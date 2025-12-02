@@ -25,12 +25,6 @@ const LoginHeader: React.FC<LoginHeaderProps> = ({ title = 'Login' }) => {
         >
           <span>Forgot your password?</span>
         </a>
-        <a
-          href="/register"
-          className="text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors w-fit flex items-center gap-1"
-        >
-          <span>Create new account</span>
-        </a>
       </div>
     </div>
   );
