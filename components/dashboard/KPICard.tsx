@@ -62,9 +62,7 @@ export default function KPICard({
           {title}
         </h3>
         <p className="text-3xl font-bold text-white">{value}</p>
-        {subtitle && (
-          <p className="text-gray-500 text-sm mt-1">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-gray-500 text-sm mt-1">{subtitle}</p>}
       </div>
     </div>
   );

@@ -150,7 +150,9 @@ export default function ActivityTimeline() {
           </h3>
           <p className="text-gray-400 text-sm">Live activity feed</p>
         </div>
-        <button className="text-orange-500 hover:text-orange-400 text-sm font-medium transition-colors" suppressHydrationWarning>
+        <button
+          className="text-orange-500 hover:text-orange-400 text-sm font-medium transition-colors"
+          suppressHydrationWarning>
           View All
         </button>
       </div>
@@ -162,7 +164,9 @@ export default function ActivityTimeline() {
             className="flex gap-4 group hover:bg-gray-800/50 p-3 rounded-lg transition-all duration-200 cursor-pointer">
             {/* Icon */}
             <div
-              className={`flex-shrink-0 w-10 h-10 rounded-lg border flex items-center justify-center ${typeColors[activity.type]}`}>
+              className={`flex-shrink-0 w-10 h-10 rounded-lg border flex items-center justify-center ${
+                typeColors[activity.type]
+              }`}>
               {activity.icon}
             </div>
 

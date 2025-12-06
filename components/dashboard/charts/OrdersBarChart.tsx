@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-
 const ordersData = [
   { label: "Mon", orders: 45 },
   { label: "Tue", orders: 62 },

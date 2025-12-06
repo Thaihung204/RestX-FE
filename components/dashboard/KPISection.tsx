@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import KPICard from "./KPICard";
 
 export default function KPISection() {

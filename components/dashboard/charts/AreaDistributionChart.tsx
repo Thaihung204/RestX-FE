@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 const areaData = [
   { name: "VIP Area", value: 35, color: "#F97316" },
@@ -17,16 +17,16 @@ export default function AreaDistributionChart() {
   return (
     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
       <div className="mb-6">
-        <h3 className="text-xl font-bold text-white mb-1">
-          Area Distribution
-        </h3>
+        <h3 className="text-xl font-bold text-white mb-1">Area Distribution</h3>
         <p className="text-gray-400 text-sm">Table allocation by zone</p>
       </div>
 
       <div className="flex flex-col lg:flex-row items-center justify-center gap-8">
         {/* Pie Chart */}
         <div className="relative w-48 h-48">
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+          <svg
+            className="w-full h-full transform -rotate-90"
+            viewBox="0 0 200 200">
             {areaData.map((item, index) => {
               const percentage = (item.value / total) * 100;
               const angle = (percentage / 100) * 360;
@@ -56,7 +56,8 @@ export default function AreaDistributionChart() {
                   fill={item.color}
                   className="transition-all duration-300 cursor-pointer"
                   style={{
-                    opacity: hoveredIndex === null || hoveredIndex === index ? 1 : 0.5,
+                    opacity:
+                      hoveredIndex === null || hoveredIndex === index ? 1 : 0.5,
                     transform:
                       hoveredIndex === index ? "scale(1.05)" : "scale(1)",
                     transformOrigin: "center",

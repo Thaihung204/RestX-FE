@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-
 type TableStatus = "serving" | "available" | "reserved" | "cleaning";
 
 interface Table {
@@ -68,7 +66,11 @@ export default function TableStatusMap() {
         key={table.id}
         className="group relative cursor-pointer transition-all duration-300 hover:scale-110">
         <div
-          className={`w-16 h-16 ${config.bg} rounded-lg flex flex-col items-center justify-center border-2 ${config.border} shadow-lg transition-all
+          className={`w-16 h-16 ${
+            config.bg
+          } rounded-lg flex flex-col items-center justify-center border-2 ${
+            config.border
+          } shadow-lg transition-all
           ${table.status === "serving" ? "animate-pulse-slow" : ""}`}>
           <span className="text-white font-bold text-sm">{table.id}</span>
           <span className="text-white text-xs">{table.seats} seats</span>
@@ -101,7 +103,9 @@ export default function TableStatusMap() {
           <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
             VIP Area
           </h4>
-          <div className="flex gap-4 flex-wrap">{vipTables.map(renderTable)}</div>
+          <div className="flex gap-4 flex-wrap">
+            {vipTables.map(renderTable)}
+          </div>
         </div>
 
         {/* Indoor Area */}
@@ -119,7 +123,9 @@ export default function TableStatusMap() {
           <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
             Outdoor Area
           </h4>
-          <div className="flex gap-4 flex-wrap">{outdoorTables.map(renderTable)}</div>
+          <div className="flex gap-4 flex-wrap">
+            {outdoorTables.map(renderTable)}
+          </div>
         </div>
       </div>
 

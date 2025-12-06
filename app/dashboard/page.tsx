@@ -1,15 +1,14 @@
 "use client";
 
-import React from "react";
-import DashboardSidebar from "@/components/layout/DashboardSidebar";
-import DashboardHeader from "@/components/layout/DashboardHeader";
-import KPISection from "@/components/dashboard/KPISection";
-import RevenueChart from "@/components/dashboard/charts/RevenueChart";
-import OrdersBarChart from "@/components/dashboard/charts/OrdersBarChart";
-import AreaDistributionChart from "@/components/dashboard/charts/AreaDistributionChart";
-import TableStatusMap from "@/components/dashboard/TableStatusMap";
 import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
+import AreaDistributionChart from "@/components/dashboard/charts/AreaDistributionChart";
+import OrdersBarChart from "@/components/dashboard/charts/OrdersBarChart";
+import RevenueChart from "@/components/dashboard/charts/RevenueChart";
+import KPISection from "@/components/dashboard/KPISection";
 import QuickActions from "@/components/dashboard/QuickActions";
+import TableStatusMap from "@/components/dashboard/TableStatusMap";
+import DashboardHeader from "@/components/layout/DashboardHeader";
+import DashboardSidebar from "@/components/layout/DashboardSidebar";
 
 export default function DashboardPage() {
   return (

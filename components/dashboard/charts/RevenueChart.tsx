@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-
 const revenueData = [
   { day: "Mon", value: 3200 },
   { day: "Tue", value: 4100 },
