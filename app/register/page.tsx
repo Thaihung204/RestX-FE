@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import LoginHeader from "@/components/auth/LoginHeader";
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
+import React, { useState } from "react";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -20,7 +18,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   // Error states
   const [errors, setErrors] = useState({
     firstName: "",
@@ -30,7 +28,7 @@ export default function RegisterPage() {
     password: [] as string[],
     confirmPassword: "",
   });
-  
+
   const [touched, setTouched] = useState({
     firstName: false,
     lastName: false,
@@ -58,9 +56,9 @@ export default function RegisterPage() {
 
   const validatePassword = (pwd: string): string[] => {
     if (!pwd) return [];
-    
+
     const errors: string[] = [];
-    
+
     if (pwd.length < 8) {
       errors.push("At least 8 characters");
     }
@@ -76,7 +74,7 @@ export default function RegisterPage() {
     if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(pwd)) {
       errors.push("At least one special character (!@#$%...)");
     }
-    
+
     return errors;
   };
 
@@ -90,24 +88,27 @@ export default function RegisterPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
     if (touched[name as keyof typeof touched]) {
       // Validate on change if already touched
       if (name === "email") {
-        setErrors(prev => ({ ...prev, email: validateEmail(value) }));
+        setErrors((prev) => ({ ...prev, email: validateEmail(value) }));
       } else if (name === "phone") {
-        setErrors(prev => ({ ...prev, phone: validatePhone(value) }));
+        setErrors((prev) => ({ ...prev, phone: validatePhone(value) }));
       } else if (name === "password") {
-        setErrors(prev => ({ 
-          ...prev, 
+        setErrors((prev) => ({
+          ...prev,
           password: validatePassword(value),
-          confirmPassword: validateConfirmPassword(formData.confirmPassword, value)
+          confirmPassword: validateConfirmPassword(
+            formData.confirmPassword,
+            value
+          ),
         }));
       } else if (name === "confirmPassword") {
-        setErrors(prev => ({ 
-          ...prev, 
-          confirmPassword: validateConfirmPassword(value, formData.password)
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: validateConfirmPassword(value, formData.password),
         }));
       }
     }
@@ -133,13 +134,16 @@ export default function RegisterPage() {
       email: validateEmail(formData.email),
       phone: validatePhone(formData.phone),
       password: validatePassword(formData.password),
-      confirmPassword: validateConfirmPassword(formData.confirmPassword, formData.password),
+      confirmPassword: validateConfirmPassword(
+        formData.confirmPassword,
+        formData.password
+      ),
     };
 
     setErrors(newErrors);
 
     // Check if there are any errors
-    const hasErrors = 
+    const hasErrors =
       newErrors.firstName ||
       newErrors.lastName ||
       newErrors.email ||
@@ -159,7 +163,7 @@ export default function RegisterPage() {
     setTimeout(() => {
       setLoading(false);
       alert(
-        `✅ Registration Submitted!\n\nName: ${formData.firstName} ${formData.lastName}\nEmail: ${formData.email}\nPhone: ${formData.phone}\n\n(This is UI demo only - No API integration)`
+        `Registration Submitted!\n\nName: ${formData.firstName} ${formData.lastName}\nEmail: ${formData.email}\nPhone: ${formData.phone}\n\n(This is UI demo only - No API integration)`
       );
     }, 1000);
   };
@@ -173,7 +177,9 @@ export default function RegisterPage() {
       <div className="max-w-[480px] w-full space-y-8 relative z-10">
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border border-orange-100">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              Create Account
+            </h2>
             <p className="text-gray-600">Join RestX today</p>
           </div>
 
@@ -181,7 +187,9 @@ export default function RegisterPage() {
             {/* Name fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-gray-700 mb-2">
                   First Name
                 </label>
                 <input
@@ -193,19 +201,25 @@ export default function RegisterPage() {
                   placeholder="John"
                   className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
                            text-gray-900 placeholder-gray-400
-                           ${touched.firstName && errors.firstName
-                             ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                             : 'border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300'}
+                           ${
+                             touched.firstName && errors.firstName
+                               ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                               : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
+                           }
                            disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
                   suppressHydrationWarning
                 />
                 {touched.firstName && errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.firstName}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-gray-700 mb-2">
                   Last Name
                 </label>
                 <input
@@ -217,9 +231,11 @@ export default function RegisterPage() {
                   placeholder="Doe"
                   className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
                            text-gray-900 placeholder-gray-400
-                           ${touched.lastName && errors.lastName
-                             ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                             : 'border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300'}
+                           ${
+                             touched.lastName && errors.lastName
+                               ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                               : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
+                           }
                            disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
                   suppressHydrationWarning
                 />
@@ -231,7 +247,9 @@ export default function RegisterPage() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2">
                 Email
               </label>
               <input
@@ -243,9 +261,11 @@ export default function RegisterPage() {
                 placeholder="your.email@example.com"
                 className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
                          text-gray-900 placeholder-gray-400
-                         ${touched.email && errors.email
-                           ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                           : 'border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300'}
+                         ${
+                           touched.email && errors.email
+                             ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                             : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
+                         }
                          disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
                 suppressHydrationWarning
               />
@@ -256,7 +276,9 @@ export default function RegisterPage() {
 
             {/* Phone */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 mb-2">
                 Phone Number
               </label>
               <input
@@ -268,9 +290,11 @@ export default function RegisterPage() {
                 placeholder="0123456789"
                 className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
                          text-gray-900 placeholder-gray-400
-                         ${touched.phone && errors.phone
-                           ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                           : 'border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300'}
+                         ${
+                           touched.phone && errors.phone
+                             ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                             : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
+                         }
                          disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
                 suppressHydrationWarning
               />
@@ -281,7 +305,9 @@ export default function RegisterPage() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -294,9 +320,11 @@ export default function RegisterPage() {
                   placeholder="Enter your password"
                   className={`w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all
                            text-gray-900 placeholder-gray-400
-                           ${touched.password && errors.password.length > 0
-                             ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                             : 'border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300'}
+                           ${
+                             touched.password && errors.password.length > 0
+                               ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                               : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
+                           }
                            disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
                   suppressHydrationWarning
                 />
@@ -304,16 +332,38 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  suppressHydrationWarning
-                >
+                  suppressHydrationWarning>
                   {showPassword ? (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      />
                     </svg>
                   ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
                     </svg>
                   )}
                 </button>
@@ -331,7 +381,9 @@ export default function RegisterPage() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700 mb-2">
                 Confirm Password
               </label>
               <div className="relative">
@@ -344,9 +396,11 @@ export default function RegisterPage() {
                   placeholder="Confirm your password"
                   className={`w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all
                            text-gray-900 placeholder-gray-400
-                           ${touched.confirmPassword && errors.confirmPassword
-                             ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                             : 'border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300'}
+                           ${
+                             touched.confirmPassword && errors.confirmPassword
+                               ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                               : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
+                           }
                            disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
                   suppressHydrationWarning
                 />
@@ -354,22 +408,46 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  suppressHydrationWarning
-                >
+                  suppressHydrationWarning>
                   {showConfirmPassword ? (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      />
                     </svg>
                   ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
                     </svg>
                   )}
                 </button>
               </div>
               {touched.confirmPassword && errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 
@@ -386,11 +464,15 @@ export default function RegisterPage() {
               </div>
               <label htmlFor="terms" className="ml-3 text-sm text-gray-600">
                 I agree to RestX's{" "}
-                <a href="/terms" className="text-orange-600 hover:text-orange-700 font-medium">
+                <a
+                  href="/terms"
+                  className="text-orange-600 hover:text-orange-700 font-medium">
                   Terms of Service
                 </a>{" "}
                 and{" "}
-                <a href="/privacy" className="text-orange-600 hover:text-orange-700 font-medium">
+                <a
+                  href="/privacy"
+                  className="text-orange-600 hover:text-orange-700 font-medium">
                   Privacy Policy
                 </a>
               </label>
@@ -399,23 +481,11 @@ export default function RegisterPage() {
             <RememberCheckbox checked={remember} onChange={setRemember} />
             <LoginButton loading={loading} text="CREATE ACCOUNT" />
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">Or sign up with</span>
-              </div>
-            </div>
-
-            <SocialLoginButtons />
-
             <div className="text-center text-sm text-gray-600 mt-4 pt-4 border-t border-gray-200">
               Already have an account?{" "}
               <a
                 href="/login"
-                className="text-orange-600 hover:text-orange-700 font-semibold transition-colors"
-              >
+                className="text-orange-600 hover:text-orange-700 font-semibold transition-colors">
                 Sign in here
               </a>
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
 import LoginButton from "@/components/auth/LoginButton";
+import React, { useState } from "react";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
     setTimeout(() => {
       setLoading(false);
       alert(
-        `✅ Password Reset Link Sent!\n\nEmail: ${email}\n\nPlease check your email for the reset link.\n\n(This is UI demo only - No API integration)`
+        `Password Reset Link Sent!\n\nEmail: ${email}\n\nPlease check your email for the reset link.\n\n(This is UI demo only - No API integration)`
       );
     }, 1000);
   };

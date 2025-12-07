@@ -3,7 +3,6 @@
 import AdminLoginHeader from "@/components/auth/AdminLoginHeader";
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
 import React, { useState } from "react";
 
 export default function AdminLoginPage() {
@@ -45,9 +44,9 @@ export default function AdminLoginPage() {
       setPasswordErrors([]);
       return false;
     }
-    
+
     const errors: string[] = [];
-    
+
     if (pwd.length < 8) {
       errors.push("At least 8 characters");
     }
@@ -103,7 +102,7 @@ export default function AdminLoginPage() {
     setTimeout(() => {
       setLoading(false);
       alert(
-        `✅ Login Form Submitted!\n\nEmail: ${email}\nRemember Me: ${remember}\n\n(This is UI demo only - No API integration)`
+        `Login Form Submitted!\n\nEmail: ${email}\nRemember Me: ${remember}\n\n(This is UI demo only - No API integration)`
       );
     }, 1000);
   };
@@ -145,16 +144,16 @@ export default function AdminLoginPage() {
                     placeholder="admin@restx.com"
                     className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
                            text-gray-900 placeholder-gray-400
-                           ${emailTouched && emailError 
-                             ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200' 
-                             : 'border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300'}
+                           ${
+                             emailTouched && emailError
+                               ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                               : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
+                           }
                            disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
                     suppressHydrationWarning
                   />
                   {emailTouched && emailError && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {emailError}
-                    </p>
+                    <p className="mt-1 text-sm text-red-600">{emailError}</p>
                   )}
                 </div>
                 <div>
@@ -179,9 +178,11 @@ export default function AdminLoginPage() {
                       placeholder="Enter your password"
                       className={`w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all
                            text-gray-900 placeholder-gray-400
-                           ${passwordTouched && passwordErrors.length > 0
-                             ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                             : 'border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300'}
+                           ${
+                             passwordTouched && passwordErrors.length > 0
+                               ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                               : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
+                           }
                            disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
                       suppressHydrationWarning
                     />
@@ -237,17 +238,6 @@ export default function AdminLoginPage() {
                 </div>{" "}
                 <RememberCheckbox checked={remember} onChange={setRemember} />
                 <LoginButton loading={loading} text="LOGIN" />
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-500">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
-                <SocialLoginButtons />
                 <div className="text-center text-sm text-gray-600 mt-6">
                   By continuing, you agree to RestX's{" "}
                   <a
