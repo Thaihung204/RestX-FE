@@ -1,0 +1,287 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { CloseOutlined, MenuOutlined } from '@ant-design/icons';
+import { Button, Drawer, Layout, Menu, Space } from 'antd';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { usePageTransition } from './PageTransition';
+
+const { Header: AntHeader } = Layout;
+
+const navItems = [
+  { key: 'product', label: <a href="#product">Sản phẩm</a> },
+  { key: 'workflow', label: <a href="#workflow">Quy trình</a> },
+  { key: 'testimonials', label: <a href="#testimonials">Khách hàng</a> },
+  { key: 'contact', label: <a href="#footer">Liên hệ</a> },
+  { key: 'admin', label: <Link href="/login-admin">Admin</Link> },
+];
+
+const Header: React.FC = () => {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { isAnimationReady } = usePageTransition();
+
+  useEffect(() => {
+    setMounted(true);
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  // Don't render until mounted to prevent FOUC
+  if (!mounted) {
+    return null;
+  }
+
+  return (
+    <>
+      <motion.div
+        initial={{ y: -100, opacity: 0 }}
+        animate={isAnimationReady ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}
+        transition={{
+          duration: 0.6,
+          ease: [0.25, 0.4, 0.25, 1],
+          delay: 0.1,
+        }}
+      >
+        <AntHeader
+          style={{
+            position: 'fixed',
+            top: scrolled ? 10 : 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: scrolled ? 'calc(100% - 40px)' : 'calc(100% - 80px)',
+            maxWidth: 1400,
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 32px',
+            background: scrolled 
+              ? 'rgba(255, 255, 255, 0.95)' 
+              : 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderRadius: 60,
+            boxShadow: scrolled 
+              ? '0 8px 32px rgba(0, 0, 0, 0.12)' 
+              : '0 4px 24px rgba(0, 0, 0, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.8)',
+            transition: 'all 0.3s ease',
+            height: 64,
+          }}
+        >
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                borderRadius: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: 18,
+                boxShadow: '0 4px 12px rgba(255, 122, 0, 0.3)',
+              }}
+            >
+              R
+            </div>
+            <span
+              style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: '#111111',
+              }}
+            >
+              RestX
+            </span>
+          </div>
+
+          {/* Desktop Navigation */}
+          {!isMobile && (
+            <Menu
+              mode="horizontal"
+              items={navItems}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                flex: 1,
+                justifyContent: 'center',
+                fontSize: 15,
+                fontWeight: 500,
+              }}
+              selectable={false}
+            />
+          )}
+
+          {/* Desktop Buttons */}
+          {!isMobile && (
+            <Space size={12}>
+              <Button
+                type="text"
+                href="/login"
+                style={{
+                  fontWeight: 600,
+                  fontSize: 15,
+                  height: 40,
+                  padding: '0 20px',
+                  color: '#111111',
+                }}
+              >
+                Log in
+              </Button>
+              <Button
+                type="text"
+                href="/login-admin"
+                style={{
+                  fontWeight: 600,
+                  fontSize: 15,
+                  height: 40,
+                  padding: '0 16px',
+                  color: '#FF7A00',
+                }}
+              >
+                Admin
+              </Button>
+              <Button
+                type="primary"
+                href="/register"
+                style={{
+                  fontWeight: 600,
+                  fontSize: 15,
+                  height: 40,
+                  padding: '0 24px',
+                  background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                  border: 'none',
+                  boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
+                }}
+              >
+                Sign up
+              </Button>
+            </Space>
+          )}
+
+          {/* Mobile Menu Button */}
+          {isMobile && (
+            <Button
+              type="text"
+              icon={<MenuOutlined style={{ fontSize: 20 }} />}
+              onClick={() => setDrawerOpen(true)}
+              style={{ color: '#111111' }}
+            />
+          )}
+        </AntHeader>
+      </motion.div>
+
+      {/* Mobile Drawer */}
+      <Drawer
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                borderRadius: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: 14,
+              }}
+            >
+              R
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 18 }}>RestX</span>
+          </div>
+        }
+        placement="right"
+        onClose={() => setDrawerOpen(false)}
+        open={drawerOpen}
+        closeIcon={<CloseOutlined />}
+        size="default"
+      >
+        <Menu
+          mode="vertical"
+          items={navItems}
+          style={{
+            border: 'none',
+            fontSize: 16,
+            fontWeight: 500,
+          }}
+          selectable={false}
+        />
+        <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Button
+            block
+            size="large"
+            href="/login"
+            style={{
+              fontWeight: 600,
+              height: 48,
+              borderRadius: 50,
+              borderColor: '#E5E7EB',
+            }}
+          >
+            Log in
+          </Button>
+          <Button
+            block
+            size="large"
+            href="/login-admin"
+            style={{
+              fontWeight: 600,
+              height: 48,
+              borderRadius: 50,
+              borderColor: '#FFE0CC',
+              color: '#FF7A00',
+              background: '#FFF7F0',
+            }}
+          >
+            Admin
+          </Button>
+          <Button
+            type="primary"
+            block
+            size="large"
+            href="/register"
+            style={{
+              fontWeight: 600,
+              height: 48,
+              borderRadius: 50,
+              background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+              border: 'none',
+              boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
+            }}
+          >
+            Sign up
+          </Button>
+        </div>
+      </Drawer>
+    </>
+  );
+};
+
+export default Header;
