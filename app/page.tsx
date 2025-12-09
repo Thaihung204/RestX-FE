@@ -15,12 +15,22 @@ export default function Home() {
       <div style={{ minHeight: '100vh' }}>
         <Header />
         <main>
-          <HeroSection />
-          <FeatureSection />
-          <WorkflowSection />
-          <TestimonialsSection />
+          <section id="hero" style={{ scrollMarginTop: 120 }}>
+            <HeroSection />
+          </section>
+          <section id="product" style={{ scrollMarginTop: 120 }}>
+            <FeatureSection />
+          </section>
+          <section id="workflow" style={{ scrollMarginTop: 120 }}>
+            <WorkflowSection />
+          </section>
+          <section id="testimonials" style={{ scrollMarginTop: 120 }}>
+            <TestimonialsSection />
+          </section>
         </main>
-        <Footer />
+        <footer id="footer" style={{ scrollMarginTop: 120 }}>
+          <Footer />
+        </footer>
       </div>
     </PageTransition>
   );

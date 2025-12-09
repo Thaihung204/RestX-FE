@@ -1,9 +1,15 @@
+import { AuthProvider } from "@/lib/contexts/AuthContext";
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
 import AntdProvider from "./theme/AntdProvider";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "RestX - All-in-one Restaurant Operations Platform",
-  description: "Tối ưu vận hành nhà hàng với RestX. Quản lý đặt bàn, order, bếp, kho và báo cáo trên một nền tảng duy nhất.",
+  description:
+    "Tối ưu vận hành nhà hàng với RestX. Quản lý đặt bàn, order, bếp, kho và báo cáo trên một nền tảng duy nhất.",
 };
 
 export default function RootLayout({
@@ -14,12 +20,6 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
         <style>{`
           * {
             margin: 0;
@@ -45,8 +45,10 @@ export default function RootLayout({
           }
         `}</style>
       </head>
-      <body>
-        <AntdProvider>{children}</AntdProvider>
+      <body className={inter.className}>
+        <AuthProvider>
+          <AntdProvider>{children}</AntdProvider>
+        </AuthProvider>
       </body>
     </html>
   );

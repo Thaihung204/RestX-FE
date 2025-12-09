@@ -1,19 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Button, Drawer, Space } from 'antd';
-import { MenuOutlined, CloseOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { CloseOutlined, MenuOutlined } from '@ant-design/icons';
+import { Button, Drawer, Layout, Menu, Space } from 'antd';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { usePageTransition } from './PageTransition';
 
 const { Header: AntHeader } = Layout;
 
 const navItems = [
-  { key: 'product', label: 'Product' },
-  { key: 'solutions', label: 'Solutions' },
-  { key: 'pricing', label: 'Pricing' },
-  { key: 'resources', label: 'Resources' },
-  { key: 'contact', label: 'Contact' },
+  { key: 'product', label: <a href="#product">Sản phẩm</a> },
+  { key: 'workflow', label: <a href="#workflow">Quy trình</a> },
+  { key: 'testimonials', label: <a href="#testimonials">Khách hàng</a> },
+  { key: 'contact', label: <a href="#footer">Liên hệ</a> },
+  { key: 'admin', label: <Link href="/login-admin">Admin</Link> },
 ];
 
 const Header: React.FC = () => {
@@ -139,6 +140,7 @@ const Header: React.FC = () => {
             <Space size={12}>
               <Button
                 type="text"
+                href="/login"
                 style={{
                   fontWeight: 600,
                   fontSize: 15,
@@ -150,7 +152,21 @@ const Header: React.FC = () => {
                 Log in
               </Button>
               <Button
+                type="text"
+                href="/login-admin"
+                style={{
+                  fontWeight: 600,
+                  fontSize: 15,
+                  height: 40,
+                  padding: '0 16px',
+                  color: '#FF7A00',
+                }}
+              >
+                Admin
+              </Button>
+              <Button
                 type="primary"
+                href="/register"
                 style={{
                   fontWeight: 600,
                   fontSize: 15,
@@ -221,6 +237,7 @@ const Header: React.FC = () => {
           <Button
             block
             size="large"
+            href="/login"
             style={{
               fontWeight: 600,
               height: 48,
@@ -231,9 +248,25 @@ const Header: React.FC = () => {
             Log in
           </Button>
           <Button
+            block
+            size="large"
+            href="/login-admin"
+            style={{
+              fontWeight: 600,
+              height: 48,
+              borderRadius: 50,
+              borderColor: '#FFE0CC',
+              color: '#FF7A00',
+              background: '#FFF7F0',
+            }}
+          >
+            Admin
+          </Button>
+          <Button
             type="primary"
             block
             size="large"
+            href="/register"
             style={{
               fontWeight: 600,
               height: 48,
