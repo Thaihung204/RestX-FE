@@ -463,7 +463,7 @@ export default function RegisterPage() {
                 />
               </div>
               <label htmlFor="terms" className="ml-3 text-sm text-gray-600">
-                I agree to RestX's{" "}
+                I agree to RestX&apos;s{" "}
                 <a
                   href="/terms"
                   className="text-orange-600 hover:text-orange-700 font-medium">

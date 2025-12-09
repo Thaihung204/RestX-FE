@@ -171,7 +171,7 @@ export default function LoginPage() {
             <LoginButton loading={loading} text="LOGIN" />
 
             <div className="text-center text-sm text-gray-600 mt-6">
-              By continuing, you agree to RestX's{" "}
+              By continuing, you agree to RestX&apos;s{" "}
               <a
                 href="/terms"
                 className="text-orange-600 hover:text-orange-700 font-medium">

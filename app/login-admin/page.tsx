@@ -239,7 +239,7 @@ export default function AdminLoginPage() {
                 <RememberCheckbox checked={remember} onChange={setRemember} />
                 <LoginButton loading={loading} text="LOGIN" />
                 <div className="text-center text-sm text-gray-600 mt-6">
-                  By continuing, you agree to RestX's{" "}
+                  By continuing, you agree to RestX&apos;s{" "}
                   <a
                     href="/terms"
                     className="text-orange-600 hover:text-orange-700 font-medium">
@@ -253,7 +253,7 @@ export default function AdminLoginPage() {
                   </a>
                 </div>
                 <div className="text-center text-sm text-gray-600 mt-4 pt-4 border-t border-gray-200">
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                   <a
                     href="/register"
                     className="text-orange-600 hover:text-orange-700 font-semibold transition-colors">
