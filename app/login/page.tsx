@@ -2,7 +2,6 @@
 
 import LoginButton from "@/components/auth/LoginButton";
 import LoginHeader from "@/components/auth/LoginHeader";
-import RememberCheckbox from "@/components/auth/RememberCheckbox";
 import React, { useState } from "react";
 
 export default function LoginPage() {
@@ -167,7 +166,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            <RememberCheckbox checked={remember} onChange={setRemember} />
             <LoginButton loading={loading} text="LOGIN" />
 
             <div className="text-center text-sm text-gray-600 mt-6">
