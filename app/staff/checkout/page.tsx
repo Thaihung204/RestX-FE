@@ -224,7 +224,7 @@ export default function CheckoutPage() {
           cursor: 'pointer',
           transition: 'all 0.3s',
         }}
-        bodyStyle={{ padding: 20 }}
+        styles={{ body: { padding: 20 } }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
           <Avatar
@@ -348,7 +348,7 @@ export default function CheckoutPage() {
           marginBottom: 24,
           border: '1px solid #f0f0f0',
         }}
-        bodyStyle={{ padding: '16px 24px' }}
+        styles={{ body: { padding: '16px 24px' } }}
       >
         <Search
           placeholder="Tìm theo tên bàn hoặc mã hóa đơn..."

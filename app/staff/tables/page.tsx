@@ -229,7 +229,7 @@ export default function TableManagement() {
             height: '100%',
             minHeight: 220,
           }}
-          bodyStyle={{ padding: 20, height: '100%', display: 'flex', flexDirection: 'column' }}
+          styles={{ body: { padding: 20, height: '100%', display: 'flex', flexDirection: 'column' } }}
         >
           <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column' }}>
             {/* Table Icon */}
@@ -322,7 +322,7 @@ export default function TableManagement() {
                   border: `1px solid ${config.color}30`,
                   background: config.bgColor,
                 }}
-                bodyStyle={{ padding: '16px 20px' }}
+                styles={{ body: { padding: '16px 20px' } }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div

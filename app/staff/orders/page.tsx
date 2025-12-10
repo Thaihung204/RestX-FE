@@ -298,7 +298,7 @@ export default function OrderManagement() {
             marginBottom: 16,
             cursor: 'pointer',
           }}
-          bodyStyle={{ padding: 20 }}
+          styles={{ body: { padding: 20 } }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
@@ -467,7 +467,7 @@ export default function OrderManagement() {
           border: '1px solid #f0f0f0',
           marginBottom: 24,
         }}
-        bodyStyle={{ padding: '16px 24px' }}
+        styles={{ body: { padding: '16px 24px' } }}
       >
         <Row gutter={16} align="middle">
           <Col flex="1">
