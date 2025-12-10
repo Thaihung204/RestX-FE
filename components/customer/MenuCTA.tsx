@@ -1,6 +1,6 @@
-import { ArrowRightOutlined, ShoppingOutlined } from '@ant-design/icons';
-import { Button, Card, Typography } from 'antd';
-import React from 'react';
+import { ArrowRightOutlined, ShoppingOutlined } from "@ant-design/icons";
+import { Button, Card, Typography } from "antd";
+import React from "react";
 
 const { Title, Text } = Typography;
 
@@ -13,45 +13,45 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
     <Card
       style={{
         borderRadius: 20,
-        border: 'none',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-        background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
-        overflow: 'hidden',
+        border: "none",
+        boxShadow: "0 10px 30px rgba(210,74,0,0.25)",
+        background: "linear-gradient(135deg, #FF8A3D 0%, #D24A00 100%)",
+        overflow: "hidden",
         marginTop: 20,
       }}
       styles={{
         body: { padding: 0 },
       }}>
-      <div style={{ position: 'relative', padding: 24 }}>
+      <div style={{ position: "relative", padding: 24 }}>
         {/* Background decoration */}
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             top: -50,
             right: -50,
             width: 200,
             height: 200,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.1)',
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.12)",
           }}
         />
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             bottom: -30,
             left: -30,
             width: 150,
             height: 150,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.1)',
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.12)",
           }}
         />
 
-        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ position: "relative", zIndex: 1 }}>
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
+              display: "flex",
+              alignItems: "center",
               gap: 16,
               marginBottom: 20,
             }}>
@@ -60,19 +60,21 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
                 width: 56,
                 height: 56,
                 borderRadius: 14,
-                background: 'rgba(255,255,255,0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backdropFilter: 'blur(10px)',
+                background: "rgba(255,255,255,0.25)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backdropFilter: "blur(10px)",
               }}>
-              <ShoppingOutlined style={{ fontSize: 28, color: 'white' }} />
+              <ShoppingOutlined style={{ fontSize: 28, color: "white" }} />
             </div>
             <div style={{ flex: 1 }}>
-              <Title level={4} style={{ margin: 0, color: 'white', fontSize: 20 }}>
+              <Title
+                level={4}
+                style={{ margin: 0, color: "white", fontSize: 20 }}>
                 Khám phá thực đơn
               </Title>
-              <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>
+              <Text style={{ color: "rgba(255,255,255,0.92)", fontSize: 14 }}>
                 Hơn 100 món ăn đặc sắc
               </Text>
             </div>
@@ -80,25 +82,31 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
 
           <div
             style={{
-              background: 'rgba(255,255,255,0.15)',
+              background: "rgba(255,255,255,0.18)",
               padding: 16,
               borderRadius: 12,
               marginBottom: 20,
-              backdropFilter: 'blur(10px)',
+              backdropFilter: "blur(10px)",
             }}>
-            <Text style={{ color: 'white', fontSize: 14, display: 'block', marginBottom: 8 }}>
+            <Text
+              style={{
+                color: "white",
+                fontSize: 14,
+                display: "block",
+                marginBottom: 8,
+              }}>
               Xem thực đơn, đặt món và theo dõi đơn hàng của bạn
             </Text>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {['Món chính', 'Khai vị', 'Đồ uống', 'Tráng miệng'].map((tag) => (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {["Món chính", "Khai vị", "Đồ uống", "Tráng miệng"].map((tag) => (
                 <div
                   key={tag}
                   style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    padding: '4px 12px',
+                    background: "rgba(255,255,255,0.24)",
+                    padding: "4px 12px",
                     borderRadius: 20,
                     fontSize: 12,
-                    color: 'white',
+                    color: "white",
                   }}>
                   {tag}
                 </div>
@@ -113,21 +121,21 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
             icon={<ArrowRightOutlined />}
             iconPlacement="end"
             style={{
-              width: '100%',
+              width: "100%",
               height: 48,
               borderRadius: 12,
-              background: 'white',
-              border: 'none',
-              color: '#FF7A00',
+              background: "white",
+              border: "none",
+              color: "#D24A00",
               fontSize: 16,
               fontWeight: 600,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+              boxShadow: "0 6px 18px rgba(210,74,0,0.28)",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.02)';
+              e.currentTarget.style.transform = "scale(1.02)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.transform = "scale(1)";
             }}>
             Xem thực đơn ngay
           </Button>

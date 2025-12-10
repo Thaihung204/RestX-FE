@@ -2,9 +2,9 @@ import {
   CommentOutlined,
   CustomerServiceOutlined,
   FileTextOutlined,
-} from '@ant-design/icons';
-import { Card, Col, Row, Typography } from 'antd';
-import React from 'react';
+} from "@ant-design/icons";
+import { Card, Col, Row, Typography } from "antd";
+import React from "react";
 
 const { Text } = Typography;
 
@@ -35,22 +35,22 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       onClick={onClick}
       style={{
         borderRadius: 16,
-        border: 'none',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-        height: '100%',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
+        border: "none",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+        height: "100%",
+        cursor: "pointer",
+        transition: "all 0.3s ease",
       }}
       styles={{
-        body: { padding: 20, textAlign: 'center' },
+        body: { padding: 20, textAlign: "center" },
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+        e.currentTarget.style.transform = "translateY(-4px)";
+        e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.15)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)';
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
       }}>
       <div
         style={{
@@ -58,10 +58,10 @@ const ActionButton: React.FC<ActionButtonProps> = ({
           height: 64,
           borderRadius: 16,
           background: `linear-gradient(135deg, ${color}15 0%, ${color}30 100%)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 16px',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          margin: "0 auto 16px",
           border: `2px solid ${color}20`,
         }}>
         {React.cloneElement(icon, {
@@ -71,14 +71,20 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       <Text
         strong
         style={{
-          display: 'block',
+          display: "block",
           fontSize: 16,
-          color: '#1F1F1F',
+          color: "#1F1F1F",
           marginBottom: 6,
         }}>
         {title}
       </Text>
-      <Text style={{ fontSize: 13, color: '#757575', display: 'block', lineHeight: 1.4 }}>
+      <Text
+        style={{
+          fontSize: 13,
+          color: "#757575",
+          display: "block",
+          lineHeight: 1.4,
+        }}>
         {description}
       </Text>
     </Card>
@@ -92,7 +98,9 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({
 }) => {
   return (
     <div style={{ marginTop: 20 }}>
-      <Typography.Title level={5} style={{ marginBottom: 16, color: '#1F1F1F', fontSize: 18 }}>
+      <Typography.Title
+        level={5}
+        style={{ marginBottom: 16, color: "#1F1F1F", fontSize: 18 }}>
         Dịch vụ
       </Typography.Title>
       <Row gutter={[12, 12]}>
