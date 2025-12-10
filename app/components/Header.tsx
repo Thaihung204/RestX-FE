@@ -14,7 +14,7 @@ const navItems = [
   { key: 'workflow', label: <a href="#workflow">Quy trình</a> },
   { key: 'testimonials', label: <a href="#testimonials">Khách hàng</a> },
   { key: 'contact', label: <a href="#footer">Liên hệ</a> },
-  { key: 'admin', label: <Link href="/login-admin">Admin</Link> },
+  { key: 'staff', label: <Link href="/staff">Staff Portal</Link> },
 ];
 
 const Header: React.FC = () => {
@@ -138,47 +138,59 @@ const Header: React.FC = () => {
           {/* Desktop Buttons */}
           {!isMobile && (
             <Space size={12}>
-              <Button
-                type="text"
-                href="/login"
-                style={{
-                  fontWeight: 600,
-                  fontSize: 15,
-                  height: 40,
-                  padding: '0 20px',
-                  color: '#111111',
-                }}
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  type="text"
+                  href="/login"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    height: 40,
+                    padding: '0 20px',
+                    color: '#111111',
+                  }}
+                >
+                  Log in
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  type="text"
+                  href="/staff"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    height: 40,
+                    padding: '0 16px',
+                    color: '#FF7A00',
+                    background: 'rgba(255, 122, 0, 0.08)',
+                    borderRadius: 20,
+                  }}
+                >
+                  🍽️ Staff
+                </Button>
+              </motion.div>
+              <motion.div 
+                whileHover={{ scale: 1.05, boxShadow: '0 8px 25px rgba(255, 122, 0, 0.45)' }} 
+                whileTap={{ scale: 0.95 }}
+                style={{ borderRadius: 20 }}
               >
-                Log in
-              </Button>
-              <Button
-                type="text"
-                href="/login-admin"
-                style={{
-                  fontWeight: 600,
-                  fontSize: 15,
-                  height: 40,
-                  padding: '0 16px',
-                  color: '#FF7A00',
-                }}
-              >
-                Admin
-              </Button>
-              <Button
-                type="primary"
-                href="/register"
-                style={{
-                  fontWeight: 600,
-                  fontSize: 15,
-                  height: 40,
-                  padding: '0 24px',
-                  background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
-                  border: 'none',
-                  boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
-                }}
-              >
-                Sign up
-              </Button>
+                <Button
+                  type="primary"
+                  href="/register"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    height: 40,
+                    padding: '0 24px',
+                    background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                    border: 'none',
+                    boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
+                  }}
+                >
+                  Sign up
+                </Button>
+              </motion.div>
             </Space>
           )}
 
@@ -250,7 +262,7 @@ const Header: React.FC = () => {
           <Button
             block
             size="large"
-            href="/login-admin"
+            href="/staff"
             style={{
               fontWeight: 600,
               height: 48,
@@ -260,7 +272,7 @@ const Header: React.FC = () => {
               background: '#FFF7F0',
             }}
           >
-            Admin
+            🍽️ Staff Portal
           </Button>
           <Button
             type="primary"

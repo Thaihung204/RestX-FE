@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Button, Typography, Tag, Row, Col, Card, Space } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Button, Typography, Tag, Row, Col, Card, Flex } from 'antd';
 import { PlayCircleOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { usePageTransition } from './PageTransition';
@@ -10,6 +10,14 @@ const { Title, Paragraph, Text } = Typography;
 
 const HeroSection: React.FC = () => {
   const { isAnimationReady } = usePageTransition();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Animation variants
   const containerVariants = {
@@ -90,33 +98,33 @@ const HeroSection: React.FC = () => {
     <section
       style={{
         position: 'relative',
-        height: '100vh',
-        minHeight: 700,
-        maxHeight: 900,
-        padding: '100px 24px 40px',
+        minHeight: isMobile ? 'auto' : '100vh',
+        padding: isMobile ? '100px 16px 40px' : '100px 24px 40px',
         overflow: 'hidden',
         background: '#FFFFFF',
         display: 'flex',
         alignItems: 'center',
       }}
     >
-      {/* Orange Gradient Blob */}
-      <motion.div
-        variants={blobVariants}
-        initial="hidden"
-        animate={isAnimationReady ? 'visible' : 'hidden'}
-        style={{
-          position: 'absolute',
-          top: '-10%',
-          right: '-15%',
-          width: '60%',
-          height: '120%',
-          background: 'linear-gradient(135deg, #FFB066 0%, #FF7A00 50%, #E06000 100%)',
-          borderRadius: '40% 30% 50% 40%',
-          transform: 'rotate(-15deg)',
-          zIndex: 0,
-        }}
-      />
+      {/* Orange Gradient Blob - Hidden on mobile for cleaner look */}
+      {!isMobile && (
+        <motion.div
+          variants={blobVariants}
+          initial="hidden"
+          animate={isAnimationReady ? 'visible' : 'hidden'}
+          style={{
+            position: 'absolute',
+            top: '-10%',
+            right: '-15%',
+            width: '60%',
+            height: '120%',
+            background: 'linear-gradient(135deg, #FFB066 0%, #FF7A00 50%, #E06000 100%)',
+            borderRadius: '40% 30% 50% 40%',
+            transform: 'rotate(-15deg)',
+            zIndex: 0,
+          }}
+        />
+      )}
 
       <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1, width: '100%' }}>
         <Row gutter={[48, 32]} align="middle">
@@ -127,7 +135,7 @@ const HeroSection: React.FC = () => {
               initial="hidden"
               animate={isAnimationReady ? 'visible' : 'hidden'}
             >
-              <Space orientation="vertical" size={20} style={{ width: '100%' }}>
+              <Flex vertical gap={20} style={{ width: '100%' }}>
                 <motion.div variants={itemVariants}>
                   <Tag
                     style={{
@@ -135,8 +143,8 @@ const HeroSection: React.FC = () => {
                       border: 'none',
                       color: '#E06000',
                       fontWeight: 600,
-                      fontSize: 14,
-                      padding: '8px 16px',
+                      fontSize: isMobile ? 12 : 14,
+                      padding: isMobile ? '6px 12px' : '8px 16px',
                       borderRadius: 50,
                     }}
                   >
@@ -148,7 +156,7 @@ const HeroSection: React.FC = () => {
                   <Title
                     level={1}
                     style={{
-                      fontSize: 'clamp(36px, 5vw, 56px)',
+                      fontSize: isMobile ? 28 : 'clamp(36px, 5vw, 56px)',
                       fontWeight: 700,
                       lineHeight: 1.15,
                       margin: 0,
@@ -162,7 +170,7 @@ const HeroSection: React.FC = () => {
                 <motion.div variants={itemVariants}>
                   <Paragraph
                     style={{
-                      fontSize: 18,
+                      fontSize: isMobile ? 15 : 18,
                       color: '#4F4F4F',
                       lineHeight: 1.7,
                       margin: 0,
@@ -174,14 +182,15 @@ const HeroSection: React.FC = () => {
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                  <Space size={16} wrap>
+                  <Flex gap={12} wrap="wrap">
                     <Button
                       type="primary"
-                      size="large"
+                      size={isMobile ? 'middle' : 'large'}
+                      block={isMobile}
                       style={{
-                        height: 52,
-                        padding: '0 36px',
-                        fontSize: 16,
+                        height: isMobile ? 44 : 52,
+                        padding: isMobile ? '0 24px' : '0 36px',
+                        fontSize: isMobile ? 14 : 16,
                         fontWeight: 600,
                         borderRadius: 50,
                         background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
@@ -192,12 +201,13 @@ const HeroSection: React.FC = () => {
                       Get Started
                     </Button>
                     <Button
-                      size="large"
+                      size={isMobile ? 'middle' : 'large'}
                       icon={<PlayCircleOutlined />}
+                      block={isMobile}
                       style={{
-                        height: 52,
-                        padding: '0 32px',
-                        fontSize: 16,
+                        height: isMobile ? 44 : 52,
+                        padding: isMobile ? '0 20px' : '0 32px',
+                        fontSize: isMobile ? 14 : 16,
                         fontWeight: 600,
                         borderRadius: 50,
                         borderColor: '#E5E7EB',
@@ -206,7 +216,7 @@ const HeroSection: React.FC = () => {
                     >
                       Watch Demo
                     </Button>
-                  </Space>
+                  </Flex>
                 </motion.div>
 
                 {/* Stats */}
@@ -216,31 +226,36 @@ const HeroSection: React.FC = () => {
                   animate={isAnimationReady ? 'visible' : 'hidden'}
                   style={{ marginTop: 8 }}
                 >
-                  <Row gutter={[32, 16]}>
+                  <Row gutter={[isMobile ? 16 : 32, 16]}>
                     {[
                       { value: '100.000+', label: 'Thương hiệu' },
                       { value: '15+', label: 'Năm kinh nghiệm' },
                       { value: '500+', label: 'Chi nhánh' },
                     ].map((stat, index) => (
-                      <Col key={index}>
+                      <Col key={index} xs={8}>
                         <motion.div
                           variants={statsVariants}
                           custom={index}
-                          style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}
+                          style={{ 
+                            display: 'flex', 
+                            flexDirection: isMobile ? 'column' : 'row',
+                            alignItems: isMobile ? 'flex-start' : 'baseline', 
+                            gap: isMobile ? 2 : 8 
+                          }}
                         >
-                          <span style={{ color: '#FF7A00', fontSize: 28, fontWeight: 700 }}>{stat.value}</span>
-                          <span style={{ color: '#4F4F4F', fontSize: 13 }}>{stat.label}</span>
+                          <span style={{ color: '#FF7A00', fontSize: isMobile ? 20 : 28, fontWeight: 700 }}>{stat.value}</span>
+                          <span style={{ color: '#4F4F4F', fontSize: isMobile ? 11 : 13 }}>{stat.label}</span>
                         </motion.div>
                       </Col>
                     ))}
                   </Row>
                 </motion.div>
-              </Space>
+              </Flex>
             </motion.div>
           </Col>
 
-          {/* Right Column - Dashboard Mockup */}
-          <Col xs={24} md={12}>
+          {/* Right Column - Dashboard Mockup - Hidden on small mobile */}
+          <Col xs={24} md={12} style={{ display: isMobile ? 'none' : 'block' }}>
             <motion.div
               variants={cardVariants}
               initial="hidden"
@@ -255,7 +270,7 @@ const HeroSection: React.FC = () => {
                 }}
                 styles={{ body: { padding: 24 } }}
               >
-                <Space orientation="vertical" size={20} style={{ width: '100%' }}>
+                <Flex vertical gap={20} style={{ width: '100%' }}>
                   {/* Header */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Text strong style={{ fontSize: 18 }}>Tổng quan hoạt động</Text>
@@ -313,7 +328,7 @@ const HeroSection: React.FC = () => {
                     <Text strong style={{ display: 'block', marginBottom: 12 }}>
                       📋 Recent Orders
                     </Text>
-                    <Space orientation="vertical" size={8} style={{ width: '100%' }}>
+                    <Flex vertical gap={8} style={{ width: '100%' }}>
                       {[1, 2, 3].map((i) => (
                         <div
                           key={i}
@@ -325,9 +340,9 @@ const HeroSection: React.FC = () => {
                           }}
                         />
                       ))}
-                    </Space>
+                    </Flex>
                   </Card>
-                </Space>
+                </Flex>
               </Card>
             </motion.div>
           </Col>

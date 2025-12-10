@@ -1,0 +1,835 @@
+'use client';
+
+import React, { useState } from 'react';
+import {
+  Card,
+  Row,
+  Col,
+  Typography,
+  Tag,
+  Button,
+  Space,
+  Modal,
+  List,
+  Avatar,
+  Badge,
+  Tabs,
+  Input,
+  Select,
+  Divider,
+  message,
+  Empty,
+  InputNumber,
+} from 'antd';
+import {
+  ShoppingCartOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  SyncOutlined,
+  ExclamationCircleOutlined,
+  SearchOutlined,
+  PlusOutlined,
+  MinusOutlined,
+  DeleteOutlined,
+  FireOutlined,
+  CoffeeOutlined,
+  TableOutlined,
+  UserOutlined,
+  PrinterOutlined,
+  SendOutlined,
+} from '@ant-design/icons';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const { Title, Text, Paragraph } = Typography;
+const { Search } = Input;
+
+type OrderStatus = 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled';
+type OrderItemStatus = 'pending' | 'preparing' | 'ready' | 'served';
+
+interface OrderItem {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  note?: string;
+  status: OrderItemStatus;
+}
+
+interface Order {
+  id: string;
+  tableId: string;
+  tableName: string;
+  items: OrderItem[];
+  status: OrderStatus;
+  createdAt: string;
+  total: number;
+  notes?: string;
+}
+
+// Mock menu data
+const menuCategories = [
+  {
+    id: 'appetizer',
+    name: 'Khai vị',
+    icon: <CoffeeOutlined />,
+    items: [
+      { id: 'm1', name: 'Gỏi cuốn tôm thịt', price: 65000, image: '🥗' },
+      { id: 'm2', name: 'Chả giò hải sản', price: 85000, image: '🥟' },
+      { id: 'm3', name: 'Súp cua', price: 55000, image: '🥣' },
+    ],
+  },
+  {
+    id: 'main',
+    name: 'Món chính',
+    icon: <FireOutlined />,
+    items: [
+      { id: 'm4', name: 'Bò lúc lắc', price: 185000, image: '🥩' },
+      { id: 'm5', name: 'Cá hồi sốt chanh dây', price: 245000, image: '🐟' },
+      { id: 'm6', name: 'Gà nướng muối ớt', price: 165000, image: '🍗' },
+      { id: 'm7', name: 'Tôm hùm nướng bơ', price: 650000, image: '🦞' },
+      { id: 'm8', name: 'Cơm chiên hải sản', price: 125000, image: '🍚' },
+    ],
+  },
+  {
+    id: 'drink',
+    name: 'Đồ uống',
+    icon: <CoffeeOutlined />,
+    items: [
+      { id: 'm9', name: 'Nước ép cam', price: 45000, image: '🍊' },
+      { id: 'm10', name: 'Sinh tố bơ', price: 55000, image: '🥑' },
+      { id: 'm11', name: 'Coca Cola', price: 25000, image: '🥤' },
+      { id: 'm12', name: 'Bia Tiger', price: 35000, image: '🍺' },
+    ],
+  },
+];
+
+// Mock orders data
+const initialOrders: Order[] = [
+  {
+    id: 'ORD001',
+    tableId: 'a2',
+    tableName: 'A02',
+    status: 'preparing',
+    createdAt: '18:35',
+    total: 750000,
+    items: [
+      { id: 'i1', name: 'Bò lúc lắc', quantity: 2, price: 185000, status: 'preparing' },
+      { id: 'i2', name: 'Gỏi cuốn tôm thịt', quantity: 1, price: 65000, status: 'ready' },
+      { id: 'i3', name: 'Cơm chiên hải sản', quantity: 2, price: 125000, status: 'pending' },
+      { id: 'i4', name: 'Nước ép cam', quantity: 3, price: 45000, status: 'served' },
+    ],
+  },
+  {
+    id: 'ORD002',
+    tableId: 'a3',
+    tableName: 'A03',
+    status: 'pending',
+    createdAt: '19:05',
+    total: 420000,
+    items: [
+      { id: 'i5', name: 'Cá hồi sốt chanh dây', quantity: 1, price: 245000, status: 'pending' },
+      { id: 'i6', name: 'Súp cua', quantity: 2, price: 55000, status: 'pending' },
+      { id: 'i7', name: 'Sinh tố bơ', quantity: 2, price: 55000, status: 'pending' },
+    ],
+  },
+  {
+    id: 'ORD003',
+    tableId: 'b1',
+    tableName: 'B01',
+    status: 'ready',
+    createdAt: '18:10',
+    total: 1250000,
+    items: [
+      { id: 'i8', name: 'Tôm hùm nướng bơ', quantity: 1, price: 650000, status: 'ready' },
+      { id: 'i9', name: 'Bò lúc lắc', quantity: 2, price: 185000, status: 'ready' },
+      { id: 'i10', name: 'Chả giò hải sản', quantity: 2, price: 85000, status: 'ready' },
+      { id: 'i11', name: 'Bia Tiger', quantity: 4, price: 35000, status: 'served' },
+    ],
+  },
+  {
+    id: 'ORD004',
+    tableId: 'b3',
+    tableName: 'B03',
+    status: 'served',
+    createdAt: '19:20',
+    total: 580000,
+    items: [
+      { id: 'i12', name: 'Gà nướng muối ớt', quantity: 2, price: 165000, status: 'served' },
+      { id: 'i13', name: 'Cơm chiên hải sản', quantity: 2, price: 125000, status: 'served' },
+    ],
+  },
+];
+
+const statusConfig: Record<OrderStatus, { color: string; text: string; icon: React.ReactNode }> = {
+  pending: { color: 'orange', text: 'Chờ xử lý', icon: <ExclamationCircleOutlined /> },
+  preparing: { color: 'blue', text: 'Đang nấu', icon: <SyncOutlined spin /> },
+  ready: { color: 'green', text: 'Sẵn sàng', icon: <CheckCircleOutlined /> },
+  served: { color: 'default', text: 'Đã phục vụ', icon: <CheckCircleOutlined /> },
+  cancelled: { color: 'red', text: 'Đã hủy', icon: <ClockCircleOutlined /> },
+};
+
+const itemStatusConfig: Record<OrderItemStatus, { color: string; text: string }> = {
+  pending: { color: 'orange', text: 'Chờ' },
+  preparing: { color: 'blue', text: 'Đang nấu' },
+  ready: { color: 'green', text: 'Sẵn sàng' },
+  served: { color: 'default', text: 'Đã phục vụ' },
+};
+
+export default function OrderManagement() {
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchText, setSearchText] = useState('');
+  const [cart, setCart] = useState<{ item: typeof menuCategories[0]['items'][0]; quantity: number }[]>([]);
+  const [selectedTable, setSelectedTable] = useState<string>('');
+  const [activeMenuCategory, setActiveMenuCategory] = useState('appetizer');
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = order.tableName.toLowerCase().includes(searchText.toLowerCase()) ||
+      order.id.toLowerCase().includes(searchText.toLowerCase());
+    const matchesTab = activeTab === 'all' || order.status === activeTab;
+    return matchesSearch && matchesTab;
+  });
+
+  const stats = {
+    pending: orders.filter(o => o.status === 'pending').length,
+    preparing: orders.filter(o => o.status === 'preparing').length,
+    ready: orders.filter(o => o.status === 'ready').length,
+  };
+
+  const handleOrderClick = (order: Order) => {
+    setSelectedOrder(order);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleUpdateItemStatus = (orderId: string, itemId: string, newStatus: OrderItemStatus) => {
+    setOrders(prev =>
+      prev.map(order => {
+        if (order.id === orderId) {
+          const updatedItems = order.items.map(item =>
+            item.id === itemId ? { ...item, status: newStatus } : item
+          );
+          // Update order status based on items
+          let orderStatus: OrderStatus = order.status;
+          if (updatedItems.every(i => i.status === 'served')) {
+            orderStatus = 'served';
+          } else if (updatedItems.every(i => i.status === 'ready' || i.status === 'served')) {
+            orderStatus = 'ready';
+          } else if (updatedItems.some(i => i.status === 'preparing')) {
+            orderStatus = 'preparing';
+          }
+          return { ...order, items: updatedItems, status: orderStatus };
+        }
+        return order;
+      })
+    );
+    message.success('Đã cập nhật trạng thái món');
+  };
+
+  const addToCart = (item: typeof menuCategories[0]['items'][0]) => {
+    setCart(prev => {
+      const existing = prev.find(c => c.item.id === item.id);
+      if (existing) {
+        return prev.map(c => c.item.id === item.id ? { ...c, quantity: c.quantity + 1 } : c);
+      }
+      return [...prev, { item, quantity: 1 }];
+    });
+  };
+
+  const updateCartQuantity = (itemId: string, delta: number) => {
+    setCart(prev => {
+      return prev
+        .map(c => c.item.id === itemId ? { ...c, quantity: Math.max(0, c.quantity + delta) } : c)
+        .filter(c => c.quantity > 0);
+    });
+  };
+
+  const cartTotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
+
+  const handleCreateOrder = () => {
+    if (!selectedTable || cart.length === 0) {
+      message.error('Vui lòng chọn bàn và thêm món');
+      return;
+    }
+
+    const newOrder: Order = {
+      id: `ORD${String(orders.length + 1).padStart(3, '0')}`,
+      tableId: selectedTable,
+      tableName: selectedTable,
+      status: 'pending',
+      createdAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      total: cartTotal,
+      items: cart.map((c, idx) => ({
+        id: `new_${idx}`,
+        name: c.item.name,
+        quantity: c.quantity,
+        price: c.item.price,
+        status: 'pending' as OrderItemStatus,
+      })),
+    };
+
+    setOrders(prev => [newOrder, ...prev]);
+    message.success('Đã tạo order mới');
+    setIsNewOrderModalOpen(false);
+    setCart([]);
+    setSelectedTable('');
+  };
+
+  const renderOrderCard = (order: Order) => {
+    const config = statusConfig[order.status];
+    const pendingItems = order.items.filter(i => i.status === 'pending' || i.status === 'preparing').length;
+    
+    return (
+      <motion.div
+        key={order.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        layout
+      >
+        <Card
+          hoverable
+          onClick={() => handleOrderClick(order)}
+          style={{
+            borderRadius: 16,
+            border: '1px solid #f0f0f0',
+            marginBottom: 16,
+            cursor: 'pointer',
+          }}
+          bodyStyle={{ padding: 20 }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <Avatar
+                  style={{
+                    background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                    fontWeight: 600,
+                  }}
+                  size={44}
+                >
+                  {order.tableName}
+                </Avatar>
+                <div>
+                  <Text strong style={{ fontSize: 16 }}>{order.tableName}</Text>
+                  <br />
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    {order.id} • {order.createdAt}
+                  </Text>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                {order.items.slice(0, 3).map(item => (
+                  <Tag
+                    key={item.id}
+                    color={itemStatusConfig[item.status].color}
+                    style={{ marginBottom: 4, borderRadius: 20 }}
+                  >
+                    {item.name} x{item.quantity}
+                  </Tag>
+                ))}
+                {order.items.length > 3 && (
+                  <Tag style={{ borderRadius: 20 }}>+{order.items.length - 3} món khác</Tag>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <Text strong style={{ color: '#FF7A00', fontSize: 16 }}>
+                  {order.total.toLocaleString('vi-VN')}đ
+                </Text>
+                {pendingItems > 0 && (
+                  <Badge count={`${pendingItems} món chưa xong`} style={{ backgroundColor: '#faad14' }} />
+                )}
+              </div>
+            </div>
+
+            <Tag
+              icon={config.icon}
+              color={config.color}
+              style={{
+                borderRadius: 20,
+                padding: '6px 14px',
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              {config.text}
+            </Tag>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  };
+
+  return (
+    <div>
+      {/* Header Stats */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={8}>
+          <Card
+            style={{
+              borderRadius: 16,
+              background: '#fff7e6',
+              border: '1px solid #ffd591',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  background: '#faad14',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <ExclamationCircleOutlined style={{ fontSize: 24, color: '#fff' }} />
+              </div>
+              <div>
+                <Text style={{ fontSize: 28, fontWeight: 700 }}>{stats.pending}</Text>
+                <br />
+                <Text type="secondary">Chờ xử lý</Text>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card
+            style={{
+              borderRadius: 16,
+              background: '#e6f7ff',
+              border: '1px solid #91d5ff',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  background: '#1890ff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <SyncOutlined spin style={{ fontSize: 24, color: '#fff' }} />
+              </div>
+              <div>
+                <Text style={{ fontSize: 28, fontWeight: 700 }}>{stats.preparing}</Text>
+                <br />
+                <Text type="secondary">Đang nấu</Text>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card
+            style={{
+              borderRadius: 16,
+              background: '#f6ffed',
+              border: '1px solid #b7eb8f',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  background: '#52c41a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <CheckCircleOutlined style={{ fontSize: 24, color: '#fff' }} />
+              </div>
+              <div>
+                <Text style={{ fontSize: 28, fontWeight: 700 }}>{stats.ready}</Text>
+                <br />
+                <Text type="secondary">Sẵn sàng phục vụ</Text>
+              </div>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Search & Filter */}
+      <Card
+        style={{
+          borderRadius: 20,
+          border: '1px solid #f0f0f0',
+          marginBottom: 24,
+        }}
+        bodyStyle={{ padding: '16px 24px' }}
+      >
+        <Row gutter={16} align="middle">
+          <Col flex="1">
+            <Search
+              placeholder="Tìm theo mã order hoặc tên bàn..."
+              allowClear
+              size="large"
+              style={{ maxWidth: 400 }}
+              prefix={<SearchOutlined style={{ color: '#bbb' }} />}
+              onChange={e => setSearchText(e.target.value)}
+            />
+          </Col>
+          <Col>
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => setIsNewOrderModalOpen(true)}
+              style={{
+                borderRadius: 12,
+                height: 48,
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                border: 'none',
+              }}
+            >
+              Tạo Order mới
+            </Button>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Order List with Tabs */}
+      <Card
+        style={{
+          borderRadius: 20,
+          border: '1px solid #f0f0f0',
+        }}
+      >
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            { key: 'all', label: `Tất cả (${orders.length})` },
+            { key: 'pending', label: `Chờ xử lý (${stats.pending})` },
+            { key: 'preparing', label: `Đang nấu (${stats.preparing})` },
+            { key: 'ready', label: `Sẵn sàng (${stats.ready})` },
+          ]}
+        />
+
+        <AnimatePresence>
+          {filteredOrders.length > 0 ? (
+            filteredOrders.map(order => renderOrderCard(order))
+          ) : (
+            <Empty description="Không có order nào" />
+          )}
+        </AnimatePresence>
+      </Card>
+
+      {/* Order Detail Modal */}
+      <Modal
+        title={
+          <Space>
+            <ShoppingCartOutlined style={{ color: '#FF7A00' }} />
+            <span>Chi tiết Order {selectedOrder?.id}</span>
+          </Space>
+        }
+        open={isDetailModalOpen}
+        onCancel={() => setIsDetailModalOpen(false)}
+        footer={null}
+        width={600}
+        centered
+      >
+        {selectedOrder && (
+          <div>
+            {/* Order Info */}
+            <Card
+              size="small"
+              style={{
+                borderRadius: 12,
+                background: '#fafafa',
+                marginBottom: 20,
+              }}
+            >
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Text type="secondary">Bàn</Text>
+                  <br />
+                  <Text strong style={{ fontSize: 16 }}>{selectedOrder.tableName}</Text>
+                </Col>
+                <Col span={8}>
+                  <Text type="secondary">Thời gian</Text>
+                  <br />
+                  <Text strong style={{ fontSize: 16 }}>{selectedOrder.createdAt}</Text>
+                </Col>
+                <Col span={8}>
+                  <Text type="secondary">Trạng thái</Text>
+                  <br />
+                  <Tag
+                    icon={statusConfig[selectedOrder.status].icon}
+                    color={statusConfig[selectedOrder.status].color}
+                    style={{ marginTop: 4 }}
+                  >
+                    {statusConfig[selectedOrder.status].text}
+                  </Tag>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Items List */}
+            <List
+              itemLayout="horizontal"
+              dataSource={selectedOrder.items}
+              renderItem={item => (
+                <List.Item
+                  actions={[
+                    <Select
+                      key="status"
+                      value={item.status}
+                      size="small"
+                      style={{ width: 110 }}
+                      onChange={(value) => handleUpdateItemStatus(selectedOrder.id, item.id, value)}
+                      options={[
+                        { value: 'pending', label: 'Chờ' },
+                        { value: 'preparing', label: 'Đang nấu' },
+                        { value: 'ready', label: 'Sẵn sàng' },
+                        { value: 'served', label: 'Đã phục vụ' },
+                      ]}
+                    />,
+                  ]}
+                >
+                  <List.Item.Meta
+                    title={
+                      <Space>
+                        <Text strong>{item.name}</Text>
+                        <Tag>{item.quantity}x</Tag>
+                      </Space>
+                    }
+                    description={
+                      <Text type="secondary">
+                        {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+                      </Text>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+
+            <Divider />
+
+            {/* Total */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 16 }}>Tổng cộng</Text>
+              <Text strong style={{ fontSize: 24, color: '#FF7A00' }}>
+                {selectedOrder.total.toLocaleString('vi-VN')}đ
+              </Text>
+            </div>
+
+            {/* Actions */}
+            <Row gutter={12} style={{ marginTop: 24 }}>
+              <Col span={8}>
+                <Button
+                  icon={<PrinterOutlined />}
+                  size="large"
+                  block
+                  style={{ borderRadius: 12 }}
+                >
+                  In hóa đơn
+                </Button>
+              </Col>
+              <Col span={8}>
+                <Button
+                  icon={<PlusOutlined />}
+                  size="large"
+                  block
+                  style={{ borderRadius: 12 }}
+                >
+                  Thêm món
+                </Button>
+              </Col>
+              <Col span={8}>
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  size="large"
+                  block
+                  style={{
+                    borderRadius: 12,
+                    background: '#52c41a',
+                    border: 'none',
+                  }}
+                >
+                  Gửi bếp
+                </Button>
+              </Col>
+            </Row>
+          </div>
+        )}
+      </Modal>
+
+      {/* New Order Modal */}
+      <Modal
+        title={
+          <Space>
+            <PlusOutlined style={{ color: '#FF7A00' }} />
+            <span>Tạo Order mới</span>
+          </Space>
+        }
+        open={isNewOrderModalOpen}
+        onCancel={() => {
+          setIsNewOrderModalOpen(false);
+          setCart([]);
+          setSelectedTable('');
+        }}
+        footer={null}
+        width={900}
+        centered
+      >
+        <Row gutter={24}>
+          {/* Menu */}
+          <Col span={14}>
+            <div style={{ marginBottom: 16 }}>
+              <Select
+                placeholder="Chọn bàn"
+                size="large"
+                style={{ width: '100%' }}
+                value={selectedTable || undefined}
+                onChange={setSelectedTable}
+                options={[
+                  { value: 'A01', label: 'Bàn A01' },
+                  { value: 'A05', label: 'Bàn A05' },
+                  { value: 'B02', label: 'Bàn B02' },
+                  { value: 'VIP02', label: 'Bàn VIP02' },
+                ]}
+              />
+            </div>
+
+            <Tabs
+              activeKey={activeMenuCategory}
+              onChange={setActiveMenuCategory}
+              items={menuCategories.map(cat => ({
+                key: cat.id,
+                label: (
+                  <Space>
+                    {cat.icon}
+                    {cat.name}
+                  </Space>
+                ),
+              }))}
+            />
+
+            <Row gutter={[12, 12]}>
+              {menuCategories
+                .find(c => c.id === activeMenuCategory)
+                ?.items.map(item => (
+                  <Col span={12} key={item.id}>
+                    <Card
+                      hoverable
+                      size="small"
+                      style={{ borderRadius: 12 }}
+                      onClick={() => addToCart(item)}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ fontSize: 32 }}>{item.image}</span>
+                        <div style={{ flex: 1 }}>
+                          <Text strong style={{ display: 'block' }}>{item.name}</Text>
+                          <Text style={{ color: '#FF7A00' }}>
+                            {item.price.toLocaleString('vi-VN')}đ
+                          </Text>
+                        </div>
+                        <PlusOutlined style={{ color: '#FF7A00' }} />
+                      </div>
+                    </Card>
+                  </Col>
+                ))}
+            </Row>
+          </Col>
+
+          {/* Cart */}
+          <Col span={10}>
+            <Card
+              title={
+                <Space>
+                  <ShoppingCartOutlined />
+                  <span>Giỏ hàng ({cart.length})</span>
+                </Space>
+              }
+              style={{
+                borderRadius: 16,
+                background: '#fafafa',
+                height: '100%',
+              }}
+            >
+              {cart.length > 0 ? (
+                <>
+                  <List
+                    size="small"
+                    dataSource={cart}
+                    renderItem={c => (
+                      <List.Item
+                        actions={[
+                          <Button
+                            key="minus"
+                            type="text"
+                            size="small"
+                            icon={<MinusOutlined />}
+                            onClick={() => updateCartQuantity(c.item.id, -1)}
+                          />,
+                          <span key="qty" style={{ minWidth: 20, textAlign: 'center' }}>
+                            {c.quantity}
+                          </span>,
+                          <Button
+                            key="plus"
+                            type="text"
+                            size="small"
+                            icon={<PlusOutlined />}
+                            onClick={() => updateCartQuantity(c.item.id, 1)}
+                          />,
+                        ]}
+                      >
+                        <List.Item.Meta
+                          avatar={<span style={{ fontSize: 24 }}>{c.item.image}</span>}
+                          title={c.item.name}
+                          description={`${(c.item.price * c.quantity).toLocaleString('vi-VN')}đ`}
+                        />
+                      </List.Item>
+                    )}
+                  />
+
+                  <Divider />
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <Text strong>Tổng cộng</Text>
+                    <Text strong style={{ fontSize: 18, color: '#FF7A00' }}>
+                      {cartTotal.toLocaleString('vi-VN')}đ
+                    </Text>
+                  </div>
+
+                  <Button
+                    type="primary"
+                    size="large"
+                    block
+                    onClick={handleCreateOrder}
+                    style={{
+                      borderRadius: 12,
+                      height: 48,
+                      fontWeight: 600,
+                      background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                      border: 'none',
+                    }}
+                  >
+                    Tạo Order
+                  </Button>
+                </>
+              ) : (
+                <Empty description="Chưa có món nào" />
+              )}
+            </Card>
+          </Col>
+        </Row>
+      </Modal>
+    </div>
+  );
+}
+
