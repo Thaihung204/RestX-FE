@@ -405,11 +405,12 @@ export default function CheckoutPage() {
             ? '94%'
             : 820
         }
+        centered
         style={{
           maxWidth: isMobile ? '100%' : isTablet ? '94vw' : '820px',
+          backgroundColor: '#0A0E14',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
         }}
-        centered
-        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
         styles={{
           header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
           body: { padding: isMobile ? 12 : 16, maxHeight: '60vh', overflowY: 'auto', backgroundColor: '#0A0E14' },
