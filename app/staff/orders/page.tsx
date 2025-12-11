@@ -185,6 +185,15 @@ export default function OrderManagement() {
   const [cart, setCart] = useState<{ item: typeof menuCategories[0]['items'][0]; quantity: number }[]>([]);
   const [selectedTable, setSelectedTable] = useState<string>('');
   const [activeMenuCategory, setActiveMenuCategory] = useState('appetizer');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check mobile viewport
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.tableName.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -293,71 +302,93 @@ export default function OrderManagement() {
           hoverable
           onClick={() => handleOrderClick(order)}
           style={{
-            borderRadius: 16,
+            borderRadius: isMobile ? 12 : 16,
             border: '1px solid #f0f0f0',
-            marginBottom: 16,
+            marginBottom: isMobile ? 12 : 16,
             cursor: 'pointer',
           }}
-          styles={{ body: { padding: 20 } }}
+          styles={{ body: { padding: isMobile ? 14 : 20 } }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 12, marginBottom: isMobile ? 10 : 12 }}>
                 <Avatar
                   style={{
                     background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
                     fontWeight: 600,
+                    fontSize: isMobile ? 12 : 14,
                   }}
-                  size={44}
+                  size={isMobile ? 38 : 44}
                 >
                   {order.tableName}
                 </Avatar>
-                <div>
-                  <Text strong style={{ fontSize: 16 }}>{order.tableName}</Text>
-                  <br />
-                  <Text type="secondary" style={{ fontSize: 13 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>{order.tableName}</Text>
+                    {isMobile && (
+                      <Tag
+                        icon={config.icon}
+                        color={config.color}
+                        style={{
+                          borderRadius: 20,
+                          padding: '2px 10px',
+                          fontSize: 11,
+                          fontWeight: 600,
+                          margin: 0,
+                        }}
+                      >
+                        {config.text}
+                      </Tag>
+                    )}
+                  </div>
+                  <Text type="secondary" style={{ fontSize: isMobile ? 12 : 13 }}>
                     {order.id} • {order.createdAt}
                   </Text>
                 </div>
               </div>
 
-              <div style={{ marginBottom: 12 }}>
-                {order.items.slice(0, 3).map(item => (
+              <div style={{ marginBottom: isMobile ? 10 : 12 }}>
+                {order.items.slice(0, isMobile ? 2 : 3).map(item => (
                   <Tag
                     key={item.id}
                     color={itemStatusConfig[item.status].color}
-                    style={{ marginBottom: 4, borderRadius: 20 }}
+                    style={{ marginBottom: 4, borderRadius: 20, fontSize: isMobile ? 11 : 12 }}
                   >
                     {item.name} x{item.quantity}
                   </Tag>
                 ))}
-                {order.items.length > 3 && (
-                  <Tag style={{ borderRadius: 20 }}>+{order.items.length - 3} món khác</Tag>
+                {order.items.length > (isMobile ? 2 : 3) && (
+                  <Tag style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12 }}>+{order.items.length - (isMobile ? 2 : 3)} món khác</Tag>
                 )}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <Text strong style={{ color: '#FF7A00', fontSize: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, flexWrap: 'wrap' }}>
+                <Text strong style={{ color: '#FF7A00', fontSize: isMobile ? 15 : 16 }}>
                   {order.total.toLocaleString('vi-VN')}đ
                 </Text>
                 {pendingItems > 0 && (
-                  <Badge count={`${pendingItems} món chưa xong`} style={{ backgroundColor: '#faad14' }} />
+                  <Badge 
+                    count={isMobile ? `${pendingItems} chưa xong` : `${pendingItems} món chưa xong`} 
+                    style={{ backgroundColor: '#faad14', fontSize: isMobile ? 10 : 12 }} 
+                  />
                 )}
               </div>
             </div>
 
-            <Tag
-              icon={config.icon}
-              color={config.color}
-              style={{
-                borderRadius: 20,
-                padding: '6px 14px',
-                fontSize: 13,
-                fontWeight: 600,
-              }}
-            >
-              {config.text}
-            </Tag>
+            {!isMobile && (
+              <Tag
+                icon={config.icon}
+                color={config.color}
+                style={{
+                  borderRadius: 20,
+                  padding: '6px 14px',
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                {config.text}
+              </Tag>
+            )}
           </div>
         </Card>
       </motion.div>
@@ -367,93 +398,96 @@ export default function OrderManagement() {
   return (
     <div>
       {/* Header Stats */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={8}>
+      <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
+        <Col xs={8} sm={8}>
           <Card
             style={{
-              borderRadius: 16,
+              borderRadius: isMobile ? 12 : 16,
               background: '#fff7e6',
               border: '1px solid #ffd591',
             }}
+            styles={{ body: { padding: isMobile ? 12 : 24 } }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, flexDirection: isMobile ? 'column' : 'row' }}>
               <div
                 style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 14,
+                  width: isMobile ? 40 : 52,
+                  height: isMobile ? 40 : 52,
+                  borderRadius: isMobile ? 10 : 14,
                   background: '#faad14',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <ExclamationCircleOutlined style={{ fontSize: 24, color: '#fff' }} />
+                <ExclamationCircleOutlined style={{ fontSize: isMobile ? 18 : 24, color: '#fff' }} />
               </div>
-              <div>
-                <Text style={{ fontSize: 28, fontWeight: 700 }}>{stats.pending}</Text>
+              <div style={{ textAlign: isMobile ? 'center' : 'left' }}>
+                <Text style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700 }}>{stats.pending}</Text>
                 <br />
-                <Text type="secondary">Chờ xử lý</Text>
+                <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Chờ xử lý</Text>
               </div>
             </div>
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
+        <Col xs={8} sm={8}>
           <Card
             style={{
-              borderRadius: 16,
+              borderRadius: isMobile ? 12 : 16,
               background: '#e6f7ff',
               border: '1px solid #91d5ff',
             }}
+            styles={{ body: { padding: isMobile ? 12 : 24 } }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, flexDirection: isMobile ? 'column' : 'row' }}>
               <div
                 style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 14,
+                  width: isMobile ? 40 : 52,
+                  height: isMobile ? 40 : 52,
+                  borderRadius: isMobile ? 10 : 14,
                   background: '#1890ff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <SyncOutlined spin style={{ fontSize: 24, color: '#fff' }} />
+                <SyncOutlined spin style={{ fontSize: isMobile ? 18 : 24, color: '#fff' }} />
               </div>
-              <div>
-                <Text style={{ fontSize: 28, fontWeight: 700 }}>{stats.preparing}</Text>
+              <div style={{ textAlign: isMobile ? 'center' : 'left' }}>
+                <Text style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700 }}>{stats.preparing}</Text>
                 <br />
-                <Text type="secondary">Đang nấu</Text>
+                <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Đang nấu</Text>
               </div>
             </div>
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
+        <Col xs={8} sm={8}>
           <Card
             style={{
-              borderRadius: 16,
+              borderRadius: isMobile ? 12 : 16,
               background: '#f6ffed',
               border: '1px solid #b7eb8f',
             }}
+            styles={{ body: { padding: isMobile ? 12 : 24 } }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, flexDirection: isMobile ? 'column' : 'row' }}>
               <div
                 style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 14,
+                  width: isMobile ? 40 : 52,
+                  height: isMobile ? 40 : 52,
+                  borderRadius: isMobile ? 10 : 14,
                   background: '#52c41a',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <CheckCircleOutlined style={{ fontSize: 24, color: '#fff' }} />
+                <CheckCircleOutlined style={{ fontSize: isMobile ? 18 : 24, color: '#fff' }} />
               </div>
-              <div>
-                <Text style={{ fontSize: 28, fontWeight: 700 }}>{stats.ready}</Text>
+              <div style={{ textAlign: isMobile ? 'center' : 'left' }}>
+                <Text style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700 }}>{stats.ready}</Text>
                 <br />
-                <Text type="secondary">Sẵn sàng phục vụ</Text>
+                <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Sẵn sàng</Text>
               </div>
             </div>
           </Card>
@@ -463,38 +497,39 @@ export default function OrderManagement() {
       {/* Search & Filter */}
       <Card
         style={{
-          borderRadius: 20,
+          borderRadius: isMobile ? 12 : 20,
           border: '1px solid #f0f0f0',
-          marginBottom: 24,
+          marginBottom: isMobile ? 16 : 24,
         }}
-        styles={{ body: { padding: '16px 24px' } }}
+        styles={{ body: { padding: isMobile ? 12 : '16px 24px' } }}
       >
-        <Row gutter={16} align="middle">
-          <Col flex="1">
+        <Row gutter={[12, 12]} align="middle">
+          <Col xs={24} sm={16} md={18}>
             <Search
-              placeholder="Tìm theo mã order hoặc tên bàn..."
+              placeholder={isMobile ? "Tìm order..." : "Tìm theo mã order hoặc tên bàn..."}
               allowClear
-              size="large"
-              style={{ maxWidth: 400 }}
+              size={isMobile ? 'middle' : 'large'}
+              style={{ width: '100%' }}
               prefix={<SearchOutlined style={{ color: '#bbb' }} />}
               onChange={e => setSearchText(e.target.value)}
             />
           </Col>
-          <Col>
+          <Col xs={24} sm={8} md={6}>
             <Button
               type="primary"
-              size="large"
+              size={isMobile ? 'middle' : 'large'}
               icon={<PlusOutlined />}
               onClick={() => setIsNewOrderModalOpen(true)}
+              block={isMobile}
               style={{
                 borderRadius: 12,
-                height: 48,
+                height: isMobile ? 40 : 48,
                 fontWeight: 600,
                 background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
                 border: 'none',
               }}
             >
-              Tạo Order mới
+              {isMobile ? 'Tạo Order' : 'Tạo Order mới'}
             </Button>
           </Col>
         </Row>
@@ -503,14 +538,21 @@ export default function OrderManagement() {
       {/* Order List with Tabs */}
       <Card
         style={{
-          borderRadius: 20,
+          borderRadius: isMobile ? 12 : 20,
           border: '1px solid #f0f0f0',
         }}
+        styles={{ body: { padding: isMobile ? 12 : 24 } }}
       >
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
-          items={[
+          size={isMobile ? 'small' : 'middle'}
+          items={isMobile ? [
+            { key: 'all', label: `Tất cả (${orders.length})` },
+            { key: 'pending', label: `Chờ (${stats.pending})` },
+            { key: 'preparing', label: `Nấu (${stats.preparing})` },
+            { key: 'ready', label: `Sẵn (${stats.ready})` },
+          ] : [
             { key: 'all', label: `Tất cả (${orders.length})` },
             { key: 'pending', label: `Chờ xử lý (${stats.pending})` },
             { key: 'preparing', label: `Đang nấu (${stats.preparing})` },
@@ -538,8 +580,9 @@ export default function OrderManagement() {
         open={isDetailModalOpen}
         onCancel={() => setIsDetailModalOpen(false)}
         footer={null}
-        width={600}
+        width={isMobile ? '95%' : 600}
         centered
+        styles={{ body: { padding: isMobile ? 16 : 24 } }}
       >
         {selectedOrder && (
           <div>
@@ -549,27 +592,27 @@ export default function OrderManagement() {
               style={{
                 borderRadius: 12,
                 background: '#fafafa',
-                marginBottom: 20,
+                marginBottom: isMobile ? 16 : 20,
               }}
             >
-              <Row gutter={16}>
-                <Col span={8}>
-                  <Text type="secondary">Bàn</Text>
+              <Row gutter={[12, 12]}>
+                <Col xs={8}>
+                  <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Bàn</Text>
                   <br />
-                  <Text strong style={{ fontSize: 16 }}>{selectedOrder.tableName}</Text>
+                  <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>{selectedOrder.tableName}</Text>
                 </Col>
-                <Col span={8}>
-                  <Text type="secondary">Thời gian</Text>
+                <Col xs={8}>
+                  <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Thời gian</Text>
                   <br />
-                  <Text strong style={{ fontSize: 16 }}>{selectedOrder.createdAt}</Text>
+                  <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>{selectedOrder.createdAt}</Text>
                 </Col>
-                <Col span={8}>
-                  <Text type="secondary">Trạng thái</Text>
+                <Col xs={8}>
+                  <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Trạng thái</Text>
                   <br />
                   <Tag
                     icon={statusConfig[selectedOrder.status].icon}
                     color={statusConfig[selectedOrder.status].color}
-                    style={{ marginTop: 4 }}
+                    style={{ marginTop: 4, fontSize: isMobile ? 10 : 12 }}
                   >
                     {statusConfig[selectedOrder.status].text}
                   </Tag>
@@ -581,6 +624,7 @@ export default function OrderManagement() {
             <List
               itemLayout="horizontal"
               dataSource={selectedOrder.items}
+              size={isMobile ? 'small' : 'default'}
               renderItem={item => (
                 <List.Item
                   actions={[
@@ -588,7 +632,7 @@ export default function OrderManagement() {
                       key="status"
                       value={item.status}
                       size="small"
-                      style={{ width: 110 }}
+                      style={{ width: isMobile ? 90 : 110 }}
                       onChange={(value) => handleUpdateItemStatus(selectedOrder.id, item.id, value)}
                       options={[
                         { value: 'pending', label: 'Chờ' },
@@ -601,13 +645,13 @@ export default function OrderManagement() {
                 >
                   <List.Item.Meta
                     title={
-                      <Space>
-                        <Text strong>{item.name}</Text>
-                        <Tag>{item.quantity}x</Tag>
+                      <Space size={isMobile ? 4 : 8}>
+                        <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>{item.name}</Text>
+                        <Tag style={{ fontSize: isMobile ? 10 : 12 }}>{item.quantity}x</Tag>
                       </Space>
                     }
                     description={
-                      <Text type="secondary">
+                      <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>
                         {(item.price * item.quantity).toLocaleString('vi-VN')}đ
                       </Text>
                     }
@@ -616,43 +660,43 @@ export default function OrderManagement() {
               )}
             />
 
-            <Divider />
+            <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
 
             {/* Total */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 16 }}>Tổng cộng</Text>
-              <Text strong style={{ fontSize: 24, color: '#FF7A00' }}>
+              <Text style={{ fontSize: isMobile ? 14 : 16 }}>Tổng cộng</Text>
+              <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }}>
                 {selectedOrder.total.toLocaleString('vi-VN')}đ
               </Text>
             </div>
 
             {/* Actions */}
-            <Row gutter={12} style={{ marginTop: 24 }}>
-              <Col span={8}>
+            <Row gutter={[8, 8]} style={{ marginTop: isMobile ? 16 : 24 }}>
+              <Col xs={12} sm={8}>
                 <Button
                   icon={<PrinterOutlined />}
-                  size="large"
+                  size={isMobile ? 'middle' : 'large'}
                   block
                   style={{ borderRadius: 12 }}
                 >
-                  In hóa đơn
+                  {isMobile ? 'In' : 'In hóa đơn'}
                 </Button>
               </Col>
-              <Col span={8}>
+              <Col xs={12} sm={8}>
                 <Button
                   icon={<PlusOutlined />}
-                  size="large"
+                  size={isMobile ? 'middle' : 'large'}
                   block
                   style={{ borderRadius: 12 }}
                 >
                   Thêm món
                 </Button>
               </Col>
-              <Col span={8}>
+              <Col xs={24} sm={8}>
                 <Button
                   type="primary"
                   icon={<SendOutlined />}
-                  size="large"
+                  size={isMobile ? 'middle' : 'large'}
                   block
                   style={{
                     borderRadius: 12,
@@ -683,16 +727,17 @@ export default function OrderManagement() {
           setSelectedTable('');
         }}
         footer={null}
-        width={900}
+        width={isMobile ? '95%' : 900}
         centered
+        styles={{ body: { padding: isMobile ? 16 : 24, maxHeight: isMobile ? '80vh' : 'auto', overflowY: 'auto' } }}
       >
-        <Row gutter={24}>
+        <Row gutter={[16, 16]}>
           {/* Menu */}
-          <Col span={14}>
+          <Col xs={24} md={14}>
             <div style={{ marginBottom: 16 }}>
               <Select
                 placeholder="Chọn bàn"
-                size="large"
+                size={isMobile ? 'middle' : 'large'}
                 style={{ width: '100%' }}
                 value={selectedTable || undefined}
                 onChange={setSelectedTable}
@@ -708,37 +753,39 @@ export default function OrderManagement() {
             <Tabs
               activeKey={activeMenuCategory}
               onChange={setActiveMenuCategory}
+              size={isMobile ? 'small' : 'middle'}
               items={menuCategories.map(cat => ({
                 key: cat.id,
                 label: (
-                  <Space>
+                  <Space size={isMobile ? 4 : 8}>
                     {cat.icon}
-                    {cat.name}
+                    {!isMobile && cat.name}
                   </Space>
                 ),
               }))}
             />
 
-            <Row gutter={[12, 12]}>
+            <Row gutter={[isMobile ? 8 : 12, isMobile ? 8 : 12]}>
               {menuCategories
                 .find(c => c.id === activeMenuCategory)
                 ?.items.map(item => (
-                  <Col span={12} key={item.id}>
+                  <Col xs={24} sm={12} key={item.id}>
                     <Card
                       hoverable
                       size="small"
-                      style={{ borderRadius: 12 }}
+                      style={{ borderRadius: isMobile ? 10 : 12 }}
+                      styles={{ body: { padding: isMobile ? 10 : 12 } }}
                       onClick={() => addToCart(item)}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <span style={{ fontSize: 32 }}>{item.image}</span>
-                        <div style={{ flex: 1 }}>
-                          <Text strong style={{ display: 'block' }}>{item.name}</Text>
-                          <Text style={{ color: '#FF7A00' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
+                        <span style={{ fontSize: isMobile ? 24 : 32 }}>{item.image}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <Text strong style={{ display: 'block', fontSize: isMobile ? 13 : 14 }}>{item.name}</Text>
+                          <Text style={{ color: '#FF7A00', fontSize: isMobile ? 12 : 14 }}>
                             {item.price.toLocaleString('vi-VN')}đ
                           </Text>
                         </div>
-                        <PlusOutlined style={{ color: '#FF7A00' }} />
+                        <PlusOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 14 : 16 }} />
                       </div>
                     </Card>
                   </Col>
@@ -747,19 +794,19 @@ export default function OrderManagement() {
           </Col>
 
           {/* Cart */}
-          <Col span={10}>
+          <Col xs={24} md={10}>
             <Card
               title={
-                <Space>
+                <Space size={isMobile ? 8 : 12}>
                   <ShoppingCartOutlined />
-                  <span>Giỏ hàng ({cart.length})</span>
+                  <span style={{ fontSize: isMobile ? 14 : 16 }}>Giỏ hàng ({cart.length})</span>
                 </Space>
               }
               style={{
-                borderRadius: 16,
+                borderRadius: isMobile ? 12 : 16,
                 background: '#fafafa',
-                height: '100%',
               }}
+              styles={{ body: { padding: isMobile ? 12 : 24 } }}
             >
               {cart.length > 0 ? (
                 <>
@@ -768,6 +815,7 @@ export default function OrderManagement() {
                     dataSource={cart}
                     renderItem={c => (
                       <List.Item
+                        style={{ padding: isMobile ? '8px 0' : '12px 0' }}
                         actions={[
                           <Button
                             key="minus"
@@ -776,7 +824,7 @@ export default function OrderManagement() {
                             icon={<MinusOutlined />}
                             onClick={() => updateCartQuantity(c.item.id, -1)}
                           />,
-                          <span key="qty" style={{ minWidth: 20, textAlign: 'center' }}>
+                          <span key="qty" style={{ minWidth: 20, textAlign: 'center', fontSize: isMobile ? 13 : 14 }}>
                             {c.quantity}
                           </span>,
                           <Button
@@ -789,31 +837,31 @@ export default function OrderManagement() {
                         ]}
                       >
                         <List.Item.Meta
-                          avatar={<span style={{ fontSize: 24 }}>{c.item.image}</span>}
-                          title={c.item.name}
-                          description={`${(c.item.price * c.quantity).toLocaleString('vi-VN')}đ`}
+                          avatar={<span style={{ fontSize: isMobile ? 20 : 24 }}>{c.item.image}</span>}
+                          title={<span style={{ fontSize: isMobile ? 13 : 14 }}>{c.item.name}</span>}
+                          description={<span style={{ fontSize: isMobile ? 12 : 14 }}>{`${(c.item.price * c.quantity).toLocaleString('vi-VN')}đ`}</span>}
                         />
                       </List.Item>
                     )}
                   />
 
-                  <Divider />
+                  <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <Text strong>Tổng cộng</Text>
-                    <Text strong style={{ fontSize: 18, color: '#FF7A00' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isMobile ? 12 : 16 }}>
+                    <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>Tổng cộng</Text>
+                    <Text strong style={{ fontSize: isMobile ? 16 : 18, color: '#FF7A00' }}>
                       {cartTotal.toLocaleString('vi-VN')}đ
                     </Text>
                   </div>
 
                   <Button
                     type="primary"
-                    size="large"
+                    size={isMobile ? 'middle' : 'large'}
                     block
                     onClick={handleCreateOrder}
                     style={{
                       borderRadius: 12,
-                      height: 48,
+                      height: isMobile ? 44 : 48,
                       fontWeight: 600,
                       background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
                       border: 'none',

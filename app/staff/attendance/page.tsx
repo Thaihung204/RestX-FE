@@ -74,6 +74,15 @@ export default function AttendancePage() {
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [actionType, setActionType] = useState<'checkIn' | 'checkOut' | 'breakStart' | 'breakEnd'>('checkIn');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check mobile viewport
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Update clock every second
   useEffect(() => {
@@ -138,69 +147,73 @@ export default function AttendancePage() {
     setIsConfirmModalOpen(false);
   };
 
-  const columns = [
-    {
-      title: 'Ngày',
-      dataIndex: 'date',
-      key: 'date',
-      render: (date: string) => {
-        const d = new Date(date);
-        return (
-          <div>
-            <Text strong>{d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {d.toLocaleDateString('vi-VN', { weekday: 'short' })}
-            </Text>
-          </div>
-        );
+  const getColumns = () => {
+    const allColumns = [
+      {
+        title: 'Ngày',
+        dataIndex: 'date',
+        key: 'date',
+        render: (date: string) => {
+          const d = new Date(date);
+          return (
+            <div>
+              <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>{d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</Text>
+              <br />
+              <Text type="secondary" style={{ fontSize: isMobile ? 10 : 12 }}>
+                {d.toLocaleDateString('vi-VN', { weekday: 'short' })}
+              </Text>
+            </div>
+          );
+        },
       },
-    },
-    {
-      title: 'Giờ vào',
-      dataIndex: 'checkIn',
-      key: 'checkIn',
-      render: (time: string | null) =>
-        time ? (
-          <Tag icon={<LoginOutlined />} color="green">
-            {time}
-          </Tag>
-        ) : (
-          <Text type="secondary">--:--</Text>
+      {
+        title: 'Giờ vào',
+        dataIndex: 'checkIn',
+        key: 'checkIn',
+        render: (time: string | null) =>
+          time ? (
+            <Tag icon={<LoginOutlined />} color="green" style={{ fontSize: isMobile ? 10 : 12 }}>
+              {time}
+            </Tag>
+          ) : (
+            <Text type="secondary">--:--</Text>
+          ),
+      },
+      {
+        title: 'Giờ ra',
+        dataIndex: 'checkOut',
+        key: 'checkOut',
+        render: (time: string | null) =>
+          time ? (
+            <Tag icon={<LogoutOutlined />} color="blue" style={{ fontSize: isMobile ? 10 : 12 }}>
+              {time}
+            </Tag>
+          ) : (
+            <Text type="secondary">--:--</Text>
+          ),
+      },
+      {
+        title: 'Số giờ',
+        dataIndex: 'totalHours',
+        key: 'totalHours',
+        hidden: isMobile,
+        render: (hours: number) => (
+          <Text strong style={{ color: hours >= 8 ? '#52c41a' : '#faad14', fontSize: isMobile ? 12 : 14 }}>
+            {hours > 0 ? `${hours.toFixed(1)}h` : '--'}
+          </Text>
         ),
-    },
-    {
-      title: 'Giờ ra',
-      dataIndex: 'checkOut',
-      key: 'checkOut',
-      render: (time: string | null) =>
-        time ? (
-          <Tag icon={<LogoutOutlined />} color="blue">
-            {time}
-          </Tag>
-        ) : (
-          <Text type="secondary">--:--</Text>
+      },
+      {
+        title: 'Trạng thái',
+        dataIndex: 'status',
+        key: 'status',
+        render: (status: string) => (
+          <Tag color={statusConfig[status].color} style={{ fontSize: isMobile ? 10 : 12 }}>{statusConfig[status].text}</Tag>
         ),
-    },
-    {
-      title: 'Số giờ',
-      dataIndex: 'totalHours',
-      key: 'totalHours',
-      render: (hours: number) => (
-        <Text strong style={{ color: hours >= 8 ? '#52c41a' : '#faad14' }}>
-          {hours > 0 ? `${hours.toFixed(1)}h` : '--'}
-        </Text>
-      ),
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={statusConfig[status].color}>{statusConfig[status].text}</Tag>
-      ),
-    },
-  ];
+      },
+    ];
+    return allColumns.filter(col => !col.hidden);
+  };
 
   // Monthly stats
   const monthlyStats = {
@@ -242,26 +255,27 @@ export default function AttendancePage() {
       >
         <Card
           style={{
-            borderRadius: 24,
+            borderRadius: isMobile ? 16 : 24,
             background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
             border: 'none',
-            marginBottom: 24,
+            marginBottom: isMobile ? 16 : 24,
             overflow: 'hidden',
           }}
+          styles={{ body: { padding: isMobile ? 16 : 24 } }}
         >
-          <Row gutter={[32, 32]} align="middle">
+          <Row gutter={[isMobile ? 16 : 32, isMobile ? 16 : 32]} align="middle">
             <Col xs={24} md={12}>
-              <div style={{ padding: '20px 0' }}>
-                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>
+              <div style={{ padding: isMobile ? '10px 0' : '20px 0', textAlign: isMobile ? 'center' : 'left' }}>
+                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 12 : 14 }}>
                   {formatDate(currentTime)}
                 </Text>
                 <div
                   style={{
-                    fontSize: 72,
+                    fontSize: isMobile ? 48 : 72,
                     fontWeight: 700,
                     color: '#fff',
                     fontFamily: 'monospace',
-                    letterSpacing: 4,
+                    letterSpacing: isMobile ? 2 : 4,
                     marginTop: 8,
                   }}
                 >
@@ -269,29 +283,29 @@ export default function AttendancePage() {
                 </div>
                 
                 {isCheckedIn && (
-                  <div style={{ marginTop: 16 }}>
-                    <Space size={24}>
+                  <div style={{ marginTop: isMobile ? 12 : 16 }}>
+                    <Space size={isMobile ? 16 : 24} wrap>
                       <div>
-                        <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>
+                        <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 11 : 12 }}>
                           Giờ vào
                         </Text>
                         <br />
-                        <Text style={{ color: '#52c41a', fontSize: 18, fontWeight: 600 }}>
+                        <Text style={{ color: '#52c41a', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
                           {checkInTime}
                         </Text>
                       </div>
                       <div>
-                        <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>
+                        <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 11 : 12 }}>
                           Đã làm
                         </Text>
                         <br />
-                        <Text style={{ color: '#FF7A00', fontSize: 18, fontWeight: 600 }}>
+                        <Text style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
                           {calculateWorkingHours().toFixed(1)}h
                         </Text>
                       </div>
                       {isOnBreak && (
-                        <Tag color="orange" style={{ borderRadius: 20 }}>
-                          <CoffeeOutlined /> Đang nghỉ giải lao
+                        <Tag color="orange" style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12 }}>
+                          <CoffeeOutlined /> {isMobile ? 'Nghỉ' : 'Đang nghỉ giải lao'}
                         </Tag>
                       )}
                     </Space>
@@ -309,10 +323,10 @@ export default function AttendancePage() {
                     icon={<LoginOutlined />}
                     onClick={() => handleAction('checkIn')}
                     style={{
-                      width: 200,
-                      height: 200,
+                      width: isMobile ? 140 : 200,
+                      height: isMobile ? 140 : 200,
                       borderRadius: '50%',
-                      fontSize: 24,
+                      fontSize: isMobile ? 18 : 24,
                       fontWeight: 700,
                       background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
                       border: 'none',
@@ -324,11 +338,11 @@ export default function AttendancePage() {
                       gap: 8,
                     }}
                   >
-                    <LoginOutlined style={{ fontSize: 48 }} />
+                    <LoginOutlined style={{ fontSize: isMobile ? 36 : 48 }} />
                     <span>CHECK IN</span>
                   </Button>
                 ) : (
-                  <Flex vertical gap={16} align="center">
+                  <Flex vertical gap={isMobile ? 12 : 16} align="center">
                     <Button
                       type="primary"
                       danger
@@ -336,10 +350,10 @@ export default function AttendancePage() {
                       icon={<LogoutOutlined />}
                       onClick={() => handleAction('checkOut')}
                       style={{
-                        width: 160,
-                        height: 160,
+                        width: isMobile ? 120 : 160,
+                        height: isMobile ? 120 : 160,
                         borderRadius: '50%',
-                        fontSize: 20,
+                        fontSize: isMobile ? 16 : 20,
                         fontWeight: 700,
                         display: 'flex',
                         flexDirection: 'column',
@@ -349,21 +363,22 @@ export default function AttendancePage() {
                         boxShadow: '0 8px 32px rgba(255, 77, 79, 0.4)',
                       }}
                     >
-                      <LogoutOutlined style={{ fontSize: 36 }} />
+                      <LogoutOutlined style={{ fontSize: isMobile ? 28 : 36 }} />
                       <span>CHECK OUT</span>
                     </Button>
                     
                     <Button
-                      size="large"
+                      size={isMobile ? 'middle' : 'large'}
                       icon={isOnBreak ? <CheckCircleOutlined /> : <CoffeeOutlined />}
                       onClick={() => handleAction(isOnBreak ? 'breakEnd' : 'breakStart')}
                       style={{
                         borderRadius: 12,
-                        height: 48,
+                        height: isMobile ? 40 : 48,
                         background: isOnBreak ? '#52c41a' : '#faad14',
                         color: '#fff',
                         border: 'none',
                         fontWeight: 600,
+                        fontSize: isMobile ? 13 : 14,
                       }}
                     >
                       {isOnBreak ? 'Kết thúc nghỉ' : 'Nghỉ giải lao'}
@@ -377,71 +392,73 @@ export default function AttendancePage() {
       </motion.div>
 
       {/* Stats Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
         <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: 16, textAlign: 'center' }}>
+          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
             <Statistic
-              title="Ngày công"
+              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Ngày công</span>}
               value={monthlyStats.workedDays}
               suffix={`/${monthlyStats.totalDays}`}
-              valueStyle={{ color: '#52c41a', fontWeight: 700 }}
+              valueStyle={{ color: '#52c41a', fontWeight: 700, fontSize: isMobile ? 20 : 24 }}
               prefix={<CalendarOutlined />}
             />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: 16, textAlign: 'center' }}>
+          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
             <Statistic
-              title="Đi muộn"
+              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Đi muộn</span>}
               value={monthlyStats.lateDays}
               suffix="ngày"
-              valueStyle={{ color: '#faad14', fontWeight: 700 }}
+              valueStyle={{ color: '#faad14', fontWeight: 700, fontSize: isMobile ? 20 : 24 }}
               prefix={<ClockCircleOutlined />}
             />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: 16, textAlign: 'center' }}>
+          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
             <Statistic
-              title="Nghỉ phép"
+              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Nghỉ phép</span>}
               value={monthlyStats.leaveDays}
               suffix="ngày"
-              valueStyle={{ color: '#1890ff', fontWeight: 700 }}
+              valueStyle={{ color: '#1890ff', fontWeight: 700, fontSize: isMobile ? 20 : 24 }}
               prefix={<HistoryOutlined />}
             />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: 16, textAlign: 'center' }}>
+          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
             <Statistic
-              title="Tổng giờ làm"
+              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Tổng giờ làm</span>}
               value={monthlyStats.totalHours}
               suffix="h"
-              valueStyle={{ color: '#FF7A00', fontWeight: 700 }}
+              valueStyle={{ color: '#FF7A00', fontWeight: 700, fontSize: isMobile ? 20 : 24 }}
               prefix={<FieldTimeOutlined />}
             />
           </Card>
         </Col>
       </Row>
 
-      <Row gutter={[24, 24]}>
+      <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]}>
         {/* Attendance History */}
         <Col xs={24} lg={14}>
           <Card
             title={
               <Space>
-                <HistoryOutlined style={{ color: '#FF7A00' }} />
-                <span>Lịch sử chấm công</span>
+                <HistoryOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18 }} />
+                <span style={{ fontSize: isMobile ? 14 : 16 }}>Lịch sử chấm công</span>
               </Space>
             }
-            style={{ borderRadius: 16 }}
+            style={{ borderRadius: isMobile ? 12 : 16 }}
+            styles={{ body: { padding: isMobile ? 8 : 24 } }}
           >
             <Table
-              columns={columns}
+              columns={getColumns()}
               dataSource={attendanceHistory}
               rowKey="id"
-              pagination={{ pageSize: 7 }}
-              size="middle"
+              pagination={{ pageSize: isMobile ? 5 : 7 }}
+              size={isMobile ? 'small' : 'middle'}
+              scroll={isMobile ? { x: 350 } : undefined}
             />
           </Card>
         </Col>
@@ -451,16 +468,17 @@ export default function AttendancePage() {
           <Card
             title={
               <Space>
-                <TrophyOutlined style={{ color: '#FF7A00' }} />
-                <span>Tiến độ tháng này</span>
+                <TrophyOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18 }} />
+                <span style={{ fontSize: isMobile ? 14 : 16 }}>Tiến độ tháng này</span>
               </Space>
             }
-            style={{ borderRadius: 16, marginBottom: 24 }}
+            style={{ borderRadius: isMobile ? 12 : 16, marginBottom: isMobile ? 12 : 24 }}
+            styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
-            <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: isMobile ? 16 : 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Ngày công</Text>
-                <Text strong>
+                <Text style={{ fontSize: isMobile ? 13 : 14 }}>Ngày công</Text>
+                <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>
                   {monthlyStats.workedDays}/{monthlyStats.totalDays}
                 </Text>
               </div>
@@ -471,10 +489,10 @@ export default function AttendancePage() {
               />
             </div>
 
-            <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: isMobile ? 16 : 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text>Giờ làm việc</Text>
-                <Text strong>
+                <Text style={{ fontSize: isMobile ? 13 : 14 }}>Giờ làm việc</Text>
+                <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>
                   {monthlyStats.totalHours}/{monthlyStats.totalDays * 8}h
                 </Text>
               </div>
@@ -485,10 +503,10 @@ export default function AttendancePage() {
               />
             </div>
 
-            <Divider />
+            <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
 
             <div>
-              <Text strong style={{ display: 'block', marginBottom: 12 }}>
+              <Text strong style={{ display: 'block', marginBottom: isMobile ? 8 : 12, fontSize: isMobile ? 13 : 14 }}>
                 Hôm nay
               </Text>
               <Timeline
@@ -497,7 +515,7 @@ export default function AttendancePage() {
                     color: 'green',
                     children: (
                       <>
-                        <Text strong>07:58</Text> - Check in
+                        <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>07:58</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- Check in</Text>
                       </>
                     ),
                   },
@@ -505,7 +523,7 @@ export default function AttendancePage() {
                     color: 'orange',
                     children: (
                       <>
-                        <Text strong>12:00</Text> - Nghỉ trưa
+                        <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>12:00</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- Nghỉ trưa</Text>
                       </>
                     ),
                   },
@@ -513,7 +531,7 @@ export default function AttendancePage() {
                     color: 'green',
                     children: (
                       <>
-                        <Text strong>13:00</Text> - Tiếp tục làm việc
+                        <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>13:00</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- Tiếp tục làm việc</Text>
                       </>
                     ),
                   },
@@ -521,7 +539,7 @@ export default function AttendancePage() {
                     color: 'gray',
                     children: (
                       <>
-                        <Text type="secondary">Đang làm việc...</Text>
+                        <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>Đang làm việc...</Text>
                       </>
                     ),
                   },
@@ -533,14 +551,15 @@ export default function AttendancePage() {
           {/* Quick Info */}
           <Card
             style={{
-              borderRadius: 16,
+              borderRadius: isMobile ? 12 : 16,
               background: 'linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%)',
               border: '1px solid #ffd591',
             }}
+            styles={{ body: { padding: isMobile ? 14 : 24 } }}
           >
-            <Space>
+            <Space size={isMobile ? 10 : 16}>
               <Avatar
-                size={48}
+                size={isMobile ? 40 : 48}
                 style={{
                   background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
                 }}
@@ -548,9 +567,9 @@ export default function AttendancePage() {
                 <UserOutlined />
               </Avatar>
               <div>
-                <Text strong style={{ fontSize: 16 }}>Nguyễn Văn A</Text>
+                <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>Nguyễn Văn A</Text>
                 <br />
-                <Text type="secondary">Nhân viên phục vụ • Ca sáng (8:00 - 17:00)</Text>
+                <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Nhân viên phục vụ • Ca sáng (8:00 - 17:00)</Text>
               </div>
             </Space>
           </Card>
@@ -566,12 +585,13 @@ export default function AttendancePage() {
         okText="Xác nhận"
         cancelText="Hủy"
         centered
+        width={isMobile ? '90%' : 400}
       >
-        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <div style={{ textAlign: 'center', padding: isMobile ? '12px 0' : '20px 0' }}>
           <div
             style={{
-              width: 80,
-              height: 80,
+              width: isMobile ? 64 : 80,
+              height: isMobile ? 64 : 80,
               borderRadius: '50%',
               background:
                 actionType === 'checkOut'
@@ -585,18 +605,18 @@ export default function AttendancePage() {
               margin: '0 auto 16px',
             }}
           >
-            {actionType === 'checkIn' && <LoginOutlined style={{ fontSize: 36, color: '#fff' }} />}
-            {actionType === 'checkOut' && <LogoutOutlined style={{ fontSize: 36, color: '#fff' }} />}
-            {actionType === 'breakStart' && <CoffeeOutlined style={{ fontSize: 36, color: '#fff' }} />}
-            {actionType === 'breakEnd' && <CheckCircleOutlined style={{ fontSize: 36, color: '#fff' }} />}
+            {actionType === 'checkIn' && <LoginOutlined style={{ fontSize: isMobile ? 28 : 36, color: '#fff' }} />}
+            {actionType === 'checkOut' && <LogoutOutlined style={{ fontSize: isMobile ? 28 : 36, color: '#fff' }} />}
+            {actionType === 'breakStart' && <CoffeeOutlined style={{ fontSize: isMobile ? 28 : 36, color: '#fff' }} />}
+            {actionType === 'breakEnd' && <CheckCircleOutlined style={{ fontSize: isMobile ? 28 : 36, color: '#fff' }} />}
           </div>
-          <Title level={4} style={{ margin: 0 }}>
+          <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>
             {actionType === 'checkIn' && 'Xác nhận CHECK IN?'}
             {actionType === 'checkOut' && 'Xác nhận CHECK OUT?'}
             {actionType === 'breakStart' && 'Bắt đầu nghỉ giải lao?'}
             {actionType === 'breakEnd' && 'Kết thúc nghỉ giải lao?'}
           </Title>
-          <Text type="secondary">
+          <Text type="secondary" style={{ fontSize: isMobile ? 13 : 14 }}>
             Thời gian: {formatTime(currentTime)}
           </Text>
         </div>
