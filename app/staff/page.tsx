@@ -15,9 +15,13 @@ import {
   ReloadOutlined,
   BellOutlined,
   FireOutlined,
+  ThunderboltOutlined,
+  CalendarOutlined,
+  SmileOutlined,
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import PageTransition from '../components/PageTransition';
 
 const { Title, Text } = Typography;
 
@@ -247,11 +251,12 @@ export default function StaffDashboard() {
     return 'Chào buổi tối';
   };
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <PageTransition minimumLoadingTime={1500}>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
       {/* Welcome Section */}
       <motion.div variants={itemVariants}>
         <Card
@@ -273,7 +278,7 @@ export default function StaffDashboard() {
                   transition={{ delay: 0.2 }}
                 >
                   <Title level={isMobile ? 4 : 3} style={{ color: '#fff', margin: 0, marginBottom: 8 }}>
-                    {getGreeting()}, Nguyễn Văn A! 👋
+                    {getGreeting()}, Nguyễn Văn A! <SmileOutlined style={{ marginLeft: 8 }} />
                   </Title>
                   <Text style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: isMobile ? 14 : 16 }}>
                     Bạn đang có{' '}
@@ -334,20 +339,22 @@ export default function StaffDashboard() {
                     <Link href="/staff/attendance" style={{ display: 'inline-block' }}>
                       <Button
                         size={isMobile ? 'middle' : 'large'}
+                        icon={<CalendarOutlined />}
                         style={{
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          border: 'none',
+                          background: 'rgba(255, 255, 255, 0.15)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
                           color: '#fff',
                           borderRadius: 10,
                           fontWeight: 600,
                           backdropFilter: 'blur(10px)',
                           fontSize: isMobile ? 12 : 14,
-                          minWidth: isMobile ? 130 : 170,
+                          minWidth: isMobile ? 150 : 180,
+                          height: isMobile ? 36 : 44,
                           transition: 'all 0.2s ease',
                         }}
                         className="welcome-btn"
                       >
-                        📅 Xem lịch làm việc
+                        Xem lịch làm việc
                       </Button>
                     </Link>
                     <Link href="/staff/orders" style={{ display: 'inline-block' }}>
@@ -356,14 +363,15 @@ export default function StaffDashboard() {
                         size={isMobile ? 'middle' : 'large'}
                         icon={<ShoppingCartOutlined />}
                         style={{
-                          background: '#fff',
+                          background: 'rgba(255, 255, 255, 0.95)',
                           color: '#FF7A00',
                           border: 'none',
                           borderRadius: 10,
                           fontWeight: 600,
                           fontSize: isMobile ? 12 : 14,
-                          minWidth: isMobile ? 130 : 170,
-                          boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                          minWidth: isMobile ? 150 : 180,
+                          height: isMobile ? 36 : 44,
+                          boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
                           transition: 'all 0.2s ease',
                         }}
                         className="welcome-btn-primary"
@@ -432,7 +440,7 @@ export default function StaffDashboard() {
                 hoverable={!isMobile}
                 style={{
                   borderRadius: isMobile ? 12 : 16,
-                  border: '1px solid #f0f0f0',
+                  border: '1px solid var(--border)',
                   boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
                   transition: 'all 0.3s ease',
                   height: '100%',
@@ -449,7 +457,7 @@ export default function StaffDashboard() {
                         style={{ 
                           fontSize: isMobile ? 22 : 32, 
                           fontWeight: 700, 
-                          color: stat.isMoney ? stat.color : '#111', 
+                          color: stat.isMoney ? stat.color : 'var(--text)', 
                           display: 'inline-block' 
                         }}
                         initial={{ opacity: 0, scale: 0.5 }}
@@ -463,12 +471,12 @@ export default function StaffDashboard() {
                         )}
                       </motion.span>
                       {stat.suffix && (
-                        <span style={{ fontSize: isMobile ? 12 : 16, color: '#888', marginLeft: 4 }}>
+                        <span style={{ fontSize: isMobile ? 12 : 16, color: 'var(--text-muted)', marginLeft: 4 }}>
                           {stat.suffix}
                         </span>
                       )}
                       {stat.isMoney && (
-                        <span style={{ fontSize: isMobile ? 12 : 16, color: '#888', marginLeft: 2 }}>đ</span>
+                        <span style={{ fontSize: isMobile ? 12 : 16, color: 'var(--text-muted)', marginLeft: 2 }}>đ</span>
                       )}
                     </div>
                     {stat.total && (
@@ -485,7 +493,7 @@ export default function StaffDashboard() {
                               '0%': stat.color,
                               '100%': `${stat.color}80`,
                             }}
-                            railColor="#f0f0f0"
+                            railColor="var(--border)"
                             size="small"
                           />
                         </motion.div>
@@ -551,7 +559,7 @@ export default function StaffDashboard() {
               }
               style={{
                 borderRadius: isMobile ? 12 : 16,
-                border: '1px solid #f0f0f0',
+                border: '1px solid var(--border)',
                 boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
                 height: '100%',
                 minHeight: isMobile ? 'auto' : 420,
@@ -585,7 +593,7 @@ export default function StaffDashboard() {
               }
               style={{
                 borderRadius: isMobile ? 12 : 16,
-                border: '1px solid #f0f0f0',
+                border: '1px solid var(--border)',
                 boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
                 height: '100%',
                 display: 'flex',
@@ -599,12 +607,12 @@ export default function StaffDashboard() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  whileHover={{ background: '#fafafa', borderRadius: 12 }}
+                  whileHover={{ background: 'var(--card)', borderRadius: 12 }}
                   style={{
                     padding: '16px 12px',
                     marginLeft: -12,
                     marginRight: -12,
-                    borderBottom: index < tableStatus.length - 1 ? '1px solid #f0f0f0' : 'none',
+                    borderBottom: index < tableStatus.length - 1 ? '1px solid var(--border)' : 'none',
                     transition: 'background 0.2s',
                     cursor: 'pointer',
                   }}
@@ -615,7 +623,7 @@ export default function StaffDashboard() {
                       <motion.span
                         key={zone.available}
                         initial={{ scale: 1.5, color: '#52c41a' }}
-                        animate={{ scale: 1, color: '#888' }}
+                        animate={{ scale: 1, color: 'var(--text-muted)' }}
                         transition={{ duration: 0.3 }}
                       >
                         {zone.available}
@@ -636,7 +644,7 @@ export default function StaffDashboard() {
                         '0%': '#FF7A00',
                         '100%': '#FF9A40',
                       }}
-                      railColor="#f0f0f0"
+                      railColor="var(--border)"
                       size="small"
                     />
                   </motion.div>
@@ -652,7 +660,7 @@ export default function StaffDashboard() {
                           background: '#52c41a',
                         }}
                       />
-                      <Text style={{ fontSize: 12, color: '#888' }}>
+                      <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                         Trống: {zone.available}
                       </Text>
                     </Space>
@@ -665,7 +673,7 @@ export default function StaffDashboard() {
                           background: '#FF7A00',
                         }}
                       />
-                      <Text style={{ fontSize: 12, color: '#888' }}>
+                      <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                         Đang dùng: {zone.occupied}
                       </Text>
                     </Space>
@@ -708,7 +716,9 @@ export default function StaffDashboard() {
         <Card
           title={
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>⚡ Thao tác nhanh</span>
+              <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>
+                <ThunderboltOutlined style={{ marginRight: 6 }} /> Thao tác nhanh
+              </span>
               <Tooltip title="Làm mới dữ liệu">
                 <motion.div
                   animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
@@ -728,7 +738,7 @@ export default function StaffDashboard() {
           style={{
             marginTop: isMobile ? 16 : 24,
             borderRadius: isMobile ? 12 : 16,
-            border: '1px solid #f0f0f0',
+            border: '1px solid var(--border)',
             boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
           }}
         >
@@ -763,7 +773,7 @@ export default function StaffDashboard() {
                         justifyContent: 'center',
                         gap: isMobile ? 4 : 8,
                         border: `2px solid ${action.color}20`,
-                        background: `linear-gradient(135deg, ${action.color}08 0%, #fff 100%)`,
+                        background: `linear-gradient(135deg, ${action.color}08 0%, var(--card) 100%)`,
                         transition: 'all 0.3s',
                       }}
                     >
@@ -774,7 +784,7 @@ export default function StaffDashboard() {
                       >
                         {action.icon}
                       </motion.span>
-                      <span style={{ fontWeight: 600, color: '#333', fontSize: isMobile ? 12 : 14 }}>{action.title}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: isMobile ? 12 : 14 }}>{action.title}</span>
                     </Button>
                   </motion.div>
                 </Link>
@@ -805,19 +815,20 @@ export default function StaffDashboard() {
         }
         .ant-table-wrapper .ant-table-thead > tr > th {
           padding: 14px 20px !important;
-          background: #fafafa !important;
+          background: var(--card) !important;
           font-weight: 600;
-          color: #666;
+          color: var(--text-muted);
           font-size: 13px;
         }
         .ant-table-wrapper .ant-table-tbody > tr:hover > td {
-          background: #fff7e6 !important;
+          background: rgba(255, 122, 0, 0.08) !important;
         }
         .ant-table-wrapper .ant-table-tbody > tr:last-child > td {
           border-bottom: none;
         }
       `}</style>
-    </motion.div>
+      </motion.div>
+    </PageTransition>
   );
 }
 

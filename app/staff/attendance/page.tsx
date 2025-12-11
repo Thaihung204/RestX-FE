@@ -485,7 +485,7 @@ export default function AttendancePage() {
               <Progress
                 percent={Number(((monthlyStats.workedDays / monthlyStats.totalDays) * 100).toFixed(1))}
                 strokeColor="#52c41a"
-                railColor="#f0f0f0"
+                railColor="var(--border)"
                 format={(p) => `${p?.toFixed(1)}%`}
               />
             </div>
@@ -500,7 +500,7 @@ export default function AttendancePage() {
               <Progress
                 percent={Number(((monthlyStats.totalHours / (monthlyStats.totalDays * 8)) * 100).toFixed(1))}
                 strokeColor="#FF7A00"
-                railColor="#f0f0f0"
+                railColor="var(--border)"
                 format={(p) => `${p?.toFixed(1)}%`}
               />
             </div>
@@ -554,8 +554,8 @@ export default function AttendancePage() {
           <Card
             style={{
               borderRadius: isMobile ? 12 : 16,
-              background: 'linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%)',
-              border: '1px solid #ffd591',
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
             }}
             styles={{ body: { padding: isMobile ? 14 : 24 } }}
           >
@@ -588,9 +588,13 @@ export default function AttendancePage() {
         cancelText="Hủy"
         centered
         width={isMobile ? '90%' : 400}
+        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
         styles={{
+          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
+          body: { backgroundColor: '#0A0E14' },
+          footer: { backgroundColor: '#0A0E14', borderTop: '1px solid rgba(255, 255, 255, 0.08)' },
           mask: {
-            background: 'rgba(0,0,0,0.55)',
+            background: 'rgba(0, 0, 0, 0.92)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',

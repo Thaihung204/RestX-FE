@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
 // Context to share animation ready state
 interface PageTransitionContextType {
@@ -23,8 +24,18 @@ const PageTransition: React.FC<PageTransitionProps> = ({
   children,
   minimumLoadingTime = 1800,
 }) => {
+  const { mode } = useThemeMode();
   const [isLoading, setIsLoading] = useState(true);
   const [isAnimationReady, setIsAnimationReady] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let minTimeReached = false;
@@ -88,7 +99,9 @@ const PageTransition: React.FC<PageTransitionProps> = ({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'linear-gradient(135deg, #FFFFFF 0%, #FFF8F3 100%)',
+              background: (mounted && mode === 'dark')
+                ? 'linear-gradient(135deg, #0E121A 0%, #141927 100%)'
+                : 'linear-gradient(135deg, #FFFFFF 0%, #FFF8F3 100%)',
             }}
           >
             {/* Background glow */}
@@ -219,7 +232,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
                 style={{
                   fontSize: 34,
                   fontWeight: 700,
-                  color: '#111111',
+                  color: (mounted && mode === 'dark') ? '#ECECEC' : '#111111',
                   letterSpacing: -0.5,
                 }}
               >
@@ -282,7 +295,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
               style={{
                 marginTop: 20,
                 fontSize: 12,
-                color: '#9CA3AF',
+                color: (mounted && mode === 'dark') ? '#C5C5C5' : '#9CA3AF',
                 fontWeight: 600,
                 letterSpacing: 3,
                 textTransform: 'uppercase',

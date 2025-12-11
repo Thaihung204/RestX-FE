@@ -83,7 +83,7 @@ const WorkflowSection: React.FC = () => {
     <section
       style={{
         padding: '80px 24px',
-        background: '#FFFFFF',
+        background: 'var(--bg-base)',
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -100,7 +100,7 @@ const WorkflowSection: React.FC = () => {
                 fontSize: 'clamp(28px, 4vw, 42px)',
                 fontWeight: 700,
                 margin: 0,
-                color: '#111111',
+                color: 'var(--text)',
               }}
             >
               Cách RestX vận hành trong nhà hàng của bạn
@@ -108,7 +108,7 @@ const WorkflowSection: React.FC = () => {
             <Paragraph
               style={{
                 fontSize: 18,
-                color: '#4F4F4F',
+                color: 'var(--text-muted)',
                 margin: 0,
                 maxWidth: 600,
                 marginLeft: 'auto',
@@ -135,7 +135,7 @@ const WorkflowSection: React.FC = () => {
                     style={{
                       height: '100%',
                       borderRadius: 20,
-                      border: '2px solid #E5E7EB',
+                      border: '2px solid var(--border)',
                       transition: 'all 0.3s ease',
                     }}
                     styles={{ body: { padding: 32 } }}
@@ -169,11 +169,11 @@ const WorkflowSection: React.FC = () => {
                         {step.icon}
                       </div>
 
-                      <Title level={4} style={{ margin: 0, color: '#111111' }}>
+                      <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
                         {step.title}
                       </Title>
 
-                      <Text style={{ color: '#4F4F4F', lineHeight: 1.7, fontSize: 15 }}>
+                      <Text style={{ color: 'var(--text-muted)', lineHeight: 1.7, fontSize: 15 }}>
                         {step.description}
                       </Text>
                     </Space>

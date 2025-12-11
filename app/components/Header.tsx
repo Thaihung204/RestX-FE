@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { CloseOutlined, MenuOutlined } from '@ant-design/icons';
-import { Button, Drawer, Layout, Menu, Space } from 'antd';
+import { CloseOutlined, MenuOutlined, TeamOutlined } from '@ant-design/icons';
+import { Button, Drawer, Layout, Menu, Space, Divider } from 'antd';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { usePageTransition } from './PageTransition';
+import ThemeToggle from './ThemeToggle';
+import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
 const { Header: AntHeader } = Layout;
 
@@ -14,7 +16,6 @@ const navItems = [
   { key: 'workflow', label: <a href="#workflow">Quy trình</a> },
   { key: 'testimonials', label: <a href="#testimonials">Khách hàng</a> },
   { key: 'contact', label: <a href="#footer">Liên hệ</a> },
-  { key: 'staff', label: <Link href="/staff">Staff Portal</Link> },
 ];
 
 const Header: React.FC = () => {
@@ -23,6 +24,7 @@ const Header: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { isAnimationReady } = usePageTransition();
+  const { mode } = useThemeMode();
 
   useEffect(() => {
     setMounted(true);
@@ -74,9 +76,9 @@ const Header: React.FC = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '0 32px',
-            background: scrolled 
-              ? 'rgba(255, 255, 255, 0.95)' 
-              : 'rgba(255, 255, 255, 0.9)',
+            background: mode === 'dark'
+              ? (scrolled ? 'rgba(20, 25, 39, 0.95)' : 'rgba(20, 25, 39, 0.9)')
+              : (scrolled ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.9)'),
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderRadius: 60,
@@ -111,7 +113,7 @@ const Header: React.FC = () => {
               style={{
                 fontSize: 22,
                 fontWeight: 700,
-                color: '#111111',
+                color: mode === 'dark' ? '#ECECEC' : '#111111',
               }}
             >
               RestX
@@ -139,57 +141,58 @@ const Header: React.FC = () => {
           {!isMobile && (
             <Space size={12}>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  type="text"
-                  href="/login"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    height: 40,
-                    padding: '0 20px',
-                    color: '#111111',
-                  }}
-                >
-                  Log in
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  type="text"
+              <Button
+                type="text"
                   href="/staff"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    height: 40,
-                    padding: '0 16px',
-                    color: '#FF7A00',
+                style={{
+                  fontWeight: 600,
+                  fontSize: 15,
+                  height: 40,
+                  padding: '0 16px',
+                  color: '#FF7A00',
                     background: 'rgba(255, 122, 0, 0.08)',
                     borderRadius: 20,
-                  }}
-                >
-                  🍽️ Staff
-                </Button>
+                }}
+              >
+                  <TeamOutlined style={{ marginRight: 6 }} /> Staff
+              </Button>
+              </motion.div>
+              <ThemeToggle />
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                type="text"
+                href="/login"
+                style={{
+                  fontWeight: 600,
+                  fontSize: 15,
+                  height: 40,
+                  padding: '0 20px',
+                    color: mode === 'dark' ? '#ECECEC' : '#111111',
+                }}
+              >
+                Log in
+              </Button>
               </motion.div>
               <motion.div 
                 whileHover={{ scale: 1.05, boxShadow: '0 8px 25px rgba(255, 122, 0, 0.45)' }} 
                 whileTap={{ scale: 0.95 }}
                 style={{ borderRadius: 20 }}
               >
-                <Button
-                  type="primary"
-                  href="/register"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    height: 40,
-                    padding: '0 24px',
-                    background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
-                    border: 'none',
-                    boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
-                  }}
-                >
-                  Sign up
-                </Button>
+              <Button
+                type="primary"
+                href="/register"
+                style={{
+                  fontWeight: 600,
+                  fontSize: 15,
+                  height: 40,
+                  padding: '0 24px',
+                  background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                  border: 'none',
+                  boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
+                }}
+              >
+                Sign up
+              </Button>
               </motion.div>
             </Space>
           )}
@@ -200,7 +203,7 @@ const Header: React.FC = () => {
               type="text"
               icon={<MenuOutlined style={{ fontSize: 20 }} />}
               onClick={() => setDrawerOpen(true)}
-              style={{ color: '#111111' }}
+              style={{ color: mode === 'dark' ? '#ECECEC' : '#111111' }}
             />
           )}
         </AntHeader>
@@ -245,7 +248,11 @@ const Header: React.FC = () => {
           }}
           selectable={false}
         />
-        <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Divider />
+        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
+          <ThemeToggle />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Button
             block
             size="large"
@@ -258,21 +265,6 @@ const Header: React.FC = () => {
             }}
           >
             Log in
-          </Button>
-          <Button
-            block
-            size="large"
-            href="/staff"
-            style={{
-              fontWeight: 600,
-              height: 48,
-              borderRadius: 50,
-              borderColor: '#FFE0CC',
-              color: '#FF7A00',
-              background: '#FFF7F0',
-            }}
-          >
-            🍽️ Staff Portal
           </Button>
           <Button
             type="primary"

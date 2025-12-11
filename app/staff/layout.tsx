@@ -19,7 +19,8 @@ import {
   HomeOutlined,
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
-import AntdProvider from '../theme/AntdProvider';
+import ThemeToggle from '../components/ThemeToggle';
+import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 import Link from 'next/link';
 
 const { Sider, Content, Header } = Layout;
@@ -86,6 +87,7 @@ export default function StaffLayout({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { mode } = useThemeMode();
 
   useEffect(() => {
     const checkViewport = () => {
@@ -267,8 +269,8 @@ export default function StaffLayout({
   );
 
   return (
-    <AntdProvider>
-      <Layout style={{ minHeight: '100vh' }}>
+    <>
+    <Layout style={{ minHeight: '100vh' }}>
         {/* Mobile Drawer */}
         {isDrawerDevice && (
           <Drawer
@@ -279,20 +281,20 @@ export default function StaffLayout({
             style={{ top: 0, height: '100vh' }}
             closable={false}
             maskClosable
-            maskStyle={{
-              background: 'rgba(0,0,0,0.55)',
-              backdropFilter: 'none',
-              WebkitBackdropFilter: 'none',
-              filter: 'none',
-            }}
             rootStyle={{
               backdropFilter: 'none',
               WebkitBackdropFilter: 'none',
             }}
             styles={{
+              mask: {
+                background: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'none',
+                WebkitBackdropFilter: 'none',
+                filter: 'none',
+              },
               body: { 
                 padding: 0, 
-                background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
+                background: 'var(--sidebar-bg)',
                 height: '100%',
                 minHeight: '100%',
                 overflowY: 'auto',
@@ -328,7 +330,7 @@ export default function StaffLayout({
             width={260}
             collapsedWidth={80}
             style={{
-              background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
+              background: 'var(--sidebar-bg)',
               boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
               position: 'fixed',
               height: '100vh',
@@ -352,7 +354,7 @@ export default function StaffLayout({
           <Header
             style={{
               padding: isMobile ? '0 16px' : '0 24px',
-              background: '#fff',
+              background: 'var(--card)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -361,7 +363,7 @@ export default function StaffLayout({
               top: 0,
               zIndex: 99,
               height: 64,
-              borderBottom: '1px solid #f0f0f0',
+              borderBottom: '1px solid var(--border)',
             }}
           >
             {/* Left Section */}
@@ -405,12 +407,12 @@ export default function StaffLayout({
             </div>
 
             {/* Right Section */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
               {/* Home Link */}
               <Link href="/">
                 <Button
                   type="text"
-                  icon={<HomeOutlined style={{ fontSize: 18, color: '#666' }} />}
+                  icon={<HomeOutlined style={{ fontSize: 18, color: 'var(--text-muted)' }} />}
                   style={{
                     width: 36,
                     height: 36,
@@ -426,7 +428,7 @@ export default function StaffLayout({
               <Badge count={3} size="small" offset={[-4, 4]}>
                 <Button
                   type="text"
-                  icon={<BellOutlined style={{ fontSize: 18, color: '#666' }} />}
+                  icon={<BellOutlined style={{ fontSize: 18, color: 'var(--text-muted)' }} />}
                   style={{
                     width: 36,
                     height: 36,
@@ -437,6 +439,9 @@ export default function StaffLayout({
                   }}
                 />
               </Badge>
+
+              {/* Theme toggle */}
+              <ThemeToggle />
 
               {/* User Menu */}
               <Dropdown
@@ -450,10 +455,10 @@ export default function StaffLayout({
                     alignItems: 'center',
                     gap: 8,
                     padding: '4px 8px 4px 4px',
-                    background: '#f8f8f8',
+                    background: 'var(--card)',
                     borderRadius: 24,
                     cursor: 'pointer',
-                    border: '1px solid #eee',
+                    border: '1px solid var(--border)',
                     transition: 'all 0.2s',
                   }}
                 >
@@ -468,7 +473,7 @@ export default function StaffLayout({
                     NV
                   </Avatar>
                   {!isMobile && (
-                    <Text style={{ fontWeight: 500, fontSize: 13, color: '#333', paddingRight: 4 }}>
+                    <Text style={{ fontWeight: 500, fontSize: 13, color: 'var(--text)', paddingRight: 4 }}>
                       Nguyễn Văn A
                     </Text>
                   )}
@@ -489,7 +494,6 @@ export default function StaffLayout({
           </Content>
         </Layout>
       </Layout>
-
       <style jsx global>{`
         .ant-menu-dark .ant-menu-item {
           margin: 4px 0 !important;
@@ -513,10 +517,30 @@ export default function StaffLayout({
           backdrop-filter: none !important;
           -webkit-backdrop-filter: none !important;
           filter: none !important;
-          background: rgba(0, 0, 0, 0.55) !important;
+          background: rgba(0, 0, 0, 0.92) !important;
+        }
+        /* Cards inside modal should be darker */
+        .ant-modal-body .ant-card {
+          background: #0F1419 !important;
+          border-color: var(--border) !important;
+        }
+        .ant-modal-body .ant-card-body {
+          background: #0F1419 !important;
+        }
+        /* Select dropdown in modal */
+        .ant-modal-body .ant-select-selector {
+          background: #0F1419 !important;
+          border-color: var(--border) !important;
+        }
+        .ant-modal-body .ant-select-dropdown {
+          background: #0F1419 !important;
+        }
+        /* Divider in modal */
+        .ant-modal-body .ant-divider {
+          border-color: var(--border) !important;
         }
       `}</style>
-    </AntdProvider>
+    </>
   );
 }
 

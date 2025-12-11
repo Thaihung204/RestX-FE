@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Typography, Tag, Row, Col, Card, Flex } from 'antd';
-import { PlayCircleOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, FileTextOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { usePageTransition } from './PageTransition';
 
@@ -101,7 +101,7 @@ const HeroSection: React.FC = () => {
         minHeight: isMobile ? 'auto' : '100vh',
         padding: isMobile ? '100px 16px 40px' : '100px 24px 40px',
         overflow: 'hidden',
-        background: '#FFFFFF',
+        background: 'var(--bg-base)',
         display: 'flex',
         alignItems: 'center',
       }}
@@ -160,7 +160,7 @@ const HeroSection: React.FC = () => {
                       fontWeight: 700,
                       lineHeight: 1.15,
                       margin: 0,
-                      color: '#111111',
+                      color: 'var(--text)',
                     }}
                   >
                     Tối ưu vận hành nhà hàng với RestX
@@ -171,7 +171,7 @@ const HeroSection: React.FC = () => {
                   <Paragraph
                     style={{
                       fontSize: isMobile ? 15 : 18,
-                      color: '#4F4F4F',
+                      color: 'var(--text-muted)',
                       lineHeight: 1.7,
                       margin: 0,
                       maxWidth: 480,
@@ -210,8 +210,9 @@ const HeroSection: React.FC = () => {
                         fontSize: isMobile ? 14 : 16,
                         fontWeight: 600,
                         borderRadius: 50,
-                        borderColor: '#E5E7EB',
-                        color: '#111111',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text)',
+                    background: 'var(--card)',
                       }}
                     >
                       Watch Demo
@@ -244,7 +245,7 @@ const HeroSection: React.FC = () => {
                           }}
                         >
                           <span style={{ color: '#FF7A00', fontSize: isMobile ? 20 : 28, fontWeight: 700 }}>{stat.value}</span>
-                          <span style={{ color: '#4F4F4F', fontSize: isMobile ? 11 : 13 }}>{stat.label}</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: isMobile ? 11 : 13 }}>{stat.label}</span>
                         </motion.div>
                       </Col>
                     ))}
@@ -263,9 +264,9 @@ const HeroSection: React.FC = () => {
             >
               <Card
                 style={{
-                  background: '#FAFAFA',
+                  background: 'var(--card)',
                   borderRadius: 24,
-                  border: '1px solid #E5E7EB',
+                  border: '1px solid var(--border)',
                   boxShadow: '0 20px 60px rgba(0, 0, 0, 0.08)',
                 }}
                 styles={{ body: { padding: 24 } }}
@@ -273,7 +274,7 @@ const HeroSection: React.FC = () => {
                 <Flex vertical gap={20} style={{ width: '100%' }}>
                   {/* Header */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text strong style={{ fontSize: 18 }}>Tổng quan hoạt động</Text>
+                    <Text strong style={{ fontSize: 18, color: 'var(--text)' }}>Tổng quan hoạt động</Text>
                     <div
                       style={{
                         width: 32,
@@ -285,25 +286,40 @@ const HeroSection: React.FC = () => {
                   </div>
 
                   {/* Chart Area */}
-                  <div
+                  <Card
                     style={{
-                      height: 180,
-                      border: '2px dashed #D1D5DB',
+                      background: 'var(--card)',
+                      border: `1px solid var(--border)`,
                       borderRadius: 12,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: '#FFFFFF',
                     }}
+                    styles={{ body: { padding: 16 } }}
                   >
-                    <Text style={{ color: '#9CA3AF' }}>📊 Revenue Chart</Text>
-                  </div>
+                    <Text strong style={{ color: 'var(--text)', display: 'block', marginBottom: 8 }}>Revenue (7 ngày)</Text>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 140 }}>
+                      {[32, 52, 44, 68, 60, 80, 72].map((h, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            flex: 1,
+                            height: `${h}%`,
+                            minHeight: 20,
+                            borderRadius: 8,
+                            background: 'linear-gradient(180deg, #FF9A40 0%, #FF7A00 100%)',
+                            boxShadow: '0 6px 18px rgba(255, 122, 0, 0.25)',
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, color: 'var(--text-muted)', fontSize: 12 }}>
+                      {['T2','T3','T4','T5','T6','T7','CN'].map((d) => <span key={d}>{d}</span>)}
+                    </div>
+                  </Card>
 
                   {/* Metrics */}
                   <Row gutter={16}>
                     <Col span={12}>
-                      <Card size="small" style={{ borderRadius: 12 }}>
-                        <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase' }}>
+                      <Card size="small" style={{ borderRadius: 12, background: 'var(--card)', border: `1px solid var(--border)` }}>
+                        <Text style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                           Doanh thu
                         </Text>
                         <Title level={4} style={{ margin: '8px 0 0', color: '#FF7A00' }}>
@@ -312,8 +328,8 @@ const HeroSection: React.FC = () => {
                       </Card>
                     </Col>
                     <Col span={12}>
-                      <Card size="small" style={{ borderRadius: 12 }}>
-                        <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase' }}>
+                      <Card size="small" style={{ borderRadius: 12, background: 'var(--card)', border: `1px solid var(--border)` }}>
+                        <Text style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                           Đơn hàng
                         </Text>
                         <Title level={4} style={{ margin: '8px 0 0', color: '#FF7A00' }}>
@@ -324,21 +340,40 @@ const HeroSection: React.FC = () => {
                   </Row>
 
                   {/* Table Preview */}
-                  <Card size="small" style={{ borderRadius: 12 }}>
-                    <Text strong style={{ display: 'block', marginBottom: 12 }}>
-                      📋 Recent Orders
+                  <Card size="small" style={{ borderRadius: 12, background: 'var(--card)', border: `1px solid var(--border)` }}>
+                    <Text strong style={{ display: 'block', marginBottom: 12, color: 'var(--text)' }}>
+                      <FileTextOutlined style={{ marginRight: 6 }} /> Recent Orders
                     </Text>
-                    <Flex vertical gap={8} style={{ width: '100%' }}>
-                      {[1, 2, 3].map((i) => (
-                        <div
-                          key={i}
-                          style={{
-                            height: 10,
-                            background: '#E5E7EB',
-                            borderRadius: 4,
-                            width: `${100 - i * 15}%`,
-                          }}
-                        />
+                    <Flex vertical gap={12} style={{ width: '100%' }}>
+                      {[
+                        { table: 'A02', total: 'đ750.000', status: 'Đang nấu', color: '#FF7A00', bar: 88 },
+                        { table: 'B01', total: 'đ1.25M', status: 'Sẵn sàng', color: '#52c41a', bar: 72 },
+                        { table: 'VIP01', total: 'đ3.48M', status: 'Đã đặt', color: '#1890ff', bar: 64 },
+                      ].map((order, i) => (
+                        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Text strong style={{ color: 'var(--text)', fontSize: 14 }}>{order.table}</Text>
+                            <Text style={{ color: 'var(--text-muted)', fontSize: 13 }}>{order.total}</Text>
+                            <span style={{ color: order.color, fontSize: 12, fontWeight: 700 }}>{order.status}</span>
+                          </div>
+                          <div
+                            style={{
+                              height: 8,
+                              borderRadius: 999,
+                              background: 'var(--border)',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${order.bar}%`,
+                                height: '100%',
+                                background: order.color,
+                                borderRadius: 999,
+                              }}
+                            />
+                          </div>
+                        </div>
                       ))}
                     </Flex>
                   </Card>
@@ -356,13 +391,13 @@ const HeroSection: React.FC = () => {
           style={{
             marginTop: 48,
             paddingTop: 32,
-            borderTop: '1px solid rgba(229, 231, 235, 0.6)',
+                borderTop: '1px solid var(--border)',
             textAlign: 'center',
           }}
         >
           <Text
             style={{
-              color: '#9CA3AF',
+                  color: 'var(--text-muted)',
               fontSize: 12,
               fontWeight: 600,
               textTransform: 'uppercase',
@@ -408,11 +443,11 @@ const HeroSection: React.FC = () => {
                   },
                 }}
                 style={{
-                  color: '#9CA3AF',
+                  color: 'var(--text-muted)',
                   fontWeight: 600,
                   fontSize: 14,
                   padding: '8px 16px',
-                  background: 'rgba(249, 250, 251, 0.8)',
+                  background: 'var(--card)',
                   borderRadius: 8,
                 }}
               >

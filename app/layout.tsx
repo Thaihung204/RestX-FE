@@ -2,7 +2,7 @@ import { AuthProvider } from "@/lib/contexts/AuthContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import AntdProvider from "./theme/AntdProvider";
+import AutoDarkThemeProvider from "./theme/AutoDarkThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -47,7 +47,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <AuthProvider>
-          <AntdProvider>{children}</AntdProvider>
+          <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
         </AuthProvider>
       </body>
     </html>

@@ -38,6 +38,7 @@ import {
   SendOutlined,
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -176,6 +177,7 @@ const itemStatusConfig: Record<OrderItemStatus, { color: string; text: string }>
 
 export default function OrderManagement() {
   const { message } = App.useApp();
+  const { mode } = useThemeMode();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -303,7 +305,7 @@ export default function OrderManagement() {
           onClick={() => handleOrderClick(order)}
           style={{
             borderRadius: isMobile ? 12 : 16,
-            border: '1px solid #f0f0f0',
+            border: '1px solid var(--border)',
             marginBottom: isMobile ? 12 : 16,
             cursor: 'pointer',
           }}
@@ -403,8 +405,8 @@ export default function OrderManagement() {
           <Card
             style={{
               borderRadius: isMobile ? 12 : 16,
-              background: '#fff7e6',
-              border: '1px solid #ffd591',
+              background: mode === 'dark' ? 'rgba(250, 173, 20, 0.15)' : '#fff7e6',
+              border: `1px solid ${mode === 'dark' ? 'rgba(250, 173, 20, 0.3)' : '#ffd591'}`,
             }}
             styles={{ body: { padding: isMobile ? 12 : 24 } }}
           >
@@ -434,8 +436,8 @@ export default function OrderManagement() {
           <Card
             style={{
               borderRadius: isMobile ? 12 : 16,
-              background: '#e6f7ff',
-              border: '1px solid #91d5ff',
+              background: mode === 'dark' ? 'rgba(24, 144, 255, 0.15)' : '#e6f7ff',
+              border: `1px solid ${mode === 'dark' ? 'rgba(24, 144, 255, 0.3)' : '#91d5ff'}`,
             }}
             styles={{ body: { padding: isMobile ? 12 : 24 } }}
           >
@@ -465,8 +467,8 @@ export default function OrderManagement() {
           <Card
             style={{
               borderRadius: isMobile ? 12 : 16,
-              background: '#f6ffed',
-              border: '1px solid #b7eb8f',
+              background: mode === 'dark' ? 'rgba(82, 196, 26, 0.15)' : '#f6ffed',
+              border: `1px solid ${mode === 'dark' ? 'rgba(82, 196, 26, 0.3)' : '#b7eb8f'}`,
             }}
             styles={{ body: { padding: isMobile ? 12 : 24 } }}
           >
@@ -498,7 +500,7 @@ export default function OrderManagement() {
       <Card
         style={{
           borderRadius: isMobile ? 12 : 20,
-          border: '1px solid #f0f0f0',
+          border: '1px solid var(--border)',
           marginBottom: isMobile ? 16 : 24,
         }}
         styles={{ body: { padding: isMobile ? 12 : '16px 24px' } }}
@@ -539,7 +541,7 @@ export default function OrderManagement() {
       <Card
         style={{
           borderRadius: isMobile ? 12 : 20,
-          border: '1px solid #f0f0f0',
+          border: '1px solid var(--border)',
         }}
         styles={{ body: { padding: isMobile ? 12 : 24 } }}
       >
@@ -584,8 +586,10 @@ export default function OrderManagement() {
         centered
         styles={{
           body: { padding: isMobile ? 16 : 24 },
+          content: { backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' },
+          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
           mask: {
-            background: 'rgba(0,0,0,0.55)',
+            background: 'rgba(0, 0, 0, 0.92)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',
@@ -599,7 +603,7 @@ export default function OrderManagement() {
               size="small"
               style={{
                 borderRadius: 12,
-                background: '#fafafa',
+                background: 'var(--card)',
                 marginBottom: isMobile ? 16 : 20,
               }}
             >
@@ -638,7 +642,7 @@ export default function OrderManagement() {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: isMobile ? '10px 0' : '14px 0',
-                    borderBottom: index < selectedOrder.items.length - 1 ? '1px solid #f0f0f0' : 'none',
+                    borderBottom: index < selectedOrder.items.length - 1 ? '1px solid var(--border)' : 'none',
                   }}
                 >
                   <div style={{ flex: 1 }}>
@@ -737,10 +741,12 @@ export default function OrderManagement() {
         footer={null}
         width={isMobile ? '95%' : 900}
         centered
+        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
         styles={{
-          body: { padding: isMobile ? 16 : 24, maxHeight: isMobile ? '80vh' : 'auto', overflowY: 'auto' },
+          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
+          body: { padding: isMobile ? 16 : 24, maxHeight: isMobile ? '80vh' : 'auto', overflowY: 'auto', backgroundColor: '#0A0E14' },
           mask: {
-            background: 'rgba(0,0,0,0.55)',
+            background: 'rgba(0, 0, 0, 0.92)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',
@@ -820,7 +826,7 @@ export default function OrderManagement() {
               }
               style={{
                 borderRadius: isMobile ? 12 : 16,
-                background: '#fafafa',
+                background: 'var(--card)',
               }}
               styles={{ body: { padding: isMobile ? 12 : 24 } }}
             >
@@ -834,14 +840,14 @@ export default function OrderManagement() {
                           display: 'flex',
                           alignItems: 'center',
                           padding: isMobile ? '8px 0' : '12px 0',
-                          borderBottom: index < cart.length - 1 ? '1px solid #f0f0f0' : 'none',
+                          borderBottom: index < cart.length - 1 ? '1px solid var(--border)' : 'none',
                           gap: isMobile ? 8 : 12,
                         }}
                       >
                         <span style={{ fontSize: isMobile ? 20 : 24 }}>{c.item.image}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{c.item.name}</div>
-                          <div style={{ fontSize: isMobile ? 12 : 14, color: '#888' }}>
+                          <div style={{ fontSize: isMobile ? 12 : 14, color: 'var(--text-muted)' }}>
                             {(c.item.price * c.quantity).toLocaleString('vi-VN')}đ
                           </div>
                         </div>

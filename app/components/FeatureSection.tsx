@@ -119,7 +119,7 @@ const FeatureSection: React.FC = () => {
       id="product"
       style={{
         padding: '100px 24px',
-        background: 'linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%)',
+        background: 'var(--bg-base)',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -176,7 +176,7 @@ const FeatureSection: React.FC = () => {
                   marginBottom: 16,
                 }}
               >
-                ✨ Tính năng
+                Tính năng
               </span>
             </motion.div>
             <Title
@@ -185,7 +185,7 @@ const FeatureSection: React.FC = () => {
                 fontSize: 'clamp(28px, 4vw, 46px)',
                 fontWeight: 700,
                 margin: 0,
-                color: '#111111',
+                color: 'var(--text)',
                 lineHeight: 1.2,
               }}
             >
@@ -201,7 +201,7 @@ const FeatureSection: React.FC = () => {
             <Paragraph
               style={{
                 fontSize: 18,
-                color: '#4F4F4F',
+                color: 'var(--text-muted)',
                 margin: 0,
                 maxWidth: 600,
                 marginLeft: 'auto',
@@ -239,11 +239,11 @@ const FeatureSection: React.FC = () => {
                       style={{
                         height: '100%',
                         borderRadius: 20,
-                        border: hoveredIndex === index ? `2px solid ${feature.color}30` : '1px solid #E5E7EB',
+                        border: hoveredIndex === index ? `2px solid ${feature.color}30` : '1px solid var(--border)',
                         transition: 'all 0.3s ease',
                         background: hoveredIndex === index 
-                          ? `linear-gradient(135deg, ${feature.color}05 0%, #FFFFFF 100%)`
-                          : '#FFFFFF',
+                          ? `linear-gradient(135deg, ${feature.color}05 0%, var(--card) 100%)`
+                          : 'var(--card)',
                         boxShadow: hoveredIndex === index 
                           ? `0 20px 40px ${feature.color}15`
                           : '0 4px 20px rgba(0, 0, 0, 0.05)',
@@ -269,10 +269,10 @@ const FeatureSection: React.FC = () => {
                         >
                           {feature.icon}
                         </motion.div>
-                        <Title level={5} style={{ margin: 0, color: '#111111', fontSize: 18 }}>
+                        <Title level={5} style={{ margin: 0, color: 'var(--text)', fontSize: 18 }}>
                           {feature.title}
                         </Title>
-                        <Text style={{ color: '#4F4F4F', lineHeight: 1.7, fontSize: 15 }}>
+                        <Text style={{ color: 'var(--text-muted)', lineHeight: 1.7, fontSize: 15 }}>
                           {feature.description}
                         </Text>
                         

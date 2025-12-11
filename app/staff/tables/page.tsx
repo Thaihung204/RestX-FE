@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
 import {
   Card,
   Row,
@@ -83,31 +84,34 @@ const initialTables: TableData[] = [
   { id: 'v3', name: 'VIP03', zone: 'VIP', capacity: 12, status: 'reserved', reservation: { name: 'Lê Văn D', time: '20:30', phone: '0923456789' } },
 ];
 
-const statusConfig: Record<TableStatus, { color: string; bgColor: string; text: string; icon: React.ReactNode }> = {
-  available: {
-    color: '#52c41a',
-    bgColor: '#f6ffed',
-    text: 'Trống',
-    icon: <CheckCircleOutlined />,
-  },
-  occupied: {
-    color: '#FF7A00',
-    bgColor: '#fff7e6',
-    text: 'Đang dùng',
-    icon: <UserOutlined />,
-  },
-  reserved: {
-    color: '#1890ff',
-    bgColor: '#e6f7ff',
-    text: 'Đã đặt',
-    icon: <ClockCircleOutlined />,
-  },
-  cleaning: {
-    color: '#faad14',
-    bgColor: '#fffbe6',
-    text: 'Đang dọn',
-    icon: <ExclamationCircleOutlined />,
-  },
+const getStatusConfig = (mode: 'light' | 'dark') => {
+  const isDark = mode === 'dark';
+  return {
+    available: {
+      color: '#52c41a',
+      bgColor: isDark ? 'rgba(82, 196, 26, 0.15)' : '#f6ffed',
+      text: 'Trống',
+      icon: <CheckCircleOutlined />,
+    },
+    occupied: {
+      color: '#FF7A00',
+      bgColor: isDark ? 'rgba(255, 122, 0, 0.15)' : '#fff7e6',
+      text: 'Đang dùng',
+      icon: <UserOutlined />,
+    },
+    reserved: {
+      color: '#1890ff',
+      bgColor: isDark ? 'rgba(24, 144, 255, 0.15)' : '#e6f7ff',
+      text: 'Đã đặt',
+      icon: <ClockCircleOutlined />,
+    },
+    cleaning: {
+      color: '#faad14',
+      bgColor: isDark ? 'rgba(250, 173, 20, 0.15)' : '#fffbe6',
+      text: 'Đang dọn',
+      icon: <ExclamationCircleOutlined />,
+    },
+  } as Record<TableStatus, { color: string; bgColor: string; text: string; icon: React.ReactNode }>;
 };
 
 const containerVariants = {
@@ -128,12 +132,15 @@ const itemVariants = {
 };
 
 export default function TableManagement() {
+  const { mode } = useThemeMode();
   const [tables, setTables] = useState<TableData[]>(initialTables);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpenTableModal, setIsOpenTableModal] = useState(false);
   const [activeZone, setActiveZone] = useState('all');
   const [form] = Form.useForm();
+  
+  const statusConfig = getStatusConfig(mode);
 
   const filteredTables = activeZone === 'all' 
     ? tables 
@@ -250,7 +257,7 @@ export default function TableManagement() {
             </div>
 
             {/* Table Name */}
-            <Title level={4} style={{ margin: '0 0 4px', color: '#111' }}>
+            <Title level={4} style={{ margin: '0 0 4px', color: 'var(--text)' }}>
               {table.name}
             </Title>
 
@@ -280,8 +287,8 @@ export default function TableManagement() {
 
             {/* Additional Info */}
             {table.status === 'occupied' && table.startTime && (
-              <div style={{ marginTop: 'auto', padding: '8px', background: '#fff', borderRadius: 8 }}>
-                <Text style={{ fontSize: 12, color: '#888' }}>
+              <div style={{ marginTop: 'auto', padding: '8px', background: 'var(--card)', borderRadius: 8 }}>
+                <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                   <ClockCircleOutlined /> Từ {table.startTime}
                 </Text>
                 <br />
@@ -292,8 +299,8 @@ export default function TableManagement() {
             )}
 
             {table.status === 'reserved' && table.reservation && (
-              <div style={{ marginTop: 'auto', padding: '8px', background: '#fff', borderRadius: 8 }}>
-                <Text style={{ fontSize: 12, color: '#888' }}>
+              <div style={{ marginTop: 'auto', padding: '8px', background: 'var(--card)', borderRadius: 8 }}>
+                <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                   Đặt lúc {table.reservation.time}
                 </Text>
                 <br />
@@ -322,7 +329,7 @@ export default function TableManagement() {
                   border: `1px solid ${config.color}30`,
                   background: config.bgColor,
                 }}
-                styles={{ body: { padding: '16px 20px' } }}
+                styles={{ body: { padding: '16px 20px', background: config.bgColor } }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div
@@ -341,11 +348,11 @@ export default function TableManagement() {
                     {config.icon}
                   </div>
                   <div>
-                    <Text style={{ fontSize: 24, fontWeight: 700, color: '#111' }}>
+                    <Text style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>
                       {value}
                     </Text>
                     <br />
-                    <Text style={{ fontSize: 13, color: '#666' }}>{config.text}</Text>
+                    <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}>{config.text}</Text>
                   </div>
                 </div>
               </Card>
@@ -358,7 +365,7 @@ export default function TableManagement() {
       <Card
         style={{
           borderRadius: 20,
-          border: '1px solid #f0f0f0',
+          border: '1px solid var(--border)',
           boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
         }}
       >
@@ -403,9 +410,12 @@ export default function TableManagement() {
         footer={null}
         width={500}
         centered
+        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
         styles={{
+          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
+          body: { backgroundColor: '#0A0E14' },
           mask: {
-            background: 'rgba(0,0,0,0.55)',
+            background: 'rgba(0, 0, 0, 0.92)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',
@@ -447,14 +457,14 @@ export default function TableManagement() {
             {/* Info Grid */}
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
               <Col span={12}>
-                <Card size="small" style={{ borderRadius: 12, background: '#f9f9f9' }}>
+                <Card size="small" style={{ borderRadius: 12, background: 'var(--card)' }}>
                   <Text type="secondary" style={{ fontSize: 12 }}>Khu vực</Text>
                   <br />
                   <Text strong>Khu {selectedTable.zone}</Text>
                 </Card>
               </Col>
               <Col span={12}>
-                <Card size="small" style={{ borderRadius: 12, background: '#f9f9f9' }}>
+                <Card size="small" style={{ borderRadius: 12, background: 'var(--card)' }}>
                   <Text type="secondary" style={{ fontSize: 12 }}>Sức chứa</Text>
                   <br />
                   <Text strong>{selectedTable.capacity} người</Text>
@@ -468,8 +478,8 @@ export default function TableManagement() {
                 size="small"
                 style={{
                   borderRadius: 12,
-                  background: '#fff7e6',
-                  border: '1px solid #ffd591',
+                  background: mode === 'dark' ? 'rgba(255, 122, 0, 0.15)' : '#fff7e6',
+                  border: `1px solid ${mode === 'dark' ? 'rgba(255, 122, 0, 0.3)' : '#ffd591'}`,
                   marginBottom: 24,
                 }}
               >
@@ -501,8 +511,8 @@ export default function TableManagement() {
                 size="small"
                 style={{
                   borderRadius: 12,
-                  background: '#e6f7ff',
-                  border: '1px solid #91d5ff',
+                  background: mode === 'dark' ? 'rgba(24, 144, 255, 0.15)' : '#e6f7ff',
+                  border: `1px solid ${mode === 'dark' ? 'rgba(24, 144, 255, 0.3)' : '#91d5ff'}`,
                   marginBottom: 24,
                 }}
               >
@@ -668,9 +678,12 @@ export default function TableManagement() {
         footer={null}
         width={400}
         centered
+        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
         styles={{
+          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
+          body: { backgroundColor: '#0A0E14' },
           mask: {
-            background: 'rgba(0,0,0,0.55)',
+            background: 'rgba(0, 0, 0, 0.92)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',

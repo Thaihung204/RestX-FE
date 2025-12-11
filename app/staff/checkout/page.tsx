@@ -233,7 +233,7 @@ export default function CheckoutPage() {
         onClick={() => handleSelectBill(bill)}
         style={{
           borderRadius: isMobile ? 12 : 16,
-          border: '2px solid #f0f0f0',
+          border: '2px solid var(--border)',
           cursor: 'pointer',
           transition: 'all 0.3s',
         }}
@@ -326,7 +326,7 @@ export default function CheckoutPage() {
           <Card
             style={{
               borderRadius: isMobile ? 12 : 16,
-              border: '1px solid #f0f0f0',
+              border: '1px solid var(--border)',
             }}
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
@@ -334,7 +334,7 @@ export default function CheckoutPage() {
               title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Bàn chờ thanh toán</span>}
               value={bills.filter(b => b.status === 'pending').length}
               suffix="bàn"
-              styles={{ content: { color: '#111', fontSize: isMobile ? 22 : 28, fontWeight: 700 } }}
+              styles={{ content: { color: 'var(--text)', fontSize: isMobile ? 22 : 28, fontWeight: 700 } }}
               prefix={<TableOutlined style={{ color: '#FF7A00' }} />}
             />
           </Card>
@@ -343,7 +343,7 @@ export default function CheckoutPage() {
           <Card
             style={{
               borderRadius: isMobile ? 12 : 16,
-              border: '1px solid #f0f0f0',
+              border: '1px solid var(--border)',
             }}
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
@@ -363,7 +363,7 @@ export default function CheckoutPage() {
         style={{
           borderRadius: isMobile ? 12 : 16,
           marginBottom: isMobile ? 16 : 24,
-          border: '1px solid #f0f0f0',
+          border: '1px solid var(--border)',
         }}
         styles={{ body: { padding: isMobile ? 12 : '16px 24px' } }}
       >
@@ -409,10 +409,12 @@ export default function CheckoutPage() {
           maxWidth: isMobile ? '100%' : isTablet ? '94vw' : '820px',
         }}
         centered
+        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
         styles={{
-          body: { padding: isMobile ? 12 : 16, maxHeight: '60vh', overflowY: 'auto' },
+          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
+          body: { padding: isMobile ? 12 : 16, maxHeight: '60vh', overflowY: 'auto', backgroundColor: '#0A0E14' },
           mask: {
-            background: 'rgba(0,0,0,0.55)',
+            background: 'rgba(0, 0, 0, 0.92)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',
@@ -511,7 +513,7 @@ export default function CheckoutPage() {
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             padding: isMobile ? '8px 0' : '12px 0',
-                            borderBottom: index < selectedBill.items.length - 1 ? '1px solid #f0f0f0' : 'none',
+                            borderBottom: index < selectedBill.items.length - 1 ? '1px solid var(--border)' : 'none',
                           }}
                         >
                           <Text style={{ fontSize: isMobile ? 12 : 14 }}>
@@ -546,7 +548,7 @@ export default function CheckoutPage() {
                   <Card
                     style={{
                       borderRadius: 12,
-                      background: '#fafafa',
+                      background: 'var(--card)',
                       width: '100%',
                     }}
                     styles={{ body: { padding: isMobile ? 14 : 24 } }}
@@ -644,7 +646,7 @@ export default function CheckoutPage() {
                         style={{
                           textAlign: 'center',
                           padding: isMobile ? 12 : 20,
-                          background: '#fff',
+                          background: 'var(--card)',
                           borderRadius: 12,
                           marginBottom: isMobile ? 16 : 20,
                         }}
@@ -653,7 +655,7 @@ export default function CheckoutPage() {
                           style={{
                             width: isMobile ? 100 : 120,
                             height: isMobile ? 100 : 120,
-                            background: '#f0f0f0',
+                            background: 'var(--border)',
                             margin: '0 auto 12px',
                             borderRadius: 12,
                             display: 'flex',
