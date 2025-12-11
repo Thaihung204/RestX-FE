@@ -10,7 +10,6 @@ import {
   Button,
   Space,
   Modal,
-  List,
   Avatar,
   Tabs,
   Input,
@@ -20,7 +19,7 @@ import {
   InputNumber,
   Result,
   Statistic,
-Flex,
+  Flex,
 } from 'antd';
 import {
   DollarOutlined,
@@ -158,10 +157,15 @@ export default function CheckoutPage() {
   const [searchText, setSearchText] = useState('');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false); // for widths like iPad mini/air
 
   // Check mobile viewport
   React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => {
+      const w = window.innerWidth;
+      setIsMobile(w < 768);
+      setIsTablet(w >= 768 && w < 992);
+    };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -313,7 +317,7 @@ export default function CheckoutPage() {
               title={<Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: isMobile ? 12 : 14 }}>Tổng tiền chờ thanh toán</Text>}
               value={totalPending}
               suffix="đ"
-              valueStyle={{ color: '#fff', fontSize: isMobile ? 22 : 28, fontWeight: 700 }}
+              styles={{ content: { color: '#fff', fontSize: isMobile ? 22 : 28, fontWeight: 700 } }}
               formatter={(value) => `${Number(value).toLocaleString('vi-VN')}`}
             />
           </Card>
@@ -330,7 +334,7 @@ export default function CheckoutPage() {
               title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Bàn chờ thanh toán</span>}
               value={bills.filter(b => b.status === 'pending').length}
               suffix="bàn"
-              valueStyle={{ color: '#111', fontSize: isMobile ? 22 : 28, fontWeight: 700 }}
+              styles={{ content: { color: '#111', fontSize: isMobile ? 22 : 28, fontWeight: 700 } }}
               prefix={<TableOutlined style={{ color: '#FF7A00' }} />}
             />
           </Card>
@@ -347,7 +351,7 @@ export default function CheckoutPage() {
               title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Đã thanh toán</span>}
               value={12}
               suffix="đơn"
-              valueStyle={{ color: '#52c41a', fontSize: isMobile ? 22 : 28, fontWeight: 700 }}
+              styles={{ content: { color: '#52c41a', fontSize: isMobile ? 22 : 28, fontWeight: 700 } }}
               prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
             />
           </Card>
@@ -394,9 +398,26 @@ export default function CheckoutPage() {
           setDiscountPercent(0);
         }}
         footer={null}
-        width={isMobile ? '95%' : 700}
+        width={
+          isMobile
+            ? '100%'
+            : isTablet
+            ? '94%'
+            : 820
+        }
+        style={{
+          maxWidth: isMobile ? '100%' : isTablet ? '94vw' : '820px',
+        }}
         centered
-        styles={{ body: { padding: isMobile ? 16 : 24, maxHeight: isMobile ? '80vh' : 'auto', overflowY: 'auto' } }}
+        styles={{
+          body: { padding: isMobile ? 12 : 16, maxHeight: '60vh', overflowY: 'auto' },
+          mask: {
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
+            filter: 'none',
+          },
+        }}
       >
         {isPaymentSuccess ? (
           <Result
@@ -464,30 +485,41 @@ export default function CheckoutPage() {
                 <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>{selectedBill.id}</Text>
               </div>
 
-              <Row gutter={[16, 16]} style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'stretch', flexDirection: isMobile ? 'column' : 'row' }}>
+              <Row
+                gutter={[isMobile ? 0 : 12, 10]}
+                style={{
+                  display: 'flex',
+                  alignItems: isMobile ? 'flex-start' : 'stretch',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  width: '100%',
+                }}
+              >
                 {/* Bill Details */}
-                <Col xs={24} md={14} style={{ display: 'flex' }}>
+                <Col xs={24} lg={14} style={{ display: 'flex', width: '100%' }}>
                   <Card
                     size="small"
                     title={<span style={{ fontSize: isMobile ? 13 : 14 }}>Chi tiết hóa đơn</span>}
                     style={{ borderRadius: 12, width: '100%', display: 'flex', flexDirection: 'column' }}
-                    styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', padding: isMobile ? 12 : 16 } }}
+                    styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', padding: isMobile ? 14 : 16 } }}
                   >
                     <div style={{ flex: 1 }}>
-                      <List
-                        size="small"
-                        dataSource={selectedBill.items}
-                        renderItem={(item) => (
-                          <List.Item style={{ padding: isMobile ? '8px 0' : '12px 0' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                              <Text style={{ fontSize: isMobile ? 12 : 14 }}>
-                                {item.name} <Tag style={{ fontSize: isMobile ? 10 : 12 }}>{item.quantity}x</Tag>
-                              </Text>
-                              <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>{(item.price * item.quantity).toLocaleString('vi-VN')}đ</Text>
-                            </div>
-                          </List.Item>
-                        )}
-                      />
+                      {selectedBill.items.map((item, index) => (
+                        <div
+                          key={item.id}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: isMobile ? '8px 0' : '12px 0',
+                            borderBottom: index < selectedBill.items.length - 1 ? '1px solid #f0f0f0' : 'none',
+                          }}
+                        >
+                          <Text style={{ fontSize: isMobile ? 12 : 14 }}>
+                            {item.name} <Tag style={{ fontSize: isMobile ? 10 : 12 }}>{item.quantity}x</Tag>
+                          </Text>
+                          <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>{(item.price * item.quantity).toLocaleString('vi-VN')}đ</Text>
+                        </div>
+                      ))}
                     </div>
 
                     {/* Discount - moved inside the card */}
@@ -510,7 +542,7 @@ export default function CheckoutPage() {
                 </Col>
 
                 {/* Payment */}
-                <Col xs={24} md={10} style={{ display: 'flex' }}>
+                <Col xs={24} lg={10} style={{ display: 'flex', width: '100%' }}>
                   <Card
                     style={{
                       borderRadius: 12,
@@ -585,15 +617,17 @@ export default function CheckoutPage() {
                         <Text strong style={{ display: 'block', marginBottom: 8, fontSize: isMobile ? 13 : 14 }}>
                           Tiền khách đưa
                         </Text>
-                        <InputNumber
-                          size={isMobile ? 'middle' : 'large'}
-                          value={cashReceived}
-                          onChange={(value) => setCashReceived(value || 0)}
-                          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                          parser={(value) => Number(value?.replace(/,/g, '') || 0)}
-                          style={{ width: '100%', borderRadius: 10 }}
-                          addonAfter="đ"
-                        />
+                        <Space.Compact style={{ width: '100%' }}>
+                          <InputNumber
+                            size={isMobile ? 'middle' : 'large'}
+                            value={cashReceived}
+                            onChange={(value) => setCashReceived(value || 0)}
+                            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                            parser={(value) => Number(value?.replace(/,/g, '') || 0)}
+                            style={{ width: '100%', borderRadius: '10px 0 0 10px' }}
+                          />
+                          <Button size={isMobile ? 'middle' : 'large'} style={{ borderRadius: '0 10px 10px 0' }}>đ</Button>
+                        </Space.Compact>
                         {cashReceived >= calculateFinalTotal() && cashReceived > 0 && (
                           <div style={{ marginTop: 8, padding: isMobile ? '6px 10px' : '8px 12px', background: '#f6ffed', borderRadius: 8 }}>
                             <Text style={{ color: '#52c41a', fontSize: isMobile ? 12 : 14 }}>

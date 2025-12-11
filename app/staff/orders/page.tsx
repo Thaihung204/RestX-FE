@@ -10,16 +10,15 @@ import {
   Button,
   Space,
   Modal,
-  List,
   Avatar,
   Badge,
   Tabs,
   Input,
   Select,
   Divider,
-  message,
   Empty,
   InputNumber,
+  App,
 } from 'antd';
 import {
   ShoppingCartOutlined,
@@ -176,6 +175,7 @@ const itemStatusConfig: Record<OrderItemStatus, { color: string; text: string }>
 };
 
 export default function OrderManagement() {
+  const { message } = App.useApp();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -582,7 +582,15 @@ export default function OrderManagement() {
         footer={null}
         width={isMobile ? '95%' : 600}
         centered
-        styles={{ body: { padding: isMobile ? 16 : 24 } }}
+        styles={{
+          body: { padding: isMobile ? 16 : 24 },
+          mask: {
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
+            filter: 'none',
+          },
+        }}
       >
         {selectedOrder && (
           <div>
@@ -621,44 +629,44 @@ export default function OrderManagement() {
             </Card>
 
             {/* Items List */}
-            <List
-              itemLayout="horizontal"
-              dataSource={selectedOrder.items}
-              size={isMobile ? 'small' : 'default'}
-              renderItem={item => (
-                <List.Item
-                  actions={[
-                    <Select
-                      key="status"
-                      value={item.status}
-                      size="small"
-                      style={{ width: isMobile ? 90 : 110 }}
-                      onChange={(value) => handleUpdateItemStatus(selectedOrder.id, item.id, value)}
-                      options={[
-                        { value: 'pending', label: 'Chờ' },
-                        { value: 'preparing', label: 'Đang nấu' },
-                        { value: 'ready', label: 'Sẵn sàng' },
-                        { value: 'served', label: 'Đã phục vụ' },
-                      ]}
-                    />,
-                  ]}
+            <div>
+              {selectedOrder.items.map((item, index) => (
+                <div
+                  key={item.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: isMobile ? '10px 0' : '14px 0',
+                    borderBottom: index < selectedOrder.items.length - 1 ? '1px solid #f0f0f0' : 'none',
+                  }}
                 >
-                  <List.Item.Meta
-                    title={
-                      <Space size={isMobile ? 4 : 8}>
-                        <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>{item.name}</Text>
-                        <Tag style={{ fontSize: isMobile ? 10 : 12 }}>{item.quantity}x</Tag>
-                      </Space>
-                    }
-                    description={
+                  <div style={{ flex: 1 }}>
+                    <Space size={isMobile ? 4 : 8}>
+                      <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>{item.name}</Text>
+                      <Tag style={{ fontSize: isMobile ? 10 : 12 }}>{item.quantity}x</Tag>
+                    </Space>
+                    <div>
                       <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>
                         {(item.price * item.quantity).toLocaleString('vi-VN')}đ
                       </Text>
-                    }
+                    </div>
+                  </div>
+                  <Select
+                    value={item.status}
+                    size="small"
+                    style={{ width: isMobile ? 90 : 110 }}
+                    onChange={(value) => handleUpdateItemStatus(selectedOrder.id, item.id, value)}
+                    options={[
+                      { value: 'pending', label: 'Chờ' },
+                      { value: 'preparing', label: 'Đang nấu' },
+                      { value: 'ready', label: 'Sẵn sàng' },
+                      { value: 'served', label: 'Đã phục vụ' },
+                    ]}
                   />
-                </List.Item>
-              )}
-            />
+                </div>
+              ))}
+            </div>
 
             <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
 
@@ -729,7 +737,15 @@ export default function OrderManagement() {
         footer={null}
         width={isMobile ? '95%' : 900}
         centered
-        styles={{ body: { padding: isMobile ? 16 : 24, maxHeight: isMobile ? '80vh' : 'auto', overflowY: 'auto' } }}
+        styles={{
+          body: { padding: isMobile ? 16 : 24, maxHeight: isMobile ? '80vh' : 'auto', overflowY: 'auto' },
+          mask: {
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
+            filter: 'none',
+          },
+        }}
       >
         <Row gutter={[16, 16]}>
           {/* Menu */}
@@ -810,40 +826,45 @@ export default function OrderManagement() {
             >
               {cart.length > 0 ? (
                 <>
-                  <List
-                    size="small"
-                    dataSource={cart}
-                    renderItem={c => (
-                      <List.Item
-                        style={{ padding: isMobile ? '8px 0' : '12px 0' }}
-                        actions={[
+                  <div>
+                    {cart.map((c, index) => (
+                      <div
+                        key={c.item.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: isMobile ? '8px 0' : '12px 0',
+                          borderBottom: index < cart.length - 1 ? '1px solid #f0f0f0' : 'none',
+                          gap: isMobile ? 8 : 12,
+                        }}
+                      >
+                        <span style={{ fontSize: isMobile ? 20 : 24 }}>{c.item.image}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{c.item.name}</div>
+                          <div style={{ fontSize: isMobile ? 12 : 14, color: '#888' }}>
+                            {(c.item.price * c.quantity).toLocaleString('vi-VN')}đ
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <Button
-                            key="minus"
                             type="text"
                             size="small"
                             icon={<MinusOutlined />}
                             onClick={() => updateCartQuantity(c.item.id, -1)}
-                          />,
-                          <span key="qty" style={{ minWidth: 20, textAlign: 'center', fontSize: isMobile ? 13 : 14 }}>
+                          />
+                          <span style={{ minWidth: 20, textAlign: 'center', fontSize: isMobile ? 13 : 14 }}>
                             {c.quantity}
-                          </span>,
+                          </span>
                           <Button
-                            key="plus"
                             type="text"
                             size="small"
                             icon={<PlusOutlined />}
                             onClick={() => updateCartQuantity(c.item.id, 1)}
-                          />,
-                        ]}
-                      >
-                        <List.Item.Meta
-                          avatar={<span style={{ fontSize: isMobile ? 20 : 24 }}>{c.item.image}</span>}
-                          title={<span style={{ fontSize: isMobile ? 13 : 14 }}>{c.item.name}</span>}
-                          description={<span style={{ fontSize: isMobile ? 12 : 14 }}>{`${(c.item.price * c.quantity).toLocaleString('vi-VN')}đ`}</span>}
-                        />
-                      </List.Item>
-                    )}
-                  />
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
                   <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
 

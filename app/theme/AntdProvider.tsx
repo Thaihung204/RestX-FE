@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App as AntdApp } from 'antd';
 
 const theme = {
   token: {
@@ -41,7 +41,7 @@ export default function AntdProvider({
 }) {
   return (
     <ConfigProvider theme={theme}>
-      {children}
+      <AntdApp>{children}</AntdApp>
     </ConfigProvider>
   );
 }

@@ -364,7 +364,7 @@ export default function AttendancePage() {
                       }}
                     >
                       <LogoutOutlined style={{ fontSize: isMobile ? 28 : 36 }} />
-                      <span>CHECK OUT</span>
+                      <span style={{ fontSize: isMobile ? 14 : 16 }}>CHECK OUT</span>
                     </Button>
                     
                     <Button
@@ -399,7 +399,7 @@ export default function AttendancePage() {
               title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Ngày công</span>}
               value={monthlyStats.workedDays}
               suffix={`/${monthlyStats.totalDays}`}
-              valueStyle={{ color: '#52c41a', fontWeight: 700, fontSize: isMobile ? 20 : 24 }}
+              styles={{ content: { color: '#52c41a', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
               prefix={<CalendarOutlined />}
             />
           </Card>
@@ -410,7 +410,7 @@ export default function AttendancePage() {
               title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Đi muộn</span>}
               value={monthlyStats.lateDays}
               suffix="ngày"
-              valueStyle={{ color: '#faad14', fontWeight: 700, fontSize: isMobile ? 20 : 24 }}
+              styles={{ content: { color: '#faad14', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
               prefix={<ClockCircleOutlined />}
             />
           </Card>
@@ -421,7 +421,7 @@ export default function AttendancePage() {
               title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Nghỉ phép</span>}
               value={monthlyStats.leaveDays}
               suffix="ngày"
-              valueStyle={{ color: '#1890ff', fontWeight: 700, fontSize: isMobile ? 20 : 24 }}
+              styles={{ content: { color: '#1890ff', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
               prefix={<HistoryOutlined />}
             />
           </Card>
@@ -432,7 +432,7 @@ export default function AttendancePage() {
               title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Tổng giờ làm</span>}
               value={monthlyStats.totalHours}
               suffix="h"
-              valueStyle={{ color: '#FF7A00', fontWeight: 700, fontSize: isMobile ? 20 : 24 }}
+              styles={{ content: { color: '#FF7A00', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
               prefix={<FieldTimeOutlined />}
             />
           </Card>
@@ -483,9 +483,10 @@ export default function AttendancePage() {
                 </Text>
               </div>
               <Progress
-                percent={(monthlyStats.workedDays / monthlyStats.totalDays) * 100}
+                percent={Number(((monthlyStats.workedDays / monthlyStats.totalDays) * 100).toFixed(1))}
                 strokeColor="#52c41a"
                 railColor="#f0f0f0"
+                format={(p) => `${p?.toFixed(1)}%`}
               />
             </div>
 
@@ -497,9 +498,10 @@ export default function AttendancePage() {
                 </Text>
               </div>
               <Progress
-                percent={(monthlyStats.totalHours / (monthlyStats.totalDays * 8)) * 100}
+                percent={Number(((monthlyStats.totalHours / (monthlyStats.totalDays * 8)) * 100).toFixed(1))}
                 strokeColor="#FF7A00"
                 railColor="#f0f0f0"
+                format={(p) => `${p?.toFixed(1)}%`}
               />
             </div>
 
@@ -513,7 +515,7 @@ export default function AttendancePage() {
                 items={[
                   {
                     color: 'green',
-                    children: (
+                    content: (
                       <>
                         <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>07:58</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- Check in</Text>
                       </>
@@ -521,7 +523,7 @@ export default function AttendancePage() {
                   },
                   {
                     color: 'orange',
-                    children: (
+                    content: (
                       <>
                         <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>12:00</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- Nghỉ trưa</Text>
                       </>
@@ -529,7 +531,7 @@ export default function AttendancePage() {
                   },
                   {
                     color: 'green',
-                    children: (
+                    content: (
                       <>
                         <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>13:00</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- Tiếp tục làm việc</Text>
                       </>
@@ -537,7 +539,7 @@ export default function AttendancePage() {
                   },
                   {
                     color: 'gray',
-                    children: (
+                    content: (
                       <>
                         <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>Đang làm việc...</Text>
                       </>
@@ -586,6 +588,14 @@ export default function AttendancePage() {
         cancelText="Hủy"
         centered
         width={isMobile ? '90%' : 400}
+        styles={{
+          mask: {
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
+            filter: 'none',
+          },
+        }}
       >
         <div style={{ textAlign: 'center', padding: isMobile ? '12px 0' : '20px 0' }}>
           <div

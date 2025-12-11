@@ -403,6 +403,14 @@ export default function TableManagement() {
         footer={null}
         width={500}
         centered
+        styles={{
+          mask: {
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
+            filter: 'none',
+          },
+        }}
       >
         {selectedTable && (
           <div>
@@ -660,6 +668,14 @@ export default function TableManagement() {
         footer={null}
         width={400}
         centered
+        styles={{
+          mask: {
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
+            filter: 'none',
+          },
+        }}
       >
         <Form
           form={form}

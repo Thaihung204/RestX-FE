@@ -82,24 +82,47 @@ export default function StaffLayout({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false); // e.g. iPad widths
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
+    const checkViewport = () => {
+      const w = window.innerWidth;
+      const mobile = w < 768;
+      const tablet = w >= 768 && w < 1200;
       setIsMobile(mobile);
-      if (mobile) setCollapsed(true);
+      setIsTablet(tablet);
+      if (mobile || tablet) {
+        setCollapsed(true);
+      } else {
+        setCollapsed(false);
+        setDrawerOpen(false);
+      }
     };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
   }, []);
+
+  useEffect(() => {
+    // allow page scroll even when drawer open
+    if (drawerOpen) {
+      document.body.style.overflow = 'auto';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [drawerOpen]);
+
+  const isDrawerDevice = isMobile || isTablet;
 
   const handleMenuClick = (e: { key: string }) => {
     router.push(e.key);
-    if (isMobile) setDrawerOpen(false);
+    if (isDrawerDevice) setDrawerOpen(false);
   };
 
   // Sidebar content component for reuse
@@ -247,17 +270,37 @@ export default function StaffLayout({
     <AntdProvider>
       <Layout style={{ minHeight: '100vh' }}>
         {/* Mobile Drawer */}
-        {isMobile && (
+        {isDrawerDevice && (
           <Drawer
             placement="left"
             open={drawerOpen}
             onClose={() => setDrawerOpen(false)}
             width={280}
+            style={{ top: 0, height: '100vh' }}
             closable={false}
+            maskClosable
+            maskStyle={{
+              background: 'rgba(0,0,0,0.55)',
+              backdropFilter: 'none',
+              WebkitBackdropFilter: 'none',
+              filter: 'none',
+            }}
+            rootStyle={{
+              backdropFilter: 'none',
+              WebkitBackdropFilter: 'none',
+            }}
             styles={{
-              body: { padding: 0, background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)' },
+              body: { 
+                padding: 0, 
+                background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
+                height: '100%',
+                minHeight: '100%',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+              },
               header: { display: 'none' },
             }}
+            destroyOnClose
           >
             <div style={{ position: 'relative', height: '100%' }}>
               <Button
@@ -277,7 +320,7 @@ export default function StaffLayout({
         )}
 
         {/* Desktop Sidebar */}
-        {!isMobile && (
+        {!isDrawerDevice && (
           <Sider
             trigger={null}
             collapsible
@@ -300,8 +343,10 @@ export default function StaffLayout({
 
         {/* Main Layout */}
         <Layout style={{ 
-          marginLeft: isMobile ? 0 : (collapsed ? 80 : 260), 
-          transition: 'margin-left 0.2s' 
+          marginLeft: isDrawerDevice ? 0 : (collapsed ? 80 : 260), 
+          transition: 'margin-left 0.2s',
+          minHeight: '100vh',
+          width: '100%',
         }}>
           {/* Header */}
           <Header
@@ -323,8 +368,8 @@ export default function StaffLayout({
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Button
                 type="text"
-                icon={isMobile ? <MenuOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
-                onClick={() => isMobile ? setDrawerOpen(true) : setCollapsed(!collapsed)}
+                icon={isDrawerDevice ? <MenuOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
+                onClick={() => isDrawerDevice ? setDrawerOpen(true) : setCollapsed(!collapsed)}
                 style={{
                   fontSize: 16,
                   width: 40,
@@ -461,6 +506,14 @@ export default function StaffLayout({
         }
         .ant-menu-dark .ant-menu-item .ant-menu-item-icon {
           font-size: 18px !important;
+        }
+        /* Disable blur/backdrop on all masks (drawer + modal) */
+        .ant-drawer-mask,
+        .ant-modal-mask {
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+          filter: none !important;
+          background: rgba(0, 0, 0, 0.55) !important;
         }
       `}</style>
     </AntdProvider>
