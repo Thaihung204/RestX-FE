@@ -1,5 +1,5 @@
-import { GiftOutlined, StarOutlined } from "@ant-design/icons";
-import { Card, Progress, Typography } from "antd";
+import { RightOutlined } from "@ant-design/icons";
+import { Button, Card, Progress, Typography } from "antd";
 import React from "react";
 
 const { Title, Text } = Typography;
@@ -19,106 +19,75 @@ const PointsCard: React.FC<PointsCardProps> = ({
 
   return (
     <Card
+      bordered={false}
       style={{
-        borderRadius: 20,
-        border: "none",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-        background: "linear-gradient(135deg, #FF8A3D 0%, #D24A00 100%)",
+        height: "100%",
+        borderRadius: 24,
+        background: "linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%)",
+        position: "relative",
         overflow: "hidden",
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
       }}
-      styles={{
-        body: { padding: 24 },
-      }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          marginBottom: 20,
-        }}>
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 12,
-            background: "rgba(255,255,255,0.2)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backdropFilter: "blur(10px)",
-          }}>
-          <StarOutlined style={{ fontSize: 24, color: "#FFD700" }} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <Text
-            style={{
-              color: "rgba(255,255,255,0.8)",
-              fontSize: 14,
-              display: "block",
-            }}>
-            Điểm tích lũy
-          </Text>
-          <Title
-            level={3}
-            style={{
-              margin: 0,
-              color: "white",
-              fontSize: 28,
-              fontWeight: 700,
-            }}>
-            {currentPoints} điểm
-          </Title>
-        </div>
-        <GiftOutlined
-          style={{ fontSize: 32, color: "rgba(255,255,255,0.3)" }}
-        />
-      </div>
+      styles={{ body: { padding: 32, display: "flex", flexDirection: "column", height: "100%" } }}
+    >
+        {/* Background Pattern */}
+        <div style={{ 
+            position: "absolute", 
+            inset: 0, 
+            backgroundImage: "radial-gradient(#ffffff 1px, transparent 1px)", 
+            backgroundSize: "30px 30px", 
+            opacity: 0.03 
+        }} />
 
-      <div
-        style={{
-          background: "rgba(255,255,255,0.18)",
-          padding: 16,
-          borderRadius: 12,
-          backdropFilter: "blur(10px)",
-        }}>
-        <div style={{ marginBottom: 12 }}>
-          <Text style={{ color: "white", fontSize: 14 }}>
-            Còn <strong>{pointsToNextReward} điểm</strong> nữa để nhận thưởng
-          </Text>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, position: "relative", zIndex: 1 }}>
+            <div>
+                <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase" }}>
+                    RestX Rewards
+                </Text>
+                <Title level={2} style={{ color: "#fff", margin: "8px 0", fontSize: 36, fontWeight: 700, letterSpacing: -1 }}>
+                    {currentPoints}
+                    <span style={{ fontSize: 16, fontWeight: 400, color: "#888", marginLeft: 8 }}>điểm</span>
+                </Title>
+            </div>
+            <div style={{ 
+                width: 48, height: 48, borderRadius: "50%", 
+                background: "linear-gradient(135deg, #D4AF37 0%, #FDD835 100%)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 0 20px rgba(212, 175, 55, 0.4)"
+            }}>
+                <span style={{ fontSize: 20 }}>💎</span>
+            </div>
         </div>
-        <Progress
-          percent={progress}
-          strokeColor={{
-            "0%": "#FFD8A2",
-            "100%": "#F49A35",
-          }}
-          railColor="rgba(255,255,255,0.2)"
-          showInfo={false}
-          size={8}
-          style={{ marginBottom: 8 }}
-        />
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 12 }}>
-            0 điểm
-          </Text>
-          <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 12 }}>
-            {totalPointsNeeded} điểm
-          </Text>
-        </div>
-      </div>
 
-      <div
-        style={{
-          marginTop: 16,
-          padding: "12px 16px",
-          background: "rgba(244,182,112,0.18)",
-          borderRadius: 8,
-          border: "1px solid rgba(244,154,53,0.5)",
-        }}>
-        <Text style={{ color: "#FFD700", fontSize: 13, fontWeight: 500 }}>
-          Tích điểm mỗi lần thanh toán để đổi quà hấp dẫn
-        </Text>
-      </div>
+        <div style={{ marginTop: "auto", position: "relative", zIndex: 1 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <Text style={{ color: "#ccc", fontSize: 13 }}>Tiến độ hạng Vàng</Text>
+                <Text style={{ color: "#ff7043", fontSize: 13 }}>Còn {pointsToNextReward} điểm</Text>
+            </div>
+            <Progress 
+                percent={progress} 
+                showInfo={false} 
+                strokeColor={{ "0%": "#D4AF37", "100%": "#ff5722" }}
+            railColor="rgba(255,255,255,0.1)"
+                strokeLinecap="square"
+                size={6}
+            />
+            
+            <Button 
+                type="text" 
+                style={{ 
+                    marginTop: 20, 
+                    padding: 0, 
+                    color: "#D4AF37", 
+                    fontSize: 14,
+                    display: "flex", 
+                    alignItems: "center" 
+                }}
+            >
+                Xem ưu đãi đổi quà <RightOutlined style={{ fontSize: 10, marginLeft: 4 }} />
+            </Button>
+        </div>
     </Card>
   );
 };

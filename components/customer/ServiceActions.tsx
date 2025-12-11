@@ -1,139 +1,121 @@
 import {
-  CommentOutlined,
-  CustomerServiceOutlined,
+  BellOutlined,
   FileTextOutlined,
+  SmileOutlined
 } from "@ant-design/icons";
-import { Card, Col, Row, Typography } from "antd";
+import { Col, Row, Typography } from "antd";
 import React from "react";
 
 const { Text } = Typography;
 
 interface ServiceActionsProps {
-  onRequestBill?: () => void;
-  onAskService?: () => void;
-  onGiveFeedback?: () => void;
+onRequestBill?: () => void;
+onAskService?: () => void;
+onGiveFeedback?: () => void;
 }
 
 interface ActionButtonProps {
-  icon: React.ReactElement<{ style?: React.CSSProperties }>;
-  title: string;
-  description: string;
-  color: string;
-  onClick?: () => void;
+icon: React.ReactElement;
+title: string;
+onClick?: () => void;
+isActive?: boolean;
 }
 
 const ActionButton: React.FC<ActionButtonProps> = ({
-  icon,
-  title,
-  description,
-  color,
-  onClick,
+icon,
+title,
+onClick,
+isActive = false,
 }) => {
-  return (
-    <Card
-      hoverable
-      onClick={onClick}
-      style={{
-        borderRadius: 16,
-        border: "none",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-        height: "100%",
-        cursor: "pointer",
-        transition: "all 0.3s ease",
-      }}
-      styles={{
-        body: { padding: 20, textAlign: "center" },
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-4px)";
-        e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.15)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
-      }}>
-      <div
-        style={{
-          width: 64,
-          height: 64,
-          borderRadius: 16,
-          background: `linear-gradient(135deg, ${color}15 0%, ${color}30 100%)`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          margin: "0 auto 16px",
-          border: `2px solid ${color}20`,
-        }}>
-        {React.cloneElement(icon, {
-          style: { fontSize: 32, color: color },
-        })}
-      </div>
-      <Text
-        strong
-        style={{
-          display: "block",
-          fontSize: 16,
-          color: "#1F1F1F",
-          marginBottom: 6,
-        }}>
-        {title}
-      </Text>
-      <Text
-        style={{
-          fontSize: 13,
-          color: "#757575",
-          display: "block",
-          lineHeight: 1.4,
-        }}>
-        {description}
-      </Text>
-    </Card>
-  );
+return (
+  <div
+    onClick={onClick}
+    className="action-btn"
+    style={{
+      background: isActive 
+          ? "linear-gradient(135deg, #ff5722 0%, #d84315 100%)" 
+          : "rgba(255, 255, 255, 0.05)",
+      borderRadius: 20,
+      padding: "24px 16px",
+      cursor: "pointer",
+      textAlign: "center",
+      transition: "all 0.3s ease",
+      border: isActive ? "none" : "1px solid rgba(255, 255, 255, 0.08)",
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 12
+    }}
+    // Lưu ý: Hover effects nên xử lý bằng CSS class hoặc CSS-in-JS library, 
+    // ở đây dùng style inline cơ bản.
+  >
+    <div style={{ 
+        fontSize: 28, 
+        color: isActive ? "#fff" : "#ff7043",
+        filter: isActive ? "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" : "none"
+    }}>
+      {icon}
+    </div>
+    <Text style={{ 
+        color: isActive ? "#fff" : "#ccc", 
+        fontSize: 13, 
+        fontWeight: 600,
+        lineHeight: 1.4
+    }}>
+      {title}
+    </Text>
+  </div>
+);
 };
 
 const ServiceActions: React.FC<ServiceActionsProps> = ({
-  onRequestBill,
-  onAskService,
-  onGiveFeedback,
+onRequestBill,
+onAskService,
+onGiveFeedback,
 }) => {
-  return (
-    <div style={{ marginTop: 20 }}>
-      <Typography.Title
-        level={5}
-        style={{ marginBottom: 16, color: "#1F1F1F", fontSize: 18 }}>
-        Dịch vụ
-      </Typography.Title>
-      <Row gutter={[12, 12]}>
-        <Col xs={24} sm={8}>
-          <ActionButton
-            icon={<FileTextOutlined />}
-            title="Yêu cầu hóa đơn"
-            description="Thanh toán và nhận hóa đơn nhanh chóng"
-            color="#FF5722"
-            onClick={onRequestBill}
-          />
-        </Col>
-        <Col xs={24} sm={8}>
-          <ActionButton
-            icon={<CustomerServiceOutlined />}
-            title="Gọi phục vụ"
-            description="Nhân viên sẽ đến ngay"
-            color="#2196F3"
-            onClick={onAskService}
-          />
-        </Col>
-        <Col xs={24} sm={8}>
-          <ActionButton
-            icon={<CommentOutlined />}
-            title="Đánh giá"
-            description="Chia sẻ trải nghiệm của bạn"
-            color="#4CAF50"
-            onClick={onGiveFeedback}
-          />
-        </Col>
-      </Row>
-    </div>
-  );
+return (
+  <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Row gutter={[16, 16]} style={{ flex: 1 }}>
+      <Col span={12}>
+        <ActionButton
+          icon={<BellOutlined />}
+          title="Gọi phục vụ"
+          onClick={onAskService}
+          isActive={true} // Highlight nút quan trọng nhất
+        />
+      </Col>
+      <Col span={12}>
+        <ActionButton
+          icon={<FileTextOutlined />}
+          title="Tính tiền"
+          onClick={onRequestBill}
+        />
+      </Col>
+      <Col span={24}>
+          <div 
+              onClick={onGiveFeedback}
+              style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px dashed rgba(255,255,255,0.2)",
+                  borderRadius: 16,
+                  padding: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                  cursor: "pointer",
+                  height: "100%"
+              }}
+          >
+              <SmileOutlined style={{ color: "#888", fontSize: 20 }} />
+              <Text style={{ color: "#888", fontSize: 13 }}>Góp ý dịch vụ</Text>
+          </div>
+      </Col>
+    </Row>
+  </div>
+);
 };
 
 export default ServiceActions;

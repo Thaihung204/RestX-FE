@@ -1,4 +1,4 @@
-import { ArrowRightOutlined, ShoppingOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined } from "@ant-design/icons";
 import { Button, Card, Typography } from "antd";
 import React from "react";
 
@@ -11,134 +11,64 @@ interface MenuCTAProps {
 const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
   return (
     <Card
+      hoverable
+      onClick={onViewMenu}
       style={{
-        borderRadius: 20,
+        borderRadius: 24,
         border: "none",
-        boxShadow: "0 10px 30px rgba(210,74,0,0.25)",
-        background: "linear-gradient(135deg, #FF8A3D 0%, #D24A00 100%)",
         overflow: "hidden",
-        marginTop: 20,
+        position: "relative",
+        background: "#000",
+        cursor: "pointer",
+        marginTop: 16,
+        boxShadow: "0 20px 50px -10px rgba(255, 87, 34, 0.25)",
       }}
-      styles={{
-        body: { padding: 0 },
-      }}>
-      <div style={{ position: "relative", padding: 24 }}>
-        {/* Background decoration */}
-        <div
-          style={{
-            position: "absolute",
-            top: -50,
-            right: -50,
-            width: 200,
-            height: 200,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.12)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: -30,
-            left: -30,
-            width: 150,
-            height: 150,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.12)",
-          }}
-        />
-
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              marginBottom: 20,
+      styles={{ body: { padding: 0 } }}
+    >
+      {/* Background Image / Gradient */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(90deg, #000 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.2) 100%), url('/images/customer/menu-bg.jpg')", // Giả định có ảnh món ăn ngon làm nền
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          transition: "transform 0.5s ease",
+        }}
+      />
+      
+      {/* Content */}
+      <div style={{ position: "relative", padding: "32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ maxWidth: "70%" }}>
+            <div style={{ 
+                display: "inline-block", 
+                padding: "4px 12px", 
+                background: "rgba(255, 87, 34, 0.2)", 
+                border: "1px solid rgba(255, 87, 34, 0.4)",
+                borderRadius: 20, 
+                marginBottom: 12 
             }}>
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 14,
-                background: "rgba(255,255,255,0.25)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backdropFilter: "blur(10px)",
-              }}>
-              <ShoppingOutlined style={{ fontSize: 28, color: "white" }} />
+                <Text style={{ color: "#ff8a65", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Season 2024</Text>
             </div>
-            <div style={{ flex: 1 }}>
-              <Title
-                level={4}
-                style={{ margin: 0, color: "white", fontSize: 20 }}>
-                Khám phá thực đơn
-              </Title>
-              <Text style={{ color: "rgba(255,255,255,0.92)", fontSize: 14 }}>
-                Hơn 100 món ăn đặc sắc
-              </Text>
-            </div>
-          </div>
-
-          <div
-            style={{
-              background: "rgba(255,255,255,0.18)",
-              padding: 16,
-              borderRadius: 12,
-              marginBottom: 20,
-              backdropFilter: "blur(10px)",
-            }}>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 14,
-                display: "block",
-                marginBottom: 8,
-              }}>
-              Xem thực đơn, đặt món và theo dõi đơn hàng của bạn
+            <Title level={2} style={{ color: "white", margin: 0, fontSize: 28, fontWeight: 700 }}>
+                Khám phá Thực đơn
+            </Title>
+            <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 8, display: "block", fontSize: 14 }}>
+                Hơn 100+ món ăn tinh hoa được chế biến bởi các đầu bếp hàng đầu.
             </Text>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {["Món chính", "Khai vị", "Đồ uống", "Tráng miệng"].map((tag) => (
-                <div
-                  key={tag}
-                  style={{
-                    background: "rgba(255,255,255,0.24)",
-                    padding: "4px 12px",
-                    borderRadius: 20,
-                    fontSize: 12,
-                    color: "white",
-                  }}>
-                  {tag}
-                </div>
-              ))}
-            </div>
-          </div>
+        </div>
 
-          <Button
-            type="primary"
-            size="large"
-            onClick={onViewMenu}
-            icon={<ArrowRightOutlined />}
-            iconPlacement="end"
-            style={{
-              width: "100%",
-              height: 48,
-              borderRadius: 12,
-              background: "white",
-              border: "none",
-              color: "#D24A00",
-              fontSize: 16,
-              fontWeight: 600,
-              boxShadow: "0 6px 18px rgba(210,74,0,0.28)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.02)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-            }}>
-            Xem thực đơn ngay
-          </Button>
+        <div style={{ 
+            width: 56, 
+            height: 56, 
+            borderRadius: "50%", 
+            background: "#fff", 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center",
+            boxShadow: "0 0 20px rgba(255,255,255,0.3)"
+        }}>
+            <ArrowRightOutlined style={{ fontSize: 24, color: "#000" }} />
         </div>
       </div>
     </Card>
