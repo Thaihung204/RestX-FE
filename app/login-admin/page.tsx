@@ -3,12 +3,13 @@
 import AdminLoginHeader from "@/components/auth/AdminLoginHeader";
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function AdminLoginPage() {
   const { mode } = useThemeMode();
-  const isDark = mode === 'dark';
+  const [mounted, setMounted] = useState(false);
+  const isDark = mounted && mode === 'dark';
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -69,6 +70,10 @@ export default function AdminLoginPage() {
     setPasswordErrors(errors);
     return errors.length === 0;
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

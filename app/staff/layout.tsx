@@ -539,6 +539,26 @@ export default function StaffLayout({
         .ant-modal-body .ant-divider {
           border-color: var(--border) !important;
         }
+        /* Scrollbar styling for modal body (checkout and other modals) */
+        .ant-modal-body {
+          scrollbar-width: thin !important;
+          scrollbar-color: var(--border) var(--card) !important;
+        }
+        .ant-modal-body::-webkit-scrollbar {
+          width: 8px !important;
+          height: 8px !important;
+        }
+        .ant-modal-body::-webkit-scrollbar-track {
+          background: var(--card) !important;
+          border-radius: 4px !important;
+        }
+        .ant-modal-body::-webkit-scrollbar-thumb {
+          background: var(--border) !important;
+          border-radius: 4px !important;
+        }
+        .ant-modal-body::-webkit-scrollbar-thumb:hover {
+          background: var(--text-muted) !important;
+        }
       `}</style>
     </>
   );

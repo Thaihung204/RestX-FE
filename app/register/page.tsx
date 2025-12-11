@@ -2,12 +2,13 @@
 
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function RegisterPage() {
   const { mode } = useThemeMode();
-  const isDark = mode === 'dark';
+  const [mounted, setMounted] = useState(false);
+  const isDark = mounted && mode === 'dark';
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -80,6 +81,10 @@ export default function RegisterPage() {
 
     return errors;
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const validateConfirmPassword = (confirmPwd: string, pwd: string) => {
     if (!confirmPwd) return "";

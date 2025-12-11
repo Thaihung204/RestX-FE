@@ -3,11 +3,12 @@
 import LoginButton from "@/components/auth/LoginButton";
 import LoginHeader from "@/components/auth/LoginHeader";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function LoginPage() {
   const { mode } = useThemeMode();
+  const [mounted, setMounted] = useState(false);
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [remember, setRemember] = useState(false);
@@ -16,6 +17,10 @@ export default function LoginPage() {
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [nameError, setNameError] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const validatePhone = (phone: string) => {
     if (!phone) {
@@ -103,7 +108,7 @@ export default function LoginPage() {
     }, 1000);
   };
 
-  const isDark = mode === 'dark';
+  const isDark = mounted && mode === 'dark';
   
   return (
     <div 
@@ -157,7 +162,6 @@ export default function LoginPage() {
                   borderColor: phoneTouched && phoneError 
                     ? '#ef4444' 
                     : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
-                  placeholderColor: isDark ? '#9ca3af' : '#9ca3af',
                 }}
                 suppressHydrationWarning
               />
@@ -187,7 +191,6 @@ export default function LoginPage() {
                   borderColor: nameTouched && nameError 
                     ? '#ef4444' 
                     : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
-                  placeholderColor: isDark ? '#9ca3af' : '#9ca3af',
                 }}
                 suppressHydrationWarning
               />

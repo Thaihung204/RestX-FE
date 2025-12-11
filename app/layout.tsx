@@ -45,7 +45,7 @@ export default function RootLayout({
           }
         `}</style>
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <AuthProvider>
           <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
         </AuthProvider>

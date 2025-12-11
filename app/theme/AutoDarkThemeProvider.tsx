@@ -88,6 +88,57 @@ const AutoDarkThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
           components: (mode === "dark" ? darkTheme : lightTheme).tokens.components,
         }}
       >
+        <style jsx global>{`
+          /* Scrollbar Styling - Webkit (Chrome, Safari, Edge) */
+          ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+          }
+          ::-webkit-scrollbar-track {
+            background: var(--card);
+            border-radius: 5px;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 5px;
+            border: 2px solid var(--card);
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+          }
+          
+          /* Scrollbar Styling - Firefox */
+          * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) var(--card);
+          }
+          
+          /* Ant Design Drawer/Modal scrollbar */
+          .ant-drawer-body,
+          .ant-modal-body {
+            scrollbar-width: thin !important;
+            scrollbar-color: var(--border) var(--card) !important;
+          }
+          .ant-drawer-body::-webkit-scrollbar,
+          .ant-modal-body::-webkit-scrollbar {
+            width: 8px !important;
+            height: 8px !important;
+          }
+          .ant-drawer-body::-webkit-scrollbar-track,
+          .ant-modal-body::-webkit-scrollbar-track {
+            background: var(--card) !important;
+            border-radius: 4px !important;
+          }
+          .ant-drawer-body::-webkit-scrollbar-thumb,
+          .ant-modal-body::-webkit-scrollbar-thumb {
+            background: var(--border) !important;
+            border-radius: 4px !important;
+          }
+          .ant-drawer-body::-webkit-scrollbar-thumb:hover,
+          .ant-modal-body::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted) !important;
+          }
+        `}</style>
         {children}
       </ConfigProvider>
     </ThemeContext.Provider>

@@ -584,9 +584,9 @@ export default function OrderManagement() {
         footer={null}
         width={isMobile ? '95%' : 600}
         centered
+        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
         styles={{
           body: { padding: isMobile ? 16 : 24 },
-          content: { backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' },
           header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
           mask: {
             background: 'rgba(0, 0, 0, 0.92)',
