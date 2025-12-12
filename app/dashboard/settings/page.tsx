@@ -10,7 +10,7 @@ export default function SettingsPage() {
   >("general");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex">
+    <div className="min-h-screen flex" style={{ background: 'var(--bg-base)' }}>
       <DashboardSidebar />
       <div className="flex-1 flex flex-col">
         <DashboardHeader />
@@ -18,14 +18,16 @@ export default function SettingsPage() {
           <div className="space-y-6 max-w-5xl">
             {/* Header */}
             <div>
-              <h2 className="text-3xl font-bold text-white mb-2">Settings</h2>
-              <p className="text-gray-400">
+              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
+                Settings
+              </h2>
+              <p style={{ color: 'var(--text-muted)' }}>
                 Manage your restaurant preferences and configurations
               </p>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 border-b border-gray-700">
+            <div className="flex gap-2" style={{ borderBottom: '1px solid var(--border)' }}>
               {[
                 {
                   id: "general" as const,
@@ -52,10 +54,15 @@ export default function SettingsPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-3 font-medium transition-all flex items-center gap-2 ${
-                    activeTab === tab.id
-                      ? "text-orange-500 border-b-2 border-orange-500"
-                      : "text-gray-400 hover:text-white"
+                    activeTab === tab.id ? "text-orange-500 border-b-2 border-orange-500" : ""
                   }`}
+                  style={
+                    activeTab !== tab.id
+                      ? {
+                          color: 'var(--text-muted)',
+                        }
+                      : undefined
+                  }
                   suppressHydrationWarning>
                   <svg
                     className="w-5 h-5"
@@ -77,77 +84,112 @@ export default function SettingsPage() {
             {/* General Settings */}
             {activeTab === "general" && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">
+                <div
+                  className="rounded-xl p-6"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
                     Restaurant Information
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-gray-300 text-sm font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                         Restaurant Name
                       </label>
                       <input
                         type="text"
                         defaultValue="RestX Premium Restaurant"
-                        className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                        style={{
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text)',
+                        }}
                         suppressHydrationWarning
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                           Email
                         </label>
                         <input
                           type="email"
                           defaultValue="contact@restx.com"
-                          className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          style={{
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text)',
+                          }}
                           suppressHydrationWarning
                         />
                       </div>
                       <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                           Phone
                         </label>
                         <input
                           type="tel"
                           defaultValue="+1 (555) 123-4567"
-                          className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          style={{
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text)',
+                          }}
                           suppressHydrationWarning
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-gray-300 text-sm font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                         Address
                       </label>
                       <input
                         type="text"
                         defaultValue="123 Main Street, Downtown, City 12345"
-                        className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                        style={{
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text)',
+                        }}
                         suppressHydrationWarning
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                           Opening Time
                         </label>
                         <input
                           type="time"
                           defaultValue="09:00"
-                          className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          style={{
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text)',
+                          }}
                           suppressHydrationWarning
                         />
                       </div>
                       <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                           Closing Time
                         </label>
                         <input
                           type="time"
                           defaultValue="23:00"
-                          className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          style={{
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text)',
+                          }}
                           suppressHydrationWarning
                         />
                       </div>
@@ -155,18 +197,28 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">
+                <div
+                  className="rounded-xl p-6"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
                     Business Settings
                   </h3>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                           Currency
                         </label>
                         <select
-                          className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          style={{
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text)',
+                          }}
                           suppressHydrationWarning>
                           <option>USD ($)</option>
                           <option>EUR (€)</option>
@@ -175,24 +227,34 @@ export default function SettingsPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                           Tax Rate (%)
                         </label>
                         <input
                           type="number"
                           defaultValue="10"
-                          className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          style={{
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text)',
+                          }}
                           suppressHydrationWarning
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                           Time Zone
                         </label>
                         <select
-                          className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          style={{
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text)',
+                          }}
                           suppressHydrationWarning>
                           <option>UTC-5 (EST)</option>
                           <option>UTC-8 (PST)</option>
@@ -201,11 +263,16 @@ export default function SettingsPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                           Date Format
                         </label>
                         <select
-                          className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          style={{
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text)',
+                          }}
                           suppressHydrationWarning>
                           <option>MM/DD/YYYY</option>
                           <option>DD/MM/YYYY</option>
@@ -221,8 +288,15 @@ export default function SettingsPage() {
             {/* Appearance Settings */}
             {activeTab === "appearance" && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">Theme</h3>
+                <div
+                  className="rounded-xl p-6"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
+                    Theme
+                  </h3>
                   <div className="grid grid-cols-3 gap-4">
                     {[
                       { name: "Dark", color: "from-gray-900 to-black" },
@@ -257,8 +331,13 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">
+                <div
+                  className="rounded-xl p-6"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
                     Accent Color
                   </h3>
                   <div className="grid grid-cols-6 gap-4">
@@ -278,15 +357,22 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">
+                <div
+                  className="rounded-xl p-6"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
                     Display Options
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-white font-medium">Compact Mode</p>
-                        <p className="text-gray-400 text-sm">
+                        <p className="font-medium" style={{ color: 'var(--text)' }}>
+                          Compact Mode
+                        </p>
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           Reduce spacing between elements
                         </p>
                       </div>
@@ -301,10 +387,10 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-white font-medium">
+                        <p className="font-medium" style={{ color: 'var(--text)' }}>
                           Show Animations
                         </p>
-                        <p className="text-gray-400 text-sm">
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           Enable interface animations
                         </p>
                       </div>
@@ -326,8 +412,13 @@ export default function SettingsPage() {
             {/* Notifications Settings */}
             {activeTab === "notifications" && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">
+                <div
+                  className="rounded-xl p-6"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
                     Order Notifications
                   </h3>
                   <div className="space-y-4">
@@ -349,8 +440,12 @@ export default function SettingsPage() {
                         key={item.title}
                         className="flex items-center justify-between">
                         <div>
-                          <p className="text-white font-medium">{item.title}</p>
-                          <p className="text-gray-400 text-sm">{item.desc}</p>
+                          <p className="font-medium" style={{ color: 'var(--text)' }}>
+                            {item.title}
+                          </p>
+                          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                            {item.desc}
+                          </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
@@ -366,8 +461,13 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">
+                <div
+                  className="rounded-xl p-6"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
                     System Notifications
                   </h3>
                   <div className="space-y-4">
@@ -386,8 +486,12 @@ export default function SettingsPage() {
                         key={item.title}
                         className="flex items-center justify-between">
                         <div>
-                          <p className="text-white font-medium">{item.title}</p>
-                          <p className="text-gray-400 text-sm">{item.desc}</p>
+                          <p className="font-medium" style={{ color: 'var(--text)' }}>
+                            {item.title}
+                          </p>
+                          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                            {item.desc}
+                          </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
@@ -408,38 +512,58 @@ export default function SettingsPage() {
             {/* Security Settings */}
             {activeTab === "security" && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">
+                <div
+                  className="rounded-xl p-6"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
                     Change Password
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-gray-300 text-sm font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                         Current Password
                       </label>
                       <input
                         type="password"
-                        className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                        style={{
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text)',
+                        }}
                         suppressHydrationWarning
                       />
                     </div>
                     <div>
-                      <label className="block text-gray-300 text-sm font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                         New Password
                       </label>
                       <input
                         type="password"
-                        className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                        style={{
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text)',
+                        }}
                         suppressHydrationWarning
                       />
                     </div>
                     <div>
-                      <label className="block text-gray-300 text-sm font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                         Confirm New Password
                       </label>
                       <input
                         type="password"
-                        className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                        style={{
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text)',
+                        }}
                         suppressHydrationWarning
                       />
                     </div>
@@ -451,15 +575,22 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">
+                <div
+                  className="rounded-xl p-6"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
                     Two-Factor Authentication
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-white font-medium">Enable 2FA</p>
-                        <p className="text-gray-400 text-sm">
+                        <p className="font-medium" style={{ color: 'var(--text)' }}>
+                          Enable 2FA
+                        </p>
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           Add an extra layer of security
                         </p>
                       </div>
@@ -475,7 +606,12 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-red-500/20 rounded-xl p-6">
+                <div
+                  className="rounded-xl p-6"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                  }}>
                   <h3 className="text-xl font-bold text-red-500 mb-4">
                     Danger Zone
                   </h3>
@@ -493,7 +629,12 @@ export default function SettingsPage() {
             {/* Save Button */}
             <div className="flex justify-end gap-3 pt-6">
               <button
-                className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-all"
+                className="px-6 py-2 rounded-lg transition-all"
+                style={{
+                  background: 'var(--surface)',
+                  color: 'var(--text)',
+                  border: '1px solid var(--border)',
+                }}
                 suppressHydrationWarning>
                 Cancel
               </button>

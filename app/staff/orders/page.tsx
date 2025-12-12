@@ -36,6 +36,8 @@ import {
   UserOutlined,
   PrinterOutlined,
   SendOutlined,
+  AppstoreOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
@@ -66,6 +68,25 @@ interface Order {
   notes?: string;
 }
 
+// Helper function to get icon for menu item
+const getMenuItemIcon = (itemId: string) => {
+  const iconMap: Record<string, React.ReactNode> = {
+    'm1': <AppstoreOutlined style={{ fontSize: 24 }} />,
+    'm2': <AppstoreOutlined style={{ fontSize: 24 }} />,
+    'm3': <AppstoreOutlined style={{ fontSize: 24 }} />,
+    'm4': <AppstoreOutlined style={{ fontSize: 24 }} />,
+    'm5': <AppstoreOutlined style={{ fontSize: 24 }} />,
+    'm6': <AppstoreOutlined style={{ fontSize: 24 }} />,
+    'm7': <AppstoreOutlined style={{ fontSize: 24 }} />,
+    'm8': <AppstoreOutlined style={{ fontSize: 24 }} />,
+    'm9': <CoffeeOutlined style={{ fontSize: 24 }} />,
+    'm10': <CoffeeOutlined style={{ fontSize: 24 }} />,
+    'm11': <CoffeeOutlined style={{ fontSize: 24 }} />,
+    'm12': <CoffeeOutlined style={{ fontSize: 24 }} />,
+  };
+  return iconMap[itemId] || <ShoppingOutlined style={{ fontSize: 24 }} />;
+};
+
 // Mock menu data
 const menuCategories = [
   {
@@ -73,9 +94,9 @@ const menuCategories = [
     name: 'Khai vị',
     icon: <CoffeeOutlined />,
     items: [
-      { id: 'm1', name: 'Gỏi cuốn tôm thịt', price: 65000, image: '🥗' },
-      { id: 'm2', name: 'Chả giò hải sản', price: 85000, image: '🥟' },
-      { id: 'm3', name: 'Súp cua', price: 55000, image: '🥣' },
+      { id: 'm1', name: 'Gỏi cuốn tôm thịt', price: 65000 },
+      { id: 'm2', name: 'Chả giò hải sản', price: 85000 },
+      { id: 'm3', name: 'Súp cua', price: 55000 },
     ],
   },
   {
@@ -83,11 +104,11 @@ const menuCategories = [
     name: 'Món chính',
     icon: <FireOutlined />,
     items: [
-      { id: 'm4', name: 'Bò lúc lắc', price: 185000, image: '🥩' },
-      { id: 'm5', name: 'Cá hồi sốt chanh dây', price: 245000, image: '🐟' },
-      { id: 'm6', name: 'Gà nướng muối ớt', price: 165000, image: '🍗' },
-      { id: 'm7', name: 'Tôm hùm nướng bơ', price: 650000, image: '🦞' },
-      { id: 'm8', name: 'Cơm chiên hải sản', price: 125000, image: '🍚' },
+      { id: 'm4', name: 'Bò lúc lắc', price: 185000 },
+      { id: 'm5', name: 'Cá hồi sốt chanh dây', price: 245000 },
+      { id: 'm6', name: 'Gà nướng muối ớt', price: 165000 },
+      { id: 'm7', name: 'Tôm hùm nướng bơ', price: 650000 },
+      { id: 'm8', name: 'Cơm chiên hải sản', price: 125000 },
     ],
   },
   {
@@ -95,10 +116,10 @@ const menuCategories = [
     name: 'Đồ uống',
     icon: <CoffeeOutlined />,
     items: [
-      { id: 'm9', name: 'Nước ép cam', price: 45000, image: '🍊' },
-      { id: 'm10', name: 'Sinh tố bơ', price: 55000, image: '🥑' },
-      { id: 'm11', name: 'Coca Cola', price: 25000, image: '🥤' },
-      { id: 'm12', name: 'Bia Tiger', price: 35000, image: '🍺' },
+      { id: 'm9', name: 'Nước ép cam', price: 45000 },
+      { id: 'm10', name: 'Sinh tố bơ', price: 55000 },
+      { id: 'm11', name: 'Coca Cola', price: 25000 },
+      { id: 'm12', name: 'Bia Tiger', price: 35000 },
     ],
   },
 ];
@@ -800,7 +821,18 @@ export default function OrderManagement() {
                       onClick={() => addToCart(item)}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
-                        <span style={{ fontSize: isMobile ? 24 : 32 }}>{item.image}</span>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          width: isMobile ? 32 : 40,
+                          height: isMobile ? 32 : 40,
+                          borderRadius: 8,
+                          background: 'var(--surface)',
+                          color: '#FF7A00'
+                        }}>
+                          {getMenuItemIcon(item.id)}
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <Text strong style={{ display: 'block', fontSize: isMobile ? 13 : 14 }}>{item.name}</Text>
                           <Text style={{ color: '#FF7A00', fontSize: isMobile ? 12 : 14 }}>
@@ -844,7 +876,18 @@ export default function OrderManagement() {
                           gap: isMobile ? 8 : 12,
                         }}
                       >
-                        <span style={{ fontSize: isMobile ? 20 : 24 }}>{c.item.image}</span>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          width: isMobile ? 28 : 32,
+                          height: isMobile ? 28 : 32,
+                          borderRadius: 6,
+                          background: 'var(--surface)',
+                          color: '#FF7A00'
+                        }}>
+                          {getMenuItemIcon(c.item.id)}
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{c.item.name}</div>
                           <div style={{ fontSize: isMobile ? 12 : 14, color: 'var(--text-muted)' }}>

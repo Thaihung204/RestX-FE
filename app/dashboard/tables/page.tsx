@@ -86,7 +86,7 @@ export default function TablesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex">
+    <div className="min-h-screen flex" style={{ background: 'var(--bg-base)' }}>
       <DashboardSidebar />
       <div className="flex-1 flex flex-col">
         <DashboardHeader />
@@ -95,10 +95,10 @@ export default function TablesPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold text-white mb-2">
+                <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
                   Table Management
                 </h2>
-                <p className="text-gray-400">
+                <p style={{ color: 'var(--text-muted)' }}>
                   Manage restaurant tables and reservations
                 </p>
               </div>
@@ -123,11 +123,18 @@ export default function TablesPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Total Tables</p>
-                    <p className="text-3xl font-bold text-white mt-1">
+                    <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                      Total Tables
+                    </p>
+                    <p className="text-3xl font-bold mt-1" style={{ color: 'var(--text)' }}>
                       {tables.length}
                     </p>
                   </div>
@@ -148,10 +155,17 @@ export default function TablesPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-green-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Available</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Available
+                    </p>
                     <p className="text-3xl font-bold text-green-500 mt-1">
                       {tables.filter((t) => t.status === "available").length}
                     </p>
@@ -173,10 +187,17 @@ export default function TablesPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-orange-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(249, 115, 22, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Occupied</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Occupied
+                    </p>
                     <p className="text-3xl font-bold text-orange-500 mt-1">
                       {tables.filter((t) => t.status === "occupied").length}
                     </p>
@@ -198,10 +219,17 @@ export default function TablesPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-blue-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Reserved</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Reserved
+                    </p>
                     <p className="text-3xl font-bold text-blue-500 mt-1">
                       {tables.filter((t) => t.status === "reserved").length}
                     </p>
@@ -225,19 +253,30 @@ export default function TablesPage() {
             </div>
 
             {/* Tables Grid */}
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-white mb-6">All Tables</h3>
+            <div
+              className="rounded-xl p-6"
+              style={{
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
+              }}>
+              <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text)' }}>
+                All Tables
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {tables.map((table) => (
                   <div
                     key={table.id}
-                    className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 hover:border-orange-500/50 transition-all">
+                    className="rounded-xl p-4 transition-all hover:border-orange-500/50"
+                    style={{
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
+                    }}>
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h4 className="text-lg font-bold text-white">
+                        <h4 className="text-lg font-bold" style={{ color: 'var(--text)' }}>
                           Table {table.number}
                         </h4>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           {table.area} Area
                         </p>
                       </div>
@@ -250,7 +289,7 @@ export default function TablesPage() {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
                         <svg
                           className="w-4 h-4"
                           fill="none"
@@ -308,7 +347,12 @@ export default function TablesPage() {
                         View Details
                       </button>
                       <button
-                        className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-600 transition-all"
+                        className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                        style={{
+                          background: 'var(--surface)',
+                          color: 'var(--text-muted)',
+                          border: '1px solid var(--border)',
+                        }}
                         suppressHydrationWarning>
                         <svg
                           className="w-4 h-4"

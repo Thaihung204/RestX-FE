@@ -22,17 +22,38 @@ export default function KPICard({
   trend,
   status = "normal",
 }: KPICardProps) {
-  const statusColors = {
-    normal: "from-gray-800 to-gray-900 border-gray-700",
-    warning: "from-orange-900/30 to-gray-900 border-orange-500/30",
-    success: "from-green-900/30 to-gray-900 border-green-500/30",
+  const statusStyles: Record<
+    NonNullable<KPICardProps["status"]>,
+    { background: string; border: string }
+  > = {
+    normal: {
+      background: "var(--card)",
+      border: "1px solid var(--border)",
+    },
+    warning: {
+      background:
+        "linear-gradient(135deg, rgba(255, 122, 0, 0.12) 0%, rgba(255, 122, 0, 0.05) 100%)",
+      border: "1px solid rgba(255, 122, 0, 0.25)",
+    },
+    success: {
+      background:
+        "linear-gradient(135deg, rgba(82, 196, 26, 0.14) 0%, rgba(82, 196, 26, 0.06) 100%)",
+      border: "1px solid rgba(82, 196, 26, 0.3)",
+    },
   };
 
   return (
     <div
-      className={`bg-gradient-to-br ${statusColors[status]} border rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}>
+      className="rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+      style={statusStyles[status]}>
       <div className="flex items-start justify-between mb-4">
-        <div className="p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+        <div
+          className="p-3 rounded-lg"
+          style={{
+            background: "rgba(255, 122, 0, 0.12)",
+            border: "1px solid rgba(255, 122, 0, 0.25)",
+            color: "#FF7A00",
+          }}>
           {icon}
         </div>
         {trend && (
@@ -58,11 +79,17 @@ export default function KPICard({
       </div>
 
       <div className="space-y-1">
-        <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wide">
+        <h3 className="text-sm font-medium uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
           {title}
         </h3>
-        <p className="text-3xl font-bold text-white">{value}</p>
-        {subtitle && <p className="text-gray-500 text-sm mt-1">{subtitle}</p>}
+        <p className="text-3xl font-bold" style={{ color: "var(--text)" }}>
+          {value}
+        </p>
+        {subtitle && (
+          <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+            {subtitle}
+          </p>
+        )}
       </div>
     </div>
   );

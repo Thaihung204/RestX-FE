@@ -14,10 +14,19 @@ export default function OrdersBarChart() {
   const maxOrders = Math.max(...ordersData.map((d) => d.orders));
 
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
+    <div
+      className="rounded-xl p-6"
+      style={{
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+      }}>
       <div className="mb-6">
-        <h3 className="text-xl font-bold text-white mb-1">Orders Overview</h3>
-        <p className="text-gray-400 text-sm">Daily order volume</p>
+        <h3 className="text-xl font-bold mb-1" style={{ color: 'var(--text)' }}>
+          Orders Overview
+        </h3>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          Daily order volume
+        </p>
       </div>
 
       <div className="relative h-64">
@@ -30,12 +39,18 @@ export default function OrdersBarChart() {
                   <div
                     className="w-full bg-gradient-to-t from-orange-600 to-orange-500 rounded-t-lg transition-all duration-500 hover:from-orange-500 hover:to-orange-400 group relative"
                     style={{ height: `${height}%` }}>
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                    <div
+                      className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 rounded whitespace-nowrap"
+                      style={{
+                        background: 'var(--card)',
+                        color: 'var(--text)',
+                        border: '1px solid var(--border)',
+                      }}>
                       {item.orders} orders
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 text-gray-400 text-sm font-medium">
+                <div className="mt-3 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
                   {item.label}
                 </div>
               </div>
@@ -45,10 +60,14 @@ export default function OrdersBarChart() {
       </div>
 
       {/* Legend */}
-      <div className="mt-4 pt-4 border-t border-gray-700 flex justify-center">
+      <div
+        className="mt-4 pt-4 flex justify-center"
+        style={{ borderTop: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-gradient-to-br from-orange-600 to-orange-500 rounded"></div>
-          <span className="text-sm text-gray-400">Total Orders</span>
+          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+            Total Orders
+          </span>
         </div>
       </div>
     </div>
