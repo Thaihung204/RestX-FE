@@ -3,9 +3,12 @@
 import LoginButton from "@/components/auth/LoginButton";
 import LoginHeader from "@/components/auth/LoginHeader";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function LoginPage() {
+  const { mode } = useThemeMode();
+  const [mounted, setMounted] = useState(false);
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [remember, setRemember] = useState(false);
@@ -14,6 +17,10 @@ export default function LoginPage() {
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [nameError, setNameError] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const validatePhone = (phone: string) => {
     if (!phone) {
@@ -101,21 +108,44 @@ export default function LoginPage() {
     }, 1000);
   };
 
+  const isDark = mounted && mode === 'dark';
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-orange-950 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div 
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+      style={{
+        background: isDark 
+          ? 'linear-gradient(135deg, #0E121A 0%, #141927 50%, #1a1a2e 100%)'
+          : 'linear-gradient(135deg, #1f2937 0%, #000000 50%, #7c2d12 100%)'
+      }}
+    >
       {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-orange-600 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500 rounded-full filter blur-3xl opacity-10"></div>
+      <div 
+        className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse"
+        style={{ background: isDark ? '#FF7A00' : '#ea580c' }}
+      ></div>
+      <div 
+        className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10"
+        style={{ background: isDark ? '#FF7A00' : '#f97316' }}
+      ></div>
 
       <div className="max-w-[420px] w-full space-y-8 relative z-10">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border border-orange-100">
+        <div 
+          className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border"
+          style={{
+            background: isDark ? 'rgba(20, 25, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 122, 0, 0.2)'
+          }}
+        >
           <LoginHeader />
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
               <label
                 htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 mb-2">
+                className="block text-sm font-medium mb-2"
+                style={{ color: isDark ? '#ECECEC' : '#374151' }}
+              >
                 Phone Number
               </label>
               <input
@@ -125,25 +155,27 @@ export default function LoginPage() {
                 onChange={handlePhoneChange}
                 placeholder="0123456789"
                 maxLength={10}
-                className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
-                         text-gray-900 placeholder-gray-400
-                         ${
-                           phoneTouched && phoneError
-                             ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                             : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
-                         }
-                         disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
+                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                style={{
+                  background: isDark ? '#141927' : '#fff',
+                  color: isDark ? '#ECECEC' : '#111827',
+                  borderColor: phoneTouched && phoneError 
+                    ? '#ef4444' 
+                    : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                }}
                 suppressHydrationWarning
               />
               {phoneTouched && phoneError && (
-                <p className="mt-1 text-sm text-red-600">{phoneError}</p>
+                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{phoneError}</p>
               )}
             </div>
 
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-2">
+                className="block text-sm font-medium mb-2"
+                style={{ color: isDark ? '#ECECEC' : '#374151' }}
+              >
                 Name
               </label>
               <input
@@ -152,35 +184,43 @@ export default function LoginPage() {
                 value={name}
                 onChange={handleNameChange}
                 placeholder="Enter your name"
-                className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
-                         text-gray-900 placeholder-gray-400
-                         ${
-                           nameTouched && nameError
-                             ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                             : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
-                         }
-                         disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
+                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                style={{
+                  background: isDark ? '#141927' : '#fff',
+                  color: isDark ? '#ECECEC' : '#111827',
+                  borderColor: nameTouched && nameError 
+                    ? '#ef4444' 
+                    : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                }}
                 suppressHydrationWarning
               />
               {nameTouched && nameError && (
-                <p className="mt-1 text-sm text-red-600">{nameError}</p>
+                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{nameError}</p>
               )}
             </div>
 
             <RememberCheckbox checked={remember} onChange={setRemember} />
             <LoginButton loading={loading} text="LOGIN" />
 
-            <div className="text-center text-sm text-gray-600 mt-6">
+            <div className="text-center text-sm mt-6" style={{ color: isDark ? '#C5C5C5' : '#4b5563' }}>
               By continuing, you agree to RestX&apos;s{" "}
               <a
                 href="/terms"
-                className="text-orange-600 hover:text-orange-700 font-medium">
+                className="font-medium"
+                style={{ color: '#FF7A00' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+              >
                 Terms of Service
               </a>{" "}
               and{" "}
               <a
                 href="/privacy"
-                className="text-orange-600 hover:text-orange-700 font-medium">
+                className="font-medium"
+                style={{ color: '#FF7A00' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+              >
                 Privacy Policy
               </a>
             </div>

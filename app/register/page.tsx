@@ -2,9 +2,13 @@
 
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function RegisterPage() {
+  const { mode } = useThemeMode();
+  const [mounted, setMounted] = useState(false);
+  const isDark = mounted && mode === 'dark';
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -77,6 +81,10 @@ export default function RegisterPage() {
 
     return errors;
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const validateConfirmPassword = (confirmPwd: string, pwd: string) => {
     if (!confirmPwd) return "";
@@ -169,18 +177,40 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-orange-950 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div 
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+      style={{
+        background: isDark 
+          ? 'linear-gradient(135deg, #0E121A 0%, #141927 50%, #1a1a2e 100%)'
+          : 'linear-gradient(135deg, #1f2937 0%, #000000 50%, #7c2d12 100%)'
+      }}
+    >
       {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-orange-600 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500 rounded-full filter blur-3xl opacity-10"></div>
+      <div 
+        className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse"
+        style={{ background: isDark ? '#FF7A00' : '#ea580c' }}
+      ></div>
+      <div 
+        className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10"
+        style={{ background: isDark ? '#FF7A00' : '#f97316' }}
+      ></div>
 
       <div className="max-w-[480px] w-full space-y-8 relative z-10">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border border-orange-100">
+        <div 
+          className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border"
+          style={{
+            background: isDark ? 'rgba(20, 25, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 122, 0, 0.2)'
+          }}
+        >
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            <h2 
+              className="text-3xl font-bold mb-2"
+              style={{ color: isDark ? '#ECECEC' : '#111827' }}
+            >
               Create Account
             </h2>
-            <p className="text-gray-600">Join RestX today</p>
+            <p style={{ color: isDark ? '#C5C5C5' : '#4b5563' }}>Join RestX today</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -189,7 +219,9 @@ export default function RegisterPage() {
               <div>
                 <label
                   htmlFor="firstName"
-                  className="block text-sm font-medium text-gray-700 mb-2">
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: isDark ? '#ECECEC' : '#374151' }}
+                >
                   First Name
                 </label>
                 <input
@@ -199,18 +231,18 @@ export default function RegisterPage() {
                   value={formData.firstName}
                   onChange={handleChange}
                   placeholder="John"
-                  className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
-                           text-gray-900 placeholder-gray-400
-                           ${
-                             touched.firstName && errors.firstName
-                               ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                               : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
-                           }
-                           disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
+                  className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    background: isDark ? '#141927' : '#fff',
+                    color: isDark ? '#ECECEC' : '#111827',
+                    borderColor: touched.firstName && errors.firstName 
+                      ? '#ef4444' 
+                      : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                  }}
                   suppressHydrationWarning
                 />
                 {touched.firstName && errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600">
+                  <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>
                     {errors.firstName}
                   </p>
                 )}
@@ -219,7 +251,9 @@ export default function RegisterPage() {
               <div>
                 <label
                   htmlFor="lastName"
-                  className="block text-sm font-medium text-gray-700 mb-2">
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: isDark ? '#ECECEC' : '#374151' }}
+                >
                   Last Name
                 </label>
                 <input
@@ -229,18 +263,18 @@ export default function RegisterPage() {
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Doe"
-                  className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
-                           text-gray-900 placeholder-gray-400
-                           ${
-                             touched.lastName && errors.lastName
-                               ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                               : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
-                           }
-                           disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
+                  className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    background: isDark ? '#141927' : '#fff',
+                    color: isDark ? '#ECECEC' : '#111827',
+                    borderColor: touched.lastName && errors.lastName 
+                      ? '#ef4444' 
+                      : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                  }}
                   suppressHydrationWarning
                 />
                 {touched.lastName && errors.lastName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+                  <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.lastName}</p>
                 )}
               </div>
             </div>
@@ -249,7 +283,9 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2">
+                className="block text-sm font-medium mb-2"
+                style={{ color: isDark ? '#ECECEC' : '#374151' }}
+              >
                 Email
               </label>
               <input
@@ -259,18 +295,18 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="your.email@example.com"
-                className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
-                         text-gray-900 placeholder-gray-400
-                         ${
-                           touched.email && errors.email
-                             ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                             : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
-                         }
-                         disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
+                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                style={{
+                  background: isDark ? '#141927' : '#fff',
+                  color: isDark ? '#ECECEC' : '#111827',
+                  borderColor: touched.email && errors.email 
+                    ? '#ef4444' 
+                    : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                }}
                 suppressHydrationWarning
               />
               {touched.email && errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.email}</p>
               )}
             </div>
 
@@ -278,7 +314,9 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 mb-2">
+                className="block text-sm font-medium mb-2"
+                style={{ color: isDark ? '#ECECEC' : '#374151' }}
+              >
                 Phone Number
               </label>
               <input
@@ -288,18 +326,18 @@ export default function RegisterPage() {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="0123456789"
-                className={`w-full px-4 py-3 border-2 rounded-lg outline-none transition-all
-                         text-gray-900 placeholder-gray-400
-                         ${
-                           touched.phone && errors.phone
-                             ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                             : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
-                         }
-                         disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
+                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                style={{
+                  background: isDark ? '#141927' : '#fff',
+                  color: isDark ? '#ECECEC' : '#111827',
+                  borderColor: touched.phone && errors.phone 
+                    ? '#ef4444' 
+                    : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                }}
                 suppressHydrationWarning
               />
               {touched.phone && errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.phone}</p>
               )}
             </div>
 
@@ -307,7 +345,9 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2">
+                className="block text-sm font-medium mb-2"
+                style={{ color: isDark ? '#ECECEC' : '#374151' }}
+              >
                 Password
               </label>
               <div className="relative">
@@ -318,20 +358,23 @@ export default function RegisterPage() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Enter your password"
-                  className={`w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all
-                           text-gray-900 placeholder-gray-400
-                           ${
-                             touched.password && errors.password.length > 0
-                               ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                               : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
-                           }
-                           disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
+                  className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    background: isDark ? '#141927' : '#fff',
+                    color: isDark ? '#ECECEC' : '#111827',
+                    borderColor: touched.password && errors.password.length > 0 
+                      ? '#ef4444' 
+                      : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                  }}
                   suppressHydrationWarning
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none"
+                  style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = isDark ? '#d1d5db' : '#374151'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = isDark ? '#9ca3af' : '#6b7280'}
                   suppressHydrationWarning>
                   {showPassword ? (
                     <svg
@@ -371,7 +414,7 @@ export default function RegisterPage() {
               {touched.password && errors.password.length > 0 && (
                 <div className="mt-1 space-y-0.5">
                   {errors.password.map((error, index) => (
-                    <p key={index} className="text-sm text-red-600">
+                    <p key={index} className="text-sm" style={{ color: '#ef4444' }}>
                       {error}
                     </p>
                   ))}
@@ -383,7 +426,9 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-2">
+                className="block text-sm font-medium mb-2"
+                style={{ color: isDark ? '#ECECEC' : '#374151' }}
+              >
                 Confirm Password
               </label>
               <div className="relative">
@@ -394,20 +439,23 @@ export default function RegisterPage() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="Confirm your password"
-                  className={`w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all
-                           text-gray-900 placeholder-gray-400
-                           ${
-                             touched.confirmPassword && errors.confirmPassword
-                               ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                               : "border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-orange-300"
-                           }
-                           disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60`}
+                  className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    background: isDark ? '#141927' : '#fff',
+                    color: isDark ? '#ECECEC' : '#111827',
+                    borderColor: touched.confirmPassword && errors.confirmPassword 
+                      ? '#ef4444' 
+                      : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                  }}
                   suppressHydrationWarning
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none"
+                  style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = isDark ? '#d1d5db' : '#374151'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = isDark ? '#9ca3af' : '#6b7280'}
                   suppressHydrationWarning>
                   {showConfirmPassword ? (
                     <svg
@@ -445,7 +493,7 @@ export default function RegisterPage() {
                 </button>
               </div>
               {touched.confirmPassword && errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>
                   {errors.confirmPassword}
                 </p>
               )}
@@ -459,20 +507,32 @@ export default function RegisterPage() {
                   type="checkbox"
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-orange-300 cursor-pointer"
+                  className="w-4 h-4 border rounded focus:ring-3 focus:ring-orange-300 cursor-pointer"
+                  style={{
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : '#d1d5db',
+                    background: isDark ? '#141927' : '#f9fafb',
+                  }}
                 />
               </div>
-              <label htmlFor="terms" className="ml-3 text-sm text-gray-600">
+              <label htmlFor="terms" className="ml-3 text-sm" style={{ color: isDark ? '#C5C5C5' : '#4b5563' }}>
                 I agree to RestX&apos;s{" "}
                 <a
                   href="/terms"
-                  className="text-orange-600 hover:text-orange-700 font-medium">
+                  className="font-medium"
+                  style={{ color: '#FF7A00' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                >
                   Terms of Service
                 </a>{" "}
                 and{" "}
                 <a
                   href="/privacy"
-                  className="text-orange-600 hover:text-orange-700 font-medium">
+                  className="font-medium"
+                  style={{ color: '#FF7A00' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                >
                   Privacy Policy
                 </a>
               </label>
