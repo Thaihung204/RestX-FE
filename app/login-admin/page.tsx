@@ -9,7 +9,14 @@ import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 export default function AdminLoginPage() {
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
-  const isDark = mounted && mode === 'dark';
+  // Get initial theme from localStorage to prevent flash
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('restx-theme-mode');
+      return stored === 'dark' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return false;
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -73,7 +80,9 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Update isDark when mode changes
+    setIsDark(mode === 'dark');
+  }, [mode]);
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

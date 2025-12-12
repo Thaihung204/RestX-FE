@@ -125,7 +125,7 @@ export default function StaffPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex">
+    <div className="min-h-screen flex" style={{ background: 'var(--bg-base)' }}>
       <DashboardSidebar />
       <div className="flex-1 flex flex-col">
         <DashboardHeader />
@@ -134,10 +134,10 @@ export default function StaffPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold text-white mb-2">
+                <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
                   Staff Management
                 </h2>
-                <p className="text-gray-400">
+                <p style={{ color: 'var(--text-muted)' }}>
                   Manage your restaurant team members
                 </p>
               </div>
@@ -162,10 +162,17 @@ export default function StaffPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-blue-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Total Staff</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Total Staff
+                    </p>
                     <p className="text-3xl font-bold text-blue-500 mt-1">
                       {staff.length}
                     </p>
@@ -187,10 +194,17 @@ export default function StaffPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-green-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">On Duty</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      On Duty
+                    </p>
                     <p className="text-3xl font-bold text-green-500 mt-1">
                       {staff.filter((s) => s.status === "active").length}
                     </p>
@@ -212,10 +226,17 @@ export default function StaffPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-orange-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(249, 115, 22, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Departments</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Departments
+                    </p>
                     <p className="text-3xl font-bold text-orange-500 mt-1">5</p>
                   </div>
                   <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
@@ -235,10 +256,17 @@ export default function StaffPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-purple-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Avg Rating</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Avg Rating
+                    </p>
                     <p className="text-3xl font-bold text-purple-500 mt-1">
                       4.7
                     </p>
@@ -260,7 +288,11 @@ export default function StaffPage() {
               {staff.map((member) => (
                 <div
                   key={member.id}
-                  className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl overflow-hidden hover:border-orange-500/30 transition-all group">
+                  className="rounded-xl overflow-hidden hover:border-orange-500/30 transition-all group"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
                   <div className="p-6">
                     {/* Profile Header */}
                     <div className="flex items-start justify-between mb-4">
@@ -269,7 +301,7 @@ export default function StaffPage() {
                           {member.name.charAt(0)}
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold text-white group-hover:text-orange-500 transition-colors">
+                          <h3 className="text-lg font-bold group-hover:text-orange-500 transition-colors" style={{ color: 'var(--text)' }}>
                             {member.name}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
@@ -292,7 +324,7 @@ export default function StaffPage() {
 
                     {/* Contact Info */}
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
                         <svg
                           className="w-4 h-4"
                           fill="none"
@@ -307,7 +339,7 @@ export default function StaffPage() {
                         </svg>
                         <span>{member.email}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
                         <svg
                           className="w-4 h-4"
                           fill="none"
@@ -327,12 +359,18 @@ export default function StaffPage() {
                     {/* Details */}
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
-                        <p className="text-gray-400 text-xs mb-1">Shift</p>
-                        <p className="text-white font-medium">{member.shift}</p>
+                        <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                          Shift
+                        </p>
+                        <p className="font-medium" style={{ color: 'var(--text)' }}>
+                          {member.shift}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-gray-400 text-xs mb-1">Joined</p>
-                        <p className="text-white font-medium">
+                        <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                          Joined
+                        </p>
+                        <p className="font-medium" style={{ color: 'var(--text)' }}>
                           {member.joinDate}
                         </p>
                       </div>
@@ -347,15 +385,20 @@ export default function StaffPage() {
                             className={`w-4 h-4 ${
                               i < Math.floor(member.rating)
                                 ? "text-yellow-500"
-                                : "text-gray-600"
+                                : ""
                             }`}
+                            style={
+                              i >= Math.floor(member.rating)
+                                ? { color: 'var(--text-muted)' }
+                                : undefined
+                            }
                             fill="currentColor"
                             viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                           </svg>
                         ))}
                       </div>
-                      <span className="text-gray-400 text-sm">
+                      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
                         {member.rating}/5.0
                       </span>
                     </div>
@@ -368,7 +411,12 @@ export default function StaffPage() {
                         View Profile
                       </button>
                       <button
-                        className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-all"
+                        className="px-3 py-2 rounded-lg transition-all"
+                        style={{
+                          background: 'var(--surface)',
+                          color: 'var(--text-muted)',
+                          border: '1px solid var(--border)',
+                        }}
                         suppressHydrationWarning>
                         <svg
                           className="w-4 h-4"
