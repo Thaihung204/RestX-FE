@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 
 interface RememberCheckboxProps {
@@ -13,9 +15,12 @@ const RememberCheckbox: React.FC<RememberCheckboxProps> = ({ checked, onChange }
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 cursor-pointer"
+        className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 focus:ring-2 cursor-pointer auth-checkbox"
       />
-      <label htmlFor="remember" className="ml-2 text-sm text-gray-900 cursor-pointer">
+      <label 
+        htmlFor="remember" 
+        className="ml-2 text-sm cursor-pointer auth-text"
+      >
         Keep me logged in
       </label>
     </div>

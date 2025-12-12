@@ -88,18 +88,24 @@ export default function TableStatusMap() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
+    <div
+      className="rounded-xl p-6"
+      style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
       <div className="mb-6">
-        <h3 className="text-xl font-bold text-white mb-1">
+        <h3 className="text-xl font-bold mb-1" style={{ color: "var(--text)" }}>
           Real-time Table Status
         </h3>
-        <p className="text-gray-400 text-sm">Live floor plan overview</p>
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+          Live floor plan overview
+        </p>
       </div>
 
       {/* Floor Plan */}
       <div className="space-y-6 mb-6">
         {/* VIP Area */}
-        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+        <div
+          className="rounded-lg p-4"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
             VIP Area
           </h4>
@@ -109,7 +115,9 @@ export default function TableStatusMap() {
         </div>
 
         {/* Indoor Area */}
-        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+        <div
+          className="rounded-lg p-4"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
             Indoor Area
           </h4>
@@ -119,7 +127,9 @@ export default function TableStatusMap() {
         </div>
 
         {/* Outdoor Area */}
-        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+        <div
+          className="rounded-lg p-4"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
             Outdoor Area
           </h4>
@@ -130,12 +140,14 @@ export default function TableStatusMap() {
       </div>
 
       {/* Legend */}
-      <div className="pt-4 border-t border-gray-700">
+      <div className="pt-4" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Object.entries(statusConfig).map(([status, config]) => (
             <div key={status} className="flex items-center gap-2">
               <div className={`w-3 h-3 ${config.bg} rounded`}></div>
-              <span className="text-gray-300 text-sm">{config.label}</span>
+              <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                {config.label}
+              </span>
             </div>
           ))}
         </div>

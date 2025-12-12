@@ -85,7 +85,7 @@ const TestimonialsSection: React.FC = () => {
     <section
       style={{
         padding: '80px 24px',
-        background: '#F9FAFB',
+        background: 'var(--bg-base)',
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -102,7 +102,7 @@ const TestimonialsSection: React.FC = () => {
                 fontSize: 'clamp(28px, 4vw, 42px)',
                 fontWeight: 700,
                 margin: 0,
-                color: '#111111',
+                color: 'var(--text)',
               }}
             >
               Nhà hàng nói gì về RestX?
@@ -110,7 +110,7 @@ const TestimonialsSection: React.FC = () => {
             <Paragraph
               style={{
                 fontSize: 18,
-                color: '#4F4F4F',
+                color: 'var(--text-muted)',
                 margin: 0,
                 maxWidth: 600,
                 marginLeft: 'auto',
@@ -137,8 +137,9 @@ const TestimonialsSection: React.FC = () => {
                     style={{
                       height: '100%',
                       borderRadius: 20,
-                      border: '1px solid #E5E7EB',
+                      border: '1px solid var(--border)',
                       transition: 'all 0.3s ease',
+                      background: 'var(--card)',
                     }}
                     styles={{ body: { padding: 28 } }}
                   >
@@ -160,7 +161,7 @@ const TestimonialsSection: React.FC = () => {
                             <Text strong style={{ fontSize: 17, display: 'block' }}>
                               {testimonial.name}
                             </Text>
-                            <Text type="secondary" style={{ fontSize: 14 }}>
+                          <Text type="secondary" style={{ fontSize: 14, color: 'var(--text-muted)' }}>
                               {testimonial.role}
                             </Text>
                           </div>
@@ -176,7 +177,7 @@ const TestimonialsSection: React.FC = () => {
                       <Paragraph
                         style={{
                           fontSize: 16,
-                          color: '#111111',
+                          color: 'var(--text)',
                           lineHeight: 1.8,
                           margin: 0,
                           fontStyle: 'italic',

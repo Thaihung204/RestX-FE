@@ -178,19 +178,24 @@ export default function DashboardSidebar() {
 
   return (
     <aside
-      className={`bg-gray-900 border-r border-gray-800 flex flex-col transition-all duration-300 ${
+      className={`flex flex-col transition-all duration-300 ${
         collapsed ? "w-20" : "w-64"
-      }`}>
+      }`}
+      style={{ background: "var(--card)", borderRight: "1px solid var(--border)", color: "var(--text)" }}>
       {/* Logo */}
-      <div className="p-6 border-b border-gray-800">
+      <div className="p-6" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-lg">R</span>
           </div>
           {!collapsed && (
             <div>
-              <h2 className="text-white font-bold text-lg">RestX</h2>
-              <p className="text-gray-400 text-xs">Management</p>
+              <h2 className="font-bold text-lg" style={{ color: "var(--text)" }}>
+                RestX
+              </h2>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                Management
+              </p>
             </div>
           )}
         </div>
@@ -208,18 +213,32 @@ export default function DashboardSidebar() {
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
                     isActive
                       ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg"
-                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                  }`}>
+                      : ""
+                  }`}
+                  style={
+                    isActive
+                      ? undefined
+                      : { color: "var(--text-muted)", background: "transparent" }
+                  }>
                   <span
                     className={`transition-colors ${
                       isActive
                         ? "text-white"
-                        : "text-gray-400 group-hover:text-orange-500"
-                    }`}>
+                        : "group-hover:text-orange-500"
+                    }`}
+                    style={
+                      isActive
+                        ? undefined
+                        : { color: "var(--text-muted)" }
+                    }>
                     {item.icon}
                   </span>
                   {!collapsed && (
-                    <span className="font-medium text-sm">{item.label}</span>
+                    <span
+                      className="font-medium text-sm"
+                      style={{ color: isActive ? "var(--text)" : "var(--text-muted)" }}>
+                      {item.label}
+                    </span>
                   )}
                   {!collapsed && isActive && (
                     <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
@@ -232,17 +251,19 @@ export default function DashboardSidebar() {
       </nav>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
             A
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-white font-medium text-sm truncate">
+              <p className="font-medium text-sm truncate" style={{ color: "var(--text)" }}>
                 Admin User
               </p>
-              <p className="text-gray-400 text-xs truncate">admin@restx.com</p>
+              <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+                admin@restx.com
+              </p>
             </div>
           )}
         </div>
@@ -251,11 +272,17 @@ export default function DashboardSidebar() {
       {/* Toggle Button */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 w-6 h-6 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-all">
+        className="absolute -right-3 top-20 w-6 h-6 rounded-full flex items-center justify-center transition-all"
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          color: "var(--text-muted)",
+        }}>
         <svg
           className={`w-3 h-3 transition-transform ${
             collapsed ? "rotate-180" : ""
           }`}
+          style={{ color: "inherit" }}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24">

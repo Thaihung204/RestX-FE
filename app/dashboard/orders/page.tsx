@@ -115,7 +115,7 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex">
+    <div className="min-h-screen flex" style={{ background: 'var(--bg-base)' }}>
       <DashboardSidebar />
       <div className="flex-1 flex flex-col">
         <DashboardHeader />
@@ -124,10 +124,10 @@ export default function OrdersPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold text-white mb-2">
+                <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
                   Order Management
                 </h2>
-                <p className="text-gray-400">
+                <p style={{ color: 'var(--text-muted)' }}>
                   Track and manage all restaurant orders
                 </p>
               </div>
@@ -152,10 +152,17 @@ export default function OrdersPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-yellow-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(234, 179, 8, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Pending</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Pending
+                    </p>
                     <p className="text-3xl font-bold text-yellow-500 mt-1">
                       {orders.filter((o) => o.status === "pending").length}
                     </p>
@@ -177,10 +184,17 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-blue-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Preparing</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Preparing
+                    </p>
                     <p className="text-3xl font-bold text-blue-500 mt-1">
                       {orders.filter((o) => o.status === "preparing").length}
                     </p>
@@ -202,10 +216,17 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-purple-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Ready</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Ready
+                    </p>
                     <p className="text-3xl font-bold text-purple-500 mt-1">
                       {orders.filter((o) => o.status === "ready").length}
                     </p>
@@ -227,10 +248,17 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-orange-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(249, 115, 22, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Served</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Served
+                    </p>
                     <p className="text-3xl font-bold text-orange-500 mt-1">
                       {orders.filter((o) => o.status === "served").length}
                     </p>
@@ -252,10 +280,17 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-green-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Completed</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Completed
+                    </p>
                     <p className="text-3xl font-bold text-green-500 mt-1">
                       {orders.filter((o) => o.status === "completed").length}
                     </p>
@@ -279,48 +314,76 @@ export default function OrdersPage() {
             </div>
 
             {/* Orders Table */}
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl overflow-hidden">
-              <div className="p-6 border-b border-gray-700">
-                <h3 className="text-xl font-bold text-white">All Orders</h3>
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
+              }}>
+              <div
+                className="p-6"
+                style={{ borderBottom: '1px solid var(--border)' }}>
+                <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
+                  All Orders
+                </h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-800/50">
+                  <thead style={{ background: 'var(--surface)' }}>
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: 'var(--text-muted)' }}>
                         Order
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: 'var(--text-muted)' }}>
                         Customer
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: 'var(--text-muted)' }}>
                         Table
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: 'var(--text-muted)' }}>
                         Items
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: 'var(--text-muted)' }}>
                         Total
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: 'var(--text-muted)' }}>
                         Status
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: 'var(--text-muted)' }}>
                         Payment
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: 'var(--text-muted)' }}>
                         Time
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: 'var(--text-muted)' }}>
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-700">
+                  <tbody style={{ borderColor: 'var(--border)' }}>
                     {orders.map((order) => (
                       <tr
                         key={order.id}
-                        className="hover:bg-gray-800/30 transition-colors">
+                        className="transition-colors"
+                        style={{ borderBottom: '1px solid var(--border)' }}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-orange-500 font-semibold">
                             {order.orderNumber}
@@ -331,18 +394,18 @@ export default function OrdersPage() {
                             <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
                               {order.customerName.charAt(0)}
                             </div>
-                            <span className="text-white font-medium">
+                            <span className="font-medium" style={{ color: 'var(--text)' }}>
                               {order.customerName}
                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-gray-300">
+                          <span style={{ color: 'var(--text-muted)' }}>
                             Table {order.tableNumber}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-gray-300">
+                          <span style={{ color: 'var(--text-muted)' }}>
                             {order.items} items
                           </span>
                         </td>
@@ -369,7 +432,7 @@ export default function OrdersPage() {
                             {order.paymentStatus === "paid" ? "Paid" : "Unpaid"}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-400 text-sm">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text-muted)' }}>
                           {order.time}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
