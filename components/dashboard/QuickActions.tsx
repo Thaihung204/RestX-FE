@@ -148,10 +148,16 @@ export default function QuickActions() {
   ];
 
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
+    <div
+      className="rounded-xl p-6"
+      style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
       <div className="mb-6">
-        <h3 className="text-xl font-bold text-white mb-1">Quick Actions</h3>
-        <p className="text-gray-400 text-sm">Frequently used shortcuts</p>
+        <h3 className="text-xl font-bold mb-1" style={{ color: "var(--text)" }}>
+          Quick Actions
+        </h3>
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+          Frequently used shortcuts
+        </p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -159,7 +165,12 @@ export default function QuickActions() {
           <button
             key={action.id}
             onClick={action.onClick}
-            className="group relative bg-gray-800/50 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+            className="group relative rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              color: "var(--text)",
+            }}
             suppressHydrationWarning>
             {/* Icon */}
             <div
@@ -168,10 +179,12 @@ export default function QuickActions() {
             </div>
 
             {/* Text */}
-            <h4 className="text-white font-semibold text-sm mb-1">
+            <h4 className="font-semibold text-sm mb-1" style={{ color: "var(--text)" }}>
               {action.title}
             </h4>
-            <p className="text-gray-400 text-xs">{action.description}</p>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {action.description}
+            </p>
 
             {/* Hover effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/5 group-hover:to-orange-500/10 rounded-xl transition-all duration-300"></div>

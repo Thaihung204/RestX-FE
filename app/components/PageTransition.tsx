@@ -27,12 +27,23 @@ const PageTransition: React.FC<PageTransitionProps> = ({
   const [isAnimationReady, setIsAnimationReady] = useState(false);
 
   useEffect(() => {
+    // Check if this is a return navigation (skip loading screen if already loaded once)
+    const isReturning = typeof window !== 'undefined' && sessionStorage.getItem('restx-has-loaded');
+    
+    if (isReturning && document.readyState === 'complete') {
+      // Skip loading screen on return navigation
+      setIsLoading(false);
+      setIsAnimationReady(true);
+      return;
+    }
+
     let minTimeReached = false;
     let pageLoaded = false;
 
     const checkAndFinish = () => {
       if (minTimeReached && pageLoaded) {
         setIsLoading(false);
+        sessionStorage.setItem('restx-has-loaded', 'true');
       }
     };
 
@@ -50,6 +61,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
 
     if (document.readyState === 'complete') {
       pageLoaded = true;
+      checkAndFinish();
     } else {
       window.addEventListener('load', handleLoad);
     }
@@ -58,7 +70,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
       clearTimeout(timer);
       window.removeEventListener('load', handleLoad);
     };
-  }, [minimumLoadingTime]);
+  }, [minimumLoadingTime, isLoading]);
 
   const handleLoadingComplete = () => {
     // Start entrance animations after loading screen exits
@@ -77,19 +89,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 9999,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'linear-gradient(135deg, #FFFFFF 0%, #FFF8F3 100%)',
-            }}
+            className="loading-screen-bg"
           >
             {/* Background glow */}
             <motion.div
@@ -216,10 +216,10 @@ const PageTransition: React.FC<PageTransitionProps> = ({
               }}
             >
               <motion.span
+                className="loading-screen-text"
                 style={{
                   fontSize: 34,
                   fontWeight: 700,
-                  color: '#111111',
                   letterSpacing: -0.5,
                 }}
               >
@@ -279,10 +279,10 @@ const PageTransition: React.FC<PageTransitionProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8, duration: 0.5 }}
+              className="loading-screen-tagline"
               style={{
                 marginTop: 20,
                 fontSize: 12,
-                color: '#9CA3AF',
                 fontWeight: 600,
                 letterSpacing: 3,
                 textTransform: 'uppercase',

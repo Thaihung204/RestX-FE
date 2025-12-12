@@ -12,7 +12,9 @@ import DashboardSidebar from "@/components/layout/DashboardSidebar";
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex">
+    <div
+      className="min-h-screen flex"
+      style={{ background: "var(--bg-base)", color: "var(--text)" }}>
       {/* Sidebar */}
       <DashboardSidebar />
 
@@ -22,7 +24,9 @@ export default function DashboardPage() {
         <DashboardHeader />
 
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+        <main
+          className="flex-1 p-6 lg:p-8 overflow-y-auto"
+          style={{ background: "var(--bg-base)", color: "var(--text)" }}>
           <div className="space-y-6">
             {/* KPI Cards */}
             <section>

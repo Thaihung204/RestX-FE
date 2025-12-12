@@ -142,13 +142,17 @@ const typeColors: Record<Activity["type"], string> = {
 
 export default function ActivityTimeline() {
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
+    <div
+      className="rounded-xl p-6"
+      style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-bold text-white mb-1">
+          <h3 className="text-xl font-bold mb-1" style={{ color: "var(--text)" }}>
             Recent Activities
           </h3>
-          <p className="text-gray-400 text-sm">Live activity feed</p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            Live activity feed
+          </p>
         </div>
         <button
           className="text-orange-500 hover:text-orange-400 text-sm font-medium transition-colors"
@@ -161,7 +165,8 @@ export default function ActivityTimeline() {
         {activities.map((activity, index) => (
           <div
             key={activity.id}
-            className="flex gap-4 group hover:bg-gray-800/50 p-3 rounded-lg transition-all duration-200 cursor-pointer">
+            className="flex gap-4 group p-3 rounded-lg transition-all duration-200 cursor-pointer"
+            style={{ background: "var(--surface)" }}>
             {/* Icon */}
             <div
               className={`flex-shrink-0 w-10 h-10 rounded-lg border flex items-center justify-center ${
@@ -172,10 +177,12 @@ export default function ActivityTimeline() {
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <p className="text-gray-200 text-sm leading-relaxed">
+              <p className="text-sm leading-relaxed" style={{ color: "var(--text)" }}>
                 {activity.message}
               </p>
-              <p className="text-gray-500 text-xs mt-1">{activity.time}</p>
+              <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                {activity.time}
+              </p>
             </div>
 
             {/* Indicator */}
@@ -193,15 +200,15 @@ export default function ActivityTimeline() {
           width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: #1f2937;
+          background: var(--card);
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #4b5563;
+          background: var(--border);
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #6b7280;
+          background: var(--text-muted);
         }
       `}</style>
     </div>

@@ -15,10 +15,19 @@ export default function AreaDistributionChart() {
   let currentAngle = 0;
 
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
+    <div
+      className="rounded-xl p-6"
+      style={{
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+      }}>
       <div className="mb-6">
-        <h3 className="text-xl font-bold text-white mb-1">Area Distribution</h3>
-        <p className="text-gray-400 text-sm">Table allocation by zone</p>
+        <h3 className="text-xl font-bold mb-1" style={{ color: 'var(--text)' }}>
+          Area Distribution
+        </h3>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          Table allocation by zone
+        </p>
       </div>
 
       <div className="flex flex-col lg:flex-row items-center justify-center gap-8">
@@ -68,13 +77,17 @@ export default function AreaDistributionChart() {
               );
             })}
             {/* Center circle */}
-            <circle cx="100" cy="100" r="50" fill="#1F2937" />
+            <circle cx="100" cy="100" r="50" fill="var(--surface)" />
           </svg>
 
           {/* Center text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-2xl font-bold text-white">{total}</p>
-            <p className="text-xs text-gray-400">Tables</p>
+            <p className="text-2xl font-bold" style={{ color: 'var(--text)' }}>
+              {total}
+            </p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              Tables
+            </p>
           </div>
         </div>
 
@@ -92,8 +105,10 @@ export default function AreaDistributionChart() {
                   className="w-4 h-4 rounded"
                   style={{ backgroundColor: item.color }}></div>
                 <div className="flex-1">
-                  <p className="text-white font-medium text-sm">{item.name}</p>
-                  <p className="text-gray-400 text-xs">
+                  <p className="font-medium text-sm" style={{ color: 'var(--text)' }}>
+                    {item.name}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                     {item.value} tables ({percentage}%)
                   </p>
                 </div>

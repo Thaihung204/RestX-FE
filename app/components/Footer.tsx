@@ -100,9 +100,10 @@ const Footer: React.FC = () => {
   return (
     <footer
       style={{
-        background: 'linear-gradient(180deg, #111827 0%, #0D1117 100%)',
+        background: 'var(--surface)',
         padding: '64px 24px 32px',
-        color: 'white',
+        color: 'var(--text)',
+        borderTop: '1px solid var(--border)',
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -135,12 +136,12 @@ const Footer: React.FC = () => {
                     >
                       R
                     </div>
-                    <Title level={4} style={{ margin: 0, color: 'white' }}>
+                    <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
                       RestX
                     </Title>
                   </div>
 
-                  <Text style={{ color: '#9CA3AF', lineHeight: 1.7, display: 'block', maxWidth: 280 }}>
+                  <Text style={{ color: 'var(--text-muted)', lineHeight: 1.7, display: 'block', maxWidth: 280 }}>
                     RestX – Nền tảng vận hành nhà hàng thế hệ mới. Giúp bạn quản lý mọi khía cạnh của nhà hàng trên một hệ thống duy nhất.
                   </Text>
 
@@ -158,7 +159,7 @@ const Footer: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#9CA3AF',
+                        color: 'var(--text-muted)',
                         transition: 'all 0.3s ease',
                       }}
                     >
@@ -176,7 +177,7 @@ const Footer: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#9CA3AF',
+                        color: 'var(--text-muted)',
                         transition: 'all 0.3s ease',
                       }}
                     >
@@ -194,7 +195,7 @@ const Footer: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#9CA3AF',
+                        color: 'var(--text-muted)',
                         transition: 'all 0.3s ease',
                       }}
                     >
@@ -212,7 +213,7 @@ const Footer: React.FC = () => {
                   <Col xs={12} sm={6} key={index}>
                     <motion.div variants={itemVariants}>
                       <Space orientation="vertical" size={16}>
-                        <Text strong style={{ color: 'white', fontSize: 15 }}>
+                        <Text strong style={{ color: 'var(--text)', fontSize: 15 }}>
                           {column.title}
                         </Text>
                         <Space orientation="vertical" size={12}>
@@ -221,7 +222,7 @@ const Footer: React.FC = () => {
                               key={linkIndex}
                               href={link.href}
                               style={{
-                                color: '#9CA3AF',
+                                color: 'var(--text-muted)',
                                 fontSize: 14,
                                 transition: 'color 0.2s ease',
                               }}
@@ -245,7 +246,7 @@ const Footer: React.FC = () => {
           viewport={{ once: true }}
           variants={bottomVariants}
         >
-          <Divider style={{ borderColor: 'rgba(255, 255, 255, 0.1)', margin: '48px 0 24px' }} />
+          <Divider style={{ borderColor: 'var(--border)', margin: '48px 0 24px' }} />
 
           {/* Bottom Bar */}
           <div
@@ -257,17 +258,17 @@ const Footer: React.FC = () => {
               gap: 16,
             }}
           >
-            <Text style={{ color: '#6B7280', fontSize: 14 }}>
+            <Text style={{ color: 'var(--text-muted)', fontSize: 14 }}>
               © {currentYear} RestX. All rights reserved.
             </Text>
             <Space size={24}>
-              <Link href="#privacy" style={{ color: '#6B7280', fontSize: 14 }}>
+              <Link href="#privacy" style={{ color: 'var(--text-muted)', fontSize: 14 }}>
                 Privacy
               </Link>
-              <Link href="#terms" style={{ color: '#6B7280', fontSize: 14 }}>
+              <Link href="#terms" style={{ color: 'var(--text-muted)', fontSize: 14 }}>
                 Terms
               </Link>
-              <Link href="#cookies" style={{ color: '#6B7280', fontSize: 14 }}>
+              <Link href="#cookies" style={{ color: 'var(--text-muted)', fontSize: 14 }}>
                 Cookies
               </Link>
             </Space>
