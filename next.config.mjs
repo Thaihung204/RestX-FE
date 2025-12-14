@@ -2,6 +2,10 @@
 const nextConfig = {
   output: 'export',
 
+  images: {
+    unoptimized: true,
+  },
+
   // Specify the path if your app is not deployed at the root of your domain.
   // basePath: '/',
 

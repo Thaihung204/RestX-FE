@@ -15,16 +15,8 @@ const LoginHeader: React.FC<LoginHeaderProps> = ({ title = 'Login' }) => {
         </div>
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">{title}</h2>
-          <p className="text-sm text-gray-500 mt-1">Welcome to RestX Premium</p>
+          <p className="text-sm text-gray-500 mt-1">Welcome to Restaurant</p>
         </div>
-      </div>
-      <div className="flex flex-col gap-2">
-        <a
-          href="/forgot-password"
-          className="text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors w-fit flex items-center gap-1"
-        >
-          <span>Forgot your password?</span>
-        </a>
       </div>
     </div>
   );

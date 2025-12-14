@@ -1,0 +1,48 @@
+'use client';
+
+import React from 'react';
+
+const RestaurantBanner: React.FC = () => {
+  return (
+    <section
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '400px',
+        marginTop: 80,
+        overflow: 'hidden',
+      }}>
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+        }}>
+        <img
+          src="/images/restaurant/banner.png"
+          alt="RestX Restaurant Banner"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+        />
+        {/* Overlay gradient for better text readability if needed */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(180deg, rgba(26, 26, 26, 0.3) 0%, rgba(26, 26, 26, 0.6) 100%)',
+          }}
+        />
+      </div>
+    </section>
+  );
+};
+
+export default RestaurantBanner;
+
