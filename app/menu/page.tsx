@@ -187,7 +187,6 @@ export default function MenuPage() {
   return (
     <>
       {contextHolder}
-    <div suppressHydrationWarning>
     <ConfigProvider
       theme={{
         algorithm: theme.darkAlgorithm,
@@ -285,14 +284,16 @@ export default function MenuPage() {
 
                         {/* Search Input */}
                         <Col xs={10} md={16}>
-                             <Input
-                                prefix={<SearchOutlined style={{ color: "#666" }} />}
-                                placeholder="Tìm món..."
-                                allowClear
-                                value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
-                                style={{ borderRadius: 8 }}
-                            />
+                             <div suppressHydrationWarning style={{ width: "100%" }}>
+                               <Input
+                                  prefix={<SearchOutlined style={{ color: "#666" }} />}
+                                  placeholder="Tìm món..."
+                                  allowClear
+                                  value={searchText}
+                                  onChange={(e) => setSearchText(e.target.value)}
+                                  style={{ borderRadius: 8 }}
+                                />
+                             </div>
                         </Col>
                     </Row>
                 </div>
@@ -408,27 +409,29 @@ export default function MenuPage() {
                             <Text style={{ color: "#ff5722", fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
                                 {item.price}
                             </Text>
-                            <Button
-                                type="primary"
-                                icon={<PlusOutlined />}
-                                size="small"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAddToCart(item);
-                                }}
-                                style={{
-                                    background: "#ff5722",
-                                    border: "none",
-                                    width: 32,
-                                    height: 32,
-                                    minWidth: 32,
-                                    padding: 0,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    flexShrink: 0
-                                }}
-                            />
+                            <div suppressHydrationWarning>
+                              <Button
+                                  type="primary"
+                                  icon={<PlusOutlined />}
+                                  size="small"
+                                  onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAddToCart(item);
+                                  }}
+                                  style={{
+                                      background: "#ff5722",
+                                      border: "none",
+                                      width: 32,
+                                      height: 32,
+                                      minWidth: 32,
+                                      padding: 0,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      flexShrink: 0
+                                  }}
+                              />
+                            </div>
                         </div>
                     </div>
                     </Card>
@@ -489,9 +492,9 @@ export default function MenuPage() {
             styles={{
               body: { background: "#050505", padding: 0, maxHeight: "70vh", overflowY: "auto" },
               header: { background: "#121212", borderBottom: "1px solid rgba(255,255,255,0.1)" },
-              content: { background: "#050505", padding: 0 },
               mask: { background: "rgba(0, 0, 0, 0.7)" }
             }}
+            wrapClassName="cart-modal-wrapper"
           >
             <div style={{ 
               display: "flex", 
@@ -725,7 +728,6 @@ export default function MenuPage() {
         </div>
       </div>
     </ConfigProvider>
-    </div>
     </>
   );
 }
