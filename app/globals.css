@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Ant Design overrides */
+.ant-rate-star-full .ant-rate-star-second {
+  color: #FF7A00 !important;
+}
+
+.ant-card:hover {
+  border-color: #FF7A00 !important;
+  box-shadow: 0 8px 32px rgba(255, 122, 0, 0.12) !important;
+}
+
+.ant-menu-horizontal > .ant-menu-item:hover::after,
+.ant-menu-horizontal > .ant-menu-item-selected::after {
+  border-bottom-color: #FF7A00 !important;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
