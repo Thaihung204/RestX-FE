@@ -27,7 +27,7 @@ import { useMemo, useState } from "react";
 
 const { Title, Text } = Typography;
 
-// --- Dữ liệu mẫu ---
+// --- Sample data ---
 type MenuItem = {
   name: string;
   price: string;
@@ -57,7 +57,7 @@ const sections: MenuSection[] = [
     key: "all",
     title: "Tất cả món ăn",
     description: "Khám phá toàn bộ thực đơn tinh hoa của RestX.",
-    items: [], // Sẽ được gộp tự động
+    items: [], // Will be merged automatically
   },
   {
     key: "special",
@@ -144,12 +144,12 @@ const sections: MenuSection[] = [
   },
 ];
 
-// Gộp tất cả items cho mục "Tất cả"
+// Merge all items into the "All" section
 const allItems = sections.flatMap((s) => s.items);
 sections[0].items = allItems;
 
 export default function MenuPage() {
-  // Mặc định chọn mục đầu tiên (Tất cả hoặc Special tùy bạn chỉnh)
+  // Default to the first section
   const [activeSectionKey, setActiveSectionKey] = useState<string>("all");
   const [searchText, setSearchText] = useState("");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -158,9 +158,9 @@ export default function MenuPage() {
   const [selectedFood, setSelectedFood] = useState<MenuItem | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
 
-  // Logic lọc món ăn:
-  // 1. Lấy section đang chọn
-  // 2. Nếu có search text -> lọc trong section đó theo tên
+  // Filter logic:
+  // 1. Use the current section
+  // 2. If search text exists -> filter by name inside that section
   const currentSection = useMemo(
     () => sections.find((s) => s.key === activeSectionKey) || sections[1],
     [activeSectionKey]
@@ -180,15 +180,15 @@ export default function MenuPage() {
   }, [cartItems]);
 
   const getItemCategory = (itemName: string): "food" | "drink" => {
-    // Tìm item trong sections để xác định category
+    // Find item in sections to determine category
     for (const section of sections) {
       const foundItem = section.items.find((i) => i.name === itemName);
       if (foundItem) {
-        // Nếu section key là "boba" thì là nước uống, còn lại là đồ ăn
+        // If section key is "boba" it's a drink, otherwise food
         return section.key === "boba" ? "drink" : "food";
       }
     }
-    return "food"; // Mặc định là đồ ăn
+    return "food"; // Default to food
   };
 
   const handleAddToCart = (item: MenuItem) => {
@@ -263,7 +263,7 @@ export default function MenuPage() {
             colorPrimary: "#ff5722",
             fontFamily: "'Playfair Display', 'Inter', sans-serif",
             borderRadius: 12,
-            controlHeight: 45, // Tăng chiều cao các input/select cho dễ bấm
+            controlHeight: 45, // Increase input/select height for easier tap
           },
           components: {
             Modal: {
@@ -1236,7 +1236,7 @@ export default function MenuPage() {
                     <div
                       style={{
                         width: "100%",
-                        aspectRatio: "4/3", // Tỉ lệ ảnh đẹp hơn
+                        aspectRatio: "4/3", // Better image aspect ratio
                         borderRadius: 16,
                         overflow: "hidden",
                         marginBottom: 20,
