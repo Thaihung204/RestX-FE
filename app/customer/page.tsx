@@ -9,8 +9,6 @@ import {
   CloseOutlined,
   DollarOutlined,
   EditOutlined,
-  GiftOutlined,
-  SaveOutlined,
   StarOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -428,7 +426,8 @@ export default function CustomerHomePage() {
                     height: "100%",
                     borderRadius: "50%",
                     padding: 3,
-                    background: "linear-gradient(135deg, #ff5722 0%, #333 100%)",
+                    background:
+                      "linear-gradient(135deg, #ff5722 0%, #333 100%)",
                     cursor: isEditing ? "pointer" : "default",
                     boxShadow: "0 10px 25px rgba(255, 87, 34, 0.25)",
                   }}>
@@ -509,7 +508,6 @@ export default function CustomerHomePage() {
             </div>
 
             <div>
-
               {!isEditing ? (
                 <Space direction="vertical" size={20} style={{ width: "100%" }}>
                   <div
@@ -545,9 +543,7 @@ export default function CustomerHomePage() {
                         )}
                       </div>
                     </div>
-                    <div
-                      style={{ background: "rgba(255,255,255,0.1)" }}
-                    ></div>
+                    <div style={{ background: "rgba(255,255,255,0.1)" }}></div>
                     <div style={{ textAlign: "center" }}>
                       <Text
                         style={{
