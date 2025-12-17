@@ -37,6 +37,7 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -148,6 +149,7 @@ const paymentMethods = [
 ];
 
 export default function CheckoutPage() {
+  const { mode } = useThemeMode();
   const [bills, setBills] = useState<Bill[]>(initialBills);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -222,20 +224,16 @@ export default function CheckoutPage() {
   };
 
   const renderBillCard = (bill: Bill) => (
-    <motion.div
-      key={bill.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={!isMobile ? { scale: 1.02 } : undefined}
-    >
+    <div>
       <Card
         hoverable
         onClick={() => handleSelectBill(bill)}
         style={{
-          borderRadius: isMobile ? 12 : 16,
+          borderRadius: 12,
           border: '2px solid var(--border)',
           cursor: 'pointer',
           transition: 'all 0.3s',
+          overflow: 'hidden',
         }}
         styles={{ body: { padding: isMobile ? 14 : 20 } }}
       >
@@ -245,7 +243,7 @@ export default function CheckoutPage() {
             style={{
               background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
               fontSize: isMobile ? 14 : 18,
-              fontWeight: 700,
+              fontWeight: 500,
             }}
           >
             {bill.tableName}
@@ -254,10 +252,10 @@ export default function CheckoutPage() {
             <Text strong style={{ fontSize: isMobile ? 15 : 18 }}>{bill.tableName}</Text>
             <br />
             <Space size={isMobile ? 8 : 16}>
-              <Text type="secondary" style={{ fontSize: isMobile ? 11 : 13 }}>
+              <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>
                 <UserOutlined /> {bill.guests} khách
               </Text>
-              <Text type="secondary" style={{ fontSize: isMobile ? 11 : 13 }}>
+              <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>
                 <ClockCircleOutlined /> {bill.startTime}
               </Text>
             </Space>
@@ -274,7 +272,7 @@ export default function CheckoutPage() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
           <div>
-            <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12 }}>Tổng thanh toán</Text>
+            <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>Tổng thanh toán</Text>
             <br />
             <Text strong style={{ fontSize: isMobile ? 18 : 24, color: '#FF7A00' }}>
               {bill.total.toLocaleString('vi-VN')}đ
@@ -287,7 +285,7 @@ export default function CheckoutPage() {
             style={{
               borderRadius: 12,
               height: isMobile ? 40 : 48,
-              fontWeight: 600,
+              fontWeight: 500,
               background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
               border: 'none',
               fontSize: isMobile ? 12 : 14,
@@ -296,18 +294,18 @@ export default function CheckoutPage() {
             {isMobile ? 'Thanh toán' : 'Thanh toán'}
           </Button>
         </div>
-      </Card>
-    </motion.div>
+        </Card>
+    </div>
   );
 
   return (
     <div>
       {/* Stats */}
       <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ marginBottom: isMobile ? 16 : 24 }}>
-        <Col xs={24} sm={12} lg={8}>
+        <Col xs={24} sm={24} md={12} lg={8}>
           <Card
             style={{
-              borderRadius: isMobile ? 12 : 16,
+              borderRadius: 12,
               background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
               border: 'none',
             }}
@@ -317,41 +315,43 @@ export default function CheckoutPage() {
               title={<Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: isMobile ? 12 : 14 }}>Tổng tiền chờ thanh toán</Text>}
               value={totalPending}
               suffix="đ"
-              styles={{ content: { color: '#fff', fontSize: isMobile ? 22 : 28, fontWeight: 700 } }}
+              styles={{ content: { color: '#fff', fontSize: isMobile ? 24 : 32, fontWeight: 500 } }}
               formatter={(value) => `${Number(value).toLocaleString('vi-VN')}`}
             />
           </Card>
         </Col>
-        <Col xs={12} sm={12} lg={8}>
+        <Col xs={24} sm={12} md={12} lg={8}>
           <Card
             style={{
-              borderRadius: isMobile ? 12 : 16,
+              borderRadius: 12,
               border: '1px solid var(--border)',
+              overflow: 'hidden',
             }}
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Bàn chờ thanh toán</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Bàn chờ thanh toán</span>}
               value={bills.filter(b => b.status === 'pending').length}
               suffix="bàn"
-              styles={{ content: { color: 'var(--text)', fontSize: isMobile ? 22 : 28, fontWeight: 700 } }}
+              styles={{ content: { color: 'var(--text)', fontSize: isMobile ? 24 : 32, fontWeight: 500 } }}
               prefix={<TableOutlined style={{ color: '#FF7A00' }} />}
             />
           </Card>
         </Col>
-        <Col xs={12} sm={12} lg={8}>
+        <Col xs={24} sm={12} md={12} lg={8}>
           <Card
             style={{
-              borderRadius: isMobile ? 12 : 16,
+              borderRadius: 12,
               border: '1px solid var(--border)',
+              overflow: 'hidden',
             }}
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Đã thanh toán</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Đã thanh toán</span>}
               value={12}
               suffix="đơn"
-              styles={{ content: { color: '#52c41a', fontSize: isMobile ? 22 : 28, fontWeight: 700 } }}
+              styles={{ content: { color: '#52c41a', fontSize: isMobile ? 24 : 32, fontWeight: 500 } }}
               prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
             />
           </Card>
@@ -361,7 +361,7 @@ export default function CheckoutPage() {
       {/* Search */}
       <Card
         style={{
-          borderRadius: isMobile ? 12 : 16,
+          borderRadius: 12,
           marginBottom: isMobile ? 16 : 24,
           border: '1px solid var(--border)',
         }}
@@ -408,14 +408,29 @@ export default function CheckoutPage() {
         centered
         style={{
           maxWidth: isMobile ? '100%' : isTablet ? '94vw' : '820px',
-          backgroundColor: '#0A0E14',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
+          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+          borderRadius: 12,
         }}
         styles={{
-          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
-          body: { padding: isMobile ? 12 : 16, maxHeight: '60vh', overflowY: 'auto', backgroundColor: '#0A0E14' },
+          header: {
+            backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+            borderRadius: '12px 12px 0 0',
+            padding: '16px 24px',
+            paddingRight: '56px',
+          },
+          footer: {
+            borderRadius: '0 0 12px 12px',
+          },
+          body: {
+            padding: isMobile ? 12 : 16,
+            maxHeight: '60vh',
+            overflowY: 'auto',
+            backgroundColor: mode === 'dark' ? '#0A0E14' : '#FFFFFF',
+          },
           mask: {
-            background: 'rgba(0, 0, 0, 0.92)',
+            background: mode === 'dark' ? 'rgba(0, 0, 0, 0.92)' : 'rgba(0, 0, 0, 0.45)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',
@@ -477,7 +492,7 @@ export default function CheckoutPage() {
                   style={{
                     background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
                     fontSize: isMobile ? 18 : 24,
-                    fontWeight: 700,
+                    fontWeight: 500,
                   }}
                 >
                   {selectedBill.tableName}
@@ -485,7 +500,7 @@ export default function CheckoutPage() {
                 <Title level={isMobile ? 5 : 4} style={{ margin: '12px 0 4px' }}>
                   Thanh toán {selectedBill.tableName}
                 </Title>
-                <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>{selectedBill.id}</Text>
+                <Text style={{ fontSize: isMobile ? 13 : 15, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>{selectedBill.id}</Text>
               </div>
 
               <Row
@@ -501,9 +516,21 @@ export default function CheckoutPage() {
                 <Col xs={24} lg={14} style={{ display: 'flex', width: '100%' }}>
                   <Card
                     size="small"
-                    title={<span style={{ fontSize: isMobile ? 13 : 14 }}>Chi tiết hóa đơn</span>}
-                    style={{ borderRadius: 12, width: '100%', display: 'flex', flexDirection: 'column' }}
-                    styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', padding: isMobile ? 14 : 16 } }}
+                    title={<span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>Chi tiết hóa đơn</span>}
+                    style={{
+                      borderRadius: 16,
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+                      border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+                      overflow: 'hidden',
+                      boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    }}
+                    styles={{ 
+                      body: { flex: 1, display: 'flex', flexDirection: 'column', padding: isMobile ? '16px 18px' : '20px 24px' },
+                      header: { padding: isMobile ? '14px 18px' : '16px 24px', borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB' }
+                    }}
                   >
                     <div style={{ flex: 1 }}>
                       {selectedBill.items.map((item, index) => (
@@ -513,8 +540,12 @@ export default function CheckoutPage() {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            padding: isMobile ? '8px 0' : '12px 0',
-                            borderBottom: index < selectedBill.items.length - 1 ? '1px solid var(--border)' : 'none',
+                            padding: isMobile ? '10px 0' : '14px 0',
+                            borderBottom: index < selectedBill.items.length - 1
+                              ? mode === 'dark'
+                                ? '1px solid rgba(255, 255, 255, 0.08)'
+                                : '1px solid #F0F0F0'
+                              : 'none',
                           }}
                         >
                           <Text style={{ fontSize: isMobile ? 12 : 14 }}>
@@ -545,43 +576,52 @@ export default function CheckoutPage() {
                 </Col>
 
                 {/* Payment */}
-                <Col xs={24} lg={10} style={{ display: 'flex', width: '100%' }}>
+                <Col xs={24} md={24} lg={10} style={{ display: 'flex', width: '100%' }}>
                   <Card
                     style={{
                       borderRadius: 12,
-                      background: 'var(--card)',
+                      background: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#FFFFFF',
                       width: '100%',
+                      border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #E5E7EB',
+                      overflow: 'hidden',
+                      boxShadow: mode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
                     }}
-                    styles={{ body: { padding: isMobile ? 14 : 24 } }}
+                    styles={{ body: { padding: isMobile ? '18px 20px' : '24px 28px' } }}
                   >
                     {/* Summary */}
-                    <div style={{ marginBottom: isMobile ? 16 : 20 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <Text style={{ fontSize: isMobile ? 12 : 14 }}>Tạm tính</Text>
-                        <Text style={{ fontSize: isMobile ? 12 : 14 }}>{selectedBill.subtotal.toLocaleString('vi-VN')}đ</Text>
+                    <div style={{ marginBottom: isMobile ? 18 : 24 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 12, borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #F0F0F0' }}>
+                        <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>Tạm tính</Text>
+                        <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{selectedBill.subtotal.toLocaleString('vi-VN')}đ</Text>
                       </div>
                       {discountPercent > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                          <Text style={{ color: '#52c41a', fontSize: isMobile ? 12 : 14 }}>Giảm giá ({discountPercent}%)</Text>
-                          <Text style={{ color: '#52c41a', fontSize: isMobile ? 12 : 14 }}>-{calculateDiscount().toLocaleString('vi-VN')}đ</Text>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 12, borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #F0F0F0' }}>
+                          <Text style={{ color: '#52c41a', fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>Giảm giá ({discountPercent}%)</Text>
+                          <Text style={{ color: '#52c41a', fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>-{calculateDiscount().toLocaleString('vi-VN')}đ</Text>
                         </div>
                       )}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <Text style={{ fontSize: isMobile ? 12 : 14 }}>VAT (10%)</Text>
-                        <Text style={{ fontSize: isMobile ? 12 : 14 }}>{selectedBill.tax.toLocaleString('vi-VN')}đ</Text>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 12, borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #F0F0F0' }}>
+                        <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>VAT (10%)</Text>
+                        <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{selectedBill.tax.toLocaleString('vi-VN')}đ</Text>
                       </div>
-                      <Divider style={{ margin: isMobile ? '10px 0' : '12px 0' }} />
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>Tổng cộng</Text>
-                        <Text strong style={{ fontSize: isMobile ? 17 : 20, color: '#FF7A00' }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        marginTop: 16,
+                        paddingTop: 16,
+                        borderTop: mode === 'dark' ? '2px solid rgba(255, 255, 255, 0.12)' : '2px solid #E5E7EB',
+                      }}>
+                        <Text strong style={{ fontSize: isMobile ? 15 : 17, fontWeight: 600 }}>Tổng cộng</Text>
+                        <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00', fontWeight: 500 }}>
                           {calculateFinalTotal().toLocaleString('vi-VN')}đ
                         </Text>
                       </div>
                     </div>
 
                     {/* Payment Methods */}
-                    <div style={{ marginBottom: isMobile ? 16 : 20 }}>
-                      <Text strong style={{ display: 'block', marginBottom: isMobile ? 8 : 12, fontSize: isMobile ? 13 : 14 }}>
+                    <div style={{ marginBottom: isMobile ? 18 : 24 }}>
+                      <Text strong style={{ display: 'block', marginBottom: isMobile ? 12 : 16, fontSize: isMobile ? 14 : 15, fontWeight: 600 }}>
                         Phương thức thanh toán
                       </Text>
                       <Radio.Group
@@ -647,16 +687,17 @@ export default function CheckoutPage() {
                         style={{
                           textAlign: 'center',
                           padding: isMobile ? 12 : 20,
-                          background: 'var(--card)',
+                          background: mode === 'dark' ? 'var(--card)' : '#F7F8FA',
                           borderRadius: 12,
                           marginBottom: isMobile ? 16 : 20,
+                          border: mode === 'dark' ? 'none' : '1px solid #E5E7EB',
                         }}
                       >
                         <div
                           style={{
                             width: isMobile ? 100 : 120,
                             height: isMobile ? 100 : 120,
-                            background: 'var(--border)',
+                            background: mode === 'dark' ? 'var(--border)' : '#E5E7EB',
                             margin: '0 auto 12px',
                             borderRadius: 12,
                             display: 'flex',
@@ -680,7 +721,7 @@ export default function CheckoutPage() {
                       style={{
                         height: isMobile ? 44 : 52,
                         borderRadius: 12,
-                        fontWeight: 600,
+                        fontWeight: 500,
                         fontSize: isMobile ? 14 : 16,
                         background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
                         border: 'none',
@@ -695,6 +736,38 @@ export default function CheckoutPage() {
           )
         )}
       </Modal>
+
+      <style jsx global>{`
+        /* Modal border radius */
+        .ant-modal-content {
+          border-radius: 12px !important;
+          overflow: hidden !important;
+        }
+        
+        /* Modal close button positioning - inside header */
+        .ant-modal-close {
+          top: 16px !important;
+          right: 20px !important;
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: 8px !important;
+          background: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'} !important;
+          transition: all 0.2s ease !important;
+        }
+        .ant-modal-close:hover {
+          background: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'} !important;
+        }
+        .ant-modal-close-x {
+          width: 32px !important;
+          height: 32px !important;
+          line-height: 32px !important;
+          font-size: 16px !important;
+          color: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.65)'} !important;
+        }
+        .ant-modal-close:hover .ant-modal-close-x {
+          color: ${mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.85)'} !important;
+        }
+      `}</style>
     </div>
   );
 }
