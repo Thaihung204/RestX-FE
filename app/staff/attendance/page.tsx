@@ -35,6 +35,7 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import type { Dayjs } from 'dayjs';
+import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
 
 const { Title, Text } = Typography;
 
@@ -68,6 +69,7 @@ const statusConfig: Record<string, { color: string; text: string }> = {
 };
 
 export default function AttendancePage() {
+  const { mode } = useThemeMode();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isCheckedIn, setIsCheckedIn] = useState(true);
   const [checkInTime, setCheckInTime] = useState('07:58');
@@ -249,14 +251,13 @@ export default function AttendancePage() {
   return (
     <div>
       {/* Current Time Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+      <div>
         <Card
           style={{
             borderRadius: isMobile ? 16 : 24,
-            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+            background: mode === 'dark'
+              ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
+              : 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
             border: 'none',
             marginBottom: isMobile ? 16 : 24,
             overflow: 'hidden',
@@ -272,7 +273,7 @@ export default function AttendancePage() {
                 <div
                   style={{
                     fontSize: isMobile ? 48 : 72,
-                    fontWeight: 700,
+                    fontWeight: 500,
                     color: '#fff',
                     fontFamily: 'monospace',
                     letterSpacing: isMobile ? 2 : 4,
@@ -327,7 +328,7 @@ export default function AttendancePage() {
                       height: isMobile ? 140 : 200,
                       borderRadius: '50%',
                       fontSize: isMobile ? 18 : 24,
-                      fontWeight: 700,
+                      fontWeight: 500,
                       background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
                       border: 'none',
                       boxShadow: '0 8px 32px rgba(82, 196, 26, 0.4)',
@@ -354,7 +355,7 @@ export default function AttendancePage() {
                         height: isMobile ? 120 : 160,
                         borderRadius: '50%',
                         fontSize: isMobile ? 16 : 20,
-                        fontWeight: 700,
+                        fontWeight: 500,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -377,7 +378,7 @@ export default function AttendancePage() {
                         background: isOnBreak ? '#52c41a' : '#faad14',
                         color: '#fff',
                         border: 'none',
-                        fontWeight: 600,
+                        fontWeight: 500,
                         fontSize: isMobile ? 13 : 14,
                       }}
                     >
@@ -389,50 +390,82 @@ export default function AttendancePage() {
             </Col>
           </Row>
         </Card>
-      </motion.div>
+      </div>
 
       {/* Stats Cards */}
       <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
+        <Col xs={24} sm={12} md={12} lg={6}>
+          <Card style={{ 
+            borderRadius: 12, 
+            textAlign: 'center', 
+            overflow: 'hidden',
+            border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+            boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.2s ease',
+            background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+          }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Ngày công</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Ngày công</span>}
               value={monthlyStats.workedDays}
               suffix={`/${monthlyStats.totalDays}`}
-              styles={{ content: { color: '#52c41a', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
+              styles={{ content: { color: '#52c41a', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
               prefix={<CalendarOutlined />}
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
+        <Col xs={24} sm={12} md={12} lg={6}>
+          <Card style={{ 
+            borderRadius: 12, 
+            textAlign: 'center', 
+            overflow: 'hidden',
+            border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+            boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.2s ease',
+            background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+          }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Đi muộn</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Đi muộn</span>}
               value={monthlyStats.lateDays}
               suffix="ngày"
-              styles={{ content: { color: '#faad14', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
+              styles={{ content: { color: '#faad14', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
               prefix={<ClockCircleOutlined />}
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
+        <Col xs={24} sm={12} md={12} lg={6}>
+          <Card style={{ 
+            borderRadius: 12, 
+            textAlign: 'center', 
+            overflow: 'hidden',
+            border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+            boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.2s ease',
+            background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+          }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Nghỉ phép</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Nghỉ phép</span>}
               value={monthlyStats.leaveDays}
               suffix="ngày"
-              styles={{ content: { color: '#1890ff', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
+              styles={{ content: { color: '#1890ff', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
               prefix={<HistoryOutlined />}
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
+        <Col xs={24} sm={12} md={12} lg={6}>
+          <Card style={{ 
+            borderRadius: 12, 
+            textAlign: 'center', 
+            overflow: 'hidden',
+            border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+            boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.2s ease',
+            background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+          }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Tổng giờ làm</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Tổng giờ làm</span>}
               value={monthlyStats.totalHours}
               suffix="h"
-              styles={{ content: { color: '#FF7A00', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
+              styles={{ content: { color: '#FF7A00', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
               prefix={<FieldTimeOutlined />}
             />
           </Card>
@@ -441,7 +474,7 @@ export default function AttendancePage() {
 
       <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]}>
         {/* Attendance History */}
-        <Col xs={24} lg={14}>
+        <Col xs={24} md={24} lg={14}>
           <Card
             title={
               <Space>
@@ -449,8 +482,14 @@ export default function AttendancePage() {
                 <span style={{ fontSize: isMobile ? 14 : 16 }}>Lịch sử chấm công</span>
               </Space>
             }
-            style={{ borderRadius: isMobile ? 12 : 16 }}
-            styles={{ body: { padding: isMobile ? 8 : 24 } }}
+            style={{ 
+              borderRadius: 12, 
+              overflow: 'hidden',
+              border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+              boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+              background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+            }}
+            styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}
           >
             <Table
               columns={getColumns()}
@@ -472,7 +511,14 @@ export default function AttendancePage() {
                 <span style={{ fontSize: isMobile ? 14 : 16 }}>Tiến độ tháng này</span>
               </Space>
             }
-            style={{ borderRadius: isMobile ? 12 : 16, marginBottom: isMobile ? 12 : 24 }}
+            style={{ 
+              borderRadius: 12, 
+              marginBottom: isMobile ? 12 : 24, 
+              overflow: 'hidden',
+              border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+              boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+              background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+            }}
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
             <div style={{ marginBottom: isMobile ? 16 : 24 }}>
@@ -553,9 +599,9 @@ export default function AttendancePage() {
           {/* Quick Info */}
           <Card
             style={{
-              borderRadius: isMobile ? 12 : 16,
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
+              borderRadius: 12,
+              background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+              border: mode === 'dark' ? '1px solid var(--border)' : '1px solid #E5E7EB',
             }}
             styles={{ body: { padding: isMobile ? 14 : 24 } }}
           >
@@ -588,13 +634,27 @@ export default function AttendancePage() {
         cancelText="Hủy"
         centered
         width={isMobile ? '90%' : 400}
-        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+        style={{
+          backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
+          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+          borderRadius: 12,
+        }}
         styles={{
-          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
-          body: { backgroundColor: '#0A0E14' },
-          footer: { backgroundColor: '#0A0E14', borderTop: '1px solid rgba(255, 255, 255, 0.08)' },
+          header: {
+            backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+            borderRadius: '12px 12px 0 0',
+            padding: '16px 24px',
+            paddingRight: '56px',
+          },
+          body: { backgroundColor: mode === 'dark' ? '#0A0E14' : '#FFFFFF' },
+          footer: {
+            backgroundColor: mode === 'dark' ? '#0A0E14' : '#FFFFFF',
+            borderTop: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+            borderRadius: '0 0 12px 12px',
+          },
           mask: {
-            background: 'rgba(0, 0, 0, 0.92)',
+            background: mode === 'dark' ? 'rgba(0, 0, 0, 0.92)' : 'rgba(0, 0, 0, 0.45)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',
@@ -635,6 +695,38 @@ export default function AttendancePage() {
           </Text>
         </div>
       </Modal>
+
+      <style jsx global>{`
+        /* Modal border radius */
+        .ant-modal-content {
+          border-radius: 12px !important;
+          overflow: hidden !important;
+        }
+        
+        /* Modal close button positioning - inside header */
+        .ant-modal-close {
+          top: 16px !important;
+          right: 20px !important;
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: 8px !important;
+          background: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'} !important;
+          transition: all 0.2s ease !important;
+        }
+        .ant-modal-close:hover {
+          background: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'} !important;
+        }
+        .ant-modal-close-x {
+          width: 32px !important;
+          height: 32px !important;
+          line-height: 32px !important;
+          font-size: 16px !important;
+          color: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.65)'} !important;
+        }
+        .ant-modal-close:hover .ant-modal-close-x {
+          color: ${mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.85)'} !important;
+        }
+      `}</style>
     </div>
   );
 }
