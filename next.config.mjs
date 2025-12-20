@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // Removed 'output: export' to enable middleware and server-side features
+  // Middleware requires server-side runtime which is supported on Vercel
 
   images: {
     unoptimized: true,
