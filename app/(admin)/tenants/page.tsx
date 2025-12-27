@@ -265,8 +265,7 @@ const TenantPage: React.FC = () => {
                   color: "var(--text-muted)",
                 }}
               >
-                Quản lý nhà hàng thuộc hệ thống RestX, theo dõi số lượng tenants
-                và doanh thu toàn hệ thống.
+                Manage restaurants in the RestX system, track tenant count and total system revenue.
               </Typography.Paragraph>
             </div>
 
@@ -279,13 +278,13 @@ const TenantPage: React.FC = () => {
                   icon={<PlusOutlined />}
                   className="shadow-orange-900/20 shadow-lg border-none"
                 >
-                  Thêm Tenant
+                  Add Tenant
                 </Button>
               </Link>
             </div>
           </div>
 
-          {/* Stats Cards Row - chỉ tập trung cho admin/tenants */}
+          {/* Stats Cards Row - focused for admin/tenants */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card
               bordered={false}
@@ -363,13 +362,13 @@ const TenantPage: React.FC = () => {
             </Card>
           </div>
 
-          {/* Tabs: Danh sách tenants & Doanh thu hệ thống */}
+          {/* Tabs: Tenant list & System revenue */}
           <Tabs
             defaultActiveKey="tenants"
             items={[
               {
                 key: "tenants",
-                label: "Danh sách nhà hàng (Tenants)",
+                label: "Restaurant List (Tenants)",
                 children: (
                   <Card
                     bordered={false}
@@ -392,7 +391,7 @@ const TenantPage: React.FC = () => {
                         <Input
                           size="large"
                           allowClear
-                          placeholder="Tìm kiếm theo tên, slug, email..."
+                          placeholder="Search by name, slug, email..."
                           prefix={
                             <SearchOutlined
                               style={{ color: "var(--text-muted)" }}
@@ -439,7 +438,7 @@ const TenantPage: React.FC = () => {
               },
               {
                 key: "revenue",
-                label: "Doanh thu hệ thống",
+                label: "System Revenue",
                 children: (
                   <div className="space-y-4">
                     {/* Filter bar for revenue */}
@@ -459,13 +458,12 @@ const TenantPage: React.FC = () => {
                               color: "var(--text)",
                             }}
                           >
-                            Doanh thu toàn hệ thống
+                            Total System Revenue
                           </Typography.Title>
                           <Typography.Text
                             style={{ color: "var(--text-muted)" }}
                           >
-                            Xem xu hướng doanh thu theo ngày / tuần / tháng /
-                            năm.
+                            View revenue trends by day / week / month / year.
                           </Typography.Text>
                         </div>
                         <div className="flex flex-wrap gap-3">
@@ -475,10 +473,10 @@ const TenantPage: React.FC = () => {
                               setActiveRevenueRange(e.target.value)
                             }
                             options={[
-                              { label: "Ngày", value: "day" },
-                              { label: "Tuần", value: "week" },
-                              { label: "Tháng", value: "month" },
-                              { label: "Năm", value: "year" },
+                              { label: "Day", value: "day" },
+                              { label: "Week", value: "week" },
+                              { label: "Month", value: "month" },
+                              { label: "Year", value: "year" },
                             ]}
                             optionType="button"
                             buttonStyle="solid"
