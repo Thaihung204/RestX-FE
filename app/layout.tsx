@@ -87,7 +87,9 @@ export default function RootLayout({
       </head>
       <body className={inter.className} suppressHydrationWarning>
         <AuthProvider>
-          <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
+          <AutoDarkThemeProvider>
+            {children}
+          </AutoDarkThemeProvider>
         </AuthProvider>
       </body>
     </html>
