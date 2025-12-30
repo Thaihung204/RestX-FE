@@ -25,11 +25,13 @@ import {
   theme,
 } from "antd";
 import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 const { Text, Title } = Typography;
 
 export default function CustomerHomePage() {
+  const router = useRouter();
   const [messageApi, contextHolder] = message.useMessage();
   const [tableNumber] = useState("C1");
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -68,7 +70,7 @@ export default function CustomerHomePage() {
   };
 
   const handleViewMenu = () => {
-    messageApi.info("Đang chuyển đến trang thực đơn...");
+    router.push("/menu");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

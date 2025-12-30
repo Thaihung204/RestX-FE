@@ -1,27 +1,28 @@
 "use client";
 
+import NotificationSystem from "@/components/notifications/NotificationSystem";
 import {
-  DeleteOutlined,
-  DownOutlined,
-  FilterOutlined,
-  MinusOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  ShoppingCartOutlined,
+    DeleteOutlined,
+    DownOutlined,
+    FilterOutlined,
+    MinusOutlined,
+    PlusOutlined,
+    SearchOutlined,
+    ShoppingCartOutlined,
 } from "@ant-design/icons";
 import {
-  Affix,
-  Button,
-  Card,
-  Col,
-  ConfigProvider,
-  Input,
-  Modal,
-  Row,
-  Select,
-  Typography,
-  message,
-  theme,
+    Affix,
+    Button,
+    Card,
+    Col,
+    ConfigProvider,
+    Input,
+    Modal,
+    Row,
+    Select,
+    Typography,
+    message,
+    theme,
 } from "antd";
 import { useMemo, useState } from "react";
 
@@ -1489,6 +1490,7 @@ export default function MenuPage() {
           </div>
         </div>
       </ConfigProvider>
+      <NotificationSystem />
     </>
   );
 }
