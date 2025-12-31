@@ -1,0 +1,248 @@
+{
+  "staff": {
+    "orders": {
+      "title": "Order Management",
+      "search": {
+        "placeholder": "Search orders...",
+        "placeholder_full": "Search by order ID or table name..."
+      },
+      "create_order": "Create New Order",
+      "create_order_short": "Create Order",
+      "stats": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "pending_items": "items not done",
+        "no_orders": "No orders found"
+      },
+      "tabs": {
+        "all": "All",
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready"
+      },
+      "order": {
+        "table": "Table",
+        "time": "Time",
+        "status": "Status",
+        "total": "Total",
+        "other_items": "other items",
+        "items_not_done": "not done"
+      },
+      "status": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served",
+        "cancelled": "Cancelled"
+      },
+      "item_status": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served"
+      },
+      "modal": {
+        "order_detail": "Order Details",
+        "new_order": "Create New Order",
+        "cart": "Cart",
+        "select_table": "Select Table",
+        "no_items": "No items yet",
+        "print": "Print Bill",
+        "print_short": "Print",
+        "add_item": "Add Item",
+        "send_to_kitchen": "Send to Kitchen"
+      },
+      "menu": {
+        "appetizer": "Appetizers",
+        "main": "Main Courses",
+        "drink": "Drinks"
+      },
+      "messages": {
+        "select_table_and_items": "Please select a table and add items",
+        "order_created": "New order created successfully",
+        "status_updated": "Item status updated"
+      }
+    },
+    "tables": {
+      "title": "Table Management",
+      "status": {
+        "available": "Available",
+        "occupied": "In Use",
+        "reserved": "Reserved",
+        "cleaning": "Cleaning"
+      },
+      "zones": {
+        "all": "All",
+        "zone_a": "Zone A",
+        "zone_b": "Zone B",
+        "zone_vip": "VIP Zone"
+      },
+      "table": {
+        "seats": "seats",
+        "guests": "guests",
+        "dishes": "dishes",
+        "from": "From",
+        "booked_at": "Booked at",
+        "capacity": "Capacity"
+      },
+      "modal": {
+        "detail": "Table Details",
+        "open_table": "Open New Table",
+        "zone": "Zone",
+        "guests_count": "Number of Guests",
+        "start_time": "Start Time",
+        "total_amount": "Total Amount",
+        "reservation_name": "Reservation Name",
+        "reservation_time": "Reservation Time",
+        "phone": "Phone Number",
+        "confirm_open": "Confirm Open Table"
+      },
+      "actions": {
+        "open_table": "Open Table",
+        "add_dish": "Add Dish",
+        "transfer_table": "Transfer Table",
+        "checkout": "Checkout",
+        "close_table": "Close Table",
+        "guest_arrived": "Guest Arrived - Open Table",
+        "edit_reservation": "Edit Reservation Info",
+        "finish_cleaning": "Finish Cleaning"
+      },
+      "messages": {
+        "table_opened": "Table opened with {guests} guests",
+        "table_closed": "Table closed",
+        "table_ready": "Table is ready",
+        "enter_guests": "Please enter number of guests",
+        "max_guests": "Maximum {capacity} guests"
+      }
+    },
+    "menu": {
+      "dashboard": "Dashboard",
+      "tables": "Table Management",
+      "orders": "Order Management",
+      "checkout": "Checkout",
+      "attendance": "Attendance"
+    },
+    "user_menu": {
+      "profile": "Profile",
+      "settings": "Settings",
+      "logout": "Logout"
+    },
+    "sidebar": {
+      "staff_role": "Staff Member",
+      "working": "Working",
+      "started": "Started",
+      "today": "Today"
+    },
+    "checkout": {
+      "title": "Checkout",
+      "stats": {
+        "total_pending": "Total Pending Payment",
+        "tables_pending": "Tables Pending Payment",
+        "paid": "Paid"
+      },
+      "search": {
+        "placeholder": "Search table or bill...",
+        "placeholder_full": "Search by table name or bill code..."
+      },
+      "bill": {
+        "guests": "guests",
+        "dishes": "dishes",
+        "portions": "portions",
+        "total_payment": "Total Payment",
+        "pay": "Pay"
+      },
+      "payment": {
+        "title": "Payment",
+        "bill_detail": "Bill Details",
+        "payment_method": "Payment Method",
+        "cash_received": "Cash Received",
+        "change": "Change",
+        "subtotal": "Subtotal",
+        "discount": "Discount",
+        "vat": "VAT (10%)",
+        "total": "Total",
+        "confirm": "Confirm Payment",
+        "scan_qr": "Scan QR code to pay",
+        "success": "Payment Successful!",
+        "bill": "Bill",
+        "complete": "Complete"
+      },
+      "methods": {
+        "cash": "Cash",
+        "card": "Bank Card",
+        "transfer": "Bank Transfer",
+        "momo": "MoMo"
+      },
+      "messages": {
+        "insufficient_cash": "Insufficient cash received",
+        "payment_success": "Payment successful!"
+      }
+    },
+    "attendance": {
+      "title": "Attendance",
+      "check_in": "CHECK IN",
+      "check_out": "CHECK OUT",
+      "break": "Break",
+      "on_break": "On Break",
+      "end_break": "End Break",
+      "stats": {
+        "worked_days": "Worked Days",
+        "late_days": "Late Days",
+        "leave_days": "Leave Days",
+        "total_hours": "Total Working Hours"
+      },
+      "table": {
+        "date": "Date",
+        "check_in_time": "Check In",
+        "check_out_time": "Check Out",
+        "hours": "Hours",
+        "status": "Status"
+      },
+      "status": {
+        "present": "On Time",
+        "late": "Late",
+        "absent": "Absent",
+        "leave": "Leave"
+      },
+      "history": {
+        "title": "Attendance History",
+        "progress": "Monthly Progress",
+        "today": "Today",
+        "working_hours": "Working Hours"
+      },
+      "timeline": {
+        "check_in": "Check in",
+        "lunch_break": "Lunch break",
+        "resume_work": "Resume work",
+        "working": "Working..."
+      },
+      "modal": {
+        "confirm": "Confirm",
+        "confirm_checkin": "Confirm CHECK IN?",
+        "confirm_checkout": "Confirm CHECK OUT?",
+        "start_break": "Start break?",
+        "end_break": "End break?",
+        "time": "Time",
+        "ok": "Confirm",
+        "cancel": "Cancel"
+      },
+      "info": {
+        "check_in_time": "Check In",
+        "worked": "Worked",
+        "staff_info": "Staff Member • Morning Shift (8:00 - 17:00)"
+      },
+      "messages": {
+        "checkin_success": "Checked in at {time}",
+        "checkout_success": "Checked out at {time}",
+        "break_start_success": "Break started at {time}",
+        "break_end_success": "Break ended at {time}"
+      }
+    }
+  },
+  "common": {
+    "language": "Language",
+    "english": "English",
+    "vietnamese": "Tiếng Việt"
+  }
+}

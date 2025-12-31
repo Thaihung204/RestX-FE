@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AutoDarkThemeProvider from "./theme/AutoDarkThemeProvider";
+import I18nProvider from "@/components/I18nProvider";
+import TenantProvider from "@/lib/components/TenantProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -86,9 +88,13 @@ export default function RootLayout({
         `}</style>
       </head>
       <body className={inter.className} suppressHydrationWarning>
-        <AuthProvider>
-          <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
-        </AuthProvider>
+        <TenantProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
+            </AuthProvider>
+          </I18nProvider>
+        </TenantProvider>
       </body>
     </html>
   );
