@@ -8,6 +8,7 @@ import WorkflowSection from './components/WorkflowSection';
 import TestimonialsSection from './components/TestimonialsSection';
 import Footer from './components/Footer';
 import PageTransition from './components/PageTransition';
+
 export default function Home() {
   return (
     <PageTransition minimumLoadingTime={2000}>

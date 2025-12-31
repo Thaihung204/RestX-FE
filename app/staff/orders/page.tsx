@@ -20,6 +20,7 @@ import {
   InputNumber,
   App,
 } from 'antd';
+import { useTranslation } from 'react-i18next';
 import {
   ShoppingCartOutlined,
   ClockCircleOutlined,
@@ -68,30 +69,11 @@ interface Order {
   notes?: string;
 }
 
-// Helper function to get icon for menu item
-const getMenuItemIcon = (itemId: string) => {
-  const iconMap: Record<string, React.ReactNode> = {
-    'm1': <AppstoreOutlined style={{ fontSize: 24 }} />,
-    'm2': <AppstoreOutlined style={{ fontSize: 24 }} />,
-    'm3': <AppstoreOutlined style={{ fontSize: 24 }} />,
-    'm4': <AppstoreOutlined style={{ fontSize: 24 }} />,
-    'm5': <AppstoreOutlined style={{ fontSize: 24 }} />,
-    'm6': <AppstoreOutlined style={{ fontSize: 24 }} />,
-    'm7': <AppstoreOutlined style={{ fontSize: 24 }} />,
-    'm8': <AppstoreOutlined style={{ fontSize: 24 }} />,
-    'm9': <CoffeeOutlined style={{ fontSize: 24 }} />,
-    'm10': <CoffeeOutlined style={{ fontSize: 24 }} />,
-    'm11': <CoffeeOutlined style={{ fontSize: 24 }} />,
-    'm12': <CoffeeOutlined style={{ fontSize: 24 }} />,
-  };
-  return iconMap[itemId] || <ShoppingOutlined style={{ fontSize: 24 }} />;
-};
-
-// Mock menu data
+// Mock menu data - Note: In a real app, menu data should also be internationalized
 const menuCategories = [
   {
     id: 'appetizer',
-    name: 'Khai vị',
+    name: 'Khai vị', // Will be replaced with translation in component
     icon: <CoffeeOutlined />,
     items: [
       { id: 'm1', name: 'Gỏi cuốn tôm thịt', price: 65000 },
@@ -101,7 +83,7 @@ const menuCategories = [
   },
   {
     id: 'main',
-    name: 'Món chính',
+    name: 'Món chính', // Will be replaced with translation in component
     icon: <FireOutlined />,
     items: [
       { id: 'm4', name: 'Bò lúc lắc', price: 185000 },
@@ -113,7 +95,7 @@ const menuCategories = [
   },
   {
     id: 'drink',
-    name: 'Đồ uống',
+    name: 'Đồ uống', // Will be replaced with translation in component
     icon: <CoffeeOutlined />,
     items: [
       { id: 'm9', name: 'Nước ép cam', price: 45000 },
@@ -181,25 +163,29 @@ const initialOrders: Order[] = [
   },
 ];
 
-const statusConfig: Record<OrderStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  pending: { color: 'orange', text: 'Chờ xử lý', icon: <ExclamationCircleOutlined /> },
-  preparing: { color: 'blue', text: 'Đang nấu', icon: <SyncOutlined spin /> },
-  ready: { color: 'green', text: 'Sẵn sàng', icon: <CheckCircleOutlined /> },
-  served: { color: 'default', text: 'Đã phục vụ', icon: <CheckCircleOutlined /> },
-  cancelled: { color: 'red', text: 'Đã hủy', icon: <ClockCircleOutlined /> },
-};
-
-const itemStatusConfig: Record<OrderItemStatus, { color: string; text: string }> = {
-  pending: { color: 'orange', text: 'Chờ' },
-  preparing: { color: 'blue', text: 'Đang nấu' },
-  ready: { color: 'green', text: 'Sẵn sàng' },
-  served: { color: 'default', text: 'Đã phục vụ' },
-};
+// Status configs will be created inside the component to use translations
 
 export default function OrderManagement() {
   const { message } = App.useApp();
   const { mode } = useThemeMode();
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
+
+  // Create status configs inside component to use translations
+  const statusConfig: Record<OrderStatus, { color: string; text: string; icon: React.ReactNode }> = {
+    pending: { color: 'orange', text: t('staff.orders.status.pending'), icon: <ExclamationCircleOutlined /> },
+    preparing: { color: 'blue', text: t('staff.orders.status.preparing'), icon: <SyncOutlined spin /> },
+    ready: { color: 'green', text: t('staff.orders.status.ready'), icon: <CheckCircleOutlined /> },
+    served: { color: 'default', text: t('staff.orders.status.served'), icon: <CheckCircleOutlined /> },
+    cancelled: { color: 'red', text: t('staff.orders.status.cancelled'), icon: <ClockCircleOutlined /> },
+  };
+
+  const itemStatusConfig: Record<OrderItemStatus, { color: string; text: string }> = {
+    pending: { color: 'orange', text: t('staff.orders.item_status.pending') },
+    preparing: { color: 'blue', text: t('staff.orders.item_status.preparing') },
+    ready: { color: 'green', text: t('staff.orders.item_status.ready') },
+    served: { color: 'default', text: t('staff.orders.item_status.served') },
+  };
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
@@ -209,13 +195,18 @@ export default function OrderManagement() {
   const [selectedTable, setSelectedTable] = useState<string>('');
   const [activeMenuCategory, setActiveMenuCategory] = useState('appetizer');
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
-  // Check mobile viewport
+  // Check viewport
   React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const checkViewport = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 576); // xs breakpoint
+      setIsTablet(width >= 576 && width < 992); // sm to md breakpoint
+    };
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
   }, []);
 
   const filteredOrders = orders.filter(order => {
@@ -257,7 +248,7 @@ export default function OrderManagement() {
         return order;
       })
     );
-    message.success('Đã cập nhật trạng thái món');
+    message.success(t('staff.orders.messages.status_updated'));
   };
 
   const addToCart = (item: typeof menuCategories[0]['items'][0]) => {
@@ -282,7 +273,7 @@ export default function OrderManagement() {
 
   const handleCreateOrder = () => {
     if (!selectedTable || cart.length === 0) {
-      message.error('Vui lòng chọn bàn và thêm món');
+      message.error(t('staff.orders.messages.select_table_and_items'));
       return;
     }
 
@@ -303,7 +294,7 @@ export default function OrderManagement() {
     };
 
     setOrders(prev => [newOrder, ...prev]);
-    message.success('Đã tạo order mới');
+    message.success(t('staff.orders.messages.order_created'));
     setIsNewOrderModalOpen(false);
     setCart([]);
     setSelectedTable('');
@@ -381,7 +372,7 @@ export default function OrderManagement() {
                   </Tag>
                 ))}
                 {order.items.length > (isMobile ? 2 : 3) && (
-                  <Tag style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12 }}>+{order.items.length - (isMobile ? 2 : 3)} món khác</Tag>
+                  <Tag style={{ borderRadius: 8, fontSize: isMobile ? 12 : 13, fontWeight: 400 }}>+{order.items.length - (isMobile ? 2 : 3)} {t('staff.orders.order.other_items')}</Tag>
                 )}
               </div>
 
@@ -390,9 +381,15 @@ export default function OrderManagement() {
                   {order.total.toLocaleString('vi-VN')}đ
                 </Text>
                 {pendingItems > 0 && (
-                  <Badge 
-                    count={isMobile ? `${pendingItems} chưa xong` : `${pendingItems} món chưa xong`} 
-                    style={{ backgroundColor: '#faad14', fontSize: isMobile ? 10 : 12 }} 
+                  <Badge
+                    count={isMobile ? `${pendingItems} ${t('staff.orders.order.items_not_done')}` : `${pendingItems} ${t('staff.orders.stats.pending_items')}`}
+                    style={{
+                      backgroundColor: mode === 'dark' ? 'rgba(255, 122, 0, 0.2)' : 'rgba(255, 122, 0, 0.1)',
+                      color: '#FF7A00',
+                      fontSize: isMobile ? 12 : 13,
+                      fontWeight: 500,
+                      border: `1px solid ${mode === 'dark' ? 'rgba(255, 122, 0, 0.3)' : 'rgba(255, 122, 0, 0.2)'}`,
+                    }}
                   />
                 )}
               </div>
@@ -445,10 +442,21 @@ export default function OrderManagement() {
               >
                 <ExclamationCircleOutlined style={{ fontSize: isMobile ? 18 : 24, color: '#fff' }} />
               </div>
-              <div style={{ textAlign: isMobile ? 'center' : 'left' }}>
-                <Text style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700 }}>{stats.pending}</Text>
-                <br />
-                <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Chờ xử lý</Text>
+              <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
+                <Text style={{ 
+                  fontSize: isMobile ? 28 : 36, 
+                  fontWeight: 500,
+                  display: 'block',
+                  color: mode === 'dark' ? '#FFFFFF' : '#1A1A1A',
+                  lineHeight: 1.2,
+                  marginBottom: 8,
+                }}>{stats.pending}</Text>
+                <Text style={{
+                  fontSize: isMobile ? 13 : 15,
+                  color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                  fontWeight: 400,
+                  display: 'block',
+                }}>{t('staff.orders.stats.pending')}</Text>
               </div>
             </div>
           </Card>
@@ -476,10 +484,21 @@ export default function OrderManagement() {
               >
                 <SyncOutlined spin style={{ fontSize: isMobile ? 18 : 24, color: '#fff' }} />
               </div>
-              <div style={{ textAlign: isMobile ? 'center' : 'left' }}>
-                <Text style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700 }}>{stats.preparing}</Text>
-                <br />
-                <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Đang nấu</Text>
+              <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
+                <Text style={{ 
+                  fontSize: isMobile ? 28 : 36, 
+                  fontWeight: 500,
+                  display: 'block',
+                  color: mode === 'dark' ? '#FFFFFF' : '#1A1A1A',
+                  lineHeight: 1.2,
+                  marginBottom: 8,
+                }}>{stats.preparing}</Text>
+                <Text style={{
+                  fontSize: isMobile ? 13 : 15,
+                  color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                  fontWeight: 400,
+                  display: 'block',
+                }}>{t('staff.orders.stats.preparing')}</Text>
               </div>
             </div>
           </Card>
@@ -507,10 +526,21 @@ export default function OrderManagement() {
               >
                 <CheckCircleOutlined style={{ fontSize: isMobile ? 18 : 24, color: '#fff' }} />
               </div>
-              <div style={{ textAlign: isMobile ? 'center' : 'left' }}>
-                <Text style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700 }}>{stats.ready}</Text>
-                <br />
-                <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Sẵn sàng</Text>
+              <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
+                <Text style={{ 
+                  fontSize: isMobile ? 28 : 36, 
+                  fontWeight: 500,
+                  display: 'block',
+                  color: mode === 'dark' ? '#FFFFFF' : '#1A1A1A',
+                  lineHeight: 1.2,
+                  marginBottom: 8,
+                }}>{stats.ready}</Text>
+                <Text style={{
+                  fontSize: isMobile ? 13 : 15,
+                  color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                  fontWeight: 400,
+                  display: 'block',
+                }}>{t('staff.orders.stats.ready')}</Text>
               </div>
             </div>
           </Card>
@@ -527,9 +557,9 @@ export default function OrderManagement() {
         styles={{ body: { padding: isMobile ? 12 : '16px 24px' } }}
       >
         <Row gutter={[12, 12]} align="middle">
-          <Col xs={24} sm={16} md={18}>
+          <Col xs={24} sm={24} md={18} lg={18} xl={18}>
             <Search
-              placeholder={isMobile ? "Tìm order..." : "Tìm theo mã order hoặc tên bàn..."}
+              placeholder={isMobile ? t('staff.orders.search.placeholder') : t('staff.orders.search.placeholder_full')}
               allowClear
               size={isMobile ? 'middle' : 'large'}
               style={{ width: '100%' }}
@@ -537,22 +567,23 @@ export default function OrderManagement() {
               onChange={e => setSearchText(e.target.value)}
             />
           </Col>
-          <Col xs={24} sm={8} md={6}>
+          <Col xs={24} sm={24} md={6} lg={6} xl={6}>
             <Button
               type="primary"
               size={isMobile ? 'middle' : 'large'}
               icon={<PlusOutlined />}
               onClick={() => setIsNewOrderModalOpen(true)}
-              block={isMobile}
+              block={isMobile || isTablet}
               style={{
                 borderRadius: 12,
                 height: isMobile ? 40 : 48,
                 fontWeight: 600,
                 background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
                 border: 'none',
+                width: '100%',
               }}
             >
-              {isMobile ? 'Tạo Order' : 'Tạo Order mới'}
+              {isMobile || isTablet ? t('staff.orders.create_order_short') : t('staff.orders.create_order')}
             </Button>
           </Col>
         </Row>
@@ -571,25 +602,35 @@ export default function OrderManagement() {
           onChange={setActiveTab}
           size={isMobile ? 'small' : 'middle'}
           items={isMobile ? [
-            { key: 'all', label: `Tất cả (${orders.length})` },
-            { key: 'pending', label: `Chờ (${stats.pending})` },
-            { key: 'preparing', label: `Nấu (${stats.preparing})` },
-            { key: 'ready', label: `Sẵn (${stats.ready})` },
+            { key: 'all', label: `${t('staff.orders.tabs.all')} (${orders.length})` },
+            { key: 'pending', label: `${t('staff.orders.tabs.pending')} (${stats.pending})` },
+            { key: 'preparing', label: `${t('staff.orders.tabs.preparing')} (${stats.preparing})` },
+            { key: 'ready', label: `${t('staff.orders.tabs.ready')} (${stats.ready})` },
           ] : [
-            { key: 'all', label: `Tất cả (${orders.length})` },
-            { key: 'pending', label: `Chờ xử lý (${stats.pending})` },
-            { key: 'preparing', label: `Đang nấu (${stats.preparing})` },
-            { key: 'ready', label: `Sẵn sàng (${stats.ready})` },
+            { key: 'all', label: `${t('staff.orders.tabs.all')} (${orders.length})` },
+            { key: 'pending', label: `${t('staff.orders.tabs.pending')} (${stats.pending})` },
+            { key: 'preparing', label: `${t('staff.orders.tabs.preparing')} (${stats.preparing})` },
+            { key: 'ready', label: `${t('staff.orders.tabs.ready')} (${stats.ready})` },
           ]}
         />
 
-        <AnimatePresence>
-          {filteredOrders.length > 0 ? (
-            filteredOrders.map(order => renderOrderCard(order))
-          ) : (
-            <Empty description="Không có order nào" />
-          )}
-        </AnimatePresence>
+        {filteredOrders.length > 0 ? (
+          filteredOrders.map(order => (
+            <div key={order.id}>
+              {renderOrderCard(order)}
+            </div>
+          ))
+        ) : (
+          <Empty
+            description={t('staff.orders.stats.no_orders')}
+            style={{
+              color: mode === 'dark' ? undefined : '#4F4F4F',
+            }}
+            imageStyle={{
+              opacity: mode === 'dark' ? 0.65 : 0.4,
+            }}
+          />
+        )}
       </Card>
 
       {/* Order Detail Modal */}
@@ -597,7 +638,7 @@ export default function OrderManagement() {
         title={
           <Space>
             <ShoppingCartOutlined style={{ color: '#FF7A00' }} />
-            <span>Chi tiết Order {selectedOrder?.id}</span>
+            <span>{t('staff.orders.modal.order_detail')} {selectedOrder?.id}</span>
           </Space>
         }
         open={isDetailModalOpen}
@@ -630,18 +671,21 @@ export default function OrderManagement() {
             >
               <Row gutter={[12, 12]}>
                 <Col xs={8}>
-                  <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Bàn</Text>
-                  <br />
-                  <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>{selectedOrder.tableName}</Text>
+                  <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12, display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                    {t('staff.orders.order.table')}
+                  </Text>
+                  <Text strong style={{ fontSize: isMobile ? 15 : 17, display: 'block' }}>{selectedOrder.tableName}</Text>
                 </Col>
                 <Col xs={8}>
-                  <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Thời gian</Text>
-                  <br />
-                  <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>{selectedOrder.createdAt}</Text>
+                  <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12, display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                    {t('staff.orders.order.time')}
+                  </Text>
+                  <Text strong style={{ fontSize: isMobile ? 15 : 17, display: 'block' }}>{selectedOrder.createdAt}</Text>
                 </Col>
                 <Col xs={8}>
-                  <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Trạng thái</Text>
-                  <br />
+                  <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12, display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                    {t('staff.orders.order.status')}
+                  </Text>
                   <Tag
                     icon={statusConfig[selectedOrder.status].icon}
                     color={statusConfig[selectedOrder.status].color}
@@ -683,10 +727,10 @@ export default function OrderManagement() {
                     style={{ width: isMobile ? 90 : 110 }}
                     onChange={(value) => handleUpdateItemStatus(selectedOrder.id, item.id, value)}
                     options={[
-                      { value: 'pending', label: 'Chờ' },
-                      { value: 'preparing', label: 'Đang nấu' },
-                      { value: 'ready', label: 'Sẵn sàng' },
-                      { value: 'served', label: 'Đã phục vụ' },
+                      { value: 'pending', label: t('staff.orders.item_status.pending') },
+                      { value: 'preparing', label: t('staff.orders.item_status.preparing') },
+                      { value: 'ready', label: t('staff.orders.item_status.ready') },
+                      { value: 'served', label: t('staff.orders.item_status.served') },
                     ]}
                   />
                 </div>
@@ -697,7 +741,7 @@ export default function OrderManagement() {
 
             {/* Total */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: isMobile ? 14 : 16 }}>Tổng cộng</Text>
+              <Text style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.orders.order.total')}</Text>
               <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }}>
                 {selectedOrder.total.toLocaleString('vi-VN')}đ
               </Text>
@@ -712,7 +756,7 @@ export default function OrderManagement() {
                   block
                   style={{ borderRadius: 12 }}
                 >
-                  {isMobile ? 'In' : 'In hóa đơn'}
+                  {isMobile ? t('staff.orders.modal.print_short') : t('staff.orders.modal.print')}
                 </Button>
               </Col>
               <Col xs={12} sm={8}>
@@ -722,7 +766,7 @@ export default function OrderManagement() {
                   block
                   style={{ borderRadius: 12 }}
                 >
-                  Thêm món
+                  {t('staff.orders.modal.add_item')}
                 </Button>
               </Col>
               <Col xs={24} sm={8}>
@@ -737,7 +781,7 @@ export default function OrderManagement() {
                     border: 'none',
                   }}
                 >
-                  Gửi bếp
+                  {t('staff.orders.modal.send_to_kitchen')}
                 </Button>
               </Col>
             </Row>
@@ -750,7 +794,7 @@ export default function OrderManagement() {
         title={
           <Space>
             <PlusOutlined style={{ color: '#FF7A00' }} />
-            <span>Tạo Order mới</span>
+            <span>{t('staff.orders.modal.new_order')}</span>
           </Space>
         }
         open={isNewOrderModalOpen}
@@ -779,7 +823,7 @@ export default function OrderManagement() {
           <Col xs={24} md={14}>
             <div style={{ marginBottom: 16 }}>
               <Select
-                placeholder="Chọn bàn"
+                placeholder={t('staff.orders.modal.select_table')}
                 size={isMobile ? 'middle' : 'large'}
                 style={{ width: '100%' }}
                 value={selectedTable || undefined}
@@ -802,7 +846,7 @@ export default function OrderManagement() {
                 label: (
                   <Space size={isMobile ? 4 : 8}>
                     {cat.icon}
-                    {!isMobile && cat.name}
+                    {!isMobile && t(`staff.orders.menu.${cat.id}`)}
                   </Space>
                 ),
               }))}
@@ -853,7 +897,7 @@ export default function OrderManagement() {
               title={
                 <Space size={isMobile ? 8 : 12}>
                   <ShoppingCartOutlined />
-                  <span style={{ fontSize: isMobile ? 14 : 16 }}>Giỏ hàng ({cart.length})</span>
+                  <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.orders.modal.cart')} ({cart.length})</span>
                 </Space>
               }
               style={{
@@ -918,7 +962,7 @@ export default function OrderManagement() {
                   <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isMobile ? 12 : 16 }}>
-                    <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>Tổng cộng</Text>
+                    <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.orders.order.total')}</Text>
                     <Text strong style={{ fontSize: isMobile ? 16 : 18, color: '#FF7A00' }}>
                       {cartTotal.toLocaleString('vi-VN')}đ
                     </Text>
@@ -937,11 +981,19 @@ export default function OrderManagement() {
                       border: 'none',
                     }}
                   >
-                    Tạo Order
+                    {t('staff.orders.create_order_short')}
                   </Button>
                 </>
               ) : (
-                <Empty description="Chưa có món nào" />
+                <Empty
+                  description={t('staff.orders.modal.no_items')}
+                  style={{
+                    color: mode === 'dark' ? undefined : '#4F4F4F',
+                  }}
+                  imageStyle={{
+                    opacity: mode === 'dark' ? 0.65 : 0.4,
+                  }}
+                />
               )}
             </Card>
           </Col>
