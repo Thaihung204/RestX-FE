@@ -1,0 +1,248 @@
+{
+  "staff": {
+    "orders": {
+      "title": "Quản lý đơn hàng",
+      "search": {
+        "placeholder": "Tìm order...",
+        "placeholder_full": "Tìm theo mã order hoặc tên bàn..."
+      },
+      "create_order": "Tạo Order mới",
+      "create_order_short": "Tạo Order",
+      "stats": {
+        "pending": "Chờ xử lý",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng",
+        "pending_items": "món chưa xong",
+        "no_orders": "Không có order nào"
+      },
+      "tabs": {
+        "all": "Tất cả",
+        "pending": "Chờ xử lý",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng"
+      },
+      "order": {
+        "table": "Bàn",
+        "time": "Thời gian",
+        "status": "Trạng thái",
+        "total": "Tổng cộng",
+        "other_items": "món khác",
+        "items_not_done": "chưa xong"
+      },
+      "status": {
+        "pending": "Chờ xử lý",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng",
+        "served": "Đã phục vụ",
+        "cancelled": "Đã hủy"
+      },
+      "item_status": {
+        "pending": "Chờ",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng",
+        "served": "Đã phục vụ"
+      },
+      "modal": {
+        "order_detail": "Chi tiết Order",
+        "new_order": "Tạo Order mới",
+        "cart": "Giỏ hàng",
+        "select_table": "Chọn bàn",
+        "no_items": "Chưa có món nào",
+        "print": "In hóa đơn",
+        "print_short": "In",
+        "add_item": "Thêm món",
+        "send_to_kitchen": "Gửi bếp"
+      },
+      "menu": {
+        "appetizer": "Khai vị",
+        "main": "Món chính",
+        "drink": "Đồ uống"
+      },
+      "messages": {
+        "select_table_and_items": "Vui lòng chọn bàn và thêm món",
+        "order_created": "Đã tạo order mới",
+        "status_updated": "Đã cập nhật trạng thái món"
+      }
+    },
+    "tables": {
+      "title": "Quản lý bàn",
+      "status": {
+        "available": "Trống",
+        "occupied": "Đang dùng",
+        "reserved": "Đã đặt",
+        "cleaning": "Đang dọn"
+      },
+      "zones": {
+        "all": "Tất cả",
+        "zone_a": "Khu A",
+        "zone_b": "Khu B",
+        "zone_vip": "Khu VIP"
+      },
+      "table": {
+        "seats": "chỗ",
+        "guests": "khách",
+        "dishes": "món",
+        "from": "Từ",
+        "booked_at": "Đặt lúc",
+        "capacity": "Sức chứa"
+      },
+      "modal": {
+        "detail": "Chi tiết",
+        "open_table": "Mở bàn mới",
+        "zone": "Khu vực",
+        "guests_count": "Số lượng khách",
+        "start_time": "Bắt đầu",
+        "total_amount": "Tổng tiền",
+        "reservation_name": "Khách đặt",
+        "reservation_time": "Thời gian đặt",
+        "phone": "Số điện thoại",
+        "confirm_open": "Xác nhận mở bàn"
+      },
+      "actions": {
+        "open_table": "Mở bàn",
+        "add_dish": "Thêm món",
+        "transfer_table": "Chuyển bàn",
+        "checkout": "Thanh toán",
+        "close_table": "Đóng bàn",
+        "guest_arrived": "Khách đã đến - Mở bàn",
+        "edit_reservation": "Sửa thông tin đặt bàn",
+        "finish_cleaning": "Hoàn thành dọn dẹp"
+      },
+      "messages": {
+        "table_opened": "Đã mở {table} với {guests} khách",
+        "table_closed": "Đã đóng {table}",
+        "table_ready": "{table} đã sẵn sàng",
+        "enter_guests": "Vui lòng nhập số khách",
+        "max_guests": "Tối đa {capacity} khách"
+      }
+    },
+    "menu": {
+      "dashboard": "Tổng quan",
+      "tables": "Quản lý bàn",
+      "orders": "Quản lý Order",
+      "checkout": "Thanh toán",
+      "attendance": "Chấm công"
+    },
+    "user_menu": {
+      "profile": "Thông tin cá nhân",
+      "settings": "Cài đặt",
+      "logout": "Đăng xuất"
+    },
+    "sidebar": {
+      "staff_role": "Nhân viên phục vụ",
+      "working": "Đang làm việc",
+      "started": "Bắt đầu",
+      "today": "Hôm nay"
+    },
+    "checkout": {
+      "title": "Thanh toán",
+      "stats": {
+        "total_pending": "Tổng tiền chờ thanh toán",
+        "tables_pending": "Bàn chờ thanh toán",
+        "paid": "Đã thanh toán"
+      },
+      "search": {
+        "placeholder": "Tìm bàn hoặc hóa đơn...",
+        "placeholder_full": "Tìm theo tên bàn hoặc mã hóa đơn..."
+      },
+      "bill": {
+        "guests": "khách",
+        "dishes": "món",
+        "portions": "phần",
+        "total_payment": "Tổng thanh toán",
+        "pay": "Thanh toán"
+      },
+      "payment": {
+        "title": "Thanh toán",
+        "bill_detail": "Chi tiết hóa đơn",
+        "payment_method": "Phương thức thanh toán",
+        "cash_received": "Tiền khách đưa",
+        "change": "Tiền thừa",
+        "subtotal": "Tạm tính",
+        "discount": "Giảm giá",
+        "vat": "VAT (10%)",
+        "total": "Tổng cộng",
+        "confirm": "Xác nhận thanh toán",
+        "scan_qr": "Quét mã QR để thanh toán",
+        "success": "Thanh toán thành công!",
+        "bill": "Hóa đơn",
+        "complete": "Hoàn tất"
+      },
+      "methods": {
+        "cash": "Tiền mặt",
+        "card": "Thẻ ngân hàng",
+        "transfer": "Chuyển khoản",
+        "momo": "MoMo"
+      },
+      "messages": {
+        "insufficient_cash": "Số tiền nhận chưa đủ",
+        "payment_success": "Thanh toán thành công!"
+      }
+    },
+    "attendance": {
+      "title": "Chấm công",
+      "check_in": "CHẤM CÔNG VÀO",
+      "check_out": "CHẤM CÔNG RA",
+      "break": "Nghỉ giải lao",
+      "on_break": "Đang nghỉ giải lao",
+      "end_break": "Kết thúc nghỉ",
+      "stats": {
+        "worked_days": "Ngày công",
+        "late_days": "Đi muộn",
+        "leave_days": "Nghỉ phép",
+        "total_hours": "Tổng giờ làm"
+      },
+      "table": {
+        "date": "Ngày",
+        "check_in_time": "Giờ vào",
+        "check_out_time": "Giờ ra",
+        "hours": "Số giờ",
+        "status": "Trạng thái"
+      },
+      "status": {
+        "present": "Đúng giờ",
+        "late": "Đi muộn",
+        "absent": "Vắng mặt",
+        "leave": "Nghỉ phép"
+      },
+      "history": {
+        "title": "Lịch sử chấm công",
+        "progress": "Tiến độ tháng này",
+        "today": "Hôm nay",
+        "working_hours": "Giờ làm việc"
+      },
+      "timeline": {
+        "check_in": "Check in",
+        "lunch_break": "Nghỉ trưa",
+        "resume_work": "Tiếp tục làm việc",
+        "working": "Đang làm việc..."
+      },
+      "modal": {
+        "confirm": "Xác nhận",
+        "confirm_checkin": "Xác nhận CHẤM CÔNG VÀO?",
+        "confirm_checkout": "Xác nhận CHẤM CÔNG RA?",
+        "start_break": "Bắt đầu nghỉ giải lao?",
+        "end_break": "Kết thúc nghỉ giải lao?",
+        "time": "Thời gian",
+        "ok": "Xác nhận",
+        "cancel": "Hủy"
+      },
+      "info": {
+        "check_in_time": "Giờ vào",
+        "worked": "Đã làm",
+        "staff_info": "Nhân viên phục vụ • Ca sáng (8:00 - 17:00)"
+      },
+      "messages": {
+        "checkin_success": "Chấm công vào lúc {time}",
+        "checkout_success": "Chấm công ra lúc {time}",
+        "break_start_success": "Bắt đầu nghỉ giải lao lúc {time}",
+        "break_end_success": "Kết thúc nghỉ giải lao lúc {time}"
+      }
+    }
+  },
+  "common": {
+    "language": "Ngôn ngữ",
+    "english": "English",
+    "vietnamese": "Tiếng Việt"
+  }
+}

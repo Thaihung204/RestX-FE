@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { usePageTransition } from './PageTransition';
 import ThemeToggle from './ThemeToggle';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
 const { Header: AntHeader } = Layout;
@@ -157,6 +158,7 @@ const Header: React.FC = () => {
                   <TeamOutlined style={{ marginRight: 6 }} /> Staff
               </Button>
               </motion.div>
+              <LanguageSwitcher />
               <ThemeToggle />
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
@@ -249,7 +251,8 @@ const Header: React.FC = () => {
           selectable={false}
         />
         <Divider />
-        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <LanguageSwitcher />
           <ThemeToggle />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
