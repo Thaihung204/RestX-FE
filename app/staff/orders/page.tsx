@@ -106,6 +106,18 @@ const menuCategories = [
   },
 ];
 
+// Helper function to get icon for menu item based on its category
+const getMenuItemIcon = (itemId: string): React.ReactNode => {
+  // Find which category this item belongs to
+  for (const category of menuCategories) {
+    if (category.items.some(item => item.id === itemId)) {
+      return category.icon;
+    }
+  }
+  // Default icon if not found
+  return <AppstoreOutlined />;
+};
+
 // Mock orders data
 const initialOrders: Order[] = [
   {
