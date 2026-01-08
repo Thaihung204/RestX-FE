@@ -22,65 +22,20 @@ import { usePathname, useRouter } from 'next/navigation';
 import ThemeToggle from '../components/ThemeToggle';
 import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 import Link from 'next/link';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../components/I18nProvider';
 
 const { Sider, Content, Header } = Layout;
 const { Text } = Typography;
-
-const menuItems = [
-  {
-    key: '/staff',
-    icon: <DashboardOutlined />,
-    label: 'Tổng quan',
-  },
-  {
-    key: '/staff/tables',
-    icon: <TableOutlined />,
-    label: 'Quản lý bàn',
-  },
-  {
-    key: '/staff/orders',
-    icon: <ShoppingCartOutlined />,
-    label: 'Quản lý Order',
-  },
-  {
-    key: '/staff/checkout',
-    icon: <WalletOutlined />,
-    label: 'Thanh toán',
-  },
-  {
-    key: '/staff/attendance',
-    icon: <ClockCircleOutlined />,
-    label: 'Chấm công',
-  },
-];
-
-const userMenuItems = [
-  {
-    key: 'profile',
-    icon: <UserOutlined />,
-    label: 'Thông tin cá nhân',
-  },
-  {
-    key: 'settings',
-    icon: <SettingOutlined />,
-    label: 'Cài đặt',
-  },
-  {
-    type: 'divider' as const,
-  },
-  {
-    key: 'logout',
-    icon: <LogoutOutlined />,
-    label: 'Đăng xuất',
-    danger: true,
-  },
-];
 
 export default function StaffLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { t, i18n } = useTranslation();
+  const { language } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false); // e.g. iPad widths
@@ -88,6 +43,58 @@ export default function StaffLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { mode } = useThemeMode();
+
+  // Menu items with translations
+  const menuItems = [
+    {
+      key: '/staff',
+      icon: <DashboardOutlined />,
+      label: t('staff.menu.dashboard'),
+    },
+    {
+      key: '/staff/tables',
+      icon: <TableOutlined />,
+      label: t('staff.menu.tables'),
+    },
+    {
+      key: '/staff/orders',
+      icon: <ShoppingCartOutlined />,
+      label: t('staff.menu.orders'),
+    },
+    {
+      key: '/staff/checkout',
+      icon: <WalletOutlined />,
+      label: t('staff.menu.checkout'),
+    },
+    {
+      key: '/staff/attendance',
+      icon: <ClockCircleOutlined />,
+      label: t('staff.menu.attendance'),
+    },
+  ];
+
+  // User menu items with translations
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: t('staff.user_menu.profile'),
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: t('staff.user_menu.settings'),
+    },
+    {
+      type: 'divider' as const,
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: t('staff.user_menu.logout'),
+      danger: true,
+    },
+  ];
 
   useEffect(() => {
     const checkViewport = () => {
@@ -211,7 +218,7 @@ export default function StaffLayout({
                   fontSize: 12,
                 }}
               >
-                Nhân viên phục vụ
+                {t('staff.sidebar.staff_role')}
               </Text>
             </div>
           </div>
@@ -257,11 +264,11 @@ export default function StaffLayout({
               }}
             />
             <Text style={{ color: '#52c41a', fontSize: 12, fontWeight: 600 }}>
-              Đang làm việc
+              {t('staff.sidebar.working')}
             </Text>
           </div>
           <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}>
-            Bắt đầu: 08:00 - Hôm nay
+            {t('staff.sidebar.started')}: 08:00 - {t('staff.sidebar.today')}
           </Text>
         </div>
       )}
@@ -367,81 +374,107 @@ export default function StaffLayout({
             }}
           >
             {/* Left Section */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flex: 1, minWidth: 0 }}>
               <Button
                 type="text"
                 icon={isDrawerDevice ? <MenuOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
                 onClick={() => isDrawerDevice ? setDrawerOpen(true) : setCollapsed(!collapsed)}
                 style={{
                   fontSize: 16,
-                  width: 40,
-                  height: 40,
+                  width: isMobile ? 36 : 40,
+                  height: isMobile ? 36 : 40,
                   borderRadius: 8,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               />
-              <div style={{ borderLeft: '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <Text style={{ 
-                    fontSize: 15, 
-                    fontWeight: 600, 
-                    color: '#1a1a2e',
-                    lineHeight: 1.2,
-                    margin: 0,
-                  }}>
-                    {menuItems.find((item) => item.key === pathname)?.label || 'Dashboard'}
-                  </Text>
-                  {!isMobile && (
+              {!isMobile && (
+                <div style={{ borderLeft: '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
+                    <Text style={{ 
+                      fontSize: 15, 
+                      fontWeight: 600, 
+                      color: '#1a1a2e',
+                      lineHeight: 1.2,
+                      margin: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {menuItems.find((item) => item.key === pathname)?.label || t('staff.menu.dashboard')}
+                    </Text>
                     <Text style={{ fontSize: 12, color: '#999', lineHeight: 1.2, marginTop: 2 }}>
-                      {new Date().toLocaleDateString('vi-VN', {
+                      {new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN', {
                         weekday: 'long',
                         day: 'numeric',
                         month: 'numeric',
                       })}
                     </Text>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
+              {isMobile && (
+                <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                  <Text style={{ 
+                    fontSize: isMobile ? 14 : 15, 
+                    fontWeight: 600, 
+                    color: '#1a1a2e',
+                    lineHeight: 1.2,
+                    margin: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {menuItems.find((item) => item.key === pathname)?.label || t('staff.menu.dashboard')}
+                  </Text>
+                </div>
+              )}
             </div>
 
             {/* Right Section */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
-              {/* Home Link */}
-              <Link href="/">
-                <Button
-                  type="text"
-                  icon={<HomeOutlined style={{ fontSize: 18, color: 'var(--text-muted)' }} />}
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 8,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                />
-              </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 12, flexShrink: 0 }}>
+              {/* Home Link - Hidden on very small mobile */}
+              {!isMobile && (
+                <Link href="/">
+                  <Button
+                    type="text"
+                    icon={<HomeOutlined style={{ fontSize: 18, color: 'var(--text-muted)' }} />}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  />
+                </Link>
+              )}
 
               {/* Notifications */}
               <Badge count={3} size="small" offset={[-4, 4]}>
                 <Button
                   type="text"
-                  icon={<BellOutlined style={{ fontSize: 18, color: 'var(--text-muted)' }} />}
+                  icon={<BellOutlined style={{ fontSize: isMobile ? 16 : 18, color: 'var(--text-muted)' }} />}
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: isMobile ? 32 : 36,
+                    height: isMobile ? 32 : 36,
                     borderRadius: 8,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    padding: 0,
                   }}
                 />
               </Badge>
 
               {/* Theme toggle */}
               <ThemeToggle />
+
+              {/* Language switcher */}
+              <LanguageSwitcher />
 
               {/* User Menu */}
               <Dropdown
@@ -453,8 +486,8 @@ export default function StaffLayout({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 8,
-                    padding: '4px 8px 4px 4px',
+                    gap: isMobile ? 4 : 8,
+                    padding: isMobile ? '4px' : '4px 8px 4px 4px',
                     background: 'var(--card)',
                     borderRadius: 24,
                     cursor: 'pointer',
@@ -463,11 +496,11 @@ export default function StaffLayout({
                   }}
                 >
                   <Avatar
-                    size={28}
+                    size={isMobile ? 24 : 28}
                     style={{
                       background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
                       fontWeight: 600,
-                      fontSize: 12,
+                      fontSize: isMobile ? 10 : 12,
                     }}
                   >
                     NV

@@ -56,9 +56,9 @@ export function middleware(req: NextRequest) {
       return NextResponse.next();
     }
 
-    // Root path → tenant dashboard
+    // Root path → rewrite to /restaurant (for demo.restx.food/)
     if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/staff', req.url));
+      return NextResponse.rewrite(new URL('/restaurant', req.url));
     }
 
     // Already on /staff/* path, allow it
@@ -77,9 +77,9 @@ export function middleware(req: NextRequest) {
       return NextResponse.next();
     }
 
-    // Root path → admin dashboard
+    // Root path → render app/page.tsx (no rewrite needed)
     if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/dashboard', req.url));
+      return NextResponse.next();
     }
 
     // Already on /dashboard/* path, allow it
