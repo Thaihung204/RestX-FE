@@ -7,7 +7,9 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { usePageTransition } from './PageTransition';
 import ThemeToggle from './ThemeToggle';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 import { useThemeMode } from '../theme/AutoDarkThemeProvider';
+import { useTenant } from '@/lib/contexts/TenantContext';
 
 const { Header: AntHeader } = Layout;
 
@@ -25,6 +27,7 @@ const Header: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const { isAnimationReady } = usePageTransition();
   const { mode } = useThemeMode();
+  const { tenant } = useTenant();
 
   useEffect(() => {
     setMounted(true);
@@ -92,23 +95,35 @@ const Header: React.FC = () => {
         >
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 38,
-                height: 38,
-                background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
-                borderRadius: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 700,
-                fontSize: 18,
-                boxShadow: '0 4px 12px rgba(255, 122, 0, 0.3)',
-              }}
-            >
-              R
-            </div>
+            {tenant?.logo ? (
+              <img 
+                src={tenant.logo} 
+                alt={tenant.name}
+                style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'cover' }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  background: tenant?.color 
+                    ? `linear-gradient(135deg, ${tenant.color} 0%, ${tenant.color}DD 100%)`
+                    : 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                  borderRadius: 10,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: 18,
+                  boxShadow: tenant?.color 
+                    ? `0 4px 12px ${tenant.color}40`
+                    : '0 4px 12px rgba(255, 122, 0, 0.3)',
+                }}
+              >
+                R
+              </div>
+            )}
             <span
               style={{
                 fontSize: 22,
@@ -116,7 +131,7 @@ const Header: React.FC = () => {
                 color: mode === 'dark' ? '#ECECEC' : '#111111',
               }}
             >
-              RestX
+              {tenant?.name || 'RestX'}
             </span>
           </div>
 
@@ -157,6 +172,7 @@ const Header: React.FC = () => {
                   <TeamOutlined style={{ marginRight: 6 }} /> Staff
               </Button>
               </motion.div>
+              <LanguageSwitcher />
               <ThemeToggle />
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
@@ -249,7 +265,8 @@ const Header: React.FC = () => {
           selectable={false}
         />
         <Divider />
-        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <LanguageSwitcher />
           <ThemeToggle />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
