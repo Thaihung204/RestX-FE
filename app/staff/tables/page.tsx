@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
 import {
   Card,
@@ -36,7 +36,6 @@ import {
   DollarOutlined,
   InfoCircleOutlined,
 } from '@ant-design/icons';
-import { motion } from 'framer-motion';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -114,22 +113,6 @@ const getStatusConfig = (mode: 'light' | 'dark') => {
   } as Record<TableStatus, { color: string; bgColor: string; text: string; icon: React.ReactNode }>;
 };
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, scale: 0.9 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.3 },
-  },
-};
 
 export default function TableManagement() {
   const { mode } = useThemeMode();
@@ -139,6 +122,15 @@ export default function TableManagement() {
   const [isOpenTableModal, setIsOpenTableModal] = useState(false);
   const [activeZone, setActiveZone] = useState('all');
   const [form] = Form.useForm();
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check mobile viewport
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   const statusConfig = getStatusConfig(mode);
 
@@ -217,34 +209,30 @@ export default function TableManagement() {
     const config = statusConfig[table.status];
     
     return (
-      <motion.div
-        key={table.id}
-        variants={itemVariants}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        style={{ width: '100%', height: '100%' }}
-      >
+      <div style={{ width: '100%', height: '100%' }}>
         <Card
           hoverable
           onClick={() => handleTableClick(table)}
           style={{
-            borderRadius: 16,
+            borderRadius: 12,
             border: `2px solid ${config.color}20`,
             background: config.bgColor,
             cursor: 'pointer',
             transition: 'all 0.3s',
             height: '100%',
-            minHeight: 220,
+            minHeight: isMobile ? 180 : 220,
+            width: '100%',
+            overflow: 'hidden',
           }}
-          styles={{ body: { padding: 20, height: '100%', display: 'flex', flexDirection: 'column' } }}
+          styles={{ body: { padding: isMobile ? 14 : 20, height: '100%', display: 'flex', flexDirection: 'column' } }}
         >
           <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column' }}>
             {/* Table Icon */}
             <div
               style={{
-                width: 64,
-                height: 64,
-                borderRadius: 16,
+                width: isMobile ? 48 : 64,
+                height: isMobile ? 48 : 64,
+                borderRadius: 12,
                 background: `${config.color}15`,
                 display: 'flex',
                 alignItems: 'center',
@@ -253,16 +241,16 @@ export default function TableManagement() {
                 border: `2px solid ${config.color}30`,
               }}
             >
-              <TableOutlined style={{ fontSize: 28, color: config.color }} />
+              <TableOutlined style={{ fontSize: isMobile ? 20 : 28, color: config.color }} />
             </div>
 
             {/* Table Name */}
-            <Title level={4} style={{ margin: '0 0 4px', color: 'var(--text)' }}>
+            <Title level={isMobile ? 5 : 4} style={{ margin: '0 0 4px', color: 'var(--text)', fontSize: isMobile ? 16 : undefined }}>
               {table.name}
             </Title>
 
             {/* Capacity */}
-            <Text type="secondary" style={{ fontSize: 13 }}>
+            <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>
               <UserOutlined /> {table.capacity} chỗ
             </Text>
 
@@ -272,9 +260,9 @@ export default function TableManagement() {
                 icon={config.icon}
                 color={config.color}
                 style={{
-                  borderRadius: 20,
+                  borderRadius: 12,
                   padding: '4px 12px',
-                  fontWeight: 600,
+                  fontWeight: 500,
                   border: 'none',
                 }}
               >
@@ -292,7 +280,7 @@ export default function TableManagement() {
                   <ClockCircleOutlined /> Từ {table.startTime}
                 </Text>
                 <br />
-                <Text style={{ fontSize: 12, color: '#FF7A00', fontWeight: 600 }}>
+                <Text style={{ fontSize: 14, color: '#FF7A00', fontWeight: 500 }}>
                   {table.guests} khách • {table.order?.items} món
                 </Text>
               </div>
@@ -304,55 +292,58 @@ export default function TableManagement() {
                   Đặt lúc {table.reservation.time}
                 </Text>
                 <br />
-                <Text style={{ fontSize: 12, color: '#1890ff', fontWeight: 600 }}>
+                <Text style={{ fontSize: 14, color: '#1890ff', fontWeight: 500 }}>
                   {table.reservation.name}
                 </Text>
               </div>
             )}
           </div>
         </Card>
-      </motion.div>
+      </div>
     );
   };
 
   return (
     <div>
       {/* Header Stats */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {Object.entries(stats).map(([key, value]) => {
           const config = statusConfig[key as TableStatus];
           return (
-            <Col xs={12} sm={6} key={key}>
+            <Col xs={12} sm={12} md={6} lg={6} key={key} style={{ display: 'flex' }}>
               <Card
                 style={{
-                  borderRadius: 16,
+                  borderRadius: 12,
                   border: `1px solid ${config.color}30`,
                   background: config.bgColor,
+                  width: '100%',
+                  height: '100%',
+                  overflow: 'hidden',
                 }}
-                styles={{ body: { padding: '16px 20px', background: config.bgColor } }}
+                styles={{ body: { padding: isMobile ? '12px 16px' : '16px 20px', background: config.bgColor } }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
                   <div
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 12,
+                      width: isMobile ? 36 : 44,
+                      height: isMobile ? 36 : 44,
+                      borderRadius: isMobile ? 10 : 12,
                       background: config.color,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: '#fff',
-                      fontSize: 20,
+                      fontSize: isMobile ? 16 : 20,
+                      flexShrink: 0,
                     }}
                   >
                     {config.icon}
                   </div>
-                  <div>
-                    <Text style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <Text style={{ fontSize: isMobile ? 22 : 28, fontWeight: 500, color: 'var(--text)', display: 'block' }}>
                       {value}
                     </Text>
-                    <br />
-                    <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}>{config.text}</Text>
+                    <Text style={{ fontSize: isMobile ? 13 : 15, color: 'var(--text-muted)', display: 'block', fontWeight: 400 }}>{config.text}</Text>
                   </div>
                 </div>
               </Card>
@@ -364,15 +355,18 @@ export default function TableManagement() {
       {/* Zone Tabs & Table Grid */}
       <Card
         style={{
-          borderRadius: 20,
+          borderRadius: 12,
           border: '1px solid var(--border)',
           boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
+          overflow: 'hidden',
         }}
+        styles={{ body: { padding: isMobile ? 12 : 24 } }}
       >
         <Tabs
           activeKey={activeZone}
           onChange={setActiveZone}
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: isMobile ? 12 : 16 }}
+          size={isMobile ? 'small' : 'middle'}
           items={[
             { key: 'all', label: `Tất cả (${tables.length})` },
             { key: 'A', label: `Khu A (${tables.filter(t => t.zone === 'A').length})` },
@@ -381,20 +375,15 @@ export default function TableManagement() {
           ]}
         />
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          key={activeZone}
-        >
-          <Row gutter={[16, 16]} style={{ display: 'flex', flexWrap: 'wrap' }}>
+        <div>
+          <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]}>
             {filteredTables.map(table => (
-              <Col xs={12} sm={8} md={6} lg={4} key={table.id} style={{ display: 'flex' }}>
+              <Col xs={12} sm={8} md={6} lg={6} xl={4} key={table.id} style={{ display: 'flex' }}>
                 {renderTableCard(table)}
               </Col>
             ))}
           </Row>
-        </motion.div>
+        </div>
       </Card>
 
       {/* Table Detail Modal */}
@@ -408,14 +397,27 @@ export default function TableManagement() {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        width={500}
+        width={isMobile ? '95%' : 500}
         centered
-        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+        style={{
+          backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
+          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+          borderRadius: 12,
+        }}
         styles={{
-          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
-          body: { backgroundColor: '#0A0E14' },
+          header: {
+            backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+            borderRadius: '12px 12px 0 0',
+            padding: '16px 24px',
+            paddingRight: '56px',
+          },
+          body: { backgroundColor: mode === 'dark' ? '#0A0E14' : '#FFFFFF' },
+          footer: {
+            borderRadius: '0 0 12px 12px',
+          },
           mask: {
-            background: 'rgba(0, 0, 0, 0.92)',
+            background: mode === 'dark' ? 'rgba(0, 0, 0, 0.92)' : 'rgba(0, 0, 0, 0.45)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',
@@ -430,7 +432,7 @@ export default function TableManagement() {
                 style={{
                   width: 80,
                   height: 80,
-                  borderRadius: 20,
+                  borderRadius: 12,
                   background: statusConfig[selectedTable.status].bgColor,
                   border: `3px solid ${statusConfig[selectedTable.status].color}`,
                   display: 'flex',
@@ -455,19 +457,43 @@ export default function TableManagement() {
             </div>
 
             {/* Info Grid */}
-            <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+            <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
               <Col span={12}>
-                <Card size="small" style={{ borderRadius: 12, background: 'var(--card)' }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>Khu vực</Text>
-                  <br />
-                  <Text strong>Khu {selectedTable.zone}</Text>
+                <Card
+                  size="small"
+                  style={{
+                    borderRadius: 16,
+                    background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+                    border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+                    overflow: 'hidden',
+                    boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.2s ease',
+                  }}
+                  styles={{ body: { padding: '16px 20px' } }}
+                >
+                  <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                    Khu vực
+                  </Text>
+                  <Text strong style={{ fontSize: 16, display: 'block' }}>Khu {selectedTable.zone}</Text>
                 </Card>
               </Col>
               <Col span={12}>
-                <Card size="small" style={{ borderRadius: 12, background: 'var(--card)' }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>Sức chứa</Text>
-                  <br />
-                  <Text strong>{selectedTable.capacity} người</Text>
+                <Card
+                  size="small"
+                  style={{
+                    borderRadius: 16,
+                    background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+                    border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+                    overflow: 'hidden',
+                    boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.2s ease',
+                  }}
+                  styles={{ body: { padding: '16px 20px' } }}
+                >
+                  <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                    Sức chứa
+                  </Text>
+                  <Text strong style={{ fontSize: 16, display: 'block' }}>{selectedTable.capacity} người</Text>
                 </Card>
               </Col>
             </Row>
@@ -477,27 +503,39 @@ export default function TableManagement() {
               <Card
                 size="small"
                 style={{
-                  borderRadius: 12,
-                  background: mode === 'dark' ? 'rgba(255, 122, 0, 0.15)' : '#fff7e6',
+                  borderRadius: 16,
+                  background: mode === 'dark' 
+                    ? 'linear-gradient(135deg, rgba(255, 122, 0, 0.15) 0%, rgba(255, 154, 64, 0.1) 100%)'
+                    : 'linear-gradient(135deg, #fff7e6 0%, #fffbf0 100%)',
                   border: `1px solid ${mode === 'dark' ? 'rgba(255, 122, 0, 0.3)' : '#ffd591'}`,
-                  marginBottom: 24,
+                  marginBottom: 20,
+                  overflow: 'hidden',
+                  boxShadow: mode === 'dark' ? 'none' : '0 2px 12px rgba(255, 122, 0, 0.1)',
                 }}
+                styles={{ body: { padding: '20px 24px' } }}
               >
-                <Row gutter={16}>
+                <Row gutter={[16, 0]}>
                   <Col span={8}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>Số khách</Text>
-                    <br />
-                    <Text strong style={{ fontSize: 18 }}>{selectedTable.guests}</Text>
+                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                      Số khách
+                    </Text>
+                    <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2 }}>
+                      {selectedTable.guests}
+                    </Text>
                   </Col>
                   <Col span={8}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>Bắt đầu</Text>
-                    <br />
-                    <Text strong style={{ fontSize: 18 }}>{selectedTable.startTime}</Text>
+                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                      Bắt đầu
+                    </Text>
+                    <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2 }}>
+                      {selectedTable.startTime}
+                    </Text>
                   </Col>
                   <Col span={8}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>Tổng tiền</Text>
-                    <br />
-                    <Text strong style={{ fontSize: 18, color: '#FF7A00' }}>
+                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                      Tổng tiền
+                    </Text>
+                    <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2, color: '#FF7A00' }}>
                       {selectedTable.order.total.toLocaleString('vi-VN')}đ
                     </Text>
                   </Col>
@@ -510,27 +548,35 @@ export default function TableManagement() {
               <Card
                 size="small"
                 style={{
-                  borderRadius: 12,
-                  background: mode === 'dark' ? 'rgba(24, 144, 255, 0.15)' : '#e6f7ff',
+                  borderRadius: 16,
+                  background: mode === 'dark'
+                    ? 'linear-gradient(135deg, rgba(24, 144, 255, 0.15) 0%, rgba(24, 144, 255, 0.1) 100%)'
+                    : 'linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%)',
                   border: `1px solid ${mode === 'dark' ? 'rgba(24, 144, 255, 0.3)' : '#91d5ff'}`,
-                  marginBottom: 24,
+                  marginBottom: 20,
+                  overflow: 'hidden',
+                  boxShadow: mode === 'dark' ? 'none' : '0 2px 12px rgba(24, 144, 255, 0.1)',
                 }}
+                styles={{ body: { padding: '20px 24px' } }}
               >
-                <Flex vertical gap={12} style={{ width: '100%' }}>
+                <Flex vertical gap={16} style={{ width: '100%' }}>
                   <div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>Khách đặt</Text>
-                    <br />
-                    <Text strong>{selectedTable.reservation.name}</Text>
+                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 6, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                      Khách đặt
+                    </Text>
+                    <Text strong style={{ fontSize: 15, display: 'block' }}>{selectedTable.reservation.name}</Text>
                   </div>
                   <div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>Thời gian đặt</Text>
-                    <br />
-                    <Text strong>{selectedTable.reservation.time}</Text>
+                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 6, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                      Thời gian đặt
+                    </Text>
+                    <Text strong style={{ fontSize: 15, display: 'block' }}>{selectedTable.reservation.time}</Text>
                   </div>
                   <div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>Số điện thoại</Text>
-                    <br />
-                    <Text strong>{selectedTable.reservation.phone}</Text>
+                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 6, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
+                      Số điện thoại
+                    </Text>
+                    <Text strong style={{ fontSize: 15, display: 'block' }}>{selectedTable.reservation.phone}</Text>
                   </div>
                 </Flex>
               </Card>
@@ -549,7 +595,7 @@ export default function TableManagement() {
                   style={{
                     borderRadius: 12,
                     height: 48,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
                     border: 'none',
                   }}
@@ -568,7 +614,7 @@ export default function TableManagement() {
                     style={{
                       borderRadius: 12,
                       height: 48,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
                       border: 'none',
                     }}
@@ -626,7 +672,7 @@ export default function TableManagement() {
                     style={{
                       borderRadius: 12,
                       height: 48,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
                       border: 'none',
                     }}
@@ -654,7 +700,7 @@ export default function TableManagement() {
                   style={{
                     borderRadius: 12,
                     height: 48,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
                     border: 'none',
                   }}
@@ -676,14 +722,27 @@ export default function TableManagement() {
           form.resetFields();
         }}
         footer={null}
-        width={400}
+        width={isMobile ? '95%' : 400}
         centered
-        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+        style={{
+          backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
+          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+          borderRadius: 12,
+        }}
         styles={{
-          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
-          body: { backgroundColor: '#0A0E14' },
+          header: {
+            backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+            borderRadius: '12px 12px 0 0',
+            padding: '16px 24px',
+            paddingRight: '56px',
+          },
+          body: { backgroundColor: mode === 'dark' ? '#0A0E14' : '#FFFFFF' },
+          footer: {
+            borderRadius: '0 0 12px 12px',
+          },
           mask: {
-            background: 'rgba(0, 0, 0, 0.92)',
+            background: mode === 'dark' ? 'rgba(0, 0, 0, 0.92)' : 'rgba(0, 0, 0, 0.45)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',
@@ -758,6 +817,38 @@ export default function TableManagement() {
           </Form.Item>
         </Form>
       </Modal>
+
+      <style jsx global>{`
+        /* Modal border radius */
+        .ant-modal-content {
+          border-radius: 12px !important;
+          overflow: hidden !important;
+        }
+        
+        /* Modal close button positioning - inside header */
+        .ant-modal-close {
+          top: 16px !important;
+          right: 20px !important;
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: 8px !important;
+          background: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'} !important;
+          transition: all 0.2s ease !important;
+        }
+        .ant-modal-close:hover {
+          background: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'} !important;
+        }
+        .ant-modal-close-x {
+          width: 32px !important;
+          height: 32px !important;
+          line-height: 32px !important;
+          font-size: 16px !important;
+          color: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.65)'} !important;
+        }
+        .ant-modal-close:hover .ant-modal-close-x {
+          color: ${mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.85)'} !important;
+        }
+      `}</style>
     </div>
   );
 }

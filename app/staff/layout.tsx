@@ -277,7 +277,7 @@ export default function StaffLayout({
             placement="left"
             open={drawerOpen}
             onClose={() => setDrawerOpen(false)}
-            width={280}
+            size={280}
             style={{ top: 0, height: '100vh' }}
             closable={false}
             maskClosable
@@ -517,23 +517,44 @@ export default function StaffLayout({
           backdrop-filter: none !important;
           -webkit-backdrop-filter: none !important;
           filter: none !important;
+        }
+        [data-theme="dark"] .ant-drawer-mask,
+        [data-theme="dark"] .ant-modal-mask {
           background: rgba(0, 0, 0, 0.92) !important;
         }
-        /* Cards inside modal should be darker */
-        .ant-modal-body .ant-card {
+        [data-theme="light"] .ant-drawer-mask,
+        [data-theme="light"] .ant-modal-mask {
+          background: rgba(0, 0, 0, 0.45) !important;
+        }
+        /* Cards inside modal */
+        [data-theme="dark"] .ant-modal-body .ant-card {
           background: #0F1419 !important;
           border-color: var(--border) !important;
         }
-        .ant-modal-body .ant-card-body {
+        [data-theme="dark"] .ant-modal-body .ant-card-body {
           background: #0F1419 !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-card {
+          background: #FFFFFF !important;
+          border-color: #E5E7EB !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-card-body {
+          background: #FFFFFF !important;
         }
         /* Select dropdown in modal */
-        .ant-modal-body .ant-select-selector {
+        [data-theme="dark"] .ant-modal-body .ant-select-selector {
           background: #0F1419 !important;
           border-color: var(--border) !important;
         }
-        .ant-modal-body .ant-select-dropdown {
+        [data-theme="dark"] .ant-modal-body .ant-select-dropdown {
           background: #0F1419 !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-select-selector {
+          background: #FFFFFF !important;
+          border-color: #E5E7EB !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-select-dropdown {
+          background: #FFFFFF !important;
         }
         /* Divider in modal */
         .ant-modal-body .ant-divider {
