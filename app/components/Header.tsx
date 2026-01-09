@@ -9,7 +9,6 @@ import { usePageTransition } from './PageTransition';
 import ThemeToggle from './ThemeToggle';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
 import { useThemeMode } from '../theme/AutoDarkThemeProvider';
-import { useTenant } from '@/lib/contexts/TenantContext';
 
 const { Header: AntHeader } = Layout;
 
@@ -27,15 +26,14 @@ const Header: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const { isAnimationReady } = usePageTransition();
   const { mode } = useThemeMode();
-  const { tenant } = useTenant();
 
   useEffect(() => {
     setMounted(true);
-    
+
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
@@ -43,7 +41,7 @@ const Header: React.FC = () => {
     handleResize();
     window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleScroll);
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleScroll);
@@ -85,8 +83,8 @@ const Header: React.FC = () => {
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderRadius: 60,
-            boxShadow: scrolled 
-              ? '0 8px 32px rgba(0, 0, 0, 0.12)' 
+            boxShadow: scrolled
+              ? '0 8px 32px rgba(0, 0, 0, 0.12)'
               : '0 4px 24px rgba(0, 0, 0, 0.08)',
             border: '1px solid rgba(255, 255, 255, 0.8)',
             transition: 'all 0.3s ease',
@@ -95,35 +93,23 @@ const Header: React.FC = () => {
         >
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {tenant?.logo ? (
-              <img 
-                src={tenant.logo} 
-                alt={tenant.name}
-                style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'cover' }}
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}
+            >
+              <img
+                src="/images/logo/restx-removebg-preview.png"
+                alt="RestX Logo"
+                className="app-logo-img"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
-            ) : (
-              <div
-                style={{
-                  width: 38,
-                  height: 38,
-                  background: tenant?.color 
-                    ? `linear-gradient(135deg, ${tenant.color} 0%, ${tenant.color}DD 100%)`
-                    : 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
-                  borderRadius: 10,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: 18,
-                  boxShadow: tenant?.color 
-                    ? `0 4px 12px ${tenant.color}40`
-                    : '0 4px 12px rgba(255, 122, 0, 0.3)',
-                }}
-              >
-                R
-              </div>
-            )}
+            </div>
             <span
               style={{
                 fontSize: 22,
@@ -131,7 +117,7 @@ const Header: React.FC = () => {
                 color: mode === 'dark' ? '#ECECEC' : '#111111',
               }}
             >
-              {tenant?.name || 'RestX'}
+              Rest<span style={{ color: '#FF7A00' }}>X</span>
             </span>
           </div>
 
@@ -156,59 +142,59 @@ const Header: React.FC = () => {
           {!isMobile && (
             <Space size={12}>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                type="text"
+                <Button
+                  type="text"
                   href="/staff"
-                style={{
-                  fontWeight: 600,
-                  fontSize: 15,
-                  height: 40,
-                  padding: '0 16px',
-                  color: '#FF7A00',
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    height: 40,
+                    padding: '0 16px',
+                    color: '#FF7A00',
                     background: 'rgba(255, 122, 0, 0.08)',
                     borderRadius: 20,
-                }}
-              >
+                  }}
+                >
                   <TeamOutlined style={{ marginRight: 6 }} /> Staff
-              </Button>
+                </Button>
               </motion.div>
               <LanguageSwitcher />
               <ThemeToggle />
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                type="text"
-                href="/login"
-                style={{
-                  fontWeight: 600,
-                  fontSize: 15,
-                  height: 40,
-                  padding: '0 20px',
+                <Button
+                  type="text"
+                  href="/login"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    height: 40,
+                    padding: '0 20px',
                     color: mode === 'dark' ? '#ECECEC' : '#111111',
-                }}
-              >
-                Log in
-              </Button>
+                  }}
+                >
+                  Log in
+                </Button>
               </motion.div>
-              <motion.div 
-                whileHover={{ scale: 1.05, boxShadow: '0 8px 25px rgba(255, 122, 0, 0.45)' }} 
+              <motion.div
+                whileHover={{ scale: 1.05, boxShadow: '0 8px 25px rgba(255, 122, 0, 0.45)' }}
                 whileTap={{ scale: 0.95 }}
                 style={{ borderRadius: 20 }}
               >
-              <Button
-                type="primary"
-                href="/register"
-                style={{
-                  fontWeight: 600,
-                  fontSize: 15,
-                  height: 40,
-                  padding: '0 24px',
-                  background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
-                  border: 'none',
-                  boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
-                }}
-              >
-                Sign up
-              </Button>
+                <Button
+                  type="primary"
+                  href="/register"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    height: 40,
+                    padding: '0 24px',
+                    background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                    border: 'none',
+                    boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
+                  }}
+                >
+                  Sign up
+                </Button>
               </motion.div>
             </Space>
           )}
@@ -233,35 +219,53 @@ const Header: React.FC = () => {
               style={{
                 width: 32,
                 height: 32,
-                background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
-                borderRadius: 8,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
                 fontWeight: 700,
                 fontSize: 14,
+                overflow: 'hidden',
               }}
             >
-              R
+              <img
+                src="/images/logo/restx-removebg-preview.png"
+                alt="RestX Logo"
+                className="app-logo-img"
+                style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
+              />
             </div>
-            <span style={{ fontWeight: 700, fontSize: 18 }}>RestX</span>
+            <span style={{ fontWeight: 700, fontSize: 18, color: mode === 'dark' ? '#ECECEC' : '#111111' }}>Rest<span style={{ color: '#FF7A00' }}>X</span></span>
           </div>
         }
         placement="right"
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
-        closeIcon={<CloseOutlined />}
+        closeIcon={<CloseOutlined style={{ color: mode === 'dark' ? '#ECECEC' : '#111111' }} />}
         size="default"
+        styles={{
+          header: {
+            background: mode === 'dark' ? '#141927' : '#FFFFFF',
+            borderBottom: '1px solid var(--border)',
+          },
+          body: {
+            background: mode === 'dark' ? '#141927' : '#FFFFFF',
+          },
+          mask: {
+            backdropFilter: 'blur(4px)',
+          }
+        }}
       >
         <Menu
           mode="vertical"
           items={navItems}
           style={{
+            background: 'transparent',
             border: 'none',
             fontSize: 16,
             fontWeight: 500,
           }}
+          theme={mode === 'dark' ? 'dark' : 'light'}
           selectable={false}
         />
         <Divider />
