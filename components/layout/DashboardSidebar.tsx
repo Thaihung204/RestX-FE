@@ -178,20 +178,23 @@ export default function DashboardSidebar() {
 
   return (
     <aside
-      className={`flex flex-col transition-all duration-300 ${
-        collapsed ? "w-20" : "w-64"
-      }`}
-      style={{ background: "var(--card)", borderRight: "1px solid var(--border)", color: "var(--text)" }}>
+      className={`flex flex-col transition-all duration-300 ${collapsed ? "w-20" : "w-64"
+        }`}
+      style={{ color: "var(--text)" }}>
       {/* Logo */}
       <div className="p-6" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-lg">R</span>
+          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <img
+              src="/images/logo/restx-removebg-preview.png"
+              alt="RestX Logo"
+              className="w-full h-full object-contain app-logo-img"
+            />
           </div>
           {!collapsed && (
             <div>
               <h2 className="font-bold text-lg" style={{ color: "var(--text)" }}>
-                RestX
+                Rest<span style={{ color: '#FF7A00' }}>X</span>
               </h2>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 Management
@@ -210,22 +213,20 @@ export default function DashboardSidebar() {
               <li key={item.id}>
                 <Link
                   href={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
-                    isActive
-                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg"
-                      : ""
-                  }`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${isActive
+                    ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg"
+                    : ""
+                    }`}
                   style={
                     isActive
                       ? undefined
                       : { color: "var(--text-muted)", background: "transparent" }
                   }>
                   <span
-                    className={`transition-colors ${
-                      isActive
-                        ? "text-white"
-                        : "group-hover:text-orange-500"
-                    }`}
+                    className={`transition-colors ${isActive
+                      ? "text-white"
+                      : "group-hover:text-orange-500"
+                      }`}
                     style={
                       isActive
                         ? undefined
@@ -279,9 +280,8 @@ export default function DashboardSidebar() {
           color: "var(--text-muted)",
         }}>
         <svg
-          className={`w-3 h-3 transition-transform ${
-            collapsed ? "rotate-180" : ""
-          }`}
+          className={`w-3 h-3 transition-transform ${collapsed ? "rotate-180" : ""
+            }`}
           style={{ color: "inherit" }}
           fill="none"
           stroke="currentColor"

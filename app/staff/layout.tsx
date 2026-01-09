@@ -145,7 +145,7 @@ export default function StaffLayout({
           alignItems: 'center',
           justifyContent: (collapsed && !inDrawer) ? 'center' : 'flex-start',
           padding: (collapsed && !inDrawer) ? '0' : '0 24px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
         <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
@@ -153,18 +153,20 @@ export default function StaffLayout({
             style={{
               width: 40,
               height: 40,
-              borderRadius: 10,
-              background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 20,
               fontWeight: 700,
-              color: '#fff',
-              boxShadow: '0 4px 15px rgba(255, 122, 0, 0.4)',
+              overflow: 'hidden',
             }}
           >
-            R
+            <img
+              src="/images/logo/restx-removebg-preview.png"
+              alt="RestX Logo"
+              className="app-logo-img"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
           </div>
           {(!collapsed || inDrawer) && (
             <span
@@ -172,7 +174,7 @@ export default function StaffLayout({
                 marginLeft: 12,
                 fontSize: 22,
                 fontWeight: 700,
-                color: '#fff',
+                color: mode === 'dark' ? '#fff' : '#000',
                 letterSpacing: '-0.5px',
               }}
             >
@@ -187,7 +189,7 @@ export default function StaffLayout({
         <div
           style={{
             padding: '20px 24px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -204,7 +206,7 @@ export default function StaffLayout({
             <div>
               <Text
                 style={{
-                  color: '#fff',
+                  color: mode === 'dark' ? '#fff' : '#000',
                   fontWeight: 600,
                   fontSize: 14,
                   display: 'block',
@@ -214,7 +216,7 @@ export default function StaffLayout({
               </Text>
               <Text
                 style={{
-                  color: 'rgba(255, 255, 255, 0.5)',
+                  color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.45)',
                   fontSize: 12,
                 }}
               >
@@ -236,7 +238,7 @@ export default function StaffLayout({
           border: 'none',
           padding: '16px 12px',
         }}
-        theme="dark"
+        theme={mode === 'dark' ? 'dark' : 'light'}
       />
 
       {/* Clock In/Out Status */}
@@ -277,15 +279,14 @@ export default function StaffLayout({
 
   return (
     <>
-    <Layout style={{ minHeight: '100vh' }}>
+      <Layout style={{ minHeight: '100vh' }}>
         {/* Mobile Drawer */}
         {isDrawerDevice && (
           <Drawer
             placement="left"
             open={drawerOpen}
             onClose={() => setDrawerOpen(false)}
-            width={280}
-            style={{ top: 0, height: '100vh' }}
+            style={{ top: 0, height: '100vh', width: 280 }}
             closable={false}
             maskClosable
             rootStyle={{
@@ -299,9 +300,9 @@ export default function StaffLayout({
                 WebkitBackdropFilter: 'none',
                 filter: 'none',
               },
-              body: { 
-                padding: 0, 
-                background: 'var(--sidebar-bg)',
+              body: {
+                padding: 0,
+                background: mode === 'dark' ? '#001529' : '#ffffff',
                 height: '100%',
                 minHeight: '100%',
                 overflowY: 'auto',
@@ -314,7 +315,7 @@ export default function StaffLayout({
             <div style={{ position: 'relative', height: '100%' }}>
               <Button
                 type="text"
-                icon={<CloseOutlined style={{ color: '#fff' }} />}
+                icon={<CloseOutlined style={{ color: mode === 'dark' ? '#fff' : '#000' }} />}
                 onClick={() => setDrawerOpen(false)}
                 style={{
                   position: 'absolute',
@@ -337,13 +338,14 @@ export default function StaffLayout({
             width={260}
             collapsedWidth={80}
             style={{
-              background: 'var(--sidebar-bg)',
+              background: mode === 'dark' ? '#001529' : '#ffffff',
               boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
               position: 'fixed',
               height: '100vh',
               left: 0,
               top: 0,
               zIndex: 100,
+              borderRight: mode === 'dark' ? 'none' : '1px solid #f0f0f0'
             }}
           >
             <SidebarContent />
@@ -351,8 +353,8 @@ export default function StaffLayout({
         )}
 
         {/* Main Layout */}
-        <Layout style={{ 
-          marginLeft: isDrawerDevice ? 0 : (collapsed ? 80 : 260), 
+        <Layout style={{
+          marginLeft: isDrawerDevice ? 0 : (collapsed ? 80 : 260),
           transition: 'margin-left 0.2s',
           minHeight: '100vh',
           width: '100%',
@@ -393,9 +395,9 @@ export default function StaffLayout({
               {!isMobile && (
                 <div style={{ borderLeft: '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
-                    <Text style={{ 
-                      fontSize: 15, 
-                      fontWeight: 600, 
+                    <Text style={{
+                      fontSize: 15,
+                      fontWeight: 600,
                       color: '#1a1a2e',
                       lineHeight: 1.2,
                       margin: 0,
@@ -417,9 +419,9 @@ export default function StaffLayout({
               )}
               {isMobile && (
                 <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                  <Text style={{ 
-                    fontSize: isMobile ? 14 : 15, 
-                    fontWeight: 600, 
+                  <Text style={{
+                    fontSize: isMobile ? 14 : 15,
+                    fontWeight: 600,
                     color: '#1a1a2e',
                     lineHeight: 1.2,
                     margin: 0,

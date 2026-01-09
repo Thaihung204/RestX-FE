@@ -123,21 +123,21 @@ const Footer: React.FC = () => {
                       style={{
                         width: 44,
                         height: 44,
-                        background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
-                        borderRadius: 12,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: 'white',
-                        fontWeight: 700,
-                        fontSize: 20,
-                        boxShadow: '0 4px 12px rgba(255, 122, 0, 0.3)',
+                        overflow: 'hidden',
                       }}
                     >
-                      R
+                      <img
+                        src="/images/logo/restx-removebg-preview.png"
+                        alt="RestX Logo"
+                        className="app-logo-img"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
+                      />
                     </div>
                     <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
-                      RestX
+                      Rest<span style={{ color: '#FF7A00' }}>X</span>
                     </Title>
                   </div>
 
