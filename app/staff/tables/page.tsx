@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   Row,
@@ -21,7 +22,7 @@ import {
   Divider,
   Avatar,
   Timeline,
-Flex,
+  Flex,
 } from 'antd';
 import {
   TableOutlined,
@@ -122,10 +123,10 @@ export default function TableManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpenTableModal, setIsOpenTableModal] = useState(false);
   const [activeZone, setActiveZone] = useState('all');
-  const [isMobile, setIsMobile] = useState(false);
+
   const [form] = Form.useForm();
   const [isMobile, setIsMobile] = useState(false);
-  
+
   // Check mobile viewport
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -133,22 +134,13 @@ export default function TableManagement() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
+
   const statusConfig = getStatusConfig(mode, t);
 
-  // Check viewport
-  useEffect(() => {
-    const checkViewport = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 576); // xs breakpoint
-    };
-    checkViewport();
-    window.addEventListener('resize', checkViewport);
-    return () => window.removeEventListener('resize', checkViewport);
-  }, []);
 
-  const filteredTables = activeZone === 'all' 
-    ? tables 
+
+  const filteredTables = activeZone === 'all'
+    ? tables
     : tables.filter(t => t.zone === activeZone);
 
   const stats = {
@@ -176,11 +168,11 @@ export default function TableManagement() {
         prev.map(t =>
           t.id === selectedTable.id
             ? {
-                ...t,
-                status: 'occupied' as TableStatus,
-                guests: values.guests,
-                startTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-              }
+              ...t,
+              status: 'occupied' as TableStatus,
+              guests: values.guests,
+              startTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+            }
             : t
         )
       );
@@ -220,7 +212,7 @@ export default function TableManagement() {
 
   const renderTableCard = (table: TableData) => {
     const config = statusConfig[table.status];
-    
+
     return (
       <div style={{ width: '100%', height: '100%' }}>
         <Card
@@ -517,7 +509,7 @@ export default function TableManagement() {
                 size="small"
                 style={{
                   borderRadius: 16,
-                  background: mode === 'dark' 
+                  background: mode === 'dark'
                     ? 'linear-gradient(135deg, rgba(255, 122, 0, 0.15) 0%, rgba(255, 154, 64, 0.1) 100%)'
                     : 'linear-gradient(135deg, #fff7e6 0%, #fffbf0 100%)',
                   border: `1px solid ${mode === 'dark' ? 'rgba(255, 122, 0, 0.3)' : '#ffd591'}`,

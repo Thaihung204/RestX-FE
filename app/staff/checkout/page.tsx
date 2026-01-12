@@ -38,6 +38,8 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../components/I18nProvider';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -143,6 +145,8 @@ type PaymentMethod = 'cash' | 'card' | 'transfer' | 'momo';
 
 export default function CheckoutPage() {
   const { mode } = useThemeMode();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [bills, setBills] = useState<Bill[]>(initialBills);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -165,6 +169,12 @@ export default function CheckoutPage() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const paymentMethods = [
+    { key: 'cash', label: t('staff.checkout.payment.cash'), icon: <WalletOutlined />, color: '#52c41a' },
+    { key: 'transfer', label: t('staff.checkout.payment.transfer'), icon: <CreditCardOutlined />, color: '#1890ff' },
+    { key: 'momo', label: t('staff.checkout.payment.momo'), icon: <QrcodeOutlined />, color: '#cf1322' },
+  ];
 
   const filteredBills = bills.filter(
     bill =>
@@ -287,7 +297,7 @@ export default function CheckoutPage() {
             {t('staff.checkout.bill.pay')}
           </Button>
         </div>
-        </Card>
+      </Card>
     </div>
   );
 
@@ -395,8 +405,8 @@ export default function CheckoutPage() {
           isMobile
             ? '100%'
             : isTablet
-            ? '94%'
-            : 820
+              ? '94%'
+              : 820
         }
         centered
         style={{
@@ -520,7 +530,7 @@ export default function CheckoutPage() {
                       overflow: 'hidden',
                       boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
                     }}
-                    styles={{ 
+                    styles={{
                       body: { flex: 1, display: 'flex', flexDirection: 'column', padding: isMobile ? '16px 18px' : '20px 24px' },
                       header: { padding: isMobile ? '14px 18px' : '16px 24px', borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB' }
                     }}
@@ -597,9 +607,9 @@ export default function CheckoutPage() {
                         <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>VAT (10%)</Text>
                         <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{selectedBill.tax.toLocaleString('vi-VN')}đ</Text>
                       </div>
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
                         alignItems: 'center',
                         marginTop: 16,
                         paddingTop: 16,

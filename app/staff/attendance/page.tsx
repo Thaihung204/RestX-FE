@@ -19,7 +19,7 @@ import {
   message,
   Calendar,
   Badge,
-Flex,
+  Flex,
 } from 'antd';
 import {
   ClockCircleOutlined,
@@ -36,6 +36,8 @@ import {
 import { motion } from 'framer-motion';
 import type { Dayjs } from 'dayjs';
 import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../components/I18nProvider';
 
 const { Title, Text } = Typography;
 
@@ -63,6 +65,16 @@ const attendanceHistory: AttendanceRecord[] = [
 
 export default function AttendancePage() {
   const { mode } = useThemeMode();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+
+  const statusConfig: Record<string, { color: string; text: string }> = {
+    present: { color: 'green', text: t('staff.attendance.status.present') },
+    late: { color: 'gold', text: t('staff.attendance.status.late') },
+    absent: { color: 'red', text: t('staff.attendance.status.absent') },
+    leave: { color: 'blue', text: t('staff.attendance.status.leave') },
+  };
+
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isCheckedIn, setIsCheckedIn] = useState(true);
   const [checkInTime, setCheckInTime] = useState('07:58');
@@ -118,7 +130,7 @@ export default function AttendancePage() {
 
   const confirmAction = () => {
     const time = formatTime(currentTime).slice(0, 5);
-    
+
     switch (actionType) {
       case 'checkIn':
         setIsCheckedIn(true);
@@ -138,7 +150,7 @@ export default function AttendancePage() {
         message.success(t('staff.attendance.messages.break_end_success', { time }));
         break;
     }
-    
+
     setIsConfirmModalOpen(false);
   };
 
@@ -222,7 +234,7 @@ export default function AttendancePage() {
   const dateCellRender = (value: Dayjs) => {
     const dateStr = value.format('YYYY-MM-DD');
     const record = attendanceHistory.find(r => r.date === dateStr);
-    
+
     if (record) {
       return (
         <Badge
@@ -230,10 +242,10 @@ export default function AttendancePage() {
             record.status === 'present'
               ? 'success'
               : record.status === 'late'
-              ? 'warning'
-              : record.status === 'leave'
-              ? 'processing'
-              : 'error'
+                ? 'warning'
+                : record.status === 'leave'
+                  ? 'processing'
+                  : 'error'
           }
         />
       );
@@ -275,7 +287,7 @@ export default function AttendancePage() {
                 >
                   {formatTime(currentTime)}
                 </div>
-                
+
                 {isCheckedIn && (
                   <div style={{ marginTop: isMobile ? 12 : 16 }}>
                     <Space size={isMobile ? 16 : 24} wrap>
@@ -307,7 +319,7 @@ export default function AttendancePage() {
                 )}
               </div>
             </Col>
-            
+
             <Col xs={24} md={12}>
               <div style={{ textAlign: 'center' }}>
                 {!isCheckedIn ? (
@@ -360,7 +372,7 @@ export default function AttendancePage() {
                       <LogoutOutlined style={{ fontSize: isMobile ? 32 : 40 }} />
                       <span style={{ fontSize: isMobile ? 13 : 15, marginTop: 4 }}>{t('staff.attendance.check_out')}</span>
                     </Button>
-                    
+
                     <Button
                       size={isMobile ? 'middle' : 'large'}
                       icon={isOnBreak ? <CheckCircleOutlined /> : <CoffeeOutlined />}
@@ -388,9 +400,9 @@ export default function AttendancePage() {
       {/* Stats Cards */}
       <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
         <Col xs={24} sm={12} md={12} lg={6}>
-          <Card style={{ 
-            borderRadius: 12, 
-            textAlign: 'center', 
+          <Card style={{
+            borderRadius: 12,
+            textAlign: 'center',
             overflow: 'hidden',
             border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
             boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
@@ -407,9 +419,9 @@ export default function AttendancePage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={12} lg={6}>
-          <Card style={{ 
-            borderRadius: 12, 
-            textAlign: 'center', 
+          <Card style={{
+            borderRadius: 12,
+            textAlign: 'center',
             overflow: 'hidden',
             border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
             boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
@@ -426,9 +438,9 @@ export default function AttendancePage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={12} lg={6}>
-          <Card style={{ 
-            borderRadius: 12, 
-            textAlign: 'center', 
+          <Card style={{
+            borderRadius: 12,
+            textAlign: 'center',
             overflow: 'hidden',
             border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
             boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
@@ -445,9 +457,9 @@ export default function AttendancePage() {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={12} lg={6}>
-          <Card style={{ 
-            borderRadius: 12, 
-            textAlign: 'center', 
+          <Card style={{
+            borderRadius: 12,
+            textAlign: 'center',
             overflow: 'hidden',
             border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
             boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
@@ -475,8 +487,8 @@ export default function AttendancePage() {
                 <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.attendance.history.title')}</span>
               </Space>
             }
-            style={{ 
-              borderRadius: 12, 
+            style={{
+              borderRadius: 12,
               overflow: 'hidden',
               border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
               boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
@@ -504,9 +516,9 @@ export default function AttendancePage() {
                 <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.attendance.history.progress')}</span>
               </Space>
             }
-            style={{ 
-              borderRadius: 12, 
-              marginBottom: isMobile ? 12 : 24, 
+            style={{
+              borderRadius: 12,
+              marginBottom: isMobile ? 12 : 24,
               overflow: 'hidden',
               border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
               boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
@@ -664,8 +676,8 @@ export default function AttendancePage() {
                 actionType === 'checkOut'
                   ? '#ff4d4f'
                   : actionType === 'breakStart'
-                  ? '#faad14'
-                  : '#52c41a',
+                    ? '#faad14'
+                    : '#52c41a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
