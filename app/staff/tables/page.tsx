@@ -118,6 +118,7 @@ const getStatusConfig = (mode: 'light' | 'dark', t: (key: string) => string) => 
 export default function TableManagement() {
   const { mode } = useThemeMode();
   const { t } = useTranslation();
+  const [messageApi, contextHolder] = message.useMessage();
   const [tables, setTables] = useState<TableData[]>(initialTables);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -176,7 +177,7 @@ export default function TableManagement() {
             : t
         )
       );
-      message.success(t('staff.tables.messages.table_opened', { table: selectedTable.name, guests: values.guests }));
+      messageApi.success(t('staff.tables.messages.table_opened', { table: selectedTable.name, guests: values.guests }));
       setIsOpenTableModal(false);
       form.resetFields();
     }
@@ -191,7 +192,7 @@ export default function TableManagement() {
             : t
         )
       );
-      message.success(t('staff.tables.messages.table_closed', { table: selectedTable.name }));
+      messageApi.success(t('staff.tables.messages.table_closed', { table: selectedTable.name }));
       setIsModalOpen(false);
     }
   };
@@ -205,7 +206,7 @@ export default function TableManagement() {
             : t
         )
       );
-      message.success(t('staff.tables.messages.table_ready', { table: selectedTable.name }));
+      messageApi.success(t('staff.tables.messages.table_ready', { table: selectedTable.name }));
       setIsModalOpen(false);
     }
   };
@@ -310,12 +311,13 @@ export default function TableManagement() {
 
   return (
     <div>
+      {contextHolder}
       {/* Header Stats */}
       <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {Object.entries(stats).map(([key, value]) => {
           const config = statusConfig[key as TableStatus];
           return (
-            <Col xs={12} sm={12} md={6} lg={6} key={key} style={{ display: 'flex' }}>
+            <Col xs={24} sm={12} md={6} lg={6} key={key} style={{ display: 'flex' }}>
               <Card
                 style={{
                   borderRadius: 12,

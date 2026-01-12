@@ -54,12 +54,12 @@ export default function StaffLayout({
     {
       key: '/staff/tables',
       icon: <TableOutlined />,
-      label: isMobile ? t('staff.menu.tables_short') : t('staff.menu.tables'),
+      label: (isMobile || isTablet) ? t('staff.menu.tables_short') : t('staff.menu.tables'),
     },
     {
       key: '/staff/orders',
       icon: <ShoppingCartOutlined />,
-      label: isMobile ? t('staff.menu.orders_short') : t('staff.menu.orders'),
+      label: (isMobile || isTablet) ? t('staff.menu.orders_short') : t('staff.menu.orders'),
     },
     {
       key: '/staff/checkout',
@@ -329,6 +329,12 @@ export default function StaffLayout({
                     fontSize: 10,
                     fontWeight: 600,
                     opacity: isActive ? 1 : 0.8,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                    textAlign: 'center',
+                    padding: '0 2px',
                   }}>{item.label}</span>
                 </div>
               );
@@ -419,22 +425,24 @@ export default function StaffLayout({
             </div>
 
             {/* Right Section */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 12 }}>
               {/* Home Link */}
-              <Link href="/">
-                <Button
-                  type="text"
-                  icon={<HomeOutlined style={{ fontSize: 18, color: 'var(--text-muted)' }} />}
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 8,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                />
-              </Link>
+              {!isMobile && (
+                <Link href="/">
+                  <Button
+                    type="text"
+                    icon={<HomeOutlined style={{ fontSize: 18, color: 'var(--text-muted)' }} />}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  />
+                </Link>
+              )}
 
               {/* Notifications */}
               <Badge count={3} size="small" offset={[-4, 4]}>
@@ -457,7 +465,10 @@ export default function StaffLayout({
               <ThemeToggle />
 
               {/* Language switcher */}
-              <LanguageSwitcher />
+              {/* Language switcher - hidden on very small screens if needed, or just keep it */}
+              <div style={{ display: isMobile && window.innerWidth < 360 ? 'none' : 'block' }}>
+                <LanguageSwitcher />
+              </div>
 
               {/* User Menu */}
               <Dropdown
@@ -476,6 +487,8 @@ export default function StaffLayout({
                     cursor: 'pointer',
                     border: '1px solid var(--border)',
                     transition: 'all 0.2s',
+                    maxWidth: isMobile ? 34 : 'auto',
+                    justifyContent: 'center',
                   }}
                 >
                   <Avatar
@@ -502,7 +515,7 @@ export default function StaffLayout({
           <Content
             style={{
               margin: isMobile ? 12 : 24,
-              marginBottom: isDrawerDevice ? 100 : 24,
+              marginBottom: isDrawerDevice ? 130 : 24,
               padding: 0,
               minHeight: 'calc(100vh - 120px)',
             }}

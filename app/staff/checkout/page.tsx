@@ -147,6 +147,7 @@ export default function CheckoutPage() {
   const { mode } = useThemeMode();
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const [messageApi, contextHolder] = message.useMessage();
   const [bills, setBills] = useState<Bill[]>(initialBills);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -205,7 +206,7 @@ export default function CheckoutPage() {
 
   const handlePayment = () => {
     if (paymentMethod === 'cash' && cashReceived < calculateFinalTotal()) {
-      message.error(t('staff.checkout.messages.insufficient_cash'));
+      messageApi.error(t('staff.checkout.messages.insufficient_cash'));
       return;
     }
 
@@ -217,7 +218,7 @@ export default function CheckoutPage() {
       setBills(prev =>
         prev.map(b => (b.id === selectedBill.id ? { ...b, status: 'paid' as const } : b))
       );
-      message.success(t('staff.checkout.messages.payment_success'));
+      messageApi.success(t('staff.checkout.messages.payment_success'));
       setIsPaymentModalOpen(false);
       setIsPaymentSuccess(false);
       setSelectedBill(null);
@@ -303,6 +304,7 @@ export default function CheckoutPage() {
 
   return (
     <div>
+      {contextHolder}
       {/* Stats */}
       <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ marginBottom: isMobile ? 16 : 24 }}>
         <Col xs={24} sm={24} md={12} lg={8}>

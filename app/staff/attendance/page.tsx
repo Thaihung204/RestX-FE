@@ -67,6 +67,7 @@ export default function AttendancePage() {
   const { mode } = useThemeMode();
   const { t } = useTranslation();
   const { language } = useLanguage();
+  const [messageApi, contextHolder] = message.useMessage();
 
   const statusConfig: Record<string, { color: string; text: string }> = {
     present: { color: 'green', text: t('staff.attendance.status.present') },
@@ -135,19 +136,19 @@ export default function AttendancePage() {
       case 'checkIn':
         setIsCheckedIn(true);
         setCheckInTime(time);
-        message.success(t('staff.attendance.messages.checkin_success', { time }));
+        messageApi.success(t('staff.attendance.messages.checkin_success', { time }));
         break;
       case 'checkOut':
         setIsCheckedIn(false);
-        message.success(t('staff.attendance.messages.checkout_success', { time }));
+        messageApi.success(t('staff.attendance.messages.checkout_success', { time }));
         break;
       case 'breakStart':
         setIsOnBreak(true);
-        message.success(t('staff.attendance.messages.break_start_success', { time }));
+        messageApi.success(t('staff.attendance.messages.break_start_success', { time }));
         break;
       case 'breakEnd':
         setIsOnBreak(false);
-        message.success(t('staff.attendance.messages.break_end_success', { time }));
+        messageApi.success(t('staff.attendance.messages.break_end_success', { time }));
         break;
     }
 
@@ -255,6 +256,7 @@ export default function AttendancePage() {
 
   return (
     <div>
+      {contextHolder}
       {/* Current Time Card */}
       <div>
         <Card
