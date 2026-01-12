@@ -415,7 +415,7 @@ export default function StaffLayout({
                     {menuItems.find((item) => item.key === pathname)?.label || t('staff.menu.dashboard')}
                   </Text>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Right Section */}
