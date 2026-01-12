@@ -94,7 +94,7 @@ export default function MenuPage() {
       : menuItems.filter((item) => item.category === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex">
+    <div className="min-h-screen flex" style={{ background: 'var(--bg-base)' }}>
       <DashboardSidebar />
       <div className="flex-1 flex flex-col">
         <DashboardHeader />
@@ -103,10 +103,10 @@ export default function MenuPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold text-white mb-2">
+                <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
                   Menu Management
                 </h2>
-                <p className="text-gray-400">
+                <p style={{ color: 'var(--text-muted)' }}>
                   Manage your restaurant menu items
                 </p>
               </div>
@@ -131,11 +131,18 @@ export default function MenuPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Total Items</p>
-                    <p className="text-3xl font-bold text-white mt-1">
+                    <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                      Total Items
+                    </p>
+                    <p className="text-3xl font-bold mt-1" style={{ color: 'var(--text)' }}>
                       {menuItems.length}
                     </p>
                   </div>
@@ -156,10 +163,17 @@ export default function MenuPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-green-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Available</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Available
+                    </p>
                     <p className="text-3xl font-bold text-green-500 mt-1">
                       {menuItems.filter((i) => i.available).length}
                     </p>
@@ -181,10 +195,17 @@ export default function MenuPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-orange-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(249, 115, 22, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Popular Items</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Popular Items
+                    </p>
                     <p className="text-3xl font-bold text-orange-500 mt-1">
                       {menuItems.filter((i) => i.popular).length}
                     </p>
@@ -206,10 +227,17 @@ export default function MenuPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-purple-500/20 rounded-xl p-4">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">Categories</p>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Categories
+                    </p>
                     <p className="text-3xl font-bold text-purple-500 mt-1">
                       {categories.length - 1}
                     </p>
@@ -241,8 +269,17 @@ export default function MenuPage() {
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     selectedCategory === category
                       ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white"
-                      : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
+                      : ""
                   }`}
+                  style={
+                    selectedCategory !== category
+                      ? {
+                          background: 'var(--surface)',
+                          color: 'var(--text-muted)',
+                          border: '1px solid var(--border)',
+                        }
+                      : undefined
+                  }
                   suppressHydrationWarning>
                   {category}
                 </button>
@@ -254,12 +291,19 @@ export default function MenuPage() {
               {filteredItems.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl overflow-hidden hover:border-orange-500/50 transition-all group">
+                  className="rounded-xl overflow-hidden hover:border-orange-500/50 transition-all group"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
                   {/* Image Placeholder */}
-                  <div className="relative h-48 bg-gray-700 overflow-hidden">
+                  <div
+                    className="relative h-48 overflow-hidden"
+                    style={{ background: 'var(--surface)' }}>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <svg
-                        className="w-16 h-16 text-gray-600"
+                        className="w-16 h-16"
+                        style={{ color: 'var(--text-muted)' }}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24">
@@ -294,10 +338,10 @@ export default function MenuPage() {
                   <div className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold text-white mb-1">
+                        <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>
                           {item.name}
                         </h3>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           {item.description}
                         </p>
                       </div>
@@ -305,7 +349,9 @@ export default function MenuPage() {
 
                     <div className="flex items-center justify-between mt-4">
                       <div>
-                        <p className="text-xs text-gray-400">Price</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          Price
+                        </p>
                         <p className="text-2xl font-bold text-orange-500">
                           ${item.price}
                         </p>
@@ -322,7 +368,12 @@ export default function MenuPage() {
                         Edit
                       </button>
                       <button
-                        className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-600 transition-all"
+                        className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                        style={{
+                          background: 'var(--surface)',
+                          color: 'var(--text-muted)',
+                          border: '1px solid var(--border)',
+                        }}
                         suppressHydrationWarning>
                         <svg
                           className="w-4 h-4"

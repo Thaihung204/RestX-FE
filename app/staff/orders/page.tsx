@@ -20,6 +20,7 @@ import {
   InputNumber,
   App,
 } from 'antd';
+import { useTranslation } from 'react-i18next';
 import {
   ShoppingCartOutlined,
   ClockCircleOutlined,
@@ -36,6 +37,8 @@ import {
   UserOutlined,
   PrinterOutlined,
   SendOutlined,
+  AppstoreOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons';
 import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
 
@@ -65,42 +68,54 @@ interface Order {
   notes?: string;
 }
 
-// Mock menu data
+// Mock menu data - Note: In a real app, menu data should also be internationalized
 const menuCategories = [
   {
     id: 'appetizer',
-    name: 'Khai vị',
+    name: 'Khai vị', // Will be replaced with translation in component
     icon: <CoffeeOutlined />,
     items: [
-      { id: 'm1', name: 'Gỏi cuốn tôm thịt', price: 65000, image: '🥗' },
-      { id: 'm2', name: 'Chả giò hải sản', price: 85000, image: '🥟' },
-      { id: 'm3', name: 'Súp cua', price: 55000, image: '🥣' },
+      { id: 'm1', name: 'Gỏi cuốn tôm thịt', price: 65000 },
+      { id: 'm2', name: 'Chả giò hải sản', price: 85000 },
+      { id: 'm3', name: 'Súp cua', price: 55000 },
     ],
   },
   {
     id: 'main',
-    name: 'Món chính',
+    name: 'Món chính', // Will be replaced with translation in component
     icon: <FireOutlined />,
     items: [
-      { id: 'm4', name: 'Bò lúc lắc', price: 185000, image: '🥩' },
-      { id: 'm5', name: 'Cá hồi sốt chanh dây', price: 245000, image: '🐟' },
-      { id: 'm6', name: 'Gà nướng muối ớt', price: 165000, image: '🍗' },
-      { id: 'm7', name: 'Tôm hùm nướng bơ', price: 650000, image: '🦞' },
-      { id: 'm8', name: 'Cơm chiên hải sản', price: 125000, image: '🍚' },
+      { id: 'm4', name: 'Bò lúc lắc', price: 185000 },
+      { id: 'm5', name: 'Cá hồi sốt chanh dây', price: 245000 },
+      { id: 'm6', name: 'Gà nướng muối ớt', price: 165000 },
+      { id: 'm7', name: 'Tôm hùm nướng bơ', price: 650000 },
+      { id: 'm8', name: 'Cơm chiên hải sản', price: 125000 },
     ],
   },
   {
     id: 'drink',
-    name: 'Đồ uống',
+    name: 'Đồ uống', // Will be replaced with translation in component
     icon: <CoffeeOutlined />,
     items: [
-      { id: 'm9', name: 'Nước ép cam', price: 45000, image: '🍊' },
-      { id: 'm10', name: 'Sinh tố bơ', price: 55000, image: '🥑' },
-      { id: 'm11', name: 'Coca Cola', price: 25000, image: '🥤' },
-      { id: 'm12', name: 'Bia Tiger', price: 35000, image: '🍺' },
+      { id: 'm9', name: 'Nước ép cam', price: 45000 },
+      { id: 'm10', name: 'Sinh tố bơ', price: 55000 },
+      { id: 'm11', name: 'Coca Cola', price: 25000 },
+      { id: 'm12', name: 'Bia Tiger', price: 35000 },
     ],
   },
 ];
+
+// Helper function to get icon for menu item based on its category
+const getMenuItemIcon = (itemId: string): React.ReactNode => {
+  // Find which category this item belongs to
+  for (const category of menuCategories) {
+    if (category.items.some(item => item.id === itemId)) {
+      return category.icon;
+    }
+  }
+  // Default icon if not found
+  return <AppstoreOutlined />;
+};
 
 // Mock orders data
 const initialOrders: Order[] = [
@@ -159,25 +174,29 @@ const initialOrders: Order[] = [
   },
 ];
 
-const statusConfig: Record<OrderStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  pending: { color: 'orange', text: 'Chờ xử lý', icon: <ExclamationCircleOutlined /> },
-  preparing: { color: 'blue', text: 'Đang nấu', icon: <SyncOutlined spin /> },
-  ready: { color: 'green', text: 'Sẵn sàng', icon: <CheckCircleOutlined /> },
-  served: { color: 'default', text: 'Đã phục vụ', icon: <CheckCircleOutlined /> },
-  cancelled: { color: 'red', text: 'Đã hủy', icon: <ClockCircleOutlined /> },
-};
-
-const itemStatusConfig: Record<OrderItemStatus, { color: string; text: string }> = {
-  pending: { color: 'orange', text: 'Chờ' },
-  preparing: { color: 'blue', text: 'Đang nấu' },
-  ready: { color: 'green', text: 'Sẵn sàng' },
-  served: { color: 'default', text: 'Đã phục vụ' },
-};
+// Status configs will be created inside the component to use translations
 
 export default function OrderManagement() {
   const { message } = App.useApp();
   const { mode } = useThemeMode();
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
+
+  // Create status configs inside component to use translations
+  const statusConfig: Record<OrderStatus, { color: string; text: string; icon: React.ReactNode }> = {
+    pending: { color: 'orange', text: t('staff.orders.status.pending'), icon: <ExclamationCircleOutlined /> },
+    preparing: { color: 'blue', text: t('staff.orders.status.preparing'), icon: <SyncOutlined spin /> },
+    ready: { color: 'green', text: t('staff.orders.status.ready'), icon: <CheckCircleOutlined /> },
+    served: { color: 'default', text: t('staff.orders.status.served'), icon: <CheckCircleOutlined /> },
+    cancelled: { color: 'red', text: t('staff.orders.status.cancelled'), icon: <ClockCircleOutlined /> },
+  };
+
+  const itemStatusConfig: Record<OrderItemStatus, { color: string; text: string }> = {
+    pending: { color: 'orange', text: t('staff.orders.item_status.pending') },
+    preparing: { color: 'blue', text: t('staff.orders.item_status.preparing') },
+    ready: { color: 'green', text: t('staff.orders.item_status.ready') },
+    served: { color: 'default', text: t('staff.orders.item_status.served') },
+  };
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
@@ -187,13 +206,18 @@ export default function OrderManagement() {
   const [selectedTable, setSelectedTable] = useState<string>('');
   const [activeMenuCategory, setActiveMenuCategory] = useState('appetizer');
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
-  // Check mobile viewport
+  // Check viewport
   React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const checkViewport = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 576); // xs breakpoint
+      setIsTablet(width >= 576 && width < 992); // sm to md breakpoint
+    };
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
   }, []);
 
   const filteredOrders = orders.filter(order => {
@@ -235,7 +259,7 @@ export default function OrderManagement() {
         return order;
       })
     );
-    message.success('Đã cập nhật trạng thái món');
+    message.success(t('staff.orders.messages.status_updated'));
   };
 
   const addToCart = (item: typeof menuCategories[0]['items'][0]) => {
@@ -260,7 +284,7 @@ export default function OrderManagement() {
 
   const handleCreateOrder = () => {
     if (!selectedTable || cart.length === 0) {
-      message.error('Vui lòng chọn bàn và thêm món');
+      message.error(t('staff.orders.messages.select_table_and_items'));
       return;
     }
 
@@ -281,7 +305,7 @@ export default function OrderManagement() {
     };
 
     setOrders(prev => [newOrder, ...prev]);
-    message.success('Đã tạo order mới');
+    message.success(t('staff.orders.messages.order_created'));
     setIsNewOrderModalOpen(false);
     setCart([]);
     setSelectedTable('');
@@ -567,9 +591,9 @@ export default function OrderManagement() {
         styles={{ body: { padding: isMobile ? 16 : '20px 28px' } }}
       >
         <Row gutter={[12, 12]} align="middle">
-          <Col xs={24} sm={16} md={18}>
+          <Col xs={24} sm={24} md={18} lg={18} xl={18}>
             <Search
-              placeholder={isMobile ? "Tìm order..." : "Tìm theo mã order hoặc tên bàn..."}
+              placeholder={isMobile ? t('staff.orders.search.placeholder') : t('staff.orders.search.placeholder_full')}
               allowClear
               size={isMobile ? 'middle' : 'large'}
               style={{ width: '100%' }}
@@ -577,22 +601,23 @@ export default function OrderManagement() {
               onChange={e => setSearchText(e.target.value)}
             />
           </Col>
-          <Col xs={24} sm={8} md={6}>
+          <Col xs={24} sm={24} md={6} lg={6} xl={6}>
             <Button
               type="primary"
               size={isMobile ? 'middle' : 'large'}
               icon={<PlusOutlined />}
               onClick={() => setIsNewOrderModalOpen(true)}
-              block={isMobile}
+              block={isMobile || isTablet}
               style={{
                 borderRadius: 12,
                 height: isMobile ? 40 : 48,
                 fontWeight: 500,
                 background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
                 border: 'none',
+                width: '100%',
               }}
             >
-              {isMobile ? 'Tạo Order' : 'Tạo Order mới'}
+              {isMobile || isTablet ? t('staff.orders.create_order_short') : t('staff.orders.create_order')}
             </Button>
           </Col>
         </Row>
@@ -613,15 +638,15 @@ export default function OrderManagement() {
           onChange={setActiveTab}
           size={isMobile ? 'small' : 'middle'}
           items={isMobile ? [
-            { key: 'all', label: `Tất cả (${orders.length})` },
-            { key: 'pending', label: `Chờ (${stats.pending})` },
-            { key: 'preparing', label: `Nấu (${stats.preparing})` },
-            { key: 'ready', label: `Sẵn (${stats.ready})` },
+            { key: 'all', label: `${t('staff.orders.tabs.all')} (${orders.length})` },
+            { key: 'pending', label: `${t('staff.orders.tabs.pending')} (${stats.pending})` },
+            { key: 'preparing', label: `${t('staff.orders.tabs.preparing')} (${stats.preparing})` },
+            { key: 'ready', label: `${t('staff.orders.tabs.ready')} (${stats.ready})` },
           ] : [
-            { key: 'all', label: `Tất cả (${orders.length})` },
-            { key: 'pending', label: `Chờ xử lý (${stats.pending})` },
-            { key: 'preparing', label: `Đang nấu (${stats.preparing})` },
-            { key: 'ready', label: `Sẵn sàng (${stats.ready})` },
+            { key: 'all', label: `${t('staff.orders.tabs.all')} (${orders.length})` },
+            { key: 'pending', label: `${t('staff.orders.tabs.pending')} (${stats.pending})` },
+            { key: 'preparing', label: `${t('staff.orders.tabs.preparing')} (${stats.preparing})` },
+            { key: 'ready', label: `${t('staff.orders.tabs.ready')} (${stats.ready})` },
           ]}
         />
 
@@ -651,7 +676,7 @@ export default function OrderManagement() {
         title={
           <Space>
             <ShoppingCartOutlined style={{ color: '#FF7A00' }} />
-            <span>Chi tiết Order {selectedOrder?.id}</span>
+            <span>{t('staff.orders.modal.order_detail')} {selectedOrder?.id}</span>
           </Space>
         }
         open={isDetailModalOpen}
@@ -761,10 +786,10 @@ export default function OrderManagement() {
                     style={{ width: isMobile ? 90 : 110 }}
                     onChange={(value) => handleUpdateItemStatus(selectedOrder.id, item.id, value)}
                     options={[
-                      { value: 'pending', label: 'Chờ' },
-                      { value: 'preparing', label: 'Đang nấu' },
-                      { value: 'ready', label: 'Sẵn sàng' },
-                      { value: 'served', label: 'Đã phục vụ' },
+                      { value: 'pending', label: t('staff.orders.item_status.pending') },
+                      { value: 'preparing', label: t('staff.orders.item_status.preparing') },
+                      { value: 'ready', label: t('staff.orders.item_status.ready') },
+                      { value: 'served', label: t('staff.orders.item_status.served') },
                     ]}
                   />
                 </div>
@@ -775,7 +800,7 @@ export default function OrderManagement() {
 
             {/* Total */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: isMobile ? 14 : 16 }}>Tổng cộng</Text>
+              <Text style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.orders.order.total')}</Text>
               <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }}>
                 {selectedOrder.total.toLocaleString('vi-VN')}đ
               </Text>
@@ -790,7 +815,7 @@ export default function OrderManagement() {
                   block
                   style={{ borderRadius: 12 }}
                 >
-                  {isMobile ? 'In' : 'In hóa đơn'}
+                  {isMobile ? t('staff.orders.modal.print_short') : t('staff.orders.modal.print')}
                 </Button>
               </Col>
               <Col xs={12} sm={8}>
@@ -800,7 +825,7 @@ export default function OrderManagement() {
                   block
                   style={{ borderRadius: 12 }}
                 >
-                  Thêm món
+                  {t('staff.orders.modal.add_item')}
                 </Button>
               </Col>
               <Col xs={24} sm={8}>
@@ -815,7 +840,7 @@ export default function OrderManagement() {
                     border: 'none',
                   }}
                 >
-                  Gửi bếp
+                  {t('staff.orders.modal.send_to_kitchen')}
                 </Button>
               </Col>
             </Row>
@@ -828,7 +853,7 @@ export default function OrderManagement() {
         title={
           <Space>
             <PlusOutlined style={{ color: '#FF7A00' }} />
-            <span>Tạo Order mới</span>
+            <span>{t('staff.orders.modal.new_order')}</span>
           </Space>
         }
         open={isNewOrderModalOpen}
@@ -876,7 +901,7 @@ export default function OrderManagement() {
           <Col xs={24} md={14}>
             <div style={{ marginBottom: 16 }}>
               <Select
-                placeholder="Chọn bàn"
+                placeholder={t('staff.orders.modal.select_table')}
                 size={isMobile ? 'middle' : 'large'}
                 style={{ width: '100%' }}
                 value={selectedTable || undefined}
@@ -899,7 +924,7 @@ export default function OrderManagement() {
                 label: (
                   <Space size={isMobile ? 4 : 8}>
                     {cat.icon}
-                    {!isMobile && cat.name}
+                    {!isMobile && t(`staff.orders.menu.${cat.id}`)}
                   </Space>
                 ),
               }))}
@@ -918,7 +943,18 @@ export default function OrderManagement() {
                       onClick={() => addToCart(item)}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
-                        <span style={{ fontSize: isMobile ? 24 : 32 }}>{item.image}</span>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          width: isMobile ? 32 : 40,
+                          height: isMobile ? 32 : 40,
+                          borderRadius: 8,
+                          background: 'var(--surface)',
+                          color: '#FF7A00'
+                        }}>
+                          {getMenuItemIcon(item.id)}
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <Text strong style={{ display: 'block', fontSize: isMobile ? 13 : 14 }}>{item.name}</Text>
                           <Text style={{ color: '#FF7A00', fontSize: isMobile ? 12 : 14 }}>
@@ -939,7 +975,7 @@ export default function OrderManagement() {
               title={
                 <Space size={isMobile ? 8 : 12}>
                   <ShoppingCartOutlined />
-                  <span style={{ fontSize: isMobile ? 14 : 16 }}>Giỏ hàng ({cart.length})</span>
+                  <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.orders.modal.cart')} ({cart.length})</span>
                 </Space>
               }
               style={{
@@ -969,7 +1005,18 @@ export default function OrderManagement() {
                           gap: isMobile ? 8 : 12,
                         }}
                       >
-                        <span style={{ fontSize: isMobile ? 20 : 24 }}>{c.item.image}</span>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          width: isMobile ? 28 : 32,
+                          height: isMobile ? 28 : 32,
+                          borderRadius: 6,
+                          background: 'var(--surface)',
+                          color: '#FF7A00'
+                        }}>
+                          {getMenuItemIcon(c.item.id)}
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{c.item.name}</div>
                           <div style={{
@@ -1003,7 +1050,7 @@ export default function OrderManagement() {
                   <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isMobile ? 12 : 16 }}>
-                    <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>Tổng cộng</Text>
+                    <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.orders.order.total')}</Text>
                     <Text strong style={{ fontSize: isMobile ? 16 : 18, color: '#FF7A00' }}>
                       {cartTotal.toLocaleString('vi-VN')}đ
                     </Text>
@@ -1022,7 +1069,7 @@ export default function OrderManagement() {
                       border: 'none',
                     }}
                   >
-                    Tạo Order
+                    {t('staff.orders.create_order_short')}
                   </Button>
                 </>
               ) : (

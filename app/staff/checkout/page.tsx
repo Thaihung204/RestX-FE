@@ -141,13 +141,6 @@ const initialBills: Bill[] = [
 
 type PaymentMethod = 'cash' | 'card' | 'transfer' | 'momo';
 
-const paymentMethods = [
-  { key: 'cash', label: 'Tiền mặt', icon: <WalletOutlined />, color: '#52c41a' },
-  { key: 'card', label: 'Thẻ ngân hàng', icon: <CreditCardOutlined />, color: '#1890ff' },
-  { key: 'transfer', label: 'Chuyển khoản', icon: <QrcodeOutlined />, color: '#722ed1' },
-  { key: 'momo', label: 'MoMo', icon: <WalletOutlined />, color: '#d82d8b' },
-];
-
 export default function CheckoutPage() {
   const { mode } = useThemeMode();
   const [bills, setBills] = useState<Bill[]>(initialBills);
@@ -202,7 +195,7 @@ export default function CheckoutPage() {
 
   const handlePayment = () => {
     if (paymentMethod === 'cash' && cashReceived < calculateFinalTotal()) {
-      message.error('Số tiền nhận chưa đủ');
+      message.error(t('staff.checkout.messages.insufficient_cash'));
       return;
     }
 
@@ -214,7 +207,7 @@ export default function CheckoutPage() {
       setBills(prev =>
         prev.map(b => (b.id === selectedBill.id ? { ...b, status: 'paid' as const } : b))
       );
-      message.success('Thanh toán thành công!');
+      message.success(t('staff.checkout.messages.payment_success'));
       setIsPaymentModalOpen(false);
       setIsPaymentSuccess(false);
       setSelectedBill(null);
@@ -266,7 +259,7 @@ export default function CheckoutPage() {
 
         <div style={{ marginBottom: isMobile ? 8 : 12 }}>
           <Text type="secondary" style={{ fontSize: isMobile ? 11 : 13 }}>
-            {bill.items.length} món • {bill.items.reduce((sum, i) => sum + i.quantity, 0)} phần
+            {bill.items.length} {t('staff.checkout.bill.dishes')} • {bill.items.reduce((sum, i) => sum + i.quantity, 0)} {t('staff.checkout.bill.portions')}
           </Text>
         </div>
 
@@ -275,7 +268,7 @@ export default function CheckoutPage() {
             <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>Tổng thanh toán</Text>
             <br />
             <Text strong style={{ fontSize: isMobile ? 18 : 24, color: '#FF7A00' }}>
-              {bill.total.toLocaleString('vi-VN')}đ
+              {bill.total.toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
             </Text>
           </div>
           <Button
@@ -291,7 +284,7 @@ export default function CheckoutPage() {
               fontSize: isMobile ? 12 : 14,
             }}
           >
-            {isMobile ? 'Thanh toán' : 'Thanh toán'}
+            {t('staff.checkout.bill.pay')}
           </Button>
         </div>
         </Card>
@@ -312,7 +305,7 @@ export default function CheckoutPage() {
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
             <Statistic
-              title={<Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: isMobile ? 12 : 14 }}>Tổng tiền chờ thanh toán</Text>}
+              title={<Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: isMobile ? 12 : 14 }}>{t('staff.checkout.stats.total_pending')}</Text>}
               value={totalPending}
               suffix="đ"
               styles={{ content: { color: '#fff', fontSize: isMobile ? 24 : 32, fontWeight: 500 } }}
@@ -368,7 +361,7 @@ export default function CheckoutPage() {
         styles={{ body: { padding: isMobile ? 12 : '16px 24px' } }}
       >
         <Search
-          placeholder={isMobile ? "Tìm bàn hoặc hóa đơn..." : "Tìm theo tên bàn hoặc mã hóa đơn..."}
+          placeholder={isMobile ? t('staff.checkout.search.placeholder') : t('staff.checkout.search.placeholder_full')}
           allowClear
           size={isMobile ? 'middle' : 'large'}
           style={{ width: '100%', maxWidth: isMobile ? '100%' : 400 }}
@@ -440,19 +433,19 @@ export default function CheckoutPage() {
         {isPaymentSuccess ? (
           <Result
             status="success"
-            title={<span style={{ fontSize: isMobile ? 18 : 24 }}>Thanh toán thành công!</span>}
+            title={<span style={{ fontSize: isMobile ? 18 : 24 }}>{t('staff.checkout.payment.success')}</span>}
             subTitle={
               <div>
-                <Text style={{ fontSize: isMobile ? 13 : 14 }}>Hóa đơn: {selectedBill?.id}</Text>
+                <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.bill')}: {selectedBill?.id}</Text>
                 <br />
                 <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#52c41a' }}>
-                  {calculateFinalTotal().toLocaleString('vi-VN')}đ
+                  {calculateFinalTotal().toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
                 </Text>
                 {paymentMethod === 'cash' && cashReceived > calculateFinalTotal() && (
                   <div style={{ marginTop: 12 }}>
-                    <Text style={{ fontSize: isMobile ? 13 : 14 }}>Tiền thừa: </Text>
+                    <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.change')}: </Text>
                     <Text strong style={{ color: '#FF7A00', fontSize: isMobile ? 15 : 16 }}>
-                      {(cashReceived - calculateFinalTotal()).toLocaleString('vi-VN')}đ
+                      {(cashReceived - calculateFinalTotal()).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
                     </Text>
                   </div>
                 )}
@@ -465,7 +458,7 @@ export default function CheckoutPage() {
                 size={isMobile ? 'middle' : 'large'}
                 style={{ borderRadius: 12 }}
               >
-                {isMobile ? 'In' : 'In hóa đơn'}
+                {isMobile ? t('staff.orders.modal.print_short') : t('staff.orders.modal.print')}
               </Button>,
               <Button
                 key="done"
@@ -478,7 +471,7 @@ export default function CheckoutPage() {
                   border: 'none',
                 }}
               >
-                Hoàn tất
+                {t('staff.checkout.payment.complete')}
               </Button>,
             ]}
           />
@@ -498,7 +491,7 @@ export default function CheckoutPage() {
                   {selectedBill.tableName}
                 </Avatar>
                 <Title level={isMobile ? 5 : 4} style={{ margin: '12px 0 4px' }}>
-                  Thanh toán {selectedBill.tableName}
+                  {t('staff.checkout.payment.title')} {selectedBill.tableName}
                 </Title>
                 <Text style={{ fontSize: isMobile ? 13 : 15, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>{selectedBill.id}</Text>
               </div>
@@ -551,7 +544,7 @@ export default function CheckoutPage() {
                           <Text style={{ fontSize: isMobile ? 12 : 14 }}>
                             {item.name} <Tag style={{ fontSize: isMobile ? 10 : 12 }}>{item.quantity}x</Tag>
                           </Text>
-                          <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>{(item.price * item.quantity).toLocaleString('vi-VN')}đ</Text>
+                          <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>{(item.price * item.quantity).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ</Text>
                         </div>
                       ))}
                     </div>
@@ -560,7 +553,7 @@ export default function CheckoutPage() {
                     <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexWrap: 'wrap' }}>
                       <GiftOutlined style={{ fontSize: isMobile ? 16 : 20, color: '#FF7A00' }} />
-                      <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Giảm giá</Text>
+                      <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.discount')}</Text>
                       <InputNumber
                         min={0}
                         max={100}
@@ -658,7 +651,7 @@ export default function CheckoutPage() {
                     {paymentMethod === 'cash' && (
                       <div style={{ marginBottom: isMobile ? 16 : 20 }}>
                         <Text strong style={{ display: 'block', marginBottom: 8, fontSize: isMobile ? 13 : 14 }}>
-                          Tiền khách đưa
+                          {t('staff.checkout.payment.cash_received')}
                         </Text>
                         <Space.Compact style={{ width: '100%' }}>
                           <InputNumber
@@ -674,7 +667,7 @@ export default function CheckoutPage() {
                         {cashReceived >= calculateFinalTotal() && cashReceived > 0 && (
                           <div style={{ marginTop: 8, padding: isMobile ? '6px 10px' : '8px 12px', background: '#f6ffed', borderRadius: 8 }}>
                             <Text style={{ color: '#52c41a', fontSize: isMobile ? 12 : 14 }}>
-                              Tiền thừa: <strong>{(cashReceived - calculateFinalTotal()).toLocaleString('vi-VN')}đ</strong>
+                              {t('staff.checkout.payment.change')}: <strong>{(cashReceived - calculateFinalTotal()).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ</strong>
                             </Text>
                           </div>
                         )}
@@ -707,7 +700,7 @@ export default function CheckoutPage() {
                         >
                           <QrcodeOutlined style={{ fontSize: isMobile ? 48 : 60, color: '#bbb' }} />
                         </div>
-                        <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>Quét mã QR để thanh toán</Text>
+                        <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>{t('staff.checkout.payment.scan_qr')}</Text>
                       </div>
                     )}
 
@@ -727,7 +720,7 @@ export default function CheckoutPage() {
                         border: 'none',
                       }}
                     >
-                      Xác nhận thanh toán
+                      {t('staff.checkout.payment.confirm')}
                     </Button>
                   </Card>
                 </Col>

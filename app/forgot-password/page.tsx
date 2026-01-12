@@ -1,21 +1,13 @@
 "use client";
 
 import LoginButton from "@/components/auth/LoginButton";
-import React, { useState, useEffect } from "react";
-import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import React, { useState } from "react";
 
 export default function ForgotPasswordPage() {
-  const { mode } = useThemeMode();
-  const [mounted, setMounted] = useState(false);
-  const isDark = mounted && mode === 'dark';
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const validateEmail = (email: string) => {
     if (!email) {
@@ -61,30 +53,19 @@ export default function ForgotPasswordPage() {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
-      style={{
-        background: isDark 
-          ? 'linear-gradient(135deg, #0E121A 0%, #141927 50%, #1a1a2e 100%)'
-          : 'linear-gradient(135deg, #1f2937 0%, #000000 50%, #7c2d12 100%)'
-      }}
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient"
     >
       {/* Decorative elements */}
       <div 
-        className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse"
-        style={{ background: isDark ? '#FF7A00' : '#ea580c' }}
+        className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"
       ></div>
       <div 
-        className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10"
-        style={{ background: isDark ? '#FF7A00' : '#f97316' }}
+        className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"
       ></div>
 
       <div className="max-w-[420px] w-full space-y-8 relative z-10">
         <div 
-          className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border"
-          style={{
-            background: isDark ? 'rgba(20, 25, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 122, 0, 0.2)'
-          }}
+          className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
         >
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-orange-600 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl">
@@ -102,12 +83,11 @@ export default function ForgotPasswordPage() {
               </svg>
             </div>
             <h2 
-              className="text-3xl font-bold mb-2"
-              style={{ color: isDark ? '#ECECEC' : '#111827' }}
+              className="text-3xl font-bold mb-2 auth-title"
             >
               Forgot Password
             </h2>
-            <p style={{ color: isDark ? '#C5C5C5' : '#4b5563' }}>
+            <p className="auth-text">
               Enter your email address and we will send you a link to reset your
               password.
             </p>
@@ -117,8 +97,7 @@ export default function ForgotPasswordPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium mb-2"
-                style={{ color: isDark ? '#ECECEC' : '#374151' }}
+                className="block text-sm font-medium mb-2 auth-label"
               >
                 Email Address
               </label>
@@ -128,15 +107,10 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={handleEmailChange}
                 placeholder="your.email@example.com"
-                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
-                  background: isDark ? '#141927' : '#fff',
-                  color: isDark ? '#ECECEC' : '#111827',
-                  borderColor: emailTouched && emailError 
-                    ? '#ef4444' 
-                    : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                  borderColor: emailTouched && emailError ? '#ef4444' : undefined,
                 }}
-                suppressHydrationWarning
               />
               {emailTouched && emailError && (
                 <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{emailError}</p>
@@ -148,7 +122,7 @@ export default function ForgotPasswordPage() {
             <div 
               className="text-center pt-4 border-t"
               style={{ 
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb'
+                borderColor: 'var(--border)'
               }}
             >
               <a

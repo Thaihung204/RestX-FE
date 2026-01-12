@@ -14,10 +14,19 @@ export default function RevenueChart() {
   const maxValue = Math.max(...revenueData.map((d) => d.value));
 
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
+    <div
+      className="rounded-xl p-6"
+      style={{
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+      }}>
       <div className="mb-6">
-        <h3 className="text-xl font-bold text-white mb-1">Revenue Trend</h3>
-        <p className="text-gray-400 text-sm">Last 7 days performance</p>
+        <h3 className="text-xl font-bold mb-1" style={{ color: 'var(--text)' }}>
+          Revenue Trend
+        </h3>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          Last 7 days performance
+        </p>
       </div>
 
       <div className="relative h-64">
@@ -30,7 +39,7 @@ export default function RevenueChart() {
               y1={40 + i * 50}
               x2="680"
               y2={40 + i * 50}
-              stroke="#374151"
+              stroke="var(--border)"
               strokeWidth="1"
               strokeDasharray="4 4"
             />
@@ -42,7 +51,7 @@ export default function RevenueChart() {
               key={i}
               x="10"
               y={45 + i * 50}
-              fill="#9CA3AF"
+              fill="var(--text-muted)"
               fontSize="12"
               textAnchor="start">
               ${((maxValue * (4 - i)) / 4 / 1000).toFixed(1)}k
@@ -101,7 +110,7 @@ export default function RevenueChart() {
               key={i}
               x={80 + i * 90}
               y="256"
-              fill="#9CA3AF"
+              fill="var(--text-muted)"
               fontSize="12"
               textAnchor="middle">
               {d.day}

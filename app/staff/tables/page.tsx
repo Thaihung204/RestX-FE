@@ -83,31 +83,31 @@ const initialTables: TableData[] = [
   { id: 'v3', name: 'VIP03', zone: 'VIP', capacity: 12, status: 'reserved', reservation: { name: 'Lê Văn D', time: '20:30', phone: '0923456789' } },
 ];
 
-const getStatusConfig = (mode: 'light' | 'dark') => {
+const getStatusConfig = (mode: 'light' | 'dark', t: (key: string) => string) => {
   const isDark = mode === 'dark';
   return {
     available: {
       color: '#52c41a',
       bgColor: isDark ? 'rgba(82, 196, 26, 0.15)' : '#f6ffed',
-      text: 'Trống',
+      text: t('staff.tables.status.available'),
       icon: <CheckCircleOutlined />,
     },
     occupied: {
       color: '#FF7A00',
       bgColor: isDark ? 'rgba(255, 122, 0, 0.15)' : '#fff7e6',
-      text: 'Đang dùng',
+      text: t('staff.tables.status.occupied'),
       icon: <UserOutlined />,
     },
     reserved: {
       color: '#1890ff',
       bgColor: isDark ? 'rgba(24, 144, 255, 0.15)' : '#e6f7ff',
-      text: 'Đã đặt',
+      text: t('staff.tables.status.reserved'),
       icon: <ClockCircleOutlined />,
     },
     cleaning: {
       color: '#faad14',
       bgColor: isDark ? 'rgba(250, 173, 20, 0.15)' : '#fffbe6',
-      text: 'Đang dọn',
+      text: t('staff.tables.status.cleaning'),
       icon: <ExclamationCircleOutlined />,
     },
   } as Record<TableStatus, { color: string; bgColor: string; text: string; icon: React.ReactNode }>;
@@ -116,11 +116,13 @@ const getStatusConfig = (mode: 'light' | 'dark') => {
 
 export default function TableManagement() {
   const { mode } = useThemeMode();
+  const { t } = useTranslation();
   const [tables, setTables] = useState<TableData[]>(initialTables);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpenTableModal, setIsOpenTableModal] = useState(false);
   const [activeZone, setActiveZone] = useState('all');
+  const [isMobile, setIsMobile] = useState(false);
   const [form] = Form.useForm();
   const [isMobile, setIsMobile] = useState(false);
   
@@ -132,7 +134,18 @@ export default function TableManagement() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   
-  const statusConfig = getStatusConfig(mode);
+  const statusConfig = getStatusConfig(mode, t);
+
+  // Check viewport
+  useEffect(() => {
+    const checkViewport = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 576); // xs breakpoint
+    };
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
 
   const filteredTables = activeZone === 'all' 
     ? tables 
@@ -171,7 +184,7 @@ export default function TableManagement() {
             : t
         )
       );
-      message.success(`Đã mở ${selectedTable.name} với ${values.guests} khách`);
+      message.success(t('staff.tables.messages.table_opened', { table: selectedTable.name, guests: values.guests }));
       setIsOpenTableModal(false);
       form.resetFields();
     }
@@ -186,7 +199,7 @@ export default function TableManagement() {
             : t
         )
       );
-      message.success(`Đã đóng ${selectedTable.name}`);
+      message.success(t('staff.tables.messages.table_closed', { table: selectedTable.name }));
       setIsModalOpen(false);
     }
   };
@@ -200,7 +213,7 @@ export default function TableManagement() {
             : t
         )
       );
-      message.success(`${selectedTable.name} đã sẵn sàng`);
+      message.success(t('staff.tables.messages.table_ready', { table: selectedTable.name }));
       setIsModalOpen(false);
     }
   };
@@ -277,7 +290,7 @@ export default function TableManagement() {
             {table.status === 'occupied' && table.startTime && (
               <div style={{ marginTop: 'auto', padding: '8px', background: 'var(--card)', borderRadius: 8 }}>
                 <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  <ClockCircleOutlined /> Từ {table.startTime}
+                  <ClockCircleOutlined /> {t('staff.tables.table.from')} {table.startTime}
                 </Text>
                 <br />
                 <Text style={{ fontSize: 14, color: '#FF7A00', fontWeight: 500 }}>
@@ -289,7 +302,7 @@ export default function TableManagement() {
             {table.status === 'reserved' && table.reservation && (
               <div style={{ marginTop: 'auto', padding: '8px', background: 'var(--card)', borderRadius: 8 }}>
                 <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Đặt lúc {table.reservation.time}
+                  {t('staff.tables.table.booked_at')} {table.reservation.time}
                 </Text>
                 <br />
                 <Text style={{ fontSize: 14, color: '#1890ff', fontWeight: 500 }}>
@@ -368,10 +381,10 @@ export default function TableManagement() {
           style={{ marginBottom: isMobile ? 12 : 16 }}
           size={isMobile ? 'small' : 'middle'}
           items={[
-            { key: 'all', label: `Tất cả (${tables.length})` },
-            { key: 'A', label: `Khu A (${tables.filter(t => t.zone === 'A').length})` },
-            { key: 'B', label: `Khu B (${tables.filter(t => t.zone === 'B').length})` },
-            { key: 'VIP', label: `Khu VIP (${tables.filter(t => t.zone === 'VIP').length})` },
+            { key: 'all', label: `${t('staff.tables.zones.all')} (${tables.length})` },
+            { key: 'A', label: `${t('staff.tables.zones.zone_a')} (${tables.filter(t => t.zone === 'A').length})` },
+            { key: 'B', label: `${t('staff.tables.zones.zone_b')} (${tables.filter(t => t.zone === 'B').length})` },
+            { key: 'VIP', label: `${t('staff.tables.zones.zone_vip')} (${tables.filter(t => t.zone === 'VIP').length})` },
           ]}
         />
 
@@ -391,7 +404,7 @@ export default function TableManagement() {
         title={
           <Space>
             <TableOutlined style={{ color: '#FF7A00' }} />
-            <span>Chi tiết {selectedTable?.name}</span>
+            <span>{t('staff.tables.modal.detail')} {selectedTable?.name}</span>
           </Space>
         }
         open={isModalOpen}
@@ -600,7 +613,7 @@ export default function TableManagement() {
                     border: 'none',
                   }}
                 >
-                  Mở bàn
+                  {t('staff.tables.actions.open_table')}
                 </Button>
               )}
 
@@ -619,7 +632,7 @@ export default function TableManagement() {
                       border: 'none',
                     }}
                   >
-                    Thêm món
+                    {t('staff.tables.actions.add_dish')}
                   </Button>
                   <Row gutter={12}>
                     <Col span={12}>
@@ -629,7 +642,7 @@ export default function TableManagement() {
                         block
                         style={{ borderRadius: 12, height: 48 }}
                       >
-                        Chuyển bàn
+                        {t('staff.tables.actions.transfer_table')}
                       </Button>
                     </Col>
                     <Col span={12}>
@@ -645,7 +658,7 @@ export default function TableManagement() {
                           border: 'none',
                         }}
                       >
-                        Thanh toán
+                        {t('staff.tables.actions.checkout')}
                       </Button>
                     </Col>
                   </Row>
@@ -656,7 +669,7 @@ export default function TableManagement() {
                     onClick={handleCloseTable}
                     style={{ borderRadius: 12, height: 48 }}
                   >
-                    Đóng bàn
+                    {t('staff.tables.actions.close_table')}
                   </Button>
                 </>
               )}
@@ -677,7 +690,7 @@ export default function TableManagement() {
                       border: 'none',
                     }}
                   >
-                    Khách đã đến - Mở bàn
+                    {t('staff.tables.actions.guest_arrived')}
                   </Button>
                   <Button
                     icon={<EditOutlined />}
@@ -685,7 +698,7 @@ export default function TableManagement() {
                     block
                     style={{ borderRadius: 12, height: 48 }}
                   >
-                    Sửa thông tin đặt bàn
+                    {t('staff.tables.actions.edit_reservation')}
                   </Button>
                 </>
               )}
@@ -705,7 +718,7 @@ export default function TableManagement() {
                     border: 'none',
                   }}
                 >
-                  Hoàn thành dọn dẹp
+                  {t('staff.tables.actions.finish_cleaning')}
                 </Button>
               )}
             </Flex>
@@ -715,7 +728,7 @@ export default function TableManagement() {
 
       {/* Open Table Modal */}
       <Modal
-        title="Mở bàn mới"
+        title={t('staff.tables.modal.open_table')}
         open={isOpenTableModal}
         onCancel={() => {
           setIsOpenTableModal(false);
@@ -774,18 +787,18 @@ export default function TableManagement() {
             <Title level={4} style={{ margin: 0 }}>
               {selectedTable?.name}
             </Title>
-            <Text type="secondary">Sức chứa: {selectedTable?.capacity} người</Text>
+            <Text type="secondary">{t('staff.tables.table.capacity')}: {selectedTable?.capacity} {t('staff.tables.table.guests')}</Text>
           </div>
 
           <Form.Item
             name="guests"
-            label="Số lượng khách"
+            label={t('staff.tables.modal.guests_count')}
             rules={[
-              { required: true, message: 'Vui lòng nhập số khách' },
+              { required: true, message: t('staff.tables.messages.enter_guests') },
               {
                 type: 'number',
                 max: selectedTable?.capacity,
-                message: `Tối đa ${selectedTable?.capacity} khách`,
+                message: t('staff.tables.messages.max_guests', { capacity: selectedTable?.capacity }),
               },
             ]}
           >
@@ -794,7 +807,7 @@ export default function TableManagement() {
               max={selectedTable?.capacity}
               size="large"
               style={{ width: '100%', borderRadius: 12 }}
-              addonAfter="khách"
+              addonAfter={t('staff.tables.table.guests')}
             />
           </Form.Item>
 
@@ -812,7 +825,7 @@ export default function TableManagement() {
                 border: 'none',
               }}
             >
-              Xác nhận mở bàn
+              {t('staff.tables.modal.confirm_open')}
             </Button>
           </Form.Item>
         </Form>

@@ -113,7 +113,7 @@ export default function HelpPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex">
+    <div className="min-h-screen flex" style={{ background: 'var(--bg-base)' }}>
       <DashboardSidebar />
       <div className="flex-1 flex flex-col">
         <DashboardHeader />
@@ -121,19 +121,25 @@ export default function HelpPage() {
           <div className="space-y-6 max-w-5xl mx-auto">
             {/* Header */}
             <div className="text-center">
-              <h2 className="text-4xl font-bold text-white mb-2">
+              <h2 className="text-4xl font-bold mb-2" style={{ color: 'var(--text)' }}>
                 Help Center
               </h2>
-              <p className="text-gray-400">
+              <p style={{ color: 'var(--text-muted)' }}>
                 Find answers to common questions and get support
               </p>
             </div>
 
             {/* Search */}
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
+            <div
+              className="rounded-xl p-6"
+              style={{
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
+              }}>
               <div className="relative">
                 <svg
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                  style={{ color: 'var(--text-muted)' }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24">
@@ -149,7 +155,12 @@ export default function HelpPage() {
                   placeholder="Search for help..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-orange-500 focus:outline-none"
+                  className="w-full pl-12 pr-4 py-3 rounded-lg focus:border-orange-500 focus:outline-none"
+                  style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                  }}
                   suppressHydrationWarning
                 />
               </div>
@@ -164,8 +175,17 @@ export default function HelpPage() {
                   className={`p-4 rounded-xl border-2 transition-all ${
                     selectedCategory === category.id
                       ? "bg-gradient-to-br from-orange-600 to-orange-500 border-orange-500 text-white"
-                      : "bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 text-gray-300 hover:border-orange-500/30"
+                      : ""
                   }`}
+                  style={
+                    selectedCategory !== category.id
+                      ? {
+                          background: 'var(--card)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text-muted)',
+                        }
+                      : undefined
+                  }
                   suppressHydrationWarning>
                   <svg
                     className="w-6 h-6 mx-auto mb-2"
@@ -186,22 +206,28 @@ export default function HelpPage() {
 
             {/* FAQ List */}
             <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-white">
+              <h3 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>
                 Frequently Asked Questions
               </h3>
               {filteredFAQs.length > 0 ? (
                 filteredFAQs.map((faq, index) => (
                   <details
                     key={index}
-                    className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl overflow-hidden group">
+                    className="rounded-xl overflow-hidden group"
+                    style={{
+                      background: 'var(--card)',
+                      border: '1px solid var(--border)',
+                    }}>
                     <summary
-                      className="p-4 cursor-pointer list-none flex items-center justify-between hover:bg-gray-800/50 transition-colors"
+                      className="p-4 cursor-pointer list-none flex items-center justify-between transition-colors"
+                      style={{ borderColor: 'var(--border)' }}
                       suppressHydrationWarning>
-                      <span className="text-white font-medium">
+                      <span className="font-medium" style={{ color: 'var(--text)' }}>
                         {faq.question}
                       </span>
                       <svg
-                        className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform"
+                        className="w-5 h-5 group-open:rotate-180 transition-transform"
+                        style={{ color: 'var(--text-muted)' }}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24">
@@ -213,15 +239,21 @@ export default function HelpPage() {
                         />
                       </svg>
                     </summary>
-                    <div className="px-4 pb-4 text-gray-400 border-t border-gray-700">
+                    <div className="px-4 pb-4" style={{ borderTop: '1px solid var(--border)', color: 'var(--text-muted)' }}>
                       <p className="mt-4">{faq.answer}</p>
                     </div>
                   </details>
                 ))
               ) : (
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-12 text-center">
+                <div
+                  className="rounded-xl p-12 text-center"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}>
                   <svg
-                    className="w-16 h-16 text-gray-600 mx-auto mb-4"
+                    className="w-16 h-16 mx-auto mb-4"
+                    style={{ color: 'var(--text-muted)' }}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24">
@@ -232,7 +264,7 @@ export default function HelpPage() {
                       d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <p className="text-gray-400">
+                  <p style={{ color: 'var(--text-muted)' }}>
                     No results found. Try a different search term or category.
                   </p>
                 </div>
@@ -241,7 +273,12 @@ export default function HelpPage() {
 
             {/* Quick Links */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6 hover:border-orange-500/30 transition-all">
+              <div
+                className="rounded-xl p-6 hover:border-orange-500/30 transition-all"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                }}>
                 <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-4">
                   <svg
                     className="w-6 h-6 text-blue-500"
@@ -256,10 +293,10 @@ export default function HelpPage() {
                     />
                   </svg>
                 </div>
-                <h4 className="text-lg font-bold text-white mb-2">
+                <h4 className="text-lg font-bold mb-2" style={{ color: 'var(--text)' }}>
                   Documentation
                 </h4>
-                <p className="text-gray-400 text-sm mb-4">
+                <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
                   Comprehensive guides and tutorials
                 </p>
                 <button
@@ -269,7 +306,12 @@ export default function HelpPage() {
                 </button>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6 hover:border-orange-500/30 transition-all">
+              <div
+                className="rounded-xl p-6 hover:border-orange-500/30 transition-all"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                }}>
                 <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-4">
                   <svg
                     className="w-6 h-6 text-green-500"
@@ -284,10 +326,10 @@ export default function HelpPage() {
                     />
                   </svg>
                 </div>
-                <h4 className="text-lg font-bold text-white mb-2">
+                <h4 className="text-lg font-bold mb-2" style={{ color: 'var(--text)' }}>
                   Video Tutorials
                 </h4>
-                <p className="text-gray-400 text-sm mb-4">
+                <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
                   Step-by-step video guides
                 </p>
                 <button
@@ -297,7 +339,12 @@ export default function HelpPage() {
                 </button>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6 hover:border-orange-500/30 transition-all">
+              <div
+                className="rounded-xl p-6 hover:border-orange-500/30 transition-all"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                }}>
                 <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mb-4">
                   <svg
                     className="w-6 h-6 text-purple-500"
@@ -312,10 +359,10 @@ export default function HelpPage() {
                     />
                   </svg>
                 </div>
-                <h4 className="text-lg font-bold text-white mb-2">
+                <h4 className="text-lg font-bold mb-2" style={{ color: 'var(--text)' }}>
                   Contact Support
                 </h4>
-                <p className="text-gray-400 text-sm mb-4">
+                <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
                   Get help from our support team
                 </p>
                 <button
@@ -327,8 +374,13 @@ export default function HelpPage() {
             </div>
 
             {/* Keyboard Shortcuts */}
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <div
+              className="rounded-xl p-6"
+              style={{
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
+              }}>
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
                 <svg
                   className="w-6 h-6 text-orange-500"
                   fill="none"
@@ -354,16 +406,23 @@ export default function HelpPage() {
                 ].map((shortcut, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg">
-                    <span className="text-gray-300">{shortcut.action}</span>
+                    className="flex items-center justify-between p-3 rounded-lg"
+                    style={{ background: 'var(--surface)' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>{shortcut.action}</span>
                     <div className="flex gap-1">
                       {shortcut.keys.map((key, i) => (
                         <React.Fragment key={i}>
-                          <kbd className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-white font-mono">
+                          <kbd
+                            className="px-2 py-1 rounded text-xs font-mono"
+                            style={{
+                              background: 'var(--card)',
+                              border: '1px solid var(--border)',
+                              color: 'var(--text)',
+                            }}>
                             {key}
                           </kbd>
                           {i < shortcut.keys.length - 1 && (
-                            <span className="text-gray-500">+</span>
+                            <span style={{ color: 'var(--text-muted)' }}>+</span>
                           )}
                         </React.Fragment>
                       ))}

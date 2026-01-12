@@ -2,13 +2,23 @@
 
 import LoginButton from "@/components/auth/LoginButton";
 import LoginHeader from "@/components/auth/LoginHeader";
+
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
 import React, { useState, useEffect } from "react";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
+
 export default function LoginPage() {
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
+  // Get initial theme from localStorage to prevent flash
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('restx-theme-mode');
+      return stored === 'dark' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return false;
+  });
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [remember, setRemember] = useState(false);
@@ -20,7 +30,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Update isDark when mode changes
+    setIsDark(mode === 'dark');
+  }, [mode]);
 
   const validatePhone = (phone: string) => {
     if (!phone) {
@@ -107,35 +119,22 @@ export default function LoginPage() {
       );
     }, 1000);
   };
-
-  const isDark = mounted && mode === 'dark';
   
   return (
     <div 
-      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
-      style={{
-        background: isDark 
-          ? 'linear-gradient(135deg, #0E121A 0%, #141927 50%, #1a1a2e 100%)'
-          : 'linear-gradient(135deg, #1f2937 0%, #000000 50%, #7c2d12 100%)'
-      }}
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient"
     >
       {/* Decorative elements */}
       <div 
-        className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse"
-        style={{ background: isDark ? '#FF7A00' : '#ea580c' }}
+        className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"
       ></div>
       <div 
-        className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10"
-        style={{ background: isDark ? '#FF7A00' : '#f97316' }}
+        className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"
       ></div>
 
       <div className="max-w-[420px] w-full space-y-8 relative z-10">
         <div 
-          className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border"
-          style={{
-            background: isDark ? 'rgba(20, 25, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 122, 0, 0.2)'
-          }}
+          className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
         >
           <LoginHeader />
 
@@ -143,8 +142,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="phone"
-                className="block text-sm font-medium mb-2"
-                style={{ color: isDark ? '#ECECEC' : '#374151' }}
+                className="block text-sm font-medium mb-2 auth-label"
               >
                 Phone Number
               </label>
@@ -155,15 +153,10 @@ export default function LoginPage() {
                 onChange={handlePhoneChange}
                 placeholder="0123456789"
                 maxLength={10}
-                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
-                  background: isDark ? '#141927' : '#fff',
-                  color: isDark ? '#ECECEC' : '#111827',
-                  borderColor: phoneTouched && phoneError 
-                    ? '#ef4444' 
-                    : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                  borderColor: phoneTouched && phoneError ? '#ef4444' : undefined,
                 }}
-                suppressHydrationWarning
               />
               {phoneTouched && phoneError && (
                 <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{phoneError}</p>
@@ -173,8 +166,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium mb-2"
-                style={{ color: isDark ? '#ECECEC' : '#374151' }}
+                className="block text-sm font-medium mb-2 auth-label"
               >
                 Name
               </label>
@@ -184,25 +176,19 @@ export default function LoginPage() {
                 value={name}
                 onChange={handleNameChange}
                 placeholder="Enter your name"
-                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
-                  background: isDark ? '#141927' : '#fff',
-                  color: isDark ? '#ECECEC' : '#111827',
-                  borderColor: nameTouched && nameError 
-                    ? '#ef4444' 
-                    : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                  borderColor: nameTouched && nameError ? '#ef4444' : undefined,
                 }}
-                suppressHydrationWarning
               />
               {nameTouched && nameError && (
                 <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{nameError}</p>
               )}
             </div>
 
-            <RememberCheckbox checked={remember} onChange={setRemember} />
             <LoginButton loading={loading} text="LOGIN" />
 
-            <div className="text-center text-sm mt-6" style={{ color: isDark ? '#C5C5C5' : '#4b5563' }}>
+            <div className="text-center text-sm mt-6 auth-text">
               By continuing, you agree to RestX&apos;s{" "}
               <a
                 href="/terms"
@@ -222,6 +208,21 @@ export default function LoginPage() {
                 onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
               >
                 Privacy Policy
+              </a>
+            </div>
+
+            <div 
+              className="text-center text-sm mt-4 auth-text"
+            >
+              Or login with{" "}
+              <a
+                href="/login-email"
+                className="font-semibold transition-colors"
+                style={{ color: '#FF7A00' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+              >
+                Email & Password
               </a>
             </div>
           </form>
