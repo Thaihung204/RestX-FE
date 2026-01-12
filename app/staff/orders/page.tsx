@@ -290,7 +290,7 @@ export default function OrderManagement() {
   const renderOrderCard = (order: Order) => {
     const config = statusConfig[order.status];
     const pendingItems = order.items.filter(i => i.status === 'pending' || i.status === 'preparing').length;
-    
+
     return (
       <div>
         <Card
@@ -340,7 +340,7 @@ export default function OrderManagement() {
                       </Tag>
                     )}
                   </div>
-                  <Text style={{ 
+                  <Text style={{
                     fontSize: isMobile ? 13 : 14,
                     color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
                     fontWeight: 400,
@@ -366,23 +366,23 @@ export default function OrderManagement() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, flexWrap: 'wrap' }}>
-                <Text strong style={{ 
-                  color: '#FF7A00', 
+                <Text strong style={{
+                  color: '#FF7A00',
                   fontSize: isMobile ? 16 : 18,
                   fontWeight: 500,
                 }}>
                   {order.total.toLocaleString('vi-VN')}đ
                 </Text>
                 {pendingItems > 0 && (
-                  <Badge 
-                    count={isMobile ? `${pendingItems} chưa xong` : `${pendingItems} món chưa xong`} 
-                    style={{ 
+                  <Badge
+                    count={isMobile ? `${pendingItems} chưa xong` : `${pendingItems} món chưa xong`}
+                    style={{
                       backgroundColor: mode === 'dark' ? 'rgba(255, 122, 0, 0.2)' : 'rgba(255, 122, 0, 0.1)',
                       color: '#FF7A00',
                       fontSize: isMobile ? 12 : 13,
                       fontWeight: 500,
                       border: `1px solid ${mode === 'dark' ? 'rgba(255, 122, 0, 0.3)' : 'rgba(255, 122, 0, 0.2)'}`,
-                    }} 
+                    }}
                   />
                 )}
               </div>
@@ -392,12 +392,12 @@ export default function OrderManagement() {
               <Tag
                 icon={config.icon}
                 color={config.color}
-                  style={{
-                    borderRadius: 8,
-                    padding: '6px 14px',
-                    fontSize: 13,
-                    fontWeight: 500,
-                  }}
+                style={{
+                  borderRadius: 8,
+                  padding: '6px 14px',
+                  fontSize: 13,
+                  fontWeight: 500,
+                }}
               >
                 {config.text}
               </Tag>
@@ -412,42 +412,44 @@ export default function OrderManagement() {
     <div>
       {/* Header Stats */}
       <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
-        <Col xs={24} sm={8} md={8}>
+        <Col xs={8} sm={8} md={8}>
           <Card
             style={{
               borderRadius: 12,
               background: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#FFFFFF',
               border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E5E5',
               overflow: 'hidden',
+              height: '100%',
               boxShadow: mode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
             }}
-            styles={{ body: { padding: isMobile ? 20 : 28 } }}
+            styles={{ body: { padding: isMobile ? 12 : 28 } }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 12 : 20, flexDirection: isMobile ? 'column' : 'row' }}>
+            <div style={{ display: 'flex', alignItems: isMobile ? 'center' : 'flex-start', gap: isMobile ? 12 : 20, flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
               <div
                 style={{
-                  width: isMobile ? 48 : 56,
-                  height: isMobile ? 48 : 56,
+                  width: isMobile ? 40 : 56,
+                  height: isMobile ? 40 : 56,
                   borderRadius: 10,
                   background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
                   border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
                 <ExclamationCircleOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }} />
               </div>
               <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
-                <Text style={{ 
-                  fontSize: isMobile ? 28 : 36, 
+                <Text style={{
+                  fontSize: isMobile ? 28 : 36,
                   fontWeight: 500,
                   display: 'block',
                   color: mode === 'dark' ? '#FFFFFF' : '#1A1A1A',
                   lineHeight: 1.2,
                   marginBottom: 8,
                 }}>{stats.pending}</Text>
-                <Text style={{ 
+                <Text style={{
                   fontSize: isMobile ? 13 : 15,
                   color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
                   fontWeight: 400,
@@ -457,42 +459,44 @@ export default function OrderManagement() {
             </div>
           </Card>
         </Col>
-        <Col xs={8} sm={8}>
+        <Col xs={8} sm={8} md={8}>
           <Card
             style={{
               borderRadius: 12,
               background: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#FFFFFF',
               border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #E5E5E5',
               overflow: 'hidden',
+              height: '100%',
               boxShadow: mode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
             }}
-            styles={{ body: { padding: isMobile ? 20 : 28 } }}
+            styles={{ body: { padding: isMobile ? 12 : 28 } }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 12 : 20, flexDirection: isMobile ? 'column' : 'row' }}>
+            <div style={{ display: 'flex', alignItems: isMobile ? 'center' : 'flex-start', gap: isMobile ? 12 : 20, flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
               <div
                 style={{
-                  width: isMobile ? 48 : 56,
-                  height: isMobile ? 48 : 56,
+                  width: isMobile ? 40 : 56,
+                  height: isMobile ? 40 : 56,
                   borderRadius: 10,
                   background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
                   border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
                 <SyncOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }} />
               </div>
               <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
-                <Text style={{ 
-                  fontSize: isMobile ? 28 : 36, 
+                <Text style={{
+                  fontSize: isMobile ? 28 : 36,
                   fontWeight: 500,
                   display: 'block',
                   color: mode === 'dark' ? '#FFFFFF' : '#1A1A1A',
                   lineHeight: 1.2,
                   marginBottom: 8,
                 }}>{stats.preparing}</Text>
-                <Text style={{ 
+                <Text style={{
                   fontSize: isMobile ? 13 : 15,
                   color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
                   fontWeight: 400,
@@ -502,42 +506,44 @@ export default function OrderManagement() {
             </div>
           </Card>
         </Col>
-        <Col xs={24} sm={8} md={8}>
+        <Col xs={8} sm={8} md={8}>
           <Card
             style={{
               borderRadius: 12,
               background: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#FFFFFF',
               border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #E5E5E5',
               overflow: 'hidden',
+              height: '100%',
               boxShadow: mode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
             }}
-            styles={{ body: { padding: isMobile ? 20 : 28 } }}
+            styles={{ body: { padding: isMobile ? 12 : 28 } }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 12 : 20, flexDirection: isMobile ? 'column' : 'row' }}>
+            <div style={{ display: 'flex', alignItems: isMobile ? 'center' : 'flex-start', gap: isMobile ? 12 : 20, flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
               <div
                 style={{
-                  width: isMobile ? 48 : 56,
-                  height: isMobile ? 48 : 56,
+                  width: isMobile ? 40 : 56,
+                  height: isMobile ? 40 : 56,
                   borderRadius: 10,
                   background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
                   border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
                 <CheckCircleOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }} />
               </div>
               <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
-                <Text style={{ 
-                  fontSize: isMobile ? 28 : 36, 
+                <Text style={{
+                  fontSize: isMobile ? 28 : 36,
                   fontWeight: 500,
                   display: 'block',
                   color: mode === 'dark' ? '#FFFFFF' : '#1A1A1A',
                   lineHeight: 1.2,
                   marginBottom: 8,
                 }}>{stats.ready}</Text>
-                <Text style={{ 
+                <Text style={{
                   fontSize: isMobile ? 13 : 15,
                   color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
                   fontWeight: 400,
@@ -631,8 +637,10 @@ export default function OrderManagement() {
             style={{
               color: mode === 'dark' ? undefined : '#4F4F4F',
             }}
-            imageStyle={{
-              opacity: mode === 'dark' ? 0.65 : 0.4,
+            styles={{
+              image: {
+                opacity: mode === 'dark' ? 0.65 : 0.4,
+              }
             }}
           />
         )}
@@ -1020,11 +1028,13 @@ export default function OrderManagement() {
               ) : (
                 <Empty
                   description="Chưa có món nào"
+                  styles={{
+                    image: {
+                      opacity: mode === 'dark' ? 0.65 : 0.4,
+                    }
+                  }}
                   style={{
                     color: mode === 'dark' ? undefined : '#4F4F4F',
-                  }}
-                  imageStyle={{
-                    opacity: mode === 'dark' ? 0.65 : 0.4,
                   }}
                 />
               )}

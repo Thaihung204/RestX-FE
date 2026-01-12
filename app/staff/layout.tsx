@@ -138,7 +138,7 @@ export default function StaffLayout({
           alignItems: 'center',
           justifyContent: (collapsed && !inDrawer) ? 'center' : 'flex-start',
           padding: (collapsed && !inDrawer) ? '0' : '0 24px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
         <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
@@ -165,7 +165,7 @@ export default function StaffLayout({
                 marginLeft: 12,
                 fontSize: 22,
                 fontWeight: 700,
-                color: '#fff',
+                color: mode === 'dark' ? '#fff' : '#1a1a2e',
                 letterSpacing: '-0.5px',
               }}
             >
@@ -180,7 +180,7 @@ export default function StaffLayout({
         <div
           style={{
             padding: '20px 24px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -197,7 +197,7 @@ export default function StaffLayout({
             <div>
               <Text
                 style={{
-                  color: '#fff',
+                  color: mode === 'dark' ? '#fff' : '#1a1a2e',
                   fontWeight: 600,
                   fontSize: 14,
                   display: 'block',
@@ -207,7 +207,7 @@ export default function StaffLayout({
               </Text>
               <Text
                 style={{
-                  color: 'rgba(255, 255, 255, 0.5)',
+                  color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.45)',
                   fontSize: 12,
                 }}
               >
@@ -229,7 +229,7 @@ export default function StaffLayout({
           border: 'none',
           padding: '16px 12px',
         }}
-        theme="dark"
+        theme={mode === 'dark' ? 'dark' : 'light'}
       />
 
       {/* Clock In/Out Status */}
@@ -271,54 +271,62 @@ export default function StaffLayout({
   return (
     <>
       <Layout style={{ minHeight: '100vh' }}>
-        {/* Mobile Drawer */}
+        {/* Mobile Bottom Navigation */}
         {isDrawerDevice && (
-          <Drawer
-            placement="left"
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            size={280}
-            style={{ top: 0, height: '100vh' }}
-            closable={false}
-            maskClosable
-            rootStyle={{
-              backdropFilter: 'none',
-              WebkitBackdropFilter: 'none',
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              width: '100%',
+              height: 85,
+              background: mode === 'dark' ? 'rgba(20, 25, 39, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderTop: '1px solid var(--border)',
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'center',
+              paddingBottom: 20,
+              zIndex: 1000,
+              boxShadow: '0 -4px 20px rgba(0,0,0,0.05)',
             }}
-            styles={{
-              mask: {
-                background: 'rgba(0,0,0,0.55)',
-                backdropFilter: 'none',
-                WebkitBackdropFilter: 'none',
-                filter: 'none',
-              },
-              body: {
-                padding: 0,
-                background: 'var(--sidebar-bg)',
-                height: '100%',
-                minHeight: '100%',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-              },
-              header: { display: 'none' },
-            }}
-            destroyOnClose
           >
-            <div style={{ position: 'relative', height: '100%' }}>
-              <Button
-                type="text"
-                icon={<CloseOutlined style={{ color: '#fff' }} />}
-                onClick={() => setDrawerOpen(false)}
-                style={{
-                  position: 'absolute',
-                  right: 16,
-                  top: 20,
-                  zIndex: 10,
-                }}
-              />
-              <SidebarContent inDrawer />
-            </div>
-          </Drawer>
+            {menuItems.map((item) => {
+              const isActive = pathname === item.key;
+              return (
+                <div
+                  key={item.key}
+                  onClick={() => router.push(item.key)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                    color: isActive ? '#FF7A00' : 'var(--text-muted)',
+                    cursor: 'pointer',
+                    width: '20%',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <div style={{
+                    fontSize: 24,
+                    transform: isActive ? 'translateY(-2px)' : 'none',
+                    transition: 'transform 0.2s',
+                    filter: isActive ? 'drop-shadow(0 4px 6px rgba(255, 122, 0, 0.3))' : 'none',
+                  }}>
+                    {item.icon}
+                  </div>
+                  <span style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    opacity: isActive ? 1 : 0.8,
+                  }}>{item.label}</span>
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {/* Desktop Sidebar */}
@@ -330,8 +338,9 @@ export default function StaffLayout({
             width={260}
             collapsedWidth={80}
             style={{
-              background: 'var(--sidebar-bg)',
+              background: mode === 'dark' ? '#001529' : '#FFFFFF',
               boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
+              borderRight: mode === 'dark' ? 'none' : '1px solid var(--border)',
               position: 'fixed',
               height: '100vh',
               left: 0,
@@ -368,20 +377,22 @@ export default function StaffLayout({
           >
             {/* Left Section */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Button
-                type="text"
-                icon={isDrawerDevice ? <MenuOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
-                onClick={() => isDrawerDevice ? setDrawerOpen(true) : setCollapsed(!collapsed)}
-                style={{
-                  fontSize: 16,
-                  width: 40,
-                  height: 40,
-                  borderRadius: 8,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              />
+              {!isDrawerDevice && (
+                <Button
+                  type="text"
+                  icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                  onClick={() => setCollapsed(!collapsed)}
+                  style={{
+                    fontSize: 16,
+                    width: 40,
+                    height: 40,
+                    borderRadius: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                />
+              )}
               <div style={{ borderLeft: '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <Text style={{
@@ -486,6 +497,7 @@ export default function StaffLayout({
           <Content
             style={{
               margin: isMobile ? 12 : 24,
+              marginBottom: isDrawerDevice ? 100 : 24,
               padding: 0,
               minHeight: 'calc(100vh - 120px)',
             }}
@@ -495,12 +507,14 @@ export default function StaffLayout({
         </Layout>
       </Layout>
       <style jsx global>{`
-        .ant-menu-dark .ant-menu-item {
+        .ant-menu-dark .ant-menu-item,
+        .ant-menu-light .ant-menu-item {
           margin: 4px 0 !important;
           border-radius: 10px !important;
           height: 48px !important;
           line-height: 48px !important;
         }
+        /* Dark Mode Menu */
         .ant-menu-dark .ant-menu-item-selected {
           background: linear-gradient(135deg, rgba(255, 122, 0, 0.2) 0%, rgba(255, 122, 0, 0.1) 100%) !important;
           border-left: 3px solid #FF7A00 !important;
@@ -509,6 +523,19 @@ export default function StaffLayout({
           background: rgba(255, 255, 255, 0.05) !important;
         }
         .ant-menu-dark .ant-menu-item .ant-menu-item-icon {
+          font-size: 18px !important;
+        }
+
+        /* Light Mode Menu */
+        .ant-menu-light .ant-menu-item-selected {
+          background: linear-gradient(135deg, rgba(255, 122, 0, 0.15) 0%, rgba(255, 122, 0, 0.05) 100%) !important;
+          border-left: 3px solid #FF7A00 !important;
+          color: #FF7A00 !important;
+        }
+        .ant-menu-light .ant-menu-item:hover {
+          background: rgba(0, 0, 0, 0.04) !important;
+        }
+        .ant-menu-light .ant-menu-item .ant-menu-item-icon {
           font-size: 18px !important;
         }
         /* Disable blur/backdrop on all masks (drawer + modal) */
