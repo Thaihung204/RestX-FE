@@ -436,7 +436,7 @@ export default function OrderManagement() {
     <div>
       {/* Header Stats */}
       <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
-        <Col xs={8} sm={8} md={8}>
+        <Col xs={24} sm={8} md={8}>
           <Card
             style={{
               borderRadius: 12,
@@ -483,7 +483,7 @@ export default function OrderManagement() {
             </div>
           </Card>
         </Col>
-        <Col xs={8} sm={8} md={8}>
+        <Col xs={24} sm={8} md={8}>
           <Card
             style={{
               borderRadius: 12,
@@ -530,7 +530,7 @@ export default function OrderManagement() {
             </div>
           </Card>
         </Col>
-        <Col xs={8} sm={8} md={8}>
+        <Col xs={24} sm={8} md={8}>
           <Card
             style={{
               borderRadius: 12,
@@ -943,9 +943,9 @@ export default function OrderManagement() {
                       onClick={() => addToCart(item)}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
                           justifyContent: 'center',
                           width: isMobile ? 32 : 40,
                           height: isMobile ? 32 : 40,
@@ -1005,9 +1005,9 @@ export default function OrderManagement() {
                           gap: isMobile ? 8 : 12,
                         }}
                       >
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
                           justifyContent: 'center',
                           width: isMobile ? 28 : 32,
                           height: isMobile ? 28 : 32,
