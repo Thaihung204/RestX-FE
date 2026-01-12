@@ -54,12 +54,12 @@ export default function StaffLayout({
     {
       key: '/staff/tables',
       icon: <TableOutlined />,
-      label: t('staff.menu.tables'),
+      label: isMobile ? t('staff.menu.tables_short') : t('staff.menu.tables'),
     },
     {
       key: '/staff/orders',
       icon: <ShoppingCartOutlined />,
-      label: t('staff.menu.orders'),
+      label: isMobile ? t('staff.menu.orders_short') : t('staff.menu.orders'),
     },
     {
       key: '/staff/checkout',
@@ -400,12 +400,12 @@ export default function StaffLayout({
                   }}
                 />
               )}
-              <div style={{ borderLeft: '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center' }}>
+              <div style={{ borderLeft: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <Text style={{
                     fontSize: 15,
                     fontWeight: 600,
-                    color: '#1a1a2e',
+                    color: mode === 'dark' ? '#fff' : '#1a1a2e',
                     lineHeight: 1.2,
                     margin: 0,
                     overflow: 'hidden',
