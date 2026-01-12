@@ -260,7 +260,7 @@ export default function StaffLayout({
               Đang làm việc
             </Text>
           </div>
-          <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}>
+          <Text style={{ color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)', fontSize: 12 }}>
             Bắt đầu: 08:00 - Hôm nay
           </Text>
         </div>
@@ -270,7 +270,7 @@ export default function StaffLayout({
 
   return (
     <>
-    <Layout style={{ minHeight: '100vh' }}>
+      <Layout style={{ minHeight: '100vh' }}>
         {/* Mobile Drawer */}
         {isDrawerDevice && (
           <Drawer
@@ -292,8 +292,8 @@ export default function StaffLayout({
                 WebkitBackdropFilter: 'none',
                 filter: 'none',
               },
-              body: { 
-                padding: 0, 
+              body: {
+                padding: 0,
                 background: 'var(--sidebar-bg)',
                 height: '100%',
                 minHeight: '100%',
@@ -344,8 +344,8 @@ export default function StaffLayout({
         )}
 
         {/* Main Layout */}
-        <Layout style={{ 
-          marginLeft: isDrawerDevice ? 0 : (collapsed ? 80 : 260), 
+        <Layout style={{
+          marginLeft: isDrawerDevice ? 0 : (collapsed ? 80 : 260),
           transition: 'margin-left 0.2s',
           minHeight: '100vh',
           width: '100%',
@@ -384,9 +384,9 @@ export default function StaffLayout({
               />
               <div style={{ borderLeft: '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <Text style={{ 
-                    fontSize: 15, 
-                    fontWeight: 600, 
+                  <Text style={{
+                    fontSize: 15,
+                    fontWeight: 600,
                     color: '#1a1a2e',
                     lineHeight: 1.2,
                     margin: 0,
@@ -407,7 +407,7 @@ export default function StaffLayout({
             </div>
 
             {/* Right Section */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
               {/* Home Link */}
               <Link href="/">
                 <Button
