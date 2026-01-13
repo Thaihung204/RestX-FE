@@ -42,8 +42,8 @@ export function middleware(req: NextRequest) {
   // Development mode: allow all routes (localhost, 127.0.0.1, etc.)
   const isDevelopment = host.includes("localhost") || 
     host.includes("127.0.0.1") || 
-    host.includes("0.0.0.0") ||
-    host.includes(".vercel.app");
+    host.includes("0.0.0.0");
+    // host.includes(".vercel.app");
 
   if (isDevelopment) {
     // In development, allow all routes to work normally
