@@ -1,14 +1,16 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import KPICard from "./KPICard";
 
 export default function KPISection() {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <KPICard
-        title="Today's Bookings"
+        title={t("dashboard.kpi.bookings")}
         value={24}
-        subtitle="8 pending confirmations"
+        subtitle={t("dashboard.kpi.bookings_subtitle", { count: 8 })}
         trend={{ value: 12, isPositive: true }}
         icon={
           <svg
@@ -27,9 +29,9 @@ export default function KPISection() {
       />
 
       <KPICard
-        title="Available Tables"
+        title={t("dashboard.kpi.available_tables")}
         value="12/40"
-        subtitle="VIP: 3, Indoor: 7, Outdoor: 2"
+        subtitle={t("dashboard.kpi.available_tables_subtitle", { vip: 3, indoor: 7, outdoor: 2 })}
         status="normal"
         icon={
           <svg
@@ -48,9 +50,9 @@ export default function KPISection() {
       />
 
       <KPICard
-        title="Today's Revenue"
+        title={t("dashboard.kpi.revenue")}
         value="$4,850"
-        subtitle="Target: $6,000"
+        subtitle={t("dashboard.kpi.revenue_target", { target: "$6,000" })}
         trend={{ value: 18, isPositive: true }}
         status="success"
         icon={
@@ -70,9 +72,9 @@ export default function KPISection() {
       />
 
       <KPICard
-        title="Active Orders"
+        title={t("dashboard.kpi.active_orders")}
         value={18}
-        subtitle="6 waiting, 12 in-progress"
+        subtitle={t("dashboard.kpi.active_orders_subtitle", { waiting: 6, progress: 12 })}
         status="warning"
         icon={
           <svg
@@ -91,9 +93,9 @@ export default function KPISection() {
       />
 
       <KPICard
-        title="Top Selling Dish"
+        title={t("dashboard.kpi.top_dish")}
         value="Grilled Salmon"
-        subtitle="42 orders today"
+        subtitle={t("dashboard.kpi.top_dish_subtitle", { count: 42 })}
         trend={{ value: 25, isPositive: true }}
         icon={
           <svg
@@ -112,9 +114,9 @@ export default function KPISection() {
       />
 
       <KPICard
-        title="Kitchen Status"
-        value="Busy"
-        subtitle="8 orders in queue"
+        title={t("dashboard.kpi.kitchen_status")}
+        value={t("dashboard.kpi.status_busy")}
+        subtitle={t("dashboard.kpi.kitchen_queue", { count: 8 })}
         status="warning"
         icon={
           <svg

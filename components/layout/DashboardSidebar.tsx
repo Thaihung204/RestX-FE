@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface NavItem {
   id: string;
@@ -12,13 +13,14 @@ interface NavItem {
 }
 
 export default function DashboardSidebar() {
+  const { t } = useTranslation("common");
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   const navItems: NavItem[] = [
     {
       id: "dashboard",
-      label: "Dashboard",
+      label: t("dashboard.sidebar.items.dashboard"),
       path: "/dashboard",
       icon: (
         <svg
@@ -37,7 +39,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "analytics",
-      label: "Analytics",
+      label: t("dashboard.sidebar.items.analytics"),
       path: "/dashboard/analytics",
       icon: (
         <svg
@@ -56,7 +58,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "tables",
-      label: "Tables",
+      label: t("dashboard.sidebar.items.tables"),
       path: "/dashboard/tables",
       icon: (
         <svg
@@ -75,7 +77,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "menu",
-      label: "Menu",
+      label: t("dashboard.sidebar.items.menu"),
       path: "/dashboard/menu",
       icon: (
         <svg
@@ -94,7 +96,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "orders",
-      label: "Orders",
+      label: t("dashboard.sidebar.items.orders"),
       path: "/dashboard/orders",
       icon: (
         <svg
@@ -113,7 +115,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "staff",
-      label: "Staff",
+      label: t("dashboard.sidebar.items.staff"),
       path: "/dashboard/staff",
       icon: (
         <svg
@@ -132,7 +134,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "settings",
-      label: "Settings",
+      label: t("dashboard.sidebar.items.settings"),
       path: "/dashboard/settings",
       icon: (
         <svg
@@ -157,7 +159,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "help",
-      label: "Help",
+      label: t("dashboard.sidebar.items.help"),
       path: "/dashboard/help",
       icon: (
         <svg
@@ -197,7 +199,7 @@ export default function DashboardSidebar() {
                 Rest<span style={{ color: '#FF7A00' }}>X</span>
               </h2>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Management
+                {t("dashboard.sidebar.management")}
               </p>
             </div>
           )}

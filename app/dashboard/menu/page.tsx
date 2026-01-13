@@ -3,6 +3,7 @@
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface MenuItem {
   id: string;
@@ -16,6 +17,7 @@ interface MenuItem {
 }
 
 export default function MenuPage() {
+  const { t } = useTranslation("common");
   const [menuItems] = useState<MenuItem[]>([
     {
       id: "1",
@@ -104,10 +106,10 @@ export default function MenuPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
-                  Menu Management
+                  {t("dashboard.menu.title")}
                 </h2>
                 <p style={{ color: 'var(--text-muted)' }}>
-                  Manage your restaurant menu items
+                  {t("dashboard.menu.subtitle")}
                 </p>
               </div>
               <button
@@ -125,7 +127,7 @@ export default function MenuPage() {
                     d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                   />
                 </svg>
-                Add Menu Item
+                {t("dashboard.menu.add_item")}
               </button>
             </div>
 
@@ -140,7 +142,7 @@ export default function MenuPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-                      Total Items
+                      {t("dashboard.menu.stats.total_items")}
                     </p>
                     <p className="text-3xl font-bold mt-1" style={{ color: 'var(--text)' }}>
                       {menuItems.length}
@@ -172,7 +174,7 @@ export default function MenuPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Available
+                      {t("dashboard.menu.stats.available")}
                     </p>
                     <p className="text-3xl font-bold text-green-500 mt-1">
                       {menuItems.filter((i) => i.available).length}
@@ -204,7 +206,7 @@ export default function MenuPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Popular Items
+                      {t("dashboard.menu.stats.popular_items")}
                     </p>
                     <p className="text-3xl font-bold text-orange-500 mt-1">
                       {menuItems.filter((i) => i.popular).length}
@@ -236,7 +238,7 @@ export default function MenuPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Categories
+                      {t("dashboard.menu.stats.categories")}
                     </p>
                     <p className="text-3xl font-bold text-purple-500 mt-1">
                       {categories.length - 1}
@@ -266,22 +268,23 @@ export default function MenuPage() {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    selectedCategory === category
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedCategory === category
                       ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white"
                       : ""
-                  }`}
+                    }`}
                   style={
                     selectedCategory !== category
                       ? {
-                          background: 'var(--surface)',
-                          color: 'var(--text-muted)',
-                          border: '1px solid var(--border)',
-                        }
+                        background: 'var(--surface)',
+                        color: 'var(--text-muted)',
+                        border: '1px solid var(--border)',
+                      }
                       : undefined
                   }
                   suppressHydrationWarning>
-                  {category}
+                  {category === "All"
+                    ? t("dashboard.menu.filter")
+                    : t(`dashboard.menu.categories.${category.toLowerCase().replace(" ", "_")}`)}
                 </button>
               ))}
             </div>
@@ -323,13 +326,13 @@ export default function MenuPage() {
                           viewBox="0 0 20 20">
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
-                        Popular
+                        {t("dashboard.menu.popular")}
                       </div>
                     )}
                     {!item.available && (
                       <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
                         <span className="px-4 py-2 bg-red-500 text-white rounded-lg font-bold">
-                          Out of Stock
+                          {t("dashboard.menu.out_of_stock")}
                         </span>
                       </div>
                     )}
@@ -350,14 +353,18 @@ export default function MenuPage() {
                     <div className="flex items-center justify-between mt-4">
                       <div>
                         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Price
+                          {t("dashboard.menu.price")}
                         </p>
                         <p className="text-2xl font-bold text-orange-500">
                           ${item.price}
                         </p>
                       </div>
                       <span className="px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full text-xs font-medium border border-blue-500/20">
-                        {item.category}
+                        {t(
+                          `dashboard.menu.categories.${item.category
+                            .toLowerCase()
+                            .replace(" ", "_")}`
+                        )}
                       </span>
                     </div>
 
@@ -365,7 +372,7 @@ export default function MenuPage() {
                       <button
                         className="flex-1 px-3 py-2 bg-orange-500/10 text-orange-500 rounded-lg text-sm font-medium hover:bg-orange-500/20 transition-all"
                         suppressHydrationWarning>
-                        Edit
+                        {t("dashboard.menu.edit")}
                       </button>
                       <button
                         className="px-3 py-2 rounded-lg text-sm font-medium transition-all"

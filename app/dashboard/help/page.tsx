@@ -3,6 +3,7 @@
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface FAQItem {
   question: string;
@@ -11,94 +12,46 @@ interface FAQItem {
 }
 
 export default function HelpPage() {
+  const { t } = useTranslation("common");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const faqs: FAQItem[] = [
-    {
-      question: "How do I add a new table?",
-      answer:
-        "Navigate to the Tables page and click the 'Add Table' button in the top right. Fill in the table details including number, capacity, and area, then save.",
-      category: "tables",
-    },
-    {
-      question: "How to process a new order?",
-      answer:
-        "Go to Orders page, click 'New Order', select the table, add menu items, and confirm. The order will be sent to the kitchen automatically.",
-      category: "orders",
-    },
-    {
-      question: "How do I manage staff schedules?",
-      answer:
-        "In the Staff section, click on a staff member's profile and select 'Schedule'. You can assign shifts, set working hours, and manage time-off requests.",
-      category: "staff",
-    },
-    {
-      question: "How to update menu items?",
-      answer:
-        "Go to Menu page, find the item you want to update, click the Edit button. You can change name, price, description, availability, and category.",
-      category: "menu",
-    },
-    {
-      question: "How do I generate reports?",
-      answer:
-        "Visit the Analytics page and select the type of report you need (sales, revenue, inventory). Choose the date range and click 'Generate Report'.",
-      category: "analytics",
-    },
-    {
-      question: "How to handle payment processing?",
-      answer:
-        "When an order is completed, click on the order and select 'Process Payment'. Choose payment method (cash, card, or digital) and confirm the transaction.",
-      category: "orders",
-    },
-    {
-      question: "How do I change my password?",
-      answer:
-        "Go to Settings > Security tab. Enter your current password, then your new password twice, and click 'Update Password'.",
-      category: "account",
-    },
-    {
-      question: "How to manage table reservations?",
-      answer:
-        "In the Tables page, click on a table and select 'Reserve'. Enter customer details, reservation time, and number of guests. The table status will update automatically.",
-      category: "tables",
-    },
-  ];
+  const faqs = t("dashboard.help.questions", { returnObjects: true }) as FAQItem[];
 
   const categories = [
     {
       id: "all",
-      name: "All Topics",
+      name: t("dashboard.help.categories.all"),
       icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10",
     },
     {
       id: "tables",
-      name: "Tables",
+      name: t("dashboard.help.categories.tables"),
       icon: "M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z",
     },
     {
       id: "orders",
-      name: "Orders",
+      name: t("dashboard.help.categories.orders"),
       icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
     },
     {
       id: "menu",
-      name: "Menu",
+      name: t("dashboard.help.categories.menu"),
       icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
     },
     {
       id: "staff",
-      name: "Staff",
+      name: t("dashboard.help.categories.staff"),
       icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
     },
     {
       id: "analytics",
-      name: "Analytics",
+      name: t("dashboard.help.categories.analytics"),
       icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
     },
     {
       id: "account",
-      name: "Account",
+      name: t("dashboard.help.categories.account"),
       icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
     },
   ];
@@ -122,10 +75,10 @@ export default function HelpPage() {
             {/* Header */}
             <div className="text-center">
               <h2 className="text-4xl font-bold mb-2" style={{ color: 'var(--text)' }}>
-                Help Center
+                {t("dashboard.help.title")}
               </h2>
               <p style={{ color: 'var(--text-muted)' }}>
-                Find answers to common questions and get support
+                {t("dashboard.help.subtitle")}
               </p>
             </div>
 
@@ -152,7 +105,7 @@ export default function HelpPage() {
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search for help..."
+                  placeholder={t("dashboard.help.search_placeholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 rounded-lg focus:border-orange-500 focus:outline-none"
@@ -172,18 +125,17 @@ export default function HelpPage() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    selectedCategory === category.id
+                  className={`p-4 rounded-xl border-2 transition-all ${selectedCategory === category.id
                       ? "bg-gradient-to-br from-orange-600 to-orange-500 border-orange-500 text-white"
                       : ""
-                  }`}
+                    }`}
                   style={
                     selectedCategory !== category.id
                       ? {
-                          background: 'var(--card)',
-                          border: '1px solid var(--border)',
-                          color: 'var(--text-muted)',
-                        }
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-muted)',
+                      }
                       : undefined
                   }
                   suppressHydrationWarning>
@@ -207,7 +159,7 @@ export default function HelpPage() {
             {/* FAQ List */}
             <div className="space-y-4">
               <h3 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>
-                Frequently Asked Questions
+                {t("dashboard.help.faq_title")}
               </h3>
               {filteredFAQs.length > 0 ? (
                 filteredFAQs.map((faq, index) => (
@@ -265,7 +217,7 @@ export default function HelpPage() {
                     />
                   </svg>
                   <p style={{ color: 'var(--text-muted)' }}>
-                    No results found. Try a different search term or category.
+                    {t("dashboard.help.no_results")}
                   </p>
                 </div>
               )}
@@ -294,15 +246,15 @@ export default function HelpPage() {
                   </svg>
                 </div>
                 <h4 className="text-lg font-bold mb-2" style={{ color: 'var(--text)' }}>
-                  Documentation
+                  {t("dashboard.help.quick_links.documentation")}
                 </h4>
                 <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-                  Comprehensive guides and tutorials
+                  {t("dashboard.help.quick_links.documentation_desc")}
                 </p>
                 <button
                   className="text-orange-500 font-medium text-sm hover:text-orange-400 transition-colors"
                   suppressHydrationWarning>
-                  View Docs →
+                  {t("dashboard.help.quick_links.view_docs")} →
                 </button>
               </div>
 
@@ -327,15 +279,15 @@ export default function HelpPage() {
                   </svg>
                 </div>
                 <h4 className="text-lg font-bold mb-2" style={{ color: 'var(--text)' }}>
-                  Video Tutorials
+                  {t("dashboard.help.quick_links.video_tutorials")}
                 </h4>
                 <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-                  Step-by-step video guides
+                  {t("dashboard.help.quick_links.video_tutorials_desc")}
                 </p>
                 <button
                   className="text-orange-500 font-medium text-sm hover:text-orange-400 transition-colors"
                   suppressHydrationWarning>
-                  Watch Videos →
+                  {t("dashboard.help.quick_links.watch_videos")} →
                 </button>
               </div>
 
@@ -360,15 +312,15 @@ export default function HelpPage() {
                   </svg>
                 </div>
                 <h4 className="text-lg font-bold mb-2" style={{ color: 'var(--text)' }}>
-                  Contact Support
+                  {t("dashboard.help.quick_links.contact_support")}
                 </h4>
                 <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-                  Get help from our support team
+                  {t("dashboard.help.quick_links.contact_support_desc")}
                 </p>
                 <button
                   className="text-orange-500 font-medium text-sm hover:text-orange-400 transition-colors"
                   suppressHydrationWarning>
-                  Contact Us →
+                  {t("dashboard.help.quick_links.contact_us")} →
                 </button>
               </div>
             </div>
@@ -393,16 +345,16 @@ export default function HelpPage() {
                     d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
                   />
                 </svg>
-                Keyboard Shortcuts
+                {t("dashboard.help.shortcuts.title")}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { keys: ["Ctrl", "K"], action: "Quick Search" },
-                  { keys: ["Ctrl", "N"], action: "New Order" },
-                  { keys: ["Ctrl", "T"], action: "View Tables" },
-                  { keys: ["Ctrl", "M"], action: "View Menu" },
-                  { keys: ["Ctrl", ","], action: "Open Settings" },
-                  { keys: ["Ctrl", "/"], action: "Show Help" },
+                  { keys: ["Ctrl", "K"], action: t("dashboard.help.shortcuts.quick_search") },
+                  { keys: ["Ctrl", "N"], action: t("dashboard.help.shortcuts.new_order") },
+                  { keys: ["Ctrl", "T"], action: t("dashboard.help.shortcuts.view_tables") },
+                  { keys: ["Ctrl", "M"], action: t("dashboard.help.shortcuts.view_menu") },
+                  { keys: ["Ctrl", ","], action: t("dashboard.help.shortcuts.open_settings") },
+                  { keys: ["Ctrl", "/"], action: t("dashboard.help.shortcuts.show_help") },
                 ].map((shortcut, index) => (
                   <div
                     key={index}

@@ -1,5 +1,48 @@
 {
   "staff": {
+    "dashboard": {
+      "greeting": {
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening"
+      },
+      "welcome_message": "You have <1>{{orders}} orders</1> to process and <3>{{tables}} tables</3> serving.",
+      "live_status": {
+        "dishes_ready": "dishes ready",
+        "tables_payment": "tables need payment"
+      },
+      "actions": {
+        "view_schedule": "View Schedule",
+        "create_order": "Create New Order",
+        "view_table_map": "View Table Map",
+        "quick_actions": "Quick Actions",
+        "refresh_data": "Refresh Data"
+      },
+      "stats": {
+        "serving_tables": "Serving Tables",
+        "processing_orders": "Processing Orders",
+        "today_revenue": "Today Revenue",
+        "today_hours": "Today Working Hours",
+        "orders_suffix": "orders",
+        "hours_suffix": "hours"
+      },
+      "recent_orders": {
+        "title": "Recent Orders",
+        "processing_count": "{{count}} processing",
+        "view_all": "View All"
+      },
+      "table_status": {
+        "title": "Table Status",
+        "vacant": "Vacant",
+        "occupied": "Occupied"
+      },
+      "quick_action_items": {
+        "open_table": "Open Table",
+        "create_order": "Create Order",
+        "checkout": "Checkout",
+        "attendance": "Attendance"
+      }
+    },
     "orders": {
       "title": "Order Management",
       "search": {
@@ -240,9 +283,542 @@
       }
     }
   },
+  "dashboard": {
+    "kpi": {
+      "bookings": "Today's Bookings",
+      "bookings_subtitle": "{{count}} pending confirmations",
+      "available_tables": "Available Tables",
+      "available_tables_subtitle": "VIP: {{vip}}, Indoor: {{indoor}}, Outdoor: {{outdoor}}",
+      "revenue": "Today's Revenue",
+      "revenue_target": "Target: {{target}}",
+      "active_orders": "Active Orders",
+      "active_orders_subtitle": "{{waiting}} waiting, {{progress}} in-progress",
+      "top_dish": "Top Selling Dish",
+      "top_dish_subtitle": "{{count}} orders today",
+      "kitchen_status": "Kitchen Status",
+      "kitchen_queue": "{{count}} orders in queue",
+      "status_busy": "Busy",
+      "status_normal": "Normal"
+    },
+    "quick_actions": {
+      "title": "Quick Actions",
+      "subtitle": "Frequently used shortcuts",
+      "add_table": "Add Table",
+      "add_table_desc": "Create new table",
+      "add_dish": "Add Dish",
+      "add_dish_desc": "Add menu item",
+      "add_staff": "Add Staff",
+      "add_staff_desc": "New employee",
+      "view_bookings": "View Bookings",
+      "view_bookings_desc": "All reservations",
+      "inventory": "Inventory",
+      "inventory_desc": "Stock management",
+      "reports": "Reports",
+      "reports_desc": "Analytics & data"
+    },
+    "table_status": {
+      "title": "Real-time Table Status",
+      "subtitle": "Live floor plan overview",
+      "areas": {
+        "vip": "VIP Area",
+        "indoor": "Indoor Area",
+        "outdoor": "Outdoor Area"
+      },
+      "status": {
+        "serving": "Serving",
+        "available": "Available",
+        "reserved": "Reserved",
+        "cleaning": "Cleaning"
+      },
+      "tooltip": {
+        "status": "Status",
+        "seats": "Seats",
+        "area": "Area"
+      }
+    },
+    "timeline": {
+      "title": "Recent Activity",
+      "subtitle": "Latest actions"
+    },
+    "sidebar": {
+      "management": "Management",
+      "items": {
+        "dashboard": "Dashboard",
+        "analytics": "Analytics",
+        "tables": "Tables",
+        "menu": "Menu",
+        "orders": "Orders",
+        "staff": "Staff",
+        "settings": "Settings",
+        "help": "Help"
+      }
+    },
+    "header": {
+      "pages": "Pages",
+      "dashboard": "Dashboard",
+      "main_dashboard": "Main Dashboard",
+      "search_placeholder": "Search...",
+      "user_role": "Restaurant Owner"
+    },
+    "menu": {
+      "title": "Menu Management",
+      "subtitle": "Manage your restaurant menu items",
+      "add_item": "Add Menu Item",
+      "stats": {
+        "total_items": "Total Items",
+        "available": "Available",
+        "popular_items": "Popular Items",
+        "categories": "Categories"
+      },
+      "filter": "All",
+      "out_of_stock": "Out of Stock",
+      "popular": "Popular",
+      "price": "Price",
+      "edit": "Edit",
+      "categories": {
+        "all": "All",
+        "main_course": "Main Course",
+        "appetizer": "Appetizer",
+        "dessert": "Dessert",
+        "beverages": "Beverages"
+      }
+    },
+    "orders": {
+      "title": "Order Management",
+      "subtitle": "Track and manage all restaurant orders",
+      "new_order": "New Order",
+      "stats": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served",
+        "completed": "Completed"
+      },
+      "table": {
+        "order": "Order",
+        "customer": "Customer",
+        "table": "Table",
+        "items": "Items",
+        "total": "Tổng",
+        "status": "Status",
+        "payment": "Payment",
+        "time": "Time",
+        "actions": "Actions"
+      },
+      "status": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "payment_status": {
+        "paid": "Paid",
+        "unpaid": "Unpaid"
+      }
+    },
+    "tables": {
+      "title": "Table Management",
+      "subtitle": "Manage restaurant tables and reservations",
+      "add_table": "Add Table",
+      "stats": {
+        "total_tables": "Total Tables",
+        "available": "Available",
+        "occupied": "Occupied",
+        "reserved": "Reserved"
+      },
+      "card": {
+        "area": "Area",
+        "capacity": "Capacity: {{count}} seats",
+        "order": "Order",
+        "reserved_at": "Reserved at",
+        "view_details": "View Details"
+      }
+    },
+    "staff": {
+      "title": "Staff Management",
+      "subtitle": "Manage your restaurant team members",
+      "add_staff": "Add Staff",
+      "stats": {
+        "total_staff": "Total Staff",
+        "on_duty": "On Duty",
+        "departments": "Departments",
+        "avg_rating": "Avg Rating"
+      },
+      "card": {
+        "shift": "Shift",
+        "joined": "Joined",
+        "view_profile": "View Profile"
+      },
+      "roles": {
+        "manager": "Manager",
+        "chef": "Chef",
+        "waiter": "Waiter",
+        "cashier": "Cashier",
+        "cleaner": "Cleaner"
+      },
+      "status": {
+        "active": "Active",
+        "off_duty": "Off Duty",
+        "on_leave": "On Leave"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Manage your restaurant preferences and configurations",
+      "tabs": {
+        "general": "General",
+        "appearance": "Appearance",
+        "notifications": "Notifications",
+        "security": "Security"
+      },
+      "general": {
+        "restaurant_info": "Restaurant Information",
+        "restaurant_name": "Restaurant Name",
+        "email": "Email",
+        "phone": "Phone",
+        "address": "Address",
+        "opening_time": "Opening Time",
+        "closing_time": "Closing Time",
+        "business_settings": "Business Settings",
+        "currency": "Currency",
+        "tax_rate": "Tax Rate (%)",
+        "timezone": "Time Zone",
+        "date_format": "Date Format"
+      },
+      "appearance": {
+        "theme": "Theme",
+        "accent_color": "Accent Color",
+        "display_options": "Display Options",
+        "compact_mode": "Compact Mode",
+        "compact_mode_desc": "Reduce spacing between elements",
+        "show_animations": "Show Animations",
+        "show_animations_desc": "Enable interface animations",
+        "themes": {
+          "dark": "Dark",
+          "light": "Light",
+          "auto": "Auto"
+        }
+      },
+      "notifications": {
+        "order_notifications": "Order Notifications",
+        "system_notifications": "System Notifications",
+        "items": {
+          "new_orders": "New Orders",
+          "new_orders_desc": "Get notified when new orders arrive",
+          "order_updates": "Order Updates",
+          "order_updates_desc": "Updates on order status changes",
+          "order_completion": "Order Completion",
+          "order_completion_desc": "When orders are completed",
+          "table_updates": "Table Updates",
+          "table_updates_desc": "Changes in table status",
+          "staff_alerts": "Staff Alerts",
+          "staff_alerts_desc": "Staff check-in/out notifications",
+          "inventory_alerts": "Inventory Alerts",
+          "inventory_alerts_desc": "Low stock warnings"
+        }
+      },
+      "security": {
+        "change_password": "Change Password",
+        "current_password": "Current Password",
+        "new_password": "New Password",
+        "confirm_new_password": "Confirm New Password",
+        "update_password": "Update Password",
+        "two_factor": "Two-Factor Authentication",
+        "enable_2fa": "Enable 2FA",
+        "enable_2fa_desc": "Add an extra layer of security",
+        "danger_zone": "Danger Zone",
+        "delete_account": "Delete Account"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "save_changes": "Save Changes"
+      }
+    },
+    "help": {
+      "title": "Help Center",
+      "subtitle": "Find answers to common questions and get support",
+      "search_placeholder": "Search for help...",
+      "categories": {
+        "all": "All Topics",
+        "tables": "Tables",
+        "orders": "Orders",
+        "menu": "Menu",
+        "staff": "Staff",
+        "analytics": "Analytics",
+        "account": "Account"
+      },
+      "faq_title": "Frequently Asked Questions",
+      "no_results": "No results found. Try a different search term or category.",
+      "quick_links": {
+        "documentation": "Documentation",
+        "documentation_desc": "Comprehensive guides and tutorials",
+        "view_docs": "View Docs",
+        "video_tutorials": "Video Tutorials",
+        "video_tutorials_desc": "Step-by-step video guides",
+        "watch_videos": "Watch Videos",
+        "contact_support": "Contact Support",
+        "contact_support_desc": "Get help from our support team",
+        "contact_us": "Contact Us"
+      },
+      "questions": [
+        {
+          "question": "How do I add a new table?",
+          "answer": "Navigate to the Tables page and click the 'Add Table' button in the top right. Fill in the table details including number, capacity, and area, then save.",
+          "category": "tables"
+        },
+        {
+          "question": "How to process a new order?",
+          "answer": "Go to Orders page, click 'New Order', select the table, add menu items, and confirm. The order will be sent to the kitchen automatically.",
+          "category": "orders"
+        },
+        {
+          "question": "How do I manage staff schedules?",
+          "answer": "In the Staff section, click on a staff member's profile and select 'Schedule'. You can assign shifts, set working hours, and manage time-off requests.",
+          "category": "staff"
+        },
+        {
+          "question": "How to update menu items?",
+          "answer": "Go to Menu page, find the item you want to update, click the Edit button. You can change name, price, description, availability, and category.",
+          "category": "menu"
+        },
+        {
+          "question": "How do I generate reports?",
+          "answer": "Visit the Analytics page and select the type of report you need (sales, revenue, inventory). Choose the date range and click 'Generate Report'.",
+          "category": "analytics"
+        },
+        {
+          "question": "How to handle payment processing?",
+          "answer": "When an order is completed, click on the order and select 'Process Payment'. Choose payment method (cash, card, or digital) and confirm the transaction.",
+          "category": "orders"
+        },
+        {
+          "question": "How do I change my password?",
+          "answer": "Go to Settings > Security tab. Enter your current password, then your new password twice, and click 'Update Password'.",
+          "category": "account"
+        },
+        {
+          "question": "How to manage table reservations?",
+          "answer": "In the Tables page, click on a table and select 'Reserve'. Enter customer details, reservation time, and number of guests. The table status will update automatically.",
+          "category": "tables"
+        }
+      ],
+      "shortcuts": {
+        "title": "Keyboard Shortcuts",
+        "quick_search": "Quick Search",
+        "new_order": "New Order",
+        "view_tables": "View Tables",
+        "view_menu": "View Menu",
+        "open_settings": "Open Settings",
+        "show_help": "Show Help"
+      }
+    },
+    "analytics": {
+      "title": "Analytics Dashboard",
+      "subtitle": "Detailed insights and performance metrics",
+      "page_title": "Analytics Page",
+      "coming_soon": "Advanced analytics features coming soon",
+      "under_development": "Under Development"
+    }
+  },
   "common": {
+    "time": {
+      "minutes_ago": "{{count}} minutes ago"
+    },
     "language": "Language",
     "english": "English",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "theme": {
+      "switch_to_light": "Switch to Light mode",
+      "switch_to_dark": "Switch to Dark mode"
+    }
+  },
+  "homepage": {
+    "header": {
+      "product": "Product",
+      "workflow": "Workflow",
+      "testimonials": "Testimonials",
+      "contact": "Contact",
+      "staff": "Staff",
+      "login": "Log in",
+      "signup": "Sign up"
+    },
+    "hero": {
+      "tag": "All-in-one Restaurant Ops Platform",
+      "title": "Optimize restaurant operations with RestX",
+      "description": "Manage tables, orders, kitchen, inventory and reports on a single platform.",
+      "get_started": "Get Started",
+      "watch_demo": "Watch Demo",
+      "stats": {
+        "brands": "Brands",
+        "years": "Years of Experience",
+        "branches": "Branches"
+      },
+      "dashboard": {
+        "title": "Activity Overview",
+        "revenue_7_days": "Revenue (7 days)",
+        "revenue": "Revenue",
+        "orders": "Orders",
+        "recent_orders": "Recent Orders"
+      },
+      "trusted_by": "Trusted by top brands"
+    },
+    "features": {
+      "tag": "Features",
+      "title_prefix": "Highlight features of ",
+      "description": "All the tools you need to run your restaurant – in one intuitive interface.",
+      "items": {
+        "table_management": {
+          "title": "Smart Table Management",
+          "description": "Automatic table reservation system with intuitive interface, helping optimize table layout and reduce waiting time for customers."
+        },
+        "order_kot": {
+          "title": "Seamless Order & KOT",
+          "description": "Sync orders from waiter to kitchen instantly. Track dish status in real-time and minimize errors."
+        },
+        "inventory": {
+          "title": "Inventory Management",
+          "description": "Accurate inventory control, low stock alerts, and optimize purchasing costs according to business cycles."
+        },
+        "reports": {
+          "title": "Real-time Reports",
+          "description": "Dashboard analyzing revenue, best-selling dishes, staff performance. All data updated in real-time."
+        },
+        "multi_branch": {
+          "title": "Multi-branch",
+          "description": "Manage multiple stores on one system. Sync menu, pricing and aggregate centralized reports."
+        },
+        "integration": {
+          "title": "Flexible Integration",
+          "description": "Connect with payment gateways, delivery, accounting and third-party apps via open API."
+        },
+        "learn_more": "Learn more"
+      }
+    },
+    "workflow": {
+      "title": "How RestX works in your restaurant",
+      "description": "From table booking to bill settlement, every step is supported by RestX.",
+      "steps": {
+        "setup": {
+          "title": "Restaurant & Menu Setup",
+          "description": "Configure restaurant info, create menu, set up tables and staff permissions in minutes."
+        },
+        "operation": {
+          "title": "Operation & Real-time Sync",
+          "description": "Receive orders, process payments, send orders to kitchen automatically. All changes updated instantly on all devices."
+        },
+        "analysis": {
+          "title": "Analysis & Optimization",
+          "description": "View detailed reports on revenue, best sellers, costs. Use data to make smarter business decisions."
+        }
+      }
+    },
+    "testimonials": {
+      "title": "What restaurants say about RestX?",
+      "description": "Hundreds of restaurant owners and managers have trusted RestX to optimize their operations.",
+      "items": {
+        "nam": {
+          "role": "Owner, 123 Seafood Restaurant",
+          "quote": "RestX has completely changed how we operate. From table reservations to inventory management, everything is automated and much more accurate."
+        },
+        "huong": {
+          "role": "Manager, Pho 24h Chain",
+          "quote": "I used to spend hours aggregating reports from 5 branches. Now with RestX, all data is available on the dashboard in a few clicks."
+        },
+        "tuan": {
+          "role": "Owner, Saigon Broken Rice",
+          "quote": "Simple interface, staff learns very quickly. Stable system, never encountered errors during peak hours. Recommend for every restaurant!"
+        },
+        "lan": {
+          "role": "Manager, Green Cafe & Bistro",
+          "quote": "We love the real-time sync feature. Orders from app to kitchen in just 1 second, customers are very satisfied with service speed."
+        }
+      }
+    },
+    "footer": {
+      "tagline": "RestX – Next generation restaurant operations platform. Helping you manage every aspect of your restaurant on a single system.",
+      "columns": {
+        "product": {
+          "title": "Product",
+          "overview": "Overview",
+          "features": "Features",
+          "pricing": "Pricing",
+          "integrations": "Integrations"
+        },
+        "resources": {
+          "title": "Resources",
+          "blog": "Blog",
+          "help_center": "Help Center",
+          "faqs": "FAQs",
+          "documentation": "Documentation"
+        },
+        "company": {
+          "title": "Company",
+          "about": "About",
+          "contact": "Contact",
+          "careers": "Careers",
+          "partners": "Partners"
+        },
+        "legal": {
+          "title": "Legal",
+          "privacy": "Privacy Policy",
+          "terms": "Terms of Service",
+          "cookies": "Cookie Policy",
+          "gdpr": "GDPR"
+        }
+      },
+      "copyright": "© {year} RestX. All rights reserved.",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "cookies": "Cookies"
+    }
+  },
+  "restaurant": {
+    "header": {
+      "home": "Home",
+      "about": "About",
+      "menu": {
+        "title": "Menu",
+        "all": "All Items",
+        "appetizer": "Appetizers",
+        "main": "Main Courses",
+        "dessert": "Desserts",
+        "drink": "Drinks"
+      },
+      "featured": "Featured",
+      "daily": "Daily Specials",
+      "news": "News",
+      "book_table": "Book Table",
+      "title": "RestX Restaurant"
+    },
+    "hero": {
+      "title": "RestX Restaurant",
+      "subtitle": "Diverse cuisine",
+      "cta": "BOOK NOW"
+    },
+    "about": {
+      "subtitle": "About Us",
+      "title": "Passion for Food",
+      "description": "We bring exquisite culinary experiences with dishes prepared from the freshest ingredients.",
+      "years_experience": "Years Experience",
+      "master_chefs": "Master Chefs",
+      "read_more": "Read More"
+    },
+    "categories": {
+      "title": "Featured Categories",
+      "appetizer": "Appetizers",
+      "main": "Mains",
+      "dessert": "Desserts",
+      "drinks": "Drinks"
+    },
+    "menu": {
+      "subtitle": "Discover",
+      "title": "Today's Menu",
+      "all": "All",
+      "starter": "Starters",
+      "main": "Mains",
+      "dessert": "Desserts"
+    }
   }
 }

@@ -4,12 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { Button, Typography, Tag, Row, Col, Card, Flex, Grid } from 'antd';
 import { PlayCircleOutlined, FileTextOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { usePageTransition } from './PageTransition';
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
 
 const HeroSection: React.FC = () => {
+  const { t } = useTranslation();
   const { isAnimationReady } = usePageTransition();
   const screens = useBreakpoint();
 
@@ -168,7 +170,7 @@ const HeroSection: React.FC = () => {
                       borderRadius: 50,
                     }}
                   >
-                    All-in-one Restaurant Ops Platform
+                    {t('homepage.hero.tag')}
                   </Tag>
                 </motion.div>
 
@@ -183,7 +185,7 @@ const HeroSection: React.FC = () => {
                       color: 'var(--text)',
                     }}
                   >
-                    Tối ưu vận hành nhà hàng với RestX
+                    {t('homepage.hero.title')}
                   </Title>
                 </motion.div>
 
@@ -197,7 +199,7 @@ const HeroSection: React.FC = () => {
                       maxWidth: 480,
                     }}
                   >
-                    Quản lý đặt bàn, order, bếp, kho và báo cáo trên một nền tảng duy nhất.
+                    {t('homepage.hero.description')}
                   </Paragraph>
                 </motion.div>
 
@@ -218,7 +220,7 @@ const HeroSection: React.FC = () => {
                         boxShadow: '0 8px 24px rgba(255, 122, 0, 0.35)',
                       }}
                     >
-                      Get Started
+                      {t('homepage.hero.get_started')}
                     </Button>
                     <Button
                       size={isMobile ? 'middle' : 'large'}
@@ -235,7 +237,7 @@ const HeroSection: React.FC = () => {
                         background: 'var(--card)',
                       }}
                     >
-                      Watch Demo
+                      {t('homepage.hero.watch_demo')}
                     </Button>
                   </Flex>
                 </motion.div>
@@ -249,9 +251,9 @@ const HeroSection: React.FC = () => {
                 >
                   <Row gutter={[isMobile ? 16 : 32, 16]} justify={isStacked ? 'center' : 'start'}>
                     {[
-                      { value: '100.000+', label: 'Thương hiệu' },
-                      { value: '15+', label: 'Năm kinh nghiệm' },
-                      { value: '500+', label: 'Chi nhánh' },
+                      { value: '100.000+', label: t('homepage.hero.stats.brands') },
+                      { value: '15+', label: t('homepage.hero.stats.years') },
+                      { value: '500+', label: t('homepage.hero.stats.branches') },
                     ].map((stat, index) => (
                       <Col key={index} xs={8} lg={8}>
                         <motion.div
@@ -294,7 +296,7 @@ const HeroSection: React.FC = () => {
                 <Flex vertical gap={20} style={{ width: '100%' }}>
                   {/* Header */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text strong style={{ fontSize: 18, color: 'var(--text)' }}>Tổng quan hoạt động</Text>
+                    <Text strong style={{ fontSize: 18, color: 'var(--text)' }}>{t('homepage.hero.dashboard.title')}</Text>
                     <div
                       style={{
                         width: 32,
@@ -314,7 +316,7 @@ const HeroSection: React.FC = () => {
                     }}
                     styles={{ body: { padding: 16 } }}
                   >
-                    <Text strong style={{ color: 'var(--text)', display: 'block', marginBottom: 8 }}>Revenue (7 ngày)</Text>
+                    <Text strong style={{ color: 'var(--text)', display: 'block', marginBottom: 8 }}>{t('homepage.hero.dashboard.revenue_7_days')}</Text>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 140 }}>
                       {[32, 52, 44, 68, 60, 80, 72].map((h, i) => (
                         <div
@@ -340,7 +342,7 @@ const HeroSection: React.FC = () => {
                     <Col span={12}>
                       <Card size="small" style={{ borderRadius: 12, background: 'var(--card)', border: `1px solid var(--border)` }}>
                         <Text style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                          Doanh thu
+                          {t('homepage.hero.dashboard.revenue')}
                         </Text>
                         <Title level={4} style={{ margin: '8px 0 0', color: '#FF7A00' }}>
                           ₫2.4M
@@ -350,7 +352,7 @@ const HeroSection: React.FC = () => {
                     <Col span={12}>
                       <Card size="small" style={{ borderRadius: 12, background: 'var(--card)', border: `1px solid var(--border)` }}>
                         <Text style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                          Đơn hàng
+                          {t('homepage.hero.dashboard.orders')}
                         </Text>
                         <Title level={4} style={{ margin: '8px 0 0', color: '#FF7A00' }}>
                           148
@@ -362,13 +364,13 @@ const HeroSection: React.FC = () => {
                   {/* Table Preview */}
                   <Card size="small" style={{ borderRadius: 12, background: 'var(--card)', border: `1px solid var(--border)` }}>
                     <Text strong style={{ display: 'block', marginBottom: 12, color: 'var(--text)' }}>
-                      <FileTextOutlined style={{ marginRight: 6 }} /> Recent Orders
+                      <FileTextOutlined style={{ marginRight: 6 }} /> {t('homepage.hero.dashboard.recent_orders')}
                     </Text>
                     <Flex vertical gap={12} style={{ width: '100%' }}>
                       {[
-                        { table: 'A02', total: 'đ750.000', status: 'Đang nấu', color: '#FF7A00', bar: 88 },
-                        { table: 'B01', total: 'đ1.25M', status: 'Sẵn sàng', color: '#52c41a', bar: 72 },
-                        { table: 'VIP01', total: 'đ3.48M', status: 'Đã đặt', color: '#1890ff', bar: 64 },
+                        { table: 'A02', total: 'đ750.000', status: t('staff.orders.status.preparing'), color: '#FF7A00', bar: 88 },
+                        { table: 'B01', total: 'đ1.25M', status: t('staff.orders.status.ready'), color: '#52c41a', bar: 72 },
+                        { table: 'VIP01', total: 'đ3.48M', status: t('staff.tables.status.reserved'), color: '#1890ff', bar: 64 },
                       ].map((order, i) => (
                         <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -424,7 +426,7 @@ const HeroSection: React.FC = () => {
               letterSpacing: 1.5,
             }}
           >
-            Được tin dùng bởi các thương hiệu hàng đầu
+            {t('homepage.hero.trusted_by')}
           </Text>
           <motion.div
             initial="hidden"

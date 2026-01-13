@@ -12,14 +12,18 @@ import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
 const { Header: AntHeader } = Layout;
 
-const navItems = [
-  { key: 'product', label: <a href="#product">Sản phẩm</a> },
-  { key: 'workflow', label: <a href="#workflow">Quy trình</a> },
-  { key: 'testimonials', label: <a href="#testimonials">Khách hàng</a> },
-  { key: 'contact', label: <a href="#footer">Liên hệ</a> },
-];
+import { useTranslation } from 'react-i18next';
 
 const Header: React.FC = () => {
+  const { t } = useTranslation();
+
+  const navItems = [
+    { key: 'product', label: <a href="#product">{t('homepage.header.product')}</a> },
+    { key: 'workflow', label: <a href="#workflow">{t('homepage.header.workflow')}</a> },
+    { key: 'testimonials', label: <a href="#testimonials">{t('homepage.header.testimonials')}</a> },
+    { key: 'contact', label: <a href="#footer">{t('homepage.header.contact')}</a> },
+  ];
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -155,7 +159,7 @@ const Header: React.FC = () => {
                     borderRadius: 20,
                   }}
                 >
-                  <TeamOutlined style={{ marginRight: 6 }} /> Staff
+                  <TeamOutlined style={{ marginRight: 6 }} /> {t('homepage.header.staff')}
                 </Button>
               </motion.div>
               <LanguageSwitcher />
@@ -172,7 +176,7 @@ const Header: React.FC = () => {
                     color: mode === 'dark' ? '#ECECEC' : '#111111',
                   }}
                 >
-                  Log in
+                  {t('homepage.header.login')}
                 </Button>
               </motion.div>
               <motion.div
@@ -193,7 +197,7 @@ const Header: React.FC = () => {
                     boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
                   }}
                 >
-                  Sign up
+                  {t('homepage.header.signup')}
                 </Button>
               </motion.div>
             </Space>
@@ -285,7 +289,7 @@ const Header: React.FC = () => {
               borderColor: '#E5E7EB',
             }}
           >
-            Log in
+            {t('homepage.header.login')}
           </Button>
           <Button
             type="primary"
@@ -301,7 +305,7 @@ const Header: React.FC = () => {
               boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
             }}
           >
-            Sign up
+            {t('homepage.header.signup')}
           </Button>
         </div>
       </Drawer>

@@ -9,11 +9,14 @@ import {
   MenuOutlined,
   CloseOutlined,
 } from '@ant-design/icons';
-import { Button, Input, Drawer, Space, Dropdown } from 'antd';
+import { Button, Drawer, Space, Dropdown } from 'antd';
 import Link from 'next/link';
-import Image from 'next/image';
+import { useTranslation } from 'react-i18next';
+import ThemeToggle from '@/app/components/ThemeToggle';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const RestaurantHeader: React.FC = () => {
+  const { t } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -22,15 +25,15 @@ const RestaurantHeader: React.FC = () => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
-    
+
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     handleResize();
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleResize);
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
@@ -38,31 +41,31 @@ const RestaurantHeader: React.FC = () => {
   }, []);
 
   const menuItems = [
-    { key: 'home', label: <Link href="/restaurant">Trang chủ</Link> },
-    { key: 'about', label: <a href="#about">Giới thiệu</a> },
+    { key: 'home', label: <Link href="/restaurant">{t('restaurant.header.home')}</Link> },
+    { key: 'about', label: <a href="#about">{t('restaurant.header.about')}</a> },
     {
       key: 'menu',
       label: (
         <Dropdown
           menu={{
             items: [
-              { key: 'all', label: 'Tất cả món' },
-              { key: 'appetizer', label: 'Khai vị' },
-              { key: 'main', label: 'Món chính' },
-              { key: 'dessert', label: 'Tráng miệng' },
-              { key: 'drink', label: 'Đồ uống' },
+              { key: 'all', label: t('restaurant.header.menu.all') },
+              { key: 'appetizer', label: t('restaurant.header.menu.appetizer') },
+              { key: 'main', label: t('restaurant.header.menu.main') },
+              { key: 'dessert', label: t('restaurant.header.menu.dessert') },
+              { key: 'drink', label: t('restaurant.header.menu.drink') },
             ],
           }}>
           <Space>
-            Menu
+            {t('restaurant.header.menu.title')}
             <DownOutlined style={{ fontSize: 10 }} />
           </Space>
         </Dropdown>
       ),
     },
-    { key: 'featured', label: <a href="#featured">Món ăn nổi bật</a> },
-    { key: 'daily', label: <a href="#daily">Món ngon mỗi ngày</a> },
-    { key: 'news', label: <a href="#news">Tin tức</a> },
+    { key: 'featured', label: <a href="#featured">{t('restaurant.header.featured')}</a> },
+    { key: 'daily', label: <a href="#daily">{t('restaurant.header.daily')}</a> },
+    { key: 'news', label: <a href="#news">{t('restaurant.header.news')}</a> },
   ];
 
   return (
@@ -73,10 +76,11 @@ const RestaurantHeader: React.FC = () => {
         left: 0,
         right: 0,
         zIndex: 1000,
-        background: scrolled ? 'rgba(26, 26, 26, 0.95)' : '#1a1a1a',
+        background: scrolled ? 'rgba(26, 26, 26, 0.95)' : 'transparent', // Modified to be transparent initially if desired, or keep generic
         backdropFilter: 'blur(10px)',
         transition: 'all 0.3s ease',
         borderBottom: scrolled ? '1px solid rgba(255, 122, 0, 0.2)' : 'none',
+        // Ensure text color is managed or forced white as per design
       }}>
       <div
         style={{
@@ -109,7 +113,7 @@ const RestaurantHeader: React.FC = () => {
               color: 'white',
               fontFamily: 'serif',
             }}>
-            RestX Restaurant
+            {t('restaurant.header.title')}
           </span>
         </Link>
 
@@ -123,8 +127,12 @@ const RestaurantHeader: React.FC = () => {
             ))}
           </Space>
 
-          {/* Icons */}
-          <Space size="large" style={{ marginLeft: 24 }}>
+          {/* Icons & Actions */}
+          <Space size="middle" style={{ marginLeft: 24 }}>
+            {/* Add Language Switcher and Theme Toggle here */}
+            <LanguageSwitcher style={{ color: 'white' }} />
+            <ThemeToggle style={{ color: 'white' }} />
+
             <SearchOutlined style={{ fontSize: 20, color: 'white', cursor: 'pointer' }} />
             <UserOutlined style={{ fontSize: 20, color: 'white', cursor: 'pointer' }} />
             <ShoppingCartOutlined style={{ fontSize: 20, color: 'white', cursor: 'pointer' }} />
@@ -139,7 +147,7 @@ const RestaurantHeader: React.FC = () => {
                 padding: '0 24px',
                 boxShadow: '0 4px 12px rgba(255, 122, 0, 0.3)',
               }}>
-              Đặt bàn
+              {t('restaurant.header.book_table')}
             </Button>
             <MenuOutlined
               style={{
@@ -168,6 +176,10 @@ const RestaurantHeader: React.FC = () => {
               {item.label}
             </div>
           ))}
+          <div style={{ display: 'flex', gap: 16, marginTop: 24 }}>
+            <LanguageSwitcher style={{ color: 'white' }} />
+            <ThemeToggle style={{ color: 'white' }} />
+          </div>
         </Space>
       </Drawer>
     </header>
@@ -175,4 +187,3 @@ const RestaurantHeader: React.FC = () => {
 };
 
 export default RestaurantHeader;
-
