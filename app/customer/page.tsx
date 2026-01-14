@@ -3,6 +3,7 @@
 import MenuCTA from "@/components/customer/MenuCTA";
 import RestaurantHeader from "@/components/customer/RestaurantHeader";
 import WelcomeCard from "@/components/customer/WelcomeCard";
+import NotificationSystem from "@/components/notifications/NotificationSystem";
 import {
   BellOutlined,
   CameraOutlined,
@@ -511,7 +512,7 @@ export default function CustomerHomePage() {
 
             <div>
               {!isEditing ? (
-                <Space direction="vertical" size={20} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={20} style={{ width: "100%" }}>
                   <div
                     style={{
                       display: "grid",
@@ -655,7 +656,7 @@ export default function CustomerHomePage() {
                       <Progress
                         percent={progress}
                         strokeColor={{ "0%": "#ffd700", "100%": "#ff5722" }}
-                        trailColor="rgba(255,255,255,0.1)"
+                        railColor="rgba(255,255,255,0.1)"
                         showInfo={false}
                         size="small"
                       />
@@ -688,7 +689,7 @@ export default function CustomerHomePage() {
                   </Button>
                 </Space>
               ) : (
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                   <div>
                     <Text
                       style={{
@@ -784,6 +785,7 @@ export default function CustomerHomePage() {
             </div>
           </div>
         </Modal>
+        <NotificationSystem />
       </div>
     </ConfigProvider>
   );
