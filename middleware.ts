@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export function middleware(req: NextRequest) {
   const host = req.headers.get('host') || '';
@@ -20,6 +20,7 @@ export function middleware(req: NextRequest) {
   // Public routes accessible on any domain
   const PUBLIC_ROUTES = new Set([
     '/login',
+    '/login-email',
     '/login-admin',
     '/register',
     '/forgot-password',
