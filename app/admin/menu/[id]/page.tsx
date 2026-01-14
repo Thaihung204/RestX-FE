@@ -25,11 +25,8 @@ export default function MenuItemFormPage() {
 
   const categories = ["Main Course", "Appetizer", "Dessert", "Beverages"];
 
-  // Load existing item data if editing
   useEffect(() => {
     if (!isNewItem) {
-      // TODO: Fetch item data from API using id
-      // For demo purposes, using mock data
       const mockItem = {
         name: "Grilled Salmon",
         category: "Main Course",
@@ -45,13 +42,10 @@ export default function MenuItemFormPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isNewItem) {
-      // TODO: Add API call to create menu item
       console.log("Creating new item:", formData);
     } else {
-      // TODO: Add API call to update menu item
       console.log("Updating item:", id, formData);
     }
-    // Redirect back to menu page
     router.push("/admin/menu");
   };
 
@@ -71,13 +65,11 @@ export default function MenuItemFormPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert("File size must be less than 5MB");
         return;
       }
 
-      // Check file type
       const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
       if (!validTypes.includes(file.type)) {
         alert("Only PNG, JPG, JPEG, and WEBP files are allowed");
@@ -101,9 +93,7 @@ export default function MenuItemFormPage() {
   };
 
   const formatPrice = (value: string) => {
-    // Remove all non-digit characters
     const numbers = value.replace(/\D/g, "");
-    // Format with thousand separators
     return numbers.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
@@ -122,7 +112,7 @@ export default function MenuItemFormPage() {
         <DashboardHeader />
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* Header */}
+
             <div className="flex items-center gap-4 mb-6">
               <button
                 onClick={() => router.back()}
@@ -159,13 +149,9 @@ export default function MenuItemFormPage() {
               </div>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Two Column Layout: Form Left, Image Right */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Left Column - Form Fields (2/3 width) */}
                 <div className="lg:col-span-2 space-y-4">
-                  {/* Basic Information Card */}
                   <div
                     className="rounded-xl p-4"
                     style={{
@@ -178,7 +164,6 @@ export default function MenuItemFormPage() {
                       Basic Information
                     </h3>
                     <div className="space-y-3">
-                      {/* Item Name */}
                       <div>
                         <label
                           htmlFor="name"
@@ -203,7 +188,6 @@ export default function MenuItemFormPage() {
                         />
                       </div>
 
-                      {/* Category */}
                       <div>
                         <label
                           htmlFor="category"
@@ -232,7 +216,6 @@ export default function MenuItemFormPage() {
                         </select>
                       </div>
 
-                      {/* Price */}
                       <div>
                         <label
                           htmlFor="price"
@@ -264,7 +247,6 @@ export default function MenuItemFormPage() {
                         </div>
                       </div>
 
-                      {/* Description */}
                       <div>
                         <label
                           htmlFor="description"
@@ -290,7 +272,6 @@ export default function MenuItemFormPage() {
                     </div>
                   </div>
 
-                  {/* Settings Card */}
                   <div
                     className="rounded-xl p-4"
                     style={{
@@ -303,7 +284,6 @@ export default function MenuItemFormPage() {
                       Settings
                     </h3>
                     <div className="space-y-3">
-                      {/* Available Toggle */}
                       <div className="flex items-center justify-between">
                         <div>
                           <p
@@ -329,7 +309,6 @@ export default function MenuItemFormPage() {
                         </label>
                       </div>
 
-                      {/* Popular Toggle */}
                       <div className="flex items-center justify-between">
                         <div>
                           <p
@@ -358,9 +337,7 @@ export default function MenuItemFormPage() {
                   </div>
                 </div>
 
-                {/* Right Column - Image Upload (1/3 width) */}
                 <div className="lg:col-span-1">
-                  {/* Image Upload Card */}
                   <div
                     className="rounded-xl p-4 sticky top-4"
                     style={{
@@ -455,7 +432,6 @@ export default function MenuItemFormPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
                   type="button"

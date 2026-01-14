@@ -233,7 +233,6 @@ export default function MenuPage() {
         <DashboardHeader />
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
           <div className="space-y-6">
-            {/* Header */}
             <div className="flex items-center justify-between">
               <div>
                 <h2
@@ -266,7 +265,6 @@ export default function MenuPage() {
               </Link>
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div
                 className="rounded-xl p-4"
@@ -407,7 +405,6 @@ export default function MenuPage() {
               </div>
             </div>
 
-            {/* Category Filter */}
             <div className="flex gap-2 flex-wrap">
               {categories.map((category) => (
                 <button
@@ -433,7 +430,6 @@ export default function MenuPage() {
               ))}
             </div>
 
-            {/* Menu Items Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {filteredItems.map((item) => (
                 <div
@@ -443,7 +439,6 @@ export default function MenuPage() {
                     background: "var(--card)",
                     border: "1px solid var(--border)",
                   }}>
-                  {/* Image Placeholder */}
                   <div
                     className="relative overflow-hidden"
                     style={{
