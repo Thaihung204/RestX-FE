@@ -340,7 +340,7 @@ export default function MenuItemFormPage() {
                           <p
                             className="text-xs"
                             style={{ color: "var(--text-muted)" }}>
-                            Display "Popular" badge on this item
+                            Display &quot;Popular&quot; badge on this item
                           </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">

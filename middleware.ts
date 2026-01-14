@@ -8,8 +8,8 @@ export function middleware(req: NextRequest) {
   // Landing domains - serve public landing page
   const LANDING_DOMAINS = new Set(["restx.food", "www.restx.food"]);
 
-  // Admin subdomain - serve /admin (tenant admin)
-  const ADMIN_DOMAIN = "admin.restx.food";
+  // Super Admin domain - serve /tenants (manage all tenants)
+  const ADMIN_DOMAIN = 'admin.restx.food';
 
   // Development domains - no routing logic
   const DEVELOPMENT_DOMAINS = new Set(["localhost", "127.0.0.1"]);
@@ -56,28 +56,22 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Landing domains (restx.food, www.restx.food) - serve public landing page + super admin
+  // Landing domains (restx.food, www.restx.food) - serve public landing page
   if (LANDING_DOMAINS.has(host)) {
-    // Allow /tenants route for super admin (RestX admin managing all tenants)
+    return NextResponse.next();
+  }
+
+  // Super Admin domain (admin.restx.food) - route to /tenants
+  if (host === ADMIN_DOMAIN) {
+    if (pathname === '/') {
+      return NextResponse.rewrite(new URL('/tenants', req.url));
+    }
+
     if (pathname.startsWith('/tenants')) {
       return NextResponse.next();
     }
 
-    // Allow landing page and public routes
-    return NextResponse.next();
-  }
-
-  // Admin domain (admin.restx.food) - route to /admin (tenant admin)
-  if (host === ADMIN_DOMAIN) {
-    if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/admin', req.url));
-    }
-
-    if (pathname.startsWith('/admin')) {
-      return NextResponse.next();
-    }
-
-    return NextResponse.rewrite(new URL(`/admin${pathname}`, req.url));
+    return NextResponse.rewrite(new URL(`/tenants${pathname}`, req.url));
   }
 
   // Tenant domains (*.restx.food excluding www, admin, and root)
@@ -89,12 +83,17 @@ export function middleware(req: NextRequest) {
       return NextResponse.rewrite(new URL('/restaurant', req.url));
     }
 
+    // Tenant admin routes → allow through
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.next();
+    }
+
     // Staff routes → allow through
     if (pathname.startsWith('/staff')) {
       return NextResponse.next();
     }
 
-    // Other paths → allow through (could be /restaurant, /customer, etc)
+    // Other paths → allow through (could be /restaurant, /customer, /menu, etc)
     return NextResponse.next();
   }
 
