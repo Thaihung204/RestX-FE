@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 
 interface QuickAction {
   id: string;
@@ -12,6 +13,8 @@ interface QuickAction {
 }
 
 export default function QuickActions() {
+  const router = useRouter();
+  
   const actions: QuickAction[] = [
     {
       id: "add-table",
@@ -53,7 +56,7 @@ export default function QuickActions() {
           />
         </svg>
       ),
-      onClick: () => alert("Add Dish - UI Demo"),
+      onClick: () => router.push("/admin/menu/new"),
     },
     {
       id: "add-staff",

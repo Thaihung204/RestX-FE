@@ -14,6 +14,8 @@ export function middleware(req: NextRequest) {
     '/forgot-password',
     '/restaurant',
     '/customer',
+    '/menu',
+    '/reset-password',
   ];
 
   // Check if it's a static file or API route (skip middleware)
@@ -83,13 +85,13 @@ export function middleware(req: NextRequest) {
       return NextResponse.next();
     }
 
-    // Already on /dashboard/* path, allow it
-    if (pathname.startsWith('/dashboard')) {
+    // Already on /admin/* path, allow it
+    if (pathname.startsWith('/admin')) {
       return NextResponse.next();
     }
 
-    // Rewrite other paths to /dashboard/* for admin
-    return NextResponse.rewrite(new URL(`/dashboard${pathname}`, req.url));
+    // Rewrite other paths to /admin/* for admin
+    return NextResponse.rewrite(new URL(`/admin${pathname}`, req.url));
   }
 
   // Default: allow the request to proceed (for other domains or fallback)
