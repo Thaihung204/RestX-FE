@@ -5,11 +5,14 @@ export function middleware(req: NextRequest) {
   const host = req.headers.get('host') || '';
   const pathname = req.nextUrl.pathname;
 
-  // Admin domains (whitelisted) - serve /dashboard
-  const ADMIN_DOMAINS = new Set([
+  // Landing domains - serve public landing page
+  const LANDING_DOMAINS = new Set([
     'restx.food',
-    'admin.restx.food',
+    'www.restx.food',
   ]);
+
+  // Admin subdomain - serve /dashboard
+  const ADMIN_DOMAIN = 'admin.restx.food';
 
   // Development domains - no routing logic
   const DEVELOPMENT_DOMAINS = new Set([
@@ -25,6 +28,7 @@ export function middleware(req: NextRequest) {
     '/forgot-password',
     '/restaurant',
     '/customer',
+    '/menu',
   ]);
 
   // Skip middleware for static assets and API routes
@@ -38,11 +42,12 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow public routes
+  // Allow public routes on any domain
   const isPublicRoute =
     PUBLIC_ROUTES.has(pathname) ||
     pathname.startsWith('/restaurant') ||
-    pathname.startsWith('/customer');
+    pathname.startsWith('/customer') ||
+    pathname.startsWith('/menu');
 
   if (isPublicRoute) {
     return NextResponse.next();
@@ -55,14 +60,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Admin domain (explicit whitelist)
-  const isAdminDomain = ADMIN_DOMAINS.has(host);
+  // Landing domains (restx.food, www.restx.food) - serve public landing page
+  if (LANDING_DOMAINS.has(host)) {
+    return NextResponse.next();
+  }
 
-  // Tenant domain (subdomain of restx.food, excluding admin)
-  const isTenantDomain = host.endsWith('.restx.food') && !isAdminDomain;
-
-  // Admin domain routing → /dashboard
-  if (isAdminDomain) {
+  // Admin domain (admin.restx.food) - route to /dashboard
+  if (host === ADMIN_DOMAIN) {
     if (pathname === '/') {
       return NextResponse.rewrite(new URL('/dashboard', req.url));
     }
@@ -74,17 +78,22 @@ export function middleware(req: NextRequest) {
     return NextResponse.rewrite(new URL(`/dashboard${pathname}`, req.url));
   }
 
-  // Tenant domain routing → /staff
+  // Tenant domains (*.restx.food excluding www, admin, and root)
+  const isTenantDomain = host.endsWith('.restx.food') && !LANDING_DOMAINS.has(host) && host !== ADMIN_DOMAIN;
+
   if (isTenantDomain) {
+    // Root path → restaurant page (for customers)
     if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/staff', req.url));
+      return NextResponse.rewrite(new URL('/restaurant', req.url));
     }
 
+    // Staff routes → allow through
     if (pathname.startsWith('/staff')) {
       return NextResponse.next();
     }
 
-    return NextResponse.rewrite(new URL(`/staff${pathname}`, req.url));
+    // Other paths → allow through (could be /restaurant, /customer, etc)
+    return NextResponse.next();
   }
 
   // Unknown domain - allow through
