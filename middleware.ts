@@ -2,11 +2,23 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 export function middleware(req: NextRequest) {
-  const host = req.headers.get("host") || "";
+  const host = req.headers.get('host') || '';
   const pathname = req.nextUrl.pathname;
 
-  // Public routes that should work on both domains
-  const publicRoutes = [
+  // Admin domains (whitelisted) - serve /dashboard
+  const ADMIN_DOMAINS = new Set([
+    'restx.food',
+    'admin.restx.food',
+  ]);
+
+  // Development domains - no routing logic
+  const DEVELOPMENT_DOMAINS = new Set([
+    'localhost',
+    '127.0.0.1',
+  ]);
+
+  // Public routes accessible on any domain
+  const PUBLIC_ROUTES = new Set([
     '/login',
     '/login-email',
     '/login-admin',
@@ -14,97 +26,73 @@ export function middleware(req: NextRequest) {
     '/forgot-password',
     '/restaurant',
     '/customer',
-  ];
+  ]);
 
-  // Check if it's a static file or API route (skip middleware)
+  // Skip middleware for static assets and API routes
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/images') ||
     pathname.startsWith('/favicon.ico') ||
-    pathname.match(/\.(ico|png|jpg|jpeg|svg|woff|woff2|ttf|eot)$/)
+    pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|eot|otf)$/)
   ) {
     return NextResponse.next();
   }
 
-  // Check if it's a public route
-  const isPublicRoute = publicRoutes.includes(pathname) || 
-    pathname.startsWith('/restaurant') || 
+  // Allow public routes
+  const isPublicRoute =
+    PUBLIC_ROUTES.has(pathname) ||
+    pathname.startsWith('/restaurant') ||
     pathname.startsWith('/customer');
 
-  // Tenant domain (demo.restx.food)
-  const isTenantDomain = host.startsWith("demo.") || host === "demo.restx.food";
-  
-  // Admin domain (restx.food - root domain only, not subdomains)
-  const isAdminDomain = host === "restx.food" || 
-    (host.endsWith(".restx.food") && !host.startsWith("demo."));
-
-  // Development mode: allow all routes (localhost, 127.0.0.1, etc.)
-  const isDevelopment = host.includes("localhost") || 
-    host.includes("127.0.0.1") || 
-    host.includes("0.0.0.0");
-    // host.includes(".vercel.app");
-
-  if (isDevelopment) {
-    // In development, allow all routes to work normally
+  if (isPublicRoute) {
     return NextResponse.next();
   }
 
-  // Tenant domain routing
-  if (isTenantDomain) {
-    // Allow public routes
-    if (isPublicRoute) {
-      return NextResponse.next();
-    }
+  // Development mode - allow all routes
+  const isDevelopment = DEVELOPMENT_DOMAINS.has(host) || host.startsWith('localhost:') || host.startsWith('127.0.0.1:');
 
-    // Root path → rewrite to /restaurant (for demo.restx.food/)
-    if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/restaurant', req.url));
-    }
-
-    // Already on /staff/* path, allow it
-    if (pathname.startsWith('/staff')) {
-      return NextResponse.next();
-    }
-
-    // Rewrite other paths to /staff/* for tenant
-    return NextResponse.rewrite(new URL(`/staff${pathname}`, req.url));
+  if (isDevelopment) {
+    return NextResponse.next();
   }
 
-  // Admin domain routing
+  // Admin domain (explicit whitelist)
+  const isAdminDomain = ADMIN_DOMAINS.has(host);
+
+  // Tenant domain (subdomain of restx.food, excluding admin)
+  const isTenantDomain = host.endsWith('.restx.food') && !isAdminDomain;
+
+  // Admin domain routing → /dashboard
   if (isAdminDomain) {
-    // Allow public routes
-    if (isPublicRoute) {
-      return NextResponse.next();
-    }
-
-    // Root path → render app/page.tsx (no rewrite needed)
     if (pathname === '/') {
-      return NextResponse.next();
+      return NextResponse.rewrite(new URL('/dashboard', req.url));
     }
 
-    // Already on /dashboard/* path, allow it
     if (pathname.startsWith('/dashboard')) {
       return NextResponse.next();
     }
 
-    // Rewrite other paths to /dashboard/* for admin
     return NextResponse.rewrite(new URL(`/dashboard${pathname}`, req.url));
   }
 
-  // Default: allow the request to proceed (for other domains or fallback)
+  // Tenant domain routing → /staff
+  if (isTenantDomain) {
+    if (pathname === '/') {
+      return NextResponse.rewrite(new URL('/staff', req.url));
+    }
+
+    if (pathname.startsWith('/staff')) {
+      return NextResponse.next();
+    }
+
+    return NextResponse.rewrite(new URL(`/staff${pathname}`, req.url));
+  }
+
+  // Unknown domain - allow through
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
 
