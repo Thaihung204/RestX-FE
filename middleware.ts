@@ -11,7 +11,7 @@ export function middleware(req: NextRequest) {
     'www.restx.food',
   ]);
 
-  // Admin subdomain - serve /dashboard
+  // Admin subdomain - serve /admin (tenant admin)
   const ADMIN_DOMAIN = 'admin.restx.food';
 
   // Development domains - no routing logic
@@ -61,22 +61,28 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Landing domains (restx.food, www.restx.food) - serve public landing page
+  // Landing domains (restx.food, www.restx.food) - serve public landing page + super admin
   if (LANDING_DOMAINS.has(host)) {
-    return NextResponse.next();
-  }
-
-  // Admin domain (admin.restx.food) - route to /dashboard
-  if (host === ADMIN_DOMAIN) {
-    if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/dashboard', req.url));
-    }
-
-    if (pathname.startsWith('/dashboard')) {
+    // Allow /tenants route for super admin (RestX admin managing all tenants)
+    if (pathname.startsWith('/tenants')) {
       return NextResponse.next();
     }
 
-    return NextResponse.rewrite(new URL(`/dashboard${pathname}`, req.url));
+    // Allow landing page and public routes
+    return NextResponse.next();
+  }
+
+  // Admin domain (admin.restx.food) - route to /admin (tenant admin)
+  if (host === ADMIN_DOMAIN) {
+    if (pathname === '/') {
+      return NextResponse.rewrite(new URL('/admin', req.url));
+    }
+
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.next();
+    }
+
+    return NextResponse.rewrite(new URL(`/admin${pathname}`, req.url));
   }
 
   // Tenant domains (*.restx.food excluding www, admin, and root)
