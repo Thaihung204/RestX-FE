@@ -1,37 +1,31 @@
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const host = req.headers.get('host') || '';
+  const host = req.headers.get("host") || "";
   const pathname = req.nextUrl.pathname;
 
   // Landing domains - serve public landing page
-  const LANDING_DOMAINS = new Set([
-    'restx.food',
-    'www.restx.food',
-  ]);
+  const LANDING_DOMAINS = new Set(["restx.food", "www.restx.food"]);
 
   // Admin subdomain - serve /admin (tenant admin)
-  const ADMIN_DOMAIN = 'admin.restx.food';
+  const ADMIN_DOMAIN = "admin.restx.food";
 
   // Development domains - no routing logic
-  const DEVELOPMENT_DOMAINS = new Set([
-    'localhost',
-    '127.0.0.1',
-  ]);
+  const DEVELOPMENT_DOMAINS = new Set(["localhost", "127.0.0.1"]);
 
   // Public routes accessible on any domain
   const PUBLIC_ROUTES = new Set([
-    '/login',
-    '/login-email',
-    '/login-admin',
-    '/register',
-    '/forgot-password',
-    '/restaurant',
-    '/customer',
-    '/menu',
-    '/reset-password',
-  ];
+    "/login",
+    "/login-email",
+    "/login-admin",
+    "/register",
+    "/forgot-password",
+    "/restaurant",
+    "/customer",
+    "/menu",
+    "/reset-password",
+  ]);
 
   // Skip middleware for static assets and API routes
   if (
@@ -104,32 +98,10 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Admin domain routing
-  if (isAdminDomain) {
-    // Allow public routes
-    if (isPublicRoute) {
-      return NextResponse.next();
-    }
-
-    // Root path → render app/page.tsx (no rewrite needed)
-    if (pathname === '/') {
-      return NextResponse.next();
-    }
-
-    // Already on /admin/* path, allow it
-    if (pathname.startsWith('/admin')) {
-      return NextResponse.next();
-    }
-
-    // Rewrite other paths to /admin/* for admin
-    return NextResponse.rewrite(new URL(`/admin${pathname}`, req.url));
-  }
-
-  // Default: allow the request to proceed (for other domains or fallback)
+  // Unknown domain - allow through
   return NextResponse.next();
 }
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
-

@@ -2,8 +2,8 @@
 
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
-import { useRouter, useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function MenuItemFormPage() {
   const router = useRouter();
@@ -23,12 +23,7 @@ export default function MenuItemFormPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const categories = [
-    "Main Course",
-    "Appetizer",
-    "Dessert",
-    "Beverages",
-  ];
+  const categories = ["Main Course", "Appetizer", "Dessert", "Beverages"];
 
   // Load existing item data if editing
   useEffect(() => {
@@ -61,7 +56,9 @@ export default function MenuItemFormPage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
@@ -181,117 +178,117 @@ export default function MenuItemFormPage() {
                       Basic Information
                     </h3>
                     <div className="space-y-3">
-                  {/* Item Name */}
-                  <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text)" }}>
-                      Item Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      placeholder="e.g., Grilled Salmon"
-                    />
-                  </div>
+                      {/* Item Name */}
+                      <div>
+                        <label
+                          htmlFor="name"
+                          className="block text-sm font-medium mb-2"
+                          style={{ color: "var(--text)" }}>
+                          Item Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="name"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }}
+                          placeholder="e.g., Grilled Salmon"
+                        />
+                      </div>
 
-                  {/* Category */}
-                  <div>
-                    <label
-                      htmlFor="category"
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text)" }}>
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="category"
-                      name="category"
-                      value={formData.category}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}>
-                      <option value="">Select a category</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                      {/* Category */}
+                      <div>
+                        <label
+                          htmlFor="category"
+                          className="block text-sm font-medium mb-2"
+                          style={{ color: "var(--text)" }}>
+                          Category <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          id="category"
+                          name="category"
+                          value={formData.category}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }}>
+                          <option value="">Select a category</option>
+                          {categories.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                  {/* Price */}
-                  <div>
-                    <label
-                      htmlFor="price"
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text)" }}>
-                      Price <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="price"
-                        name="price"
-                        value={formData.price}
-                        onChange={handlePriceChange}
-                        required
-                        className="w-full pl-4 pr-16 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-                        style={{
-                          background: "var(--surface)",
-                          border: "1px solid var(--border)",
-                          color: "var(--text)",
-                        }}
-                        placeholder="0"
-                      />
-                      <span
-                        className="absolute right-4 top-1/2 -translate-y-1/2 font-bold"
-                        style={{ color: "var(--text-muted)" }}>
-                        VNĐ
-                      </span>
+                      {/* Price */}
+                      <div>
+                        <label
+                          htmlFor="price"
+                          className="block text-sm font-medium mb-2"
+                          style={{ color: "var(--text)" }}>
+                          Price <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            id="price"
+                            name="price"
+                            value={formData.price}
+                            onChange={handlePriceChange}
+                            required
+                            className="w-full pl-4 pr-16 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                            style={{
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              color: "var(--text)",
+                            }}
+                            placeholder="0"
+                          />
+                          <span
+                            className="absolute right-4 top-1/2 -translate-y-1/2 font-bold"
+                            style={{ color: "var(--text-muted)" }}>
+                            VNĐ
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div>
+                        <label
+                          htmlFor="description"
+                          className="block text-sm font-medium mb-2"
+                          style={{ color: "var(--text)" }}>
+                          Description
+                        </label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          value={formData.description}
+                          onChange={handleChange}
+                          rows={4}
+                          className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }}
+                          placeholder="Describe the dish, ingredients, or special features..."
+                        />
+                      </div>
                     </div>
                   </div>
-
-                  {/* Description */}
-                  <div>
-                    <label
-                      htmlFor="description"
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text)" }}>
-                      Description
-                    </label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      rows={4}
-                      className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      placeholder="Describe the dish, ingredients, or special features..."
-                    />
-                  </div>
-                </div>
-              </div>
 
                   {/* Settings Card */}
                   <div
@@ -314,7 +311,9 @@ export default function MenuItemFormPage() {
                             style={{ color: "var(--text)" }}>
                             Available for Order
                           </p>
-                          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          <p
+                            className="text-xs"
+                            style={{ color: "var(--text-muted)" }}>
                             Customers can order this item
                           </p>
                         </div>
@@ -338,7 +337,9 @@ export default function MenuItemFormPage() {
                             style={{ color: "var(--text)" }}>
                             Mark as Popular
                           </p>
-                          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          <p
+                            className="text-xs"
+                            style={{ color: "var(--text-muted)" }}>
                             Display "Popular" badge on this item
                           </p>
                         </div>
@@ -359,96 +360,98 @@ export default function MenuItemFormPage() {
 
                 {/* Right Column - Image Upload (1/3 width) */}
                 <div className="lg:col-span-1">
-              {/* Image Upload Card */}
-              <div
-                className="rounded-xl p-4 sticky top-4"
-                style={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                }}>
-                <h3
-                  className="text-lg font-bold mb-3"
-                  style={{ color: "var(--text)" }}>
-                  Item Image
-                </h3>
-                {imagePreview ? (
-                  <div className="relative" style={{ aspectRatio: '4/3' }}>
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all shadow-lg">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <label
-                    htmlFor="image-upload"
-                    className="border-2 border-dashed rounded-lg text-center hover:border-orange-500/50 transition-all cursor-pointer block"
-                    style={{ 
-                      borderColor: "var(--border)",
-                      aspectRatio: '4/3',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                  {/* Image Upload Card */}
+                  <div
+                    className="rounded-xl p-4 sticky top-4"
+                    style={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
                     }}>
-                    <div className="flex flex-col items-center gap-2 p-4">
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center"
-                        style={{ background: "var(--surface)" }}>
-                        <svg
-                          className="w-6 h-6"
-                          style={{ color: "var(--text-muted)" }}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
+                    <h3
+                      className="text-lg font-bold mb-3"
+                      style={{ color: "var(--text)" }}>
+                      Item Image
+                    </h3>
+                    {imagePreview ? (
+                      <div className="relative" style={{ aspectRatio: "4/3" }}>
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all shadow-lg">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
                       </div>
-                      <div>
-                        <p
-                          className="text-xs font-medium"
-                          style={{ color: "var(--text)" }}>
-                          Click to upload
-                        </p>
-                        <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-                          PNG, JPG, WEBP (5MB)
-                        </p>
-                      </div>
-                      <span className="px-3 py-1.5 bg-orange-500/10 text-orange-500 rounded-lg text-xs font-medium hover:bg-orange-500/20 transition-all">
-                        Choose File
-                      </span>
-                    </div>
-                    <input
-                      id="image-upload"
-                      type="file"
-                      accept="image/png,image/jpeg,image/jpg,image/webp"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
+                    ) : (
+                      <label
+                        htmlFor="image-upload"
+                        className="border-2 border-dashed rounded-lg text-center hover:border-orange-500/50 transition-all cursor-pointer block"
+                        style={{
+                          borderColor: "var(--border)",
+                          aspectRatio: "4/3",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}>
+                        <div className="flex flex-col items-center gap-2 p-4">
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center"
+                            style={{ background: "var(--surface)" }}>
+                            <svg
+                              className="w-6 h-6"
+                              style={{ color: "var(--text-muted)" }}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <p
+                              className="text-xs font-medium"
+                              style={{ color: "var(--text)" }}>
+                              Click to upload
+                            </p>
+                            <p
+                              className="text-xs mt-1"
+                              style={{ color: "var(--text-muted)" }}>
+                              PNG, JPG, WEBP (5MB)
+                            </p>
+                          </div>
+                          <span className="px-3 py-1.5 bg-orange-500/10 text-orange-500 rounded-lg text-xs font-medium hover:bg-orange-500/20 transition-all">
+                            Choose File
+                          </span>
+                        </div>
+                        <input
+                          id="image-upload"
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/webp"
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
                 </div>
               </div>
 

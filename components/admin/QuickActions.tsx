@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
 import { useRouter } from "next/navigation";
+import React from "react";
 
 interface QuickAction {
   id: string;
@@ -14,7 +14,7 @@ interface QuickAction {
 
 export default function QuickActions() {
   const router = useRouter();
-  
+
   const actions: QuickAction[] = [
     {
       id: "add-table",
@@ -153,7 +153,11 @@ export default function QuickActions() {
   return (
     <div
       className="rounded-xl p-6"
-      style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
+      style={{
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        color: "var(--text)",
+      }}>
       <div className="mb-6">
         <h3 className="text-xl font-bold mb-1" style={{ color: "var(--text)" }}>
           Quick Actions
@@ -182,7 +186,9 @@ export default function QuickActions() {
             </div>
 
             {/* Text */}
-            <h4 className="font-semibold text-sm mb-1" style={{ color: "var(--text)" }}>
+            <h4
+              className="font-semibold text-sm mb-1"
+              style={{ color: "var(--text)" }}>
               {action.title}
             </h4>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
