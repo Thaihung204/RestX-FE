@@ -1,12 +1,12 @@
 "use client";
 
-import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
-import AreaDistributionChart from "@/components/dashboard/charts/AreaDistributionChart";
-import OrdersBarChart from "@/components/dashboard/charts/OrdersBarChart";
-import RevenueChart from "@/components/dashboard/charts/RevenueChart";
-import KPISection from "@/components/dashboard/KPISection";
-import QuickActions from "@/components/dashboard/QuickActions";
-import TableStatusMap from "@/components/dashboard/TableStatusMap";
+import ActivityTimeline from "@/components/admin/ActivityTimeline";
+import AreaDistributionChart from "@/components/admin/charts/AreaDistributionChart";
+import OrdersBarChart from "@/components/admin/charts/OrdersBarChart";
+import RevenueChart from "@/components/admin/charts/RevenueChart";
+import KPISection from "@/components/admin/KPISection";
+import QuickActions from "@/components/admin/QuickActions";
+import TableStatusMap from "@/components/admin/TableStatusMap";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 

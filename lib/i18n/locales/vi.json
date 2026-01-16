@@ -162,7 +162,9 @@
     "menu": {
       "dashboard": "Tổng quan",
       "tables": "Quản lý bàn",
+      "tables_short": "Bàn",
       "orders": "Quản lý Order",
+      "orders_short": "Order",
       "checkout": "Thanh toán",
       "attendance": "Chấm công"
     },

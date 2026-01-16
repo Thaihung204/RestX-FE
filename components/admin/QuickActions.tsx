@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -13,7 +14,11 @@ interface QuickAction {
 }
 
 export default function QuickActions() {
+<<<<<<< HEAD:components/dashboard/QuickActions.tsx
   const { t } = useTranslation();
+=======
+  const router = useRouter();
+>>>>>>> c6393903b6f228d8bf681c080e440322773948aa:components/admin/QuickActions.tsx
 
   const actions: QuickAction[] = [
     {
@@ -56,7 +61,7 @@ export default function QuickActions() {
           />
         </svg>
       ),
-      onClick: () => alert("Add Dish - UI Demo"),
+      onClick: () => router.push("/admin/menu/new"),
     },
     {
       id: "add-staff",
@@ -153,7 +158,11 @@ export default function QuickActions() {
   return (
     <div
       className="rounded-xl p-6"
-      style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
+      style={{
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        color: "var(--text)",
+      }}>
       <div className="mb-6">
         <h3 className="text-xl font-bold mb-1" style={{ color: "var(--text)" }}>
           {t("dashboard.quick_actions.title")}
@@ -182,7 +191,9 @@ export default function QuickActions() {
             </div>
 
             {/* Text */}
-            <h4 className="font-semibold text-sm mb-1" style={{ color: "var(--text)" }}>
+            <h4
+              className="font-semibold text-sm mb-1"
+              style={{ color: "var(--text)" }}>
               {action.title}
             </h4>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>

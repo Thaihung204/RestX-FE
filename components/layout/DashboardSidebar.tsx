@@ -19,9 +19,9 @@ export default function DashboardSidebar() {
 
   const navItems: NavItem[] = [
     {
-      id: "dashboard",
-      label: t("dashboard.sidebar.items.dashboard"),
-      path: "/dashboard",
+      id: "admin",
+      label: "Dashboard",
+      path: "/admin",
       icon: (
         <svg
           className="w-5 h-5"
@@ -39,8 +39,8 @@ export default function DashboardSidebar() {
     },
     {
       id: "analytics",
-      label: t("dashboard.sidebar.items.analytics"),
-      path: "/dashboard/analytics",
+      label: "Analytics",
+      path: "/admin/analytics",
       icon: (
         <svg
           className="w-5 h-5"
@@ -58,8 +58,8 @@ export default function DashboardSidebar() {
     },
     {
       id: "tables",
-      label: t("dashboard.sidebar.items.tables"),
-      path: "/dashboard/tables",
+      label: "Tables",
+      path: "/admin/tables",
       icon: (
         <svg
           className="w-5 h-5"
@@ -77,8 +77,8 @@ export default function DashboardSidebar() {
     },
     {
       id: "menu",
-      label: t("dashboard.sidebar.items.menu"),
-      path: "/dashboard/menu",
+      label: "Menu",
+      path: "/admin/menu",
       icon: (
         <svg
           className="w-5 h-5"
@@ -96,8 +96,8 @@ export default function DashboardSidebar() {
     },
     {
       id: "orders",
-      label: t("dashboard.sidebar.items.orders"),
-      path: "/dashboard/orders",
+      label: "Orders",
+      path: "/admin/orders",
       icon: (
         <svg
           className="w-5 h-5"
@@ -115,8 +115,8 @@ export default function DashboardSidebar() {
     },
     {
       id: "staff",
-      label: t("dashboard.sidebar.items.staff"),
-      path: "/dashboard/staff",
+      label: "Staff",
+      path: "/admin/staff",
       icon: (
         <svg
           className="w-5 h-5"
@@ -134,8 +134,8 @@ export default function DashboardSidebar() {
     },
     {
       id: "settings",
-      label: t("dashboard.sidebar.items.settings"),
-      path: "/dashboard/settings",
+      label: "Settings",
+      path: "/admin/settings",
       icon: (
         <svg
           className="w-5 h-5"
@@ -159,8 +159,8 @@ export default function DashboardSidebar() {
     },
     {
       id: "help",
-      label: t("dashboard.sidebar.items.help"),
-      path: "/dashboard/help",
+      label: "Help",
+      path: "/admin/help",
       icon: (
         <svg
           className="w-5 h-5"
