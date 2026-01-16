@@ -5,61 +5,53 @@ import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function MenuItemFormPage() {
+export default function StaffFormPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const isNewItem = id === "new";
+  const isNew = id === "new";
 
   const [formData, setFormData] = useState({
     name: "",
-    category: "",
-    price: "",
-    description: "",
-    available: true,
-    popular: false,
+    email: "",
+    phone: "",
+    role: "",
+    status: "active" as "active" | "inactive",
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const categories = ["Main Course", "Appetizer", "Dessert", "Beverages"];
+  const roles = ["Manager", "Waiter", "Chef", "Cashier"];
 
   useEffect(() => {
-    if (!isNewItem) {
-      const mockItem = {
-        name: "Grilled Salmon",
-        category: "Main Course",
-        price: "28.99",
-        description: "Fresh Atlantic salmon with herbs",
-        available: true,
-        popular: true,
+    if (!isNew) {
+      const mockStaff = {
+        name: "John Doe",
+        email: "john@restaurant.com",
+        phone: "0901234567",
+        role: "Manager",
+        status: "active" as "active" | "inactive",
       };
-      setFormData(mockItem);
+      setFormData(mockStaff);
     }
-  }, [id, isNewItem]);
+  }, [id, isNew]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isNewItem) {
-      console.log("Creating new item:", formData);
+    if (isNew) {
+      console.log("Creating new staff:", formData);
     } else {
-      console.log("Updating item:", id, formData);
+      console.log("Updating staff:", id, formData);
     }
-    router.push("/admin/menu");
+    router.push("/admin/staff");
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-    }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +70,6 @@ export default function MenuItemFormPage() {
 
       setImageFile(file);
 
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -92,17 +83,11 @@ export default function MenuItemFormPage() {
     setImagePreview(null);
   };
 
-  const formatPrice = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    return numbers.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  };
-
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPrice(e.target.value);
-    setFormData((prev) => ({
-      ...prev,
-      price: formatted,
-    }));
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this staff member?")) {
+      console.log("Deleting staff:", id);
+      router.push("/admin/staff");
+    }
   };
 
   return (
@@ -112,17 +97,14 @@ export default function MenuItemFormPage() {
         <DashboardHeader />
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
           <div className="max-w-4xl mx-auto space-y-6">
-
             <div className="flex items-center gap-4 mb-6">
               <button
                 onClick={() => router.back()}
-                className="p-2 rounded-lg transition-all"
+                className="p-2 rounded-lg hover:bg-orange-500/10 transition-all"
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#FF380B10'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--surface)'}>
+                }}>
                 <svg
                   className="w-5 h-5"
                   style={{ color: "var(--text)" }}
@@ -141,12 +123,12 @@ export default function MenuItemFormPage() {
                 <h2
                   className="text-3xl font-bold mb-2"
                   style={{ color: "var(--text)" }}>
-                  {isNewItem ? "Add New Menu Item" : "Edit Menu Item"}
+                  {isNew ? "Add New Staff Member" : "Edit Staff Member"}
                 </h2>
                 <p style={{ color: "var(--text-muted)" }}>
-                  {isNewItem
-                    ? "Create a new dish for your restaurant menu"
-                    : "Update the menu item information"}
+                  {isNew
+                    ? "Fill in the details to add a new staff member"
+                    : "Update staff member information"}
                 </p>
               </div>
             </div>
@@ -163,7 +145,7 @@ export default function MenuItemFormPage() {
                     <h3
                       className="text-lg font-bold mb-3"
                       style={{ color: "var(--text)" }}>
-                      Basic Information
+                      Personal Information
                     </h3>
                     <div className="space-y-3">
                       <div>
@@ -171,7 +153,7 @@ export default function MenuItemFormPage() {
                           htmlFor="name"
                           className="block text-sm font-medium mb-2"
                           style={{ color: "var(--text)" }}>
-                          Item Name <span className="text-red-500">*</span>
+                          Full Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -188,21 +170,69 @@ export default function MenuItemFormPage() {
                           }}
                           onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 2px #FF380B'}
                           onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
-                          placeholder="e.g., Grilled Salmon"
+                          placeholder="e.g., John Doe"
                         />
                       </div>
 
                       <div>
                         <label
-                          htmlFor="category"
+                          htmlFor="email"
                           className="block text-sm font-medium mb-2"
                           style={{ color: "var(--text)" }}>
-                          Category <span className="text-red-500">*</span>
+                          Email <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          id="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }}                          onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 2px #FF380B'}
+                          onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}                          placeholder="john@restaurant.com"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="phone"
+                          className="block text-sm font-medium mb-2"
+                          style={{ color: "var(--text)" }}>
+                          Phone Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          id="phone"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }}                          onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 2px #FF380B'}
+                          onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}                          placeholder="0901234567"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="role"
+                          className="block text-sm font-medium mb-2"
+                          style={{ color: "var(--text)" }}>
+                          Role <span className="text-red-500">*</span>
                         </label>
                         <select
-                          id="category"
-                          name="category"
-                          value={formData.category}
+                          id="role"
+                          name="role"
+                          value={formData.role}
                           onChange={handleChange}
                           required
                           className="w-full px-4 py-3 rounded-lg outline-none transition-all"
@@ -213,10 +243,10 @@ export default function MenuItemFormPage() {
                           }}
                           onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 2px #FF380B'}
                           onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}>
-                          <option value="">Select a category</option>
-                          {categories.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
+                          <option value="">Select a role</option>
+                          {roles.map((role) => (
+                            <option key={role} value={role}>
+                              {role}
                             </option>
                           ))}
                         </select>
@@ -224,134 +254,27 @@ export default function MenuItemFormPage() {
 
                       <div>
                         <label
-                          htmlFor="price"
+                          htmlFor="status"
                           className="block text-sm font-medium mb-2"
                           style={{ color: "var(--text)" }}>
-                          Price <span className="text-red-500">*</span>
+                          Status
                         </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            id="price"
-                            name="price"
-                            value={formData.price}
-                            onChange={handlePriceChange}
-                            required
-                            className="w-full pl-4 pr-16 py-3 rounded-lg outline-none transition-all"
-                            style={{
-                              background: "var(--surface)",
-                              border: "1px solid var(--border)",
-                              color: "var(--text)",
-                            }}
-                            onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 2px #FF380B'}
-                            onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
-                            placeholder="0"
-                          />
-                          <span
-                            className="absolute right-4 top-1/2 -translate-y-1/2 font-bold"
-                            style={{ color: "var(--text-muted)" }}>
-                            VNĐ
-                          </span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="description"
-                          className="block text-sm font-medium mb-2"
-                          style={{ color: "var(--text)" }}>
-                          Description
-                        </label>
-                        <textarea
-                          id="description"
-                          name="description"
-                          value={formData.description}
+                        <select
+                          id="status"
+                          name="status"
+                          value={formData.status}
                           onChange={handleChange}
-                          rows={4}
-                          className="w-full px-4 py-3 rounded-lg outline-none transition-all resize-none"
+                          className="w-full px-4 py-3 rounded-lg outline-none transition-all"
                           style={{
                             background: "var(--surface)",
                             border: "1px solid var(--border)",
                             color: "var(--text)",
                           }}
                           onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 2px #FF380B'}
-                          onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
-                          placeholder="Describe the dish, ingredients, or special features..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    className="rounded-xl p-4"
-                    style={{
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                    }}>
-                    <h3
-                      className="text-lg font-bold mb-3"
-                      style={{ color: "var(--text)" }}>
-                      Settings
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p
-                            className="font-medium text-sm"
-                            style={{ color: "var(--text)" }}>
-                            Available for Order
-                          </p>
-                          <p
-                            className="text-xs"
-                            style={{ color: "var(--text-muted)" }}>
-                            Customers can order this item
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            name="available"
-                            checked={formData.available}
-                            onChange={handleChange}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
-                            style={{
-                              backgroundColor: formData.available ? '#FF380B' : '#4b5563'
-                            }}
-                            onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 4px #FF380B33'}
-                            onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p
-                            className="font-medium text-sm"
-                            style={{ color: "var(--text)" }}>
-                            Mark as Popular
-                          </p>
-                          <p
-                            className="text-xs"
-                            style={{ color: "var(--text-muted)" }}>
-                            Display &quot;Popular&quot; badge on this item
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            name="popular"
-                            checked={formData.popular}
-                            onChange={handleChange}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
-                            style={{
-                              backgroundColor: formData.popular ? '#FF380B' : '#4b5563'
-                            }}
-                            onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 4px #FF380B33'}
-                            onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}></div>
-                        </label>
+                          onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}>
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -367,10 +290,10 @@ export default function MenuItemFormPage() {
                     <h3
                       className="text-lg font-bold mb-3"
                       style={{ color: "var(--text)" }}>
-                      Item Image
+                      Profile Picture
                     </h3>
                     {imagePreview ? (
-                      <div className="relative" style={{ aspectRatio: "4/3" }}>
+                      <div className="relative aspect-square">
                         <img
                           src={imagePreview}
                           alt="Preview"
@@ -397,14 +320,8 @@ export default function MenuItemFormPage() {
                     ) : (
                       <label
                         htmlFor="image-upload"
-                        className="border-2 border-dashed rounded-lg text-center transition-all cursor-pointer block"
-                        style={{
-                          borderColor: "var(--border)",
-                          aspectRatio: "4/3",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
+                        className="border-2 border-dashed rounded-lg text-center transition-all cursor-pointer block aspect-square flex items-center justify-center"
+                        style={{ borderColor: "var(--border)" }}
                         onMouseEnter={(e) => e.currentTarget.style.borderColor = '#FF380B80'}
                         onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}>
                         <div className="flex flex-col items-center gap-2 p-4">
@@ -421,7 +338,7 @@ export default function MenuItemFormPage() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                               />
                             </svg>
                           </div>
@@ -470,6 +387,17 @@ export default function MenuItemFormPage() {
                   }}>
                   Cancel
                 </button>
+                {!isNew && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="px-4 py-2.5 rounded-lg font-medium transition-all"
+                    style={{ background: '#ef444410', color: '#ef4444' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#ef444420'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#ef444410'}>
+                    Delete
+                  </button>
+                )}
                 <button
                   type="submit"
                   className="flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-all shadow-lg"
@@ -483,7 +411,7 @@ export default function MenuItemFormPage() {
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'linear-gradient(to right, #FF380B, #FF380BF0)';
                   }}>
-                  {isNewItem ? "Add Menu Item" : "Save Changes"}
+                  {isNew ? "Add Staff Member" : "Save Changes"}
                 </button>
               </div>
             </form>
