@@ -1,15 +1,25 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button, Typography, Tag, Row, Col, Card, Flex } from 'antd';
+import { Button, Typography, Tag, Row, Col, Card, Flex, Grid } from 'antd';
 import { PlayCircleOutlined, FileTextOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { usePageTransition } from './PageTransition';
 
 const { Title, Paragraph, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const HeroSection: React.FC = () => {
   const { isAnimationReady } = usePageTransition();
+  const screens = useBreakpoint();
+
+  // Use state for isMobile to match existing logic (or we could rely entirely on screens)
+  // Maintaining isMobile for granular typography/padding tweaks if needed, but syncing with breakpoints is better.
+  // Let's use screens for layout decisions primarily.
+  // Note: screens might be empty on first render, so we need to handle that or use a useEffect for isMobile if we want exact px match.
+  // But for this refactor, let's stick to the simpler isMobile state for "small mobile" specifically (<768)
+  // and use screens for the larger layout breaks (lg).
+
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -18,6 +28,8 @@ const HeroSection: React.FC = () => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const isStacked = !screens.lg; // Tablet or Mobile (< 992px)
 
   // Animation variants
   const containerVariants = {
@@ -127,15 +139,23 @@ const HeroSection: React.FC = () => {
       )}
 
       <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1, width: '100%' }}>
-        <Row gutter={[48, 32]} align="middle">
+        <Row gutter={[48, 48]} align="middle">
           {/* Left Column */}
-          <Col xs={24} md={12}>
+          <Col xs={24} lg={12}>
             <motion.div
               variants={containerVariants}
               initial="hidden"
               animate={isAnimationReady ? 'visible' : 'hidden'}
             >
-              <Flex vertical gap={20} style={{ width: '100%' }}>
+              <Flex
+                vertical
+                gap={20}
+                style={{
+                  width: '100%',
+                  alignItems: isStacked ? 'center' : 'flex-start',
+                  textAlign: isStacked ? 'center' : 'left'
+                }}
+              >
                 <motion.div variants={itemVariants}>
                   <Tag
                     style={{
@@ -181,8 +201,8 @@ const HeroSection: React.FC = () => {
                   </Paragraph>
                 </motion.div>
 
-                <motion.div variants={itemVariants}>
-                  <Flex gap={12} wrap="wrap">
+                <motion.div variants={itemVariants} style={{ width: '100%' }}>
+                  <Flex gap={12} wrap="wrap" justify={isStacked ? 'center' : 'flex-start'}>
                     <Button
                       type="primary"
                       size={isMobile ? 'middle' : 'large'}
@@ -210,9 +230,9 @@ const HeroSection: React.FC = () => {
                         fontSize: isMobile ? 14 : 16,
                         fontWeight: 600,
                         borderRadius: 50,
-                    borderColor: 'var(--border)',
-                    color: 'var(--text)',
-                    background: 'var(--card)',
+                        borderColor: 'var(--border)',
+                        color: 'var(--text)',
+                        background: 'var(--card)',
                       }}
                     >
                       Watch Demo
@@ -225,27 +245,27 @@ const HeroSection: React.FC = () => {
                   variants={containerVariants}
                   initial="hidden"
                   animate={isAnimationReady ? 'visible' : 'hidden'}
-                  style={{ marginTop: 8 }}
+                  style={{ marginTop: 8, width: '100%' }}
                 >
-                  <Row gutter={[isMobile ? 16 : 32, 16]}>
+                  <Row gutter={[isMobile ? 16 : 32, 16]} justify={isStacked ? 'center' : 'start'}>
                     {[
                       { value: '100.000+', label: 'Thương hiệu' },
                       { value: '15+', label: 'Năm kinh nghiệm' },
                       { value: '500+', label: 'Chi nhánh' },
                     ].map((stat, index) => (
-                      <Col key={index} xs={8}>
+                      <Col key={index} xs={8} lg={8}>
                         <motion.div
                           variants={statsVariants}
                           custom={index}
-                          style={{ 
-                            display: 'flex', 
-                            flexDirection: isMobile ? 'column' : 'row',
-                            alignItems: isMobile ? 'flex-start' : 'baseline', 
-                            gap: isMobile ? 2 : 8 
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column', // Always column for cleaner stat look
+                            alignItems: isStacked ? 'center' : 'flex-start',
+                            gap: 2
                           }}
                         >
                           <span style={{ color: '#FF7A00', fontSize: isMobile ? 20 : 28, fontWeight: 700 }}>{stat.value}</span>
-                          <span style={{ color: 'var(--text-muted)', fontSize: isMobile ? 11 : 13 }}>{stat.label}</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: isMobile ? 11 : 13, textAlign: 'center' }}>{stat.label}</span>
                         </motion.div>
                       </Col>
                     ))}
@@ -255,8 +275,8 @@ const HeroSection: React.FC = () => {
             </motion.div>
           </Col>
 
-          {/* Right Column - Dashboard Mockup - Hidden on small mobile */}
-          <Col xs={24} md={12} style={{ display: isMobile ? 'none' : 'block' }}>
+          {/* Right Column - Dashboard Mockup - Hidden on small mobile, visible on tablet */}
+          <Col xs={24} lg={12} style={{ display: isMobile ? 'none' : 'block' }}>
             <motion.div
               variants={cardVariants}
               initial="hidden"
@@ -311,7 +331,7 @@ const HeroSection: React.FC = () => {
                       ))}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, color: 'var(--text-muted)', fontSize: 12 }}>
-                      {['T2','T3','T4','T5','T6','T7','CN'].map((d) => <span key={d}>{d}</span>)}
+                      {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((d) => <span key={d}>{d}</span>)}
                     </div>
                   </Card>
 
@@ -391,13 +411,13 @@ const HeroSection: React.FC = () => {
           style={{
             marginTop: 48,
             paddingTop: 32,
-                borderTop: '1px solid var(--border)',
+            borderTop: '1px solid var(--border)',
             textAlign: 'center',
           }}
         >
           <Text
             style={{
-                  color: 'var(--text-muted)',
+              color: 'var(--text-muted)',
               fontSize: 12,
               fontWeight: 600,
               textTransform: 'uppercase',
