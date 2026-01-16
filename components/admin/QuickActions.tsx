@@ -17,8 +17,7 @@ export default function QuickActions() {
       id: "add-table",
       title: "Add Table",
       description: "Create new table",
-      color: "",
-      colorStyle: { background: `linear-gradient(to right, #FF380B, #FF380B)` },
+      color: "", // Will use inline style
       icon: (
         <svg
           className="w-6 h-6"
@@ -175,7 +174,12 @@ export default function QuickActions() {
             suppressHydrationWarning>
             {/* Icon */}
             <div
-              className={`w-12 h-12 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+              className={`w-12 h-12 rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform duration-300 shadow-lg ${
+                action.color ? `bg-gradient-to-br ${action.color}` : ''
+              }`}
+              style={action.id === 'add-table' ? {
+                background: 'linear-gradient(to right, #FF380B, #FF380B)'
+              } : undefined}>
               {action.icon}
             </div>
 

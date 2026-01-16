@@ -30,11 +30,8 @@ const statusConfig: Record<
 > = {
   serving: {
     bg: "",
-    bgStyle: { backgroundColor: '#FF380B' },
     border: "",
-    borderStyle: { borderColor: '#FF380B' },
     text: "",
-    textStyle: { color: '#FF380B' },
     label: "Serving",
   },
   available: {
@@ -45,11 +42,8 @@ const statusConfig: Record<
   },
   reserved: {
     bg: "",
-    bgStyle: { backgroundColor: '#FF6B3B' },
     border: "",
-    borderStyle: { borderColor: '#FF6B3B' },
     text: "",
-    textStyle: { color: '#FF6B3B' },
     label: "Reserved",
   },
   cleaning: {
@@ -67,6 +61,16 @@ export default function TableStatusMap() {
 
   const renderTable = (table: Table) => {
     const config = statusConfig[table.status];
+    const getStatusStyle = () => {
+      if (table.status === 'serving') {
+        return { backgroundColor: '#FF380B', borderColor: '#FF380B' };
+      }
+      if (table.status === 'reserved') {
+        return { backgroundColor: '#FF6B3B', borderColor: '#FF6B3B' };
+      }
+      return {};
+    };
+    
     return (
       <div
         key={table.id}
@@ -77,7 +81,8 @@ export default function TableStatusMap() {
           } rounded-lg flex flex-col items-center justify-center border-2 ${
             config.border
           } shadow-lg transition-all
-          ${table.status === "serving" ? "animate-pulse-slow" : ""}`}>
+          ${table.status === "serving" ? "animate-pulse-slow" : ""}`}
+          style={getStatusStyle()}>
           <span className="text-white font-bold text-sm">{table.id}</span>
           <span className="text-white text-xs">{table.seats} seats</span>
         </div>
@@ -148,14 +153,22 @@ export default function TableStatusMap() {
       {/* Legend */}
       <div className="pt-4" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Object.entries(statusConfig).map(([status, config]) => (
-            <div key={status} className="flex items-center gap-2">
-              <div className={`w-3 h-3 ${config.bg} rounded`}></div>
-              <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-                {config.label}
-              </span>
-            </div>
-          ))}
+          {Object.entries(statusConfig).map(([status, config]) => {
+            const getLegendStyle = () => {
+              if (status === 'serving') return { backgroundColor: '#FF380B' };
+              if (status === 'reserved') return { backgroundColor: '#FF6B3B' };
+              return {};
+            };
+            
+            return (
+              <div key={status} className="flex items-center gap-2">
+                <div className={`w-3 h-3 ${config.bg} rounded`} style={getLegendStyle()}></div>
+                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {config.label}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

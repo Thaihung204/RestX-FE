@@ -136,8 +136,7 @@ const activities: Activity[] = [
 const typeColors: Record<Activity["type"], string> = {
   booking: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   menu: "bg-green-500/10 text-green-500 border-green-500/20",
-  payment: "",
-  paymentStyle: { backgroundColor: 'rgba(255, 56, 11, 0.1)', color: '#FF380B', borderColor: 'rgba(255, 56, 11, 0.2)' },
+  payment: "", // Will use inline style
   staff: "bg-purple-500/10 text-purple-500 border-purple-500/20",
 };
 
@@ -173,7 +172,12 @@ export default function ActivityTimeline() {
             <div
               className={`flex-shrink-0 w-10 h-10 rounded-lg border flex items-center justify-center ${
                 typeColors[activity.type]
-              }`}>
+              }`}
+              style={activity.type === 'payment' ? { 
+                backgroundColor: 'rgba(255, 56, 11, 0.1)', 
+                color: '#FF380B', 
+                borderColor: 'rgba(255, 56, 11, 0.2)' 
+              } : undefined}>
               {activity.icon}
             </div>
 
