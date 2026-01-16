@@ -17,7 +17,8 @@ export default function QuickActions() {
       id: "add-table",
       title: "Add Table",
       description: "Create new table",
-      color: "from-orange-600 to-orange-500",
+      color: "",
+      colorStyle: { background: `linear-gradient(to right, #FF380B, #FF380B)` },
       icon: (
         <svg
           className="w-6 h-6"
@@ -187,7 +188,7 @@ export default function QuickActions() {
             </p>
 
             {/* Hover effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/5 group-hover:to-orange-500/10 rounded-xl transition-all duration-300"></div>
+            <div className="absolute inset-0 rounded-xl transition-all duration-300" style={{ background: 'linear-gradient(to bottom right, rgba(255, 56, 11, 0), rgba(255, 56, 11, 0))' }} onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(to bottom right, rgba(255, 56, 11, 0.05), rgba(255, 56, 11, 0.1))'} onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(to bottom right, rgba(255, 56, 11, 0), rgba(255, 56, 11, 0))'}></div>
           </button>
         ))}
       </div>

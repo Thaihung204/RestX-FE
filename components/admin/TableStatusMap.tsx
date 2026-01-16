@@ -29,9 +29,12 @@ const statusConfig: Record<
   { bg: string; border: string; text: string; label: string }
 > = {
   serving: {
-    bg: "bg-orange-500",
-    border: "border-orange-500",
-    text: "text-orange-500",
+    bg: "",
+    bgStyle: { backgroundColor: '#FF380B' },
+    border: "",
+    borderStyle: { borderColor: '#FF380B' },
+    text: "",
+    textStyle: { color: '#FF380B' },
     label: "Serving",
   },
   available: {
@@ -41,9 +44,12 @@ const statusConfig: Record<
     label: "Available",
   },
   reserved: {
-    bg: "bg-orange-400",
-    border: "border-orange-400",
-    text: "text-orange-400",
+    bg: "",
+    bgStyle: { backgroundColor: '#FF6B3B' },
+    border: "",
+    borderStyle: { borderColor: '#FF6B3B' },
+    text: "",
+    textStyle: { color: '#FF6B3B' },
     label: "Reserved",
   },
   cleaning: {
@@ -106,7 +112,7 @@ export default function TableStatusMap() {
         <div
           className="rounded-lg p-4"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
+          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide" style={{ color: '#FF380B' }}>
             VIP Area
           </h4>
           <div className="flex gap-4 flex-wrap">
@@ -118,7 +124,7 @@ export default function TableStatusMap() {
         <div
           className="rounded-lg p-4"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
+          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide" style={{ color: '#FF380B' }}>
             Indoor Area
           </h4>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
@@ -130,7 +136,7 @@ export default function TableStatusMap() {
         <div
           className="rounded-lg p-4"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
+          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide" style={{ color: '#FF380B' }}>
             Outdoor Area
           </h4>
           <div className="flex gap-4 flex-wrap">

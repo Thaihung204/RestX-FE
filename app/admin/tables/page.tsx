@@ -69,9 +69,9 @@ export default function TablesPage() {
       badge: "bg-green-500/10 text-green-500 border-green-500/20",
     },
     occupied: {
-      color: "bg-orange-500",
+      color: "bg-[#FF380B]",
       text: "Occupied",
-      badge: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+      badge: "bg-[#FF380B]/10 text-[#FF380B] border-[#FF380B]/20",
     },
     reserved: {
       color: "bg-blue-500",
@@ -103,7 +103,8 @@ export default function TablesPage() {
                 </p>
               </div>
               <button
-                className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-orange-400 transition-all"
+                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                style={{ background: '#FF380B' }}
                 suppressHydrationWarning>
                 <svg
                   className="w-5 h-5 inline-block mr-2"
@@ -191,20 +192,21 @@ export default function TablesPage() {
                 className="rounded-xl p-4"
                 style={{
                   background: 'var(--card)',
-                  border: '1px solid rgba(249, 115, 22, 0.2)',
+                  border: '1px solid rgba(255, 56, 11, 0.2)',
                 }}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                       Occupied
                     </p>
-                    <p className="text-3xl font-bold text-orange-500 mt-1">
+                    <p className="text-3xl font-bold mt-1" style={{ color: '#FF380B' }}>
                       {tables.filter((t) => t.status === "occupied").length}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(255, 56, 11, 0.1)' }}>
                     <svg
-                      className="w-6 h-6 text-orange-500"
+                      className="w-6 h-6"
+                      style={{ color: '#FF380B' }}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24">
@@ -266,7 +268,8 @@ export default function TablesPage() {
                 {tables.map((table) => (
                   <div
                     key={table.id}
-                    className="rounded-xl p-4 transition-all hover:border-orange-500/50"
+                    className="rounded-xl p-4 transition-all"
+                    style={{ borderColor: 'rgba(255, 56, 11, 0.5)' }}
                     style={{
                       background: 'var(--surface)',
                       border: '1px solid var(--border)',
@@ -305,7 +308,7 @@ export default function TablesPage() {
                         <span>Capacity: {table.capacity} seats</span>
                       </div>
                       {table.currentOrder && (
-                        <div className="flex items-center gap-2 text-sm text-orange-500">
+                        <div className="flex items-center gap-2 text-sm" style={{ color: '#FF380B' }}>
                           <svg
                             className="w-4 h-4"
                             fill="none"
@@ -342,7 +345,10 @@ export default function TablesPage() {
 
                     <div className="flex gap-2">
                       <button
-                        className="flex-1 px-3 py-2 bg-orange-500/10 text-orange-500 rounded-lg text-sm font-medium hover:bg-orange-500/20 transition-all"
+                        className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                        style={{ backgroundColor: 'rgba(255, 56, 11, 0.1)', color: '#FF380B' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 56, 11, 0.2)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 56, 11, 0.1)'; }}
                         suppressHydrationWarning>
                         View Details
                       </button>

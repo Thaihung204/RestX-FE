@@ -53,7 +53,7 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
                     backdropFilter: "blur(4px)"
                 }}
             >
-                <Text style={{ display: "block", color: "#ff7043", fontSize: 12, marginBottom: 2 }}>Vị trí</Text>
+                <Text style={{ display: "block", color: "#FF380B", fontSize: 12, marginBottom: 2 }}>Vị trí</Text>
                 <Text style={{ color: "#fff", fontSize: 24, fontWeight: 800, lineHeight: 1 }}>{tableNumber}</Text>
             </div>
         </div>

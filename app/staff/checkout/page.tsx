@@ -250,7 +250,7 @@ export default function CheckoutPage() {
           <Avatar
             size={isMobile ? 44 : 56}
             style={{
-              background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+              background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
               fontSize: isMobile ? 14 : 18,
               fontWeight: 700,
             }}
@@ -283,7 +283,7 @@ export default function CheckoutPage() {
           <div>
             <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>{t('staff.checkout.bill.total_payment')}</Text>
             <br />
-            <Text strong style={{ fontSize: isMobile ? 18 : 24, color: '#FF7A00' }}>
+            <Text strong style={{ fontSize: isMobile ? 18 : 24, color: '#FF380B' }}>
               {bill.total.toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
             </Text>
           </div>
@@ -315,7 +315,7 @@ export default function CheckoutPage() {
           <Card
             style={{
               borderRadius: isMobile ? 12 : 16,
-              background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+              background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
               border: 'none',
             }}
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
@@ -342,7 +342,7 @@ export default function CheckoutPage() {
               value={bills.filter(b => b.status === 'pending').length}
               suffix={language === 'en' ? 'tables' : 'bàn'}
               styles={{ content: { color: 'var(--text)', fontSize: isMobile ? 24 : 32, fontWeight: 500 } }}
-              prefix={<TableOutlined style={{ color: '#FF7A00' }} />}
+              prefix={<TableOutlined style={{ color: '#FF380B' }} />}
             />
           </Card>
         </Col>
@@ -443,7 +443,7 @@ export default function CheckoutPage() {
                 {paymentMethod === 'cash' && cashReceived > calculateFinalTotal() && (
                   <div style={{ marginTop: 12 }}>
                     <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.change')}: </Text>
-                    <Text strong style={{ color: '#FF7A00', fontSize: isMobile ? 15 : 16 }}>
+                    <Text strong style={{ color: '#FF380B', fontSize: isMobile ? 15 : 16 }}>
                       {(cashReceived - calculateFinalTotal()).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
                     </Text>
                   </div>
@@ -482,7 +482,7 @@ export default function CheckoutPage() {
                 <Avatar
                   size={isMobile ? 52 : 64}
                   style={{
-                    background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                    background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                     fontSize: isMobile ? 18 : 24,
                     fontWeight: 700,
                   }}
@@ -547,7 +547,7 @@ export default function CheckoutPage() {
                     {/* Discount - moved inside the card */}
                     <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexWrap: 'wrap' }}>
-                      <GiftOutlined style={{ fontSize: isMobile ? 16 : 20, color: '#FF7A00' }} />
+                      <GiftOutlined style={{ fontSize: isMobile ? 16 : 20, color: '#FF380B' }} />
                       <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.discount')}</Text>
                       <InputNumber
                         min={0}
@@ -598,7 +598,7 @@ export default function CheckoutPage() {
                         borderTop: mode === 'dark' ? '2px solid rgba(255, 255, 255, 0.12)' : '2px solid #E5E7EB',
                       }}>
                         <Text strong style={{ fontSize: isMobile ? 15 : 17, fontWeight: 600 }}>{t('staff.checkout.payment.total')}</Text>
-                        <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00', fontWeight: 500 }}>
+                        <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B', fontWeight: 500 }}>
                           {calculateFinalTotal().toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
                         </Text>
                       </div>

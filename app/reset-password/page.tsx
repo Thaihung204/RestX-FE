@@ -125,7 +125,7 @@ export default function ResetPasswordPage() {
           className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
         >
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-600 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl" style={{ background: '#FF380B' }}>
               <svg
                 className="w-8 h-8 text-white"
                 fill="none"

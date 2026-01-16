@@ -340,7 +340,7 @@ export default function OrderManagement() {
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 12, marginBottom: isMobile ? 10 : 12 }}>
                 <Avatar
                   style={{
-                    background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                    background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                     fontWeight: 600,
                     fontSize: isMobile ? 12 : 14,
                   }}
@@ -389,18 +389,18 @@ export default function OrderManagement() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, flexWrap: 'wrap' }}>
-                <Text strong style={{ color: '#FF7A00', fontSize: isMobile ? 15 : 16 }}>
+                <Text strong style={{ color: '#FF380B', fontSize: isMobile ? 15 : 16 }}>
                   {order.total.toLocaleString('vi-VN')}đ
                 </Text>
                 {pendingItems > 0 && (
                   <Badge
                     count={isMobile ? `${pendingItems} ${t('staff.orders.order.items_not_done')}` : `${pendingItems} ${t('staff.orders.stats.pending_items')}`}
                     style={{
-                      backgroundColor: mode === 'dark' ? 'rgba(255, 122, 0, 0.2)' : 'rgba(255, 122, 0, 0.1)',
-                      color: '#FF7A00',
+                      backgroundColor: mode === 'dark' ? 'rgba(255, 56, 11, 0.2)' : 'rgba(255, 56, 11, 0.1)',
+                      color: '#FF380B',
                       fontSize: isMobile ? 12 : 13,
                       fontWeight: 500,
-                      border: `1px solid ${mode === 'dark' ? 'rgba(255, 122, 0, 0.3)' : 'rgba(255, 122, 0, 0.2)'}`,
+                      border: `1px solid ${mode === 'dark' ? 'rgba(255, 56, 11, 0.3)' : 'rgba(255, 56, 11, 0.2)'}`,
                     }}
                   />
                 )}
@@ -590,7 +590,7 @@ export default function OrderManagement() {
                 borderRadius: 12,
                 height: isMobile ? 40 : 48,
                 fontWeight: 600,
-                background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                 border: 'none',
                 width: '100%',
               }}
@@ -649,7 +649,7 @@ export default function OrderManagement() {
       <Modal
         title={
           <Space>
-            <ShoppingCartOutlined style={{ color: '#FF7A00' }} />
+            <ShoppingCartOutlined style={{ color: '#FF380B' }} />
             <span>{t('staff.orders.modal.order_detail')} {selectedOrder?.id}</span>
           </Space>
         }
@@ -754,7 +754,7 @@ export default function OrderManagement() {
             {/* Total */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.orders.order.total')}</Text>
-              <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }}>
+              <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B' }}>
                 {selectedOrder.total.toLocaleString('vi-VN')}đ
               </Text>
             </div>
@@ -805,7 +805,7 @@ export default function OrderManagement() {
       <Modal
         title={
           <Space>
-            <PlusOutlined style={{ color: '#FF7A00' }} />
+            <PlusOutlined style={{ color: '#FF380B' }} />
             <span>{t('staff.orders.modal.new_order')}</span>
           </Space>
         }
@@ -885,17 +885,17 @@ export default function OrderManagement() {
                           height: isMobile ? 32 : 40,
                           borderRadius: 8,
                           background: 'var(--surface)',
-                          color: '#FF7A00'
+                          color: '#FF380B'
                         }}>
                           {getMenuItemIcon(item.id)}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <Text strong style={{ display: 'block', fontSize: isMobile ? 13 : 14 }}>{item.name}</Text>
-                          <Text style={{ color: '#FF7A00', fontSize: isMobile ? 12 : 14 }}>
+                          <Text style={{ color: '#FF380B', fontSize: isMobile ? 12 : 14 }}>
                             {item.price.toLocaleString('vi-VN')}đ
                           </Text>
                         </div>
-                        <PlusOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 14 : 16 }} />
+                        <PlusOutlined style={{ color: '#FF380B', fontSize: isMobile ? 14 : 16 }} />
                       </div>
                     </Card>
                   </Col>
@@ -940,7 +940,7 @@ export default function OrderManagement() {
                           height: isMobile ? 28 : 32,
                           borderRadius: 6,
                           background: 'var(--surface)',
-                          color: '#FF7A00'
+                          color: '#FF380B'
                         }}>
                           {getMenuItemIcon(c.item.id)}
                         </div>
@@ -975,7 +975,7 @@ export default function OrderManagement() {
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isMobile ? 12 : 16 }}>
                     <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.orders.order.total')}</Text>
-                    <Text strong style={{ fontSize: isMobile ? 16 : 18, color: '#FF7A00' }}>
+                    <Text strong style={{ fontSize: isMobile ? 16 : 18, color: '#FF380B' }}>
                       {cartTotal.toLocaleString('vi-VN')}đ
                     </Text>
                   </div>
@@ -989,7 +989,7 @@ export default function OrderManagement() {
                       borderRadius: 12,
                       height: isMobile ? 44 : 48,
                       fontWeight: 600,
-                      background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                      background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                       border: 'none',
                     }}
                   >

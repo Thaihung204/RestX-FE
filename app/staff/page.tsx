@@ -32,8 +32,8 @@ const statsData = [
     value: 12,
     total: 20,
     icon: <TableOutlined />,
-    color: '#FF7A00',
-    bgColor: 'rgba(255, 122, 0, 0.1)',
+    color: '#FF380B',
+    bgColor: 'rgba(255, 56, 11, 0.1)',
   },
   {
     title: 'Order đang xử lý',
@@ -142,7 +142,7 @@ const orderColumns = [
     key: 'total',
     width: '22%',
     render: (total: number) => (
-      <Text strong style={{ color: '#FF7A00', fontSize: 14 }}>
+      <Text strong style={{ color: '#FF380B', fontSize: 14 }}>
         {total.toLocaleString('vi-VN')}đ
       </Text>
     ),
@@ -262,7 +262,7 @@ export default function StaffDashboard() {
         <Card
           style={{
             marginBottom: isMobile ? 16 : 24,
-            background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+            background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
             border: 'none',
             borderRadius: isMobile ? 16 : 20,
             overflow: 'hidden',
@@ -364,7 +364,7 @@ export default function StaffDashboard() {
                         icon={<ShoppingCartOutlined />}
                         style={{
                           background: 'rgba(255, 255, 255, 0.95)',
-                          color: '#FF7A00',
+                          color: '#FF380B',
                           border: 'none',
                           borderRadius: 10,
                           fontWeight: 600,
@@ -541,7 +541,7 @@ export default function StaffDashboard() {
                       animate={{ rotate: [0, 10, -10, 0] }}
                       transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                     >
-                      <ShoppingCartOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 20 }} />
+                      <ShoppingCartOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
                     </motion.div>
                     <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>Order gần đây</span>
                     <Tag color="orange" style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12, margin: 0 }}>
@@ -550,7 +550,7 @@ export default function StaffDashboard() {
                   </Space>
                   <Link href="/staff/orders">
                     <motion.div whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
-                      <Button type="link" style={{ color: '#FF7A00', fontWeight: 600, fontSize: isMobile ? 12 : 14, padding: isMobile ? '0 4px' : '0 15px' }}>
+                      <Button type="link" style={{ color: '#FF380B', fontWeight: 600, fontSize: isMobile ? 12 : 14, padding: isMobile ? '0 4px' : '0 15px' }}>
                         Xem tất cả <RightOutlined />
                       </Button>
                     </motion.div>
@@ -587,7 +587,7 @@ export default function StaffDashboard() {
             <Card
               title={
                 <Space>
-                  <TableOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 20 }} />
+                  <TableOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
                   <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>Tình trạng bàn</span>
                 </Space>
               }
@@ -641,8 +641,8 @@ export default function StaffDashboard() {
                       percent={(zone.occupied / zone.total) * 100}
                       showInfo={false}
                       strokeColor={{
-                        '0%': '#FF7A00',
-                        '100%': '#FF9A40',
+                        '0%': '#FF380B',
+                        '100%': '#FF6B3B',
                       }}
                       railColor="var(--border)"
                       size="small"
@@ -670,7 +670,7 @@ export default function StaffDashboard() {
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          background: '#FF7A00',
+                          background: '#FF380B',
                         }}
                       />
                       <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
@@ -696,9 +696,9 @@ export default function StaffDashboard() {
                         borderRadius: 12,
                         height: 48,
                         fontWeight: 600,
-                        background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                        background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                         border: 'none',
-                        boxShadow: '0 4px 15px rgba(255, 122, 0, 0.3)',
+                        boxShadow: '0 4px 15px rgba(255, 56, 11, 0.3)',
                       }}
                     >
                       Xem sơ đồ bàn
@@ -744,7 +744,7 @@ export default function StaffDashboard() {
         >
           <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}>
             {[
-              { icon: <TableOutlined />, title: 'Mở bàn', color: '#FF7A00', href: '/staff/tables' },
+              { icon: <TableOutlined />, title: 'Mở bàn', color: '#FF380B', href: '/staff/tables' },
               { icon: <ShoppingCartOutlined />, title: 'Tạo order', color: '#1890ff', href: '/staff/orders' },
               { icon: <DollarOutlined />, title: 'Thanh toán', color: '#52c41a', href: '/staff/checkout' },
               { icon: <ClockCircleOutlined />, title: 'Chấm công', color: '#722ed1', href: '/staff/attendance' },
@@ -821,7 +821,7 @@ export default function StaffDashboard() {
           font-size: 13px;
         }
         .ant-table-wrapper .ant-table-tbody > tr:hover > td {
-          background: rgba(255, 122, 0, 0.08) !important;
+          background: rgba(255, 56, 11, 0.08) !important;
         }
         .ant-table-wrapper .ant-table-tbody > tr:last-child > td {
           border-bottom: none;

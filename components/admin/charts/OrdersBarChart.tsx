@@ -37,7 +37,8 @@ export default function OrdersBarChart() {
               <div key={index} className="flex-1 flex flex-col items-center">
                 <div className="relative w-full flex items-end justify-center h-48">
                   <div
-                    className="w-full bg-gradient-to-t from-orange-600 to-orange-500 rounded-t-lg transition-all duration-500 hover:from-orange-500 hover:to-orange-400 group relative"
+                    className="w-full rounded-t-lg transition-all duration-500 group relative"
+                    style={{ background: 'linear-gradient(to top, #FF380B, #FF380B)' }}
                     style={{ height: `${height}%` }}>
                     <div
                       className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 rounded whitespace-nowrap"
@@ -64,7 +65,7 @@ export default function OrdersBarChart() {
         className="mt-4 pt-4 flex justify-center"
         style={{ borderTop: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-gradient-to-br from-orange-600 to-orange-500 rounded"></div>
+          <div className="w-3 h-3 rounded" style={{ background: 'linear-gradient(to bottom right, #FF380B, #FF380B)' }}></div>
           <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
             Total Orders
           </span>

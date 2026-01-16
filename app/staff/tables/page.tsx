@@ -95,8 +95,8 @@ const getStatusConfig = (mode: 'light' | 'dark', t: (key: string) => string) => 
       icon: <CheckCircleOutlined />,
     },
     occupied: {
-      color: '#FF7A00',
-      bgColor: isDark ? 'rgba(255, 122, 0, 0.15)' : '#fff7e6',
+      color: '#FF380B',
+      bgColor: isDark ? 'rgba(255, 56, 11, 0.15)' : '#fff7e6',
       text: t('staff.tables.status.occupied'),
       icon: <UserOutlined />,
     },
@@ -306,7 +306,7 @@ export default function TableManagement() {
                   <ClockCircleOutlined /> {t('staff.tables.table.from')} {table.startTime}
                 </Text>
                 <br />
-                <Text style={{ fontSize: 14, color: '#FF7A00', fontWeight: 500 }}>
+                <Text style={{ fontSize: 14, color: '#FF380B', fontWeight: 500 }}>
                   {table.guests} {t('staff.tables.table.guests')} • {table.order?.items} {t('staff.tables.table.dishes')}
                 </Text>
               </div>
@@ -415,7 +415,7 @@ export default function TableManagement() {
       <Modal
         title={
           <Space>
-            <TableOutlined style={{ color: '#FF7A00' }} />
+            <TableOutlined style={{ color: '#FF380B' }} />
             <span>{t('staff.tables.modal.detail')} {selectedTable?.name}</span>
           </Space>
         }
@@ -521,8 +521,8 @@ export default function TableManagement() {
                 size="small"
                 style={{
                   borderRadius: 12,
-                  background: mode === 'dark' ? 'rgba(255, 122, 0, 0.15)' : '#fff7e6',
-                  border: `1px solid ${mode === 'dark' ? 'rgba(255, 122, 0, 0.3)' : '#ffd591'}`,
+                  background: mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : '#fff7e6',
+                  border: `1px solid ${mode === 'dark' ? 'rgba(255, 56, 11, 0.3)' : '#ffd591'}`,
                   marginBottom: 24,
                 }}
               >
@@ -547,7 +547,7 @@ export default function TableManagement() {
                     <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
                       {t('staff.tables.modal.total_amount')}
                     </Text>
-                    <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2, color: '#FF7A00' }}>
+                    <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2, color: '#FF380B' }}>
                       {selectedTable.order.total.toLocaleString('vi-VN')}đ
                     </Text>
                   </Col>
@@ -622,7 +622,7 @@ export default function TableManagement() {
                       borderRadius: 12,
                       height: 48,
                       fontWeight: 600,
-                      background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                      background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                       border: 'none',
                     }}
                   >

@@ -49,7 +49,8 @@ export default function DashboardHeader() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search..."
-                className="w-64 px-4 py-2 pl-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="w-64 px-4 py-2 pl-10 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+                style={{ '--tw-ring-color': '#FF380B' } as React.CSSProperties}
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
@@ -88,7 +89,7 @@ export default function DashboardHeader() {
                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                 />
               </svg>
-              <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full" style={{ backgroundColor: '#FF380B' }}></span>
             </button>
 
             {/* Theme Toggle */}
@@ -123,7 +124,7 @@ export default function DashboardHeader() {
             <button
               className="flex items-center gap-3 p-2 rounded-lg transition-colors"
               style={{ background: "var(--surface)", color: "var(--text)" }}>
-              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ background: '#FF380B' }}>
                 A
               </div>
               <div className="hidden lg:block text-left">

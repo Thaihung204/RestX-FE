@@ -154,14 +154,14 @@ export default function StaffLayout({
               width: 40,
               height: 40,
               borderRadius: 10,
-              background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+              background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 20,
               fontWeight: 700,
               color: '#fff',
-              boxShadow: '0 4px 15px rgba(255, 122, 0, 0.4)',
+              boxShadow: '0 4px 15px rgba(255, 56, 11, 0.4)',
             }}
           >
             R
@@ -176,7 +176,7 @@ export default function StaffLayout({
                 letterSpacing: '-0.5px',
               }}
             >
-              Rest<span style={{ color: '#FF7A00' }}>X</span>
+              Rest<span style={{ color: '#FF380B' }}>X</span>
             </span>
           )}
         </Link>
@@ -194,7 +194,7 @@ export default function StaffLayout({
             <Avatar
               size={44}
               style={{
-                background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                 fontSize: 18,
                 fontWeight: 600,
               }}
@@ -248,9 +248,9 @@ export default function StaffLayout({
             left: 16,
             right: 16,
             padding: '16px',
-            background: 'rgba(255, 122, 0, 0.1)',
+            background: 'rgba(255, 56, 11, 0.1)',
             borderRadius: 12,
-            border: '1px solid rgba(255, 122, 0, 0.2)',
+            border: '1px solid rgba(255, 56, 11, 0.2)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -498,7 +498,7 @@ export default function StaffLayout({
                   <Avatar
                     size={isMobile ? 24 : 28}
                     style={{
-                      background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                      background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                       fontWeight: 600,
                       fontSize: isMobile ? 10 : 12,
                     }}
@@ -535,8 +535,8 @@ export default function StaffLayout({
           line-height: 48px !important;
         }
         .ant-menu-dark .ant-menu-item-selected {
-          background: linear-gradient(135deg, rgba(255, 122, 0, 0.2) 0%, rgba(255, 122, 0, 0.1) 100%) !important;
-          border-left: 3px solid #FF7A00 !important;
+          background: linear-gradient(135deg, rgba(255, 56, 11, 0.2) 0%, rgba(255, 56, 11, 0.1) 100%) !important;
+          border-left: 3px solid #FF380B !important;
         }
         .ant-menu-dark .ant-menu-item:hover {
           background: rgba(255, 255, 255, 0.05) !important;

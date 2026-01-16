@@ -306,7 +306,7 @@ export default function AttendancePage() {
                           {t('staff.attendance.info.worked')}
                         </Text>
                         <br />
-                        <Text style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
+                        <Text style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
                           {calculateWorkingHours().toFixed(1)}h
                         </Text>
                       </div>
@@ -439,7 +439,7 @@ export default function AttendancePage() {
               title={<span style={{ fontSize: isMobile ? 13 : 15 }}>{t('staff.attendance.stats.total_hours')}</span>}
               value={monthlyStats.totalHours}
               suffix="h"
-              styles={{ content: { color: '#FF7A00', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
+              styles={{ content: { color: '#FF380B', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
               prefix={<FieldTimeOutlined />}
             />
           </Card>
@@ -452,7 +452,7 @@ export default function AttendancePage() {
           <Card
             title={
               <Space>
-                <HistoryOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18 }} />
+                <HistoryOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18 }} />
                 <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.attendance.history.title')}</span>
               </Space>
             }
@@ -475,7 +475,7 @@ export default function AttendancePage() {
           <Card
             title={
               <Space>
-                <TrophyOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18 }} />
+                <TrophyOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18 }} />
                 <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.attendance.history.progress')}</span>
               </Space>
             }
@@ -506,7 +506,7 @@ export default function AttendancePage() {
               </div>
               <Progress
                 percent={Number(((monthlyStats.totalHours / (monthlyStats.totalDays * 8)) * 100).toFixed(1))}
-                strokeColor="#FF7A00"
+                strokeColor="#FF380B"
                 railColor="var(--border)"
                 format={(p) => `${p?.toFixed(1)}%`}
               />
@@ -570,7 +570,7 @@ export default function AttendancePage() {
               <Avatar
                 size={isMobile ? 40 : 48}
                 style={{
-                  background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                  background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                 }}
               >
                 <UserOutlined />

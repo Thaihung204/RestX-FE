@@ -127,7 +127,7 @@ export default function NotFound() {
                 style={{
                   fontSize: '120px',
                   fontWeight: 700,
-                  background: 'linear-gradient(135deg, #FF7A00 0%, #FFB066 100%)',
+                  background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -148,14 +148,14 @@ export default function NotFound() {
                   width: '120px',
                   height: '120px',
                   background: isDark
-                    ? 'rgba(255, 122, 0, 0.1)'
-                    : 'rgba(255, 122, 0, 0.05)',
-                  border: `2px solid ${isDark ? 'rgba(255, 122, 0, 0.3)' : 'rgba(255, 122, 0, 0.2)'}`,
+                    ? 'rgba(255, 56, 11, 0.1)'
+                    : 'rgba(255, 56, 11, 0.05)',
+                  border: `2px solid ${isDark ? 'rgba(255, 56, 11, 0.3)' : 'rgba(255, 56, 11, 0.2)'}`, 
                 }}>
                 <CoffeeOutlined
                   style={{
                     fontSize: '48px',
-                    color: '#FF7A00',
+                    color: '#FF380B',
                   }}
                 />
               </div>
@@ -204,10 +204,10 @@ export default function NotFound() {
                   paddingLeft: '24px',
                   paddingRight: '24px',
                   borderRadius: '24px',
-                  background: 'linear-gradient(135deg, #FF7A00 0%, #FFB066 100%)',
+                  background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                   border: 'none',
                   fontWeight: 600,
-                  boxShadow: '0 4px 16px rgba(255, 122, 0, 0.3)',
+                  boxShadow: '0 4px 16px rgba(255, 56, 11, 0.3)',
                 }}>
                 Về trang chủ
               </Button>
@@ -248,18 +248,18 @@ export default function NotFound() {
               <Link
                 href="/restaurant"
                 style={{
-                  color: '#FF7A00',
+                  color: '#FF380B',
                   textDecoration: 'none',
                   fontSize: '14px',
                   fontWeight: 500,
                   transition: 'all 0.3s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#FFB066';
+                  e.currentTarget.style.color = '#FF6B3B';
                   e.currentTarget.style.textDecoration = 'underline';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#FF7A00';
+                  e.currentTarget.style.color = '#FF380B';
                   e.currentTarget.style.textDecoration = 'none';
                 }}>
                 Nhà hàng
@@ -268,18 +268,18 @@ export default function NotFound() {
               <Link
                 href="/login"
                 style={{
-                  color: '#FF7A00',
+                  color: '#FF380B',
                   textDecoration: 'none',
                   fontSize: '14px',
                   fontWeight: 500,
                   transition: 'all 0.3s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#FFB066';
+                  e.currentTarget.style.color = '#FF6B3B';
                   e.currentTarget.style.textDecoration = 'underline';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#FF7A00';
+                  e.currentTarget.style.color = '#FF380B';
                   e.currentTarget.style.textDecoration = 'none';
                 }}>
                 Đăng nhập
@@ -288,18 +288,18 @@ export default function NotFound() {
               <Link
                 href="/customer"
                 style={{
-                  color: '#FF7A00',
+                  color: '#FF380B',
                   textDecoration: 'none',
                   fontSize: '14px',
                   fontWeight: 500,
                   transition: 'all 0.3s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#FFB066';
+                  e.currentTarget.style.color = '#FF6B3B';
                   e.currentTarget.style.textDecoration = 'underline';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#FF7A00';
+                  e.currentTarget.style.color = '#FF380B';
                   e.currentTarget.style.textDecoration = 'none';
                 }}>
                 Khách hàng
@@ -328,8 +328,8 @@ export default function NotFound() {
                 height: '100px',
                 borderRadius: '50%',
                 background: isDark
-                  ? 'rgba(255, 122, 0, 0.05)'
-                  : 'rgba(255, 122, 0, 0.03)',
+                  ? 'rgba(255, 56, 11, 0.05)'
+                  : 'rgba(255, 56, 11, 0.03)',
                 filter: 'blur(40px)',
               }}
             />
@@ -352,8 +352,8 @@ export default function NotFound() {
                 height: '120px',
                 borderRadius: '50%',
                 background: isDark
-                  ? 'rgba(255, 122, 0, 0.05)'
-                  : 'rgba(255, 122, 0, 0.03)',
+                  ? 'rgba(255, 56, 11, 0.05)'
+                  : 'rgba(255, 56, 11, 0.03)',
                 filter: 'blur(40px)',
               }}
             />
