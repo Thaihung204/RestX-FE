@@ -14,11 +14,8 @@ interface QuickAction {
 }
 
 export default function QuickActions() {
-<<<<<<< HEAD:components/dashboard/QuickActions.tsx
   const { t } = useTranslation();
-=======
   const router = useRouter();
->>>>>>> c6393903b6f228d8bf681c080e440322773948aa:components/admin/QuickActions.tsx
 
   const actions: QuickAction[] = [
     {
