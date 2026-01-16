@@ -3,6 +3,7 @@
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Staff {
   id: string;
@@ -17,6 +18,7 @@ interface Staff {
 }
 
 export default function StaffPage() {
+  const { t } = useTranslation("common");
   const [staff] = useState<Staff[]>([
     {
       id: "1",
@@ -135,10 +137,10 @@ export default function StaffPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
-                  Staff Management
+                  {t("dashboard.staff.title")}
                 </h2>
                 <p style={{ color: 'var(--text-muted)' }}>
-                  Manage your restaurant team members
+                  {t("dashboard.staff.subtitle")}
                 </p>
               </div>
               <button
@@ -156,7 +158,7 @@ export default function StaffPage() {
                     d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                   />
                 </svg>
-                Add Staff
+                {t("dashboard.staff.add_staff")}
               </button>
             </div>
 
@@ -171,7 +173,7 @@ export default function StaffPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Total Staff
+                      {t("dashboard.staff.stats.total_staff")}
                     </p>
                     <p className="text-3xl font-bold text-blue-500 mt-1">
                       {staff.length}
@@ -203,7 +205,7 @@ export default function StaffPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      On Duty
+                      {t("dashboard.staff.stats.on_duty")}
                     </p>
                     <p className="text-3xl font-bold text-green-500 mt-1">
                       {staff.filter((s) => s.status === "active").length}
@@ -235,7 +237,7 @@ export default function StaffPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Departments
+                      {t("dashboard.staff.stats.departments")}
                     </p>
                     <p className="text-3xl font-bold text-orange-500 mt-1">5</p>
                   </div>
@@ -265,7 +267,7 @@ export default function StaffPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Avg Rating
+                      {t("dashboard.staff.stats.avg_rating")}
                     </p>
                     <p className="text-3xl font-bold text-purple-500 mt-1">
                       4.7
@@ -306,19 +308,17 @@ export default function StaffPage() {
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium border ${
-                                roleConfig[member.role].badge
-                              }`}>
-                              {member.role}
+                              className={`px-2 py-1 rounded-full text-xs font-medium border ${roleConfig[member.role].badge
+                                }`}>
+                              {t(`dashboard.staff.roles.${member.role.toLowerCase()}`)}
                             </span>
                           </div>
                         </div>
                       </div>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium border ${
-                          statusConfig[member.status].badge
-                        }`}>
-                        {statusConfig[member.status].text}
+                        className={`px-2 py-1 rounded-full text-xs font-medium border ${statusConfig[member.status].badge
+                          }`}>
+                        {t(`dashboard.staff.status.${member.status.replace("-", "_")}`)}
                       </span>
                     </div>
 
@@ -360,7 +360,7 @@ export default function StaffPage() {
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
                         <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
-                          Shift
+                          {t("dashboard.staff.card.shift")}
                         </p>
                         <p className="font-medium" style={{ color: 'var(--text)' }}>
                           {member.shift}
@@ -368,7 +368,7 @@ export default function StaffPage() {
                       </div>
                       <div>
                         <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
-                          Joined
+                          {t("dashboard.staff.card.joined")}
                         </p>
                         <p className="font-medium" style={{ color: 'var(--text)' }}>
                           {member.joinDate}
@@ -382,11 +382,10 @@ export default function StaffPage() {
                         {[...Array(5)].map((_, i) => (
                           <svg
                             key={i}
-                            className={`w-4 h-4 ${
-                              i < Math.floor(member.rating)
-                                ? "text-yellow-500"
-                                : ""
-                            }`}
+                            className={`w-4 h-4 ${i < Math.floor(member.rating)
+                              ? "text-yellow-500"
+                              : ""
+                              }`}
                             style={
                               i >= Math.floor(member.rating)
                                 ? { color: 'var(--text-muted)' }
@@ -408,7 +407,7 @@ export default function StaffPage() {
                       <button
                         className="flex-1 px-3 py-2 bg-orange-500/10 text-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition-all font-medium text-sm"
                         suppressHydrationWarning>
-                        View Profile
+                        {t("dashboard.staff.card.view_profile")}
                       </button>
                       <button
                         className="px-3 py-2 rounded-lg transition-all"

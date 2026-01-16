@@ -3,8 +3,10 @@
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function SettingsPage() {
+  const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState<
     "general" | "appearance" | "notifications" | "security"
   >("general");
@@ -19,10 +21,10 @@ export default function SettingsPage() {
             {/* Header */}
             <div>
               <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
-                Settings
+                {t("dashboard.settings.title")}
               </h2>
               <p style={{ color: 'var(--text-muted)' }}>
-                Manage your restaurant preferences and configurations
+                {t("dashboard.settings.subtitle")}
               </p>
             </div>
 
@@ -31,36 +33,35 @@ export default function SettingsPage() {
               {[
                 {
                   id: "general" as const,
-                  label: "General",
+                  label: t("dashboard.settings.tabs.general"),
                   icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
                 },
                 {
                   id: "appearance" as const,
-                  label: "Appearance",
+                  label: t("dashboard.settings.tabs.appearance"),
                   icon: "M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01",
                 },
                 {
                   id: "notifications" as const,
-                  label: "Notifications",
+                  label: t("dashboard.settings.tabs.notifications"),
                   icon: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9",
                 },
                 {
                   id: "security" as const,
-                  label: "Security",
+                  label: t("dashboard.settings.tabs.security"),
                   icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
                 },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-3 font-medium transition-all flex items-center gap-2 ${
-                    activeTab === tab.id ? "text-orange-500 border-b-2 border-orange-500" : ""
-                  }`}
+                  className={`px-4 py-3 font-medium transition-all flex items-center gap-2 ${activeTab === tab.id ? "text-orange-500 border-b-2 border-orange-500" : ""
+                    }`}
                   style={
                     activeTab !== tab.id
                       ? {
-                          color: 'var(--text-muted)',
-                        }
+                        color: 'var(--text-muted)',
+                      }
                       : undefined
                   }
                   suppressHydrationWarning>
@@ -91,12 +92,12 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                   }}>
                   <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
-                    Restaurant Information
+                    {t("dashboard.settings.general.restaurant_info")}
                   </h3>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                        Restaurant Name
+                        {t("dashboard.settings.general.restaurant_name")}
                       </label>
                       <input
                         type="text"
@@ -113,7 +114,7 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          Email
+                          {t("dashboard.settings.general.email")}
                         </label>
                         <input
                           type="email"
@@ -129,7 +130,7 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          Phone
+                          {t("dashboard.settings.general.phone")}
                         </label>
                         <input
                           type="tel"
@@ -146,7 +147,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                        Address
+                        {t("dashboard.settings.general.address")}
                       </label>
                       <input
                         type="text"
@@ -163,7 +164,7 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          Opening Time
+                          {t("dashboard.settings.general.opening_time")}
                         </label>
                         <input
                           type="time"
@@ -179,7 +180,7 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          Closing Time
+                          {t("dashboard.settings.general.closing_time")}
                         </label>
                         <input
                           type="time"
@@ -204,13 +205,13 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                   }}>
                   <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
-                    Business Settings
+                    {t("dashboard.settings.general.business_settings")}
                   </h3>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          Currency
+                          {t("dashboard.settings.general.currency")}
                         </label>
                         <select
                           className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
@@ -228,7 +229,7 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          Tax Rate (%)
+                          {t("dashboard.settings.general.tax_rate")}
                         </label>
                         <input
                           type="number"
@@ -246,7 +247,7 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          Time Zone
+                          {t("dashboard.settings.general.timezone")}
                         </label>
                         <select
                           className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
@@ -264,7 +265,7 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          Date Format
+                          {t("dashboard.settings.general.date_format")}
                         </label>
                         <select
                           className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
@@ -295,7 +296,7 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                   }}>
                   <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
-                    Theme
+                    {t("dashboard.settings.appearance.theme")}
                   </h3>
                   <div className="grid grid-cols-3 gap-4">
                     {[
@@ -308,22 +309,19 @@ export default function SettingsPage() {
                     ].map((theme) => (
                       <button
                         key={theme.name}
-                        className={`p-4 bg-gradient-to-br ${
-                          theme.color
-                        } border-2 ${
-                          theme.name === "Dark"
+                        className={`p-4 bg-gradient-to-br ${theme.color
+                          } border-2 ${theme.name === "Dark"
                             ? "border-orange-500"
                             : "border-gray-700"
-                        } rounded-xl hover:border-orange-500 transition-all`}
+                          } rounded-xl hover:border-orange-500 transition-all`}
                         suppressHydrationWarning>
                         <div className="text-center">
                           <p
-                            className={`font-bold ${
-                              theme.name === "Light"
-                                ? "text-gray-900"
-                                : "text-white"
-                            }`}>
-                            {theme.name}
+                            className={`font-bold ${theme.name === "Light"
+                              ? "text-gray-900"
+                              : "text-white"
+                              }`}>
+                            {t(`dashboard.settings.appearance.themes.${theme.name.toLowerCase()}`)}
                           </p>
                         </div>
                       </button>
@@ -338,18 +336,17 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                   }}>
                   <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
-                    Accent Color
+                    {t("dashboard.settings.appearance.accent_color")}
                   </h3>
                   <div className="grid grid-cols-6 gap-4">
                     {["orange", "blue", "green", "purple", "pink", "red"].map(
                       (color) => (
                         <button
                           key={color}
-                          className={`h-12 bg-${color}-500 rounded-lg hover:scale-110 transition-transform ${
-                            color === "orange"
-                              ? "ring-2 ring-white ring-offset-2 ring-offset-gray-900"
-                              : ""
-                          }`}
+                          className={`h-12 bg-${color}-500 rounded-lg hover:scale-110 transition-transform ${color === "orange"
+                            ? "ring-2 ring-white ring-offset-2 ring-offset-gray-900"
+                            : ""
+                            }`}
                           suppressHydrationWarning
                         />
                       )
@@ -364,16 +361,16 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                   }}>
                   <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
-                    Display Options
+                    {t("dashboard.settings.appearance.display_options")}
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium" style={{ color: 'var(--text)' }}>
-                          Compact Mode
+                          {t("dashboard.settings.appearance.compact_mode")}
                         </p>
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                          Reduce spacing between elements
+                          {t("dashboard.settings.appearance.compact_mode_desc")}
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -388,10 +385,10 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium" style={{ color: 'var(--text)' }}>
-                          Show Animations
+                          {t("dashboard.settings.appearance.show_animations")}
                         </p>
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                          Enable interface animations
+                          {t("dashboard.settings.appearance.show_animations_desc")}
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -419,21 +416,21 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                   }}>
                   <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
-                    Order Notifications
+                    {t("dashboard.settings.notifications.order_notifications")}
                   </h3>
                   <div className="space-y-4">
                     {[
                       {
-                        title: "New Orders",
-                        desc: "Get notified when new orders arrive",
+                        title: t("dashboard.settings.notifications.items.new_orders"),
+                        desc: t("dashboard.settings.notifications.items.new_orders_desc"),
                       },
                       {
-                        title: "Order Updates",
-                        desc: "Updates on order status changes",
+                        title: t("dashboard.settings.notifications.items.order_updates"),
+                        desc: t("dashboard.settings.notifications.items.order_updates_desc"),
                       },
                       {
-                        title: "Order Completion",
-                        desc: "When orders are completed",
+                        title: t("dashboard.settings.notifications.items.order_completion"),
+                        desc: t("dashboard.settings.notifications.items.order_completion_desc"),
                       },
                     ].map((item) => (
                       <div
@@ -468,19 +465,19 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                   }}>
                   <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
-                    System Notifications
+                    {t("dashboard.settings.notifications.system_notifications")}
                   </h3>
                   <div className="space-y-4">
                     {[
                       {
-                        title: "Table Updates",
-                        desc: "Changes in table status",
+                        title: t("dashboard.settings.notifications.items.table_updates"),
+                        desc: t("dashboard.settings.notifications.items.table_updates_desc"),
                       },
                       {
-                        title: "Staff Alerts",
-                        desc: "Staff check-in/out notifications",
+                        title: t("dashboard.settings.notifications.items.staff_alerts"),
+                        desc: t("dashboard.settings.notifications.items.staff_alerts_desc"),
                       },
-                      { title: "Inventory Alerts", desc: "Low stock warnings" },
+                      { title: t("dashboard.settings.notifications.items.inventory_alerts"), desc: t("dashboard.settings.notifications.items.inventory_alerts_desc") },
                     ].map((item) => (
                       <div
                         key={item.title}
@@ -519,12 +516,12 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                   }}>
                   <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
-                    Change Password
+                    {t("dashboard.settings.security.change_password")}
                   </h3>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                        Current Password
+                        {t("dashboard.settings.security.current_password")}
                       </label>
                       <input
                         type="password"
@@ -539,7 +536,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                        New Password
+                        {t("dashboard.settings.security.new_password")}
                       </label>
                       <input
                         type="password"
@@ -554,7 +551,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                        Confirm New Password
+                        {t("dashboard.settings.security.confirm_new_password")}
                       </label>
                       <input
                         type="password"
@@ -570,7 +567,7 @@ export default function SettingsPage() {
                     <button
                       className="px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-orange-400 transition-all"
                       suppressHydrationWarning>
-                      Update Password
+                      {t("dashboard.settings.security.update_password")}
                     </button>
                   </div>
                 </div>
@@ -582,16 +579,16 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                   }}>
                   <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
-                    Two-Factor Authentication
+                    {t("dashboard.settings.security.two_factor")}
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium" style={{ color: 'var(--text)' }}>
-                          Enable 2FA
+                          {t("dashboard.settings.security.enable_2fa")}
                         </p>
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                          Add an extra layer of security
+                          {t("dashboard.settings.security.enable_2fa_desc")}
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -613,13 +610,13 @@ export default function SettingsPage() {
                     border: '1px solid rgba(239, 68, 68, 0.2)',
                   }}>
                   <h3 className="text-xl font-bold text-red-500 mb-4">
-                    Danger Zone
+                    {t("dashboard.settings.security.danger_zone")}
                   </h3>
                   <div className="space-y-4">
                     <button
                       className="px-6 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg font-medium hover:bg-red-500 hover:text-white transition-all"
                       suppressHydrationWarning>
-                      Delete Account
+                      {t("dashboard.settings.security.delete_account")}
                     </button>
                   </div>
                 </div>
@@ -636,12 +633,12 @@ export default function SettingsPage() {
                   border: '1px solid var(--border)',
                 }}
                 suppressHydrationWarning>
-                Cancel
+                {t("dashboard.settings.buttons.cancel")}
               </button>
               <button
                 className="px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-orange-400 transition-all"
                 suppressHydrationWarning>
-                Save Changes
+                {t("dashboard.settings.buttons.save_changes")}
               </button>
             </div>
           </div>

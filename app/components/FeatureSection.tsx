@@ -11,6 +11,7 @@ import {
   ApiOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -21,53 +22,50 @@ interface Feature {
   color: string;
 }
 
-const features: Feature[] = [
-  {
-    icon: <TableOutlined style={{ fontSize: 36 }} />,
-    title: 'Quản lý đặt bàn thông minh',
-    description:
-      'Hệ thống đặt bàn tự động với giao diện trực quan, giúp tối ưu hóa sơ đồ bàn và giảm thời gian chờ cho khách hàng.',
-    color: '#FF7A00',
-  },
-  {
-    icon: <FileTextOutlined style={{ fontSize: 36 }} />,
-    title: 'Order & KOT liền mạch',
-    description:
-      'Đồng bộ order từ phục vụ đến bếp ngay lập tức. Theo dõi trạng thái món ăn realtime và giảm thiểu sai sót.',
-    color: '#10B981',
-  },
-  {
-    icon: <InboxOutlined style={{ fontSize: 36 }} />,
-    title: 'Quản lý kho & nguyên vật liệu',
-    description:
-      'Kiểm soát tồn kho chính xác, cảnh báo nguyên liệu sắp hết, và tối ưu chi phí mua hàng theo chu kỳ kinh doanh.',
-    color: '#6366F1',
-  },
-  {
-    icon: <BarChartOutlined style={{ fontSize: 36 }} />,
-    title: 'Báo cáo realtime',
-    description:
-      'Dashboard phân tích doanh thu, món bán chạy, hiệu suất nhân viên. Tất cả dữ liệu cập nhật theo thời gian thực.',
-    color: '#F59E0B',
-  },
-  {
-    icon: <ShopOutlined style={{ fontSize: 36 }} />,
-    title: 'Đa chi nhánh',
-    description:
-      'Quản lý nhiều cửa hàng trên một hệ thống. Đồng bộ menu, giá bán và tổng hợp báo cáo tập trung.',
-    color: '#EC4899',
-  },
-  {
-    icon: <ApiOutlined style={{ fontSize: 36 }} />,
-    title: 'Tích hợp linh hoạt',
-    description:
-      'Kết nối với payment gateway, giao hàng, kế toán và các ứng dụng bên thứ ba thông qua API mở.',
-    color: '#14B8A6',
-  },
-];
+
 
 const FeatureSection: React.FC = () => {
+  const { t } = useTranslation();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const features: Feature[] = [
+    {
+      icon: <TableOutlined style={{ fontSize: 36 }} />,
+      title: t('homepage.features.items.table_management.title'),
+      description: t('homepage.features.items.table_management.description'),
+      color: '#FF7A00',
+    },
+    {
+      icon: <FileTextOutlined style={{ fontSize: 36 }} />,
+      title: t('homepage.features.items.order_kot.title'),
+      description: t('homepage.features.items.order_kot.description'),
+      color: '#10B981',
+    },
+    {
+      icon: <InboxOutlined style={{ fontSize: 36 }} />,
+      title: t('homepage.features.items.inventory.title'),
+      description: t('homepage.features.items.inventory.description'),
+      color: '#6366F1',
+    },
+    {
+      icon: <BarChartOutlined style={{ fontSize: 36 }} />,
+      title: t('homepage.features.items.reports.title'),
+      description: t('homepage.features.items.reports.description'),
+      color: '#F59E0B',
+    },
+    {
+      icon: <ShopOutlined style={{ fontSize: 36 }} />,
+      title: t('homepage.features.items.multi_branch.title'),
+      description: t('homepage.features.items.multi_branch.description'),
+      color: '#EC4899',
+    },
+    {
+      icon: <ApiOutlined style={{ fontSize: 36 }} />,
+      title: t('homepage.features.items.integration.title'),
+      description: t('homepage.features.items.integration.description'),
+      color: '#14B8A6',
+    },
+  ];
 
   const headerVariants = {
     hidden: { opacity: 0, y: 40 },
@@ -107,8 +105,8 @@ const FeatureSection: React.FC = () => {
 
   const iconVariants = {
     rest: { scale: 1, rotate: 0 },
-    hover: { 
-      scale: 1.1, 
+    hover: {
+      scale: 1.1,
       rotate: [0, -10, 10, 0],
       transition: { duration: 0.4 }
     },
@@ -176,7 +174,7 @@ const FeatureSection: React.FC = () => {
                   marginBottom: 16,
                 }}
               >
-                Tính năng
+                {t('homepage.features.tag')}
               </span>
             </motion.div>
             <Title
@@ -189,8 +187,8 @@ const FeatureSection: React.FC = () => {
                 lineHeight: 1.2,
               }}
             >
-              Tính năng nổi bật của{' '}
-              <span style={{ 
+              {t('homepage.features.title_prefix')}
+              <span style={{
                 background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -209,7 +207,7 @@ const FeatureSection: React.FC = () => {
                 lineHeight: 1.7,
               }}
             >
-              Tất cả công cụ bạn cần để vận hành nhà hàng – trong một giao diện trực quan.
+              {t('homepage.features.description')}
             </Paragraph>
           </Flex>
         </motion.div>
@@ -223,8 +221,8 @@ const FeatureSection: React.FC = () => {
           <Row gutter={[24, 24]}>
             {features.map((feature, index) => (
               <Col xs={24} sm={12} md={8} key={index}>
-                <motion.div 
-                  variants={cardVariants} 
+                <motion.div
+                  variants={cardVariants}
                   style={{ height: '100%' }}
                   onHoverStart={() => setHoveredIndex(index)}
                   onHoverEnd={() => setHoveredIndex(null)}
@@ -241,10 +239,10 @@ const FeatureSection: React.FC = () => {
                         borderRadius: 20,
                         border: hoveredIndex === index ? `2px solid ${feature.color}30` : '1px solid var(--border)',
                         transition: 'all 0.3s ease',
-                        background: hoveredIndex === index 
+                        background: hoveredIndex === index
                           ? `linear-gradient(135deg, ${feature.color}05 0%, var(--card) 100%)`
                           : 'var(--card)',
-                        boxShadow: hoveredIndex === index 
+                        boxShadow: hoveredIndex === index
                           ? `0 20px 40px ${feature.color}15`
                           : '0 4px 20px rgba(0, 0, 0, 0.05)',
                       }}
@@ -275,7 +273,7 @@ const FeatureSection: React.FC = () => {
                         <Text style={{ color: 'var(--text-muted)', lineHeight: 1.7, fontSize: 15 }}>
                           {feature.description}
                         </Text>
-                        
+
                         {/* Learn more link */}
                         <motion.div
                           initial={{ opacity: 0, x: -10 }}
@@ -293,7 +291,7 @@ const FeatureSection: React.FC = () => {
                               gap: 6,
                             }}
                           >
-                            Tìm hiểu thêm 
+                            {t('homepage.features.items.learn_more')}
                             <motion.span
                               animate={hoveredIndex === index ? { x: [0, 5, 0] } : { x: 0 }}
                               transition={{ duration: 0.6, repeat: Infinity }}

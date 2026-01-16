@@ -3,6 +3,7 @@
 import React from 'react';
 import { Typography, Row, Col, Card, Space, Avatar, Rate } from 'antd';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -13,38 +14,37 @@ interface Testimonial {
   initial: string;
 }
 
-const testimonials: Testimonial[] = [
-  {
-    name: 'Anh Nam',
-    role: 'Owner, Nhà hàng Hải Sản 123',
-    initial: 'N',
-    quote:
-      'RestX đã thay đổi hoàn toàn cách chúng tôi vận hành. Từ việc đặt bàn đến quản lý kho, mọi thứ đều được tự động hóa và chính xác hơn rất nhiều.',
-  },
-  {
-    name: 'Chị Hương',
-    role: 'Manager, Chuỗi Phở 24h',
-    initial: 'H',
-    quote:
-      'Trước đây tôi phải mất hàng giờ để tổng hợp báo cáo từ 5 chi nhánh. Giờ với RestX, tất cả dữ liệu đều có sẵn trên dashboard trong vài cú click.',
-  },
-  {
-    name: 'Anh Tuấn',
-    role: 'Owner, Quán Cơm Tấm Sài Gòn',
-    initial: 'T',
-    quote:
-      'Giao diện đơn giản, nhân viên học rất nhanh. Hệ thống ổn định, chưa bao giờ gặp lỗi trong giờ cao điểm. Recommend cho mọi nhà hàng!',
-  },
-  {
-    name: 'Chị Lan',
-    role: 'Manager, Cafe & Bistro Xanh',
-    initial: 'L',
-    quote:
-      'Chúng tôi yêu tính năng đồng bộ realtime. Order từ app đến bếp chỉ trong 1 giây, khách hàng rất hài lòng về tốc độ phục vụ.',
-  },
-];
+
 
 const TestimonialsSection: React.FC = () => {
+  const { t } = useTranslation();
+
+  const testimonials: Testimonial[] = [
+    {
+      name: 'Anh Nam',
+      role: t('homepage.testimonials.items.nam.role'),
+      initial: 'N',
+      quote: t('homepage.testimonials.items.nam.quote'),
+    },
+    {
+      name: 'Chị Hương',
+      role: t('homepage.testimonials.items.huong.role'),
+      initial: 'H',
+      quote: t('homepage.testimonials.items.huong.quote'),
+    },
+    {
+      name: 'Anh Tuấn',
+      role: t('homepage.testimonials.items.tuan.role'),
+      initial: 'T',
+      quote: t('homepage.testimonials.items.tuan.quote'),
+    },
+    {
+      name: 'Chị Lan',
+      role: t('homepage.testimonials.items.lan.role'),
+      initial: 'L',
+      quote: t('homepage.testimonials.items.lan.quote'),
+    },
+  ];
   const headerVariants = {
     hidden: { opacity: 0, y: 40 },
     visible: {
@@ -105,7 +105,7 @@ const TestimonialsSection: React.FC = () => {
                 color: 'var(--text)',
               }}
             >
-              Nhà hàng nói gì về RestX?
+              {t('homepage.testimonials.title')}
             </Title>
             <Paragraph
               style={{
@@ -117,7 +117,7 @@ const TestimonialsSection: React.FC = () => {
                 marginRight: 'auto',
               }}
             >
-              Hàng trăm chủ nhà hàng và quản lý đã tin tưởng RestX để tối ưu vận hành của họ.
+              {t('homepage.testimonials.description')}
             </Paragraph>
           </Space>
         </motion.div>
@@ -161,7 +161,7 @@ const TestimonialsSection: React.FC = () => {
                             <Text strong style={{ fontSize: 17, display: 'block' }}>
                               {testimonial.name}
                             </Text>
-                          <Text type="secondary" style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                            <Text type="secondary" style={{ fontSize: 14, color: 'var(--text-muted)' }}>
                               {testimonial.role}
                             </Text>
                           </div>

@@ -68,54 +68,9 @@ interface Order {
   notes?: string;
 }
 
-// Mock menu data - Note: In a real app, menu data should also be internationalized
-const menuCategories = [
-  {
-    id: 'appetizer',
-    name: 'Khai vị', // Will be replaced with translation in component
-    icon: <CoffeeOutlined />,
-    items: [
-      { id: 'm1', name: 'Gỏi cuốn tôm thịt', price: 65000 },
-      { id: 'm2', name: 'Chả giò hải sản', price: 85000 },
-      { id: 'm3', name: 'Súp cua', price: 55000 },
-    ],
-  },
-  {
-    id: 'main',
-    name: 'Món chính', // Will be replaced with translation in component
-    icon: <FireOutlined />,
-    items: [
-      { id: 'm4', name: 'Bò lúc lắc', price: 185000 },
-      { id: 'm5', name: 'Cá hồi sốt chanh dây', price: 245000 },
-      { id: 'm6', name: 'Gà nướng muối ớt', price: 165000 },
-      { id: 'm7', name: 'Tôm hùm nướng bơ', price: 650000 },
-      { id: 'm8', name: 'Cơm chiên hải sản', price: 125000 },
-    ],
-  },
-  {
-    id: 'drink',
-    name: 'Đồ uống', // Will be replaced with translation in component
-    icon: <CoffeeOutlined />,
-    items: [
-      { id: 'm9', name: 'Nước ép cam', price: 45000 },
-      { id: 'm10', name: 'Sinh tố bơ', price: 55000 },
-      { id: 'm11', name: 'Coca Cola', price: 25000 },
-      { id: 'm12', name: 'Bia Tiger', price: 35000 },
-    ],
-  },
-];
+// Menu data moved inside component for translation
 
-// Helper function to get icon for menu item based on its category
-const getMenuItemIcon = (itemId: string): React.ReactNode => {
-  // Find which category this item belongs to
-  for (const category of menuCategories) {
-    if (category.items.some(item => item.id === itemId)) {
-      return category.icon;
-    }
-  }
-  // Default icon if not found
-  return <AppstoreOutlined />;
-};
+// Helper function moved to component
 
 // Mock orders data
 const initialOrders: Order[] = [
@@ -182,6 +137,42 @@ export default function OrderManagement() {
   const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
 
+  const menuCategories = [
+    {
+      id: 'appetizer',
+      name: t('staff.orders.menu.appetizer'),
+      icon: <CoffeeOutlined />,
+      items: [
+        { id: 'm1', name: 'Gỏi cuốn tôm thịt', price: 65000 },
+        { id: 'm2', name: 'Chả giò hải sản', price: 85000 },
+        { id: 'm3', name: 'Súp cua', price: 55000 },
+      ],
+    },
+    {
+      id: 'main',
+      name: t('staff.orders.menu.main'),
+      icon: <FireOutlined />,
+      items: [
+        { id: 'm4', name: 'Bò lúc lắc', price: 185000 },
+        { id: 'm5', name: 'Cá hồi sốt chanh dây', price: 245000 },
+        { id: 'm6', name: 'Gà nướng muối ớt', price: 165000 },
+        { id: 'm7', name: 'Tôm hùm nướng bơ', price: 650000 },
+        { id: 'm8', name: 'Cơm chiên hải sản', price: 125000 },
+      ],
+    },
+    {
+      id: 'drink',
+      name: t('staff.orders.menu.drink'),
+      icon: <CoffeeOutlined />,
+      items: [
+        { id: 'm9', name: 'Nước ép cam', price: 45000 },
+        { id: 'm10', name: 'Sinh tố bơ', price: 55000 },
+        { id: 'm11', name: 'Coca Cola', price: 25000 },
+        { id: 'm12', name: 'Bia Tiger', price: 35000 },
+      ],
+    },
+  ];
+
   // Create status configs inside component to use translations
   const statusConfig: Record<OrderStatus, { color: string; text: string; icon: React.ReactNode }> = {
     pending: { color: 'orange', text: t('staff.orders.status.pending'), icon: <ExclamationCircleOutlined /> },
@@ -207,6 +198,18 @@ export default function OrderManagement() {
   const [activeMenuCategory, setActiveMenuCategory] = useState('appetizer');
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+
+  // Helper function to get icon for menu item based on its category
+  const getMenuItemIcon = (itemId: string): React.ReactNode => {
+    // Find which category this item belongs to
+    for (const category of menuCategories) {
+      if (category.items.some(item => item.id === itemId)) {
+        return category.icon;
+      }
+    }
+    // Default icon if not found
+    return <AppstoreOutlined />;
+  };
 
   // Check viewport
   React.useEffect(() => {

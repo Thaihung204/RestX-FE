@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 type TableStatus = "serving" | "available" | "reserved" | "cleaning";
 
 interface Table {
@@ -24,37 +26,39 @@ const tables: Table[] = [
   { id: "O3", status: "available", seats: 4, area: "Outdoor" },
 ];
 
-const statusConfig: Record<
-  TableStatus,
-  { bg: string; border: string; text: string; label: string }
-> = {
-  serving: {
-    bg: "bg-orange-500",
-    border: "border-orange-500",
-    text: "text-orange-500",
-    label: "Serving",
-  },
-  available: {
-    bg: "bg-gray-600",
-    border: "border-gray-600",
-    text: "text-gray-400",
-    label: "Available",
-  },
-  reserved: {
-    bg: "bg-orange-400",
-    border: "border-orange-400",
-    text: "text-orange-400",
-    label: "Reserved",
-  },
-  cleaning: {
-    bg: "bg-red-400",
-    border: "border-red-400",
-    text: "text-red-400",
-    label: "Cleaning",
-  },
-};
-
 export default function TableStatusMap() {
+  const { t } = useTranslation();
+
+  const statusConfig: Record<
+    TableStatus,
+    { bg: string; border: string; text: string; label: string }
+  > = {
+    serving: {
+      bg: "bg-orange-500",
+      border: "border-orange-500",
+      text: "text-orange-500",
+      label: t("dashboard.table_status.status.serving"),
+    },
+    available: {
+      bg: "bg-gray-600",
+      border: "border-gray-600",
+      text: "text-gray-400",
+      label: t("dashboard.table_status.status.available"),
+    },
+    reserved: {
+      bg: "bg-orange-400",
+      border: "border-orange-400",
+      text: "text-orange-400",
+      label: t("dashboard.table_status.status.reserved"),
+    },
+    cleaning: {
+      bg: "bg-red-400",
+      border: "border-red-400",
+      text: "text-red-400",
+      label: t("dashboard.table_status.status.cleaning"),
+    },
+  };
+
   const vipTables = tables.filter((t) => t.area === "VIP");
   const indoorTables = tables.filter((t) => t.area === "Indoor");
   const outdoorTables = tables.filter((t) => t.area === "Outdoor");
@@ -66,22 +70,20 @@ export default function TableStatusMap() {
         key={table.id}
         className="group relative cursor-pointer transition-all duration-300 hover:scale-110">
         <div
-          className={`w-16 h-16 ${
-            config.bg
-          } rounded-lg flex flex-col items-center justify-center border-2 ${
-            config.border
-          } shadow-lg transition-all
+          className={`w-16 h-16 ${config.bg
+            } rounded-lg flex flex-col items-center justify-center border-2 ${config.border
+            } shadow-lg transition-all
           ${table.status === "serving" ? "animate-pulse-slow" : ""}`}>
           <span className="text-white font-bold text-sm">{table.id}</span>
-          <span className="text-white text-xs">{table.seats} seats</span>
+          <span className="text-white text-xs">{table.seats} {t("dashboard.table_status.tooltip.seats").toLowerCase()}</span>
         </div>
 
         {/* Tooltip */}
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-3 py-2 rounded shadow-lg whitespace-nowrap z-10 border border-gray-700">
           <div className="font-semibold">{table.id}</div>
-          <div className="text-gray-300">Status: {config.label}</div>
-          <div className="text-gray-300">Seats: {table.seats}</div>
-          <div className="text-gray-300">Area: {table.area}</div>
+          <div className="text-gray-300">{t("dashboard.table_status.tooltip.status")}: {config.label}</div>
+          <div className="text-gray-300">{t("dashboard.table_status.tooltip.seats")}: {table.seats}</div>
+          <div className="text-gray-300">{t("dashboard.table_status.tooltip.area")}: {table.area}</div>
         </div>
       </div>
     );
@@ -93,10 +95,10 @@ export default function TableStatusMap() {
       style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
       <div className="mb-6">
         <h3 className="text-xl font-bold mb-1" style={{ color: "var(--text)" }}>
-          Real-time Table Status
+          {t("dashboard.table_status.title")}
         </h3>
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          Live floor plan overview
+          {t("dashboard.table_status.subtitle")}
         </p>
       </div>
 
@@ -107,7 +109,7 @@ export default function TableStatusMap() {
           className="rounded-lg p-4"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
-            VIP Area
+            {t("dashboard.table_status.areas.vip")}
           </h4>
           <div className="flex gap-4 flex-wrap">
             {vipTables.map(renderTable)}
@@ -119,7 +121,7 @@ export default function TableStatusMap() {
           className="rounded-lg p-4"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
-            Indoor Area
+            {t("dashboard.table_status.areas.indoor")}
           </h4>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
             {indoorTables.map(renderTable)}
@@ -131,7 +133,7 @@ export default function TableStatusMap() {
           className="rounded-lg p-4"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <h4 className="text-orange-500 font-semibold mb-3 text-sm uppercase tracking-wide">
-            Outdoor Area
+            {t("dashboard.table_status.areas.outdoor")}
           </h4>
           <div className="flex gap-4 flex-wrap">
             {outdoorTables.map(renderTable)}
