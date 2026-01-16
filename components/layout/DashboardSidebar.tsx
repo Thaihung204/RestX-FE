@@ -17,9 +17,9 @@ export default function DashboardSidebar() {
 
   const navItems: NavItem[] = [
     {
-      id: "dashboard",
+      id: "admin",
       label: "Dashboard",
-      path: "/dashboard",
+      path: "/admin",
       icon: (
         <svg
           className="w-5 h-5"
@@ -38,7 +38,7 @@ export default function DashboardSidebar() {
     {
       id: "analytics",
       label: "Analytics",
-      path: "/dashboard/analytics",
+      path: "/admin/analytics",
       icon: (
         <svg
           className="w-5 h-5"
@@ -57,7 +57,7 @@ export default function DashboardSidebar() {
     {
       id: "tables",
       label: "Tables",
-      path: "/dashboard/tables",
+      path: "/admin/tables",
       icon: (
         <svg
           className="w-5 h-5"
@@ -76,7 +76,7 @@ export default function DashboardSidebar() {
     {
       id: "menu",
       label: "Menu",
-      path: "/dashboard/menu",
+      path: "/admin/menu",
       icon: (
         <svg
           className="w-5 h-5"
@@ -95,7 +95,7 @@ export default function DashboardSidebar() {
     {
       id: "orders",
       label: "Orders",
-      path: "/dashboard/orders",
+      path: "/admin/orders",
       icon: (
         <svg
           className="w-5 h-5"
@@ -114,7 +114,7 @@ export default function DashboardSidebar() {
     {
       id: "staff",
       label: "Staff",
-      path: "/dashboard/staff",
+      path: "/admin/staff",
       icon: (
         <svg
           className="w-5 h-5"
@@ -133,7 +133,7 @@ export default function DashboardSidebar() {
     {
       id: "settings",
       label: "Settings",
-      path: "/dashboard/settings",
+      path: "/admin/settings",
       icon: (
         <svg
           className="w-5 h-5"
@@ -158,7 +158,7 @@ export default function DashboardSidebar() {
     {
       id: "help",
       label: "Help",
-      path: "/dashboard/help",
+      path: "/admin/help",
       icon: (
         <svg
           className="w-5 h-5"

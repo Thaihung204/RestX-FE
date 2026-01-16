@@ -210,6 +210,21 @@ export default function LoginPage() {
                 Privacy Policy
               </a>
             </div>
+
+            <div 
+              className="text-center text-sm mt-4 auth-text"
+            >
+              Or login with{" "}
+              <a
+                href="/login-email"
+                className="font-semibold transition-colors"
+                style={{ color: '#FF7A00' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+              >
+                Email & Password
+              </a>
+            </div>
           </form>
         </div>
       </div>
