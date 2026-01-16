@@ -54,12 +54,12 @@ export default function StaffLayout({
     {
       key: '/staff/tables',
       icon: <TableOutlined />,
-      label: t('staff.menu.tables'),
+      label: (isMobile || isTablet) ? t('staff.menu.tables_short') : t('staff.menu.tables'),
     },
     {
       key: '/staff/orders',
       icon: <ShoppingCartOutlined />,
-      label: t('staff.menu.orders'),
+      label: (isMobile || isTablet) ? t('staff.menu.orders_short') : t('staff.menu.orders'),
     },
     {
       key: '/staff/checkout',
@@ -174,7 +174,7 @@ export default function StaffLayout({
                 marginLeft: 12,
                 fontSize: 22,
                 fontWeight: 700,
-                color: mode === 'dark' ? '#fff' : '#000',
+                color: mode === 'dark' ? '#fff' : '#1a1a2e',
                 letterSpacing: '-0.5px',
               }}
             >
@@ -206,7 +206,7 @@ export default function StaffLayout({
             <div>
               <Text
                 style={{
-                  color: mode === 'dark' ? '#fff' : '#000',
+                  color: mode === 'dark' ? '#fff' : '#1a1a2e',
                   fontWeight: 600,
                   fontSize: 14,
                   display: 'block',
@@ -269,8 +269,8 @@ export default function StaffLayout({
               {t('staff.sidebar.working')}
             </Text>
           </div>
-          <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}>
-            {t('staff.sidebar.started')}: 08:00 - {t('staff.sidebar.today')}
+          <Text style={{ color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)', fontSize: 12 }}>
+            Bắt đầu: 08:00 - Hôm nay
           </Text>
         </div>
       )}
@@ -280,53 +280,68 @@ export default function StaffLayout({
   return (
     <>
       <Layout style={{ minHeight: '100vh' }}>
-        {/* Mobile Drawer */}
+        {/* Mobile Bottom Navigation */}
         {isDrawerDevice && (
-          <Drawer
-            placement="left"
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            style={{ top: 0, height: '100vh', width: 280 }}
-            closable={false}
-            maskClosable
-            rootStyle={{
-              backdropFilter: 'none',
-              WebkitBackdropFilter: 'none',
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              width: '100%',
+              height: 85,
+              background: mode === 'dark' ? 'rgba(20, 25, 39, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderTop: '1px solid var(--border)',
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'center',
+              paddingBottom: 20,
+              zIndex: 1000,
+              boxShadow: '0 -4px 20px rgba(0,0,0,0.05)',
             }}
-            styles={{
-              mask: {
-                background: 'rgba(0,0,0,0.55)',
-                backdropFilter: 'none',
-                WebkitBackdropFilter: 'none',
-                filter: 'none',
-              },
-              body: {
-                padding: 0,
-                background: mode === 'dark' ? '#001529' : '#ffffff',
-                height: '100%',
-                minHeight: '100%',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-              },
-              header: { display: 'none' },
-            }}
-            destroyOnClose
           >
-            <div style={{ position: 'relative', height: '100%' }}>
-              <Button
-                type="text"
-                icon={<CloseOutlined style={{ color: mode === 'dark' ? '#fff' : '#000' }} />}
-                onClick={() => setDrawerOpen(false)}
-                style={{
-                  position: 'absolute',
-                  right: 16,
-                  top: 20,
-                  zIndex: 10,
-                }}
-              />
-              <SidebarContent inDrawer />
-            </div>
-          </Drawer>
+            {menuItems.map((item) => {
+              const isActive = pathname === item.key;
+              return (
+                <div
+                  key={item.key}
+                  onClick={() => router.push(item.key)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                    color: isActive ? '#FF7A00' : 'var(--text-muted)',
+                    cursor: 'pointer',
+                    width: '20%',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <div style={{
+                    fontSize: 24,
+                    transform: isActive ? 'translateY(-2px)' : 'none',
+                    transition: 'transform 0.2s',
+                    filter: isActive ? 'drop-shadow(0 4px 6px rgba(255, 122, 0, 0.3))' : 'none',
+                  }}>
+                    {item.icon}
+                  </div>
+                  <span style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    opacity: isActive ? 1 : 0.8,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                    textAlign: 'center',
+                    padding: '0 2px',
+                  }}>{item.label}</span>
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {/* Desktop Sidebar */}
@@ -338,14 +353,14 @@ export default function StaffLayout({
             width={260}
             collapsedWidth={80}
             style={{
-              background: mode === 'dark' ? '#001529' : '#ffffff',
+              background: mode === 'dark' ? '#001529' : '#FFFFFF',
               boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
+              borderRight: mode === 'dark' ? 'none' : '1px solid var(--border)',
               position: 'fixed',
               height: '100vh',
               left: 0,
               top: 0,
               zIndex: 100,
-              borderRight: mode === 'dark' ? 'none' : '1px solid #f0f0f0'
             }}
           >
             <SidebarContent />
@@ -376,53 +391,29 @@ export default function StaffLayout({
             }}
           >
             {/* Left Section */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flex: 1, minWidth: 0 }}>
-              <Button
-                type="text"
-                icon={isDrawerDevice ? <MenuOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
-                onClick={() => isDrawerDevice ? setDrawerOpen(true) : setCollapsed(!collapsed)}
-                style={{
-                  fontSize: 16,
-                  width: isMobile ? 36 : 40,
-                  height: isMobile ? 36 : 40,
-                  borderRadius: 8,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              />
-              {!isMobile && (
-                <div style={{ borderLeft: '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
-                    <Text style={{
-                      fontSize: 15,
-                      fontWeight: 600,
-                      color: '#1a1a2e',
-                      lineHeight: 1.2,
-                      margin: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      {menuItems.find((item) => item.key === pathname)?.label || t('staff.menu.dashboard')}
-                    </Text>
-                    <Text style={{ fontSize: 12, color: '#999', lineHeight: 1.2, marginTop: 2 }}>
-                      {new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN', {
-                        weekday: 'long',
-                        day: 'numeric',
-                        month: 'numeric',
-                      })}
-                    </Text>
-                  </div>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {!isDrawerDevice && (
+                <Button
+                  type="text"
+                  icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                  onClick={() => setCollapsed(!collapsed)}
+                  style={{
+                    fontSize: 16,
+                    width: 40,
+                    height: 40,
+                    borderRadius: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                />
               )}
-              {isMobile && (
-                <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+              <div style={{ borderLeft: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <Text style={{
-                    fontSize: isMobile ? 14 : 15,
+                    fontSize: 15,
                     fontWeight: 600,
-                    color: '#1a1a2e',
+                    color: mode === 'dark' ? '#fff' : '#1a1a2e',
                     lineHeight: 1.2,
                     margin: 0,
                     overflow: 'hidden',
@@ -432,12 +423,12 @@ export default function StaffLayout({
                     {menuItems.find((item) => item.key === pathname)?.label || t('staff.menu.dashboard')}
                   </Text>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Right Section */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 12, flexShrink: 0 }}>
-              {/* Home Link - Hidden on very small mobile */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 12 }}>
+              {/* Home Link */}
               {!isMobile && (
                 <Link href="/">
                   <Button
@@ -476,7 +467,10 @@ export default function StaffLayout({
               <ThemeToggle />
 
               {/* Language switcher */}
-              <LanguageSwitcher />
+              {/* Language switcher - hidden on very small screens if needed, or just keep it */}
+              <div style={{ display: isMobile && window.innerWidth < 360 ? 'none' : 'block' }}>
+                <LanguageSwitcher />
+              </div>
 
               {/* User Menu */}
               <Dropdown
@@ -495,6 +489,8 @@ export default function StaffLayout({
                     cursor: 'pointer',
                     border: '1px solid var(--border)',
                     transition: 'all 0.2s',
+                    maxWidth: isMobile ? 34 : 'auto',
+                    justifyContent: 'center',
                   }}
                 >
                   <Avatar
@@ -521,6 +517,7 @@ export default function StaffLayout({
           <Content
             style={{
               margin: isMobile ? 12 : 24,
+              marginBottom: isDrawerDevice ? 130 : 24,
               padding: 0,
               minHeight: 'calc(100vh - 120px)',
             }}
@@ -530,12 +527,14 @@ export default function StaffLayout({
         </Layout>
       </Layout>
       <style jsx global>{`
-        .ant-menu-dark .ant-menu-item {
+        .ant-menu-dark .ant-menu-item,
+        .ant-menu-light .ant-menu-item {
           margin: 4px 0 !important;
           border-radius: 10px !important;
           height: 48px !important;
           line-height: 48px !important;
         }
+        /* Dark Mode Menu */
         .ant-menu-dark .ant-menu-item-selected {
           background: linear-gradient(135deg, rgba(255, 122, 0, 0.2) 0%, rgba(255, 122, 0, 0.1) 100%) !important;
           border-left: 3px solid #FF7A00 !important;
@@ -546,29 +545,63 @@ export default function StaffLayout({
         .ant-menu-dark .ant-menu-item .ant-menu-item-icon {
           font-size: 18px !important;
         }
+
+        /* Light Mode Menu */
+        .ant-menu-light .ant-menu-item-selected {
+          background: linear-gradient(135deg, rgba(255, 122, 0, 0.15) 0%, rgba(255, 122, 0, 0.05) 100%) !important;
+          border-left: 3px solid #FF7A00 !important;
+          color: #FF7A00 !important;
+        }
+        .ant-menu-light .ant-menu-item:hover {
+          background: rgba(0, 0, 0, 0.04) !important;
+        }
+        .ant-menu-light .ant-menu-item .ant-menu-item-icon {
+          font-size: 18px !important;
+        }
         /* Disable blur/backdrop on all masks (drawer + modal) */
         .ant-drawer-mask,
         .ant-modal-mask {
           backdrop-filter: none !important;
           -webkit-backdrop-filter: none !important;
           filter: none !important;
+        }
+        [data-theme="dark"] .ant-drawer-mask,
+        [data-theme="dark"] .ant-modal-mask {
           background: rgba(0, 0, 0, 0.92) !important;
         }
-        /* Cards inside modal should be darker */
-        .ant-modal-body .ant-card {
+        [data-theme="light"] .ant-drawer-mask,
+        [data-theme="light"] .ant-modal-mask {
+          background: rgba(0, 0, 0, 0.45) !important;
+        }
+        /* Cards inside modal */
+        [data-theme="dark"] .ant-modal-body .ant-card {
           background: #0F1419 !important;
           border-color: var(--border) !important;
         }
-        .ant-modal-body .ant-card-body {
+        [data-theme="dark"] .ant-modal-body .ant-card-body {
           background: #0F1419 !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-card {
+          background: #FFFFFF !important;
+          border-color: #E5E7EB !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-card-body {
+          background: #FFFFFF !important;
         }
         /* Select dropdown in modal */
-        .ant-modal-body .ant-select-selector {
+        [data-theme="dark"] .ant-modal-body .ant-select-selector {
           background: #0F1419 !important;
           border-color: var(--border) !important;
         }
-        .ant-modal-body .ant-select-dropdown {
+        [data-theme="dark"] .ant-modal-body .ant-select-dropdown {
           background: #0F1419 !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-select-selector {
+          background: #FFFFFF !important;
+          border-color: #E5E7EB !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-select-dropdown {
+          background: #FFFFFF !important;
         }
         /* Divider in modal */
         .ant-modal-body .ant-divider {

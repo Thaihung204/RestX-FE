@@ -2,6 +2,7 @@
 
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
+import Link from "next/link";
 import { useState } from "react";
 
 interface MenuItem {
@@ -16,66 +17,198 @@ interface MenuItem {
 }
 
 export default function MenuPage() {
+  const formatPrice = (price: number) => {
+    return price.toLocaleString("vi-VN");
+  };
+
   const [menuItems] = useState<MenuItem[]>([
     {
       id: "1",
-      name: "Grilled Salmon",
+      name: "Honi Poke",
       category: "Main Course",
-      price: 28.99,
-      image: "/placeholder-dish.jpg",
-      description: "Fresh Atlantic salmon with herbs",
+      price: 89000,
+      image: "/images/menu/Honi-Poke.png",
+      description:
+        "Cá hồi tươi sống kết hợp cùng rong biển, dưa chuột, bơ và sốt cay đặc trưng",
       available: true,
       popular: true,
     },
     {
       id: "2",
-      name: "Truffle Pasta",
+      name: "Ahi Poke",
       category: "Main Course",
-      price: 24.99,
-      image: "/placeholder-dish.jpg",
-      description: "Homemade pasta with truffle sauce",
+      price: 89000,
+      image: "/images/menu/ahi-poke.png",
+      description:
+        "Cá ngừ đại dương sốt Shoyu, hành tây, mè rang và rau củ tươi mát",
       available: true,
       popular: true,
     },
     {
       id: "3",
+      name: "Sriracha Mayo Salmon",
+      category: "Main Course",
+      price: 89000,
+      image: "/images/menu/Sriracha-Mayo-Salmon.png",
+      description:
+        "Cá hồi nướng phủ sốt Sriracha Mayo cay ngọt hòa quyện hoàn hảo",
+      available: true,
+      popular: false,
+    },
+    {
+      id: "4",
+      name: "Salmon Lover Set",
+      category: "Main Course",
+      price: 95000,
+      image: "/images/menu/Salmon-Lover-Set.png",
+      description:
+        "Combo gồm 8 miếng nigiri cá hồi tươi và 6 miếng maki cá hồi chuẩn Nhật",
+      available: true,
+      popular: true,
+    },
+    {
+      id: "5",
+      name: "Rainbow Roll",
+      category: "Main Course",
+      price: 85000,
+      image: "/images/menu/Rainbow-Roll.png",
+      description:
+        "Cuộn sushi 7 màu sắc với nhiều loại cá tươi, bơ và sốt đặc biệt",
+      available: true,
+      popular: true,
+    },
+    {
+      id: "6",
+      name: "Vegan Garden Roll",
+      category: "Main Course",
+      price: 75000,
+      image: "/images/menu/Vegan-Garden-Roll.png",
+      description:
+        "Cuộn chay với rau củ tươi, bơ, dưa chuột và nấm truffle thuần chay",
+      available: true,
+      popular: false,
+    },
+    {
+      id: "7",
+      name: "Grilled Salmon",
+      category: "Main Course",
+      price: 289000,
+      image: "/placeholder-dish.jpg",
+      description: "Fresh Atlantic salmon with herbs",
+      available: true,
+      popular: false,
+    },
+    {
+      id: "8",
+      name: "Truffle Pasta",
+      category: "Main Course",
+      price: 249000,
+      image: "/placeholder-dish.jpg",
+      description: "Homemade pasta with truffle sauce",
+      available: true,
+      popular: false,
+    },
+    {
+      id: "9",
       name: "Caesar Salad",
       category: "Appetizer",
-      price: 12.99,
+      price: 129000,
       image: "/placeholder-dish.jpg",
       description: "Classic Caesar with croutons",
       available: true,
       popular: false,
     },
     {
-      id: "4",
+      id: "10",
       name: "Beef Steak",
       category: "Main Course",
-      price: 35.99,
+      price: 359000,
       image: "/placeholder-dish.jpg",
       description: "Premium ribeye steak",
       available: true,
       popular: true,
     },
     {
-      id: "5",
+      id: "11",
       name: "Chocolate Lava Cake",
       category: "Dessert",
-      price: 9.99,
+      price: 99000,
       image: "/placeholder-dish.jpg",
       description: "Warm chocolate cake with ice cream",
       available: false,
       popular: false,
     },
     {
-      id: "6",
+      id: "12",
       name: "Tom Yum Soup",
       category: "Appetizer",
-      price: 8.99,
+      price: 89000,
       image: "/placeholder-dish.jpg",
       description: "Spicy Thai soup",
       available: true,
       popular: false,
+    },
+    {
+      id: "13",
+      name: "Brown Sugar Milk",
+      category: "Beverages",
+      price: 45000,
+      image: "/images/menu/Brown-Sugar-Milk.png",
+      description:
+        "Trà sữa trân châu đường đen thơm ngon, ngọt ngào với vị caramel đặc trưng",
+      available: true,
+      popular: true,
+    },
+    {
+      id: "14",
+      name: "Matcha Cream Foam",
+      category: "Beverages",
+      price: 42000,
+      image: "/images/menu/matcha-cold-cream.png",
+      description:
+        "Trà xanh matcha Nhật Bản phủ lớp kem cheese mềm mịn thơm béo",
+      available: true,
+      popular: false,
+    },
+    {
+      id: "15",
+      name: "Tuna Tataki",
+      category: "Appetizer",
+      price: 115000,
+      image: "/placeholder-dish.jpg",
+      description: "Lightly seared tuna with ponzu sauce and sesame",
+      available: true,
+      popular: true,
+    },
+    {
+      id: "16",
+      name: "Miso Soup",
+      category: "Appetizer",
+      price: 35000,
+      image: "/placeholder-dish.jpg",
+      description: "Traditional Japanese soup with tofu and seaweed",
+      available: true,
+      popular: false,
+    },
+    {
+      id: "17",
+      name: "Tiramisu",
+      category: "Dessert",
+      price: 89000,
+      image: "/placeholder-dish.jpg",
+      description: "Classic Italian dessert with espresso and mascarpone",
+      available: true,
+      popular: false,
+    },
+    {
+      id: "18",
+      name: "Mango Sticky Rice",
+      category: "Dessert",
+      price: 65000,
+      image: "/placeholder-dish.jpg",
+      description: "Sweet sticky rice with fresh mango and coconut cream",
+      available: true,
+      popular: true,
     },
   ]);
 
@@ -94,55 +227,61 @@ export default function MenuPage() {
       : menuItems.filter((item) => item.category === selectedCategory);
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg-base)' }}>
+    <div className="min-h-screen flex" style={{ background: "var(--bg-base)" }}>
       <DashboardSidebar />
       <div className="flex-1 flex flex-col">
         <DashboardHeader />
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
           <div className="space-y-6">
-            {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
+                <h2
+                  className="text-3xl font-bold mb-2"
+                  style={{ color: "var(--text)" }}>
                   Menu Management
                 </h2>
-                <p style={{ color: 'var(--text-muted)' }}>
+                <p style={{ color: "var(--text-muted)" }}>
                   Manage your restaurant menu items
                 </p>
               </div>
-              <button
-                className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-orange-400 transition-all"
-                suppressHydrationWarning>
-                <svg
-                  className="w-5 h-5 inline-block mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                Add Menu Item
-              </button>
+              <Link href="/admin/menu/new">
+                <button
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-orange-400 transition-all"
+                  suppressHydrationWarning>
+                  <svg
+                    className="w-5 h-5 inline-block mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  Add Menu Item
+                </button>
+              </Link>
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div
                 className="rounded-xl p-4"
                 style={{
-                  background: 'var(--card)',
-                  border: '1px solid var(--border)',
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
                 }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                    <p
+                      className="text-sm mt-1"
+                      style={{ color: "var(--text-muted)" }}>
                       Total Items
                     </p>
-                    <p className="text-3xl font-bold mt-1" style={{ color: 'var(--text)' }}>
+                    <p
+                      className="text-3xl font-bold mt-1"
+                      style={{ color: "var(--text)" }}>
                       {menuItems.length}
                     </p>
                   </div>
@@ -166,12 +305,14 @@ export default function MenuPage() {
               <div
                 className="rounded-xl p-4"
                 style={{
-                  background: 'var(--card)',
-                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                  background: "var(--card)",
+                  border: "1px solid rgba(34, 197, 94, 0.2)",
                 }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <p
+                      className="text-sm"
+                      style={{ color: "var(--text-muted)" }}>
                       Available
                     </p>
                     <p className="text-3xl font-bold text-green-500 mt-1">
@@ -198,12 +339,14 @@ export default function MenuPage() {
               <div
                 className="rounded-xl p-4"
                 style={{
-                  background: 'var(--card)',
-                  border: '1px solid rgba(249, 115, 22, 0.2)',
+                  background: "var(--card)",
+                  border: "1px solid rgba(249, 115, 22, 0.2)",
                 }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <p
+                      className="text-sm"
+                      style={{ color: "var(--text-muted)" }}>
                       Popular Items
                     </p>
                     <p className="text-3xl font-bold text-orange-500 mt-1">
@@ -230,12 +373,14 @@ export default function MenuPage() {
               <div
                 className="rounded-xl p-4"
                 style={{
-                  background: 'var(--card)',
-                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                  background: "var(--card)",
+                  border: "1px solid rgba(168, 85, 247, 0.2)",
                 }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <p
+                      className="text-sm"
+                      style={{ color: "var(--text-muted)" }}>
                       Categories
                     </p>
                     <p className="text-3xl font-bold text-purple-500 mt-1">
@@ -260,7 +405,6 @@ export default function MenuPage() {
               </div>
             </div>
 
-            {/* Category Filter */}
             <div className="flex gap-2 flex-wrap">
               {categories.map((category) => (
                 <button
@@ -274,9 +418,9 @@ export default function MenuPage() {
                   style={
                     selectedCategory !== category
                       ? {
-                          background: 'var(--surface)',
-                          color: 'var(--text-muted)',
-                          border: '1px solid var(--border)',
+                          background: "var(--surface)",
+                          color: "var(--text-muted)",
+                          border: "1px solid var(--border)",
                         }
                       : undefined
                   }
@@ -286,24 +430,25 @@ export default function MenuPage() {
               ))}
             </div>
 
-            {/* Menu Items Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {filteredItems.map((item) => (
                 <div
                   key={item.id}
                   className="rounded-xl overflow-hidden hover:border-orange-500/50 transition-all group"
                   style={{
-                    background: 'var(--card)',
-                    border: '1px solid var(--border)',
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
                   }}>
-                  {/* Image Placeholder */}
                   <div
-                    className="relative h-48 overflow-hidden"
-                    style={{ background: 'var(--surface)' }}>
+                    className="relative overflow-hidden"
+                    style={{
+                      background: "var(--surface)",
+                      aspectRatio: "4/3",
+                    }}>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <svg
                         className="w-16 h-16"
-                        style={{ color: 'var(--text-muted)' }}
+                        style={{ color: "var(--text-muted)" }}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24">
@@ -335,44 +480,52 @@ export default function MenuPage() {
                     )}
                   </div>
 
-                  <div className="p-4">
+                  <div className="p-3">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>
+                        <h3
+                          className="text-sm font-bold mb-1 line-clamp-1"
+                          style={{ color: "var(--text)" }}>
                           {item.name}
                         </h3>
-                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                        <p
+                          className="text-xs line-clamp-2"
+                          style={{ color: "var(--text-muted)" }}>
                           {item.description}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center justify-between mt-3">
                       <div>
-                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <p
+                          className="text-xs"
+                          style={{ color: "var(--text-muted)" }}>
                           Price
                         </p>
-                        <p className="text-2xl font-bold text-orange-500">
-                          ${item.price}
+                        <p className="text-lg font-bold text-orange-500">
+                          {formatPrice(item.price)} VNĐ
                         </p>
                       </div>
-                      <span className="px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full text-xs font-medium border border-blue-500/20">
+                      <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded-full text-xs font-medium border border-blue-500/20">
                         {item.category}
                       </span>
                     </div>
 
-                    <div className="flex gap-2 mt-4">
-                      <button
-                        className="flex-1 px-3 py-2 bg-orange-500/10 text-orange-500 rounded-lg text-sm font-medium hover:bg-orange-500/20 transition-all"
-                        suppressHydrationWarning>
-                        Edit
-                      </button>
+                    <div className="flex gap-2 mt-3">
+                      <Link href={`/admin/menu/${item.id}`} className="flex-1">
+                        <button
+                          className="w-full px-3 py-2 bg-orange-500/10 text-orange-500 rounded-lg text-sm font-medium hover:bg-orange-500/20 transition-all"
+                          suppressHydrationWarning>
+                          Edit
+                        </button>
+                      </Link>
                       <button
                         className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                         style={{
-                          background: 'var(--surface)',
-                          color: 'var(--text-muted)',
-                          border: '1px solid var(--border)',
+                          background: "var(--surface)",
+                          color: "var(--text-muted)",
+                          border: "1px solid var(--border)",
                         }}
                         suppressHydrationWarning>
                         <svg

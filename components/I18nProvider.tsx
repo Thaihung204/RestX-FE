@@ -1,15 +1,11 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import '@/lib/i18n/i18n';
+import { LanguageContext } from '@/lib/contexts/LanguageContext';
 
-const LanguageContext = createContext<{ language: string; changeLanguage: (lang: string) => void }>({
-  language: 'vi',
-  changeLanguage: () => {},
-});
-
-export const useLanguage = () => useContext(LanguageContext);
+export { useLanguage } from '@/lib/contexts/LanguageContext';
 
 export default function I18nProvider({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
@@ -29,11 +25,11 @@ export default function I18nProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     // Get the correct language from localStorage or i18n
-    const savedLang = typeof window !== 'undefined' 
-      ? localStorage.getItem('language') 
+    const savedLang = typeof window !== 'undefined'
+      ? localStorage.getItem('language')
       : null;
-    const targetLang = (savedLang === 'en' || savedLang === 'vi') 
-      ? savedLang 
+    const targetLang = (savedLang === 'en' || savedLang === 'vi')
+      ? savedLang
       : (i18n.language || 'vi');
 
     // Ensure i18n and state are synchronized
