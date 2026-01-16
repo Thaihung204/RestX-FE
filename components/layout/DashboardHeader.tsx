@@ -50,12 +50,12 @@ export default function DashboardHeader() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search..."
                 className="w-64 px-4 py-2 pl-10 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all"
-                style={{ '--tw-ring-color': '#FF380B' } as React.CSSProperties}
                 style={{
+                  '--tw-ring-color': '#FF380B',
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   color: "var(--text)",
-                }}
+                } as React.CSSProperties}
               />
               <svg
                 className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2"

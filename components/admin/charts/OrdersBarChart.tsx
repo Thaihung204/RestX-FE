@@ -38,8 +38,10 @@ export default function OrdersBarChart() {
                 <div className="relative w-full flex items-end justify-center h-48">
                   <div
                     className="w-full rounded-t-lg transition-all duration-500 group relative"
-                    style={{ background: 'linear-gradient(to top, #FF380B, #FF380B)' }}
-                    style={{ height: `${height}%` }}>
+                    style={{ 
+                      background: 'linear-gradient(to top, #FF380B, #FF380B)',
+                      height: `${height}%`
+                    }}>
                     <div
                       className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 rounded whitespace-nowrap"
                       style={{

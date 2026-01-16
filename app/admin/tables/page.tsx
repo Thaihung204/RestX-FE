@@ -269,7 +269,6 @@ export default function TablesPage() {
                   <div
                     key={table.id}
                     className="rounded-xl p-4 transition-all"
-                    style={{ borderColor: 'rgba(255, 56, 11, 0.5)' }}
                     style={{
                       background: 'var(--surface)',
                       border: '1px solid var(--border)',
