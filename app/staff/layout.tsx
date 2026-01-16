@@ -54,12 +54,12 @@ export default function StaffLayout({
     {
       key: '/staff/tables',
       icon: <TableOutlined />,
-      label: t('staff.menu.tables'),
+      label: (isMobile || isTablet) ? t('staff.menu.tables_short') : t('staff.menu.tables'),
     },
     {
       key: '/staff/orders',
       icon: <ShoppingCartOutlined />,
-      label: t('staff.menu.orders'),
+      label: (isMobile || isTablet) ? t('staff.menu.orders_short') : t('staff.menu.orders'),
     },
     {
       key: '/staff/checkout',
@@ -269,8 +269,8 @@ export default function StaffLayout({
               {t('staff.sidebar.working')}
             </Text>
           </div>
-          <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}>
-            {t('staff.sidebar.started')}: 08:00 - {t('staff.sidebar.today')}
+          <Text style={{ color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)', fontSize: 12 }}>
+            Bắt đầu: 08:00 - Hôm nay
           </Text>
         </div>
       )}
@@ -310,7 +310,6 @@ export default function StaffLayout({
               },
               header: { display: 'none' },
             }}
-            destroyOnClose
           >
             <div style={{ position: 'relative', height: '100%' }}>
               <Button
@@ -340,6 +339,7 @@ export default function StaffLayout({
             style={{
               background: mode === 'dark' ? '#001529' : '#ffffff',
               boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
+              borderRight: mode === 'dark' ? 'none' : '1px solid var(--border)',
               position: 'fixed',
               height: '100vh',
               left: 0,
@@ -432,12 +432,12 @@ export default function StaffLayout({
                     {menuItems.find((item) => item.key === pathname)?.label || t('staff.menu.dashboard')}
                   </Text>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Right Section */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 12, flexShrink: 0 }}>
-              {/* Home Link - Hidden on very small mobile */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 12 }}>
+              {/* Home Link */}
               {!isMobile && (
                 <Link href="/">
                   <Button
@@ -476,7 +476,10 @@ export default function StaffLayout({
               <ThemeToggle />
 
               {/* Language switcher */}
-              <LanguageSwitcher />
+              {/* Language switcher - hidden on very small screens if needed, or just keep it */}
+              <div style={{ display: isMobile && window.innerWidth < 360 ? 'none' : 'block' }}>
+                <LanguageSwitcher />
+              </div>
 
               {/* User Menu */}
               <Dropdown
@@ -495,6 +498,8 @@ export default function StaffLayout({
                     cursor: 'pointer',
                     border: '1px solid var(--border)',
                     transition: 'all 0.2s',
+                    maxWidth: isMobile ? 34 : 'auto',
+                    justifyContent: 'center',
                   }}
                 >
                   <Avatar
@@ -521,6 +526,7 @@ export default function StaffLayout({
           <Content
             style={{
               margin: isMobile ? 12 : 24,
+              marginBottom: isDrawerDevice ? 130 : 24,
               padding: 0,
               minHeight: 'calc(100vh - 120px)',
             }}
@@ -530,12 +536,14 @@ export default function StaffLayout({
         </Layout>
       </Layout>
       <style jsx global>{`
-        .ant-menu-dark .ant-menu-item {
+        .ant-menu-dark .ant-menu-item,
+        .ant-menu-light .ant-menu-item {
           margin: 4px 0 !important;
           border-radius: 10px !important;
           height: 48px !important;
           line-height: 48px !important;
         }
+        /* Dark Mode Menu */
         .ant-menu-dark .ant-menu-item-selected {
           background: linear-gradient(135deg, rgba(255, 122, 0, 0.2) 0%, rgba(255, 122, 0, 0.1) 100%) !important;
           border-left: 3px solid #FF7A00 !important;
@@ -546,29 +554,63 @@ export default function StaffLayout({
         .ant-menu-dark .ant-menu-item .ant-menu-item-icon {
           font-size: 18px !important;
         }
+
+        /* Light Mode Menu */
+        .ant-menu-light .ant-menu-item-selected {
+          background: linear-gradient(135deg, rgba(255, 122, 0, 0.15) 0%, rgba(255, 122, 0, 0.05) 100%) !important;
+          border-left: 3px solid #FF7A00 !important;
+          color: #FF7A00 !important;
+        }
+        .ant-menu-light .ant-menu-item:hover {
+          background: rgba(0, 0, 0, 0.04) !important;
+        }
+        .ant-menu-light .ant-menu-item .ant-menu-item-icon {
+          font-size: 18px !important;
+        }
         /* Disable blur/backdrop on all masks (drawer + modal) */
         .ant-drawer-mask,
         .ant-modal-mask {
           backdrop-filter: none !important;
           -webkit-backdrop-filter: none !important;
           filter: none !important;
+        }
+        [data-theme="dark"] .ant-drawer-mask,
+        [data-theme="dark"] .ant-modal-mask {
           background: rgba(0, 0, 0, 0.92) !important;
         }
-        /* Cards inside modal should be darker */
-        .ant-modal-body .ant-card {
+        [data-theme="light"] .ant-drawer-mask,
+        [data-theme="light"] .ant-modal-mask {
+          background: rgba(0, 0, 0, 0.45) !important;
+        }
+        /* Cards inside modal */
+        [data-theme="dark"] .ant-modal-body .ant-card {
           background: #0F1419 !important;
           border-color: var(--border) !important;
         }
-        .ant-modal-body .ant-card-body {
+        [data-theme="dark"] .ant-modal-body .ant-card-body {
           background: #0F1419 !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-card {
+          background: #FFFFFF !important;
+          border-color: #E5E7EB !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-card-body {
+          background: #FFFFFF !important;
         }
         /* Select dropdown in modal */
-        .ant-modal-body .ant-select-selector {
+        [data-theme="dark"] .ant-modal-body .ant-select-selector {
           background: #0F1419 !important;
           border-color: var(--border) !important;
         }
-        .ant-modal-body .ant-select-dropdown {
+        [data-theme="dark"] .ant-modal-body .ant-select-dropdown {
           background: #0F1419 !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-select-selector {
+          background: #FFFFFF !important;
+          border-color: #E5E7EB !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-select-dropdown {
+          background: #FFFFFF !important;
         }
         /* Divider in modal */
         .ant-modal-body .ant-divider {
