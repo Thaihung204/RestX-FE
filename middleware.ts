@@ -1,35 +1,30 @@
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const host = req.headers.get('host') || '';
+  const host = req.headers.get("host") || "";
   const pathname = req.nextUrl.pathname;
 
   // Landing domains - serve public landing page
-  const LANDING_DOMAINS = new Set([
-    'restx.food',
-    'www.restx.food',
-  ]);
+  const LANDING_DOMAINS = new Set(["restx.food", "www.restx.food"]);
 
   // Super Admin domain - serve /tenants (manage all tenants)
   const ADMIN_DOMAIN = 'admin.restx.food';
 
   // Development domains - no routing logic
-  const DEVELOPMENT_DOMAINS = new Set([
-    'localhost',
-    '127.0.0.1',
-  ]);
+  const DEVELOPMENT_DOMAINS = new Set(["localhost", "127.0.0.1"]);
 
   // Public routes accessible on any domain
   const PUBLIC_ROUTES = new Set([
-    '/login',
-    '/login-email',
-    '/login-admin',
-    '/register',
-    '/forgot-password',
-    '/restaurant',
-    '/customer',
-    '/menu',
+    "/login",
+    "/login-email",
+    "/login-admin",
+    "/register",
+    "/forgot-password",
+    "/restaurant",
+    "/customer",
+    "/menu",
+    "/reset-password",
   ]);
 
   // Skip middleware for static assets and API routes
@@ -109,4 +104,3 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
-
