@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Statistic, Typography, Table, Tag, Progress, Space, Avatar, Button, Tooltip, Flex } from 'antd';
+import { motion } from 'framer-motion';
 import {
   TableOutlined,
   ShoppingCartOutlined,
@@ -24,6 +25,26 @@ import PageTransition from '../components/PageTransition';
 import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
 const { Title, Text } = Typography;
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4 }
+  }
+};
 
 // Mock data for statistics - chỉ hiển thị thông tin hữu ích cho nhân viên
 const statsData = [
@@ -59,8 +80,8 @@ const statsData = [
     title: 'Bàn cần thanh toán',
     value: 2,
     icon: <DollarOutlined />,
-    color: '#faad14',
-    bgColor: 'rgba(250, 173, 20, 0.1)',
+    color: '#FF380B',
+    bgColor: 'rgba(255, 56, 11, 0.1)',
     suffix: 'bàn',
     href: '/staff/checkout',
     urgent: true,
@@ -70,8 +91,8 @@ const statsData = [
     value: 12,
     total: 20,
     icon: <TableOutlined />,
-    color: '#FF7A00',
-    bgColor: 'rgba(255, 122, 0, 0.1)',
+    color: '#FF380B',
+    bgColor: 'rgba(255, 56, 11, 0.1)',
     href: '/staff/tables',
   },
 ];
@@ -119,6 +140,9 @@ const urgentOrders = [
     priority: 'high',
   },
 ];
+
+// Mock data for recent orders
+const recentOrders = urgentOrders.slice(0, 5);
 
 // Mock data for tables needing payment
 const tablesNeedingPayment = [
@@ -287,41 +311,16 @@ export default function StaffDashboard() {
                     <strong>12 bàn</strong> đang phục vụ.
                   </Text>
                   
-                  {/* Live status indicators */}
+                  {/* Status indicators - Elegant */}
                   <div style={{ marginTop: isMobile ? 12 : 16, display: 'flex', gap: isMobile ? 8 : 16, flexWrap: 'wrap' }}>
-                    <motion.div
-                      animate={{ opacity: [1, 0.6, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      style={{
-                        color: mode === 'dark' ? '#FF7A00' : '#1A1A1A',
-                        margin: 0,
-                        marginBottom: 12,
-                        fontWeight: 500,
-                        letterSpacing: '-0.5px',
-                        fontSize: isMobile ? 24 : 32,
-                      }}
-                    >
-                      {getGreeting()}, Nguyễn Văn A
-                    </Title>
-                    <Text style={{
-                      color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.65)',
-                      fontSize: isMobile ? 15 : 17,
-                      lineHeight: 1.6,
-                      fontWeight: 400,
-                    }}>
-                      Bạn đang có <strong style={{ color: mode === 'dark' ? '#FF7A00' : '#FF7A00', fontWeight: 600 }}>8 order</strong> cần xử lý và <strong style={{ color: mode === 'dark' ? '#FF7A00' : '#FF7A00', fontWeight: 600 }}>2 bàn</strong> cần thanh toán.
-                    </Text>
-
-                    {/* Status indicators - Elegant */}
-                    <div style={{ marginTop: isMobile ? 20 : 28, display: 'flex', gap: isMobile ? 12 : 16, flexWrap: 'wrap' }}>
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: 10,
-                        background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
+                        background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : 'rgba(255, 56, 11, 0.08)',
                         padding: isMobile ? '8px 16px' : '10px 20px',
                         borderRadius: 8,
-                        border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
+                        border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid rgba(255, 56, 11, 0.15)',
                       }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#52c41a' }} />
                         <Text style={{
@@ -334,12 +333,12 @@ export default function StaffDashboard() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: 10,
-                        background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
+                        background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : 'rgba(255, 56, 11, 0.08)',
                         padding: isMobile ? '8px 16px' : '10px 20px',
                         borderRadius: 8,
-                        border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
+                        border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid rgba(255, 56, 11, 0.15)',
                       }}>
-                        <DollarOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 14 : 16 }} />
+                        <DollarOutlined style={{ color: '#FF380B', fontSize: isMobile ? 14 : 16 }} />
                         <Text style={{
                           color: mode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1A1A1A',
                           fontSize: isMobile ? 13 : 14,
@@ -347,9 +346,9 @@ export default function StaffDashboard() {
                         }}>2 bàn cần thanh toán</Text>
                       </div>
                     </div>
-                  </div>
-                </Col>
-                <Col xs={24} sm={24} md={8} lg={8}>
+                </motion.div>
+              </Col>
+              <Col xs={24} sm={24} md={8} lg={8}>
                   <div style={{ textAlign: isMobile ? 'left' : 'right', width: '100%' }}>
                     <Flex
                       vertical={isMobile}
@@ -367,9 +366,9 @@ export default function StaffDashboard() {
                           icon={<CalendarOutlined />}
                           block={isMobile}
                           style={{
-                            background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : '#FFFFFF',
-                            border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.3)' : '1px solid #E5E5E5',
-                            color: mode === 'dark' ? '#FF7A00' : '#1A1A1A',
+                            background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : '#FFFFFF',
+                            border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.3)' : '1px solid #E5E5E5',
+                            color: mode === 'dark' ? '#FF380B' : '#1A1A1A',
                             borderRadius: 8,
                             fontWeight: 500,
                             fontSize: isMobile ? 14 : 15,
@@ -389,7 +388,7 @@ export default function StaffDashboard() {
                           icon={<ShoppingCartOutlined />}
                           block={isMobile}
                           style={{
-                            background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                            background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                             color: '#FFFFFF',
                             border: 'none',
                             borderRadius: 8,
@@ -397,7 +396,7 @@ export default function StaffDashboard() {
                             fontSize: isMobile ? 14 : 15,
                             minWidth: isMobile ? '100%' : 200,
                             height: isMobile ? 44 : 48,
-                            boxShadow: '0 4px 16px rgba(255, 122, 0, 0.3)',
+                            boxShadow: '0 4px 16px rgba(255, 56, 11, 0.3)',
                             transition: 'all 0.2s ease',
                           }}
                           className="luxury-btn-primary"
@@ -411,10 +410,11 @@ export default function StaffDashboard() {
               </Row>
             </div>
           </Card>
-        </div>
+        </motion.div>
 
         {/* Statistics Cards - Chỉ hiển thị thông tin cần thiết */}
-        <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
+        <motion.div variants={itemVariants}>
+          <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
           {statsData.map((stat, index) => (
             <Col xs={12} sm={12} md={6} lg={6} key={index} style={{ display: 'flex' }}>
               <Link href={stat.href || '#'} style={{ width: '100%', textDecoration: 'none', display: 'flex' }}>
@@ -426,19 +426,19 @@ export default function StaffDashboard() {
                     style={{
                       borderRadius: 12,
                       border: mode === 'dark'
-                        ? (stat.urgent ? '1px solid rgba(255, 122, 0, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)')
-                        : (stat.urgent ? '1px solid #FF7A00' : '1px solid #E5E5E5'),
+                        ? (stat.urgent ? '1px solid rgba(255, 56, 11, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)')
+                        : (stat.urgent ? '1px solid #FF380B' : '1px solid #E5E5E5'),
                       boxShadow: mode === 'dark'
-                        ? (stat.urgent ? '0 4px 20px rgba(255, 122, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.3)')
-                        : (stat.urgent ? '0 4px 16px rgba(255, 122, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.08)'),
+                        ? (stat.urgent ? '0 4px 20px rgba(255, 56, 11, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.3)')
+                        : (stat.urgent ? '0 4px 16px rgba(255, 56, 11, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.08)'),
                       transition: 'all 0.3s ease',
                       height: '100%',
                       width: '100%',
                       display: 'flex',
                       flexDirection: 'column',
                       background: mode === 'dark'
-                        ? (stat.urgent ? 'rgba(255, 122, 0, 0.08)' : 'rgba(255, 255, 255, 0.03)')
-                        : (stat.urgent ? 'rgba(255, 122, 0, 0.05)' : '#FFFFFF'),
+                        ? (stat.urgent ? 'rgba(255, 56, 11, 0.08)' : 'rgba(255, 255, 255, 0.03)')
+                        : (stat.urgent ? 'rgba(255, 56, 11, 0.05)' : '#FFFFFF'),
                       overflow: 'hidden',
                     }}
                     styles={{
@@ -469,16 +469,16 @@ export default function StaffDashboard() {
                           height: isMobile ? 48 : 64,
                           borderRadius: 12,
                           background: mode === 'dark'
-                            ? 'rgba(255, 122, 0, 0.1)'
-                            : 'rgba(255, 122, 0, 0.08)',
+                            ? 'rgba(255, 56, 11, 0.1)'
+                            : 'rgba(255, 56, 11, 0.08)',
                           border: mode === 'dark'
-                            ? '1px solid rgba(255, 122, 0, 0.2)'
-                            : '1px solid rgba(255, 122, 0, 0.15)',
+                            ? '1px solid rgba(255, 56, 11, 0.2)'
+                            : '1px solid rgba(255, 56, 11, 0.15)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: isMobile ? 20 : 28,
-                          color: '#FF7A00',
+                          color: '#FF380B',
                           flexShrink: 0,
                         }}
                       >
@@ -525,7 +525,7 @@ export default function StaffDashboard() {
                             <Progress
                               percent={(stat.value / stat.total) * 100}
                               showInfo={false}
-                              strokeColor="#FF7A00"
+                              strokeColor="#FF380B"
                               railColor={mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E5E5E5'}
                               size={{ height: isMobile ? 3 : 4 }}
                             />
@@ -560,6 +560,7 @@ export default function StaffDashboard() {
             </Col>
           ))}
         </Row>
+        </motion.div>
 
         <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]}>
           {/* Order cần xử lý */}
@@ -569,7 +570,7 @@ export default function StaffDashboard() {
                 title={
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                     <Space size={isMobile ? 8 : 12} wrap>
-                      <ShoppingCartOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 20 }} />
+                      <ShoppingCartOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
                       <span style={{ fontWeight: 500, fontSize: isMobile ? 14 : 16 }}>Order cần xử lý</span>
                       <Tag color="orange" style={{ borderRadius: 8, fontSize: isMobile ? 12 : 13, margin: 0, fontWeight: 500 }}>
                         {urgentOrders.length} đơn
@@ -637,8 +638,9 @@ export default function StaffDashboard() {
               </Card>
             </div>
           </Col>
+        </Row>
 
-      <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ display: 'flex', flexWrap: 'wrap' }}>
+        <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ display: 'flex', flexWrap: 'wrap' }}>
         {/* Recent Orders */}
         <Col xs={24} lg={16} style={{ display: 'flex' }}>
           <motion.div variants={itemVariants} style={{ width: '100%' }}>
@@ -781,10 +783,11 @@ export default function StaffDashboard() {
                           borderRadius: '50%',
                           background: '#FF380B',
                         }}
-                      >
-                        Xem tất cả
-                      </Button>
-                    </Link>
+                      />
+                      <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        Đang phục vụ: {zone.occupied}
+                      </Text>
+                    </Space>
                   </div>
                 </motion.div>
               ))}
@@ -820,7 +823,7 @@ export default function StaffDashboard() {
       </Row>
 
         {/* Quick Actions */}
-        <div>
+        <motion.div variants={itemVariants}>
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -835,17 +838,16 @@ export default function StaffDashboard() {
                     loading={isRefreshing}
                     size={isMobile ? 'small' : 'middle'}
                   />
-                </motion.div>
-              </Tooltip>
-            </div>
-          }
-          style={{
-            marginTop: isMobile ? 16 : 24,
-            borderRadius: isMobile ? 12 : 16,
-            border: '1px solid var(--border)',
-            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
-          }}
-        >
+                </Tooltip>
+              </div>
+            }
+            style={{
+              marginTop: isMobile ? 16 : 24,
+              borderRadius: isMobile ? 12 : 16,
+              border: '1px solid var(--border)',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
+            }}
+          >
           <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}>
             {[
               { icon: <TableOutlined />, title: 'Mở bàn', color: '#FF380B', href: '/staff/tables' },
@@ -876,8 +878,8 @@ export default function StaffDashboard() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: isMobile ? 4 : 8,
-                        border: mode === 'dark' ? `1px solid rgba(255, 122, 0, 0.2)` : `1px solid ${action.color}30`,
-                        background: mode === 'dark' ? 'rgba(255, 122, 0, 0.08)' : `${action.color}08`,
+                        border: mode === 'dark' ? `1px solid rgba(255, 56, 11, 0.2)` : `1px solid ${action.color}30`,
+                        background: mode === 'dark' ? 'rgba(255, 56, 11, 0.08)' : `${action.color}08`,
                         transition: 'all 0.2s ease',
                       }}
                     >
@@ -886,22 +888,23 @@ export default function StaffDashboard() {
                       </span>
                       <span style={{ fontWeight: 500, color: 'var(--text)', fontSize: isMobile ? 12 : 14 }}>{action.title}</span>
                     </Button>
-                  </Link>
-                </Col>
-              ))}
+                  </motion.div>
+                </Link>
+              </Col>
+            ))}
             </Row>
           </Card>
-        </div>
+        </motion.div>
 
         <style jsx global>{`
         .luxury-btn:hover {
-          background: ${mode === 'dark' ? 'rgba(255, 122, 0, 0.15)' : '#F8F8F8'} !important;
-          border-color: ${mode === 'dark' ? 'rgba(255, 122, 0, 0.4)' : '#FF7A00'} !important;
+          background: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : '#F8F8F8'} !important;
+          border-color: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.4)' : '#FF380B'} !important;
           transform: translateY(-1px);
         }
         .luxury-btn-primary:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(255, 122, 0, 0.4) !important;
+          box-shadow: 0 6px 20px rgba(255, 56, 11, 0.4) !important;
         }
         .ant-table-wrapper .ant-table-tbody > tr > td {
           padding: 16px 20px !important;
@@ -927,13 +930,13 @@ export default function StaffDashboard() {
           background: rgba(82, 196, 26, 0.15) !important;
         }
         .table-row-pending {
-          background: rgba(255, 122, 0, 0.05) !important;
+          background: rgba(255, 56, 11, 0.05) !important;
         }
         .table-row-pending:hover {
-          background: rgba(255, 122, 0, 0.12) !important;
+          background: rgba(255, 56, 11, 0.12) !important;
         }
       `}</style>
-      </div>
+      </motion.div>
     </PageTransition>
   );
 }

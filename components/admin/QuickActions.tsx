@@ -110,7 +110,7 @@ export default function QuickActions() {
       id: "inventory",
       title: "Inventory",
       description: "Stock management",
-      color: "from-yellow-600 to-yellow-500",
+      color: "from-orange-600 to-orange-500",
       icon: (
         <svg
           className="w-6 h-6"

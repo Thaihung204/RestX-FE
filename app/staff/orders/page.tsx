@@ -437,7 +437,7 @@ export default function OrderManagement() {
             style={{
               borderRadius: 12,
               background: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#FFFFFF',
-              border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E5E5',
+              border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E5E5',
               overflow: 'hidden',
               height: '100%',
               boxShadow: mode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
@@ -450,15 +450,15 @@ export default function OrderManagement() {
                   width: isMobile ? 40 : 56,
                   height: isMobile ? 40 : 56,
                   borderRadius: 10,
-                  background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
-                  border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
+                  background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : 'rgba(255, 56, 11, 0.08)',
+                  border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid rgba(255, 56, 11, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}
               >
-                <ExclamationCircleOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }} />
+                <ExclamationCircleOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B' }} />
               </div>
               <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
                 <Text style={{
@@ -497,15 +497,15 @@ export default function OrderManagement() {
                   width: isMobile ? 40 : 56,
                   height: isMobile ? 40 : 56,
                   borderRadius: 10,
-                  background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
-                  border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
+                  background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : 'rgba(255, 56, 11, 0.08)',
+                  border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid rgba(255, 56, 11, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}
               >
-                <SyncOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }} />
+                <SyncOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B' }} />
               </div>
               <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
                 <Text style={{
@@ -544,15 +544,15 @@ export default function OrderManagement() {
                   width: isMobile ? 40 : 56,
                   height: isMobile ? 40 : 56,
                   borderRadius: 10,
-                  background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
-                  border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
+                  background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : 'rgba(255, 56, 11, 0.08)',
+                  border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid rgba(255, 56, 11, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}
               >
-                <CheckCircleOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }} />
+                <CheckCircleOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B' }} />
               </div>
               <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
                 <Text style={{
@@ -682,14 +682,14 @@ export default function OrderManagement() {
         centered
         style={{
           backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+          border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
           borderRadius: 12,
         }}
         styles={{
           body: { padding: isMobile ? 20 : 28 },
           header: {
             backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
             borderRadius: '12px 12px 0 0',
             padding: '20px 28px',
             position: 'relative',
@@ -863,13 +863,13 @@ export default function OrderManagement() {
         centered
         style={{
           backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+          border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
           borderRadius: 12,
         }}
         styles={{
           header: {
             backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
             borderRadius: '12px 12px 0 0',
             padding: '20px 28px',
             position: 'relative',
@@ -1104,7 +1104,7 @@ export default function OrderManagement() {
           transition: all 0.2s ease !important;
         }
         .ant-modal-close:hover {
-          background: ${mode === 'dark' ? 'rgba(255, 122, 0, 0.2)' : 'rgba(255, 122, 0, 0.15)'} !important;
+          background: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.2)' : 'rgba(255, 56, 11, 0.15)'} !important;
         }
         .ant-modal-close-x {
           width: 32px !important;

@@ -311,7 +311,7 @@ export default function StaffLayout({
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 4,
-                    color: isActive ? '#FF7A00' : 'var(--text-muted)',
+                    color: isActive ? '#FF380B' : 'var(--text-muted)',
                     cursor: 'pointer',
                     width: '20%',
                     transition: 'all 0.3s ease',
@@ -321,7 +321,7 @@ export default function StaffLayout({
                     fontSize: 24,
                     transform: isActive ? 'translateY(-2px)' : 'none',
                     transition: 'transform 0.2s',
-                    filter: isActive ? 'drop-shadow(0 4px 6px rgba(255, 122, 0, 0.3))' : 'none',
+                    filter: isActive ? 'drop-shadow(0 4px 6px rgba(255, 56, 11, 0.3))' : 'none',
                   }}>
                     {item.icon}
                   </div>
@@ -546,9 +546,9 @@ export default function StaffLayout({
 
         /* Light Mode Menu */
         .ant-menu-light .ant-menu-item-selected {
-          background: linear-gradient(135deg, rgba(255, 122, 0, 0.15) 0%, rgba(255, 122, 0, 0.05) 100%) !important;
-          border-left: 3px solid #FF7A00 !important;
-          color: #FF7A00 !important;
+          background: linear-gradient(135deg, rgba(255, 56, 11, 0.15) 0%, rgba(255, 56, 11, 0.05) 100%) !important;
+          border-left: 3px solid #FF380B !important;
+          color: #FF380B !important;
         }
         .ant-menu-light .ant-menu-item:hover {
           background: rgba(0, 0, 0, 0.04) !important;

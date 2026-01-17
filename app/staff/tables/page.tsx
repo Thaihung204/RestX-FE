@@ -95,7 +95,7 @@ const getStatusConfig = (mode: 'light' | 'dark', t: (key: string) => string) => 
     },
     occupied: {
       color: '#FF380B',
-      bgColor: isDark ? 'rgba(255, 56, 11, 0.15)' : '#fff7e6',
+      bgColor: isDark ? 'rgba(255, 56, 11, 0.15)' : 'rgba(255, 56, 11, 0.08)',
       text: t('staff.tables.status.occupied'),
       icon: <UserOutlined />,
     },
@@ -106,7 +106,7 @@ const getStatusConfig = (mode: 'light' | 'dark', t: (key: string) => string) => 
       icon: <ClockCircleOutlined />,
     },
     cleaning: {
-      color: '#faad14',
+      color: '#FF380B',
       bgColor: isDark ? 'rgba(250, 173, 20, 0.15)' : '#fffbe6',
       text: t('staff.tables.status.cleaning'),
       icon: <ExclamationCircleOutlined />,
@@ -511,8 +511,8 @@ export default function TableManagement() {
                 size="small"
                 style={{
                   borderRadius: 12,
-                  background: mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : '#fff7e6',
-                  border: `1px solid ${mode === 'dark' ? 'rgba(255, 56, 11, 0.3)' : '#ffd591'}`,
+                  background: mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : 'rgba(255, 56, 11, 0.08)',
+                  border: `1px solid ${mode === 'dark' ? 'rgba(255, 56, 11, 0.3)' : 'rgba(255, 56, 11, 0.2)'}`,
                   marginBottom: 24,
                 }}
                 styles={{ body: { padding: '20px 24px' } }}

@@ -264,7 +264,7 @@ export default function AttendancePage() {
             borderRadius: isMobile ? 16 : 24,
             background: mode === 'dark'
               ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
-              : 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+              : 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
             border: 'none',
             marginBottom: isMobile ? 16 : 24,
             overflow: 'hidden',
@@ -382,7 +382,7 @@ export default function AttendancePage() {
                       style={{
                         borderRadius: 12,
                         height: isMobile ? 40 : 48,
-                        background: isOnBreak ? '#52c41a' : '#faad14',
+                        background: isOnBreak ? '#52c41a' : '#FF380B',
                         color: '#fff',
                         border: 'none',
                         fontWeight: 500,
@@ -643,13 +643,13 @@ export default function AttendancePage() {
         width={isMobile ? '90%' : 400}
         style={{
           backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+          border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
           borderRadius: 12,
         }}
         styles={{
           header: {
             backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
             borderRadius: '12px 12px 0 0',
             padding: '16px 24px',
             paddingRight: '56px',
@@ -678,7 +678,7 @@ export default function AttendancePage() {
                 actionType === 'checkOut'
                   ? '#ff4d4f'
                   : actionType === 'breakStart'
-                    ? '#faad14'
+                    ? '#FF380B'
                     : '#52c41a',
               display: 'flex',
               alignItems: 'center',
