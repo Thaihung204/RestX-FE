@@ -105,7 +105,7 @@ export const cardHover = {
   hover: { 
     scale: 1.02,
     y: -8,
-    boxShadow: '0 20px 40px rgba(255, 122, 0, 0.15)',
+    boxShadow: '0 20px 40px rgba(255, 56, 11, 0.15)',
     transition: { duration: durations.fast, ease: easings.snappy }
   },
   tap: { 
@@ -130,10 +130,10 @@ export const buttonHover = {
 // Glow effect for buttons/cards
 export const glowHover = {
   rest: { 
-    boxShadow: '0 0 0px rgba(255, 122, 0, 0)',
+    boxShadow: '0 0 0px rgba(255, 56, 11, 0)',
   },
   hover: { 
-    boxShadow: '0 0 30px rgba(255, 122, 0, 0.4)',
+    boxShadow: '0 0 30px rgba(255, 56, 11, 0.4)',
     transition: { duration: durations.normal }
   },
 };

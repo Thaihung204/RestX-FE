@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Statistic, Typography, Table, Tag, Progress, Space, Avatar, Button, Tooltip, Flex } from 'antd';
+import { motion } from 'framer-motion';
 import {
   TableOutlined,
   ShoppingCartOutlined,
@@ -25,10 +26,38 @@ import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
 const { Title, Text } = Typography;
 
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4 }
+  }
+};
+
 // Mock data for statistics - chỉ hiển thị thông tin hữu ích cho nhân viên
 const statsData = [
   {
-    title: 'Order cần xử lý',
+    title: 'Bàn đang phục vụ',
+    value: 12,
+    total: 20,
+    icon: <TableOutlined />,
+    color: '#FF380B',
+    bgColor: 'rgba(255, 56, 11, 0.1)',
+  },
+  {
+    title: 'Order đang xử lý',
     value: 8,
     icon: <ShoppingCartOutlined />,
     color: '#1890ff',
@@ -51,8 +80,8 @@ const statsData = [
     title: 'Bàn cần thanh toán',
     value: 2,
     icon: <DollarOutlined />,
-    color: '#faad14',
-    bgColor: 'rgba(250, 173, 20, 0.1)',
+    color: '#FF380B',
+    bgColor: 'rgba(255, 56, 11, 0.1)',
     suffix: 'bàn',
     href: '/staff/checkout',
     urgent: true,
@@ -62,8 +91,8 @@ const statsData = [
     value: 12,
     total: 20,
     icon: <TableOutlined />,
-    color: '#FF7A00',
-    bgColor: 'rgba(255, 122, 0, 0.1)',
+    color: '#FF380B',
+    bgColor: 'rgba(255, 56, 11, 0.1)',
     href: '/staff/tables',
   },
 ];
@@ -112,6 +141,9 @@ const urgentOrders = [
   },
 ];
 
+// Mock data for recent orders
+const recentOrders = urgentOrders.slice(0, 5);
+
 // Mock data for tables needing payment
 const tablesNeedingPayment = [
   { table: 'A02', total: 750000, time: '2 giờ', guests: 3 },
@@ -139,6 +171,17 @@ const orderColumns = [
     key: 'items',
     width: '20%',
     render: (items: number) => <Text style={{ fontSize: 14 }}>{items} món</Text>,
+  },
+  {
+    title: 'Tổng tiền',
+    dataIndex: 'total',
+    key: 'total',
+    width: '22%',
+    render: (total: number) => (
+      <Text strong style={{ color: '#FF380B', fontSize: 14 }}>
+        {total.toLocaleString('vi-VN')}đ
+      </Text>
+    ),
   },
   {
     title: 'Trạng thái',
@@ -227,62 +270,57 @@ export default function StaffDashboard() {
   };
   return (
     <PageTransition minimumLoadingTime={1500}>
-      <div>
-        {/* Welcome Section - Luxury Design */}
-        <div>
-          <Card
-            style={{
-              marginBottom: isMobile ? 24 : 32,
-              background: mode === 'dark'
-                ? 'linear-gradient(135deg, #1A1A1A 0%, #2C2C2C 100%)'
-                : 'linear-gradient(135deg, #F8F8F8 0%, #FFFFFF 100%)',
-              border: mode === 'dark'
-                ? '1px solid rgba(255, 122, 0, 0.2)'
-                : '1px solid #E5E5E5',
-              borderRadius: 12,
-              overflow: 'hidden',
-              boxShadow: mode === 'dark'
-                ? '0 4px 20px rgba(0, 0, 0, 0.5)'
-                : '0 2px 12px rgba(0, 0, 0, 0.08)',
-            }}
-            styles={{ body: { padding: 0 } }}
-          >
-            <div style={{ padding: isMobile ? '32px 24px' : '48px 56px', position: 'relative' }}>
-              <Row align="middle" justify="space-between" gutter={[24, 24]}>
-                <Col xs={24} md={16}>
-                  <div>
-                    <Title
-                      level={isMobile ? 3 : 2}
-                      style={{
-                        color: mode === 'dark' ? '#FF7A00' : '#1A1A1A',
-                        margin: 0,
-                        marginBottom: 12,
-                        fontWeight: 500,
-                        letterSpacing: '-0.5px',
-                        fontSize: isMobile ? 24 : 32,
-                      }}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+      {/* Welcome Section */}
+      <motion.div variants={itemVariants}>
+        <Card
+          style={{
+            marginBottom: isMobile ? 16 : 24,
+            background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+            border: 'none',
+            borderRadius: isMobile ? 16 : 20,
+            overflow: 'hidden',
+          }}
+          styles={{ body: { padding: 0 } }}
+        >
+          <div style={{ padding: isMobile ? '20px 16px' : '32px 40px', position: 'relative' }}>
+            <Row align="middle" justify="space-between" gutter={[16, 16]}>
+              <Col xs={24} md={16}>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Title level={isMobile ? 4 : 3} style={{ color: '#fff', margin: 0, marginBottom: 8 }}>
+                    {getGreeting()}, Nguyễn Văn A! <SmileOutlined style={{ marginLeft: 8 }} />
+                  </Title>
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: isMobile ? 14 : 16 }}>
+                    Bạn đang có{' '}
+                    <motion.strong
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                      style={{ display: 'inline-block' }}
                     >
-                      {getGreeting()}, Nguyễn Văn A
-                    </Title>
-                    <Text style={{
-                      color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.65)',
-                      fontSize: isMobile ? 15 : 17,
-                      lineHeight: 1.6,
-                      fontWeight: 400,
-                    }}>
-                      Bạn đang có <strong style={{ color: mode === 'dark' ? '#FF7A00' : '#FF7A00', fontWeight: 600 }}>8 order</strong> cần xử lý và <strong style={{ color: mode === 'dark' ? '#FF7A00' : '#FF7A00', fontWeight: 600 }}>2 bàn</strong> cần thanh toán.
-                    </Text>
-
-                    {/* Status indicators - Elegant */}
-                    <div style={{ marginTop: isMobile ? 20 : 28, display: 'flex', gap: isMobile ? 12 : 16, flexWrap: 'wrap' }}>
+                      8 order
+                    </motion.strong>{' '}
+                    cần xử lý và{' '}
+                    <strong>12 bàn</strong> đang phục vụ.
+                  </Text>
+                  
+                  {/* Status indicators - Elegant */}
+                  <div style={{ marginTop: isMobile ? 12 : 16, display: 'flex', gap: isMobile ? 8 : 16, flexWrap: 'wrap' }}>
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: 10,
-                        background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
+                        background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : 'rgba(255, 56, 11, 0.08)',
                         padding: isMobile ? '8px 16px' : '10px 20px',
                         borderRadius: 8,
-                        border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
+                        border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid rgba(255, 56, 11, 0.15)',
                       }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#52c41a' }} />
                         <Text style={{
@@ -295,12 +333,12 @@ export default function StaffDashboard() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: 10,
-                        background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
+                        background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : 'rgba(255, 56, 11, 0.08)',
                         padding: isMobile ? '8px 16px' : '10px 20px',
                         borderRadius: 8,
-                        border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
+                        border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid rgba(255, 56, 11, 0.15)',
                       }}>
-                        <DollarOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 14 : 16 }} />
+                        <DollarOutlined style={{ color: '#FF380B', fontSize: isMobile ? 14 : 16 }} />
                         <Text style={{
                           color: mode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#1A1A1A',
                           fontSize: isMobile ? 13 : 14,
@@ -308,9 +346,9 @@ export default function StaffDashboard() {
                         }}>2 bàn cần thanh toán</Text>
                       </div>
                     </div>
-                  </div>
-                </Col>
-                <Col xs={24} sm={24} md={8} lg={8}>
+                </motion.div>
+              </Col>
+              <Col xs={24} sm={24} md={8} lg={8}>
                   <div style={{ textAlign: isMobile ? 'left' : 'right', width: '100%' }}>
                     <Flex
                       vertical={isMobile}
@@ -328,9 +366,9 @@ export default function StaffDashboard() {
                           icon={<CalendarOutlined />}
                           block={isMobile}
                           style={{
-                            background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : '#FFFFFF',
-                            border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.3)' : '1px solid #E5E5E5',
-                            color: mode === 'dark' ? '#FF7A00' : '#1A1A1A',
+                            background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : '#FFFFFF',
+                            border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.3)' : '1px solid #E5E5E5',
+                            color: mode === 'dark' ? '#FF380B' : '#1A1A1A',
                             borderRadius: 8,
                             fontWeight: 500,
                             fontSize: isMobile ? 14 : 15,
@@ -350,7 +388,7 @@ export default function StaffDashboard() {
                           icon={<ShoppingCartOutlined />}
                           block={isMobile}
                           style={{
-                            background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                            background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                             color: '#FFFFFF',
                             border: 'none',
                             borderRadius: 8,
@@ -358,7 +396,7 @@ export default function StaffDashboard() {
                             fontSize: isMobile ? 14 : 15,
                             minWidth: isMobile ? '100%' : 200,
                             height: isMobile ? 44 : 48,
-                            boxShadow: '0 4px 16px rgba(255, 122, 0, 0.3)',
+                            boxShadow: '0 4px 16px rgba(255, 56, 11, 0.3)',
                             transition: 'all 0.2s ease',
                           }}
                           className="luxury-btn-primary"
@@ -372,10 +410,11 @@ export default function StaffDashboard() {
               </Row>
             </div>
           </Card>
-        </div>
+        </motion.div>
 
         {/* Statistics Cards - Chỉ hiển thị thông tin cần thiết */}
-        <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
+        <motion.div variants={itemVariants}>
+          <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
           {statsData.map((stat, index) => (
             <Col xs={12} sm={12} md={6} lg={6} key={index} style={{ display: 'flex' }}>
               <Link href={stat.href || '#'} style={{ width: '100%', textDecoration: 'none', display: 'flex' }}>
@@ -387,19 +426,19 @@ export default function StaffDashboard() {
                     style={{
                       borderRadius: 12,
                       border: mode === 'dark'
-                        ? (stat.urgent ? '1px solid rgba(255, 122, 0, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)')
-                        : (stat.urgent ? '1px solid #FF7A00' : '1px solid #E5E5E5'),
+                        ? (stat.urgent ? '1px solid rgba(255, 56, 11, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)')
+                        : (stat.urgent ? '1px solid #FF380B' : '1px solid #E5E5E5'),
                       boxShadow: mode === 'dark'
-                        ? (stat.urgent ? '0 4px 20px rgba(255, 122, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.3)')
-                        : (stat.urgent ? '0 4px 16px rgba(255, 122, 0, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.08)'),
+                        ? (stat.urgent ? '0 4px 20px rgba(255, 56, 11, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.3)')
+                        : (stat.urgent ? '0 4px 16px rgba(255, 56, 11, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.08)'),
                       transition: 'all 0.3s ease',
                       height: '100%',
                       width: '100%',
                       display: 'flex',
                       flexDirection: 'column',
                       background: mode === 'dark'
-                        ? (stat.urgent ? 'rgba(255, 122, 0, 0.08)' : 'rgba(255, 255, 255, 0.03)')
-                        : (stat.urgent ? 'rgba(255, 122, 0, 0.05)' : '#FFFFFF'),
+                        ? (stat.urgent ? 'rgba(255, 56, 11, 0.08)' : 'rgba(255, 255, 255, 0.03)')
+                        : (stat.urgent ? 'rgba(255, 56, 11, 0.05)' : '#FFFFFF'),
                       overflow: 'hidden',
                     }}
                     styles={{
@@ -430,16 +469,16 @@ export default function StaffDashboard() {
                           height: isMobile ? 48 : 64,
                           borderRadius: 12,
                           background: mode === 'dark'
-                            ? 'rgba(255, 122, 0, 0.1)'
-                            : 'rgba(255, 122, 0, 0.08)',
+                            ? 'rgba(255, 56, 11, 0.1)'
+                            : 'rgba(255, 56, 11, 0.08)',
                           border: mode === 'dark'
-                            ? '1px solid rgba(255, 122, 0, 0.2)'
-                            : '1px solid rgba(255, 122, 0, 0.15)',
+                            ? '1px solid rgba(255, 56, 11, 0.2)'
+                            : '1px solid rgba(255, 56, 11, 0.15)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: isMobile ? 20 : 28,
-                          color: '#FF7A00',
+                          color: '#FF380B',
                           flexShrink: 0,
                         }}
                       >
@@ -486,7 +525,7 @@ export default function StaffDashboard() {
                             <Progress
                               percent={(stat.value / stat.total) * 100}
                               showInfo={false}
-                              strokeColor="#FF7A00"
+                              strokeColor="#FF380B"
                               railColor={mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E5E5E5'}
                               size={{ height: isMobile ? 3 : 4 }}
                             />
@@ -521,6 +560,7 @@ export default function StaffDashboard() {
             </Col>
           ))}
         </Row>
+        </motion.div>
 
         <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]}>
           {/* Order cần xử lý */}
@@ -530,7 +570,7 @@ export default function StaffDashboard() {
                 title={
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                     <Space size={isMobile ? 8 : 12} wrap>
-                      <ShoppingCartOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 20 }} />
+                      <ShoppingCartOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
                       <span style={{ fontWeight: 500, fontSize: isMobile ? 14 : 16 }}>Order cần xử lý</span>
                       <Tag color="orange" style={{ borderRadius: 8, fontSize: isMobile ? 12 : 13, margin: 0, fontWeight: 500 }}>
                         {urgentOrders.length} đơn
@@ -540,8 +580,11 @@ export default function StaffDashboard() {
                       <Button
                         type="link"
                         style={{
-                          color: '#FF7A00',
-                          fontWeight: 500,
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          color: '#FF380B',
+                          border: 'none',
+                          borderRadius: 10,
+                          fontWeight: 600,
                           fontSize: isMobile ? 12 : 14,
                           padding: isMobile ? '0 4px' : '0 15px',
                           whiteSpace: 'nowrap',
@@ -595,104 +638,192 @@ export default function StaffDashboard() {
               </Card>
             </div>
           </Col>
+        </Row>
 
-          {/* Bàn cần thanh toán */}
-          <Col xs={24} sm={24} md={24} lg={10} xl={10} style={{ display: 'flex' }}>
-            <div style={{ width: '100%', display: 'flex', minHeight: isMobile ? 'auto' : 400 }}>
-              <Card
-                title={
-                  <Space wrap>
-                    <DollarOutlined style={{ color: '#faad14', fontSize: isMobile ? 16 : 20 }} />
-                    <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>Bàn cần thanh toán</span>
+        <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ display: 'flex', flexWrap: 'wrap' }}>
+        {/* Recent Orders */}
+        <Col xs={24} lg={16} style={{ display: 'flex' }}>
+          <motion.div variants={itemVariants} style={{ width: '100%' }}>
+            <Card
+              title={
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                  <Space size={isMobile ? 8 : 12}>
+                    <motion.div
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                    >
+                      <ShoppingCartOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
+                    </motion.div>
+                    <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>Order gần đây</span>
                     <Tag color="orange" style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12, margin: 0 }}>
                       {tablesNeedingPayment.length}
                     </Tag>
                   </Space>
-                }
-                style={{
-                  borderRadius: 12,
-                  border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.4)' : '1px solid #FF7A00',
-                  boxShadow: mode === 'dark' ? '0 4px 20px rgba(255, 122, 0, 0.15)' : '0 4px 16px rgba(255, 122, 0, 0.2)',
-                  height: '100%',
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  background: mode === 'dark' ? 'rgba(255, 122, 0, 0.08)' : 'rgba(255, 122, 0, 0.05)',
-                  minHeight: isMobile ? 'auto' : 400,
-                  overflow: 'hidden',
-                }}
-                styles={{
-                  body: {
-                    padding: isMobile ? 12 : 16,
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }
-                }}
-              >
-                {tablesNeedingPayment.length > 0 ? (
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ flex: 1 }}>
-                      {tablesNeedingPayment.map((table, index) => (
-                        <div
-                          key={index}
-                          onClick={() => window.location.href = '/staff/checkout'}
-                          style={{
-                            padding: isMobile ? 12 : 16,
-                            marginBottom: index < tablesNeedingPayment.length - 1 ? 12 : 0,
-                            background: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#FFFFFF',
-                            borderRadius: 12,
-                            border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #E5E5E5',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                            <div style={{ minWidth: 0, flex: 1 }}>
-                              <Text strong style={{ fontSize: isMobile ? 14 : 16, display: 'block' }}>{table.table}</Text>
-                              <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12 }}>
-                                {table.guests} khách • {table.time}
-                              </Text>
-                            </div>
-                            <Text strong style={{ fontSize: isMobile ? 16 : 18, color: '#FF7A00', whiteSpace: 'nowrap' }}>
-                              {table.total.toLocaleString('vi-VN')}đ
-                            </Text>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <Link href="/staff/checkout" style={{ marginTop: 'auto' }}>
-                      <Button
-                        type="primary"
-                        block
-                        size={isMobile ? 'middle' : 'large'}
-                        icon={<DollarOutlined />}
-                        style={{
-                          marginTop: 16,
-                          borderRadius: 8,
-                          height: isMobile ? 44 : 48,
-                          fontWeight: 500,
-                          background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
-                          border: 'none',
-                        }}
-                      >
-                        Xem tất cả
+                  <Link href="/staff/orders">
+                    <motion.div whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
+                      <Button type="link" style={{ color: '#FF380B', fontWeight: 600, fontSize: isMobile ? 12 : 14, padding: isMobile ? '0 4px' : '0 15px' }}>
+                        Xem tất cả <RightOutlined />
                       </Button>
-                    </Link>
+                    </motion.div>
+                  </Link>
+                </div>
+              }
+              style={{
+                borderRadius: isMobile ? 12 : 16,
+                border: '1px solid var(--border)',
+                boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
+                height: '100%',
+                minHeight: isMobile ? 'auto' : 420,
+              }}
+              styles={{ body: { padding: 0 } }}
+            >
+              <Table
+                columns={isMobile ? orderColumns.filter((_, i) => i !== 2 && i !== 4) : orderColumns}
+                dataSource={recentOrders}
+                pagination={false}
+                size="middle"
+                scroll={isMobile ? { x: 300 } : undefined}
+                rowClassName={(record) => 
+                  record.status === 'ready' ? 'table-row-ready' : ''
+                }
+                tableLayout="fixed"
+              />
+            </Card>
+          </motion.div>
+        </Col>
+
+        {/* Table Status */}
+        <Col xs={24} lg={8} style={{ display: 'flex' }}>
+          <motion.div variants={itemVariants} style={{ width: '100%' }}>
+            <Card
+              title={
+                <Space>
+                  <TableOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
+                  <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>Tình trạng bàn</span>
+                </Space>
+              }
+              style={{
+                borderRadius: isMobile ? 12 : 16,
+                border: '1px solid var(--border)',
+                boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+              styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column' } }}
+            >
+              {tableStatus.map((zone, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ background: 'var(--card)', borderRadius: 12 }}
+                  style={{
+                    padding: '16px 12px',
+                    marginLeft: -12,
+                    marginRight: -12,
+                    borderBottom: index < tableStatus.length - 1 ? '1px solid var(--border)' : 'none',
+                    transition: 'background 0.2s',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <Text strong>{zone.zone}</Text>
+                    <Text type="secondary">
+                      <motion.span
+                        key={zone.available}
+                        initial={{ scale: 1.5, color: '#52c41a' }}
+                        animate={{ scale: 1, color: 'var(--text-muted)' }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {zone.available}
+                      </motion.span>
+                      /{zone.total} trống
+                    </Text>
                   </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '40px 20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <CheckCircleOutlined style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
-                    <Text style={{ fontSize: 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>Không có bàn nào cần thanh toán</Text>
+                  <motion.div
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+                    style={{ transformOrigin: 'left' }}
+                  >
+                    <Progress
+                      percent={(zone.occupied / zone.total) * 100}
+                      showInfo={false}
+                      strokeColor={{
+                        '0%': '#FF380B',
+                        '100%': '#FF6B3B',
+                      }}
+                      railColor="var(--border)"
+                      size="small"
+                    />
+                  </motion.div>
+                  <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
+                    <Space size={4}>
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          background: '#52c41a',
+                        }}
+                      />
+                      <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        Trống: {zone.available}
+                      </Text>
+                    </Space>
+                    <Space size={4}>
+                      <div
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          background: '#FF380B',
+                        }}
+                      />
+                      <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        Đang phục vụ: {zone.occupied}
+                      </Text>
+                    </Space>
                   </div>
-                )}
-              </Card>
-            </div>
-          </Col>
-        </Row>
+                </motion.div>
+              ))}
+              
+              <div style={{ marginTop: 'auto', paddingTop: 16 }}>
+                <Link href="/staff/tables">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      type="primary"
+                      block
+                      size="large"
+                      icon={<TableOutlined />}
+                      style={{
+                        borderRadius: 12,
+                        height: 48,
+                        fontWeight: 600,
+                        background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+                        border: 'none',
+                        boxShadow: '0 4px 15px rgba(255, 56, 11, 0.3)',
+                      }}
+                    >
+                      Xem sơ đồ bàn
+                    </Button>
+                  </motion.div>
+                </Link>
+              </div>
+            </Card>
+          </motion.div>
+        </Col>
+      </Row>
 
         {/* Quick Actions */}
-        <div>
+        <motion.div variants={itemVariants}>
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -712,22 +843,31 @@ export default function StaffDashboard() {
             }
             style={{
               marginTop: isMobile ? 16 : 24,
-              borderRadius: 12,
-              border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #E5E5E5',
-              boxShadow: mode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
-              overflow: 'hidden',
-              background: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#FFFFFF',
+              borderRadius: isMobile ? 12 : 16,
+              border: '1px solid var(--border)',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
             }}
           >
-            <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}>
-              {[
-                { icon: <TableOutlined />, title: 'Mở bàn', color: '#FF7A00', href: '/staff/tables' },
-                { icon: <ShoppingCartOutlined />, title: 'Tạo order', color: '#1890ff', href: '/staff/orders' },
-                { icon: <DollarOutlined />, title: 'Thanh toán', color: '#52c41a', href: '/staff/checkout' },
-                { icon: <ClockCircleOutlined />, title: 'Chấm công', color: '#722ed1', href: '/staff/attendance' },
-              ].map((action, index) => (
-                <Col xs={12} sm={12} md={6} lg={6} key={index}>
-                  <Link href={action.href}>
+          <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}>
+            {[
+              { icon: <TableOutlined />, title: 'Mở bàn', color: '#FF380B', href: '/staff/tables' },
+              { icon: <ShoppingCartOutlined />, title: 'Tạo order', color: '#1890ff', href: '/staff/orders' },
+              { icon: <DollarOutlined />, title: 'Thanh toán', color: '#52c41a', href: '/staff/checkout' },
+              { icon: <ClockCircleOutlined />, title: 'Chấm công', color: '#722ed1', href: '/staff/attendance' },
+            ].map((action, index) => (
+              <Col xs={12} sm={6} key={index}>
+                <Link href={action.href}>
+                  <motion.div
+                    whileHover={!isMobile ? { 
+                      scale: 1.03, 
+                      y: -5,
+                      boxShadow: `0 10px 30px ${action.color}25`,
+                    } : undefined}
+                    whileTap={{ scale: 0.97 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
                     <Button
                       style={{
                         width: '100%',
@@ -738,8 +878,8 @@ export default function StaffDashboard() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: isMobile ? 4 : 8,
-                        border: mode === 'dark' ? `1px solid rgba(255, 122, 0, 0.2)` : `1px solid ${action.color}30`,
-                        background: mode === 'dark' ? 'rgba(255, 122, 0, 0.08)' : `${action.color}08`,
+                        border: mode === 'dark' ? `1px solid rgba(255, 56, 11, 0.2)` : `1px solid ${action.color}30`,
+                        background: mode === 'dark' ? 'rgba(255, 56, 11, 0.08)' : `${action.color}08`,
                         transition: 'all 0.2s ease',
                       }}
                     >
@@ -748,22 +888,23 @@ export default function StaffDashboard() {
                       </span>
                       <span style={{ fontWeight: 500, color: 'var(--text)', fontSize: isMobile ? 12 : 14 }}>{action.title}</span>
                     </Button>
-                  </Link>
-                </Col>
-              ))}
+                  </motion.div>
+                </Link>
+              </Col>
+            ))}
             </Row>
           </Card>
-        </div>
+        </motion.div>
 
         <style jsx global>{`
         .luxury-btn:hover {
-          background: ${mode === 'dark' ? 'rgba(255, 122, 0, 0.15)' : '#F8F8F8'} !important;
-          border-color: ${mode === 'dark' ? 'rgba(255, 122, 0, 0.4)' : '#FF7A00'} !important;
+          background: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : '#F8F8F8'} !important;
+          border-color: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.4)' : '#FF380B'} !important;
           transform: translateY(-1px);
         }
         .luxury-btn-primary:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(255, 122, 0, 0.4) !important;
+          box-shadow: 0 6px 20px rgba(255, 56, 11, 0.4) !important;
         }
         .ant-table-wrapper .ant-table-tbody > tr > td {
           padding: 16px 20px !important;
@@ -777,7 +918,7 @@ export default function StaffDashboard() {
           font-size: 13px;
         }
         .ant-table-wrapper .ant-table-tbody > tr:hover > td {
-          background: rgba(255, 122, 0, 0.08) !important;
+          background: rgba(255, 56, 11, 0.08) !important;
         }
         .ant-table-wrapper .ant-table-tbody > tr:last-child > td {
           border-bottom: none;
@@ -789,13 +930,13 @@ export default function StaffDashboard() {
           background: rgba(82, 196, 26, 0.15) !important;
         }
         .table-row-pending {
-          background: rgba(255, 122, 0, 0.05) !important;
+          background: rgba(255, 56, 11, 0.05) !important;
         }
         .table-row-pending:hover {
-          background: rgba(255, 122, 0, 0.12) !important;
+          background: rgba(255, 56, 11, 0.12) !important;
         }
       `}</style>
-      </div>
+      </motion.div>
     </PageTransition>
   );
 }

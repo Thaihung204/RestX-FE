@@ -123,7 +123,7 @@ const Footer: React.FC = () => {
                       style={{
                         width: 44,
                         height: 44,
-                        background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                        background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
                         borderRadius: 12,
                         display: 'flex',
                         alignItems: 'center',
@@ -131,7 +131,7 @@ const Footer: React.FC = () => {
                         color: 'white',
                         fontWeight: 700,
                         fontSize: 20,
-                        boxShadow: '0 4px 12px rgba(255, 122, 0, 0.3)',
+                        boxShadow: '0 4px 12px rgba(255, 56, 11, 0.3)',
                       }}
                     >
                       R

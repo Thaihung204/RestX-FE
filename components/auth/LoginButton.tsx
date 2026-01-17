@@ -13,10 +13,11 @@ const LoginButton: React.FC<LoginButtonProps> = ({
     <button
       type="submit"
       disabled={loading}
-      className="w-full bg-gradient-to-r from-orange-600 to-orange-500 text-white py-3 px-4 rounded-lg font-semibold text-sm
-                 hover:from-orange-700 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl
+      className="w-full text-white py-3 px-4 rounded-lg font-semibold text-sm
+                 transition-all duration-300 shadow-lg hover:shadow-xl
                  disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none
-                 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                 focus:outline-none focus:ring-2 focus:ring-offset-2"
+      style={{ background: loading ? undefined : '#FF380B', '--tw-ring-color': '#FF380B' } as React.CSSProperties}
       suppressHydrationWarning>
       {loading ? (
         <span className="flex items-center justify-center">

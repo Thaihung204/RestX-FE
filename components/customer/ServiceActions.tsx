@@ -53,7 +53,7 @@ return (
   >
     <div style={{ 
         fontSize: 28, 
-        color: isActive ? "#fff" : "#ff7043",
+        color: isActive ? "#fff" : "#FF380B",
         filter: isActive ? "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" : "none"
     }}>
       {icon}

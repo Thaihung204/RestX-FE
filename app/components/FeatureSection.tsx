@@ -27,7 +27,7 @@ const features: Feature[] = [
     title: 'Quản lý đặt bàn thông minh',
     description:
       'Hệ thống đặt bàn tự động với giao diện trực quan, giúp tối ưu hóa sơ đồ bàn và giảm thời gian chờ cho khách hàng.',
-    color: '#FF7A00',
+    color: '#FF380B',
   },
   {
     icon: <FileTextOutlined style={{ fontSize: 36 }} />,
@@ -132,7 +132,7 @@ const FeatureSection: React.FC = () => {
           left: '-10%',
           width: 400,
           height: 400,
-          background: 'radial-gradient(circle, rgba(255, 122, 0, 0.05) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255, 56, 11, 0.05) 0%, transparent 70%)',
           borderRadius: '50%',
           pointerEvents: 'none',
         }}
@@ -170,7 +170,7 @@ const FeatureSection: React.FC = () => {
                   padding: '8px 20px',
                   background: 'linear-gradient(135deg, #FFF3E8 0%, #FFE8D6 100%)',
                   borderRadius: 50,
-                  color: '#E06000',
+                  color: '#CC2D08',
                   fontWeight: 600,
                   fontSize: 14,
                   marginBottom: 16,
@@ -191,7 +191,7 @@ const FeatureSection: React.FC = () => {
             >
               Tính năng nổi bật của{' '}
               <span style={{ 
-                background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}>

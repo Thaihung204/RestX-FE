@@ -264,7 +264,7 @@ export default function AttendancePage() {
             borderRadius: isMobile ? 16 : 24,
             background: mode === 'dark'
               ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
-              : 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+              : 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
             border: 'none',
             marginBottom: isMobile ? 16 : 24,
             overflow: 'hidden',
@@ -307,7 +307,7 @@ export default function AttendancePage() {
                           {t('staff.attendance.info.worked')}
                         </Text>
                         <br />
-                        <Text style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
+                        <Text style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
                           {calculateWorkingHours().toFixed(1)}h
                         </Text>
                       </div>
@@ -382,7 +382,7 @@ export default function AttendancePage() {
                       style={{
                         borderRadius: 12,
                         height: isMobile ? 40 : 48,
-                        background: isOnBreak ? '#52c41a' : '#faad14',
+                        background: isOnBreak ? '#52c41a' : '#FF380B',
                         color: '#fff',
                         border: 'none',
                         fontWeight: 500,
@@ -472,7 +472,7 @@ export default function AttendancePage() {
               title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Tổng giờ làm</span>}
               value={monthlyStats.totalHours}
               suffix="h"
-              styles={{ content: { color: '#FF7A00', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
+              styles={{ content: { color: '#FF380B', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
               prefix={<FieldTimeOutlined />}
             />
           </Card>
@@ -485,7 +485,7 @@ export default function AttendancePage() {
           <Card
             title={
               <Space>
-                <HistoryOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18 }} />
+                <HistoryOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18 }} />
                 <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.attendance.history.title')}</span>
               </Space>
             }
@@ -514,7 +514,7 @@ export default function AttendancePage() {
           <Card
             title={
               <Space>
-                <TrophyOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18 }} />
+                <TrophyOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18 }} />
                 <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.attendance.history.progress')}</span>
               </Space>
             }
@@ -552,7 +552,7 @@ export default function AttendancePage() {
               </div>
               <Progress
                 percent={Number(((monthlyStats.totalHours / (monthlyStats.totalDays * 8)) * 100).toFixed(1))}
-                strokeColor="#FF7A00"
+                strokeColor="#FF380B"
                 railColor="var(--border)"
                 format={(p) => `${p?.toFixed(1)}%`}
               />
@@ -616,7 +616,7 @@ export default function AttendancePage() {
               <Avatar
                 size={isMobile ? 40 : 48}
                 style={{
-                  background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                  background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                 }}
               >
                 <UserOutlined />
@@ -643,13 +643,13 @@ export default function AttendancePage() {
         width={isMobile ? '90%' : 400}
         style={{
           backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+          border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
           borderRadius: 12,
         }}
         styles={{
           header: {
             backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
             borderRadius: '12px 12px 0 0',
             padding: '16px 24px',
             paddingRight: '56px',
@@ -678,7 +678,7 @@ export default function AttendancePage() {
                 actionType === 'checkOut'
                   ? '#ff4d4f'
                   : actionType === 'breakStart'
-                    ? '#faad14'
+                    ? '#FF380B'
                     : '#52c41a',
               display: 'flex',
               alignItems: 'center',

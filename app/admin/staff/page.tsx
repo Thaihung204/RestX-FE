@@ -92,8 +92,10 @@ export default function StaffPage() {
       badge: "bg-purple-500/10 text-purple-500 border-purple-500/20",
     },
     Chef: {
-      color: "bg-orange-500",
-      badge: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+      color: "",
+      badge: "",
+      style: { backgroundColor: '#FF380B' },
+      badgeStyle: { backgroundColor: 'rgba(255, 56, 11, 0.1)', color: '#FF380B', borderColor: 'rgba(255, 56, 11, 0.2)' },
     },
     Waiter: {
       color: "bg-blue-500",
@@ -142,7 +144,10 @@ export default function StaffPage() {
                 </p>
               </div>
               <button
-                className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-orange-400 transition-all"
+                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                style={{ background: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#FF380B'}
                 suppressHydrationWarning>
                 <svg
                   className="w-5 h-5 inline-block mr-2"
@@ -230,18 +235,19 @@ export default function StaffPage() {
                 className="rounded-xl p-4"
                 style={{
                   background: 'var(--card)',
-                  border: '1px solid rgba(249, 115, 22, 0.2)',
+                  border: '1px solid rgba(255, 56, 11, 0.2)',
                 }}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                       Departments
                     </p>
-                    <p className="text-3xl font-bold text-orange-500 mt-1">5</p>
+                    <p className="text-3xl font-bold mt-1" style={{ color: '#FF380B' }}>5</p>
                   </div>
-                  <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(255, 56, 11, 0.1)' }}>
                     <svg
-                      className="w-6 h-6 text-orange-500"
+                      className="w-6 h-6"
+                      style={{ color: '#FF380B' }}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24">
@@ -288,20 +294,20 @@ export default function StaffPage() {
               {staff.map((member) => (
                 <div
                   key={member.id}
-                  className="rounded-xl overflow-hidden hover:border-orange-500/30 transition-all group"
+                  className="rounded-xl overflow-hidden transition-all group"
                   style={{
                     background: 'var(--card)',
-                    border: '1px solid var(--border)',
+                    border: '1px solid rgba(255, 56, 11, 0.3)',
                   }}>
                   <div className="p-6">
                     {/* Profile Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold" style={{ background: '#FF380B' }}>
                           {member.name.charAt(0)}
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold group-hover:text-orange-500 transition-colors" style={{ color: 'var(--text)' }}>
+                          <h3 className="text-lg font-bold transition-colors" style={{ color: 'var(--text)' }}>
                             {member.name}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
@@ -406,7 +412,10 @@ export default function StaffPage() {
                     {/* Actions */}
                     <div className="flex gap-2">
                       <button
-                        className="flex-1 px-3 py-2 bg-orange-500/10 text-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition-all font-medium text-sm"
+                        className="flex-1 px-3 py-2 rounded-lg transition-all font-medium text-sm"
+                        style={{ backgroundColor: 'rgba(255, 56, 11, 0.1)', color: '#FF380B' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FF380B'; e.currentTarget.style.color = 'white'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 56, 11, 0.1)'; e.currentTarget.style.color = '#FF380B'; }}
                         suppressHydrationWarning>
                         View Profile
                       </button>

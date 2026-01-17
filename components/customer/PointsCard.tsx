@@ -111,7 +111,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
             marginBottom: 8,
           }}>
           <Text style={{ color: "#ccc", fontSize: 13 }}>Tiến độ hạng Vàng</Text>
-          <Text style={{ color: "#ff7043", fontSize: 13 }}>
+          <Text style={{ color: "#FF380B", fontSize: 13 }}>
             Còn {pointsToNextReward} điểm
           </Text>
         </div>

@@ -152,11 +152,11 @@ export default function AdminLoginPage() {
         {/* Decorative elements */}
         <div 
           className="absolute top-10 right-10 w-64 h-64 rounded-full filter blur-3xl opacity-20 animate-pulse"
-          style={{ background: isDark ? '#FF7A00' : '#ea580c' }}
+          style={{ background: '#FF380B' }}
         ></div>
         <div 
           className="absolute bottom-10 left-10 w-64 h-64 rounded-full filter blur-3xl opacity-10"
-          style={{ background: isDark ? '#FF7A00' : '#f97316' }}
+          style={{ background: '#FF380B' }}
         ></div>
 
         {/* Login Form Container */}
@@ -166,7 +166,7 @@ export default function AdminLoginPage() {
               className="rounded-2xl shadow-2xl p-6 sm:p-8 border"
               style={{
                 background: isDark ? 'rgba(20, 25, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 122, 0, 0.2)'
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 56, 11, 0.2)'
               }}
             >
               <AdminLoginHeader />
@@ -212,9 +212,9 @@ export default function AdminLoginPage() {
                     <a
                       href="/forgot-password"
                       className="text-sm font-medium transition-colors"
-                      style={{ color: '#FF7A00' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                      style={{ color: '#FF380B' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                     >
                       Forgot password?
                     </a>
@@ -296,9 +296,9 @@ export default function AdminLoginPage() {
                   <a
                     href="/terms"
                     className="font-medium"
-                    style={{ color: '#FF7A00' }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                    style={{ color: '#FF380B' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                   >
                     Terms of Service
                   </a>{" "}
@@ -306,9 +306,9 @@ export default function AdminLoginPage() {
                   <a
                     href="/privacy"
                     className="font-medium"
-                    style={{ color: '#FF7A00' }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                    style={{ color: '#FF380B' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                   >
                     Privacy Policy
                   </a>
@@ -324,9 +324,9 @@ export default function AdminLoginPage() {
                   <a
                     href="/register"
                     className="font-semibold transition-colors"
-                    style={{ color: '#FF7A00' }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                    style={{ color: '#FF380B' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                   >
                     Sign up here
                   </a>

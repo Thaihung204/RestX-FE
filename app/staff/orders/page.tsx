@@ -337,8 +337,8 @@ export default function OrderManagement() {
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 12, marginBottom: isMobile ? 10 : 12 }}>
                 <Avatar
                   style={{
-                    background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
-                    fontWeight: 500,
+                    background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
+                    fontWeight: 600,
                     fontSize: isMobile ? 12 : 14,
                   }}
                   size={isMobile ? 38 : 44}
@@ -390,22 +390,18 @@ export default function OrderManagement() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, flexWrap: 'wrap' }}>
-                <Text strong style={{
-                  color: '#FF7A00',
-                  fontSize: isMobile ? 16 : 18,
-                  fontWeight: 500,
-                }}>
+                <Text strong style={{ color: '#FF380B', fontSize: isMobile ? 15 : 16 }}>
                   {order.total.toLocaleString('vi-VN')}đ
                 </Text>
                 {pendingItems > 0 && (
                   <Badge
                     count={isMobile ? `${pendingItems} chưa xong` : `${pendingItems} món chưa xong`}
                     style={{
-                      backgroundColor: mode === 'dark' ? 'rgba(255, 122, 0, 0.2)' : 'rgba(255, 122, 0, 0.1)',
-                      color: '#FF7A00',
+                      backgroundColor: mode === 'dark' ? 'rgba(255, 56, 11, 0.2)' : 'rgba(255, 56, 11, 0.1)',
+                      color: '#FF380B',
                       fontSize: isMobile ? 12 : 13,
                       fontWeight: 500,
-                      border: `1px solid ${mode === 'dark' ? 'rgba(255, 122, 0, 0.3)' : 'rgba(255, 122, 0, 0.2)'}`,
+                      border: `1px solid ${mode === 'dark' ? 'rgba(255, 56, 11, 0.3)' : 'rgba(255, 56, 11, 0.2)'}`,
                     }}
                   />
                 )}
@@ -441,7 +437,7 @@ export default function OrderManagement() {
             style={{
               borderRadius: 12,
               background: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#FFFFFF',
-              border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E5E5',
+              border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E5E5',
               overflow: 'hidden',
               height: '100%',
               boxShadow: mode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
@@ -454,15 +450,15 @@ export default function OrderManagement() {
                   width: isMobile ? 40 : 56,
                   height: isMobile ? 40 : 56,
                   borderRadius: 10,
-                  background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
-                  border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
+                  background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : 'rgba(255, 56, 11, 0.08)',
+                  border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid rgba(255, 56, 11, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}
               >
-                <ExclamationCircleOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }} />
+                <ExclamationCircleOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B' }} />
               </div>
               <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
                 <Text style={{
@@ -501,15 +497,15 @@ export default function OrderManagement() {
                   width: isMobile ? 40 : 56,
                   height: isMobile ? 40 : 56,
                   borderRadius: 10,
-                  background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
-                  border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
+                  background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : 'rgba(255, 56, 11, 0.08)',
+                  border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid rgba(255, 56, 11, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}
               >
-                <SyncOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }} />
+                <SyncOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B' }} />
               </div>
               <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
                 <Text style={{
@@ -548,15 +544,15 @@ export default function OrderManagement() {
                   width: isMobile ? 40 : 56,
                   height: isMobile ? 40 : 56,
                   borderRadius: 10,
-                  background: mode === 'dark' ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 122, 0, 0.08)',
-                  border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid rgba(255, 122, 0, 0.15)',
+                  background: mode === 'dark' ? 'rgba(255, 56, 11, 0.1)' : 'rgba(255, 56, 11, 0.08)',
+                  border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid rgba(255, 56, 11, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}
               >
-                <CheckCircleOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }} />
+                <CheckCircleOutlined style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B' }} />
               </div>
               <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
                 <Text style={{
@@ -611,8 +607,8 @@ export default function OrderManagement() {
               style={{
                 borderRadius: 12,
                 height: isMobile ? 40 : 48,
-                fontWeight: 500,
-                background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                 border: 'none',
                 width: '100%',
               }}
@@ -675,7 +671,7 @@ export default function OrderManagement() {
       <Modal
         title={
           <Space>
-            <ShoppingCartOutlined style={{ color: '#FF7A00' }} />
+            <ShoppingCartOutlined style={{ color: '#FF380B' }} />
             <span>{t('staff.orders.modal.order_detail')} {selectedOrder?.id}</span>
           </Space>
         }
@@ -686,14 +682,14 @@ export default function OrderManagement() {
         centered
         style={{
           backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+          border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
           borderRadius: 12,
         }}
         styles={{
           body: { padding: isMobile ? 20 : 28 },
           header: {
             backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
             borderRadius: '12px 12px 0 0',
             padding: '20px 28px',
             position: 'relative',
@@ -801,7 +797,7 @@ export default function OrderManagement() {
             {/* Total */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.orders.order.total')}</Text>
-              <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF7A00' }}>
+              <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B' }}>
                 {selectedOrder.total.toLocaleString('vi-VN')}đ
               </Text>
             </div>
@@ -852,7 +848,7 @@ export default function OrderManagement() {
       <Modal
         title={
           <Space>
-            <PlusOutlined style={{ color: '#FF7A00' }} />
+            <PlusOutlined style={{ color: '#FF380B' }} />
             <span>{t('staff.orders.modal.new_order')}</span>
           </Space>
         }
@@ -867,13 +863,13 @@ export default function OrderManagement() {
         centered
         style={{
           backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+          border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
           borderRadius: 12,
         }}
         styles={{
           header: {
             backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
             borderRadius: '12px 12px 0 0',
             padding: '20px 28px',
             position: 'relative',
@@ -951,17 +947,17 @@ export default function OrderManagement() {
                           height: isMobile ? 32 : 40,
                           borderRadius: 8,
                           background: 'var(--surface)',
-                          color: '#FF7A00'
+                          color: '#FF380B'
                         }}>
                           {getMenuItemIcon(item.id)}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <Text strong style={{ display: 'block', fontSize: isMobile ? 13 : 14 }}>{item.name}</Text>
-                          <Text style={{ color: '#FF7A00', fontSize: isMobile ? 12 : 14 }}>
+                          <Text style={{ color: '#FF380B', fontSize: isMobile ? 12 : 14 }}>
                             {item.price.toLocaleString('vi-VN')}đ
                           </Text>
                         </div>
-                        <PlusOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 14 : 16 }} />
+                        <PlusOutlined style={{ color: '#FF380B', fontSize: isMobile ? 14 : 16 }} />
                       </div>
                     </Card>
                   </Col>
@@ -1013,7 +1009,7 @@ export default function OrderManagement() {
                           height: isMobile ? 28 : 32,
                           borderRadius: 6,
                           background: 'var(--surface)',
-                          color: '#FF7A00'
+                          color: '#FF380B'
                         }}>
                           {getMenuItemIcon(c.item.id)}
                         </div>
@@ -1051,7 +1047,7 @@ export default function OrderManagement() {
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isMobile ? 12 : 16 }}>
                     <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.orders.order.total')}</Text>
-                    <Text strong style={{ fontSize: isMobile ? 16 : 18, color: '#FF7A00' }}>
+                    <Text strong style={{ fontSize: isMobile ? 16 : 18, color: '#FF380B' }}>
                       {cartTotal.toLocaleString('vi-VN')}đ
                     </Text>
                   </div>
@@ -1064,8 +1060,8 @@ export default function OrderManagement() {
                     style={{
                       borderRadius: 12,
                       height: isMobile ? 44 : 48,
-                      fontWeight: 500,
-                      background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                      fontWeight: 600,
+                      background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                       border: 'none',
                     }}
                   >
@@ -1108,7 +1104,7 @@ export default function OrderManagement() {
           transition: all 0.2s ease !important;
         }
         .ant-modal-close:hover {
-          background: ${mode === 'dark' ? 'rgba(255, 122, 0, 0.2)' : 'rgba(255, 122, 0, 0.15)'} !important;
+          background: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.2)' : 'rgba(255, 56, 11, 0.15)'} !important;
         }
         .ant-modal-close-x {
           width: 32px !important;

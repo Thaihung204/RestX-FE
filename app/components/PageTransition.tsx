@@ -102,7 +102,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
                 height: '50vw',
                 maxWidth: 500,
                 maxHeight: 500,
-                background: 'radial-gradient(circle, #FF7A00 0%, transparent 70%)',
+                background: 'radial-gradient(circle, #FF380B 0%, transparent 70%)',
                 borderRadius: '50%',
                 filter: 'blur(80px)',
               }}
@@ -138,8 +138,8 @@ const PageTransition: React.FC<PageTransitionProps> = ({
                   bottom: -12,
                   borderRadius: '50%',
                   border: '3px solid transparent',
-                  borderTopColor: '#FF7A00',
-                  borderRightColor: 'rgba(255, 122, 0, 0.3)',
+                  borderTopColor: '#FF380B',
+                  borderRightColor: 'rgba(255, 56, 11, 0.3)',
                 }}
               />
 
@@ -159,8 +159,8 @@ const PageTransition: React.FC<PageTransitionProps> = ({
                   bottom: -20,
                   borderRadius: '50%',
                   border: '2px solid transparent',
-                  borderBottomColor: 'rgba(255, 122, 0, 0.2)',
-                  borderLeftColor: 'rgba(255, 122, 0, 0.1)',
+                  borderBottomColor: 'rgba(255, 56, 11, 0.2)',
+                  borderLeftColor: 'rgba(255, 56, 11, 0.1)',
                 }}
               />
 
@@ -168,9 +168,9 @@ const PageTransition: React.FC<PageTransitionProps> = ({
               <motion.div
                 animate={{
                   boxShadow: [
-                    '0 0 30px rgba(255, 122, 0, 0.2)',
-                    '0 0 50px rgba(255, 122, 0, 0.4)',
-                    '0 0 30px rgba(255, 122, 0, 0.2)',
+                    '0 0 30px rgba(255, 56, 11, 0.2)',
+                    '0 0 50px rgba(255, 56, 11, 0.4)',
+                    '0 0 30px rgba(255, 56, 11, 0.2)',
                   ],
                 }}
                 transition={{
@@ -181,7 +181,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
                 style={{
                   width: 80,
                   height: 80,
-                  background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                  background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                   borderRadius: 20,
                   display: 'flex',
                   alignItems: 'center',
@@ -227,7 +227,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
               </motion.span>
               <motion.span
                 animate={{
-                  color: ['#FF7A00', '#E06000', '#FF7A00'],
+                  color: ['#FF380B', '#CC2D08', '#FF380B'],
                 }}
                 transition={{
                   duration: 2,
@@ -252,7 +252,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
               style={{
                 marginTop: 32,
                 height: 4,
-                background: 'rgba(255, 122, 0, 0.15)',
+                background: 'rgba(255, 56, 11, 0.15)',
                 borderRadius: 2,
                 overflow: 'hidden',
               }}
@@ -268,7 +268,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
                 style={{
                   width: '50%',
                   height: '100%',
-                  background: 'linear-gradient(90deg, transparent, #FF7A00, transparent)',
+                  background: 'linear-gradient(90deg, transparent, #FF380B, transparent)',
                   borderRadius: 2,
                 }}
               />

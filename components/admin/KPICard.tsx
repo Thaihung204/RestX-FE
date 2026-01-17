@@ -52,7 +52,7 @@ export default function KPICard({
           style={{
             background: "rgba(255, 122, 0, 0.12)",
             border: "1px solid rgba(255, 122, 0, 0.25)",
-            color: "#FF7A00",
+            color: "#FF380B",
           }}>
           {icon}
         </div>

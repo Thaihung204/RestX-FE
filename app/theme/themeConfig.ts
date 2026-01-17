@@ -4,11 +4,11 @@ export type ThemeMode = 'light' | 'dark';
 
 const common = {
   token: {
-    colorPrimary: '#FF7A00',
-    colorPrimaryHover: '#E06000',
-    colorPrimaryActive: '#E06000',
-    colorLink: '#FF7A00',
-    colorLinkHover: '#E06000',
+    colorPrimary: '#FF380B',
+    colorPrimaryHover: '#CC2D08',
+    colorPrimaryActive: '#CC2D08',
+    colorLink: '#FF380B',
+    colorLinkHover: '#CC2D08',
     borderRadius: 14,
     fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
     fontSize: 16,

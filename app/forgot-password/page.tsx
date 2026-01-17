@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
           className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
         >
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-600 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl" style={{ background: '#FF380B' }}>
               <svg
                 className="w-8 h-8 text-white"
                 fill="none"
@@ -128,9 +128,9 @@ export default function ForgotPasswordPage() {
               <a
                 href="/login"
                 className="text-sm font-semibold transition-colors inline-flex items-center"
-                style={{ color: '#FF7A00' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
               >
                 <svg
                   className="w-4 h-4 mr-1"

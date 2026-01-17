@@ -53,16 +53,11 @@ export default function SettingsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-3 font-medium transition-all flex items-center gap-2 ${
-                    activeTab === tab.id ? "text-orange-500 border-b-2 border-orange-500" : ""
-                  }`}
-                  style={
-                    activeTab !== tab.id
-                      ? {
-                          color: 'var(--text-muted)',
-                        }
-                      : undefined
-                  }
+                  className="px-4 py-3 font-medium transition-all flex items-center gap-2"
+                  style={{
+                    color: activeTab === tab.id ? '#FF380B' : 'var(--text-muted)',
+                    borderBottom: activeTab === tab.id ? '2px solid #FF380B' : 'none',
+                  }}
                   suppressHydrationWarning>
                   <svg
                     className="w-5 h-5"
@@ -101,12 +96,14 @@ export default function SettingsPage() {
                       <input
                         type="text"
                         defaultValue="RestX Premium Restaurant"
-                        className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
                         style={{
                           background: 'var(--surface)',
                           border: '1px solid var(--border)',
                           color: 'var(--text)',
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                         suppressHydrationWarning
                       />
                     </div>
@@ -118,13 +115,13 @@ export default function SettingsPage() {
                         <input
                           type="email"
                           defaultValue="contact@restx.com"
-                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
                           style={{
                             background: 'var(--surface)',
                             border: '1px solid var(--border)',
                             color: 'var(--text)',
-                          }}
-                          suppressHydrationWarning
+                          }}                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}                          suppressHydrationWarning
                         />
                       </div>
                       <div>
@@ -134,13 +131,13 @@ export default function SettingsPage() {
                         <input
                           type="tel"
                           defaultValue="+1 (555) 123-4567"
-                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
                           style={{
                             background: 'var(--surface)',
                             border: '1px solid var(--border)',
                             color: 'var(--text)',
-                          }}
-                          suppressHydrationWarning
+                          }}                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}                          suppressHydrationWarning
                         />
                       </div>
                     </div>
@@ -151,13 +148,13 @@ export default function SettingsPage() {
                       <input
                         type="text"
                         defaultValue="123 Main Street, Downtown, City 12345"
-                        className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
                         style={{
                           background: 'var(--surface)',
                           border: '1px solid var(--border)',
                           color: 'var(--text)',
-                        }}
-                        suppressHydrationWarning
+                        }}                        onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}                        suppressHydrationWarning
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -168,13 +165,13 @@ export default function SettingsPage() {
                         <input
                           type="time"
                           defaultValue="09:00"
-                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
                           style={{
                             background: 'var(--surface)',
                             border: '1px solid var(--border)',
                             color: 'var(--text)',
-                          }}
-                          suppressHydrationWarning
+                          }}                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}                          suppressHydrationWarning
                         />
                       </div>
                       <div>
@@ -184,7 +181,7 @@ export default function SettingsPage() {
                         <input
                           type="time"
                           defaultValue="23:00"
-                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
                           style={{
                             background: 'var(--surface)',
                             border: '1px solid var(--border)',
@@ -213,12 +210,14 @@ export default function SettingsPage() {
                           Currency
                         </label>
                         <select
-                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
                           style={{
                             background: 'var(--surface)',
                             border: '1px solid var(--border)',
                             color: 'var(--text)',
                           }}
+                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                           suppressHydrationWarning>
                           <option>USD ($)</option>
                           <option>EUR (€)</option>
@@ -233,12 +232,14 @@ export default function SettingsPage() {
                         <input
                           type="number"
                           defaultValue="10"
-                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
                           style={{
                             background: 'var(--surface)',
                             border: '1px solid var(--border)',
                             color: 'var(--text)',
                           }}
+                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                           suppressHydrationWarning
                         />
                       </div>
@@ -249,12 +250,14 @@ export default function SettingsPage() {
                           Time Zone
                         </label>
                         <select
-                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
                           style={{
                             background: 'var(--surface)',
                             border: '1px solid var(--border)',
                             color: 'var(--text)',
                           }}
+                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                           suppressHydrationWarning>
                           <option>UTC-5 (EST)</option>
                           <option>UTC-8 (PST)</option>
@@ -267,12 +270,14 @@ export default function SettingsPage() {
                           Date Format
                         </label>
                         <select
-                          className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
                           style={{
                             background: 'var(--surface)',
                             border: '1px solid var(--border)',
                             color: 'var(--text)',
                           }}
+                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                           suppressHydrationWarning>
                           <option>MM/DD/YYYY</option>
                           <option>DD/MM/YYYY</option>
@@ -310,11 +315,12 @@ export default function SettingsPage() {
                         key={theme.name}
                         className={`p-4 bg-gradient-to-br ${
                           theme.color
-                        } border-2 ${
-                          theme.name === "Dark"
-                            ? "border-orange-500"
-                            : "border-gray-700"
-                        } rounded-xl hover:border-orange-500 transition-all`}
+                        } border-2 rounded-xl transition-all`}
+                        style={{
+                          borderColor: theme.name === "Dark" ? '#FF380B' : '#374151'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                        onMouseLeave={(e) => e.currentTarget.style.borderColor = theme.name === "Dark" ? '#FF380B' : '#374151'}
                         suppressHydrationWarning>
                         <div className="text-center">
                           <p
@@ -401,7 +407,17 @@ export default function SettingsPage() {
                           className="sr-only peer"
                           suppressHydrationWarning
                         />
-                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                        <div className="w-11 h-6 peer-focus:outline-none peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" style={{backgroundColor: 'rgb(55, 65, 81)', '--tw-ring-color': '#FF380B'} as any}></div>
+                        <style jsx>{`
+                          .peer:checked ~ div {
+                            background-color: #FF380B !important;
+                          }
+                        `}</style>
+                        <style jsx>{`
+                          .peer:checked + div {
+                            background-color: #FF380B;
+                          }
+                        `}</style>
                       </label>
                     </div>
                   </div>
@@ -528,12 +544,14 @@ export default function SettingsPage() {
                       </label>
                       <input
                         type="password"
-                        className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
                         style={{
                           background: 'var(--surface)',
                           border: '1px solid var(--border)',
                           color: 'var(--text)',
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                         suppressHydrationWarning
                       />
                     </div>
@@ -543,12 +561,14 @@ export default function SettingsPage() {
                       </label>
                       <input
                         type="password"
-                        className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
                         style={{
                           background: 'var(--surface)',
                           border: '1px solid var(--border)',
                           color: 'var(--text)',
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                         suppressHydrationWarning
                       />
                     </div>
@@ -558,17 +578,22 @@ export default function SettingsPage() {
                       </label>
                       <input
                         type="password"
-                        className="w-full px-4 py-2 rounded-lg focus:border-orange-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
                         style={{
                           background: 'var(--surface)',
                           border: '1px solid var(--border)',
                           color: 'var(--text)',
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                         suppressHydrationWarning
                       />
                     </div>
                     <button
-                      className="px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-orange-400 transition-all"
+                      className="px-6 py-2 text-white rounded-lg font-medium transition-all"
+                      style={{background: 'linear-gradient(to right, #FF380B, #CC2D08)'}}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #CC2D08, #B32607)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #FF380B, #CC2D08)'}
                       suppressHydrationWarning>
                       Update Password
                     </button>
@@ -600,11 +625,16 @@ export default function SettingsPage() {
                           className="sr-only peer"
                           suppressHydrationWarning
                         />
-                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                        <div className="w-11 h-6 peer-focus:outline-none peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" style={{backgroundColor: 'rgb(55, 65, 81)', '--tw-ring-color': '#FF380B'} as any}></div>
                       </label>
                     </div>
                   </div>
                 </div>
+                <style jsx>{`
+                  .peer:checked ~ div {
+                    background-color: #FF380B !important;
+                  }
+                `}</style>
 
                 <div
                   className="rounded-xl p-6"
@@ -639,7 +669,18 @@ export default function SettingsPage() {
                 Cancel
               </button>
               <button
-                className="px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-orange-400 transition-all"
+                style={{
+                  background: 'linear-gradient(to right, #FF380B, #FF380B)',
+                  color: 'white',
+                  padding: '8px 24px',
+                  borderRadius: '8px',
+                  fontWeight: '500',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #CC2D08, #CC2D08)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #FF380B, #FF380B)'}
                 suppressHydrationWarning>
                 Save Changes
               </button>

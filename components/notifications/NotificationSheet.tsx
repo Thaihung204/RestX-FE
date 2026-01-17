@@ -236,7 +236,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                               alignItems: 'center',
                               justifyContent: 'center',
                               flexShrink: 0,
-                              color: '#FF7A00',
+                              color: '#FF380B',
                             }}
                           >
                             {item.icon}
@@ -282,7 +282,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                               width: 8,
                               height: 8,
                               borderRadius: '50%',
-                              background: '#FF7A00',
+                              background: '#FF380B',
                               flexShrink: 0,
                               marginTop: 6,
                             }}
@@ -344,7 +344,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                 left: -50,
                 width: 150,
                 height: 150,
-                background: '#ff5722',
+                background: '#FF380B',
                 filter: 'blur(90px)',
                 opacity: 0.15,
                 pointerEvents: 'none',
@@ -394,17 +394,17 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                 }}
               >
                 {selectedNotification.icon ? (
-                  <div style={{ color: '#ff5722', fontSize: 20 }}>
+                  <div style={{ color: '#FF380B', fontSize: 20 }}>
                     {selectedNotification.icon}
                   </div>
                 ) : (
-                  <InfoCircleOutlined style={{ color: '#ff5722', fontSize: 20 }} />
+                  <InfoCircleOutlined style={{ color: '#FF380B', fontSize: 20 }} />
                 )}
               </div>
               <div>
                 <Text
                   style={{
-                    color: '#ff5722',
+                    color: '#FF380B',
                     fontSize: 11,
                     textTransform: 'uppercase',
                     letterSpacing: 1,
