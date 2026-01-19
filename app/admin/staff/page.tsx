@@ -342,36 +342,28 @@ export default function StaffPage() {
                             {member.name}
                           </h3>
                           <span
-                            className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${
-                              member.role === "Manager"
+                            className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${member.role === "Manager"
                                 ? "bg-purple-500/10 text-purple-500"
                                 : member.role === "Chef"
                                   ? "bg-orange-500/10 text-orange-500"
                                   : member.role === "Waiter"
                                     ? "bg-blue-500/10 text-blue-500"
                                     : "bg-gray-500/10 text-gray-500"
-                            }`}>
-                            {member.role}
+                              }`}>
+                            {t(`dashboard.staff.roles.${member.role.toLowerCase()}`)}
                           </span>
+                          {/* Role badge translated */}
                           <div className="flex items-center gap-2 mt-1">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium border ${roleConfig[member.role].badge
-                                }`}>
-                              {t(`dashboard.staff.roles.${member.role.toLowerCase()}`)}
-                            </span>
+                            {/* Removed duplicate/broken role badge code */}
                           </div>
                         </div>
                       </div>
                       <span
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                          member.status === "active"
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium ${member.status === "active"
                             ? "bg-green-500/10 text-green-500"
                             : "bg-gray-500/10 text-gray-500"
-                        }`}>
-                        {member.status === "active" ? "Active" : "Inactive"}
-                        className={`px-2 py-1 rounded-full text-xs font-medium border ${statusConfig[member.status].badge
                           }`}>
-                        {t(`dashboard.staff.status.${member.status.replace("-", "_")}`)}
+                        {member.status === "active" ? "Active" : "Inactive"}
                       </span>
                     </div>
 
