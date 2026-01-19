@@ -4,6 +4,7 @@ import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import Link from "next/link";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Staff {
   id: string;
@@ -19,6 +20,7 @@ interface Staff {
 }
 
 export default function StaffPage() {
+  const { t } = useTranslation("common");
   const [staffList] = useState<Staff[]>([
     {
       id: "1",
@@ -81,10 +83,10 @@ export default function StaffPage() {
                 <h2
                   className="text-3xl font-bold mb-2"
                   style={{ color: "var(--text)" }}>
-                  Staff Management
+                  {t("dashboard.staff.title")}
                 </h2>
                 <p style={{ color: "var(--text-muted)" }}>
-                  Manage your restaurant team members
+                  {t("dashboard.staff.subtitle")}
                 </p>
               </div>
               <Link
@@ -109,7 +111,7 @@ export default function StaffPage() {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                Add Staff
+                {t("dashboard.staff.add_staff")}
               </Link>
             </div>
 
@@ -177,7 +179,7 @@ export default function StaffPage() {
                     <p
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}>
-                      Total Staff
+                      {t("dashboard.staff.stats.total_staff")}
                     </p>
                     <p className="text-3xl font-bold text-blue-500 mt-1">
                       {staffList.length}
@@ -211,7 +213,7 @@ export default function StaffPage() {
                     <p
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}>
-                      On Duty
+                      {t("dashboard.staff.stats.on_duty")}
                     </p>
                     <p className="text-3xl font-bold text-green-500 mt-1">
                       {staffList.filter((s) => s.status === "active").length}
@@ -245,7 +247,7 @@ export default function StaffPage() {
                     <p
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}>
-                      Departments
+                      {t("dashboard.staff.stats.departments")}
                     </p>
                     <p
                       className="text-3xl font-bold mt-1"
@@ -284,7 +286,7 @@ export default function StaffPage() {
                     <p
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}>
-                      Avg Rating
+                      {t("dashboard.staff.stats.avg_rating")}
                     </p>
                     <p className="text-3xl font-bold text-purple-500 mt-1">
                       4.7
@@ -340,25 +342,27 @@ export default function StaffPage() {
                             {member.name}
                           </h3>
                           <span
-                            className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${
-                              member.role === "Manager"
+                            className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${member.role === "Manager"
                                 ? "bg-purple-500/10 text-purple-500"
                                 : member.role === "Chef"
                                   ? "bg-orange-500/10 text-orange-500"
                                   : member.role === "Waiter"
                                     ? "bg-blue-500/10 text-blue-500"
                                     : "bg-gray-500/10 text-gray-500"
-                            }`}>
-                            {member.role}
+                              }`}>
+                            {t(`dashboard.staff.roles.${member.role.toLowerCase()}`)}
                           </span>
+                          {/* Role badge translated */}
+                          <div className="flex items-center gap-2 mt-1">
+                            {/* Removed duplicate/broken role badge code */}
+                          </div>
                         </div>
                       </div>
                       <span
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                          member.status === "active"
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium ${member.status === "active"
                             ? "bg-green-500/10 text-green-500"
                             : "bg-gray-500/10 text-gray-500"
-                        }`}>
+                          }`}>
                         {member.status === "active" ? "Active" : "Inactive"}
                       </span>
                     </div>
@@ -407,7 +411,7 @@ export default function StaffPage() {
                         <p
                           className="text-xs mb-1"
                           style={{ color: "var(--text-muted)" }}>
-                          Shift
+                          {t("dashboard.staff.card.shift")}
                         </p>
                         <p
                           className="font-medium text-sm"
@@ -419,7 +423,7 @@ export default function StaffPage() {
                         <p
                           className="text-xs mb-1"
                           style={{ color: "var(--text-muted)" }}>
-                          Joined
+                          {t("dashboard.staff.card.joined")}
                         </p>
                         <p
                           className="font-medium text-sm"
@@ -438,11 +442,10 @@ export default function StaffPage() {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <svg
                             key={star}
-                            className={`w-4 h-4 ${
-                              star <= Math.floor(member.rating)
-                                ? "text-yellow-500"
-                                : "text-gray-300"
-                            }`}
+                            className={`w-4 h-4 ${star <= Math.floor(member.rating)
+                              ? "text-yellow-500"
+                              : "text-gray-300"
+                              }`}
                             fill="currentColor"
                             viewBox="0 0 20 20">
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -487,6 +490,35 @@ export default function StaffPage() {
                         />
                       </svg>
                     </Link>
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <button
+                        className="flex-1 px-3 py-2 bg-orange-500/10 text-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition-all font-medium text-sm"
+                        suppressHydrationWarning>
+                        {t("dashboard.staff.card.view_profile")}
+                      </button>
+                      <button
+                        className="px-3 py-2 rounded-lg transition-all"
+                        style={{
+                          background: 'var(--surface)',
+                          color: 'var(--text-muted)',
+                          border: '1px solid var(--border)',
+                        }}
+                        suppressHydrationWarning>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

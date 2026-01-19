@@ -2,8 +2,10 @@
 
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
+import { useTranslation } from "react-i18next";
 
 export default function AnalyticsPage() {
+  const { t } = useTranslation("common");
   return (
     <div className="min-h-screen flex" style={{ background: "var(--bg-base)", color: "var(--text)" }}>
       <DashboardSidebar />
@@ -20,10 +22,10 @@ export default function AnalyticsPage() {
                 border: "1px solid rgba(255,56,11,0.22)",
               }}>
               <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text)" }}>
-                Analytics Dashboard
+                {t("dashboard.analytics.title")}
               </h2>
               <p style={{ color: "var(--text-muted)" }}>
-                Detailed insights and performance metrics
+                {t("dashboard.analytics.subtitle")}
               </p>
             </div>
 
@@ -49,14 +51,14 @@ export default function AnalyticsPage() {
                 </svg>
               </div>
               <h3 className="text-2xl font-bold mb-2" style={{ color: "var(--text)" }}>
-                Analytics Page
+                {t("dashboard.analytics.page_title")}
               </h3>
               <p className="mb-4" style={{ color: "var(--text-muted)" }}>
-                Advanced analytics features coming soon
+                {t("dashboard.analytics.coming_soon")}
               </p>
               <div className="inline-flex items-center gap-2 text-sm" style={{ color: "#FF380B" }}>
                 <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#FF380B" }}></div>
-                Under Development
+                {t("dashboard.analytics.under_development")}
               </div>
             </div>
           </div>

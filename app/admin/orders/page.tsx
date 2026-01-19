@@ -3,6 +3,7 @@
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Order {
   id: string;
@@ -12,17 +13,18 @@ interface Order {
   items: number;
   total: number;
   status:
-    | "pending"
-    | "preparing"
-    | "ready"
-    | "served"
-    | "completed"
-    | "cancelled";
+  | "pending"
+  | "preparing"
+  | "ready"
+  | "served"
+  | "completed"
+  | "cancelled";
   time: string;
   paymentStatus: "unpaid" | "paid";
 }
 
 export default function OrdersPage() {
+  const { t } = useTranslation("common");
   const [orders] = useState<Order[]>([
     {
       id: "1",
@@ -84,33 +86,33 @@ export default function OrdersPage() {
   const statusConfig = {
     pending: {
       color: "bg-yellow-500",
-      text: "Pending",
+      text: t("dashboard.orders.status.pending"),
       badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
     },
     preparing: {
       color: "bg-blue-500",
-      text: "Preparing",
+      text: t("dashboard.orders.status.preparing"),
       badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
     },
     ready: {
       color: "bg-purple-500",
-      text: "Ready",
+      text: t("dashboard.orders.status.ready"),
       badge: "bg-purple-500/10 text-purple-500 border-purple-500/20",
     },
     served: {
       color: "bg-[#FF380B]",
-      text: "Served",
+      text: t("dashboard.orders.status.served"),
       badge: "text-[#FF380B] border-[rgba(255,56,11,0.2)]",
       bgStyle: {backgroundColor: 'rgba(255,56,11,0.1)'},
     },
     completed: {
       color: "bg-green-500",
-      text: "Completed",
+      text: t("dashboard.orders.status.completed"),
       badge: "bg-green-500/10 text-green-500 border-green-500/20",
     },
     cancelled: {
       color: "bg-red-500",
-      text: "Cancelled",
+      text: t("dashboard.orders.status.cancelled"),
       badge: "bg-red-500/10 text-red-500 border-red-500/20",
     },
   };
@@ -126,10 +128,10 @@ export default function OrdersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
-                  Order Management
+                  {t("dashboard.orders.title")}
                 </h2>
                 <p style={{ color: 'var(--text-muted)' }}>
-                  Track and manage all restaurant orders
+                  {t("dashboard.orders.subtitle")}
                 </p>
               </div>
               <button
@@ -150,7 +152,7 @@ export default function OrdersPage() {
                     d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                   />
                 </svg>
-                New Order
+                {t("dashboard.orders.new_order")}
               </button>
             </div>
 
@@ -165,7 +167,7 @@ export default function OrdersPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Pending
+                      {t("dashboard.orders.stats.pending")}
                     </p>
                     <p className="text-3xl font-bold text-yellow-500 mt-1">
                       {orders.filter((o) => o.status === "pending").length}
@@ -197,7 +199,7 @@ export default function OrdersPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Preparing
+                      {t("dashboard.orders.stats.preparing")}
                     </p>
                     <p className="text-3xl font-bold text-blue-500 mt-1">
                       {orders.filter((o) => o.status === "preparing").length}
@@ -229,7 +231,7 @@ export default function OrdersPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Ready
+                      {t("dashboard.orders.stats.ready")}
                     </p>
                     <p className="text-3xl font-bold text-purple-500 mt-1">
                       {orders.filter((o) => o.status === "ready").length}
@@ -261,7 +263,7 @@ export default function OrdersPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Served
+                      {t("dashboard.orders.stats.served")}
                     </p>
                     <p className="text-3xl font-bold mt-1" style={{color: '#FF380B'}}>
                       {orders.filter((o) => o.status === "served").length}
@@ -294,7 +296,7 @@ export default function OrdersPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Completed
+                      {t("dashboard.orders.stats.completed")}
                     </p>
                     <p className="text-3xl font-bold text-green-500 mt-1">
                       {orders.filter((o) => o.status === "completed").length}
@@ -329,7 +331,7 @@ export default function OrdersPage() {
                 className="p-6"
                 style={{ borderBottom: '1px solid var(--border)' }}>
                 <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
-                  All Orders
+                  {t("dashboard.orders.title")}
                 </h3>
               </div>
               <div className="overflow-x-auto">
@@ -339,47 +341,47 @@ export default function OrdersPage() {
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: 'var(--text-muted)' }}>
-                        Order
+                        {t("dashboard.orders.table.order")}
                       </th>
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: 'var(--text-muted)' }}>
-                        Customer
+                        {t("dashboard.orders.table.customer")}
                       </th>
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: 'var(--text-muted)' }}>
-                        Table
+                        {t("dashboard.orders.table.table")}
                       </th>
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: 'var(--text-muted)' }}>
-                        Items
+                        {t("dashboard.orders.table.items")}
                       </th>
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: 'var(--text-muted)' }}>
-                        Total
+                        {t("dashboard.orders.table.total")}
                       </th>
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: 'var(--text-muted)' }}>
-                        Status
+                        {t("dashboard.orders.table.status")}
                       </th>
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: 'var(--text-muted)' }}>
-                        Payment
+                        {t("dashboard.orders.table.payment")}
                       </th>
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: 'var(--text-muted)' }}>
-                        Time
+                        {t("dashboard.orders.table.time")}
                       </th>
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: 'var(--text-muted)' }}>
-                        Actions
+                        {t("dashboard.orders.table.actions")}
                       </th>
                     </tr>
                   </thead>
@@ -421,20 +423,18 @@ export default function OrdersPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                              statusConfig[order.status].badge
-                            }`}>
+                            className={`px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[order.status].badge
+                              }`}>
                             {statusConfig[order.status].text}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              order.paymentStatus === "paid"
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${order.paymentStatus === "paid"
                                 ? "bg-green-500/10 text-green-500 border border-green-500/20"
                                 : "bg-red-500/10 text-red-500 border border-red-500/20"
-                            }`}>
-                            {order.paymentStatus === "paid" ? "Paid" : "Unpaid"}
+                              }`}>
+                            {order.paymentStatus === "paid" ? t("dashboard.orders.payment_status.paid") : t("dashboard.orders.payment_status.unpaid")}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text-muted)' }}>
