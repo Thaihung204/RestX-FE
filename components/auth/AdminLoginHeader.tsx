@@ -12,14 +12,15 @@ const AdminLoginHeader: React.FC = () => {
           />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Rest<span style={{ color: '#FF7A00' }}>X</span> Admin</h1>
+          <h2 className="text-3xl font-bold" style={{ background: `linear-gradient(to right, #FF380B, #FF380B)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } as React.CSSProperties}>Admin Portal</h2>
           <p className="text-sm text-gray-600 mt-1">Restaurant Management System</p>
         </div>
       </div>
       <div className="flex flex-col gap-2">
         <a
           href="/forgot-password"
-          className="text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors w-fit"
+          className="text-sm font-semibold transition-colors w-fit"
+          style={{ color: '#FF380B' }}
         >
           Forgot your password?
         </a>

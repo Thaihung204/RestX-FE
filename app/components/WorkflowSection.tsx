@@ -29,19 +29,19 @@ const WorkflowSection: React.FC = () => {
       number: '01',
       title: t('homepage.workflow.steps.setup.title'),
       description: t('homepage.workflow.steps.setup.description'),
-      icon: <SettingOutlined style={{ fontSize: 36, color: '#FF7A00' }} />,
+      icon: <SettingOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
     },
     {
       number: '02',
       title: t('homepage.workflow.steps.operation.title'),
       description: t('homepage.workflow.steps.operation.description'),
-      icon: <SyncOutlined style={{ fontSize: 36, color: '#FF7A00' }} />,
+      icon: <SyncOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
     },
     {
       number: '03',
       title: t('homepage.workflow.steps.analysis.title'),
       description: t('homepage.workflow.steps.analysis.description'),
-      icon: <RiseOutlined style={{ fontSize: 36, color: '#FF7A00' }} />,
+      icon: <RiseOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
     },
   ];
   const headerVariants = {
@@ -144,7 +144,7 @@ const WorkflowSection: React.FC = () => {
                     <Space orientation="vertical" size={20}>
                       <Tag
                         style={{
-                          background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                          background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                           border: 'none',
                           color: 'white',
                           fontWeight: 700,

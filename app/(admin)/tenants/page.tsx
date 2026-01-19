@@ -167,11 +167,11 @@ const StatusPill = ({ status }: { status: ITenant["status"] }) => {
       dot: "bg-rose-500",
     },
     maintenance: {
-      color: "text-orange-400",
-      bg: "bg-orange-900/30",
-      border: "border-orange-800/50",
+      color: "text-[#FF6B3B]",
+      bg: "bg-[#CC2D08]/30",
+      border: "border-[#CC2D08]/50",
       text: "Maintenance",
-      dot: "bg-orange-500",
+      dot: "bg-[#FF380B]",
     },
   };
   const style = config[status];
@@ -250,7 +250,7 @@ const TenantPage: React.FC = () => {
           <Avatar
             shape="square"
             size="large"
-            className="shadow-sm rounded-lg bg-orange-600 text-white">
+            className="shadow-sm rounded-lg bg-[#FF380B] text-white">
             {record.name.charAt(0)}
           </Avatar>
           <div className="flex flex-col">
@@ -345,7 +345,7 @@ const TenantPage: React.FC = () => {
                   letterSpacing: "-0.5px",
                   color: "var(--text)",
                 }}>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B3B] to-red-500">
                   Tenant Management
                 </span>
               </Typography.Title>
@@ -392,7 +392,7 @@ const TenantPage: React.FC = () => {
                   </span>
                 }
                 value={stats.total}
-                prefix={<ShopOutlined style={{ color: "#f97316" }} />}
+                prefix={<ShopOutlined style={{ color: "#FF380B" }} />}
                 valueStyle={{ color: "var(--text)" }}
               />
             </Card>

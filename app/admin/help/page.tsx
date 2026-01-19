@@ -108,12 +108,14 @@ export default function HelpPage() {
                   placeholder={t("dashboard.help.search_placeholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-lg focus:border-orange-500 focus:outline-none"
+                  className="w-full pl-12 pr-4 py-3 rounded-lg focus:outline-none"
                   style={{
                     background: 'var(--surface)',
                     border: '1px solid var(--border)',
                     color: 'var(--text)',
                   }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                   suppressHydrationWarning
                 />
               </div>
@@ -125,18 +127,15 @@ export default function HelpPage() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`p-4 rounded-xl border-2 transition-all ${selectedCategory === category.id
-                      ? "bg-gradient-to-br from-orange-600 to-orange-500 border-orange-500 text-white"
-                      : ""
-                    }`}
+                  className={`p-4 rounded-xl border-2 transition-all`}
                   style={
-                    selectedCategory !== category.id
-                      ? {
+                    selectedCategory === category.id
+                      ? { background: '#FF380B', borderColor: '#FF380B', color: 'white' }
+                      : {
                         background: 'var(--card)',
                         border: '1px solid var(--border)',
                         color: 'var(--text-muted)',
                       }
-                      : undefined
                   }
                   suppressHydrationWarning>
                   <svg
@@ -252,14 +251,17 @@ export default function HelpPage() {
                   {t("dashboard.help.quick_links.documentation_desc")}
                 </p>
                 <button
-                  className="text-orange-500 font-medium text-sm hover:text-orange-400 transition-colors"
+                  className="font-medium text-sm transition-colors"
+                  style={{ color: '#FF380B' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                   suppressHydrationWarning>
                   {t("dashboard.help.quick_links.view_docs")} →
                 </button>
               </div>
 
               <div
-                className="rounded-xl p-6 hover:border-orange-500/30 transition-all"
+                className="rounded-xl p-6 transition-all"
                 style={{
                   background: 'var(--card)',
                   border: '1px solid var(--border)',
@@ -285,14 +287,17 @@ export default function HelpPage() {
                   {t("dashboard.help.quick_links.video_tutorials_desc")}
                 </p>
                 <button
-                  className="text-orange-500 font-medium text-sm hover:text-orange-400 transition-colors"
+                  className="font-medium text-sm transition-colors"
+                  style={{ color: '#FF380B' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                   suppressHydrationWarning>
                   {t("dashboard.help.quick_links.watch_videos")} →
                 </button>
               </div>
 
               <div
-                className="rounded-xl p-6 hover:border-orange-500/30 transition-all"
+                className="rounded-xl p-6 transition-all"
                 style={{
                   background: 'var(--card)',
                   border: '1px solid var(--border)',
@@ -318,7 +323,10 @@ export default function HelpPage() {
                   {t("dashboard.help.quick_links.contact_support_desc")}
                 </p>
                 <button
-                  className="text-orange-500 font-medium text-sm hover:text-orange-400 transition-colors"
+                  className="font-medium text-sm transition-colors"
+                  style={{ color: '#FF380B' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                   suppressHydrationWarning>
                   {t("dashboard.help.quick_links.contact_us")} →
                 </button>
@@ -334,7 +342,8 @@ export default function HelpPage() {
               }}>
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
                 <svg
-                  className="w-6 h-6 text-orange-500"
+                  className="w-6 h-6"
+                  style={{ color: '#FF380B' }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24">

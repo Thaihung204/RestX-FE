@@ -127,9 +127,6 @@ const Footer: React.FC = () => {
                       style={{
                         width: 44,
                         height: 44,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
                         overflow: 'hidden',
                       }}
                     >
@@ -141,7 +138,7 @@ const Footer: React.FC = () => {
                       />
                     </div>
                     <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
-                      Rest<span style={{ color: '#FF7A00' }}>X</span>
+                      Rest<span style={{ color: '#FF380B' }}>X</span>
                     </Title>
                   </div>
 

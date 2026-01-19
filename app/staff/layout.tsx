@@ -158,7 +158,6 @@ export default function StaffLayout({
               justifyContent: 'center',
               fontSize: 20,
               fontWeight: 700,
-              overflow: 'hidden',
             }}
           >
             <img
@@ -178,7 +177,7 @@ export default function StaffLayout({
                 letterSpacing: '-0.5px',
               }}
             >
-              Rest<span style={{ color: '#FF7A00' }}>X</span>
+              Rest<span style={{ color: '#FF380B' }}>X</span>
             </span>
           )}
         </Link>
@@ -196,7 +195,7 @@ export default function StaffLayout({
             <Avatar
               size={44}
               style={{
-                background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                 fontSize: 18,
                 fontWeight: 600,
               }}
@@ -250,9 +249,9 @@ export default function StaffLayout({
             left: 16,
             right: 16,
             padding: '16px',
-            background: 'rgba(255, 122, 0, 0.1)',
+            background: 'rgba(255, 56, 11, 0.1)',
             borderRadius: 12,
-            border: '1px solid rgba(255, 122, 0, 0.2)',
+            border: '1px solid rgba(255, 56, 11, 0.2)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -313,7 +312,7 @@ export default function StaffLayout({
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 4,
-                    color: isActive ? '#FF7A00' : 'var(--text-muted)',
+                    color: isActive ? '#FF380B' : 'var(--text-muted)',
                     cursor: 'pointer',
                     width: '20%',
                     transition: 'all 0.3s ease',
@@ -323,7 +322,7 @@ export default function StaffLayout({
                     fontSize: 24,
                     transform: isActive ? 'translateY(-2px)' : 'none',
                     transition: 'transform 0.2s',
-                    filter: isActive ? 'drop-shadow(0 4px 6px rgba(255, 122, 0, 0.3))' : 'none',
+                    filter: isActive ? 'drop-shadow(0 4px 6px rgba(255, 56, 11, 0.3))' : 'none',
                   }}>
                     {item.icon}
                   </div>
@@ -496,7 +495,7 @@ export default function StaffLayout({
                   <Avatar
                     size={isMobile ? 24 : 28}
                     style={{
-                      background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                      background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                       fontWeight: 600,
                       fontSize: isMobile ? 10 : 12,
                     }}
@@ -536,8 +535,8 @@ export default function StaffLayout({
         }
         /* Dark Mode Menu */
         .ant-menu-dark .ant-menu-item-selected {
-          background: linear-gradient(135deg, rgba(255, 122, 0, 0.2) 0%, rgba(255, 122, 0, 0.1) 100%) !important;
-          border-left: 3px solid #FF7A00 !important;
+          background: linear-gradient(135deg, rgba(255, 56, 11, 0.2) 0%, rgba(255, 56, 11, 0.1) 100%) !important;
+          border-left: 3px solid #FF380B !important;
         }
         .ant-menu-dark .ant-menu-item:hover {
           background: rgba(255, 255, 255, 0.05) !important;
@@ -548,9 +547,9 @@ export default function StaffLayout({
 
         /* Light Mode Menu */
         .ant-menu-light .ant-menu-item-selected {
-          background: linear-gradient(135deg, rgba(255, 122, 0, 0.15) 0%, rgba(255, 122, 0, 0.05) 100%) !important;
-          border-left: 3px solid #FF7A00 !important;
-          color: #FF7A00 !important;
+          background: linear-gradient(135deg, rgba(255, 56, 11, 0.15) 0%, rgba(255, 56, 11, 0.05) 100%) !important;
+          border-left: 3px solid #FF380B !important;
+          color: #FF380B !important;
         }
         .ant-menu-light .ant-menu-item:hover {
           background: rgba(0, 0, 0, 0.04) !important;

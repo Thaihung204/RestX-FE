@@ -14,7 +14,8 @@ export default function KPISection() {
         trend={{ value: 12, isPositive: true }}
         icon={
           <svg
-            className="w-6 h-6 text-orange-500"
+            className="w-6 h-6"
+            style={{ color: '#FF380B' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -35,7 +36,8 @@ export default function KPISection() {
         status="normal"
         icon={
           <svg
-            className="w-6 h-6 text-orange-500"
+            className="w-6 h-6"
+            style={{ color: '#FF380B' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -57,7 +59,8 @@ export default function KPISection() {
         status="success"
         icon={
           <svg
-            className="w-6 h-6 text-orange-500"
+            className="w-6 h-6"
+            style={{ color: '#FF380B' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -78,7 +81,8 @@ export default function KPISection() {
         status="warning"
         icon={
           <svg
-            className="w-6 h-6 text-orange-500"
+            className="w-6 h-6"
+            style={{ color: '#FF380B' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -99,7 +103,8 @@ export default function KPISection() {
         trend={{ value: 25, isPositive: true }}
         icon={
           <svg
-            className="w-6 h-6 text-orange-500"
+            className="w-6 h-6"
+            style={{ color: '#FF380B' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -120,7 +125,8 @@ export default function KPISection() {
         status="warning"
         icon={
           <svg
-            className="w-6 h-6 text-orange-500"
+            className="w-6 h-6"
+            style={{ color: '#FF380B' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">

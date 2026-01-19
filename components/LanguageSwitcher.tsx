@@ -63,8 +63,8 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ style, className })
           e.currentTarget.style.backgroundColor = 'transparent';
         }}
       >
-        <GlobalOutlined style={{ color: '#FF7A00' }} />
-        <span style={{ fontSize: 14, fontWeight: 500, color: style?.color || 'var(--text)' }}>
+        <GlobalOutlined style={{ color: '#FF380B' }} />
+        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
           {language.toUpperCase()}
         </span>
         <DownOutlined style={{ fontSize: 12, color: style?.color ? 'rgba(255,255,255,0.7)' : 'var(--text-muted)' }} />

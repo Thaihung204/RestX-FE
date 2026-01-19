@@ -137,7 +137,7 @@ const activities: Activity[] = [
 const typeColors: Record<Activity["type"], string> = {
   booking: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   menu: "bg-green-500/10 text-green-500 border-green-500/20",
-  payment: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  payment: "", // Will use inline style
   staff: "bg-purple-500/10 text-purple-500 border-purple-500/20",
 };
 
@@ -157,7 +157,8 @@ export default function ActivityTimeline() {
           </p>
         </div>
         <button
-          className="text-orange-500 hover:text-orange-400 text-sm font-medium transition-colors"
+          className="text-sm font-medium transition-colors"
+          style={{ color: '#FF380B' }}
           suppressHydrationWarning>
           {t("dashboard.recent_orders.view_all")}
         </button>
@@ -172,7 +173,12 @@ export default function ActivityTimeline() {
             {/* Icon */}
             <div
               className={`flex-shrink-0 w-10 h-10 rounded-lg border flex items-center justify-center ${typeColors[activity.type]
-                }`}>
+                }`}
+              style={activity.type === 'payment' ? { 
+                backgroundColor: 'rgba(255, 56, 11, 0.1)', 
+                color: '#FF380B', 
+                borderColor: 'rgba(255, 56, 11, 0.2)' 
+              } : undefined}>
               {activity.icon}
             </div>
 
@@ -189,7 +195,7 @@ export default function ActivityTimeline() {
             {/* Indicator */}
             {index < 2 && (
               <div className="flex-shrink-0">
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#FF380B' }}></div>
               </div>
             )}
           </div>

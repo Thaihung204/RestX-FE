@@ -462,7 +462,8 @@ export default function RegisterPage() {
                   type="checkbox"
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="w-4 h-4 border rounded focus:ring-3 focus:ring-orange-300 cursor-pointer auth-checkbox"
+                  className="w-4 h-4 border rounded cursor-pointer auth-checkbox"
+                  style={{ '--tw-ring-color': '#FF380B' } as React.CSSProperties}
                 />
               </div>
               <label htmlFor="terms" className="ml-3 text-sm auth-text">
@@ -470,9 +471,9 @@ export default function RegisterPage() {
                 <a
                   href="/terms"
                   className="font-medium"
-                  style={{ color: '#FF7A00' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                  style={{ color: '#FF380B' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                 >
                   Terms of Service
                 </a>{" "}
@@ -480,9 +481,9 @@ export default function RegisterPage() {
                 <a
                   href="/privacy"
                   className="font-medium"
-                  style={{ color: '#FF7A00' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                  style={{ color: '#FF380B' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                 >
                   Privacy Policy
                 </a>
@@ -496,9 +497,9 @@ export default function RegisterPage() {
               Already have an account?{" "}
               <a
                 href="/login"
-                className="font-semibold transition-colors" style={{ color: '#FF7A00' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}>
+                className="font-semibold transition-colors" style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}>
                 Sign in here
               </a>
             </div>

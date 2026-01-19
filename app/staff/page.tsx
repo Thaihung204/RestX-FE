@@ -23,21 +23,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import PageTransition from '../components/PageTransition';
 import { useTranslation, Trans } from 'react-i18next';
+import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
 const { Title, Text } = Typography;
 
-// Mock data for statistics
-// Data definitions moved inside component or helper functions for translation
-// see getStatsData, getRecentOrders, getTableStatus, getOrderColumns below
-
+// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-    },
-  },
+      staggerChildren: 0.1
+    }
+  }
 };
 
 const itemVariants = {
@@ -45,9 +43,123 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4 },
-  },
+    transition: { duration: 0.4 }
+  }
 };
+
+// Mock data for statistics - chỉ hiển thị thông tin hữu ích cho nhân viên
+const statsData = [
+  {
+    title: 'Bàn đang phục vụ',
+    value: 12,
+    total: 20,
+    icon: <TableOutlined />,
+    color: '#FF380B',
+    bgColor: 'rgba(255, 56, 11, 0.1)',
+  },
+  {
+    title: 'Order đang xử lý',
+    value: 8,
+    icon: <ShoppingCartOutlined />,
+    color: '#1890ff',
+    bgColor: 'rgba(24, 144, 255, 0.1)',
+    suffix: 'đơn',
+    href: '/staff/orders',
+    urgent: true,
+  },
+  {
+    title: 'Món sẵn sàng',
+    value: 3,
+    icon: <CheckCircleOutlined />,
+    color: '#52c41a',
+    bgColor: 'rgba(82, 196, 26, 0.1)',
+    suffix: 'món',
+    href: '/staff/orders',
+    urgent: true,
+  },
+  {
+    title: 'Bàn cần thanh toán',
+    value: 2,
+    icon: <DollarOutlined />,
+    color: '#FF380B',
+    bgColor: 'rgba(255, 56, 11, 0.1)',
+    suffix: 'bàn',
+    href: '/staff/checkout',
+    urgent: true,
+  },
+  {
+    title: 'Bàn đang phục vụ',
+    value: 12,
+    total: 20,
+    icon: <TableOutlined />,
+    color: '#FF380B',
+    bgColor: 'rgba(255, 56, 11, 0.1)',
+    href: '/staff/tables',
+  },
+];
+
+// Mock data for urgent orders - chỉ hiển thị order cần xử lý
+const urgentOrders = [
+  {
+    key: '1',
+    table: 'Bàn 05',
+    items: 4,
+    status: 'pending',
+    time: '5 phút trước',
+    priority: 'high',
+  },
+  {
+    key: '2',
+    table: 'Bàn 12',
+    items: 6,
+    status: 'preparing',
+    time: '12 phút trước',
+    priority: 'medium',
+  },
+  {
+    key: '3',
+    table: 'Bàn 03',
+    items: 2,
+    status: 'ready',
+    time: '18 phút trước',
+    priority: 'urgent',
+  },
+  {
+    key: '5',
+    table: 'Bàn 15',
+    items: 3,
+    status: 'preparing',
+    time: '32 phút trước',
+    priority: 'medium',
+  },
+  {
+    key: '6',
+    table: 'Bàn 02',
+    items: 7,
+    status: 'pending',
+    time: '45 phút trước',
+    priority: 'high',
+  },
+];
+
+// Mock data for recent orders
+const recentOrders = urgentOrders.slice(0, 5);
+
+// Mock data for tables needing payment
+const tablesNeedingPayment = [
+  { table: 'A02', total: 750000, time: '2 giờ', guests: 3 },
+  { table: 'A05', total: 1250000, time: '1.5 giờ', guests: 4 },
+];
+
+// Mock data for table status
+const tableStatus = [
+  { zone: 'Khu A', available: 4, occupied: 6, total: 10 },
+  { zone: 'Khu B', available: 2, occupied: 4, total: 6 },
+  { zone: 'Khu VIP', available: 1, occupied: 3, total: 4 },
+];
+
+
+
 
 // Animated counter component
 const AnimatedCounter = ({ value, duration = 1 }: { value: number; duration?: number }) => {
@@ -94,6 +206,7 @@ export default function StaffDashboard() {
   }, []);
 
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
 
   const statsData = [
     {
@@ -101,8 +214,8 @@ export default function StaffDashboard() {
       value: 12,
       total: 20,
       icon: <TableOutlined />,
-      color: '#FF7A00',
-      bgColor: 'rgba(255, 122, 0, 0.1)',
+      color: '#FF380B',
+      bgColor: 'rgba(255, 56, 11, 0.1)',
       suffix: t('staff.orders.order.table'),
     },
     {
@@ -210,7 +323,7 @@ export default function StaffDashboard() {
       key: 'total',
       width: '22%',
       render: (total: number) => (
-        <Text strong style={{ color: '#FF7A00', fontSize: 14 }}>
+        <Text strong style={{ color: '#FF380B', fontSize: 14 }}>
           {total.toLocaleString('vi-VN')}đ
         </Text>
       ),
@@ -268,73 +381,72 @@ export default function StaffDashboard() {
           <Card
             style={{
               marginBottom: isMobile ? 16 : 24,
-              background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
-              border: 'none',
+              background: mode === 'dark'
+                ? 'linear-gradient(135deg, rgba(255, 56, 11, 0.15) 0%, rgba(255, 56, 11, 0.08) 100%)'
+                : 'linear-gradient(135deg, rgba(255, 56, 11, 0.08) 0%, rgba(255, 56, 11, 0.05) 100%)',
+              border: `1px solid ${mode === 'dark' ? 'rgba(255, 56, 11, 0.3)' : 'rgba(255, 56, 11, 0.2)'}`,
               borderRadius: isMobile ? 16 : 20,
               overflow: 'hidden',
             }}
             styles={{ body: { padding: 0 } }}
           >
-            <div style={{ padding: isMobile ? '20px 16px' : '32px 40px', position: 'relative' }}>
-              <Row align="middle" justify="space-between" gutter={[16, 16]}>
+            <div style={{ padding: isMobile ? '24px 20px' : '32px 40px', position: 'relative' }}>
+              <Row align="middle" justify="space-between" gutter={[16, isMobile ? 20 : 16]}>
                 <Col xs={24} md={16}>
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <Title level={isMobile ? 4 : 3} style={{ color: '#fff', margin: 0, marginBottom: 8 }}>
+                    <Title level={isMobile ? 4 : 3} style={{ color: '#FF380B', margin: 0, marginBottom: isMobile ? 12 : 8, fontWeight: 700 }}>
                       {getGreeting()}, Nguyễn Văn A! <SmileOutlined style={{ marginLeft: 8 }} />
                     </Title>
-                    <Text style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: isMobile ? 14 : 16 }}>
-                      <Trans
-                        i18nKey="staff.dashboard.welcome_message"
-                        values={{ orders: 8, tables: 12 }}
-                        components={{
-                          1: (
-                            <motion.strong
-                              animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
-                              style={{ display: 'inline-block' }}
-                            />
-                          ),
-                          3: <strong />,
-                        }}
-                      />
+                    <Text style={{ color: 'var(--text)', fontSize: isMobile ? 14 : 16 }}>
+                      Bạn đang có{' '}
+                      <motion.strong
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                        style={{ display: 'inline-block', color: '#FF380B' }}
+                      >
+                        8 order
+                      </motion.strong>{' '}
+                      cần xử lý và{' '}
+                      <strong style={{ color: '#FF380B' }}>12 bàn</strong> đang phục vụ.
                     </Text>
 
-                    {/* Live status indicators */}
-                    <div style={{ marginTop: isMobile ? 12 : 16, display: 'flex', gap: isMobile ? 8 : 16, flexWrap: 'wrap' }}>
-                      <motion.div
-                        animate={{ opacity: [1, 0.6, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          background: 'rgba(255, 255, 255, 0.15)',
-                          padding: isMobile ? '4px 10px' : '6px 12px',
-                          borderRadius: 20,
-                        }}
-                      >
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#52c41a' }} />
-                        <Text style={{ color: '#fff', fontSize: isMobile ? 11 : 13 }}>3 {t('staff.dashboard.live_status.dishes_ready')}</Text>
-                      </motion.div>
-                      <motion.div
-                        animate={{ opacity: [1, 0.6, 1] }}
-                        transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          background: 'rgba(255, 255, 255, 0.15)',
-                          padding: isMobile ? '4px 10px' : '6px 12px',
-                          borderRadius: 20,
-                        }}
-                      >
-                        <FireOutlined style={{ color: '#fff', fontSize: isMobile ? 12 : 14 }} />
-                        <Text style={{ color: '#fff', fontSize: isMobile ? 11 : 13 }}>2 {t('staff.dashboard.live_status.tables_payment')}</Text>
-                      </motion.div>
+                    <div style={{ marginTop: isMobile ? 16 : 16, display: 'flex', gap: isMobile ? 10 : 16, flexWrap: 'wrap' }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        background: mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : 'rgba(255, 56, 11, 0.12)',
+                        padding: isMobile ? '8px 16px' : '10px 20px',
+                        borderRadius: 8,
+                        border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.3)' : '1px solid rgba(255, 56, 11, 0.25)',
+                      }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#52c41a' }} />
+                        <Text style={{
+                          color: 'var(--text)',
+                          fontSize: isMobile ? 13 : 14,
+                          fontWeight: 500,
+                        }}>3 món sẵn sàng</Text>
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        background: mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : 'rgba(255, 56, 11, 0.12)',
+                        padding: isMobile ? '8px 16px' : '10px 20px',
+                        borderRadius: 8,
+                        border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.3)' : '1px solid rgba(255, 56, 11, 0.25)',
+                      }}>
+                        <DollarOutlined style={{ color: '#FF380B', fontSize: isMobile ? 14 : 16 }} />
+                        <Text style={{
+                          color: 'var(--text)',
+                          fontSize: isMobile ? 13 : 14,
+                          fontWeight: 500,
+                        }}>2 bàn cần thanh toán</Text>
+                      </div>
                     </div>
                   </motion.div>
                 </Col>
@@ -345,7 +457,7 @@ export default function StaffDashboard() {
                     transition={{ delay: 0.3 }}
                     style={{ textAlign: isMobile ? 'left' : 'right' }}
                   >
-                    <Flex vertical={!isMobile} gap={isMobile ? 8 : 12} wrap="wrap" style={{ display: 'inline-flex' }}>
+                    <Flex vertical={!isMobile} gap={isMobile ? 10 : 12} wrap="wrap" style={{ display: 'inline-flex' }}>
                       <Link href="/staff/attendance" style={{ display: 'inline-block' }}>
                         <Button
                           size={isMobile ? 'middle' : 'large'}
@@ -374,7 +486,7 @@ export default function StaffDashboard() {
                           icon={<ShoppingCartOutlined />}
                           style={{
                             background: 'rgba(255, 255, 255, 0.95)',
-                            color: '#FF7A00',
+                            color: '#FF380B',
                             border: 'none',
                             borderRadius: 10,
                             fontWeight: 600,
@@ -438,106 +550,104 @@ export default function StaffDashboard() {
         </motion.div>
 
         {/* Statistics Cards */}
-        <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ marginBottom: isMobile ? 16 : 24, display: 'flex', flexWrap: 'wrap' }}>
-          {statsData.map((stat, index) => (
-            <Col xs={12} sm={12} lg={6} key={index} style={{ display: 'flex' }}>
-              <motion.div
-                variants={itemVariants}
-                whileHover={!isMobile ? { y: -5, transition: { duration: 0.2 } } : undefined}
-                style={{ width: '100%' }}
-              >
-                <Card
-                  hoverable={!isMobile}
-                  style={{
-                    borderRadius: isMobile ? 12 : 16,
-                    border: '1px solid var(--border)',
-                    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
-                    transition: 'all 0.3s ease',
-                    height: '100%',
-                  }}
-                  styles={{ body: { padding: isMobile ? 14 : 24, height: '100%' } }}
+        <motion.div variants={itemVariants}>
+          <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ marginBottom: isMobile ? 16 : 24 }}>
+            {statsData.map((stat, index) => (
+              <Col xs={12} sm={12} lg={6} key={index} style={{ display: 'flex' }}>
+                <motion.div
+                  variants={itemVariants}
+                  whileHover={!isMobile ? { y: -5, transition: { duration: 0.2 } } : undefined}
+                  style={{ width: '100%' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14, display: 'block' }}>
-                        {stat.title}
-                      </Text>
-                      <div style={{ marginTop: isMobile ? 4 : 8 }}>
-                        <motion.span
-                          style={{
-                            fontSize: isMobile ? 22 : 32,
-                            fontWeight: 700,
-                            color: stat.isMoney ? stat.color : 'var(--text)',
-                            display: 'inline-block'
-                          }}
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: index * 0.1, duration: 0.3 }}
-                        >
-                          {stat.isMoney ? (
-                            <AnimatedCounter value={stat.value} />
-                          ) : (
-                            stat.value
+                  <Card
+                    hoverable={!isMobile}
+                    style={{
+                      borderRadius: isMobile ? 12 : 16,
+                      border: '1px solid var(--border)',
+                      boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
+                      transition: 'all 0.3s ease',
+                      height: '100%',
+                    }}
+                    styles={{ body: { padding: isMobile ? 14 : 24, height: '100%' } }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14, display: 'block' }}>
+                          {stat.title}
+                        </Text>
+                        <div style={{ marginTop: isMobile ? 4 : 8 }}>
+                          <motion.span
+                            style={{
+                              fontSize: isMobile ? 22 : 32,
+                              fontWeight: 700,
+                              color: stat.isMoney ? stat.color : 'var(--text)',
+                              display: 'inline-block'
+                            }}
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: index * 0.1, duration: 0.3 }}
+                          >
+                            {stat.isMoney ? (
+                              <AnimatedCounter value={stat.value} />
+                            ) : (
+                              stat.value
+                            )}
+                          </motion.span>
+                          {stat.suffix && (
+                            <span style={{ fontSize: isMobile ? 12 : 16, color: 'var(--text-muted)', marginLeft: 4 }}>
+                              {stat.suffix}
+                            </span>
                           )}
-                        </motion.span>
-                        {stat.suffix && (
-                          <span style={{ fontSize: isMobile ? 12 : 16, color: 'var(--text-muted)', marginLeft: 4 }}>
-                            {stat.suffix}
-                          </span>
-                        )}
-                        {stat.isMoney && (
-                          <span style={{ fontSize: isMobile ? 12 : 16, color: 'var(--text-muted)', marginLeft: 2 }}>đ</span>
+                          {stat.isMoney && (
+                            <span style={{ fontSize: isMobile ? 12 : 16, color: 'var(--text-muted)', marginLeft: 2 }}>đ</span>
+                          )}
+                        </div>
+                        {stat.total && (
+                          <div style={{ marginTop: isMobile ? 8 : 12 }}>
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: '100%' }}
+                              transition={{ delay: 0.5, duration: 0.8 }}
+                            >
+                              <Progress
+                                percent={(stat.value / stat.total) * 100}
+                                showInfo={false}
+                                strokeColor={{
+                                  '0%': stat.color,
+                                  '100%': `${stat.color}80`,
+                                }}
+                                railColor="var(--border)"
+                                size="small"
+                              />
+                            </motion.div>
+                            <Text type="secondary" style={{ fontSize: isMobile ? 10 : 12 }}>
+                              {stat.value}/{stat.total} {stat.suffix}
+                            </Text>
+                          </div>
                         )}
                       </div>
-                      {stat.total && (
-                        <div style={{ marginTop: isMobile ? 8 : 12 }}>
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: '100%' }}
-                            transition={{ delay: 0.5, duration: 0.8 }}
-                          >
-                            <Progress
-                              percent={(stat.value / stat.total) * 100}
-                              showInfo={false}
-                              strokeColor={{
-                                '0%': stat.color,
-                                '100%': `${stat.color}80`,
-                              }}
-                              railColor="var(--border)"
-                              size="small"
-                            />
-                          </motion.div>
-                          <Text type="secondary" style={{ fontSize: isMobile ? 10 : 12 }}>
-                            {stat.value}/{stat.total} {stat.suffix}
-                          </Text>
-                        </div>
-                      )}
+                      <motion.div
+                        whileHover={!isMobile ? { scale: 1.1, rotate: 5 } : undefined}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: isMobile ? 20 : 28,
+                          color: stat.color,
+                          flexShrink: 0,
+                          marginLeft: 8,
+                        }}
+                      >
+                        {stat.icon}
+                      </motion.div>
                     </div>
-                    <motion.div
-                      whileHover={!isMobile ? { scale: 1.1, rotate: 5 } : undefined}
-                      transition={{ type: 'spring', stiffness: 300 }}
-                      style={{
-                        width: isMobile ? 40 : 52,
-                        height: isMobile ? 40 : 52,
-                        borderRadius: isMobile ? 10 : 14,
-                        background: stat.bgColor,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: isMobile ? 18 : 24,
-                        color: stat.color,
-                        flexShrink: 0,
-                        marginLeft: 8,
-                      }}
-                    >
-                      {stat.icon}
-                    </motion.div>
-                  </div>
-                </Card>
-              </motion.div>
-            </Col>
-          ))}
-        </Row>
+                  </Card>
+                </motion.div>
+              </Col>
+            ))}
+          </Row>
+        </motion.div>
 
         <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ display: 'flex', flexWrap: 'wrap' }}>
           {/* Recent Orders */}
@@ -551,7 +661,7 @@ export default function StaffDashboard() {
                         animate={{ rotate: [0, 10, -10, 0] }}
                         transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                       >
-                        <ShoppingCartOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 20 }} />
+                        <ShoppingCartOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
                       </motion.div>
                       <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>{t('staff.dashboard.recent_orders.title')}</span>
                       <Tag color="orange" style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12, margin: 0 }}>
@@ -560,7 +670,7 @@ export default function StaffDashboard() {
                     </Space>
                     <Link href="/staff/orders">
                       <motion.div whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
-                        <Button type="link" style={{ color: '#FF7A00', fontWeight: 600, fontSize: isMobile ? 12 : 14, padding: isMobile ? '0 4px' : '0 15px' }}>
+                        <Button type="link" style={{ color: '#FF380B', fontWeight: 600, fontSize: isMobile ? 12 : 14, padding: isMobile ? '0 4px' : '0 15px' }}>
                           {t('staff.dashboard.recent_orders.view_all')} <RightOutlined />
                         </Button>
                       </motion.div>
@@ -597,8 +707,8 @@ export default function StaffDashboard() {
               <Card
                 title={
                   <Space>
-                    <TableOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 20 }} />
-                    <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>{t('staff.dashboard.table_status.title')}</span>
+                    <TableOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
+                    <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>Tình trạng bàn</span>
                   </Space>
                 }
                 style={{
@@ -638,7 +748,7 @@ export default function StaffDashboard() {
                         >
                           {zone.available}
                         </motion.span>
-                        /{zone.total} {t('staff.dashboard.table_status.vacant')}
+                        /{zone.total} trống
                       </Text>
                     </div>
                     <motion.div
@@ -651,8 +761,8 @@ export default function StaffDashboard() {
                         percent={(zone.occupied / zone.total) * 100}
                         showInfo={false}
                         strokeColor={{
-                          '0%': '#FF7A00',
-                          '100%': '#FF9A40',
+                          '0%': '#FF380B',
+                          '100%': '#FF6B3B',
                         }}
                         railColor="var(--border)"
                         size="small"
@@ -671,7 +781,7 @@ export default function StaffDashboard() {
                           }}
                         />
                         <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                          {t('staff.dashboard.table_status.vacant')}: {zone.available}
+                          Trống: {zone.available}
                         </Text>
                       </Space>
                       <Space size={4}>
@@ -680,11 +790,11 @@ export default function StaffDashboard() {
                             width: 8,
                             height: 8,
                             borderRadius: '50%',
-                            background: '#FF7A00',
+                            background: '#FF380B',
                           }}
                         />
                         <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                          {t('staff.dashboard.table_status.occupied')}: {zone.occupied}
+                          Đang phục vụ: {zone.occupied}
                         </Text>
                       </Space>
                     </div>
@@ -706,12 +816,12 @@ export default function StaffDashboard() {
                           borderRadius: 12,
                           height: 48,
                           fontWeight: 600,
-                          background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                          background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                           border: 'none',
-                          boxShadow: '0 4px 15px rgba(255, 122, 0, 0.3)',
+                          boxShadow: '0 4px 15px rgba(255, 56, 11, 0.3)',
                         }}
                       >
-                        {t('staff.dashboard.actions.view_table_map')}
+                        Xem sơ đồ bàn
                       </Button>
                     </motion.div>
                   </Link>
@@ -754,10 +864,10 @@ export default function StaffDashboard() {
           >
             <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}>
               {[
-                { icon: <TableOutlined />, title: t('staff.dashboard.quick_action_items.open_table'), color: '#FF7A00', href: '/staff/tables' },
-                { icon: <ShoppingCartOutlined />, title: t('staff.dashboard.quick_action_items.create_order'), color: '#1890ff', href: '/staff/orders' },
-                { icon: <DollarOutlined />, title: t('staff.dashboard.quick_action_items.checkout'), color: '#52c41a', href: '/staff/checkout' },
-                { icon: <ClockCircleOutlined />, title: t('staff.dashboard.quick_action_items.attendance'), color: '#722ed1', href: '/staff/attendance' },
+                { icon: <TableOutlined />, title: 'Mở bàn', color: '#FF380B', href: '/staff/tables' },
+                { icon: <ShoppingCartOutlined />, title: 'Tạo order', color: '#1890ff', href: '/staff/orders' },
+                { icon: <DollarOutlined />, title: 'Thanh toán', color: '#52c41a', href: '/staff/checkout' },
+                { icon: <ClockCircleOutlined />, title: 'Chấm công', color: '#722ed1', href: '/staff/attendance' },
               ].map((action, index) => (
                 <Col xs={12} sm={6} key={index}>
                   <Link href={action.href}>
@@ -776,25 +886,21 @@ export default function StaffDashboard() {
                         style={{
                           width: '100%',
                           height: isMobile ? 70 : 90,
-                          borderRadius: isMobile ? 12 : 16,
+                          borderRadius: 12,
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: isMobile ? 4 : 8,
-                          border: `2px solid ${action.color}20`,
-                          background: `linear-gradient(135deg, ${action.color}08 0%, var(--card) 100%)`,
-                          transition: 'all 0.3s',
+                          border: mode === 'dark' ? `1px solid rgba(255, 56, 11, 0.2)` : `1px solid ${action.color}30`,
+                          background: mode === 'dark' ? 'rgba(255, 56, 11, 0.08)' : `${action.color}08`,
+                          transition: 'all 0.2s ease',
                         }}
                       >
-                        <motion.span
-                          style={{ fontSize: isMobile ? 22 : 28, color: action.color }}
-                          whileHover={!isMobile ? { scale: 1.2, rotate: [0, -10, 10, 0] } : undefined}
-                          transition={{ duration: 0.3 }}
-                        >
+                        <span style={{ fontSize: isMobile ? 22 : 28, color: action.color }}>
                           {action.icon}
-                        </motion.span>
-                        <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: isMobile ? 12 : 14 }}>{action.title}</span>
+                        </span>
+                        <span style={{ fontWeight: 500, color: 'var(--text)', fontSize: isMobile ? 12 : 14 }}>{action.title}</span>
                       </Button>
                     </motion.div>
                   </Link>
@@ -805,6 +911,10 @@ export default function StaffDashboard() {
         </motion.div>
 
         <style jsx global>{`
+        .luxury-btn:hover {
+          background: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : '#F8F8F8'} !important;
+          border-color: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.4)' : '#FF380B'} !important;
+          transform: translateY(-1px);
         .welcome-btn:hover {
           transform: scale(1.03);
           background: rgba(255, 255, 255, 0.3) !important;
@@ -812,6 +922,9 @@ export default function StaffDashboard() {
         .welcome-btn:active {
           transform: scale(0.97);
         }
+        .luxury-btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(255, 56, 11, 0.4) !important;
         .welcome-btn-primary:hover {
           transform: scale(1.03);
           box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
@@ -831,14 +944,25 @@ export default function StaffDashboard() {
           font-size: 13px;
         }
         .ant-table-wrapper .ant-table-tbody > tr:hover > td {
-          background: rgba(255, 122, 0, 0.08) !important;
+          background: rgba(255, 56, 11, 0.08) !important;
         }
         .ant-table-wrapper .ant-table-tbody > tr:last-child > td {
           border-bottom: none;
         }
+        .table-row-ready {
+          background: rgba(82, 196, 26, 0.08) !important;
+        }
+        .table-row-ready:hover {
+          background: rgba(82, 196, 26, 0.15) !important;
+        }
+        .table-row-pending {
+          background: rgba(255, 56, 11, 0.05) !important;
+        }
+        .table-row-pending:hover {
+          background: rgba(255, 56, 11, 0.12) !important;
+        }
       `}</style>
       </motion.div>
-    </PageTransition>
+    </PageTransition >
   );
 }
-

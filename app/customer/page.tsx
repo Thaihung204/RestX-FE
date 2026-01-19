@@ -123,7 +123,7 @@ export default function CustomerHomePage() {
       theme={{
         algorithm: theme.darkAlgorithm,
         token: {
-          colorPrimary: "#ff5722",
+          colorPrimary: "#FF380B",
           fontFamily: "'Playfair Display', 'Inter', sans-serif",
           borderRadius: 8,
         },
@@ -139,8 +139,8 @@ export default function CustomerHomePage() {
           Input: {
             colorBgContainer: "rgba(255,255,255,0.03)",
             colorBorder: "rgba(255,255,255,0.1)",
-            activeBorderColor: "#ff5722",
-            hoverBorderColor: "rgba(255, 87, 34, 0.5)",
+            activeBorderColor: "#FF380B",
+            hoverBorderColor: "rgba(255, 56, 11, 0.5)",
           },
           DatePicker: {
             colorBgContainer: "rgba(255,255,255,0.03)",
@@ -157,8 +157,8 @@ export default function CustomerHomePage() {
           minHeight: "100vh",
           backgroundColor: "#050505",
           backgroundImage: `
-            radial-gradient(circle at 0% 0%, rgba(255, 87, 34, 0.15), transparent 40%),
-            radial-gradient(circle at 100% 100%, rgba(255, 87, 34, 0.05), transparent 40%)
+            radial-gradient(circle at 0% 0%, rgba(255, 56, 11, 0.15), transparent 40%),
+            radial-gradient(circle at 100% 100%, rgba(255, 56, 11, 0.05), transparent 40%)
           `,
           paddingBottom: 100,
         }}>
@@ -244,7 +244,7 @@ export default function CustomerHomePage() {
             background:
               "linear-gradient(180deg, rgba(5,5,5,0.9) 0%, rgba(5,5,5,0.98) 100%)",
             backdropFilter: "blur(20px)",
-            borderTop: "1px solid rgba(255,87,34,0.25)",
+            borderTop: "1px solid rgba(255,56,11,0.25)",
             padding: "10px 12px",
             zIndex: 100,
             boxShadow: "0 -4px 20px rgba(0,0,0,0.6)",
@@ -310,7 +310,7 @@ export default function CustomerHomePage() {
                 minWidth: 0,
                 height: 44,
                 borderRadius: 10,
-                background: "#ff5722",
+                background: "#FF380B",
                 border: "none",
                 fontSize: 13,
                 fontWeight: 600,
@@ -321,7 +321,7 @@ export default function CustomerHomePage() {
                 padding: "0 8px",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
-                boxShadow: "0 4px 12px rgba(255,87,34,0.4)",
+                boxShadow: "0 4px 12px rgba(255,56,11,0.4)",
               }}>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
                 Thanh toán
@@ -365,6 +365,7 @@ export default function CustomerHomePage() {
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.9)",
               overflow: "hidden",
             }}>
+            {/* Decoration blob */}
             <div
               style={{
                 position: "absolute",
@@ -372,13 +373,15 @@ export default function CustomerHomePage() {
                 left: -50,
                 width: 150,
                 height: 150,
-                background: "#ff5722",
+                background: "#FF380B",
+                borderRadius: "50%",
                 filter: "blur(80px)",
                 opacity: 0.15,
-                pointerEvents: "none",
+                zIndex: 0,
               }}
             />
-
+            
+            {/* Close button */}
             <div
               onClick={() => setProfileModalOpen(false)}
               style={{
@@ -430,9 +433,9 @@ export default function CustomerHomePage() {
                     borderRadius: "50%",
                     padding: 3,
                     background:
-                      "linear-gradient(135deg, #ff5722 0%, #333 100%)",
+                      "linear-gradient(135deg, #FF380B 0%, #333 100%)",
                     cursor: isEditing ? "pointer" : "default",
-                    boxShadow: "0 10px 25px rgba(255, 87, 34, 0.25)",
+                    boxShadow: "0 10px 25px rgba(255, 56, 11, 0.25)",
                   }}>
                   <div
                     style={{
@@ -655,7 +658,7 @@ export default function CustomerHomePage() {
                       </div>
                       <Progress
                         percent={progress}
-                        strokeColor={{ "0%": "#ffd700", "100%": "#ff5722" }}
+                        strokeColor={{ "0%": "#ffd700", "100%": "#FF380B" }}
                         railColor="rgba(255,255,255,0.1)"
                         showInfo={false}
                         size="small"
@@ -773,9 +776,9 @@ export default function CustomerHomePage() {
                         flex: 1,
                         height: 48,
                         borderRadius: 12,
-                        background: "#ff5722",
+                        background: "#FF380B",
                         fontWeight: 600,
-                        boxShadow: "0 4px 14px rgba(255, 87, 34, 0.4)",
+                        boxShadow: "0 4px 14px rgba(255, 56, 11, 0.4)",
                       }}>
                       Lưu thay đổi
                     </Button>

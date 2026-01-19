@@ -16,7 +16,7 @@ const LoginHeader: React.FC<LoginHeaderProps> = ({ title = 'Login' }) => {
           />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Rest<span style={{ color: '#FF7A00' }}>X</span> Login</h1>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">{title}</h2>
           <p className="text-sm text-gray-500 mt-1">Welcome to Restaurant</p>
         </div>
       </div>
@@ -24,4 +24,4 @@ const LoginHeader: React.FC<LoginHeaderProps> = ({ title = 'Login' }) => {
   );
 };
 
-export default LoginHeader;
+        export default LoginHeader;

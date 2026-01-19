@@ -79,8 +79,7 @@ const RestaurantHeader: React.FC = () => {
         background: scrolled ? 'rgba(26, 26, 26, 0.95)' : 'transparent', // Modified to be transparent initially if desired, or keep generic
         backdropFilter: 'blur(10px)',
         transition: 'all 0.3s ease',
-        borderBottom: scrolled ? '1px solid rgba(255, 122, 0, 0.2)' : 'none',
-        // Ensure text color is managed or forced white as per design
+        borderBottom: scrolled ? '1px solid rgba(255, 56, 11, 0.2)' : 'none',
       }}>
       <div
         style={{
@@ -98,11 +97,11 @@ const RestaurantHeader: React.FC = () => {
               width: 48,
               height: 48,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #FF8A3D 0%, #D24A00 100%)',
+              background: 'linear-gradient(135deg, #FF6B3B 0%, #CC2D08 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(255, 122, 0, 0.3)',
+              boxShadow: '0 4px 12px rgba(255, 56, 11, 0.3)',
             }}>
             <span style={{ fontSize: 24, fontWeight: 'bold', color: 'white' }}>R</span>
           </div>
@@ -139,13 +138,13 @@ const RestaurantHeader: React.FC = () => {
             <Button
               type="primary"
               style={{
-                background: 'linear-gradient(135deg, #FF8A3D 0%, #D24A00 100%)',
+                background: 'linear-gradient(135deg, #FF6B3B 0%, #CC2D08 100%)',
                 border: 'none',
                 borderRadius: 8,
                 fontWeight: 600,
                 height: 40,
                 padding: '0 24px',
-                boxShadow: '0 4px 12px rgba(255, 122, 0, 0.3)',
+                boxShadow: '0 4px 12px rgba(255, 56, 11, 0.3)',
               }}>
               {t('restaurant.header.book_table')}
             </Button>
