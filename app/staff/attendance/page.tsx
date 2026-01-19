@@ -298,7 +298,7 @@ export default function AttendancePage() {
                           {t('staff.attendance.info.check_in_time')}
                         </Text>
                         <br />
-                        <Text style={{ color: '#52c41a', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
+                        <Text style={{ color: '#fff', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
                           {checkInTime}
                         </Text>
                       </div>
@@ -307,12 +307,12 @@ export default function AttendancePage() {
                           {t('staff.attendance.info.worked')}
                         </Text>
                         <br />
-                        <Text style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
+                        <Text style={{ color: '#fff', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
                           {calculateWorkingHours().toFixed(1)}h
                         </Text>
                       </div>
                       {isOnBreak && (
-                        <Tag color="orange" style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12 }}>
+                        <Tag style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12, background: '#fff', color: '#FF380B', border: 'none', fontWeight: 600 }}>
                           <CoffeeOutlined /> {isMobile ? t('staff.attendance.break') : t('staff.attendance.on_break')}
                         </Tag>
                       )}
@@ -362,13 +362,16 @@ export default function AttendancePage() {
                         borderRadius: '50%',
                         fontSize: isMobile ? 16 : 20,
                         fontWeight: 500,
+                        background: '#ffffff',
+                        color: '#ff4d4f',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: isMobile ? 10 : 12,
-                        boxShadow: '0 8px 32px rgba(255, 77, 79, 0.4)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
                         padding: 0,
+                        border: 'none'
                       }}
                     >
                       <LogoutOutlined style={{ fontSize: isMobile ? 32 : 40 }} />
@@ -382,11 +385,12 @@ export default function AttendancePage() {
                       style={{
                         borderRadius: 12,
                         height: isMobile ? 40 : 48,
-                        background: isOnBreak ? '#52c41a' : '#FF380B',
-                        color: '#fff',
-                        border: 'none',
-                        fontWeight: 500,
+                        background: isOnBreak ? '#ffffff' : 'rgba(255, 255, 255, 0.2)',
+                        color: isOnBreak ? '#52c41a' : '#ffffff',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        fontWeight: 600,
                         fontSize: isMobile ? 13 : 14,
+                        backdropFilter: 'blur(5px)',
                       }}
                     >
                       {isOnBreak ? t('staff.attendance.end_break') : t('staff.attendance.break')}

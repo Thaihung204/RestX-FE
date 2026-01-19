@@ -463,12 +463,11 @@ export default function StaffDashboard() {
                           size={isMobile ? 'middle' : 'large'}
                           icon={<CalendarOutlined />}
                           style={{
-                            background: 'rgba(255, 255, 255, 0.15)',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
-                            color: '#fff',
+                            background: '#fff',
+                            border: '1px solid #FF380B',
+                            color: '#FF380B',
                             borderRadius: 10,
                             fontWeight: 600,
-                            backdropFilter: 'blur(10px)',
                             fontSize: isMobile ? 12 : 14,
                             minWidth: isMobile ? 150 : 180,
                             height: isMobile ? 36 : 44,
