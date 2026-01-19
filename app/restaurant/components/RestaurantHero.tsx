@@ -91,14 +91,14 @@ const RestaurantHero: React.FC = () => {
           type="primary"
           size="large"
           style={{
-            background: 'linear-gradient(135deg, #FF8A3D 0%, #D24A00 100%)',
+            background: 'linear-gradient(135deg, #FF6B3B 0%, #CC2D08 100%)',
             border: 'none',
             borderRadius: 12,
             height: 56,
             padding: '0 48px',
             fontSize: 18,
             fontWeight: 600,
-            boxShadow: '0 8px 24px rgba(255, 122, 0, 0.5)',
+            boxShadow: '0 8px 24px rgba(255, 56, 11, 0.5)',
             textTransform: 'uppercase',
           }}>
           ĐẶT BÀN NGAY

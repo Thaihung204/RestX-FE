@@ -24,21 +24,21 @@ const workflowSteps: WorkflowStep[] = [
     title: 'Thiết lập nhà hàng & menu',
     description:
       'Cấu hình thông tin nhà hàng, tạo menu, thiết lập bàn ghế và phân quyền nhân viên chỉ trong vài phút.',
-    icon: <SettingOutlined style={{ fontSize: 36, color: '#FF7A00' }} />,
+    icon: <SettingOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
   },
   {
     number: '02',
     title: 'Vận hành & đồng bộ realtime',
     description:
       'Nhận order, xử lý thanh toán, gửi lệnh xuống bếp tự động. Mọi thay đổi được cập nhật ngay lập tức trên tất cả thiết bị.',
-    icon: <SyncOutlined style={{ fontSize: 36, color: '#FF7A00' }} />,
+    icon: <SyncOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
   },
   {
     number: '03',
     title: 'Phân tích & tối ưu',
     description:
       'Xem báo cáo chi tiết về doanh thu, món bán chạy, chi phí. Sử dụng dữ liệu để ra quyết định kinh doanh thông minh hơn.',
-    icon: <RiseOutlined style={{ fontSize: 36, color: '#FF7A00' }} />,
+    icon: <RiseOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
   },
 ];
 
@@ -143,7 +143,7 @@ const WorkflowSection: React.FC = () => {
                     <Space orientation="vertical" size={20}>
                       <Tag
                         style={{
-                          background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                          background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                           border: 'none',
                           color: 'white',
                           fontWeight: 700,

@@ -95,35 +95,23 @@ const Header: React.FC = () => {
         >
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {tenant?.logo ? (
-              <img 
-                src={tenant.logo} 
-                alt={tenant.name}
-                style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'cover' }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: 38,
-                  height: 38,
-                  background: tenant?.color 
-                    ? `linear-gradient(135deg, ${tenant.color} 0%, ${tenant.color}DD 100%)`
-                    : 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
-                  borderRadius: 10,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: 18,
-                  boxShadow: tenant?.color 
-                    ? `0 4px 12px ${tenant.color}40`
-                    : '0 4px 12px rgba(255, 122, 0, 0.3)',
-                }}
-              >
-                R
-              </div>
-            )}
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
+                borderRadius: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: 18,
+                boxShadow: '0 4px 12px rgba(255, 56, 11, 0.3)',
+              }}
+            >
+              R
+            </div>
             <span
               style={{
                 fontSize: 22,
@@ -164,8 +152,8 @@ const Header: React.FC = () => {
                   fontSize: 15,
                   height: 40,
                   padding: '0 16px',
-                  color: '#FF7A00',
-                    background: 'rgba(255, 122, 0, 0.08)',
+                  color: '#FF380B',
+                    background: 'rgba(255, 56, 11, 0.08)',
                     borderRadius: 20,
                 }}
               >
@@ -190,7 +178,7 @@ const Header: React.FC = () => {
               </Button>
               </motion.div>
               <motion.div 
-                whileHover={{ scale: 1.05, boxShadow: '0 8px 25px rgba(255, 122, 0, 0.45)' }} 
+                whileHover={{ scale: 1.05, boxShadow: '0 8px 25px rgba(255, 56, 11, 0.45)' }} 
                 whileTap={{ scale: 0.95 }}
                 style={{ borderRadius: 20 }}
               >
@@ -202,9 +190,9 @@ const Header: React.FC = () => {
                   fontSize: 15,
                   height: 40,
                   padding: '0 24px',
-                  background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                  background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
                   border: 'none',
-                  boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
+                  boxShadow: '0 4px 14px rgba(255, 56, 11, 0.35)',
                 }}
               >
                 Sign up
@@ -233,7 +221,7 @@ const Header: React.FC = () => {
               style={{
                 width: 32,
                 height: 32,
-                background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
                 borderRadius: 8,
                 display: 'flex',
                 alignItems: 'center',
@@ -292,9 +280,9 @@ const Header: React.FC = () => {
               fontWeight: 600,
               height: 48,
               borderRadius: 50,
-              background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+              background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
               border: 'none',
-              boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
+              boxShadow: '0 4px 14px rgba(255, 56, 11, 0.35)',
             }}
           >
             Sign up
