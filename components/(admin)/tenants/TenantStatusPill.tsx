@@ -28,7 +28,7 @@ const STATUS_CONFIG: Record<
   },
   maintenance: {
     label: "Maintenance",
-    bg: "rgba(249,115,22,0.10)", // orange-500
+    bg: "rgba(255,56,11,0.10)",
     border: "rgba(249,115,22,0.35)",
     text: "#9A3412",
     dot: "#F97316",

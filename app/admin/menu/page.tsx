@@ -246,22 +246,25 @@ export default function MenuPage() {
               </div>
               <Link href="/admin/menu/new">
                 <button
-                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg font-medium hover:from-orange-500 hover:to-orange-400 transition-all"
-                  suppressHydrationWarning>
-                  <svg
-                    className="w-5 h-5 inline-block mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  Add Menu Item
-                </button>
+                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                style={{background: 'linear-gradient(to right, #FF380B, #CC2D08)'}}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #CC2D08, #B32607)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #FF380B, #CC2D08)'}
+                suppressHydrationWarning>
+                <svg
+                  className="w-5 h-5 inline-block mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Add Menu Item
+              </button>
               </Link>
             </div>
 
@@ -339,8 +342,8 @@ export default function MenuPage() {
               <div
                 className="rounded-xl p-4"
                 style={{
-                  background: "var(--card)",
-                  border: "1px solid rgba(249, 115, 22, 0.2)",
+                  background: 'var(--card)',
+                  border: '1px solid rgba(255, 56, 11, 0.2)',
                 }}>
                 <div className="flex items-center justify-between">
                   <div>
@@ -349,13 +352,14 @@ export default function MenuPage() {
                       style={{ color: "var(--text-muted)" }}>
                       Popular Items
                     </p>
-                    <p className="text-3xl font-bold text-orange-500 mt-1">
+                    <p className="text-3xl font-bold mt-1" style={{color: '#FF380B'}}>
                       {menuItems.filter((i) => i.popular).length}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{backgroundColor: 'rgba(255,56,11,0.1)'}}>
                     <svg
-                      className="w-6 h-6 text-orange-500"
+                      className="w-6 h-6"
+                      style={{color: '#FF380B'}}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24">
@@ -410,19 +414,15 @@ export default function MenuPage() {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    selectedCategory === category
-                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white"
-                      : ""
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all`}
                   style={
-                    selectedCategory !== category
-                      ? {
-                          background: "var(--surface)",
-                          color: "var(--text-muted)",
-                          border: "1px solid var(--border)",
+                    selectedCategory === category
+                      ? {background: 'linear-gradient(to right, #FF380B, #CC2D08)', color: 'white'}
+                      : {
+                          background: 'var(--surface)',
+                          color: 'var(--text-muted)',
+                          border: '1px solid var(--border)',
                         }
-                      : undefined
                   }
                   suppressHydrationWarning>
                   {category}
@@ -434,11 +434,14 @@ export default function MenuPage() {
               {filteredItems.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-xl overflow-hidden hover:border-orange-500/50 transition-all group"
+                  className="rounded-xl overflow-hidden transition-all group"
                   style={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                  }}>
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(255,56,11,0.5)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}>
+                  {/* Image Placeholder */}
                   <div
                     className="relative overflow-hidden"
                     style={{
@@ -461,7 +464,7 @@ export default function MenuPage() {
                       </svg>
                     </div>
                     {item.popular && (
-                      <div className="absolute top-3 right-3 px-3 py-1 bg-orange-500 rounded-full text-white text-xs font-bold flex items-center gap-1">
+                      <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-white text-xs font-bold flex items-center gap-1" style={{backgroundColor: '#FF380B'}}>
                         <svg
                           className="w-3 h-3"
                           fill="currentColor"
@@ -503,8 +506,8 @@ export default function MenuPage() {
                           style={{ color: "var(--text-muted)" }}>
                           Price
                         </p>
-                        <p className="text-lg font-bold text-orange-500">
-                          {formatPrice(item.price)} VNĐ
+                        <p className="text-2xl font-bold" style={{color: '#FF380B'}}>
+                          ${item.price}
                         </p>
                       </div>
                       <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded-full text-xs font-medium border border-blue-500/20">
@@ -512,14 +515,15 @@ export default function MenuPage() {
                       </span>
                     </div>
 
-                    <div className="flex gap-2 mt-3">
-                      <Link href={`/admin/menu/${item.id}`} className="flex-1">
-                        <button
-                          className="w-full px-3 py-2 bg-orange-500/10 text-orange-500 rounded-lg text-sm font-medium hover:bg-orange-500/20 transition-all"
-                          suppressHydrationWarning>
-                          Edit
-                        </button>
-                      </Link>
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                        style={{backgroundColor: 'rgba(255,56,11,0.1)', color: '#FF380B'}}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,56,11,0.2)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,56,11,0.1)'}
+                        suppressHydrationWarning>
+                        Edit
+                      </button>
                       <button
                         className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                         style={{

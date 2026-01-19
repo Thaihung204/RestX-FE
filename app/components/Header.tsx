@@ -97,6 +97,8 @@ const Header: React.FC = () => {
               style={{
                 width: 38,
                 height: 38,
+                background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
+                borderRadius: 10,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -145,13 +147,13 @@ const Header: React.FC = () => {
                 <Button
                   type="text"
                   href="/staff"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    height: 40,
-                    padding: '0 16px',
-                    color: '#FF7A00',
-                    background: 'rgba(255, 122, 0, 0.08)',
+                style={{
+                  fontWeight: 600,
+                  fontSize: 15,
+                  height: 40,
+                  padding: '0 16px',
+                  color: '#FF380B',
+                    background: 'rgba(255, 56, 11, 0.08)',
                     borderRadius: 20,
                   }}
                 >
@@ -175,26 +177,26 @@ const Header: React.FC = () => {
                   Log in
                 </Button>
               </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05, boxShadow: '0 8px 25px rgba(255, 122, 0, 0.45)' }}
+              <motion.div 
+                whileHover={{ scale: 1.05, boxShadow: '0 8px 25px rgba(255, 56, 11, 0.45)' }} 
                 whileTap={{ scale: 0.95 }}
                 style={{ borderRadius: 20 }}
               >
-                <Button
-                  type="primary"
-                  href="/register"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    height: 40,
-                    padding: '0 24px',
-                    background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
-                    border: 'none',
-                    boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
-                  }}
-                >
-                  Sign up
-                </Button>
+              <Button
+                type="primary"
+                href="/register"
+                style={{
+                  fontWeight: 600,
+                  fontSize: 15,
+                  height: 40,
+                  padding: '0 24px',
+                  background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
+                  border: 'none',
+                  boxShadow: '0 4px 14px rgba(255, 56, 11, 0.35)',
+                }}
+              >
+                Sign up
+              </Button>
               </motion.div>
             </Space>
           )}
@@ -219,6 +221,8 @@ const Header: React.FC = () => {
               style={{
                 width: 32,
                 height: 32,
+                background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
+                borderRadius: 8,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -296,9 +300,9 @@ const Header: React.FC = () => {
               fontWeight: 600,
               height: 48,
               borderRadius: 50,
-              background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+              background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
               border: 'none',
-              boxShadow: '0 4px 14px rgba(255, 122, 0, 0.35)',
+              boxShadow: '0 4px 14px rgba(255, 56, 11, 0.35)',
             }}
           >
             Sign up

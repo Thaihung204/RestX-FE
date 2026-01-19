@@ -123,6 +123,8 @@ const Footer: React.FC = () => {
                       style={{
                         width: 44,
                         height: 44,
+                        background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
+                        borderRadius: 12,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

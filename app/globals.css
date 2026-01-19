@@ -45,7 +45,7 @@ body {
 
 [data-theme="light"] .auth-card {
   background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(255, 122, 0, 0.2);
+  border-color: rgba(255, 56, 11, 0.2);
 }
 
 [data-theme="dark"] .auth-input {
@@ -77,11 +77,11 @@ body {
 }
 
 [data-theme="dark"] .auth-decorative {
-  background: #FF7A00;
+  background: #FF380B;
 }
 
 [data-theme="light"] .auth-decorative {
-  background: #ea580c;
+  background: #FF380B;
 }
 
 /* PageTransition loading screen */
