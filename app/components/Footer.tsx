@@ -8,6 +8,7 @@ import {
   YoutubeFilled,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Link } = Typography;
 
@@ -21,47 +22,50 @@ interface FooterColumn {
   links: FooterLink[];
 }
 
-const footerColumns: FooterColumn[] = [
-  {
-    title: 'Product',
-    links: [
-      { label: 'Overview', href: '#overview' },
-      { label: 'Features', href: '#features' },
-      { label: 'Pricing', href: '#pricing' },
-      { label: 'Integrations', href: '#integrations' },
-    ],
-  },
-  {
-    title: 'Resources',
-    links: [
-      { label: 'Blog', href: '#blog' },
-      { label: 'Help Center', href: '#help' },
-      { label: 'FAQs', href: '#faqs' },
-      { label: 'Documentation', href: '#docs' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { label: 'About', href: '#about' },
-      { label: 'Contact', href: '#contact' },
-      { label: 'Careers', href: '#careers' },
-      { label: 'Partners', href: '#partners' },
-    ],
-  },
-  {
-    title: 'Legal',
-    links: [
-      { label: 'Privacy Policy', href: '#privacy' },
-      { label: 'Terms of Service', href: '#terms' },
-      { label: 'Cookie Policy', href: '#cookies' },
-      { label: 'GDPR', href: '#gdpr' },
-    ],
-  },
-];
+
 
 const Footer: React.FC = () => {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
+
+  const footerColumns: FooterColumn[] = [
+    {
+      title: t('homepage.footer.columns.product.title'),
+      links: [
+        { label: t('homepage.footer.columns.product.overview'), href: '#overview' },
+        { label: t('homepage.footer.columns.product.features'), href: '#features' },
+        { label: t('homepage.footer.columns.product.pricing'), href: '#pricing' },
+        { label: t('homepage.footer.columns.product.integrations'), href: '#integrations' },
+      ],
+    },
+    {
+      title: t('homepage.footer.columns.resources.title'),
+      links: [
+        { label: t('homepage.footer.columns.resources.blog'), href: '#blog' },
+        { label: t('homepage.footer.columns.resources.help_center'), href: '#help' },
+        { label: t('homepage.footer.columns.resources.faqs'), href: '#faqs' },
+        { label: t('homepage.footer.columns.resources.documentation'), href: '#docs' },
+      ],
+    },
+    {
+      title: t('homepage.footer.columns.company.title'),
+      links: [
+        { label: t('homepage.footer.columns.company.about'), href: '#about' },
+        { label: t('homepage.footer.columns.company.contact'), href: '#contact' },
+        { label: t('homepage.footer.columns.company.careers'), href: '#careers' },
+        { label: t('homepage.footer.columns.company.partners'), href: '#partners' },
+      ],
+    },
+    {
+      title: t('homepage.footer.columns.legal.title'),
+      links: [
+        { label: t('homepage.footer.columns.legal.privacy'), href: '#privacy' },
+        { label: t('homepage.footer.columns.legal.terms'), href: '#terms' },
+        { label: t('homepage.footer.columns.legal.cookies'), href: '#cookies' },
+        { label: t('homepage.footer.columns.legal.gdpr'), href: '#gdpr' },
+      ],
+    },
+  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -123,26 +127,23 @@ const Footer: React.FC = () => {
                       style={{
                         width: 44,
                         height: 44,
-                        background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
-                        borderRadius: 12,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontWeight: 700,
-                        fontSize: 20,
-                        boxShadow: '0 4px 12px rgba(255, 56, 11, 0.3)',
+                        overflow: 'hidden',
                       }}
                     >
-                      R
+                      <img
+                        src="/images/logo/restx-removebg-preview.png"
+                        alt="RestX Logo"
+                        className="app-logo-img"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
+                      />
                     </div>
                     <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
-                      RestX
+                      Rest<span style={{ color: '#FF380B' }}>X</span>
                     </Title>
                   </div>
 
                   <Text style={{ color: 'var(--text-muted)', lineHeight: 1.7, display: 'block', maxWidth: 280 }}>
-                    RestX – Nền tảng vận hành nhà hàng thế hệ mới. Giúp bạn quản lý mọi khía cạnh của nhà hàng trên một hệ thống duy nhất.
+                    {t('homepage.footer.tagline')}
                   </Text>
 
                   {/* Social Icons */}
@@ -259,17 +260,17 @@ const Footer: React.FC = () => {
             }}
           >
             <Text style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-              © {currentYear} RestX. All rights reserved.
+              {t('homepage.footer.copyright', { year: currentYear })}
             </Text>
             <Space size={24}>
               <Link href="#privacy" style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-                Privacy
+                {t('homepage.footer.privacy')}
               </Link>
               <Link href="#terms" style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-                Terms
+                {t('homepage.footer.terms')}
               </Link>
               <Link href="#cookies" style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-                Cookies
+                {t('homepage.footer.cookies')}
               </Link>
             </Space>
           </div>

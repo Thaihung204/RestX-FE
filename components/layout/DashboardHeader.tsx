@@ -2,9 +2,14 @@
 
 import { useState } from "react";
 import ThemeToggle from "@/app/components/ThemeToggle";
+import { useLanguage } from "@/components/I18nProvider";
+import { useTranslation } from "react-i18next";
 
 export default function DashboardHeader() {
+  const { t } = useTranslation("common");
   const [searchQuery, setSearchQuery] = useState("");
+  const { language, changeLanguage } = useLanguage();
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
 
   return (
     <header
@@ -20,7 +25,7 @@ export default function DashboardHeader() {
           {/* Page Title & Breadcrumb */}
           <div>
             <div className="flex items-center gap-2 text-sm mb-1" style={{ color: "var(--text-muted)" }}>
-              <span>Pages</span>
+              <span>{t("dashboard.header.pages")}</span>
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -33,10 +38,10 @@ export default function DashboardHeader() {
                   d="M9 5l7 7-7 7"
                 />
               </svg>
-              <span>Dashboard</span>
+              <span>{t("dashboard.header.dashboard")}</span>
             </div>
             <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>
-              Main Dashboard
+              {t("dashboard.header.main_dashboard")}
             </h1>
           </div>
 
@@ -48,7 +53,7 @@ export default function DashboardHeader() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..."
+                placeholder={t("dashboard.header.search_placeholder")}
                 className="w-64 px-4 py-2 pl-10 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all"
                 style={{
                   '--tw-ring-color': '#FF380B',
@@ -92,6 +97,66 @@ export default function DashboardHeader() {
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full" style={{ backgroundColor: '#FF380B' }}></span>
             </button>
 
+            {/* Language Switcher */}
+            <div className="relative">
+              <button
+                onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+                className="p-2 rounded-lg transition-colors group flex items-center gap-2"
+                style={{ background: "var(--surface)", color: "var(--text-muted)" }}>
+                <svg
+                  className="w-6 h-6 group-hover:text-orange-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="text-sm font-medium uppercase group-hover:text-orange-500">
+                  {language}
+                </span>
+              </button>
+
+              {isLangMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setIsLangMenuOpen(false)}
+                  />
+                  <div
+                    className="absolute top-full right-0 mt-2 w-32 rounded-xl shadow-lg border p-1 z-40 transition-all"
+                    style={{
+                      background: "var(--card)",
+                      borderColor: "var(--border)",
+                    }}>
+                    <button
+                      onClick={() => {
+                        changeLanguage("en");
+                        setIsLangMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${language === "en" ? "bg-orange-500/10 text-orange-500" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                      style={{ color: language === "en" ? undefined : "var(--text)" }}>
+                      <span>🇬🇧</span> English
+                    </button>
+                    <button
+                      onClick={() => {
+                        changeLanguage("vi");
+                        setIsLangMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${language === "vi" ? "bg-orange-500/10 text-orange-500" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                      style={{ color: language === "vi" ? undefined : "var(--text)" }}>
+                      <span>🇻🇳</span> Tiếng Việt
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Theme Toggle */}
             <ThemeToggle />
 
@@ -132,7 +197,7 @@ export default function DashboardHeader() {
                   Admin User
                 </p>
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                  Restaurant Owner
+                  {t("dashboard.header.user_role")}
                 </p>
               </div>
               <svg

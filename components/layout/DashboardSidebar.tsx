@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface NavItem {
   id: string;
@@ -12,13 +13,14 @@ interface NavItem {
 }
 
 export default function DashboardSidebar() {
+  const { t } = useTranslation("common");
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   const navItems: NavItem[] = [
     {
       id: "admin",
-      label: "Dashboard",
+      label: t("dashboard.sidebar.items.dashboard"),
       path: "/admin",
       icon: (
         <svg
@@ -37,7 +39,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "analytics",
-      label: "Analytics",
+      label: t("dashboard.sidebar.items.analytics"),
       path: "/admin/analytics",
       icon: (
         <svg
@@ -56,7 +58,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "tables",
-      label: "Tables",
+      label: t("dashboard.sidebar.items.tables"),
       path: "/admin/tables",
       icon: (
         <svg
@@ -75,7 +77,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "menu",
-      label: "Menu",
+      label: t("dashboard.sidebar.items.menu"),
       path: "/admin/menu",
       icon: (
         <svg
@@ -94,7 +96,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "orders",
-      label: "Orders",
+      label: t("dashboard.sidebar.items.orders"),
       path: "/admin/orders",
       icon: (
         <svg
@@ -113,7 +115,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "staff",
-      label: "Staff",
+      label: t("dashboard.sidebar.items.staff"),
       path: "/admin/staff",
       icon: (
         <svg
@@ -132,7 +134,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "settings",
-      label: "Settings",
+      label: t("dashboard.sidebar.items.settings"),
       path: "/admin/settings",
       icon: (
         <svg
@@ -157,7 +159,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "help",
-      label: "Help",
+      label: t("dashboard.sidebar.items.help"),
       path: "/admin/help",
       icon: (
         <svg
@@ -178,15 +180,18 @@ export default function DashboardSidebar() {
 
   return (
     <aside
-      className={`flex flex-col transition-all duration-300 ${
-        collapsed ? "w-20" : "w-64"
-      }`}
-      style={{ background: "var(--card)", borderRight: "1px solid var(--border)", color: "var(--text)" }}>
+      className={`flex flex-col transition-all duration-300 ${collapsed ? "w-20" : "w-64"
+        }`}
+      style={{ color: "var(--text)" }}>
       {/* Logo */}
       <div className="p-6" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FF380B' }}>
-            <span className="text-white font-bold text-lg">R</span>
+          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <img
+              src="/images/logo/restx-removebg-preview.png"
+              alt="RestX Logo"
+              className="w-full h-full object-contain app-logo-img"
+            />
           </div>
           {!collapsed && (
             <div>
@@ -194,7 +199,7 @@ export default function DashboardSidebar() {
                 RestX
               </h2>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Management
+                {t("dashboard.sidebar.management")}
               </p>
             </div>
           )}
@@ -210,21 +215,17 @@ export default function DashboardSidebar() {
               <li key={item.id}>
                 <Link
                   href={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group`}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group"
                   style={
                     isActive
                       ? { background: '#FF380B', color: 'white' }
                       : { color: "var(--text-muted)", background: "transparent" }
                   }>
                   <span
-                    className={`transition-colors ${
-                      isActive
-                        ? "text-white"
-                        : ""
-                    }`}
+                    className="transition-colors"
                     style={
                       isActive
-                        ? undefined
+                        ? { color: 'white' }
                         : { color: "var(--text-muted)" }
                     }>
                     {item.icon}
@@ -232,7 +233,7 @@ export default function DashboardSidebar() {
                   {!collapsed && (
                     <span
                       className="font-medium text-sm"
-                      style={{ color: isActive ? "var(--text)" : "var(--text-muted)" }}>
+                      style={{ color: isActive ? "white" : "var(--text-muted)" }}>
                       {item.label}
                     </span>
                   )}
@@ -249,7 +250,7 @@ export default function DashboardSidebar() {
       {/* User Profile */}
       <div className="p-4" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ background: '#FF380B' }}>
+          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0" style={{ border: '2px solid #FF380B', color: '#FF380B' }}>
             A
           </div>
           {!collapsed && (
@@ -275,9 +276,8 @@ export default function DashboardSidebar() {
           color: "var(--text-muted)",
         }}>
         <svg
-          className={`w-3 h-3 transition-transform ${
-            collapsed ? "rotate-180" : ""
-          }`}
+          className={`w-3 h-3 transition-transform ${collapsed ? "rotate-180" : ""
+            }`}
           style={{ color: "inherit" }}
           fill="none"
           stroke="currentColor"

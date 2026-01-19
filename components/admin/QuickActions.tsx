@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface QuickAction {
   id: string;
@@ -13,13 +14,14 @@ interface QuickAction {
 }
 
 export default function QuickActions() {
+  const { t } = useTranslation();
   const router = useRouter();
 
   const actions: QuickAction[] = [
     {
       id: "add-table",
-      title: "Add Table",
-      description: "Create new table",
+      title: t("dashboard.quick_actions.add_table"),
+      description: t("dashboard.quick_actions.add_table_desc"),
       color: "", // Will use inline style
       icon: (
         <svg
@@ -39,8 +41,8 @@ export default function QuickActions() {
     },
     {
       id: "add-dish",
-      title: "Add Dish",
-      description: "Add menu item",
+      title: t("dashboard.quick_actions.add_dish"),
+      description: t("dashboard.quick_actions.add_dish_desc"),
       color: "from-green-600 to-green-500",
       icon: (
         <svg
@@ -60,8 +62,8 @@ export default function QuickActions() {
     },
     {
       id: "add-staff",
-      title: "Add Staff",
-      description: "New employee",
+      title: t("dashboard.quick_actions.add_staff"),
+      description: t("dashboard.quick_actions.add_staff_desc"),
       color: "from-blue-600 to-blue-500",
       icon: (
         <svg
@@ -81,8 +83,8 @@ export default function QuickActions() {
     },
     {
       id: "view-bookings",
-      title: "View Bookings",
-      description: "All reservations",
+      title: t("dashboard.quick_actions.view_bookings"),
+      description: t("dashboard.quick_actions.view_bookings_desc"),
       color: "from-purple-600 to-purple-500",
       icon: (
         <svg
@@ -108,8 +110,8 @@ export default function QuickActions() {
     },
     {
       id: "inventory",
-      title: "Inventory",
-      description: "Stock management",
+      title: t("dashboard.quick_actions.inventory"),
+      description: t("dashboard.quick_actions.inventory_desc"),
       color: "from-orange-600 to-orange-500",
       icon: (
         <svg
@@ -129,8 +131,8 @@ export default function QuickActions() {
     },
     {
       id: "reports",
-      title: "Reports",
-      description: "Analytics & data",
+      title: t("dashboard.quick_actions.reports"),
+      description: t("dashboard.quick_actions.reports_desc"),
       color: "from-red-600 to-red-500",
       icon: (
         <svg
@@ -160,10 +162,10 @@ export default function QuickActions() {
       }}>
       <div className="mb-6">
         <h3 className="text-xl font-bold mb-1" style={{ color: "var(--text)" }}>
-          Quick Actions
+          {t("dashboard.quick_actions.title")}
         </h3>
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          Frequently used shortcuts
+          {t("dashboard.quick_actions.subtitle")}
         </p>
       </div>
 

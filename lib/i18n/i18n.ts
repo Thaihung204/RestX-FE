@@ -7,10 +7,10 @@ import vi from './locales/vi.json';
 
 const resources = {
   en: {
-    translation: en,
+    common: en,
   },
   vi: {
-    translation: vi,
+    common: vi,
   },
 };
 
@@ -31,6 +31,7 @@ i18n
     resources,
     lng: getInitialLanguage(), // Get language from localStorage or default to 'vi'
     fallbackLng: 'vi',
+    defaultNS: 'common',
     interpolation: {
       escapeValue: false, // React already does escaping
     },

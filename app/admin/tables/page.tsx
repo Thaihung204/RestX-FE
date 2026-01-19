@@ -3,6 +3,7 @@
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Table {
   id: string;
@@ -15,6 +16,7 @@ interface Table {
 }
 
 export default function TablesPage() {
+  const { t } = useTranslation("common");
   const [tables] = useState<Table[]>([
     {
       id: "1",
@@ -65,22 +67,22 @@ export default function TablesPage() {
   const statusConfig = {
     available: {
       color: "bg-green-500",
-      text: "Available",
+      text: t("dashboard.tables.status.available"),
       badge: "bg-green-500/10 text-green-500 border-green-500/20",
     },
     occupied: {
       color: "bg-[#FF380B]",
-      text: "Occupied",
+      text: t("dashboard.tables.status.occupied"),
       badge: "bg-[#FF380B]/10 text-[#FF380B] border-[#FF380B]/20",
     },
     reserved: {
       color: "bg-blue-500",
-      text: "Reserved",
+      text: t("dashboard.tables.status.reserved"),
       badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
     },
     cleaning: {
       color: "bg-red-500",
-      text: "Cleaning",
+      text: t("dashboard.tables.status.cleaning"),
       badge: "bg-red-500/10 text-red-500 border-red-500/20",
     },
   };
@@ -96,10 +98,10 @@ export default function TablesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
-                  Table Management
+                  {t("dashboard.tables.title")}
                 </h2>
                 <p style={{ color: 'var(--text-muted)' }}>
-                  Manage restaurant tables and reservations
+                  {t("dashboard.tables.subtitle")}
                 </p>
               </div>
               <button
@@ -118,7 +120,7 @@ export default function TablesPage() {
                     d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                   />
                 </svg>
-                Add Table
+                {t("dashboard.tables.add_table")}
               </button>
             </div>
 
@@ -133,7 +135,7 @@ export default function TablesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-                      Total Tables
+                      {t("dashboard.tables.stats.total_tables")}
                     </p>
                     <p className="text-3xl font-bold mt-1" style={{ color: 'var(--text)' }}>
                       {tables.length}
@@ -165,7 +167,7 @@ export default function TablesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Available
+                      {t("dashboard.tables.stats.available")}
                     </p>
                     <p className="text-3xl font-bold text-green-500 mt-1">
                       {tables.filter((t) => t.status === "available").length}
@@ -197,7 +199,7 @@ export default function TablesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Occupied
+                      {t("dashboard.tables.stats.occupied")}
                     </p>
                     <p className="text-3xl font-bold mt-1" style={{ color: '#FF380B' }}>
                       {tables.filter((t) => t.status === "occupied").length}
@@ -230,7 +232,7 @@ export default function TablesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      Reserved
+                      {t("dashboard.tables.stats.reserved")}
                     </p>
                     <p className="text-3xl font-bold text-blue-500 mt-1">
                       {tables.filter((t) => t.status === "reserved").length}
@@ -262,7 +264,7 @@ export default function TablesPage() {
                 border: '1px solid var(--border)',
               }}>
               <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text)' }}>
-                All Tables
+                {t("dashboard.tables.title")}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {tables.map((table) => (
@@ -279,13 +281,12 @@ export default function TablesPage() {
                           Table {table.number}
                         </h4>
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                          {table.area} Area
+                          {table.area} {t("dashboard.tables.card.area")}
                         </p>
                       </div>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                          statusConfig[table.status].badge
-                        }`}>
+                        className={`px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[table.status].badge
+                          }`}>
                         {statusConfig[table.status].text}
                       </span>
                     </div>
@@ -304,7 +305,7 @@ export default function TablesPage() {
                             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                           />
                         </svg>
-                        <span>Capacity: {table.capacity} seats</span>
+                        <span>{t("dashboard.tables.card.capacity", { count: table.capacity })}</span>
                       </div>
                       {table.currentOrder && (
                         <div className="flex items-center gap-2 text-sm" style={{ color: '#FF380B' }}>
@@ -320,7 +321,7 @@ export default function TablesPage() {
                               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                             />
                           </svg>
-                          <span>Order: {table.currentOrder}</span>
+                          <span>{t("dashboard.tables.card.order")}: {table.currentOrder}</span>
                         </div>
                       )}
                       {table.reservationTime && (
@@ -337,7 +338,7 @@ export default function TablesPage() {
                               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <span>Reserved at {table.reservationTime}</span>
+                          <span>{t("dashboard.tables.card.reserved_at")} {table.reservationTime}</span>
                         </div>
                       )}
                     </div>
@@ -349,7 +350,7 @@ export default function TablesPage() {
                         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 56, 11, 0.2)'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 56, 11, 0.1)'; }}
                         suppressHydrationWarning>
-                        View Details
+                        {t("dashboard.tables.card.view_details")}
                       </button>
                       <button
                         className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
