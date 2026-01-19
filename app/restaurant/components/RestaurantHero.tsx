@@ -2,10 +2,13 @@
 
 import React from 'react';
 import { Button, Typography } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 
 const RestaurantHero: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <section
       style={{
@@ -72,7 +75,7 @@ const RestaurantHero: React.FC = () => {
             marginBottom: 16,
             textShadow: '0 2px 20px rgba(0,0,0,0.8)',
           }}>
-          RestX Restaurant
+          {t('restaurant.hero.title')}
         </Title>
 
         <Text
@@ -83,7 +86,7 @@ const RestaurantHero: React.FC = () => {
             marginBottom: 48,
             textShadow: '0 2px 10px rgba(0,0,0,0.8)',
           }}>
-          Món ăn đa dạng
+          {t('restaurant.hero.subtitle')}
         </Text>
 
         {/* CTA Button */}
@@ -101,7 +104,7 @@ const RestaurantHero: React.FC = () => {
             boxShadow: '0 8px 24px rgba(255, 56, 11, 0.5)',
             textTransform: 'uppercase',
           }}>
-          ĐẶT BÀN NGAY
+          {t('restaurant.hero.cta')}
         </Button>
       </div>
     </section>
@@ -109,4 +112,3 @@ const RestaurantHero: React.FC = () => {
 };
 
 export default RestaurantHero;
-

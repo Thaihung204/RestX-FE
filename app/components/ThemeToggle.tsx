@@ -3,9 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Tooltip } from 'antd';
 import { SunOutlined, MoonOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
-export default function ThemeToggle() {
+interface ThemeToggleProps {
+  style?: React.CSSProperties;
+  className?: string;
+}
+
+export default function ThemeToggle({ style, className }: ThemeToggleProps) {
+  const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
   const [mounted, setMounted] = useState(false);
   const isDark = mounted && mode === 'dark';
@@ -15,7 +22,7 @@ export default function ThemeToggle() {
   }, []);
 
   return (
-    <Tooltip title={isDark ? 'Chuyển Light mode' : 'Chuyển Dark mode'}>
+    <Tooltip title={isDark ? t('common.theme.switch_to_light') : t('common.theme.switch_to_dark')}>
       <Button
         type="text"
         onClick={toggleTheme}
@@ -27,6 +34,7 @@ export default function ThemeToggle() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          ...style,
         }}
       />
     </Tooltip>
