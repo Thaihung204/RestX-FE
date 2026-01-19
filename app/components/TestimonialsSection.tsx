@@ -150,7 +150,7 @@ const TestimonialsSection: React.FC = () => {
                           <Avatar
                             size={56}
                             style={{
-                              background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                              background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                               fontWeight: 700,
                               fontSize: 22,
                             }}
@@ -191,7 +191,7 @@ const TestimonialsSection: React.FC = () => {
                             left: 0,
                             top: -8,
                             fontSize: 48,
-                            color: '#FFB066',
+                            color: '#FF6B3B',
                             fontFamily: 'Georgia, serif',
                             lineHeight: 1,
                           }}

@@ -164,9 +164,9 @@ export default function LoginEmailPage() {
                 <a
                   href="/forgot-password"
                   className="text-sm font-medium transition-colors"
-                  style={{ color: '#FF7A00' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                  style={{ color: '#FF380B' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                 >
                   Forgot password?
                 </a>
@@ -236,9 +236,9 @@ export default function LoginEmailPage() {
               <a
                 href="/terms"
                 className="font-medium"
-                style={{ color: '#FF7A00' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
               >
                 Terms of Service
               </a>{" "}
@@ -246,9 +246,9 @@ export default function LoginEmailPage() {
               <a
                 href="/privacy"
                 className="font-medium"
-                style={{ color: '#FF7A00' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
               >
                 Privacy Policy
               </a>
@@ -262,9 +262,9 @@ export default function LoginEmailPage() {
               <a
                 href="/register"
                 className="font-semibold transition-colors"
-                style={{ color: '#FF7A00' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
               >
                 Sign up here
               </a>
@@ -277,9 +277,9 @@ export default function LoginEmailPage() {
               <a
                 href="/login"
                 className="font-semibold transition-colors"
-                style={{ color: '#FF7A00' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
               >
                 Phone Number
               </a>

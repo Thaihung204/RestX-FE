@@ -185,7 +185,7 @@ export default function DashboardSidebar() {
       {/* Logo */}
       <div className="p-6" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FF380B' }}>
             <span className="text-white font-bold text-lg">R</span>
           </div>
           {!collapsed && (
@@ -210,21 +210,17 @@ export default function DashboardSidebar() {
               <li key={item.id}>
                 <Link
                   href={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
-                    isActive
-                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg"
-                      : ""
-                  }`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group`}
                   style={
                     isActive
-                      ? undefined
+                      ? { background: '#FF380B', color: 'white' }
                       : { color: "var(--text-muted)", background: "transparent" }
                   }>
                   <span
                     className={`transition-colors ${
                       isActive
                         ? "text-white"
-                        : "group-hover:text-orange-500"
+                        : ""
                     }`}
                     style={
                       isActive
@@ -253,7 +249,7 @@ export default function DashboardSidebar() {
       {/* User Profile */}
       <div className="p-4" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ background: '#FF380B' }}>
             A
           </div>
           {!collapsed && (

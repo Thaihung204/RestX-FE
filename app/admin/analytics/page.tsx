@@ -16,8 +16,8 @@ export default function AnalyticsPage() {
               className="rounded-2xl p-6 shadow-xl"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(255,122,0,0.18) 0%, rgba(255,122,0,0.08) 100%), var(--card)",
-                border: "1px solid rgba(255,122,0,0.22)",
+                  "linear-gradient(135deg, rgba(255,56,11,0.18) 0%, rgba(255,56,11,0.08) 100%), var(--card)",
+                border: "1px solid rgba(255,56,11,0.22)",
               }}>
               <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text)" }}>
                 Analytics Dashboard
@@ -33,10 +33,10 @@ export default function AnalyticsPage() {
               style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
               <div
                 className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ background: "rgba(255,122,0,0.12)" }}>
+                style={{ background: "rgba(255,56,11,0.12)" }}>
                 <svg
                   className="w-10 h-10"
-                  style={{ color: "#FF7A00" }}
+                  style={{ color: "#FF380B" }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24">
@@ -54,8 +54,8 @@ export default function AnalyticsPage() {
               <p className="mb-4" style={{ color: "var(--text-muted)" }}>
                 Advanced analytics features coming soon
               </p>
-              <div className="inline-flex items-center gap-2 text-sm" style={{ color: "#FF7A00" }}>
-                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#FF7A00" }}></div>
+              <div className="inline-flex items-center gap-2 text-sm" style={{ color: "#FF380B" }}>
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#FF380B" }}></div>
                 Under Development
               </div>
             </div>
