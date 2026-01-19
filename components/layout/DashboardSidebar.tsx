@@ -186,6 +186,9 @@ export default function DashboardSidebar() {
       {/* Logo */}
       <div className="p-6" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FF380B' }}>
+            <span className="text-white font-bold text-lg">R</span>
+          </div>
           <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 overflow-hidden">
             <img
               src="/images/logo/restx-removebg-preview.png"
@@ -196,7 +199,7 @@ export default function DashboardSidebar() {
           {!collapsed && (
             <div>
               <h2 className="font-bold text-lg" style={{ color: "var(--text)" }}>
-                RestX
+                Rest<span style={{ color: '#FF380B' }}>X</span>
               </h2>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 {t("dashboard.sidebar.management")}

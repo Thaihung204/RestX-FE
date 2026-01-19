@@ -213,11 +213,6 @@ body {
   background: var(--text-muted, #999) !important;
 }
 
-/* Invert logo color in dark mode to make it visible without background */
-[data-theme="dark"] .app-logo-img {
-  filter: invert(1) hue-rotate(180deg);
-}
-
 /* Notification Sheet Animations */
 @keyframes fadeIn {
   from {
