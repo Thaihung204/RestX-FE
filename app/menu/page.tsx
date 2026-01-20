@@ -1,27 +1,28 @@
 "use client";
 
+import NotificationSystem from "@/components/notifications/NotificationSystem";
 import {
-  DeleteOutlined,
-  DownOutlined,
-  FilterOutlined,
-  MinusOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  ShoppingCartOutlined,
+    DeleteOutlined,
+    DownOutlined,
+    FilterOutlined,
+    MinusOutlined,
+    PlusOutlined,
+    SearchOutlined,
+    ShoppingCartOutlined,
 } from "@ant-design/icons";
 import {
-  Affix,
-  Button,
-  Card,
-  Col,
-  ConfigProvider,
-  Input,
-  Modal,
-  Row,
-  Select,
-  Typography,
-  message,
-  theme,
+    Affix,
+    Button,
+    Card,
+    Col,
+    ConfigProvider,
+    Input,
+    Modal,
+    Row,
+    Select,
+    Typography,
+    message,
+    theme,
 } from "antd";
 import { useMemo, useState } from "react";
 
@@ -260,7 +261,7 @@ export default function MenuPage() {
         theme={{
           algorithm: theme.darkAlgorithm,
           token: {
-            colorPrimary: "#ff5722",
+            colorPrimary: "#FF380B",
             fontFamily: "'Playfair Display', 'Inter', sans-serif",
             borderRadius: 12,
             controlHeight: 45, // Increase input/select height for easier tap
@@ -274,13 +275,13 @@ export default function MenuPage() {
               colorBgContainer: "rgba(255,255,255,0.08)",
               colorBorder: "transparent",
               selectorBg: "rgba(255,255,255,0.08)",
-              optionSelectedBg: "rgba(255, 87, 34, 0.2)",
+              optionSelectedBg: "rgba(255, 56, 11, 0.2)",
               colorTextPlaceholder: "#a6a6a6",
             },
             Input: {
               colorBgContainer: "rgba(255,255,255,0.04)",
               colorBorder: "transparent",
-              activeBorderColor: "#ff5722",
+              activeBorderColor: "#FF380B",
             },
           },
         }}>
@@ -289,8 +290,8 @@ export default function MenuPage() {
             minHeight: "100vh",
             backgroundColor: "#050505",
             backgroundImage: `
-            radial-gradient(circle at 0% 0%, rgba(255, 87, 34, 0.1), transparent 40%),
-            radial-gradient(circle at 100% 100%, rgba(255, 87, 34, 0.05), transparent 40%)
+            radial-gradient(circle at 0% 0%, rgba(255, 56, 11, 0.1), transparent 40%),
+            radial-gradient(circle at 100% 100%, rgba(255, 56, 11, 0.05), transparent 40%)
           `,
             paddingBottom: 80,
           }}>
@@ -325,7 +326,7 @@ export default function MenuPage() {
               }}>
               <Text
                 style={{
-                  color: "#ff5722",
+                  color: "#FF380B",
                   letterSpacing: 2,
                   fontSize: 12,
                   fontWeight: 700,
@@ -358,7 +359,7 @@ export default function MenuPage() {
                       style={{ width: "100%" }}
                       value={activeSectionKey}
                       onChange={setActiveSectionKey}
-                      suffixIcon={<DownOutlined style={{ color: "#ff5722" }} />}
+                      suffixIcon={<DownOutlined style={{ color: "#FF380B" }} />}
                       showSearch={false}
                       options={sections.map((s) => ({
                         label: (
@@ -410,10 +411,10 @@ export default function MenuPage() {
                   gap: 10,
                   marginBottom: 6,
                 }}>
-                <FilterOutlined style={{ color: "#ff5722" }} />
+                <FilterOutlined style={{ color: "#FF380B" }} />
                 <Text
                   style={{
-                    color: "#ff5722",
+                    color: "#FF380B",
                     fontWeight: 600,
                     textTransform: "uppercase",
                     fontSize: 13,
@@ -535,7 +536,7 @@ export default function MenuPage() {
                           </Text>
                           <Text
                             style={{
-                              color: "#ff5722",
+                              color: "#FF380B",
                               fontWeight: 700,
                               fontSize: 15,
                               flexShrink: 0,
@@ -552,7 +553,7 @@ export default function MenuPage() {
                                 handleAddToCart(item);
                               }}
                               style={{
-                                background: "#ff5722",
+                                background: "#FF380B",
                                 border: "none",
                                 width: 32,
                                 height: 32,
@@ -589,14 +590,14 @@ export default function MenuPage() {
                 bottom: 24,
                 right: 24,
                 zIndex: 99,
-                background: "#ff5722",
+                background: "#FF380B",
                 width: 56,
                 height: 56,
                 borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 8px 30px rgba(255, 87, 34, 0.5)",
+                boxShadow: "0 8px 30px rgba(255, 56, 11, 0.5)",
                 cursor: "pointer",
                 transition: "transform 0.2s",
               }}
@@ -614,12 +615,12 @@ export default function MenuPage() {
                     top: 0,
                     right: 0,
                     background: "white",
-                    color: "#ff5722",
+                    color: "#FF380B",
                     fontSize: 12,
                     fontWeight: "bold",
                     padding: "2px 6px",
                     borderRadius: 10,
-                    border: "2px solid #ff5722",
+                    border: "2px solid #FF380B",
                     minWidth: 20,
                     textAlign: "center",
                   }}>
@@ -672,7 +673,7 @@ export default function MenuPage() {
                     left: -50,
                     width: 150,
                     height: 150,
-                    background: "#ff5722",
+                    background: "#FF380B",
                     filter: "blur(90px)",
                     opacity: 0.15,
                     pointerEvents: "none",
@@ -712,20 +713,20 @@ export default function MenuPage() {
                       width: 38,
                       height: 38,
                       borderRadius: 10,
-                      background: "rgba(255,87,34,0.12)",
+                      background: "rgba(255,56,11,0.12)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      border: "1px solid rgba(255,87,34,0.25)",
+                      border: "1px solid rgba(255,56,11,0.25)",
                     }}>
                     <ShoppingCartOutlined
-                      style={{ color: "#ff5722", fontSize: 20 }}
+                      style={{ color: "#FF380B", fontSize: 20 }}
                     />
                   </div>
                   <div>
                     <Text
                       style={{
-                        color: "#ff5722",
+                        color: "#FF380B",
                         fontSize: 11,
                         textTransform: "uppercase",
                         letterSpacing: 1,
@@ -782,7 +783,7 @@ export default function MenuPage() {
                         <div>
                           <Text
                             style={{
-                              color: "#ff5722",
+                              color: "#FF380B",
                               fontSize: 16,
                               fontWeight: 700,
                               display: "block",
@@ -843,7 +844,7 @@ export default function MenuPage() {
                                     </Text>
                                     <Text
                                       style={{
-                                        color: "#ff5722",
+                                        color: "#FF380B",
                                         fontSize: 13,
                                         fontWeight: 600,
                                       }}>
@@ -938,7 +939,7 @@ export default function MenuPage() {
                         <div>
                           <Text
                             style={{
-                              color: "#ff5722",
+                              color: "#FF380B",
                               fontSize: 16,
                               fontWeight: 700,
                               display: "block",
@@ -999,7 +1000,7 @@ export default function MenuPage() {
                                     </Text>
                                     <Text
                                       style={{
-                                        color: "#ff5722",
+                                        color: "#FF380B",
                                         fontSize: 13,
                                         fontWeight: 600,
                                       }}>
@@ -1123,7 +1124,7 @@ export default function MenuPage() {
                         </Text>
                         <div
                           style={{
-                            color: "#ff5722",
+                            color: "#FF380B",
                             fontSize: 22,
                             fontWeight: 800,
                             marginTop: -2,
@@ -1144,12 +1145,12 @@ export default function MenuPage() {
                       block
                       size="large"
                       style={{
-                        background: "#ff5722",
+                        background: "#FF380B",
                         border: "none",
                         height: 48,
                         fontWeight: 700,
                         fontSize: 16,
-                        boxShadow: "0 10px 25px rgba(255,87,34,0.35)",
+                        boxShadow: "0 10px 25px rgba(255,56,11,0.35)",
                       }}>
                       Đặt món
                     </Button>
@@ -1200,7 +1201,7 @@ export default function MenuPage() {
                       left: -50,
                       width: 150,
                       height: 150,
-                      background: "#ff5722",
+                      background: "#FF380B",
                       filter: "blur(80px)",
                       opacity: 0.15,
                       pointerEvents: "none",
@@ -1320,13 +1321,13 @@ export default function MenuPage() {
                             <span
                               key={idx}
                               style={{
-                                background: "rgba(255, 87, 34, 0.1)",
-                                color: "#ff5722",
+                                background: "rgba(255, 56, 11, 0.1)",
+                                color: "#FF380B",
                                 padding: "4px 10px",
                                 borderRadius: 8,
                                 fontSize: 11,
                                 fontWeight: 500,
-                                border: "1px solid rgba(255, 87, 34, 0.2)",
+                                border: "1px solid rgba(255, 56, 11, 0.2)",
                                 textTransform: 'capitalize'
                               }}
                             >
@@ -1388,7 +1389,7 @@ export default function MenuPage() {
                             fontWeight: 700,
                           }}
                         >
-                          {selectedFood.price} <span style={{fontSize: 14, color: '#ff5722'}}>đ</span>
+                          {selectedFood.price} <span style={{fontSize: 14, color: '#FF380B'}}>đ</span>
                         </Text>
                       </div>
 
@@ -1429,7 +1430,7 @@ export default function MenuPage() {
                               />
                               <Text
                                 style={{
-                                  color: "#ff5722",
+                                  color: "#FF380B",
                                   fontSize: 16,
                                   fontWeight: 700,
                                   minWidth: 20,
@@ -1448,13 +1449,13 @@ export default function MenuPage() {
                                 }
                                 size="small"
                                 style={{
-                                  background: "#ff5722",
+                                  background: "#FF380B",
                                   border: "none",
                                   color: "#fff",
                                   width: 28,
                                   height: 28,
                                   borderRadius: 8,
-                                  boxShadow: "0 4px 10px rgba(255,87,34,0.3)"
+                                  boxShadow: "0 4px 10px rgba(255,56,11,0.3)"
                                 }}
                               />
                             </div>
@@ -1466,14 +1467,14 @@ export default function MenuPage() {
                               icon={<PlusOutlined />}
                               onClick={() => handleAddToCart(selectedFood)}
                               style={{
-                                background: "#ff5722",
+                                background: "#FF380B",
                                 border: "none",
                                 height: 44,
                                 padding: "0 24px",
                                 borderRadius: 12,
                                 fontWeight: 600,
                                 fontSize: 14,
-                                boxShadow: "0 4px 12px rgba(255,87,34,0.3)",
+                                boxShadow: "0 4px 12px rgba(255,56,11,0.3)",
                               }}
                             >
                               Thêm
@@ -1489,6 +1490,7 @@ export default function MenuPage() {
           </div>
         </div>
       </ConfigProvider>
+      <NotificationSystem />
     </>
   );
 }

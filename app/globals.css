@@ -18,12 +18,9 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
+  background: linear-gradient(to bottom,
       transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
 }
 
 @layer utilities {
@@ -48,7 +45,7 @@ body {
 
 [data-theme="light"] .auth-card {
   background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(255, 122, 0, 0.2);
+  border-color: rgba(255, 56, 11, 0.2);
 }
 
 [data-theme="dark"] .auth-input {
@@ -80,11 +77,11 @@ body {
 }
 
 [data-theme="dark"] .auth-decorative {
-  background: #FF7A00;
+  background: #FF380B;
 }
 
 [data-theme="light"] .auth-decorative {
-  background: #ea580c;
+  background: #FF380B;
 }
 
 /* PageTransition loading screen */
@@ -164,15 +161,18 @@ body {
   width: 10px;
   height: 10px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--card, #f0f0f0);
   border-radius: 5px;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--border, #d9d9d9);
   border-radius: 5px;
   border: 2px solid var(--card, #f0f0f0);
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted, #999);
 }
@@ -189,22 +189,64 @@ body {
   scrollbar-width: thin !important;
   scrollbar-color: var(--border, #d9d9d9) var(--card, #f0f0f0) !important;
 }
+
 .ant-drawer-body::-webkit-scrollbar,
 .ant-modal-body::-webkit-scrollbar {
   width: 8px !important;
   height: 8px !important;
 }
+
 .ant-drawer-body::-webkit-scrollbar-track,
 .ant-modal-body::-webkit-scrollbar-track {
   background: var(--card, #f0f0f0) !important;
   border-radius: 4px !important;
 }
+
 .ant-drawer-body::-webkit-scrollbar-thumb,
 .ant-modal-body::-webkit-scrollbar-thumb {
   background: var(--border, #d9d9d9) !important;
   border-radius: 4px !important;
 }
+
 .ant-drawer-body::-webkit-scrollbar-thumb:hover,
 .ant-modal-body::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted, #999) !important;
+}
+
+/* Invert logo color in dark mode to make it visible without background */
+[data-theme="dark"] .app-logo-img {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Notification Sheet Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Notification Detail Modal - remove outer AntD box completely, match cart/profile modal */
+.notification-detail-modal .ant-modal-container,
+.notification-detail-modal .ant-modal,
+.notification-detail-modal .ant-modal-content,
+.notification-detail-modal .ant-modal-body {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
 }

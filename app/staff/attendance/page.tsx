@@ -19,7 +19,7 @@ import {
   message,
   Calendar,
   Badge,
-Flex,
+  Flex,
 } from 'antd';
 import {
   ClockCircleOutlined,
@@ -35,6 +35,9 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import type { Dayjs } from 'dayjs';
+import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../components/I18nProvider';
 
 const { Title, Text } = Typography;
 
@@ -60,14 +63,19 @@ const attendanceHistory: AttendanceRecord[] = [
   { id: '7', date: '2024-12-04', checkIn: '07:58', checkOut: '17:15', totalHours: 8.8, status: 'present' },
 ];
 
-const statusConfig: Record<string, { color: string; text: string }> = {
-  present: { color: 'green', text: 'Đúng giờ' },
-  late: { color: 'orange', text: 'Đi muộn' },
-  absent: { color: 'red', text: 'Vắng mặt' },
-  leave: { color: 'blue', text: 'Nghỉ phép' },
-};
-
 export default function AttendancePage() {
+  const { mode } = useThemeMode();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const statusConfig: Record<string, { color: string; text: string }> = {
+    present: { color: 'green', text: t('staff.attendance.status.present') },
+    late: { color: 'gold', text: t('staff.attendance.status.late') },
+    absent: { color: 'red', text: t('staff.attendance.status.absent') },
+    leave: { color: 'blue', text: t('staff.attendance.status.leave') },
+  };
+
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isCheckedIn, setIsCheckedIn] = useState(true);
   const [checkInTime, setCheckInTime] = useState('07:58');
@@ -91,7 +99,7 @@ export default function AttendancePage() {
   }, []);
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('vi-VN', {
+    return date.toLocaleTimeString(language === 'en' ? 'en-US' : 'vi-VN', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
@@ -99,7 +107,7 @@ export default function AttendancePage() {
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('vi-VN', {
+    return date.toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -123,51 +131,51 @@ export default function AttendancePage() {
 
   const confirmAction = () => {
     const time = formatTime(currentTime).slice(0, 5);
-    
+
     switch (actionType) {
       case 'checkIn':
         setIsCheckedIn(true);
         setCheckInTime(time);
-        message.success(`Chấm công vào lúc ${time}`);
+        messageApi.success(t('staff.attendance.messages.checkin_success', { time }));
         break;
       case 'checkOut':
         setIsCheckedIn(false);
-        message.success(`Chấm công ra lúc ${time}`);
+        messageApi.success(t('staff.attendance.messages.checkout_success', { time }));
         break;
       case 'breakStart':
         setIsOnBreak(true);
-        message.success(`Bắt đầu nghỉ giải lao lúc ${time}`);
+        messageApi.success(t('staff.attendance.messages.break_start_success', { time }));
         break;
       case 'breakEnd':
         setIsOnBreak(false);
-        message.success(`Kết thúc nghỉ giải lao lúc ${time}`);
+        messageApi.success(t('staff.attendance.messages.break_end_success', { time }));
         break;
     }
-    
+
     setIsConfirmModalOpen(false);
   };
 
   const getColumns = () => {
     const allColumns = [
       {
-        title: 'Ngày',
+        title: t('staff.attendance.table.date'),
         dataIndex: 'date',
         key: 'date',
         render: (date: string) => {
           const d = new Date(date);
           return (
             <div>
-              <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>{d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</Text>
+              <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>{d.toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit' })}</Text>
               <br />
               <Text type="secondary" style={{ fontSize: isMobile ? 10 : 12 }}>
-                {d.toLocaleDateString('vi-VN', { weekday: 'short' })}
+                {d.toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN', { weekday: 'short' })}
               </Text>
             </div>
           );
         },
       },
       {
-        title: 'Giờ vào',
+        title: t('staff.attendance.table.check_in_time'),
         dataIndex: 'checkIn',
         key: 'checkIn',
         render: (time: string | null) =>
@@ -180,7 +188,7 @@ export default function AttendancePage() {
           ),
       },
       {
-        title: 'Giờ ra',
+        title: t('staff.attendance.table.check_out_time'),
         dataIndex: 'checkOut',
         key: 'checkOut',
         render: (time: string | null) =>
@@ -193,7 +201,7 @@ export default function AttendancePage() {
           ),
       },
       {
-        title: 'Số giờ',
+        title: t('staff.attendance.table.hours'),
         dataIndex: 'totalHours',
         key: 'totalHours',
         hidden: isMobile,
@@ -204,7 +212,7 @@ export default function AttendancePage() {
         ),
       },
       {
-        title: 'Trạng thái',
+        title: t('staff.attendance.table.status'),
         dataIndex: 'status',
         key: 'status',
         render: (status: string) => (
@@ -227,7 +235,7 @@ export default function AttendancePage() {
   const dateCellRender = (value: Dayjs) => {
     const dateStr = value.format('YYYY-MM-DD');
     const record = attendanceHistory.find(r => r.date === dateStr);
-    
+
     if (record) {
       return (
         <Badge
@@ -235,10 +243,10 @@ export default function AttendancePage() {
             record.status === 'present'
               ? 'success'
               : record.status === 'late'
-              ? 'warning'
-              : record.status === 'leave'
-              ? 'processing'
-              : 'error'
+                ? 'warning'
+                : record.status === 'leave'
+                  ? 'processing'
+                  : 'error'
           }
         />
       );
@@ -248,15 +256,15 @@ export default function AttendancePage() {
 
   return (
     <div>
+      {contextHolder}
       {/* Current Time Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+      <div>
         <Card
           style={{
             borderRadius: isMobile ? 16 : 24,
-            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+            background: mode === 'dark'
+              ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
+              : 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
             border: 'none',
             marginBottom: isMobile ? 16 : 24,
             overflow: 'hidden',
@@ -272,7 +280,7 @@ export default function AttendancePage() {
                 <div
                   style={{
                     fontSize: isMobile ? 48 : 72,
-                    fontWeight: 700,
+                    fontWeight: 500,
                     color: '#fff',
                     fontFamily: 'monospace',
                     letterSpacing: isMobile ? 2 : 4,
@@ -281,31 +289,31 @@ export default function AttendancePage() {
                 >
                   {formatTime(currentTime)}
                 </div>
-                
+
                 {isCheckedIn && (
                   <div style={{ marginTop: isMobile ? 12 : 16 }}>
                     <Space size={isMobile ? 16 : 24} wrap>
                       <div>
                         <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 11 : 12 }}>
-                          Giờ vào
+                          {t('staff.attendance.info.check_in_time')}
                         </Text>
                         <br />
-                        <Text style={{ color: '#52c41a', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
+                        <Text style={{ color: '#fff', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
                           {checkInTime}
                         </Text>
                       </div>
                       <div>
                         <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 11 : 12 }}>
-                          Đã làm
+                          {t('staff.attendance.info.worked')}
                         </Text>
                         <br />
-                        <Text style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
+                        <Text style={{ color: '#fff', fontSize: isMobile ? 16 : 18, fontWeight: 600 }}>
                           {calculateWorkingHours().toFixed(1)}h
                         </Text>
                       </div>
                       {isOnBreak && (
-                        <Tag color="orange" style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12 }}>
-                          <CoffeeOutlined /> {isMobile ? 'Nghỉ' : 'Đang nghỉ giải lao'}
+                        <Tag style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12, background: '#fff', color: '#FF380B', border: 'none', fontWeight: 600 }}>
+                          <CoffeeOutlined /> {isMobile ? t('staff.attendance.break') : t('staff.attendance.on_break')}
                         </Tag>
                       )}
                     </Space>
@@ -313,21 +321,20 @@ export default function AttendancePage() {
                 )}
               </div>
             </Col>
-            
+
             <Col xs={24} md={12}>
               <div style={{ textAlign: 'center' }}>
                 {!isCheckedIn ? (
                   <Button
                     type="primary"
                     size="large"
-                    icon={<LoginOutlined />}
                     onClick={() => handleAction('checkIn')}
                     style={{
                       width: isMobile ? 140 : 200,
                       height: isMobile ? 140 : 200,
                       borderRadius: '50%',
                       fontSize: isMobile ? 18 : 24,
-                      fontWeight: 700,
+                      fontWeight: 500,
                       background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
                       border: 'none',
                       boxShadow: '0 8px 32px rgba(82, 196, 26, 0.4)',
@@ -335,11 +342,12 @@ export default function AttendancePage() {
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: 8,
+                      gap: isMobile ? 10 : 12,
+                      padding: 0,
                     }}
                   >
-                    <LoginOutlined style={{ fontSize: isMobile ? 36 : 48 }} />
-                    <span>CHECK IN</span>
+                    <LoginOutlined style={{ fontSize: isMobile ? 40 : 52 }} />
+                    <span style={{ fontSize: isMobile ? 14 : 16, marginTop: 4 }}>{t('staff.attendance.check_in')}</span>
                   </Button>
                 ) : (
                   <Flex vertical gap={isMobile ? 12 : 16} align="center">
@@ -347,26 +355,29 @@ export default function AttendancePage() {
                       type="primary"
                       danger
                       size="large"
-                      icon={<LogoutOutlined />}
                       onClick={() => handleAction('checkOut')}
                       style={{
                         width: isMobile ? 120 : 160,
                         height: isMobile ? 120 : 160,
                         borderRadius: '50%',
                         fontSize: isMobile ? 16 : 20,
-                        fontWeight: 700,
+                        fontWeight: 500,
+                        background: '#ffffff',
+                        color: '#ff4d4f',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: 8,
-                        boxShadow: '0 8px 32px rgba(255, 77, 79, 0.4)',
+                        gap: isMobile ? 10 : 12,
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+                        padding: 0,
+                        border: 'none'
                       }}
                     >
-                      <LogoutOutlined style={{ fontSize: isMobile ? 28 : 36 }} />
-                      <span style={{ fontSize: isMobile ? 14 : 16 }}>CHECK OUT</span>
+                      <LogoutOutlined style={{ fontSize: isMobile ? 32 : 40 }} />
+                      <span style={{ fontSize: isMobile ? 13 : 15, marginTop: 4 }}>{t('staff.attendance.check_out')}</span>
                     </Button>
-                    
+
                     <Button
                       size={isMobile ? 'middle' : 'large'}
                       icon={isOnBreak ? <CheckCircleOutlined /> : <CoffeeOutlined />}
@@ -374,14 +385,15 @@ export default function AttendancePage() {
                       style={{
                         borderRadius: 12,
                         height: isMobile ? 40 : 48,
-                        background: isOnBreak ? '#52c41a' : '#faad14',
-                        color: '#fff',
-                        border: 'none',
+                        background: isOnBreak ? '#ffffff' : 'rgba(255, 255, 255, 0.2)',
+                        color: isOnBreak ? '#52c41a' : '#ffffff',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
                         fontWeight: 600,
                         fontSize: isMobile ? 13 : 14,
+                        backdropFilter: 'blur(5px)',
                       }}
                     >
-                      {isOnBreak ? 'Kết thúc nghỉ' : 'Nghỉ giải lao'}
+                      {isOnBreak ? t('staff.attendance.end_break') : t('staff.attendance.break')}
                     </Button>
                   </Flex>
                 )}
@@ -389,50 +401,82 @@ export default function AttendancePage() {
             </Col>
           </Row>
         </Card>
-      </motion.div>
+      </div>
 
       {/* Stats Cards */}
       <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
+        <Col xs={24} sm={12} md={12} lg={6}>
+          <Card style={{
+            borderRadius: 12,
+            textAlign: 'center',
+            overflow: 'hidden',
+            border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+            boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.2s ease',
+            background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+          }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Ngày công</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Ngày công</span>}
               value={monthlyStats.workedDays}
               suffix={`/${monthlyStats.totalDays}`}
-              styles={{ content: { color: '#52c41a', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
+              styles={{ content: { color: '#52c41a', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
               prefix={<CalendarOutlined />}
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
+        <Col xs={24} sm={12} md={12} lg={6}>
+          <Card style={{
+            borderRadius: 12,
+            textAlign: 'center',
+            overflow: 'hidden',
+            border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+            boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.2s ease',
+            background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+          }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Đi muộn</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Đi muộn</span>}
               value={monthlyStats.lateDays}
               suffix="ngày"
-              styles={{ content: { color: '#faad14', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
+              styles={{ content: { color: '#faad14', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
               prefix={<ClockCircleOutlined />}
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
+        <Col xs={24} sm={12} md={12} lg={6}>
+          <Card style={{
+            borderRadius: 12,
+            textAlign: 'center',
+            overflow: 'hidden',
+            border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+            boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.2s ease',
+            background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+          }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Nghỉ phép</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Nghỉ phép</span>}
               value={monthlyStats.leaveDays}
               suffix="ngày"
-              styles={{ content: { color: '#1890ff', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
+              styles={{ content: { color: '#1890ff', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
               prefix={<HistoryOutlined />}
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: isMobile ? 12 : 16, textAlign: 'center' }} styles={{ body: { padding: isMobile ? 12 : 24 } }}>
+        <Col xs={24} sm={12} md={12} lg={6}>
+          <Card style={{
+            borderRadius: 12,
+            textAlign: 'center',
+            overflow: 'hidden',
+            border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+            boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.2s ease',
+            background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+          }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>Tổng giờ làm</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Tổng giờ làm</span>}
               value={monthlyStats.totalHours}
               suffix="h"
-              styles={{ content: { color: '#FF7A00', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
+              styles={{ content: { color: '#FF380B', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
               prefix={<FieldTimeOutlined />}
             />
           </Card>
@@ -441,16 +485,22 @@ export default function AttendancePage() {
 
       <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]}>
         {/* Attendance History */}
-        <Col xs={24} lg={14}>
+        <Col xs={24} md={24} lg={14}>
           <Card
             title={
               <Space>
-                <HistoryOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18 }} />
-                <span style={{ fontSize: isMobile ? 14 : 16 }}>Lịch sử chấm công</span>
+                <HistoryOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18 }} />
+                <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.attendance.history.title')}</span>
               </Space>
             }
-            style={{ borderRadius: isMobile ? 12 : 16 }}
-            styles={{ body: { padding: isMobile ? 8 : 24 } }}
+            style={{
+              borderRadius: 12,
+              overflow: 'hidden',
+              border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+              boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+              background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+            }}
+            styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}
           >
             <Table
               columns={getColumns()}
@@ -468,16 +518,23 @@ export default function AttendancePage() {
           <Card
             title={
               <Space>
-                <TrophyOutlined style={{ color: '#FF7A00', fontSize: isMobile ? 16 : 18 }} />
-                <span style={{ fontSize: isMobile ? 14 : 16 }}>Tiến độ tháng này</span>
+                <TrophyOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18 }} />
+                <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.attendance.history.progress')}</span>
               </Space>
             }
-            style={{ borderRadius: isMobile ? 12 : 16, marginBottom: isMobile ? 12 : 24 }}
+            style={{
+              borderRadius: 12,
+              marginBottom: isMobile ? 12 : 24,
+              overflow: 'hidden',
+              border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+              boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+              background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+            }}
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
             <div style={{ marginBottom: isMobile ? 16 : 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text style={{ fontSize: isMobile ? 13 : 14 }}>Ngày công</Text>
+                <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.attendance.stats.worked_days')}</Text>
                 <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>
                   {monthlyStats.workedDays}/{monthlyStats.totalDays}
                 </Text>
@@ -492,14 +549,14 @@ export default function AttendancePage() {
 
             <div style={{ marginBottom: isMobile ? 16 : 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text style={{ fontSize: isMobile ? 13 : 14 }}>Giờ làm việc</Text>
+                <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.attendance.history.working_hours')}</Text>
                 <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>
                   {monthlyStats.totalHours}/{monthlyStats.totalDays * 8}h
                 </Text>
               </div>
               <Progress
                 percent={Number(((monthlyStats.totalHours / (monthlyStats.totalDays * 8)) * 100).toFixed(1))}
-                strokeColor="#FF7A00"
+                strokeColor="#FF380B"
                 railColor="var(--border)"
                 format={(p) => `${p?.toFixed(1)}%`}
               />
@@ -509,7 +566,7 @@ export default function AttendancePage() {
 
             <div>
               <Text strong style={{ display: 'block', marginBottom: isMobile ? 8 : 12, fontSize: isMobile ? 13 : 14 }}>
-                Hôm nay
+                {t('staff.attendance.history.today')}
               </Text>
               <Timeline
                 items={[
@@ -517,7 +574,7 @@ export default function AttendancePage() {
                     color: 'green',
                     content: (
                       <>
-                        <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>07:58</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- Check in</Text>
+                        <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>07:58</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- {t('staff.attendance.timeline.check_in')}</Text>
                       </>
                     ),
                   },
@@ -525,7 +582,7 @@ export default function AttendancePage() {
                     color: 'orange',
                     content: (
                       <>
-                        <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>12:00</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- Nghỉ trưa</Text>
+                        <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>12:00</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- {t('staff.attendance.timeline.lunch_break')}</Text>
                       </>
                     ),
                   },
@@ -533,7 +590,7 @@ export default function AttendancePage() {
                     color: 'green',
                     content: (
                       <>
-                        <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>13:00</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- Tiếp tục làm việc</Text>
+                        <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>13:00</Text> <Text style={{ fontSize: isMobile ? 12 : 14 }}>- {t('staff.attendance.timeline.resume_work')}</Text>
                       </>
                     ),
                   },
@@ -541,7 +598,7 @@ export default function AttendancePage() {
                     color: 'gray',
                     content: (
                       <>
-                        <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>Đang làm việc...</Text>
+                        <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>{t('staff.attendance.timeline.working')}</Text>
                       </>
                     ),
                   },
@@ -553,9 +610,9 @@ export default function AttendancePage() {
           {/* Quick Info */}
           <Card
             style={{
-              borderRadius: isMobile ? 12 : 16,
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
+              borderRadius: 12,
+              background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
+              border: mode === 'dark' ? '1px solid var(--border)' : '1px solid #E5E7EB',
             }}
             styles={{ body: { padding: isMobile ? 14 : 24 } }}
           >
@@ -563,7 +620,7 @@ export default function AttendancePage() {
               <Avatar
                 size={isMobile ? 40 : 48}
                 style={{
-                  background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                  background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                 }}
               >
                 <UserOutlined />
@@ -571,7 +628,7 @@ export default function AttendancePage() {
               <div>
                 <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>Nguyễn Văn A</Text>
                 <br />
-                <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>Nhân viên phục vụ • Ca sáng (8:00 - 17:00)</Text>
+                <Text type="secondary" style={{ fontSize: isMobile ? 11 : 14 }}>{t('staff.attendance.info.staff_info')}</Text>
               </div>
             </Space>
           </Card>
@@ -580,21 +637,35 @@ export default function AttendancePage() {
 
       {/* Confirm Modal */}
       <Modal
-        title="Xác nhận"
+        title={t('staff.attendance.modal.confirm')}
         open={isConfirmModalOpen}
         onCancel={() => setIsConfirmModalOpen(false)}
         onOk={confirmAction}
-        okText="Xác nhận"
-        cancelText="Hủy"
+        okText={t('staff.attendance.modal.ok')}
+        cancelText={t('staff.attendance.modal.cancel')}
         centered
         width={isMobile ? '90%' : 400}
-        style={{ backgroundColor: '#0A0E14', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+        style={{
+          backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
+          border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
+          borderRadius: 12,
+        }}
         styles={{
-          header: { backgroundColor: '#0A0E14', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' },
-          body: { backgroundColor: '#0A0E14' },
-          footer: { backgroundColor: '#0A0E14', borderTop: '1px solid rgba(255, 255, 255, 0.08)' },
+          header: {
+            backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.2)' : '1px solid #E5E7EB',
+            borderRadius: '12px 12px 0 0',
+            padding: '16px 24px',
+            paddingRight: '56px',
+          },
+          body: { backgroundColor: mode === 'dark' ? '#0A0E14' : '#FFFFFF' },
+          footer: {
+            backgroundColor: mode === 'dark' ? '#0A0E14' : '#FFFFFF',
+            borderTop: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
+            borderRadius: '0 0 12px 12px',
+          },
           mask: {
-            background: 'rgba(0, 0, 0, 0.92)',
+            background: mode === 'dark' ? 'rgba(0, 0, 0, 0.92)' : 'rgba(0, 0, 0, 0.45)',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
             filter: 'none',
@@ -611,8 +682,8 @@ export default function AttendancePage() {
                 actionType === 'checkOut'
                   ? '#ff4d4f'
                   : actionType === 'breakStart'
-                  ? '#faad14'
-                  : '#52c41a',
+                    ? '#FF380B'
+                    : '#52c41a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -625,16 +696,48 @@ export default function AttendancePage() {
             {actionType === 'breakEnd' && <CheckCircleOutlined style={{ fontSize: isMobile ? 28 : 36, color: '#fff' }} />}
           </div>
           <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>
-            {actionType === 'checkIn' && 'Xác nhận CHECK IN?'}
-            {actionType === 'checkOut' && 'Xác nhận CHECK OUT?'}
-            {actionType === 'breakStart' && 'Bắt đầu nghỉ giải lao?'}
-            {actionType === 'breakEnd' && 'Kết thúc nghỉ giải lao?'}
+            {actionType === 'checkIn' && t('staff.attendance.modal.confirm_checkin')}
+            {actionType === 'checkOut' && t('staff.attendance.modal.confirm_checkout')}
+            {actionType === 'breakStart' && t('staff.attendance.modal.start_break')}
+            {actionType === 'breakEnd' && t('staff.attendance.modal.end_break')}
           </Title>
           <Text type="secondary" style={{ fontSize: isMobile ? 13 : 14 }}>
-            Thời gian: {formatTime(currentTime)}
+            {t('staff.attendance.modal.time')}: {formatTime(currentTime)}
           </Text>
         </div>
       </Modal>
+
+      <style jsx global>{`
+        /* Modal border radius */
+        .ant-modal-content {
+          border-radius: 12px !important;
+          overflow: hidden !important;
+        }
+        
+        /* Modal close button positioning - inside header */
+        .ant-modal-close {
+          top: 16px !important;
+          right: 20px !important;
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: 8px !important;
+          background: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'} !important;
+          transition: all 0.2s ease !important;
+        }
+        .ant-modal-close:hover {
+          background: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'} !important;
+        }
+        .ant-modal-close-x {
+          width: 32px !important;
+          height: 32px !important;
+          line-height: 32px !important;
+          font-size: 16px !important;
+          color: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.65)'} !important;
+        }
+        .ant-modal-close:hover .ant-modal-close-x {
+          color: ${mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.85)'} !important;
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import ThemeToggle from "@/app/components/ThemeToggle";
-import RevenueChart from "@/components/dashboard/charts/RevenueChart";
+import RevenueChart from "@/components/admin/charts/RevenueChart";
 import {
   CheckCircleOutlined,
   MoreOutlined,
@@ -47,16 +47,96 @@ interface ITenant {
 
 // --- MOCK DATA ---
 const MOCK_DATA: ITenant[] = [
-  { id: "t-001", name: "KFC Da Nang", slug: "kfc-danang", ownerEmail: "ops.danang@kfc.com", plan: "enterprise", status: "active", lastActive: "2025-01-10T09:15:00Z" },
-  { id: "t-002", name: "Pizza Hut Hanoi", slug: "pizzahut-hanoi", ownerEmail: "owner@pizzahut.vn", plan: "pro", status: "active", lastActive: "2025-01-09T14:25:00Z" },
-  { id: "t-003", name: "Highlands Coffee HCMC", slug: "highlands-hcmc", ownerEmail: "franchise@highlands.vn", plan: "enterprise", status: "maintenance", lastActive: "2025-01-08T05:45:00Z" },
-  { id: "t-004", name: "Jollibee Hue", slug: "jollibee-hue", ownerEmail: "contact@jollibee.vn", plan: "basic", status: "inactive", lastActive: "2024-12-20T11:00:00Z" },
-  { id: "t-005", name: "Lotteria Da Lat", slug: "lotteria-dalat", ownerEmail: "dalat@lotteria.vn", plan: "pro", status: "active", lastActive: "2025-01-07T07:10:00Z" },
-  { id: "t-006", name: "Starbucks District 1", slug: "starbucks-d1", ownerEmail: "d1@starbucks.vn", plan: "enterprise", status: "active", lastActive: "2025-01-11T10:00:00Z" },
-  { id: "t-007", name: "TocoToco Hai Phong", slug: "tocotoco-haiphong", ownerEmail: "hp@tocotoco.vn", plan: "basic", status: "inactive", lastActive: "2024-12-18T16:30:00Z" },
-  { id: "t-008", name: "The Coffee House Nha Trang", slug: "tch-nhatrang", ownerEmail: "nhatrang@coffeehouse.vn", plan: "pro", status: "maintenance", lastActive: "2025-01-05T12:05:00Z" },
-  { id: "t-009", name: "Phuc Long Thu Duc", slug: "phuclong-thuduc", ownerEmail: "thuduc@phuclong.vn", plan: "pro", status: "active", lastActive: "2025-01-10T21:40:00Z" },
-  { id: "t-010", name: "Texas Chicken Da Nang", slug: "texas-danang", ownerEmail: "texas.dn@texaschicken.vn", plan: "basic", status: "active", lastActive: "2025-01-06T09:55:00Z" },
+  {
+    id: "t-001",
+    name: "KFC Da Nang",
+    slug: "kfc-danang",
+    ownerEmail: "ops.danang@kfc.com",
+    plan: "enterprise",
+    status: "active",
+    lastActive: "2025-01-10T09:15:00Z",
+  },
+  {
+    id: "t-002",
+    name: "Pizza Hut Hanoi",
+    slug: "pizzahut-hanoi",
+    ownerEmail: "owner@pizzahut.vn",
+    plan: "pro",
+    status: "active",
+    lastActive: "2025-01-09T14:25:00Z",
+  },
+  {
+    id: "t-003",
+    name: "Highlands Coffee HCMC",
+    slug: "highlands-hcmc",
+    ownerEmail: "franchise@highlands.vn",
+    plan: "enterprise",
+    status: "maintenance",
+    lastActive: "2025-01-08T05:45:00Z",
+  },
+  {
+    id: "t-004",
+    name: "Jollibee Hue",
+    slug: "jollibee-hue",
+    ownerEmail: "contact@jollibee.vn",
+    plan: "basic",
+    status: "inactive",
+    lastActive: "2024-12-20T11:00:00Z",
+  },
+  {
+    id: "t-005",
+    name: "Lotteria Da Lat",
+    slug: "lotteria-dalat",
+    ownerEmail: "dalat@lotteria.vn",
+    plan: "pro",
+    status: "active",
+    lastActive: "2025-01-07T07:10:00Z",
+  },
+  {
+    id: "t-006",
+    name: "Starbucks District 1",
+    slug: "starbucks-d1",
+    ownerEmail: "d1@starbucks.vn",
+    plan: "enterprise",
+    status: "active",
+    lastActive: "2025-01-11T10:00:00Z",
+  },
+  {
+    id: "t-007",
+    name: "TocoToco Hai Phong",
+    slug: "tocotoco-haiphong",
+    ownerEmail: "hp@tocotoco.vn",
+    plan: "basic",
+    status: "inactive",
+    lastActive: "2024-12-18T16:30:00Z",
+  },
+  {
+    id: "t-008",
+    name: "The Coffee House Nha Trang",
+    slug: "tch-nhatrang",
+    ownerEmail: "nhatrang@coffeehouse.vn",
+    plan: "pro",
+    status: "maintenance",
+    lastActive: "2025-01-05T12:05:00Z",
+  },
+  {
+    id: "t-009",
+    name: "Phuc Long Thu Duc",
+    slug: "phuclong-thuduc",
+    ownerEmail: "thuduc@phuclong.vn",
+    plan: "pro",
+    status: "active",
+    lastActive: "2025-01-10T21:40:00Z",
+  },
+  {
+    id: "t-010",
+    name: "Texas Chicken Da Nang",
+    slug: "texas-danang",
+    ownerEmail: "texas.dn@texaschicken.vn",
+    plan: "basic",
+    status: "active",
+    lastActive: "2025-01-06T09:55:00Z",
+  },
 ];
 
 const STATUS_OPTIONS = [
@@ -72,15 +152,36 @@ const STATUS_OPTIONS = [
 const StatusPill = ({ status }: { status: ITenant["status"] }) => {
   // Using rgba colors for better dark mode blending
   const config = {
-    active: { color: "text-emerald-400", bg: "bg-emerald-900/30", border: "border-emerald-800/50", text: "Active", dot: "bg-emerald-500" },
-    inactive: { color: "text-rose-400", bg: "bg-rose-900/30", border: "border-rose-800/50", text: "Inactive", dot: "bg-rose-500" },
-    maintenance: { color: "text-orange-400", bg: "bg-orange-900/30", border: "border-orange-800/50", text: "Maintenance", dot: "bg-orange-500" },
+    active: {
+      color: "text-emerald-400",
+      bg: "bg-emerald-900/30",
+      border: "border-emerald-800/50",
+      text: "Active",
+      dot: "bg-emerald-500",
+    },
+    inactive: {
+      color: "text-rose-400",
+      bg: "bg-rose-900/30",
+      border: "border-rose-800/50",
+      text: "Inactive",
+      dot: "bg-rose-500",
+    },
+    maintenance: {
+      color: "text-[#FF6B3B]",
+      bg: "bg-[#CC2D08]/30",
+      border: "border-[#CC2D08]/50",
+      text: "Maintenance",
+      dot: "bg-[#FF380B]",
+    },
   };
   const style = config[status];
 
   return (
-    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full border ${style.bg} ${style.border}`}>
-      <span className={`w-1.5 h-1.5 rounded-full mr-2 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${style.dot}`} />
+    <div
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full border ${style.bg} ${style.border}`}>
+      <span
+        className={`w-1.5 h-1.5 rounded-full mr-2 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${style.dot}`}
+      />
       <span className={`text-xs font-medium ${style.color}`}>{style.text}</span>
     </div>
   );
@@ -118,10 +219,10 @@ const TenantPage: React.FC = () => {
 
   const stats = useMemo(() => {
     return {
-        total: MOCK_DATA.length,
-        active: MOCK_DATA.filter(t => t.status === 'active').length,
-        maintenance: MOCK_DATA.filter(t => t.status === 'maintenance').length
-    }
+      total: MOCK_DATA.length,
+      active: MOCK_DATA.filter((t) => t.status === "active").length,
+      maintenance: MOCK_DATA.filter((t) => t.status === "maintenance").length,
+    };
   }, []);
 
   const handleRefresh = () => {
@@ -132,7 +233,10 @@ const TenantPage: React.FC = () => {
     { key: "view", label: "View Details" },
     { key: "domain", label: "Configure Domain" },
     { type: "divider" },
-    { key: "suspend", label: <span className="text-red-500">Suspend Tenant</span> },
+    {
+      key: "suspend",
+      label: <span className="text-red-500">Suspend Tenant</span>,
+    },
   ];
 
   const columns: ColumnsType<ITenant> = [
@@ -146,21 +250,18 @@ const TenantPage: React.FC = () => {
           <Avatar
             shape="square"
             size="large"
-            className="shadow-sm rounded-lg bg-orange-600 text-white"
-          >
+            className="shadow-sm rounded-lg bg-[#FF380B] text-white">
             {record.name.charAt(0)}
           </Avatar>
           <div className="flex flex-col">
             <span
               className="font-semibold text-sm"
-              style={{ color: "var(--text)" }}
-            >
+              style={{ color: "var(--text)" }}>
               {record.name}
             </span>
             <span
               className="text-xs font-mono"
-              style={{ color: "var(--text-muted)" }}
-            >
+              style={{ color: "var(--text-muted)" }}>
               {record.slug}.restx.food
             </span>
           </div>
@@ -177,19 +278,14 @@ const TenantPage: React.FC = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (value: ITenant["status"]) => (
-        <TenantStatusPill status={value} />
-      ),
+      render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
     },
     {
       title: "Owner Info",
       dataIndex: "ownerEmail",
       key: "ownerEmail",
       render: (email) => (
-        <span
-          className="text-sm"
-          style={{ color: "var(--text-muted)" }}
-        >
+        <span className="text-sm" style={{ color: "var(--text-muted)" }}>
           {email}
         </span>
       ),
@@ -201,8 +297,7 @@ const TenantPage: React.FC = () => {
       render: (value: string) => (
         <span
           className="text-sm font-variant-numeric tabular-nums"
-          style={{ color: "var(--text-muted)" }}
-        >
+          style={{ color: "var(--text-muted)" }}>
           {formatDate(value)}
         </span>
       ),
@@ -215,8 +310,7 @@ const TenantPage: React.FC = () => {
         <Dropdown
           menu={{ items: menuItems }}
           trigger={["click"]}
-          placement="bottomRight"
-        >
+          placement="bottomRight">
           <Button
             type="text"
             shape="circle"
@@ -230,12 +324,10 @@ const TenantPage: React.FC = () => {
   return (
     <div
       className="min-h-screen"
-      style={{ background: "var(--bg-base)", color: "var(--text)" }}
-    >
+      style={{ background: "var(--bg-base)", color: "var(--text)" }}>
       <main
         className="px-6 lg:px-8 py-8"
-        style={{ background: "var(--bg-base)", color: "var(--text)" }}
-      >
+        style={{ background: "var(--bg-base)", color: "var(--text)" }}>
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Top header + theme toggle */}
           <div className="flex items-start justify-between gap-4">
@@ -252,9 +344,8 @@ const TenantPage: React.FC = () => {
                   fontWeight: 700,
                   letterSpacing: "-0.5px",
                   color: "var(--text)",
-                }}
-              >
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
+                }}>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B3B] to-red-500">
                   Tenant Management
                 </span>
               </Typography.Title>
@@ -263,9 +354,9 @@ const TenantPage: React.FC = () => {
                   marginTop: 4,
                   marginBottom: 0,
                   color: "var(--text-muted)",
-                }}
-              >
-                Manage restaurants in the RestX system, track tenant count and total system revenue.
+                }}>
+                Manage restaurants in the RestX system, track tenant count and
+                total system revenue.
               </Typography.Paragraph>
             </div>
 
@@ -276,8 +367,7 @@ const TenantPage: React.FC = () => {
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
-                  className="shadow-orange-900/20 shadow-lg border-none"
-                >
+                  className="shadow-orange-900/20 shadow-lg border-none">
                   Add Tenant
                 </Button>
               </Link>
@@ -292,19 +382,17 @@ const TenantPage: React.FC = () => {
               style={{
                 background: "var(--card)",
                 borderColor: "var(--border)",
-              }}
-            >
+              }}>
               <Statistic
                 title={
                   <span
                     className="font-medium"
-                    style={{ color: "var(--text-muted)" }}
-                  >
+                    style={{ color: "var(--text-muted)" }}>
                     Total Tenants
                   </span>
                 }
                 value={stats.total}
-                prefix={<ShopOutlined style={{ color: "#f97316" }} />}
+                prefix={<ShopOutlined style={{ color: "#FF380B" }} />}
                 valueStyle={{ color: "var(--text)" }}
               />
             </Card>
@@ -315,14 +403,12 @@ const TenantPage: React.FC = () => {
               style={{
                 background: "var(--card)",
                 borderColor: "var(--border)",
-              }}
-            >
+              }}>
               <Statistic
                 title={
                   <span
                     className="font-medium"
-                    style={{ color: "var(--text-muted)" }}
-                  >
+                    style={{ color: "var(--text-muted)" }}>
                     Active Tenants
                   </span>
                 }
@@ -338,23 +424,19 @@ const TenantPage: React.FC = () => {
               style={{
                 background: "var(--card)",
                 borderColor: "var(--border)",
-              }}
-            >
+              }}>
               <Statistic
                 title={
                   <span
                     className="font-medium"
-                    style={{ color: "var(--text-muted)" }}
-                  >
+                    style={{ color: "var(--text-muted)" }}>
                     Monthly Revenue (mock)
                   </span>
                 }
                 value={125_000_000}
                 precision={0}
                 prefix={
-                  <RiseOutlined
-                    style={{ color: "#60a5fa", marginRight: 4 }}
-                  />
+                  <RiseOutlined style={{ color: "#60a5fa", marginRight: 4 }} />
                 }
                 valueStyle={{ color: "#60a5fa" }}
                 suffix="₫"
@@ -377,16 +459,14 @@ const TenantPage: React.FC = () => {
                     style={{
                       background: "var(--card)",
                       borderColor: "var(--border)",
-                    }}
-                  >
+                    }}>
                     {/* Filter Bar */}
                     <div
                       className="p-5 flex flex-col md:flex-row gap-4 justify-between"
                       style={{
                         borderBottom: "1px solid var(--border)",
                         background: "var(--card)",
-                      }}
-                    >
+                      }}>
                       <div className="flex flex-1 gap-3 max-w-2xl">
                         <Input
                           size="large"
@@ -412,8 +492,7 @@ const TenantPage: React.FC = () => {
                         icon={<ReloadOutlined />}
                         onClick={handleRefresh}
                         size="large"
-                        type="text"
-                      >
+                        type="text">
                         Refresh
                       </Button>
                     </div>
@@ -447,8 +526,7 @@ const TenantPage: React.FC = () => {
                       style={{
                         background: "var(--card)",
                         borderColor: "var(--border)",
-                      }}
-                    >
+                      }}>
                       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <div>
                           <Typography.Title
@@ -456,13 +534,11 @@ const TenantPage: React.FC = () => {
                             style={{
                               margin: 0,
                               color: "var(--text)",
-                            }}
-                          >
+                            }}>
                             Total System Revenue
                           </Typography.Title>
                           <Typography.Text
-                            style={{ color: "var(--text-muted)" }}
-                          >
+                            style={{ color: "var(--text-muted)" }}>
                             View revenue trends by day / week / month / year.
                           </Typography.Text>
                         </div>

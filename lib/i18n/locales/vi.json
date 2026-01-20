@@ -1,0 +1,826 @@
+{
+  "staff": {
+    "dashboard": {
+      "greeting": {
+        "morning": "Chào buổi sáng",
+        "afternoon": "Chào buổi chiều",
+        "evening": "Chào buổi tối"
+      },
+      "welcome_message": "Bạn đang có <1>{{orders}} order</1> cần xử lý và <3>{{tables}} bàn</3> đang phục vụ.",
+      "live_status": {
+        "dishes_ready": "món sẵn sàng",
+        "tables_payment": "bàn cần thanh toán"
+      },
+      "actions": {
+        "view_schedule": "Xem lịch làm việc",
+        "create_order": "Tạo Order mới",
+        "view_table_map": "Xem sơ đồ bàn",
+        "quick_actions": "Thao tác nhanh",
+        "refresh_data": "Làm mới dữ liệu"
+      },
+      "stats": {
+        "serving_tables": "Bàn đang phục vụ",
+        "processing_orders": "Order đang xử lý",
+        "today_revenue": "Doanh thu hôm nay",
+        "today_hours": "Giờ làm hôm nay",
+        "orders_suffix": "đơn",
+        "hours_suffix": "giờ"
+      },
+      "recent_orders": {
+        "title": "Order gần đây",
+        "processing_count": "{{count}} đang xử lý",
+        "view_all": "Xem tất cả"
+      },
+      "table_status": {
+        "title": "Tình trạng bàn",
+        "vacant": "Trống",
+        "occupied": "Đang dùng"
+      },
+      "quick_action_items": {
+        "open_table": "Mở bàn",
+        "create_order": "Tạo order",
+        "checkout": "Thanh toán",
+        "attendance": "Chấm công"
+      }
+    },
+    "orders": {
+      "title": "Quản lý đơn hàng",
+      "search": {
+        "placeholder": "Tìm order...",
+        "placeholder_full": "Tìm theo mã order hoặc tên bàn..."
+      },
+      "create_order": "Tạo Order mới",
+      "create_order_short": "Tạo Order",
+      "stats": {
+        "pending": "Chờ xử lý",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng",
+        "pending_items": "món chưa xong",
+        "no_orders": "Không có order nào"
+      },
+      "tabs": {
+        "all": "Tất cả",
+        "pending": "Chờ xử lý",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng"
+      },
+      "order": {
+        "table": "Bàn",
+        "time": "Thời gian",
+        "status": "Trạng thái",
+        "total": "Tổng cộng",
+        "other_items": "món khác",
+        "items_not_done": "chưa xong"
+      },
+      "status": {
+        "pending": "Chờ xử lý",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng",
+        "served": "Đã phục vụ",
+        "cancelled": "Đã hủy"
+      },
+      "item_status": {
+        "pending": "Chờ",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng",
+        "served": "Đã phục vụ"
+      },
+      "modal": {
+        "order_detail": "Chi tiết Order",
+        "new_order": "Tạo Order mới",
+        "cart": "Giỏ hàng",
+        "select_table": "Chọn bàn",
+        "no_items": "Chưa có món nào",
+        "print": "In hóa đơn",
+        "print_short": "In",
+        "add_item": "Thêm món",
+        "send_to_kitchen": "Gửi bếp"
+      },
+      "menu": {
+        "appetizer": "Khai vị",
+        "main": "Món chính",
+        "drink": "Đồ uống"
+      },
+      "messages": {
+        "select_table_and_items": "Vui lòng chọn bàn và thêm món",
+        "order_created": "Đã tạo order mới",
+        "status_updated": "Đã cập nhật trạng thái món"
+      }
+    },
+    "tables": {
+      "title": "Quản lý bàn",
+      "status": {
+        "available": "Trống",
+        "occupied": "Đang dùng",
+        "reserved": "Đã đặt",
+        "cleaning": "Đang dọn"
+      },
+      "zones": {
+        "all": "Tất cả",
+        "zone_a": "Khu A",
+        "zone_b": "Khu B",
+        "zone_vip": "Khu VIP"
+      },
+      "table": {
+        "seats": "chỗ",
+        "guests": "khách",
+        "dishes": "món",
+        "from": "Từ",
+        "booked_at": "Đặt lúc",
+        "capacity": "Sức chứa"
+      },
+      "modal": {
+        "detail": "Chi tiết",
+        "open_table": "Mở bàn mới",
+        "zone": "Khu vực",
+        "guests_count": "Số lượng khách",
+        "start_time": "Bắt đầu",
+        "total_amount": "Tổng tiền",
+        "reservation_name": "Khách đặt",
+        "reservation_time": "Thời gian đặt",
+        "phone": "Số điện thoại",
+        "confirm_open": "Xác nhận mở bàn"
+      },
+      "actions": {
+        "open_table": "Mở bàn",
+        "add_dish": "Thêm món",
+        "transfer_table": "Chuyển bàn",
+        "checkout": "Thanh toán",
+        "close_table": "Đóng bàn",
+        "guest_arrived": "Khách đã đến - Mở bàn",
+        "edit_reservation": "Sửa thông tin đặt bàn",
+        "finish_cleaning": "Hoàn thành dọn dẹp"
+      },
+      "messages": {
+        "table_opened": "Đã mở {table} với {guests} khách",
+        "table_closed": "Đã đóng {table}",
+        "table_ready": "{table} đã sẵn sàng",
+        "enter_guests": "Vui lòng nhập số khách",
+        "max_guests": "Tối đa {capacity} khách"
+      }
+    },
+    "menu": {
+      "dashboard": "Tổng quan",
+      "tables": "Quản lý bàn",
+      "tables_short": "Bàn",
+      "orders": "Quản lý Order",
+      "orders_short": "Order",
+      "checkout": "Thanh toán",
+      "attendance": "Chấm công"
+    },
+    "user_menu": {
+      "profile": "Thông tin cá nhân",
+      "settings": "Cài đặt",
+      "logout": "Đăng xuất"
+    },
+    "sidebar": {
+      "staff_role": "Nhân viên phục vụ",
+      "working": "Đang làm việc",
+      "started": "Bắt đầu",
+      "today": "Hôm nay"
+    },
+    "checkout": {
+      "title": "Thanh toán",
+      "stats": {
+        "total_pending": "Tổng tiền chờ thanh toán",
+        "tables_pending": "Bàn chờ thanh toán",
+        "paid": "Đã thanh toán"
+      },
+      "search": {
+        "placeholder": "Tìm bàn hoặc hóa đơn...",
+        "placeholder_full": "Tìm theo tên bàn hoặc mã hóa đơn..."
+      },
+      "bill": {
+        "guests": "khách",
+        "dishes": "món",
+        "portions": "phần",
+        "total_payment": "Tổng thanh toán",
+        "pay": "Thanh toán"
+      },
+      "payment": {
+        "title": "Thanh toán",
+        "bill_detail": "Chi tiết hóa đơn",
+        "payment_method": "Phương thức thanh toán",
+        "cash_received": "Tiền khách đưa",
+        "change": "Tiền thừa",
+        "subtotal": "Tạm tính",
+        "discount": "Giảm giá",
+        "vat": "VAT (10%)",
+        "total": "Tổng cộng",
+        "confirm": "Xác nhận thanh toán",
+        "scan_qr": "Quét mã QR để thanh toán",
+        "success": "Thanh toán thành công!",
+        "bill": "Hóa đơn",
+        "complete": "Hoàn tất"
+      },
+      "methods": {
+        "cash": "Tiền mặt",
+        "card": "Thẻ ngân hàng",
+        "transfer": "Chuyển khoản",
+        "momo": "MoMo"
+      },
+      "messages": {
+        "insufficient_cash": "Số tiền nhận chưa đủ",
+        "payment_success": "Thanh toán thành công!"
+      }
+    },
+    "attendance": {
+      "title": "Chấm công",
+      "check_in": "CHẤM CÔNG VÀO",
+      "check_out": "CHẤM CÔNG RA",
+      "break": "Nghỉ giải lao",
+      "on_break": "Đang nghỉ giải lao",
+      "end_break": "Kết thúc nghỉ",
+      "stats": {
+        "worked_days": "Ngày công",
+        "late_days": "Đi muộn",
+        "leave_days": "Nghỉ phép",
+        "total_hours": "Tổng giờ làm"
+      },
+      "table": {
+        "date": "Ngày",
+        "check_in_time": "Giờ vào",
+        "check_out_time": "Giờ ra",
+        "hours": "Số giờ",
+        "status": "Trạng thái"
+      },
+      "status": {
+        "present": "Đúng giờ",
+        "late": "Đi muộn",
+        "absent": "Vắng mặt",
+        "leave": "Nghỉ phép"
+      },
+      "history": {
+        "title": "Lịch sử chấm công",
+        "progress": "Tiến độ tháng này",
+        "today": "Hôm nay",
+        "working_hours": "Giờ làm việc"
+      },
+      "timeline": {
+        "check_in": "Check in",
+        "lunch_break": "Nghỉ trưa",
+        "resume_work": "Tiếp tục làm việc",
+        "working": "Đang làm việc..."
+      },
+      "modal": {
+        "confirm": "Xác nhận",
+        "confirm_checkin": "Xác nhận CHẤM CÔNG VÀO?",
+        "confirm_checkout": "Xác nhận CHẤM CÔNG RA?",
+        "start_break": "Bắt đầu nghỉ giải lao?",
+        "end_break": "Kết thúc nghỉ giải lao?",
+        "time": "Thời gian",
+        "ok": "Xác nhận",
+        "cancel": "Hủy"
+      },
+      "info": {
+        "check_in_time": "Giờ vào",
+        "worked": "Đã làm",
+        "staff_info": "Nhân viên phục vụ • Ca sáng (8:00 - 17:00)"
+      },
+      "messages": {
+        "checkin_success": "Chấm công vào lúc {time}",
+        "checkout_success": "Chấm công ra lúc {time}",
+        "break_start_success": "Bắt đầu nghỉ giải lao lúc {time}",
+        "break_end_success": "Kết thúc nghỉ giải lao lúc {time}"
+      }
+    }
+  },
+  "dashboard": {
+    "kpi": {
+      "bookings": "Đặt bàn hôm nay",
+      "bookings_subtitle": "{{count}} chờ xác nhận",
+      "available_tables": "Bàn trống",
+      "available_tables_subtitle": "VIP: {{vip}}, Trong nhà: {{indoor}}, Ngoài trời: {{outdoor}}",
+      "revenue": "Doanh thu hôm nay",
+      "revenue_target": "Mục tiêu: {{target}}",
+      "active_orders": "Đơn hàng đang xử lý",
+      "active_orders_subtitle": "{{waiting}} chờ, {{progress}} đang làm",
+      "top_dish": "Món ăn bán chạy nhất",
+      "top_dish_subtitle": "{{count}} đơn hôm nay",
+      "kitchen_status": "Trạng thái bếp",
+      "kitchen_queue": "{{count}} đơn hàng đợi",
+      "status_busy": "Bận",
+      "status_normal": "Bình thường"
+    },
+    "quick_actions": {
+      "title": "Thao tác nhanh",
+      "subtitle": "Các phím tắt thường dùng",
+      "add_table": "Thêm bàn",
+      "add_table_desc": "Tạo bàn mới",
+      "add_dish": "Thêm món",
+      "add_dish_desc": "Thêm vào thực đơn",
+      "add_staff": "Thêm nhân viên",
+      "add_staff_desc": "Nhân viên mới",
+      "view_bookings": "Xem đặt bàn",
+      "view_bookings_desc": "Tất cả đặt bàn",
+      "inventory": "Kho hàng",
+      "inventory_desc": "Quản lý kho",
+      "reports": "Báo cáo",
+      "reports_desc": "Phân tích & dữ liệu"
+    },
+    "table_status": {
+      "title": "Trạng thái bàn thời gian thực",
+      "subtitle": "Tổng quan sơ đồ bàn",
+      "areas": {
+        "vip": "Khu vực VIP",
+        "indoor": "Trong nhà",
+        "outdoor": "Ngoài trời"
+      },
+      "status": {
+        "serving": "Đang phục vụ",
+        "available": "Trống",
+        "reserved": "Đã đặt",
+        "cleaning": "Đang dọn"
+      },
+      "tooltip": {
+        "status": "Trạng thái",
+        "seats": "Ghế",
+        "area": "Khu vực"
+      }
+    },
+    "timeline": {
+      "title": "Hoạt động gần đây",
+      "subtitle": "Các hành động mới nhất"
+    },
+    "sidebar": {
+      "management": "Quản lý",
+      "items": {
+        "dashboard": "Tổng quan",
+        "analytics": "Phân tích",
+        "tables": "Bàn",
+        "menu": "Thực đơn",
+        "orders": "Đơn hàng",
+        "staff": "Nhân viên",
+        "settings": "Cài đặt",
+        "help": "Trợ giúp"
+      }
+    },
+    "header": {
+      "pages": "Trang",
+      "dashboard": "Tổng quan",
+      "main_dashboard": "Tổng quan chính",
+      "search_placeholder": "Tìm kiếm...",
+      "user_role": "Chủ nhà hàng"
+    },
+    "menu": {
+      "title": "Quản lý thực đơn",
+      "subtitle": "Quản lý các món ăn trong nhà hàng",
+      "add_item": "Thêm món",
+      "stats": {
+        "total_items": "Tổng số món",
+        "available": "Đang bán",
+        "popular_items": "Món phổ biến",
+        "categories": "Danh mục"
+      },
+      "filter": "Tất cả",
+      "out_of_stock": "Hết hàng",
+      "popular": "Phổ biến",
+      "price": "Giá",
+      "edit": "Sửa",
+      "categories": {
+        "all": "Tất cả",
+        "main_course": "Món chính",
+        "appetizer": "Khai vị",
+        "dessert": "Tráng miệng",
+        "beverages": "Đồ uống"
+      }
+    },
+    "orders": {
+      "title": "Quản lý đơn hàng",
+      "subtitle": "Theo dõi và quản lý đơn hàng",
+      "new_order": "Đơn mới",
+      "stats": {
+        "pending": "Chờ xử lý",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng",
+        "served": "Đã phục vụ",
+        "completed": "Hoàn tất"
+      },
+      "table": {
+        "order": "Đơn hàng",
+        "customer": "Khách hàng",
+        "table": "Bàn",
+        "items": "Món",
+        "total": "Tổng",
+        "status": "Trạng thái",
+        "payment": "Thanh toán",
+        "time": "Thời gian",
+        "actions": "Hành động"
+      },
+      "status": {
+        "pending": "Chờ xử lý",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng",
+        "served": "Đã phục vụ",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
+      },
+      "payment_status": {
+        "paid": "Đã thanh toán",
+        "unpaid": "Chưa thanh toán"
+      }
+    },
+    "tables": {
+      "title": "Quản lý bàn",
+      "subtitle": "Quản lý bàn và đặt bàn",
+      "add_table": "Thêm bàn",
+      "stats": {
+        "total_tables": "Tổng số bàn",
+        "available": "Trống",
+        "occupied": "Có khách",
+        "reserved": "Đã đặt"
+      },
+      "card": {
+        "area": "Khu vực",
+        "capacity": "Sức chứa: {{count}} ghế",
+        "order": "Đơn",
+        "reserved_at": "Đặt lúc",
+        "view_details": "Xem chi tiết"
+      }
+    },
+    "staff": {
+      "title": "Quản lý nhân viên",
+      "subtitle": "Quản lý đội ngũ nhân viên",
+      "add_staff": "Thêm nhân viên",
+      "stats": {
+        "total_staff": "Tổng nhân viên",
+        "on_duty": "Đang làm",
+        "departments": "Bộ phận",
+        "avg_rating": "Đánh giá TB"
+      },
+      "card": {
+        "shift": "Ca làm",
+        "joined": "Ngày vào",
+        "view_profile": "Xem hồ sơ"
+      },
+      "roles": {
+        "manager": "Quản lý",
+        "chef": "Đầu bếp",
+        "waiter": "Phục vụ",
+        "cashier": "Thu ngân",
+        "cleaner": "Lao công"
+      },
+      "status": {
+        "active": "Đang làm",
+        "off_duty": "Nghỉ ca",
+        "on_leave": "Nghỉ phép"
+      }
+    },
+    "settings": {
+      "title": "Cài đặt",
+      "subtitle": "Quản lý tùy chọn và cấu hình nhà hàng",
+      "tabs": {
+        "general": "Chung",
+        "appearance": "Giao diện",
+        "notifications": "Thông báo",
+        "security": "Bảo mật"
+      },
+      "general": {
+        "restaurant_info": "Thông tin nhà hàng",
+        "restaurant_name": "Tên nhà hàng",
+        "email": "Email",
+        "phone": "Số điện thoại",
+        "address": "Địa chỉ",
+        "opening_time": "Giờ mở cửa",
+        "closing_time": "Giờ đóng cửa",
+        "business_settings": "Cài đặt kinh doanh",
+        "currency": "Tiền tệ",
+        "tax_rate": "Thuế (%)",
+        "timezone": "Múi giờ",
+        "date_format": "Định dạng ngày"
+      },
+      "appearance": {
+        "theme": "Chủ đề",
+        "accent_color": "Màu chủ đạo",
+        "display_options": "Tùy chọn hiển thị",
+        "compact_mode": "Chế độ thu gọn",
+        "compact_mode_desc": "Giảm khoảng cách giữa các phần tử",
+        "show_animations": "Hiệu ứng chuyển động",
+        "show_animations_desc": "Bật hiệu ứng giao diện",
+        "themes": {
+          "dark": "Tối",
+          "light": "Sáng",
+          "auto": "Tự động"
+        }
+      },
+      "notifications": {
+        "order_notifications": "Thông báo đơn hàng",
+        "system_notifications": "Thông báo hệ thống",
+        "items": {
+          "new_orders": "Đơn hàng mới",
+          "new_orders_desc": "Nhận thông báo khi có đơn mới",
+          "order_updates": "Cập nhật đơn hàng",
+          "order_updates_desc": "Cập nhật trạng thái đơn hàng",
+          "order_completion": "Hoàn thành đơn",
+          "order_completion_desc": "Khi đơn hàng hoàn tất",
+          "table_updates": "Cập nhật bàn",
+          "table_updates_desc": "Thay đổi trạng thái bàn",
+          "staff_alerts": "Thông báo nhân viên",
+          "staff_alerts_desc": "Check-in/out của nhân viên",
+          "inventory_alerts": "Cảnh báo kho",
+          "inventory_alerts_desc": "Cảnh báo sắp hết hàng"
+        }
+      },
+      "security": {
+        "change_password": "Đổi mật khẩu",
+        "current_password": "Mật khẩu hiện tại",
+        "new_password": "Mật khẩu mới",
+        "confirm_new_password": "Xác nhận mật khẩu mới",
+        "update_password": "Cập nhật mật khẩu",
+        "two_factor": "Xác thực 2 lớp (2FA)",
+        "enable_2fa": "Bật 2FA",
+        "enable_2fa_desc": "Tăng cường bảo mật",
+        "danger_zone": "Vùng nguy hiểm",
+        "delete_account": "Xóa tài khoản"
+      },
+      "buttons": {
+        "cancel": "Hủy",
+        "save_changes": "Lưu thay đổi"
+      }
+    },
+    "help": {
+      "title": "Trung tâm trợ giúp",
+      "subtitle": "Tìm câu trả lời và nhận hỗ trợ",
+      "search_placeholder": "Tìm kiếm trợ giúp...",
+      "categories": {
+        "all": "Tất cả chủ đề",
+        "tables": "Bàn",
+        "orders": "Đơn hàng",
+        "menu": "Thực đơn",
+        "staff": "Nhân viên",
+        "analytics": "Phân tích",
+        "account": "Tài khoản"
+      },
+      "faq_title": "Câu hỏi thường gặp",
+      "no_results": "Không tìm thấy kết quả. Thử từ khóa khác.",
+      "quick_links": {
+        "documentation": "Tài liệu",
+        "documentation_desc": "Hướng dẫn chi tiết",
+        "view_docs": "Xem tài liệu",
+        "video_tutorials": "Video hướng dẫn",
+        "video_tutorials_desc": "Hướng dẫn từng bước qua video",
+        "watch_videos": "Xem video",
+        "contact_support": "Liên hệ hỗ trợ",
+        "contact_support_desc": "Nhận trợ giúp từ đội ngũ hỗ trợ",
+        "contact_us": "Liên hệ ngay"
+      },
+      "questions": [
+        {
+          "question": "Làm cách nào để thêm bàn mới?",
+          "answer": "Điều hướng đến trang Bàn và nhấp vào nút 'Thêm bàn' ở góc trên bên phải. Điền chi tiết bàn bao gồm số, sức chứa và khu vực, sau đó lưu lại.",
+          "category": "tables"
+        },
+        {
+          "question": "Làm thế nào để xử lý đơn hàng mới?",
+          "answer": "Đi tới trang Đơn hàng, nhấp vào 'Đơn hàng mới', chọn bàn, thêm món và xác nhận. Đơn hàng sẽ được gửi đến bếp tự động.",
+          "category": "orders"
+        },
+        {
+          "question": "Làm cách nào để quản lý lịch làm việc của nhân viên?",
+          "answer": "Trong phần Nhân viên, nhấp vào hồ sơ nhân viên và chọn 'Lịch trình'. Bạn có thể phân ca, đặt giờ làm việc và quản lý yêu cầu nghỉ phép.",
+          "category": "staff"
+        },
+        {
+          "question": "Làm thế nào để cập nhật món ăn?",
+          "answer": "Đi tới trang Thực đơn, tìm món cần cập nhật, nhấp nút Chỉnh sửa. Bạn có thể thay đổi tên, giá, mô tả, tình trạng và danh mục.",
+          "category": "menu"
+        },
+        {
+          "question": "Làm cách nào để tạo báo cáo?",
+          "answer": "Truy cập trang Phân tích và chọn loại báo cáo bạn cần (doanh số, doanh thu, kho). Chọn khoảng thời gian và nhấp 'Tạo báo cáo'.",
+          "category": "analytics"
+        },
+        {
+          "question": "Làm thế nào để xử lý thanh toán?",
+          "answer": "Khi đơn hàng hoàn tất, nhấp vào đơn hàng và chọn 'Xử lý thanh toán'. Chọn phương thức thanh toán (tiền mặt, thẻ, hoặc ví điện tử) và xác nhận giao dịch.",
+          "category": "orders"
+        },
+        {
+          "question": "Làm cách nào để đổi mật khẩu?",
+          "answer": "Đi tới Cài đặt > tab Bảo mật. Nhập mật khẩu hiện tại, sau đó nhập mật khẩu mới hai lần, và nhấp 'Cập nhật mật khẩu'.",
+          "category": "account"
+        },
+        {
+          "question": "Làm thế nào để quản lý đặt bàn?",
+          "answer": "Trong trang Bàn, nhấp vào bàn và chọn 'Đặt bàn'. Nhập chi tiết khách hàng, thời gian đặt và số lượng khách. Trạng thái bàn sẽ tự động cập nhật.",
+          "category": "tables"
+        }
+      ],
+      "shortcuts": {
+        "title": "Phím tắt",
+        "quick_search": "Tìm nhanh",
+        "new_order": "Đơn mới",
+        "view_tables": "Xem bàn",
+        "view_menu": "Xem menu",
+        "open_settings": "Mở cài đặt",
+        "show_help": "Trợ giúp"
+      }
+    },
+    "analytics": {
+      "title": "Bảng phân tích",
+      "subtitle": "Thông tin chi tiết và chỉ số hiệu suất",
+      "page_title": "Trang phân tích",
+      "coming_soon": "Tính năng phân tích nâng cao đang phát triển",
+      "under_development": "Đang phát triển"
+    }
+  },
+  "common": {
+    "time": {
+      "minutes_ago": "{{count}} phút trước"
+    },
+    "language": "Ngôn ngữ",
+    "english": "English",
+    "vietnamese": "Tiếng Việt",
+    "theme": {
+      "switch_to_light": "Chuyển chế độ Sáng",
+      "switch_to_dark": "Chuyển chế độ Tối"
+    }
+  },
+  "homepage": {
+    "header": {
+      "product": "Sản phẩm",
+      "workflow": "Quy trình",
+      "testimonials": "Khách hàng",
+      "contact": "Liên hệ",
+      "staff": "Staff",
+      "login": "Đăng nhập",
+      "signup": "Đăng ký"
+    },
+    "hero": {
+      "tag": "Nền tảng vận hành nhà hàng toàn diện",
+      "title": "Tối ưu vận hành nhà hàng với RestX",
+      "description": "Quản lý đặt bàn, order, bếp, kho và báo cáo trên một nền tảng duy nhất.",
+      "get_started": "Bắt đầu ngay",
+      "watch_demo": "Xem Demo",
+      "stats": {
+        "brands": "Thương hiệu",
+        "years": "Năm kinh nghiệm",
+        "branches": "Chi nhánh"
+      },
+      "dashboard": {
+        "title": "Tổng quan hoạt động",
+        "revenue_7_days": "Doanh thu (7 ngày)",
+        "revenue": "Doanh thu",
+        "orders": "Đơn hàng",
+        "recent_orders": "Đơn hàng gần đây"
+      },
+      "trusted_by": "Được tin dùng bởi các thương hiệu hàng đầu"
+    },
+    "features": {
+      "tag": "Tính năng",
+      "title_prefix": "Tính năng nổi bật của ",
+      "description": "Tất cả công cụ bạn cần để vận hành nhà hàng – trong một giao diện trực quan.",
+      "items": {
+        "table_management": {
+          "title": "Quản lý đặt bàn thông minh",
+          "description": "Hệ thống đặt bàn tự động với giao diện trực quan, giúp tối ưu hóa sơ đồ bàn và giảm thời gian chờ cho khách hàng."
+        },
+        "order_kot": {
+          "title": "Order & KOT liền mạch",
+          "description": "Đồng bộ order từ phục vụ đến bếp ngay lập tức. Theo dõi trạng thái món ăn realtime và giảm thiểu sai sót."
+        },
+        "inventory": {
+          "title": "Quản lý kho & nguyên vật liệu",
+          "description": "Kiểm soát tồn kho chính xác, cảnh báo nguyên liệu sắp hết, và tối ưu chi phí mua hàng theo chu kỳ kinh doanh."
+        },
+        "reports": {
+          "title": "Báo cáo realtime",
+          "description": "Dashboard phân tích doanh thu, món bán chạy, hiệu suất nhân viên. Tất cả dữ liệu cập nhật theo thời gian thực."
+        },
+        "multi_branch": {
+          "title": "Đa chi nhánh",
+          "description": "Quản lý nhiều cửa hàng trên một hệ thống. Đồng bộ menu, giá bán và tổng hợp báo cáo tập trung."
+        },
+        "integration": {
+          "title": "Tích hợp linh hoạt",
+          "description": "Kết nối với payment gateway, giao hàng, kế toán và các ứng dụng bên thứ ba thông qua API mở."
+        },
+        "learn_more": "Tìm hiểu thêm"
+      }
+    },
+    "workflow": {
+      "title": "Cách RestX vận hành trong nhà hàng của bạn",
+      "description": "Từ lúc khách đặt bàn đến khi chốt bill, mọi bước đều được RestX hỗ trợ.",
+      "steps": {
+        "setup": {
+          "title": "Thiết lập nhà hàng & menu",
+          "description": "Cấu hình thông tin nhà hàng, tạo menu, thiết lập bàn ghế và phân quyền nhân viên chỉ trong vài phút."
+        },
+        "operation": {
+          "title": "Vận hành & đồng bộ realtime",
+          "description": "Nhận order, xử lý thanh toán, gửi lệnh xuống bếp tự động. Mọi thay đổi được cập nhật ngay lập tức trên tất cả thiết bị."
+        },
+        "analysis": {
+          "title": "Phân tích & tối ưu",
+          "description": "Xem báo cáo chi tiết về doanh thu, món bán chạy, chi phí. Sử dụng dữ liệu để ra quyết định kinh doanh thông minh hơn."
+        }
+      }
+    },
+    "testimonials": {
+      "title": "Nhà hàng nói gì về RestX?",
+      "description": "Hàng trăm chủ nhà hàng và quản lý đã tin tưởng RestX để tối ưu vận hành của họ.",
+      "items": {
+        "nam": {
+          "role": "Owner, Nhà hàng Hải Sản 123",
+          "quote": "RestX đã thay đổi hoàn toàn cách chúng tôi vận hành. Từ việc đặt bàn đến quản lý kho, mọi thứ đều được tự động hóa và chính xác hơn rất nhiều."
+        },
+        "huong": {
+          "role": "Manager, Chuỗi Phở 24h",
+          "quote": "Trước đây tôi phải mất hàng giờ để tổng hợp báo cáo từ 5 chi nhánh. Giờ với RestX, tất cả dữ liệu đều có sẵn trên dashboard trong vài cú click."
+        },
+        "tuan": {
+          "role": "Owner, Quán Cơm Tấm Sài Gòn",
+          "quote": "Giao diện đơn giản, nhân viên học rất nhanh. Hệ thống ổn định, chưa bao giờ gặp lỗi trong giờ cao điểm. Recommend cho mọi nhà hàng!"
+        },
+        "lan": {
+          "role": "Manager, Cafe & Bistro Xanh",
+          "quote": "Chúng tôi yêu tính năng đồng bộ realtime. Order từ app đến bếp chỉ trong 1 giây, khách hàng rất hài lòng về tốc độ phục vụ."
+        }
+      }
+    },
+    "footer": {
+      "tagline": "RestX – Nền tảng vận hành nhà hàng thế hệ mới. Giúp bạn quản lý mọi khía cạnh của nhà hàng trên một hệ thống duy nhất.",
+      "columns": {
+        "product": {
+          "title": "Sản phẩm",
+          "overview": "Tổng quan",
+          "features": "Tính năng",
+          "pricing": "Bảng giá",
+          "integrations": "Tích hợp"
+        },
+        "resources": {
+          "title": "Tài nguyên",
+          "blog": "Blog",
+          "help_center": "Trung tâm trợ giúp",
+          "faqs": "FAQs",
+          "documentation": "Tài liệu"
+        },
+        "company": {
+          "title": "Công ty",
+          "about": "Về chúng tôi",
+          "contact": "Liên hệ",
+          "careers": "Tuyển dụng",
+          "partners": "Đối tác"
+        },
+        "legal": {
+          "title": "Pháp lý",
+          "privacy": "Chính sách bảo mật",
+          "terms": "Điều khoản dịch vụ",
+          "cookies": "Chính sách Cookie",
+          "gdpr": "GDPR"
+        }
+      },
+      "copyright": "© {year} RestX. All rights reserved.",
+      "privacy": "Bảo mật",
+      "terms": "Điều khoản",
+      "cookies": "Cookies"
+    }
+  },
+  "restaurant": {
+    "header": {
+      "home": "Trang chủ",
+      "about": "Giới thiệu",
+      "menu": {
+        "title": "Menu",
+        "all": "Tất cả món",
+        "appetizer": "Khai vị",
+        "main": "Món chính",
+        "dessert": "Tráng miệng",
+        "drink": "Đồ uống"
+      },
+      "featured": "Món ăn nổi bật",
+      "daily": "Món ngon mỗi ngày",
+      "news": "Tin tức",
+      "book_table": "Đặt bàn",
+      "title": "RestX Restaurant"
+    },
+    "hero": {
+      "title": "RestX Restaurant",
+      "subtitle": "Món ăn đa dạng",
+      "cta": "ĐẶT BÀN NGAY"
+    },
+    "about": {
+      "subtitle": "Về chúng tôi",
+      "title": "Đam mê ẩm thực",
+      "description": "Chúng tôi mang đến trải nghiệm ẩm thực tinh tế với những món ăn được chế biến từ nguyên liệu tươi ngon nhất.",
+      "years_experience": "Năm kinh nghiệm",
+      "master_chefs": "Đầu bếp hàng đầu",
+      "read_more": "Xem thêm"
+    },
+    "categories": {
+      "title": "Danh mục nổi bật",
+      "appetizer": "Khai vị",
+      "main": "Món chính",
+      "dessert": "Tráng miệng",
+      "drinks": "Đồ uống"
+    },
+    "menu": {
+      "subtitle": "Khám phá",
+      "title": "Thực đơn hôm nay",
+      "all": "Tất cả",
+      "starter": "Khai vị",
+      "main": "Món chính",
+      "dessert": "Tráng miệng"
+    }
+  }
+}

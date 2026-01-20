@@ -22,65 +22,20 @@ import { usePathname, useRouter } from 'next/navigation';
 import ThemeToggle from '../components/ThemeToggle';
 import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 import Link from 'next/link';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../components/I18nProvider';
 
 const { Sider, Content, Header } = Layout;
 const { Text } = Typography;
-
-const menuItems = [
-  {
-    key: '/staff',
-    icon: <DashboardOutlined />,
-    label: 'Tổng quan',
-  },
-  {
-    key: '/staff/tables',
-    icon: <TableOutlined />,
-    label: 'Quản lý bàn',
-  },
-  {
-    key: '/staff/orders',
-    icon: <ShoppingCartOutlined />,
-    label: 'Quản lý Order',
-  },
-  {
-    key: '/staff/checkout',
-    icon: <WalletOutlined />,
-    label: 'Thanh toán',
-  },
-  {
-    key: '/staff/attendance',
-    icon: <ClockCircleOutlined />,
-    label: 'Chấm công',
-  },
-];
-
-const userMenuItems = [
-  {
-    key: 'profile',
-    icon: <UserOutlined />,
-    label: 'Thông tin cá nhân',
-  },
-  {
-    key: 'settings',
-    icon: <SettingOutlined />,
-    label: 'Cài đặt',
-  },
-  {
-    type: 'divider' as const,
-  },
-  {
-    key: 'logout',
-    icon: <LogoutOutlined />,
-    label: 'Đăng xuất',
-    danger: true,
-  },
-];
 
 export default function StaffLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { t, i18n } = useTranslation();
+  const { language } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false); // e.g. iPad widths
@@ -88,6 +43,58 @@ export default function StaffLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { mode } = useThemeMode();
+
+  // Menu items with translations
+  const menuItems = [
+    {
+      key: '/staff',
+      icon: <DashboardOutlined />,
+      label: t('staff.menu.dashboard'),
+    },
+    {
+      key: '/staff/tables',
+      icon: <TableOutlined />,
+      label: (isMobile || isTablet) ? t('staff.menu.tables_short') : t('staff.menu.tables'),
+    },
+    {
+      key: '/staff/orders',
+      icon: <ShoppingCartOutlined />,
+      label: (isMobile || isTablet) ? t('staff.menu.orders_short') : t('staff.menu.orders'),
+    },
+    {
+      key: '/staff/checkout',
+      icon: <WalletOutlined />,
+      label: t('staff.menu.checkout'),
+    },
+    {
+      key: '/staff/attendance',
+      icon: <ClockCircleOutlined />,
+      label: t('staff.menu.attendance'),
+    },
+  ];
+
+  // User menu items with translations
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: t('staff.user_menu.profile'),
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: t('staff.user_menu.settings'),
+    },
+    {
+      type: 'divider' as const,
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: t('staff.user_menu.logout'),
+      danger: true,
+    },
+  ];
 
   useEffect(() => {
     const checkViewport = () => {
@@ -138,7 +145,7 @@ export default function StaffLayout({
           alignItems: 'center',
           justifyContent: (collapsed && !inDrawer) ? 'center' : 'flex-start',
           padding: (collapsed && !inDrawer) ? '0' : '0 24px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
         <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
@@ -146,18 +153,19 @@ export default function StaffLayout({
             style={{
               width: 40,
               height: 40,
-              borderRadius: 10,
-              background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 20,
               fontWeight: 700,
-              color: '#fff',
-              boxShadow: '0 4px 15px rgba(255, 122, 0, 0.4)',
             }}
           >
-            R
+            <img
+              src="/images/logo/restx-removebg-preview.png"
+              alt="RestX Logo"
+              className="app-logo-img"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
           </div>
           {(!collapsed || inDrawer) && (
             <span
@@ -165,11 +173,11 @@ export default function StaffLayout({
                 marginLeft: 12,
                 fontSize: 22,
                 fontWeight: 700,
-                color: '#fff',
+                color: mode === 'dark' ? '#fff' : '#1a1a2e',
                 letterSpacing: '-0.5px',
               }}
             >
-              Rest<span style={{ color: '#FF7A00' }}>X</span>
+              Rest<span style={{ color: '#FF380B' }}>X</span>
             </span>
           )}
         </Link>
@@ -180,14 +188,14 @@ export default function StaffLayout({
         <div
           style={{
             padding: '20px 24px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Avatar
               size={44}
               style={{
-                background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                 fontSize: 18,
                 fontWeight: 600,
               }}
@@ -197,7 +205,7 @@ export default function StaffLayout({
             <div>
               <Text
                 style={{
-                  color: '#fff',
+                  color: mode === 'dark' ? '#fff' : '#1a1a2e',
                   fontWeight: 600,
                   fontSize: 14,
                   display: 'block',
@@ -207,11 +215,11 @@ export default function StaffLayout({
               </Text>
               <Text
                 style={{
-                  color: 'rgba(255, 255, 255, 0.5)',
+                  color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.45)',
                   fontSize: 12,
                 }}
               >
-                Nhân viên phục vụ
+                {t('staff.sidebar.staff_role')}
               </Text>
             </div>
           </div>
@@ -229,7 +237,7 @@ export default function StaffLayout({
           border: 'none',
           padding: '16px 12px',
         }}
-        theme="dark"
+        theme={mode === 'dark' ? 'dark' : 'light'}
       />
 
       {/* Clock In/Out Status */}
@@ -241,9 +249,9 @@ export default function StaffLayout({
             left: 16,
             right: 16,
             padding: '16px',
-            background: 'rgba(255, 122, 0, 0.1)',
+            background: 'rgba(255, 56, 11, 0.1)',
             borderRadius: 12,
-            border: '1px solid rgba(255, 122, 0, 0.2)',
+            border: '1px solid rgba(255, 56, 11, 0.2)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -257,10 +265,10 @@ export default function StaffLayout({
               }}
             />
             <Text style={{ color: '#52c41a', fontSize: 12, fontWeight: 600 }}>
-              Đang làm việc
+              {t('staff.sidebar.working')}
             </Text>
           </div>
-          <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}>
+          <Text style={{ color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)', fontSize: 12 }}>
             Bắt đầu: 08:00 - Hôm nay
           </Text>
         </div>
@@ -270,55 +278,69 @@ export default function StaffLayout({
 
   return (
     <>
-    <Layout style={{ minHeight: '100vh' }}>
-        {/* Mobile Drawer */}
+      <Layout style={{ minHeight: '100vh' }}>
+        {/* Mobile Bottom Navigation */}
         {isDrawerDevice && (
-          <Drawer
-            placement="left"
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            width={280}
-            style={{ top: 0, height: '100vh' }}
-            closable={false}
-            maskClosable
-            rootStyle={{
-              backdropFilter: 'none',
-              WebkitBackdropFilter: 'none',
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              width: '100%',
+              height: 85,
+              background: mode === 'dark' ? 'rgba(20, 25, 39, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderTop: '1px solid var(--border)',
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'center',
+              paddingBottom: 20,
+              zIndex: 1000,
+              boxShadow: '0 -4px 20px rgba(0,0,0,0.05)',
             }}
-            styles={{
-              mask: {
-                background: 'rgba(0,0,0,0.55)',
-                backdropFilter: 'none',
-                WebkitBackdropFilter: 'none',
-                filter: 'none',
-              },
-              body: { 
-                padding: 0, 
-                background: 'var(--sidebar-bg)',
-                height: '100%',
-                minHeight: '100%',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-              },
-              header: { display: 'none' },
-            }}
-            destroyOnClose
           >
-            <div style={{ position: 'relative', height: '100%' }}>
-              <Button
-                type="text"
-                icon={<CloseOutlined style={{ color: '#fff' }} />}
-                onClick={() => setDrawerOpen(false)}
-                style={{
-                  position: 'absolute',
-                  right: 16,
-                  top: 20,
-                  zIndex: 10,
-                }}
-              />
-              <SidebarContent inDrawer />
-            </div>
-          </Drawer>
+            {menuItems.map((item) => {
+              const isActive = pathname === item.key;
+              return (
+                <div
+                  key={item.key}
+                  onClick={() => router.push(item.key)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                    color: isActive ? '#FF380B' : 'var(--text-muted)',
+                    cursor: 'pointer',
+                    width: '20%',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <div style={{
+                    fontSize: 24,
+                    transform: isActive ? 'translateY(-2px)' : 'none',
+                    transition: 'transform 0.2s',
+                    filter: isActive ? 'drop-shadow(0 4px 6px rgba(255, 56, 11, 0.3))' : 'none',
+                  }}>
+                    {item.icon}
+                  </div>
+                  <span style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    opacity: isActive ? 1 : 0.8,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                    textAlign: 'center',
+                    padding: '0 2px',
+                  }}>{item.label}</span>
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {/* Desktop Sidebar */}
@@ -330,8 +352,9 @@ export default function StaffLayout({
             width={260}
             collapsedWidth={80}
             style={{
-              background: 'var(--sidebar-bg)',
+              background: mode === 'dark' ? '#001529' : '#FFFFFF',
               boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
+              borderRight: mode === 'dark' ? 'none' : '1px solid var(--border)',
               position: 'fixed',
               height: '100vh',
               left: 0,
@@ -344,8 +367,8 @@ export default function StaffLayout({
         )}
 
         {/* Main Layout */}
-        <Layout style={{ 
-          marginLeft: isDrawerDevice ? 0 : (collapsed ? 80 : 260), 
+        <Layout style={{
+          marginLeft: isDrawerDevice ? 0 : (collapsed ? 80 : 260),
           transition: 'margin-left 0.2s',
           minHeight: '100vh',
           width: '100%',
@@ -368,80 +391,85 @@ export default function StaffLayout({
           >
             {/* Left Section */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Button
-                type="text"
-                icon={isDrawerDevice ? <MenuOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
-                onClick={() => isDrawerDevice ? setDrawerOpen(true) : setCollapsed(!collapsed)}
-                style={{
-                  fontSize: 16,
-                  width: 40,
-                  height: 40,
-                  borderRadius: 8,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              />
-              <div style={{ borderLeft: '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <Text style={{ 
-                    fontSize: 15, 
-                    fontWeight: 600, 
-                    color: '#1a1a2e',
-                    lineHeight: 1.2,
-                    margin: 0,
-                  }}>
-                    {menuItems.find((item) => item.key === pathname)?.label || 'Dashboard'}
-                  </Text>
-                  {!isMobile && (
-                    <Text style={{ fontSize: 12, color: '#999', lineHeight: 1.2, marginTop: 2 }}>
-                      {new Date().toLocaleDateString('vi-VN', {
-                        weekday: 'long',
-                        day: 'numeric',
-                        month: 'numeric',
-                      })}
-                    </Text>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Right Section */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
-              {/* Home Link */}
-              <Link href="/">
+              {!isDrawerDevice && (
                 <Button
                   type="text"
-                  icon={<HomeOutlined style={{ fontSize: 18, color: 'var(--text-muted)' }} />}
+                  icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                  onClick={() => setCollapsed(!collapsed)}
                   style={{
-                    width: 36,
-                    height: 36,
+                    fontSize: 16,
+                    width: 40,
+                    height: 40,
                     borderRadius: 8,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 />
-              </Link>
+              )}
+              <div style={{ borderLeft: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e8e8e8', paddingLeft: 12, display: 'flex', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <Text style={{
+                    fontSize: 15,
+                    fontWeight: 600,
+                    color: mode === 'dark' ? '#fff' : '#1a1a2e',
+                    lineHeight: 1.2,
+                    margin: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {menuItems.find((item) => item.key === pathname)?.label || t('staff.menu.dashboard')}
+                  </Text>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Section */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 12 }}>
+              {/* Home Link */}
+              {!isMobile && (
+                <Link href="/">
+                  <Button
+                    type="text"
+                    icon={<HomeOutlined style={{ fontSize: 18, color: 'var(--text-muted)' }} />}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  />
+                </Link>
+              )}
 
               {/* Notifications */}
               <Badge count={3} size="small" offset={[-4, 4]}>
                 <Button
                   type="text"
-                  icon={<BellOutlined style={{ fontSize: 18, color: 'var(--text-muted)' }} />}
+                  icon={<BellOutlined style={{ fontSize: isMobile ? 16 : 18, color: 'var(--text-muted)' }} />}
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: isMobile ? 32 : 36,
+                    height: isMobile ? 32 : 36,
                     borderRadius: 8,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    padding: 0,
                   }}
                 />
               </Badge>
 
               {/* Theme toggle */}
               <ThemeToggle />
+
+              {/* Language switcher */}
+              {/* Language switcher - hidden on very small screens if needed, or just keep it */}
+              <div style={{ display: isMobile && window.innerWidth < 360 ? 'none' : 'block' }}>
+                <LanguageSwitcher />
+              </div>
 
               {/* User Menu */}
               <Dropdown
@@ -453,21 +481,23 @@ export default function StaffLayout({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 8,
-                    padding: '4px 8px 4px 4px',
+                    gap: isMobile ? 4 : 8,
+                    padding: isMobile ? '4px' : '4px 8px 4px 4px',
                     background: 'var(--card)',
                     borderRadius: 24,
                     cursor: 'pointer',
                     border: '1px solid var(--border)',
                     transition: 'all 0.2s',
+                    maxWidth: isMobile ? 34 : 'auto',
+                    justifyContent: 'center',
                   }}
                 >
                   <Avatar
-                    size={28}
+                    size={isMobile ? 24 : 28}
                     style={{
-                      background: 'linear-gradient(135deg, #FF7A00 0%, #FF9A40 100%)',
+                      background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
                       fontWeight: 600,
-                      fontSize: 12,
+                      fontSize: isMobile ? 10 : 12,
                     }}
                   >
                     NV
@@ -486,6 +516,7 @@ export default function StaffLayout({
           <Content
             style={{
               margin: isMobile ? 12 : 24,
+              marginBottom: isDrawerDevice ? 130 : 24,
               padding: 0,
               minHeight: 'calc(100vh - 120px)',
             }}
@@ -495,20 +526,35 @@ export default function StaffLayout({
         </Layout>
       </Layout>
       <style jsx global>{`
-        .ant-menu-dark .ant-menu-item {
+        .ant-menu-dark .ant-menu-item,
+        .ant-menu-light .ant-menu-item {
           margin: 4px 0 !important;
           border-radius: 10px !important;
           height: 48px !important;
           line-height: 48px !important;
         }
+        /* Dark Mode Menu */
         .ant-menu-dark .ant-menu-item-selected {
-          background: linear-gradient(135deg, rgba(255, 122, 0, 0.2) 0%, rgba(255, 122, 0, 0.1) 100%) !important;
-          border-left: 3px solid #FF7A00 !important;
+          background: linear-gradient(135deg, rgba(255, 56, 11, 0.2) 0%, rgba(255, 56, 11, 0.1) 100%) !important;
+          border-left: 3px solid #FF380B !important;
         }
         .ant-menu-dark .ant-menu-item:hover {
           background: rgba(255, 255, 255, 0.05) !important;
         }
         .ant-menu-dark .ant-menu-item .ant-menu-item-icon {
+          font-size: 18px !important;
+        }
+
+        /* Light Mode Menu */
+        .ant-menu-light .ant-menu-item-selected {
+          background: linear-gradient(135deg, rgba(255, 56, 11, 0.15) 0%, rgba(255, 56, 11, 0.05) 100%) !important;
+          border-left: 3px solid #FF380B !important;
+          color: #FF380B !important;
+        }
+        .ant-menu-light .ant-menu-item:hover {
+          background: rgba(0, 0, 0, 0.04) !important;
+        }
+        .ant-menu-light .ant-menu-item .ant-menu-item-icon {
           font-size: 18px !important;
         }
         /* Disable blur/backdrop on all masks (drawer + modal) */
@@ -517,23 +563,44 @@ export default function StaffLayout({
           backdrop-filter: none !important;
           -webkit-backdrop-filter: none !important;
           filter: none !important;
+        }
+        [data-theme="dark"] .ant-drawer-mask,
+        [data-theme="dark"] .ant-modal-mask {
           background: rgba(0, 0, 0, 0.92) !important;
         }
-        /* Cards inside modal should be darker */
-        .ant-modal-body .ant-card {
+        [data-theme="light"] .ant-drawer-mask,
+        [data-theme="light"] .ant-modal-mask {
+          background: rgba(0, 0, 0, 0.45) !important;
+        }
+        /* Cards inside modal */
+        [data-theme="dark"] .ant-modal-body .ant-card {
           background: #0F1419 !important;
           border-color: var(--border) !important;
         }
-        .ant-modal-body .ant-card-body {
+        [data-theme="dark"] .ant-modal-body .ant-card-body {
           background: #0F1419 !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-card {
+          background: #FFFFFF !important;
+          border-color: #E5E7EB !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-card-body {
+          background: #FFFFFF !important;
         }
         /* Select dropdown in modal */
-        .ant-modal-body .ant-select-selector {
+        [data-theme="dark"] .ant-modal-body .ant-select-selector {
           background: #0F1419 !important;
           border-color: var(--border) !important;
         }
-        .ant-modal-body .ant-select-dropdown {
+        [data-theme="dark"] .ant-modal-body .ant-select-dropdown {
           background: #0F1419 !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-select-selector {
+          background: #FFFFFF !important;
+          border-color: #E5E7EB !important;
+        }
+        [data-theme="light"] .ant-modal-body .ant-select-dropdown {
+          background: #FFFFFF !important;
         }
         /* Divider in modal */
         .ant-modal-body .ant-divider {

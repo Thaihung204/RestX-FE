@@ -193,21 +193,35 @@ export default function LoginPage() {
               <a
                 href="/terms"
                 className="font-medium"
-                style={{ color: '#FF7A00' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
-              >
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}>
                 Terms of Service
               </a>{" "}
               and{" "}
               <a
                 href="/privacy"
                 className="font-medium"
-                style={{ color: '#FF7A00' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#E06000'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF7A00'}
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
               >
                 Privacy Policy
+              </a>
+            </div>
+
+            <div 
+              className="text-center text-sm mt-4 auth-text"
+            >
+              Or login with{" "}
+              <a
+                href="/login-email"
+                className="font-semibold transition-colors"
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
+              >
+                Email & Password
               </a>
             </div>
           </form>

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AutoDarkThemeProvider from "./theme/AutoDarkThemeProvider";
+import I18nProvider from "@/components/I18nProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -73,22 +74,24 @@ export default function RootLayout({
           }
           /* Custom Ant Design overrides */
           .ant-rate-star-full .ant-rate-star-second {
-            color: #FF7A00 !important;
+            color: #FF380B !important;
           }
           .ant-card:hover {
-            border-color: #FF7A00 !important;
-            box-shadow: 0 8px 32px rgba(255, 122, 0, 0.12) !important;
+            border-color: #FF380B !important;
+            box-shadow: 0 8px 32px rgba(255, 56, 11, 0.12) !important;
           }
           .ant-menu-horizontal > .ant-menu-item:hover::after,
           .ant-menu-horizontal > .ant-menu-item-selected::after {
-            border-bottom-color: #FF7A00 !important;
+            border-bottom-color: #FF380B !important;
           }
         `}</style>
       </head>
       <body className={inter.className} suppressHydrationWarning>
-        <AuthProvider>
-          <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
-        </AuthProvider>
+        <I18nProvider>
+          <AuthProvider>
+            <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
+          </AuthProvider>
+        </I18nProvider>
       </body>
     </html>
   );

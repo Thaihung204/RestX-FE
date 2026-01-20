@@ -8,6 +8,7 @@ import {
   RiseOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -18,31 +19,31 @@ interface WorkflowStep {
   icon: React.ReactNode;
 }
 
-const workflowSteps: WorkflowStep[] = [
-  {
-    number: '01',
-    title: 'Thiết lập nhà hàng & menu',
-    description:
-      'Cấu hình thông tin nhà hàng, tạo menu, thiết lập bàn ghế và phân quyền nhân viên chỉ trong vài phút.',
-    icon: <SettingOutlined style={{ fontSize: 36, color: '#FF7A00' }} />,
-  },
-  {
-    number: '02',
-    title: 'Vận hành & đồng bộ realtime',
-    description:
-      'Nhận order, xử lý thanh toán, gửi lệnh xuống bếp tự động. Mọi thay đổi được cập nhật ngay lập tức trên tất cả thiết bị.',
-    icon: <SyncOutlined style={{ fontSize: 36, color: '#FF7A00' }} />,
-  },
-  {
-    number: '03',
-    title: 'Phân tích & tối ưu',
-    description:
-      'Xem báo cáo chi tiết về doanh thu, món bán chạy, chi phí. Sử dụng dữ liệu để ra quyết định kinh doanh thông minh hơn.',
-    icon: <RiseOutlined style={{ fontSize: 36, color: '#FF7A00' }} />,
-  },
-];
+
 
 const WorkflowSection: React.FC = () => {
+  const { t } = useTranslation();
+
+  const workflowSteps: WorkflowStep[] = [
+    {
+      number: '01',
+      title: t('homepage.workflow.steps.setup.title'),
+      description: t('homepage.workflow.steps.setup.description'),
+      icon: <SettingOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
+    },
+    {
+      number: '02',
+      title: t('homepage.workflow.steps.operation.title'),
+      description: t('homepage.workflow.steps.operation.description'),
+      icon: <SyncOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
+    },
+    {
+      number: '03',
+      title: t('homepage.workflow.steps.analysis.title'),
+      description: t('homepage.workflow.steps.analysis.description'),
+      icon: <RiseOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
+    },
+  ];
   const headerVariants = {
     hidden: { opacity: 0, y: 40 },
     visible: {
@@ -103,7 +104,7 @@ const WorkflowSection: React.FC = () => {
                 color: 'var(--text)',
               }}
             >
-              Cách RestX vận hành trong nhà hàng của bạn
+              {t('homepage.workflow.title')}
             </Title>
             <Paragraph
               style={{
@@ -115,7 +116,7 @@ const WorkflowSection: React.FC = () => {
                 marginRight: 'auto',
               }}
             >
-              Từ lúc khách đặt bàn đến khi chốt bill, mọi bước đều được RestX hỗ trợ.
+              {t('homepage.workflow.description')}
             </Paragraph>
           </Space>
         </motion.div>
@@ -143,7 +144,7 @@ const WorkflowSection: React.FC = () => {
                     <Space orientation="vertical" size={20}>
                       <Tag
                         style={{
-                          background: 'linear-gradient(135deg, #FF7A00 0%, #E06000 100%)',
+                          background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
                           border: 'none',
                           color: 'white',
                           fontWeight: 700,

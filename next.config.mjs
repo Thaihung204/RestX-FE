@@ -1,11 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Removed 'output: export' to enable middleware and server-side features
-  // Middleware requires server-side runtime which is supported on Vercel
-
-  images: {
-    unoptimized: true,
-  },
+  // output: 'export', // Temporarily disable static export for i18n testing
 
   // Specify the path if your app is not deployed at the root of your domain.
   // basePath: '/',
