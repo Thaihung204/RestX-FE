@@ -2,10 +2,12 @@
 
 import React from 'react';
 import { Typography, Row, Col, Button } from 'antd';
+import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
 
 const { Title, Paragraph, Text } = Typography;
 
 const AboutSection: React.FC = () => {
+  const { mode } = useThemeMode();
   const foodImages = [
     '/images/restaurant/dish1.png',
     '/images/restaurant/dish2.png',
@@ -19,7 +21,7 @@ const AboutSection: React.FC = () => {
     <section
       id="about"
       style={{
-        background: '#1a1a1a',
+        background: mode === 'dark' ? '#1a1a1a' : '#ffffff',
         padding: '80px 24px',
       }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
@@ -29,7 +31,7 @@ const AboutSection: React.FC = () => {
             <Title
               level={2}
               style={{
-                color: 'white',
+                color: mode === 'dark' ? 'white' : '#1a1a1a',
                 fontSize: 48,
                 fontWeight: 400,
                 fontFamily: 'serif',
@@ -40,7 +42,7 @@ const AboutSection: React.FC = () => {
             <Title
               level={3}
               style={{
-                color: 'white',
+                color: mode === 'dark' ? 'white' : '#1a1a1a',
                 fontSize: 36,
                 fontWeight: 400,
                 fontFamily: 'serif',
@@ -50,7 +52,7 @@ const AboutSection: React.FC = () => {
             </Title>
             <Paragraph
               style={{
-                color: 'rgba(255,255,255,0.9)',
+                color: mode === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
                 fontSize: 16,
                 lineHeight: 1.8,
                 marginBottom: 24,
@@ -63,7 +65,7 @@ const AboutSection: React.FC = () => {
             <Button
               type="link"
               style={{
-                color: 'white',
+                color: mode === 'dark' ? 'white' : '#1a1a1a',
                 padding: 0,
                 fontSize: 16,
                 textDecoration: 'underline',

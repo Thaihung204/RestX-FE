@@ -153,15 +153,9 @@ export default function StaffLayout({
             style={{
               width: 40,
               height: 40,
-              borderRadius: 10,
-              background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 20,
-              fontWeight: 700,
-              color: '#fff',
-              boxShadow: '0 4px 15px rgba(255, 56, 11, 0.4)',
               overflow: 'hidden',
             }}
           >

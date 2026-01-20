@@ -1,0 +1,359 @@
+'use client';
+
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface AddTableModalProps {
+    open: boolean;
+    onClose: () => void;
+    onAdd: (e: React.FormEvent<HTMLFormElement>) => void;
+}
+
+export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onAdd }) => {
+    const [formData, setFormData] = useState({
+        number: '',
+        capacity: '4',
+        area: 'Indoor',
+    });
+
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const newErrors: Record<string, string> = {};
+
+        if (!formData.number) newErrors.number = 'Table number is required';
+        if (parseInt(formData.capacity) < 1) newErrors.capacity = 'Minimum capacity is 1';
+        if (parseInt(formData.capacity) > 20) newErrors.capacity = 'Maximum capacity is 20';
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        onAdd(e);
+        setFormData({ number: '', capacity: '4', area: 'Indoor' });
+        setErrors({});
+    };
+
+    return (
+        <AnimatePresence>
+            {open && (
+                <>
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(0, 0, 0, 0.7)',
+                            backdropFilter: 'blur(8px)',
+                            zIndex: 1000,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        {/* Modal */}
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                background: 'var(--card)',
+                                borderRadius: 16,
+                                width: '90%',
+                                maxWidth: 520,
+                                overflow: 'hidden',
+                                boxShadow: '0 24px 64px rgba(0, 0, 0, 0.4)',
+                                border: '1px solid var(--border)',
+                            }}
+                        >
+                            {/* Header */}
+                            <div
+                                style={{
+                                    background: 'linear-gradient(135deg, #FF380B 0%, #ff6b3d 100%)',
+                                    padding: '32px',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                {/* Decorative elements */}
+                                <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, background: 'rgba(255, 255, 255, 0.08)', borderRadius: '50%', }} />
+                                <div style={{ position: 'absolute', bottom: -40, left: -40, width: 140, height: 140, background: 'rgba(255, 255, 255, 0.06)', borderRadius: '50%', }} />
+
+                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+                                        style={{
+                                            width: 56,
+                                            height: 56,
+                                            marginBottom: 16,
+                                            background: 'rgba(255, 255, 255, 0.2)',
+                                            backdropFilter: 'blur(10px)',
+                                            borderRadius: 14,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+                                            <path d="M12 5v14M5 12h14" />
+                                        </svg>
+                                    </motion.div>
+                                    <h2 style={{ margin: '0 0 8px 0', fontSize: 26, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
+                                        Create New Table
+                                    </h2>
+                                    <p style={{ margin: 0, fontSize: 14, color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.5 }}>
+                                        Add a new table to your restaurant layout
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Form */}
+                            <div style={{ padding: '32px' }}>
+                                <form onSubmit={handleSubmit}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                                        {/* Table Number */}
+                                        <motion.div
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.15 }}
+                                        >
+                                            <label htmlFor="number" style={{
+                                                display: 'block',
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                                color: 'var(--text)',
+                                                marginBottom: 8,
+                                                letterSpacing: '-0.01em',
+                                            }}>
+                                                Table Number <span style={{ color: '#ff4d4f' }}>*</span>
+                                            </label>
+                                            <input
+                                                id="number"
+                                                type="number"
+                                                name="number"
+                                                min="1"
+                                                value={formData.number}
+                                                onChange={(e) => {
+                                                    setFormData({ ...formData, number: e.target.value });
+                                                    if (errors.number) setErrors({ ...errors, number: '' });
+                                                }}
+                                                placeholder="Enter table number"
+                                                required
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '14px 16px',
+                                                    borderRadius: 10,
+                                                    border: errors.number ? '2px solid #ff4d4f' : '2px solid var(--border)',
+                                                    background: 'var(--surface)',
+                                                    color: 'var(--text)',
+                                                    fontSize: 15,
+                                                    fontWeight: 500,
+                                                    outline: 'none',
+                                                    transition: 'all 0.2s',
+                                                }}
+                                                onFocus={(e) => e.target.style.borderColor = '#FF380B'}
+                                                onBlur={(e) => e.target.style.borderColor = errors.number ? '#ff4d4f' : 'var(--border)'}
+                                            />
+                                            {errors.number && (
+                                                <motion.p
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    style={{ margin: '6px 0 0 0', fontSize: 12, color: '#ff4d4f', fontWeight: 500 }}
+                                                >
+                                                    {errors.number}
+                                                </motion.p>
+                                            )}
+                                        </motion.div>
+
+                                        {/* Capacity */}
+                                        <motion.div
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.2 }}
+                                        >
+                                            <label htmlFor="capacity" style={{
+                                                display: 'block',
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                                color: 'var(--text)',
+                                                marginBottom: 8,
+                                                letterSpacing: '-0.01em',
+                                            }}>
+                                                Seating Capacity <span style={{ color: '#ff4d4f' }}>*</span>
+                                            </label>
+                                            <input
+                                                id="capacity"
+                                                type="number"
+                                                name="capacity"
+                                                min="1"
+                                                max="20"
+                                                value={formData.capacity}
+                                                onChange={(e) => {
+                                                    setFormData({ ...formData, capacity: e.target.value });
+                                                    if (errors.capacity) setErrors({ ...errors, capacity: '' });
+                                                }}
+                                                placeholder="Number of seats (1-20)"
+                                                required
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '14px 16px',
+                                                    borderRadius: 10,
+                                                    border: errors.capacity ? '2px solid #ff4d4f' : '2px solid var(--border)',
+                                                    background: 'var(--surface)',
+                                                    color: 'var(--text)',
+                                                    fontSize: 15,
+                                                    fontWeight: 500,
+                                                    outline: 'none',
+                                                    transition: 'all 0.2s',
+                                                }}
+                                                onFocus={(e) => e.target.style.borderColor = '#FF380B'}
+                                                onBlur={(e) => e.target.style.borderColor = errors.capacity ? '#ff4d4f' : 'var(--border)'}
+                                            />
+                                            {errors.capacity && (
+                                                <motion.p
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    style={{ margin: '6px 0 0 0', fontSize: 12, color: '#ff4d4f', fontWeight: 500 }}
+                                                >
+                                                    {errors.capacity}
+                                                </motion.p>
+                                            )}
+                                        </motion.div>
+
+                                        {/* Area */}
+                                        <motion.div
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.25 }}
+                                        >
+                                            <label htmlFor="area" style={{
+                                                display: 'block',
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                                color: 'var(--text)',
+                                                marginBottom: 8,
+                                                letterSpacing: '-0.01em',
+                                            }}>
+                                                Dining Area <span style={{ color: '#ff4d4f' }}>*</span>
+                                            </label>
+                                            <div style={{ position: 'relative' }}>
+                                                <select
+                                                    id="area"
+                                                    name="area"
+                                                    value={formData.area}
+                                                    onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                                                    required
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '14px 16px',
+                                                        paddingRight: 40,
+                                                        borderRadius: 10,
+                                                        border: '2px solid var(--border)',
+                                                        background: 'var(--surface)',
+                                                        color: 'var(--text)',
+                                                        fontSize: 15,
+                                                        fontWeight: 500,
+                                                        cursor: 'pointer',
+                                                        appearance: 'none',
+                                                        outline: 'none',
+                                                        transition: 'all 0.2s',
+                                                    }}
+                                                    onFocus={(e) => e.target.style.borderColor = '#FF380B'}
+                                                    onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
+                                                >
+                                                    <option value="VIP">VIP Section</option>
+                                                    <option value="Indoor">Indoor Dining</option>
+                                                    <option value="Outdoor">Outdoor Terrace</option>
+                                                </select>
+                                                <svg
+                                                    style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                                                    width="16"
+                                                    height="16"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="var(--text-muted)"
+                                                    strokeWidth="2.5"
+                                                >
+                                                    <path d="M6 9l6 6 6-6" strokeLinecap="round" />
+                                                </svg>
+                                            </div>
+                                        </motion.div>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <motion.div
+                                        initial={{ y: 20, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ delay: 0.3 }}
+                                        style={{ display: 'flex', gap: 12, marginTop: 32 }}
+                                    >
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            type="button"
+                                            onClick={onClose}
+                                            style={{
+                                                flex: 1,
+                                                padding: '14px 20px',
+                                                borderRadius: 10,
+                                                border: '2px solid var(--border)',
+                                                background: 'var(--surface)',
+                                                color: 'var(--text)',
+                                                fontSize: 15,
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                letterSpacing: '-0.01em',
+                                            }}
+                                        >
+                                            Cancel
+                                        </motion.button>
+                                        <motion.button
+                                            whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(255, 56, 11, 0.4)' }}
+                                            whileTap={{ scale: 0.98 }}
+                                            type="submit"
+                                            style={{
+                                                flex: 2,
+                                                padding: '14px 20px',
+                                                borderRadius: 10,
+                                                border: 'none',
+                                                background: 'linear-gradient(135deg, #FF380B 0%, #ff6b3d 100%)',
+                                                color: '#fff',
+                                                fontSize: 15,
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: 8,
+                                                boxShadow: '0 4px 16px rgba(255, 56, 11, 0.3)',
+                                                letterSpacing: '-0.01em',
+                                            }}
+                                        >
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                                <path d="M12 5v14M5 12h14" />
+                                            </svg>
+                                            Create Table
+                                        </motion.button>
+                                    </motion.div>
+                                </form>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
+    );
+};
