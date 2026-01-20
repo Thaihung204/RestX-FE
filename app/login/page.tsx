@@ -3,12 +3,13 @@
 import LoginButton from "@/components/auth/LoginButton";
 import LoginHeader from "@/components/auth/LoginHeader";
 
-import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 
 export default function LoginPage() {
+  const { t } = useTranslation('auth');
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
   // Get initial theme from localStorage to prevent flash
@@ -43,12 +44,12 @@ export default function LoginPage() {
     const phoneDigits = phone.replace(/\D/g, "");
 
     if (phoneDigits.length !== 10) {
-      setPhoneError("Phone number must be exactly 10 digits");
+      setPhoneError(t('login_page.validation.phone_length'));
       return false;
     }
 
     if (!/^[0-9]{10}$/.test(phoneDigits)) {
-      setPhoneError("Phone number must contain only digits");
+      setPhoneError(t('login_page.validation.phone_digits'));
       return false;
     }
 
@@ -73,7 +74,7 @@ export default function LoginPage() {
     }
 
     if (name.trim().length < 2) {
-      setNameError("Name must be at least 2 characters");
+      setNameError(t('login_page.validation.name_length'));
       return false;
     }
 
@@ -115,7 +116,7 @@ export default function LoginPage() {
     setTimeout(() => {
       setLoading(false);
       alert(
-        `Login Form Submitted!\n\nPhone: ${phone}\nName: ${name}\nRemember Me: ${remember}\n\n(This is UI demo only - No API integration)`
+        t('login_page.alerts.submitted', { phone, name, remember })
       );
     }, 1000);
   };
@@ -144,14 +145,14 @@ export default function LoginPage() {
                 htmlFor="phone"
                 className="block text-sm font-medium mb-2 auth-label"
               >
-                Phone Number
+                {t('login_page.phone_label')}
               </label>
               <input
                 id="phone"
                 type="tel"
                 value={phone}
                 onChange={handlePhoneChange}
-                placeholder="0123456789"
+                placeholder={t('login_page.phone_placeholder')}
                 maxLength={10}
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
@@ -168,14 +169,14 @@ export default function LoginPage() {
                 htmlFor="name"
                 className="block text-sm font-medium mb-2 auth-label"
               >
-                Name
+                {t('login_page.name_label')}
               </label>
               <input
                 id="name"
                 type="text"
                 value={name}
                 onChange={handleNameChange}
-                placeholder="Enter your name"
+                placeholder={t('login_page.name_placeholder')}
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
                   borderColor: nameTouched && nameError ? '#ef4444' : undefined,
@@ -186,19 +187,19 @@ export default function LoginPage() {
               )}
             </div>
 
-            <LoginButton loading={loading} text="LOGIN" />
+            <LoginButton loading={loading} text={t('login_button.login_text')} />
 
             <div className="text-center text-sm mt-6 auth-text">
-              By continuing, you agree to RestX&apos;s{" "}
+              {t('login_page.terms_text')}{" "}
               <a
                 href="/terms"
                 className="font-medium"
                 style={{ color: '#FF380B' }}
                 onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
                 onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}>
-                Terms of Service
+                {t('login_page.terms_of_service')}
               </a>{" "}
-              and{" "}
+              &
               <a
                 href="/privacy"
                 className="font-medium"
@@ -206,14 +207,14 @@ export default function LoginPage() {
                 onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
                 onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
               >
-                Privacy Policy
+                {t('login_page.privacy_policy')}
               </a>
             </div>
 
             <div 
               className="text-center text-sm mt-4 auth-text"
             >
-              Or login with{" "}
+              {t('login_page.or_login_with')}{" "}
               <a
                 href="/login-email"
                 className="font-semibold transition-colors"
@@ -221,7 +222,7 @@ export default function LoginPage() {
                 onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
                 onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
               >
-                Email & Password
+                {t('login_page.email_password')}
               </a>
             </div>
           </form>

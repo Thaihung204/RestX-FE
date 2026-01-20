@@ -1,6 +1,7 @@
-import { RightOutlined } from "@ant-design/icons";
+import { RightOutlined, SketchOutlined } from "@ant-design/icons";
 import { Button, Card, Progress, Typography } from "antd";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
 
@@ -15,6 +16,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
   pointsToNextReward,
   totalPointsNeeded,
 }) => {
+  const { t } = useTranslation('common');
   const progress = (currentPoints / totalPointsNeeded) * 100;
 
   return (
@@ -65,7 +67,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
               letterSpacing: 1.5,
               textTransform: "uppercase",
             }}>
-            RestX Rewards
+            {t('points_card.title')}
           </Text>
           <Title
             level={2}
@@ -84,7 +86,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
                 color: "#888",
                 marginLeft: 8,
               }}>
-              điểm
+              {t('points_card.points')}
             </span>
           </Title>
         </div>
@@ -99,7 +101,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
             justifyContent: "center",
             boxShadow: "0 0 20px rgba(212, 175, 55, 0.4)",
           }}>
-          <span style={{ fontSize: 20 }}>💎</span>
+          <SketchOutlined style={{ fontSize: 24, color: '#fff' }} />
         </div>
       </div>
 
@@ -110,9 +112,9 @@ const PointsCard: React.FC<PointsCardProps> = ({
             justifyContent: "space-between",
             marginBottom: 8,
           }}>
-          <Text style={{ color: "#ccc", fontSize: 13 }}>Tiến độ hạng Vàng</Text>
+          <Text style={{ color: "#ccc", fontSize: 13 }}>{t('points_card.gold_progress')}</Text>
           <Text style={{ color: "#FF380B", fontSize: 13 }}>
-            Còn {pointsToNextReward} điểm
+            {t('points_card.remaining_points', { count: pointsToNextReward })}
           </Text>
         </div>
         <Progress
@@ -134,7 +136,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
             display: "flex",
             alignItems: "center",
           }}>
-          Xem ưu đãi đổi quà{" "}
+          {t('points_card.view_rewards')}{" "}
           <RightOutlined style={{ fontSize: 10, marginLeft: 4 }} />
         </Button>
       </div>
