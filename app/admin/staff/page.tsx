@@ -15,6 +15,7 @@ interface Staff {
   status: "active" | "inactive";
   avatar?: string;
   joinDate: string;
+  salary: number;
   shift: string;
   rating: number;
 }
@@ -30,6 +31,7 @@ export default function StaffPage() {
       role: "Manager",
       status: "active",
       joinDate: "2023-01-15",
+      salary: 25000000,
       shift: "Morning",
       rating: 4.9,
     },
@@ -41,6 +43,7 @@ export default function StaffPage() {
       role: "Waiter",
       status: "active",
       joinDate: "2024-02-20",
+      salary: 8000000,
       shift: "Evening",
       rating: 4.5,
     },
@@ -52,6 +55,7 @@ export default function StaffPage() {
       role: "Chef",
       status: "inactive",
       joinDate: "2023-11-10",
+      salary: 15000000,
       shift: "Afternoon",
       rating: 4.7,
     },
@@ -429,10 +433,27 @@ export default function StaffPage() {
                           className="font-medium text-sm"
                           style={{ color: "var(--text)" }}>
                           {new Date(member.joinDate).toLocaleDateString(
-                            "en-US",
-                            { month: "short", year: "numeric" },
+                            "vi-VN",
+                            { day: "2-digit", month: "2-digit", year: "numeric" },
                           )}
                         </p>
+                      </div>
+                      <div className="col-span-2 border-t border-dashed border-gray-700 pt-3 mt-1">
+                        <div className="flex justify-between items-center">
+                          <p
+                            className="text-xs"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("dashboard.staff.card.salary")}
+                          </p>
+                          <p
+                            className="font-medium text-sm"
+                            style={{ color: "#FF380B" }}>
+                            {new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(member.salary)}
+                          </p>
+                        </div>
                       </div>
                     </div>
 

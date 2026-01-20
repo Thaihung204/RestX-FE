@@ -370,7 +370,9 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                 border: '1px solid rgba(255,255,255,0.05)',
               }}
             >
-              <div style={{ color: '#888', fontSize: 14 }}>✕</div>
+              <div style={{ color: '#888', fontSize: 14 }}>
+                <CloseOutlined />
+              </div>
             </div>
 
             <div
