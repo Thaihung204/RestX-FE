@@ -287,7 +287,7 @@ const TenantPage: React.FC = () => {
           {/* Stats Cards Row - focused for admin/tenants */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card
-              bordered={false}
+              variant="borderless"
               className="shadow-md"
               style={{
                 background: "var(--card)",
@@ -310,7 +310,7 @@ const TenantPage: React.FC = () => {
             </Card>
 
             <Card
-              bordered={false}
+              variant="borderless"
               className="shadow-md"
               style={{
                 background: "var(--card)",
@@ -333,7 +333,7 @@ const TenantPage: React.FC = () => {
             </Card>
 
             <Card
-              bordered={false}
+              variant="borderless"
               className="shadow-md"
               style={{
                 background: "var(--card)",
@@ -371,7 +371,7 @@ const TenantPage: React.FC = () => {
                 label: "Restaurant List (Tenants)",
                 children: (
                   <Card
-                    bordered={false}
+                    variant="borderless"
                     className="shadow-md overflow-hidden"
                     bodyStyle={{ padding: 0 }}
                     style={{
@@ -443,7 +443,7 @@ const TenantPage: React.FC = () => {
                   <div className="space-y-4">
                     {/* Filter bar for revenue */}
                     <Card
-                      bordered={false}
+                      variant="borderless"
                       style={{
                         background: "var(--card)",
                         borderColor: "var(--border)",
