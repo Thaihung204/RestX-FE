@@ -2,27 +2,30 @@
 
 import NotificationSystem from "@/components/notifications/NotificationSystem";
 import {
-    DeleteOutlined,
-    DownOutlined,
-    FilterOutlined,
-    MinusOutlined,
-    PlusOutlined,
-    SearchOutlined,
-    ShoppingCartOutlined,
+  CloseOutlined,
+  CoffeeOutlined,
+  DeleteOutlined,
+  DownOutlined,
+  FilterOutlined,
+  FireOutlined,
+  MinusOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  ShoppingCartOutlined
 } from "@ant-design/icons";
 import {
-    Affix,
-    Button,
-    Card,
-    Col,
-    ConfigProvider,
-    Input,
-    Modal,
-    Row,
-    Select,
-    Typography,
-    message,
-    theme,
+  Affix,
+  Button,
+  Card,
+  Col,
+  ConfigProvider,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Typography,
+  message,
+  theme,
 } from "antd";
 import { useMemo, useState } from "react";
 
@@ -698,7 +701,9 @@ export default function MenuPage() {
                     backdropFilter: "blur(4px)",
                     border: "1px solid rgba(255,255,255,0.05)",
                   }}>
-                  <div style={{ color: "#888", fontSize: 14 }}>✕</div>
+                  <div style={{ color: "#888", fontSize: 14 }}>
+                    <CloseOutlined />
+                  </div>
                 </div>
 
                 <div
@@ -791,7 +796,7 @@ export default function MenuPage() {
                               textTransform: "uppercase",
                               letterSpacing: 1,
                             }}>
-                            Đồ ăn
+                            <FireOutlined style={{ marginRight: 8 }} /> Đồ ăn
                           </Text>
                           {foodItems.map((item) => (
                             <Card
@@ -947,7 +952,7 @@ export default function MenuPage() {
                               textTransform: "uppercase",
                               letterSpacing: 1,
                             }}>
-                            🥤 Nước uống
+                            <CoffeeOutlined style={{ marginRight: 8 }} /> Nước uống
                           </Text>
                           {drinkItems.map((item) => (
                             <Card
@@ -1228,7 +1233,9 @@ export default function MenuPage() {
                       border: "1px solid rgba(255,255,255,0.05)",
                     }}
                   >
-                    <div style={{ color: "#888", fontSize: 14 }}>✕</div>
+                    <div style={{ color: "#888", fontSize: 14 }}>
+                      <CloseOutlined />
+                    </div>
                   </div>
 
                   {/* --- Content Body --- */}
@@ -1267,7 +1274,7 @@ export default function MenuPage() {
                             justifyContent: "center",
                           }}
                         >
-                          <span style={{ fontSize: 40 }}>🍽️</span>
+                          <FireOutlined style={{ fontSize: 40, color: '#FF380B' }} />
                         </div>
                       )}
                       

@@ -1,4 +1,4 @@
-import { RightOutlined } from "@ant-design/icons";
+import { RightOutlined, SketchOutlined } from "@ant-design/icons";
 import { Button, Card, Progress, Typography } from "antd";
 import React from "react";
 
@@ -99,7 +99,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
             justifyContent: "center",
             boxShadow: "0 0 20px rgba(212, 175, 55, 0.4)",
           }}>
-          <span style={{ fontSize: 20 }}>💎</span>
+          <SketchOutlined style={{ fontSize: 20, color: '#fff' }} />
         </div>
       </div>
 
@@ -110,7 +110,10 @@ const PointsCard: React.FC<PointsCardProps> = ({
             justifyContent: "space-between",
             marginBottom: 8,
           }}>
-          <Text style={{ color: "#ccc", fontSize: 13 }}>Tiến độ hạng Vàng</Text>
+          <Text style={{ color: "#ccc", fontSize: 13 }}>
+            <SketchOutlined style={{ fontSize: 13, color: '#ccc', marginRight: 4 }} />
+            Tiến độ hạng Vàng
+          </Text>
           <Text style={{ color: "#FF380B", fontSize: 13 }}>
             Còn {pointsToNextReward} điểm
           </Text>

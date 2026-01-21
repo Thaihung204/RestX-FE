@@ -4,12 +4,14 @@ import ThemeToggle from "@/app/components/ThemeToggle";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import {
   CheckCircleOutlined,
+  MailOutlined,
   MoreOutlined,
+  PhoneOutlined,
   PlusOutlined,
   ReloadOutlined,
   RiseOutlined,
   SearchOutlined,
-  ShopOutlined,
+  ShopOutlined
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import {
@@ -38,8 +40,15 @@ import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPi
 interface ITenant {
   id: string;
   name: string;
-  slug: string;
+  hostName: string;
+  businessName: string;
+  phoneNumber: string;
+  addressLine1: string;
+  addressLine2: string;
+  addressLine3: string;
+  addressLine4: string;
   ownerEmail: string;
+  mailRestaurant: string;
   plan: "basic" | "pro" | "enterprise";
   status: "active" | "inactive" | "maintenance";
   lastActive: string;
@@ -50,8 +59,15 @@ const MOCK_DATA: ITenant[] = [
   {
     id: "t-001",
     name: "KFC Da Nang",
-    slug: "kfc-danang",
+    hostName: "kfc-danang",
+    businessName: "KFC Da Nang Restaurant",
+    phoneNumber: "0236123456",
+    addressLine1: "123",
+    addressLine2: "Nguyen Van Linh",
+    addressLine3: "Da Nang",
+    addressLine4: "Vietnam",
     ownerEmail: "ops.danang@kfc.com",
+    mailRestaurant: "contact@kfc-danang.vn",
     plan: "enterprise",
     status: "active",
     lastActive: "2025-01-10T09:15:00Z",
@@ -59,8 +75,15 @@ const MOCK_DATA: ITenant[] = [
   {
     id: "t-002",
     name: "Pizza Hut Hanoi",
-    slug: "pizzahut-hanoi",
+    hostName: "pizzahut-hanoi",
+    businessName: "Pizza Hut Hanoi Branch",
+    phoneNumber: "0241234567",
+    addressLine1: "456",
+    addressLine2: "Tran Duy Hung",
+    addressLine3: "Hanoi",
+    addressLine4: "Vietnam",
     ownerEmail: "owner@pizzahut.vn",
+    mailRestaurant: "info@pizzahut-hanoi.vn",
     plan: "pro",
     status: "active",
     lastActive: "2025-01-09T14:25:00Z",
@@ -68,8 +91,15 @@ const MOCK_DATA: ITenant[] = [
   {
     id: "t-003",
     name: "Highlands Coffee HCMC",
-    slug: "highlands-hcmc",
+    hostName: "highlands-hcmc",
+    businessName: "Highlands Coffee Ho Chi Minh",
+    phoneNumber: "0281234567",
+    addressLine1: "789",
+    addressLine2: "Le Lai",
+    addressLine3: "Ho Chi Minh",
+    addressLine4: "Vietnam",
     ownerEmail: "franchise@highlands.vn",
+    mailRestaurant: "hcmc@highlands.vn",
     plan: "enterprise",
     status: "maintenance",
     lastActive: "2025-01-08T05:45:00Z",
@@ -77,8 +107,15 @@ const MOCK_DATA: ITenant[] = [
   {
     id: "t-004",
     name: "Jollibee Hue",
-    slug: "jollibee-hue",
+    hostName: "jollibee-hue",
+    businessName: "Jollibee Hue City",
+    phoneNumber: "0234567890",
+    addressLine1: "101",
+    addressLine2: "Hung Vuong",
+    addressLine3: "Hue",
+    addressLine4: "Vietnam",
     ownerEmail: "contact@jollibee.vn",
+    mailRestaurant: "hue@jollibee.vn",
     plan: "basic",
     status: "inactive",
     lastActive: "2024-12-20T11:00:00Z",
@@ -86,8 +123,15 @@ const MOCK_DATA: ITenant[] = [
   {
     id: "t-005",
     name: "Lotteria Da Lat",
-    slug: "lotteria-dalat",
+    hostName: "lotteria-dalat",
+    businessName: "Lotteria Da Lat Branch",
+    phoneNumber: "0263456789",
+    addressLine1: "202",
+    addressLine2: "Tran Phu",
+    addressLine3: "Da Lat",
+    addressLine4: "Vietnam",
     ownerEmail: "dalat@lotteria.vn",
+    mailRestaurant: "contact@lotteria-dalat.vn",
     plan: "pro",
     status: "active",
     lastActive: "2025-01-07T07:10:00Z",
@@ -95,8 +139,15 @@ const MOCK_DATA: ITenant[] = [
   {
     id: "t-006",
     name: "Starbucks District 1",
-    slug: "starbucks-d1",
+    hostName: "starbucks-d1",
+    businessName: "Starbucks District 1 HCMC",
+    phoneNumber: "0287654321",
+    addressLine1: "303",
+    addressLine2: "Dong Khoi",
+    addressLine3: "Ho Chi Minh",
+    addressLine4: "Vietnam",
     ownerEmail: "d1@starbucks.vn",
+    mailRestaurant: "district1@starbucks.vn",
     plan: "enterprise",
     status: "active",
     lastActive: "2025-01-11T10:00:00Z",
@@ -104,8 +155,15 @@ const MOCK_DATA: ITenant[] = [
   {
     id: "t-007",
     name: "TocoToco Hai Phong",
-    slug: "tocotoco-haiphong",
+    hostName: "tocotoco-haiphong",
+    businessName: "TocoToco Hai Phong Store",
+    phoneNumber: "0225678901",
+    addressLine1: "404",
+    addressLine2: "Tran Hung Dao",
+    addressLine3: "Hai Phong",
+    addressLine4: "Vietnam",
     ownerEmail: "hp@tocotoco.vn",
+    mailRestaurant: "haiphong@tocotoco.vn",
     plan: "basic",
     status: "inactive",
     lastActive: "2024-12-18T16:30:00Z",
@@ -113,8 +171,15 @@ const MOCK_DATA: ITenant[] = [
   {
     id: "t-008",
     name: "The Coffee House Nha Trang",
-    slug: "tch-nhatrang",
+    hostName: "tch-nhatrang",
+    businessName: "The Coffee House Nha Trang",
+    phoneNumber: "0258901234",
+    addressLine1: "505",
+    addressLine2: "Tran Phu",
+    addressLine3: "Nha Trang",
+    addressLine4: "Vietnam",
     ownerEmail: "nhatrang@coffeehouse.vn",
+    mailRestaurant: "contact@tch-nhatrang.vn",
     plan: "pro",
     status: "maintenance",
     lastActive: "2025-01-05T12:05:00Z",
@@ -122,8 +187,15 @@ const MOCK_DATA: ITenant[] = [
   {
     id: "t-009",
     name: "Phuc Long Thu Duc",
-    slug: "phuclong-thuduc",
+    hostName: "phuclong-thuduc",
+    businessName: "Phuc Long Thu Duc District",
+    phoneNumber: "0289012345",
+    addressLine1: "606",
+    addressLine2: "Vo Van Ngan",
+    addressLine3: "Ho Chi Minh",
+    addressLine4: "Vietnam",
     ownerEmail: "thuduc@phuclong.vn",
+    mailRestaurant: "thuduc@phuclong.vn",
     plan: "pro",
     status: "active",
     lastActive: "2025-01-10T21:40:00Z",
@@ -131,8 +203,15 @@ const MOCK_DATA: ITenant[] = [
   {
     id: "t-010",
     name: "Texas Chicken Da Nang",
-    slug: "texas-danang",
+    hostName: "texas-danang",
+    businessName: "Texas Chicken Da Nang Branch",
+    phoneNumber: "0236901234",
+    addressLine1: "707",
+    addressLine2: "Bach Dang",
+    addressLine3: "Da Nang",
+    addressLine4: "Vietnam",
     ownerEmail: "texas.dn@texaschicken.vn",
+    mailRestaurant: "danang@texaschicken.vn",
     plan: "basic",
     status: "active",
     lastActive: "2025-01-06T09:55:00Z",
@@ -211,8 +290,11 @@ const TenantPage: React.FC = () => {
       const matchesQuery =
         !query ||
         item.name.toLowerCase().includes(query) ||
-        item.slug.toLowerCase().includes(query) ||
-        item.ownerEmail.toLowerCase().includes(query);
+        item.hostName.toLowerCase().includes(query) ||
+        item.businessName.toLowerCase().includes(query) ||
+        item.phoneNumber.includes(query) ||
+        item.ownerEmail.toLowerCase().includes(query) ||
+        item.mailRestaurant.toLowerCase().includes(query);
       return matchesStatus && matchesQuery;
     });
   }, [search, status]);
@@ -241,10 +323,10 @@ const TenantPage: React.FC = () => {
 
   const columns: ColumnsType<ITenant> = [
     {
-      title: "Tenant Name",
+      title: "Tenant Info",
       dataIndex: "name",
       key: "tenant",
-      width: 300,
+      width: 280,
       render: (_, record) => (
         <div className="flex items-center gap-3">
           <Avatar
@@ -260,11 +342,46 @@ const TenantPage: React.FC = () => {
               {record.name}
             </span>
             <span
+              className="text-xs"
+              style={{ color: "var(--text-muted)" }}>
+              {record.businessName}
+            </span>
+            <span
               className="text-xs font-mono"
               style={{ color: "var(--text-muted)" }}>
-              {record.slug}.restx.food
+              {record.hostName}.restx.food
             </span>
           </div>
+        </div>
+      ),
+    },
+    {
+      title: "Contact",
+      key: "contact",
+      width: 200,
+      render: (_, record) => (
+        <div className="flex flex-col gap-1">
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+            <PhoneOutlined /> {record.phoneNumber}
+          </span>
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+            <MailOutlined /> {record.mailRestaurant}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: "Address",
+      key: "address",
+      width: 220,
+      render: (_, record) => (
+        <div className="flex flex-col">
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+            {record.addressLine1} {record.addressLine2}
+          </span>
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+            {record.addressLine3}, {record.addressLine4}
+          </span>
         </div>
       ),
     },
@@ -272,20 +389,23 @@ const TenantPage: React.FC = () => {
       title: "Plan",
       dataIndex: "plan",
       key: "plan",
+      width: 100,
       render: (plan: ITenant["plan"]) => <TenantPlanTag plan={plan} />,
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
+      width: 120,
       render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
     },
     {
-      title: "Owner Info",
+      title: "Owner",
       dataIndex: "ownerEmail",
       key: "ownerEmail",
+      width: 180,
       render: (email) => (
-        <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
           {email}
         </span>
       ),
@@ -294,9 +414,10 @@ const TenantPage: React.FC = () => {
       title: "Last Active",
       dataIndex: "lastActive",
       key: "lastActive",
+      width: 110,
       render: (value: string) => (
         <span
-          className="text-sm font-variant-numeric tabular-nums"
+          className="text-xs font-variant-numeric tabular-nums"
           style={{ color: "var(--text-muted)" }}>
           {formatDate(value)}
         </span>
@@ -377,7 +498,7 @@ const TenantPage: React.FC = () => {
           {/* Stats Cards Row - focused for admin/tenants */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card
-              bordered={false}
+              variant="borderless"
               className="shadow-md"
               style={{
                 background: "var(--card)",
@@ -393,12 +514,12 @@ const TenantPage: React.FC = () => {
                 }
                 value={stats.total}
                 prefix={<ShopOutlined style={{ color: "#FF380B" }} />}
-                valueStyle={{ color: "var(--text)" }}
+                styles={{ content: { color: "var(--text)" } }}
               />
             </Card>
 
             <Card
-              bordered={false}
+              variant="borderless"
               className="shadow-md"
               style={{
                 background: "var(--card)",
@@ -413,13 +534,13 @@ const TenantPage: React.FC = () => {
                   </span>
                 }
                 value={stats.active}
-                valueStyle={{ color: "#34d399" }}
+                styles={{ content: { color: "#34d399" } }}
                 prefix={<CheckCircleOutlined style={{ color: "#34d399" }} />}
               />
             </Card>
 
             <Card
-              bordered={false}
+              variant="borderless"
               className="shadow-md"
               style={{
                 background: "var(--card)",
@@ -438,7 +559,7 @@ const TenantPage: React.FC = () => {
                 prefix={
                   <RiseOutlined style={{ color: "#60a5fa", marginRight: 4 }} />
                 }
-                valueStyle={{ color: "#60a5fa" }}
+                styles={{ content: { color: "#60a5fa" } }}
                 suffix="₫"
               />
             </Card>
@@ -453,9 +574,9 @@ const TenantPage: React.FC = () => {
                 label: "Restaurant List (Tenants)",
                 children: (
                   <Card
-                    bordered={false}
+                    variant="borderless"
                     className="shadow-md overflow-hidden"
-                    bodyStyle={{ padding: 0 }}
+                    styles={{ body: { padding: 0 } }}
                     style={{
                       background: "var(--card)",
                       borderColor: "var(--border)",
@@ -522,7 +643,7 @@ const TenantPage: React.FC = () => {
                   <div className="space-y-4">
                     {/* Filter bar for revenue */}
                     <Card
-                      bordered={false}
+                      variant="borderless"
                       style={{
                         background: "var(--card)",
                         borderColor: "var(--border)",
