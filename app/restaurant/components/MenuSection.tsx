@@ -1,13 +1,17 @@
 'use client';
 
-import React from 'react';
 import { Typography } from 'antd';
 import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
+import React from 'react';
+
+import { useTranslation } from 'react-i18next';
 
 const { Title } = Typography;
 
 const MenuSection: React.FC = () => {
   const { mode } = useThemeMode();
+  const { t } = useTranslation();
+
   return (
     <section
       id="menu"
@@ -35,7 +39,7 @@ const MenuSection: React.FC = () => {
                 fontFamily: 'serif',
                 margin: 0,
               }}>
-              Thực đơn của chúng tôi
+              {t('restaurant.menu_section.title')}
             </Title>
             <div
               style={{
@@ -50,7 +54,7 @@ const MenuSection: React.FC = () => {
         {/* Menu content will be added here */}
         <div style={{ textAlign: 'center', marginTop: 60 }}>
           <p style={{ color: mode === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.65)', fontSize: 16 }}>
-            Thực đơn đang được cập nhật...
+            {t('restaurant.menu_section.not_updated')}
           </p>
         </div>
       </div>

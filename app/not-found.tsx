@@ -1,19 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Button, Typography, Space, Card } from 'antd';
 import {
-  HomeOutlined,
-  ArrowLeftOutlined,
-  CoffeeOutlined,
+    ArrowLeftOutlined,
+    CoffeeOutlined,
+    HomeOutlined,
 } from '@ant-design/icons';
+import { Button, Card, Space, Typography } from 'antd';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
 
 export default function NotFound() {
+  const { t } = useTranslation('common');
   const router = useRouter();
   // Use state with safe default to prevent hydration mismatch
   const [mode, setMode] = useState<'light' | 'dark'>('light');
@@ -172,8 +174,8 @@ export default function NotFound() {
                 marginBottom: '16px',
                 color: isDark ? '#ECECEC' : '#111111',
               }}>
-              Trang không tìm thấy
-            </Title>
+                {t('not_found.title')}
+              </Title>
           </motion.div>
 
           {/* Description */}
@@ -186,8 +188,7 @@ export default function NotFound() {
                 maxWidth: '500px',
                 margin: '0 auto 32px',
               }}>
-              Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.
-              Có thể món ăn này đã hết trong thực đơn!
+              {t('not_found.description')}
             </Paragraph>
           </motion.div>
 
@@ -209,7 +210,7 @@ export default function NotFound() {
                   fontWeight: 600,
                   boxShadow: '0 4px 16px rgba(255, 56, 11, 0.3)',
                 }}>
-                Về trang chủ
+                {t('not_found.back_home')}
               </Button>
 
               <Button
@@ -228,7 +229,7 @@ export default function NotFound() {
                   color: isDark ? '#ECECEC' : '#111111',
                   fontWeight: 600,
                 }}>
-                Quay lại
+                {t('not_found.back')}
               </Button>
             </Space>
           </motion.div>
@@ -242,7 +243,7 @@ export default function NotFound() {
                 display: 'block',
                 marginBottom: '16px',
               }}>
-              Hoặc truy cập:
+              {t('not_found.or_visit')}
             </Text>
             <Space size="middle" wrap className="justify-center">
               <Link
@@ -262,7 +263,7 @@ export default function NotFound() {
                   e.currentTarget.style.color = '#FF380B';
                   e.currentTarget.style.textDecoration = 'none';
                 }}>
-                Nhà hàng
+                {t('not_found.restaurant')}
               </Link>
               <span style={{ color: isDark ? '#4B5563' : '#D1D5DB' }}>•</span>
               <Link
@@ -282,7 +283,7 @@ export default function NotFound() {
                   e.currentTarget.style.color = '#FF380B';
                   e.currentTarget.style.textDecoration = 'none';
                 }}>
-                Đăng nhập
+                {t('not_found.login')}
               </Link>
               <span style={{ color: isDark ? '#4B5563' : '#D1D5DB' }}>•</span>
               <Link
@@ -302,7 +303,7 @@ export default function NotFound() {
                   e.currentTarget.style.color = '#FF380B';
                   e.currentTarget.style.textDecoration = 'none';
                 }}>
-                Khách hàng
+                {t('not_found.customer')}
               </Link>
             </Space>
           </motion.div>

@@ -1,10 +1,13 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface LoginHeaderProps {
   title?: string;
 }
 
-const LoginHeader: React.FC<LoginHeaderProps> = ({ title = 'Login' }) => {
+const LoginHeader: React.FC<LoginHeaderProps> = ({ title }) => {
+  const { t } = useTranslation('auth');
+  const displayTitle = title || t('login_header.default_title');
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-6">
@@ -16,8 +19,8 @@ const LoginHeader: React.FC<LoginHeaderProps> = ({ title = 'Login' }) => {
           />
         </div>
         <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">{title}</h2>
-          <p className="text-sm text-gray-500 mt-1">Welcome to Restaurant</p>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">{displayTitle}</h2>
+          <p className="text-sm text-gray-500 mt-1">{t('login_header.subtitle')}</p>
         </div>
       </div>
     </div>

@@ -8,9 +8,11 @@ import vi from './locales/vi.json';
 const resources = {
   en: {
     common: en,
+    auth: en.auth,
   },
   vi: {
     common: vi,
+    auth: vi.auth,
   },
 };
 

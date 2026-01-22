@@ -2,10 +2,12 @@
 
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function RegisterPage() {
+  const { t } = useTranslation('auth');
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
   // Get initial theme from localStorage to prevent flash
@@ -52,7 +54,7 @@ export default function RegisterPage() {
   const validateEmail = (email: string) => {
     if (!email) return "";
     if (!/\S+@\S+\.\S+/.test(email)) {
-      return "Please enter a valid email address";
+      return t('register_page.validation.invalid_email');
     }
     return "";
   };
@@ -60,7 +62,7 @@ export default function RegisterPage() {
   const validatePhone = (phone: string) => {
     if (!phone) return "";
     if (!/^[0-9]{10}$/.test(phone)) {
-      return "Please enter a valid 10-digit phone number";
+      return t('register_page.validation.invalid_phone');
     }
     return "";
   };
@@ -71,19 +73,19 @@ export default function RegisterPage() {
     const errors: string[] = [];
 
     if (pwd.length < 8) {
-      errors.push("At least 8 characters");
+      errors.push(t('register_page.password_requirements.length'));
     }
     if (!/(?=.*[a-z])/.test(pwd)) {
-      errors.push("At least one lowercase letter (a-z)");
+      errors.push(t('register_page.password_requirements.lowercase'));
     }
     if (!/(?=.*[A-Z])/.test(pwd)) {
-      errors.push("At least one uppercase letter (A-Z)");
+      errors.push(t('register_page.password_requirements.uppercase'));
     }
     if (!/(?=.*[0-9])/.test(pwd)) {
-      errors.push("At least one number (0-9)");
+      errors.push(t('register_page.password_requirements.number'));
     }
     if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(pwd)) {
-      errors.push("At least one special character (!@#$%...)");
+      errors.push(t('register_page.password_requirements.special'));
     }
 
     return errors;
@@ -98,7 +100,7 @@ export default function RegisterPage() {
   const validateConfirmPassword = (confirmPwd: string, pwd: string) => {
     if (!confirmPwd) return "";
     if (confirmPwd !== pwd) {
-      return "Passwords do not match";
+      return t('register_page.validation.password_mismatch');
     }
     return "";
   };
@@ -146,8 +148,8 @@ export default function RegisterPage() {
 
     // Validate all fields
     const newErrors = {
-      firstName: !formData.firstName ? "Please enter your first name" : "",
-      lastName: !formData.lastName ? "Please enter your last name" : "",
+      firstName: !formData.firstName ? t('register_page.validation.required_first_name') : "",
+      lastName: !formData.lastName ? t('register_page.validation.required_last_name') : "",
       email: validateEmail(formData.email),
       phone: validatePhone(formData.phone),
       password: validatePassword(formData.password),
@@ -171,7 +173,7 @@ export default function RegisterPage() {
     if (hasErrors) return;
 
     if (!acceptTerms) {
-      alert("Please accept the Terms of Service and Privacy Policy");
+      alert(t('register_page.alerts.accept_terms'));
       return;
     }
 
@@ -179,8 +181,9 @@ export default function RegisterPage() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
+      setLoading(false);
       alert(
-        `Registration Submitted!\n\nName: ${formData.firstName} ${formData.lastName}\nEmail: ${formData.email}\nPhone: ${formData.phone}\n\n(This is UI demo only - No API integration)`
+        t('register_page.alerts.submitted', { firstName: formData.firstName, lastName: formData.lastName, email: formData.email, phone: formData.phone })
       );
     }, 1000);
   };
@@ -205,9 +208,9 @@ export default function RegisterPage() {
             <h2 
               className="text-3xl font-bold mb-2 auth-title"
             >
-              Create Account
+              {t('register_page.title')}
             </h2>
-            <p className="auth-text">Join RestX today</p>
+            <p className="auth-text">{t('register_page.subtitle')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -218,7 +221,7 @@ export default function RegisterPage() {
                   htmlFor="firstName"
                   className="block text-sm font-medium mb-2 auth-label"
                 >
-                  First Name
+                  {t('register_page.first_name')}
                 </label>
                 <input
                   id="firstName"
@@ -244,7 +247,7 @@ export default function RegisterPage() {
                   htmlFor="lastName"
                   className="block text-sm font-medium mb-2 auth-label"
                 >
-                  Last Name
+                  {t('register_page.last_name')}
                 </label>
                 <input
                   id="lastName"
@@ -270,7 +273,7 @@ export default function RegisterPage() {
                 htmlFor="email"
                 className="block text-sm font-medium mb-2 auth-label"
               >
-                Email
+                {t('register_page.email')}
               </label>
               <input
                 id="email"
@@ -295,7 +298,7 @@ export default function RegisterPage() {
                 htmlFor="phone"
                 className="block text-sm font-medium mb-2 auth-label"
               >
-                Phone Number
+                {t('register_page.phone')}
               </label>
               <input
                 id="phone"
@@ -320,7 +323,7 @@ export default function RegisterPage() {
                 htmlFor="password"
                 className="block text-sm font-medium mb-2 auth-label"
               >
-                Password
+                {t('register_page.password')}
               </label>
               <div className="relative">
                 <input
@@ -329,7 +332,7 @@ export default function RegisterPage() {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Enter your password"
+                  placeholder={t('register_page.password_placeholder')}
                   className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                   style={{
                     borderColor: touched.password && errors.password.length > 0 ? '#ef4444' : undefined,
@@ -392,7 +395,7 @@ export default function RegisterPage() {
                 htmlFor="confirmPassword"
                 className="block text-sm font-medium mb-2 auth-label"
               >
-                Confirm Password
+                {t('register_page.confirm_password')}
               </label>
               <div className="relative">
                 <input
@@ -401,7 +404,7 @@ export default function RegisterPage() {
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  placeholder="Confirm your password"
+                  placeholder={t('register_page.confirm_password_placeholder')}
                   className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                   style={{
                     borderColor: touched.confirmPassword && errors.confirmPassword ? '#ef4444' : undefined,
@@ -467,7 +470,7 @@ export default function RegisterPage() {
                 />
               </div>
               <label htmlFor="terms" className="ml-3 text-sm auth-text">
-                I agree to RestX&apos;s{" "}
+                {t('register_page.i_agree')}{" "}
                 <a
                   href="/terms"
                   className="font-medium"
@@ -475,9 +478,9 @@ export default function RegisterPage() {
                   onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
                   onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                 >
-                  Terms of Service
+                  {t('register_page.terms_of_service')}
                 </a>{" "}
-                and{" "}
+                &{" "}
                 <a
                   href="/privacy"
                   className="font-medium"
@@ -485,22 +488,22 @@ export default function RegisterPage() {
                   onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
                   onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
                 >
-                  Privacy Policy
+                  {t('register_page.privacy_policy')}
                 </a>
               </label>
             </div>
 
             <RememberCheckbox checked={remember} onChange={setRemember} />
-            <LoginButton loading={loading} text="CREATE ACCOUNT" />
+            <LoginButton loading={loading} text={t('register_page.create_account_btn')} />
 
             <div className="text-center text-sm auth-text mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-              Already have an account?{" "}
+              {t('register_page.already_have_account')}{" "}
               <a
                 href="/login"
                 className="font-semibold transition-colors" style={{ color: '#FF380B' }}
                 onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
                 onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}>
-                Sign in here
+                {t('register_page.sign_in_here')}
               </a>
             </div>
           </form>

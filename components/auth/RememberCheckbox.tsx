@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface RememberCheckboxProps {
   checked: boolean;
@@ -8,6 +9,7 @@ interface RememberCheckboxProps {
 }
 
 const RememberCheckbox: React.FC<RememberCheckboxProps> = ({ checked, onChange }) => {
+  const { t } = useTranslation('auth');
   return (
     <div className="flex items-center mb-4">
       <input
@@ -22,7 +24,7 @@ const RememberCheckbox: React.FC<RememberCheckboxProps> = ({ checked, onChange }
         htmlFor="remember" 
         className="ml-2 text-sm cursor-pointer auth-text"
       >
-        Keep me logged in
+        {t('remember_me')}
       </label>
     </div>
   );

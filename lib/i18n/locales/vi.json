@@ -13,7 +13,6 @@
       },
       "actions": {
         "view_schedule": "Xem lịch làm việc",
-        "create_order": "Tạo Order mới",
         "view_table_map": "Xem sơ đồ bàn",
         "quick_actions": "Thao tác nhanh",
         "refresh_data": "Làm mới dữ liệu"
@@ -49,7 +48,6 @@
         "placeholder": "Tìm order...",
         "placeholder_full": "Tìm theo mã order hoặc tên bàn..."
       },
-      "create_order": "Tạo Order mới",
       "create_order_short": "Tạo Order",
       "stats": {
         "pending": "Chờ xử lý",
@@ -72,22 +70,9 @@
         "other_items": "món khác",
         "items_not_done": "chưa xong"
       },
-      "status": {
-        "pending": "Chờ xử lý",
-        "preparing": "Đang nấu",
-        "ready": "Sẵn sàng",
-        "served": "Đã phục vụ",
-        "cancelled": "Đã hủy"
-      },
-      "item_status": {
-        "pending": "Chờ",
-        "preparing": "Đang nấu",
-        "ready": "Sẵn sàng",
-        "served": "Đã phục vụ"
-      },
+
       "modal": {
         "order_detail": "Chi tiết Order",
-        "new_order": "Tạo Order mới",
         "cart": "Giỏ hàng",
         "select_table": "Chọn bàn",
         "no_items": "Chưa có món nào",
@@ -350,6 +335,7 @@
         "tables": "Bàn",
         "menu": "Thực đơn",
         "orders": "Đơn hàng",
+        "customers": "Khách hàng",
         "staff": "Nhân viên",
         "settings": "Cài đặt",
         "help": "Trợ giúp"
@@ -456,7 +442,8 @@
       },
       "card": {
         "shift": "Ca làm",
-        "joined": "Ngày vào",
+        "joined": "Ngày vào làm",
+        "salary": "Lương",
         "view_profile": "Xem hồ sơ"
       },
       "roles": {
@@ -632,7 +619,20 @@
   },
   "common": {
     "time": {
-      "minutes_ago": "{{count}} phút trước"
+      "just_now": "Vừa xong",
+      "minutes_ago": "{{count}} phút trước",
+      "hours_ago": "{{count}} giờ trước",
+      "days_ago": "{{count}} ngày trước"
+    },
+    "status": {
+      "pending": "Chờ xử lý",
+      "preparing": "Đang nấu",
+      "ready": "Sẵn sàng",
+      "served": "Đã phục vụ",
+      "cancelled": "Đã hủy"
+    },
+    "actions": {
+      "create_order": "Tạo Order mới"
     },
     "language": "Ngôn ngữ",
     "english": "English",
@@ -787,31 +787,29 @@
       "home": "Trang chủ",
       "about": "Giới thiệu",
       "menu": {
-        "title": "Menu",
-        "all": "Tất cả món",
+        "title": "Thực đơn",
+        "all": "Tất cả",
         "appetizer": "Khai vị",
         "main": "Món chính",
         "dessert": "Tráng miệng",
         "drink": "Đồ uống"
       },
-      "featured": "Món ăn nổi bật",
-      "daily": "Món ngon mỗi ngày",
+      "featured": "Nổi bật",
+      "daily": "Món trong ngày",
       "news": "Tin tức",
-      "book_table": "Đặt bàn",
-      "title": "RestX Restaurant"
+      "title": "RestX",
+      "book_table": "Đặt bàn"
     },
     "hero": {
-      "title": "RestX Restaurant",
-      "subtitle": "Món ăn đa dạng",
-      "cta": "ĐẶT BÀN NGAY"
+      "title": "Hương vị Tinh tế",
+      "subtitle": "Trải nghiệm ẩm thực đẳng cấp với những món ăn được chế biến công phu từ những nguyên liệu tươi ngon nhất.",
+      "cta": "KHÁM PHÁ NGAY"
     },
     "about": {
-      "subtitle": "Về chúng tôi",
-      "title": "Đam mê ẩm thực",
-      "description": "Chúng tôi mang đến trải nghiệm ẩm thực tinh tế với những món ăn được chế biến từ nguyên liệu tươi ngon nhất.",
-      "years_experience": "Năm kinh nghiệm",
-      "master_chefs": "Đầu bếp hàng đầu",
-      "read_more": "Xem thêm"
+      "title": "Về Chúng Tôi",
+      "restaurant_name": "RestX Restaurant",
+      "description": "Tại RestX Restaurant, chúng tôi đặt khách hàng lên hàng đầu. Với đội ngũ nhân viên tận tâm và những công thức nấu ăn độc đáo, chúng tôi cam kết mang đến trải nghiệm ẩm thực tuyệt vời nhất. Mỗi món ăn được chế biến cẩn thận với nguyên liệu tươi ngon nhất, tạo nên hương vị đặc biệt không thể tìm thấy ở đâu khác. Chúng tôi xin chân thành cảm ơn sự ủng hộ của quý khách.",
+      "see_more": "Xem Thêm"
     },
     "categories": {
       "title": "Danh mục nổi bật",
@@ -820,13 +818,187 @@
       "dessert": "Tráng miệng",
       "drinks": "Đồ uống"
     },
-    "menu": {
-      "subtitle": "Khám phá",
-      "title": "Thực đơn hôm nay",
-      "all": "Tất cả",
-      "starter": "Khai vị",
-      "main": "Món chính",
-      "dessert": "Tráng miệng"
+    "menu_section": {
+      "title": "Thực đơn của chúng tôi",
+      "not_updated": "Thực đơn đang được cập nhật..."
     }
+  },
+  "customers": {
+    "title": "Quản lý khách hàng",
+    "birthday_alert": {
+      "title": "Sinh nhật hôm nay!",
+      "message": "Có {{count}} khách hàng sinh nhật hôm nay. Hãy gửi lời chúc mừng!"
+    },
+    "search": {
+      "label": "Tìm kiếm",
+      "placeholder": "Tên, email hoặc số điện thoại..."
+    },
+    "filters": {
+      "tier": "Hạng thành viên",
+      "all_tiers": "Tất cả"
+    },
+    "list": {
+      "found_count": "Tìm thấy {{count}} khách hàng",
+      "headers": {
+        "customer": "Khách hàng",
+        "contact": "Liên hệ",
+        "vip_tier": "Hạng VIP",
+        "orders": "Đơn hàng",
+        "total_spent": "Tổng chi tiêu",
+        "points": "Điểm tích lũy",
+        "status": "Trạng thái"
+      },
+      "status": {
+        "birthday": "Sinh nhật",
+        "active": "Hoạt động"
+      },
+      "empty": "Không tìm thấy khách hàng nào"
+    },
+    "detail": {
+      "member_since": "Tham gia {{date}}",
+      "orders": "Đơn hàng",
+      "spent": "Chi tiêu",
+      "points": "Điểm",
+      "last_visit": "Ghé thăm gần nhất",
+      "favorite_items": "Món ưa thích",
+      "birthday_banner": {
+        "title": "Khách hàng có sinh nhật hôm nay!",
+        "subtitle": "Đừng quên gửi lời chúc mừng."
+      },
+      "member_tier": "Thành viên {{tier}}"
+    }
+  },
+  "points_card": {
+    "title": "RestX Rewards",
+    "points": "điểm",
+    "gold_progress": "Tiến độ hạng Vàng",
+    "remaining_points": "Còn {{count}} điểm",
+    "view_rewards": "Xem ưu đãi đổi quà"
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "mark_read": "Đánh dấu đã đọc",
+    "empty": "Không có thông báo"
+  },
+  "menu_page": {
+    "title": "Thực đơn hôm nay",
+    "restx_menu": "RESTX MENU",
+    "search_placeholder": "Tìm món...",
+    "viewing_category": "Đang xem danh mục",
+    "showing_items": "Hiển thị {{count}} món ăn",
+    "no_items_found": "Không tìm thấy món nào phù hợp.",
+    "cart": {
+      "title": "Giỏ hàng",
+      "items_count": "{{count}} sản phẩm",
+      "empty": "Giỏ hàng của bạn đang trống",
+      "food_section": "Đồ ăn",
+      "drink_section": "Đồ uống",
+      "added_success": "Đã thêm {{name}} vào giỏ hàng",
+      "removed_success": "Đã xóa món khỏi giỏ hàng",
+      "total": "Tổng cộng",
+      "confirm": "Xác nhận đơn hàng"
+    },
+    "detail_modal": {
+      "add_to_cart": "Thêm vào giỏ",
+      "price": "Giá"
+    },
+    "best_seller": "Bán chạy nhất",
+    "default_food_desc": "Món ăn tuyệt vời từ nguyên liệu tươi ngon nhất.",
+    "tags": {
+      "spicy": "Cay",
+      "new": "Mới",
+      "best": "Hot",
+      "vegan": "Chay"
+    },
+    "sections": {
+      "all_title": "Tất cả món ăn",
+      "all_desc": "Khám phá toàn bộ thực đơn tinh hoa của RestX.",
+      "special_title": "Special Bowls",
+      "special_desc": "Signature poke bowls với cá tươi, rau củ muối và sốt đậm đà.",
+      "sushi_title": "Honi Sushi",
+      "sushi_desc": "Combo sushi tươi, phong phú cho mọi khẩu vị.",
+      "boba_title": "Honi Boba",
+      "boba_desc": "Trà sữa và nước trái cây pha chế tươi mát."
+    }
+  },
+  "auth": {
+    "admin_login_header": {
+      "title": "Portal Quản trị",
+      "subtitle": "Hệ thống Quản lý Nhà hàng",
+      "forgot_password": "Quên mật khẩu?"
+    },
+    "login_header": {
+      "default_title": "Đăng nhập",
+      "subtitle": "Chào mừng đến với Nhà hàng"
+    },
+    "login_button": {
+      "login_text": "ĐĂNG NHẬP",
+      "create_account": "TẠO TÀI KHOẢN",
+      "loading": "Đang tải..."
+    },
+    "login_page": {
+      "phone_label": "Số điện thoại",
+      "phone_placeholder": "0123456789",
+      "name_label": "Tên",
+      "name_placeholder": "Nhập tên của bạn",
+      "terms_text": "Bằng cách tiếp tục, bạn đồng ý với",
+      "terms_of_service": "Điều khoản dịch vụ",
+      "privacy_policy": "Chính sách bảo mật",
+      "or_login_with": "Hoặc đăng nhập bằng",
+      "email_password": "Email & Mật khẩu",
+      "validation": {
+        "phone_length": "Số điện thoại phải có đúng 10 chữ số",
+        "phone_digits": "Số điện thoại chỉ được chứa chữ số",
+        "name_length": "Tên phải có ít nhất 2 ký tự"
+      },
+      "alerts": {
+        "submitted": "Đã gửi biểu mẫu đăng nhập!\n\nSố điện thoại: {{phone}}\nTên: {{name}}\nGhi nhớ: {{remember}}\n\n(Đây chỉ là bản demo giao diện - Chưa tích hợp API)"
+      }
+    },
+    "register_page": {
+      "title": "Tạo tài khoản",
+      "subtitle": "Tham gia RestX ngay hôm nay",
+      "first_name": "Họ",
+      "last_name": "Tên",
+      "email": "Email",
+      "phone": "Số điện thoại",
+      "password": "Mật khẩu",
+      "confirm_password": "Xác nhận mật khẩu",
+      "password_placeholder": "Nhập mật khẩu của bạn",
+      "confirm_password_placeholder": "Xác nhận mật khẩu của bạn",
+      "i_agree": "Tôi đồng ý với",
+      "create_account_btn": "TẠO TÀI KHOẢN",
+      "already_have_account": "Đã có tài khoản?",
+      "sign_in_here": "Đăng nhập tại đây",
+      "validation": {
+        "required_first_name": "Vui lòng nhập họ của bạn",
+        "required_last_name": "Vui lòng nhập tên của bạn",
+        "invalid_email": "Vui lòng nhập địa chỉ email hợp lệ",
+        "invalid_phone": "Vui lòng nhập số điện thoại 10 chữ số hợp lệ",
+        "password_mismatch": "Mật khẩu không khớp"
+      },
+      "password_requirements": {
+        "length": "Ít nhất 8 ký tự",
+        "lowercase": "Ít nhất một chữ cái thường (a-z)",
+        "uppercase": "Ít nhất một chữ cái hoa (A-Z)",
+        "number": "Ít nhất một số (0-9)",
+        "special": "Ít nhất một ký tự đặc biệt (!@#$%...)"
+      },
+      "alerts": {
+        "accept_terms": "Vui lòng chấp nhận Điều khoản dịch vụ và Chính sách bảo mật",
+        "submitted": "Đăng ký thành công!\n\nTên: {{firstName}} {{lastName}}\nEmail: {{email}}\nSố điện thoại: {{phone}}\n\n(Đây chỉ là bản demo giao diện - Chưa tích hợp API)"
+      }
+    },
+    "remember_me": "Ghi nhớ đăng nhập"
+  },
+  "not_found": {
+    "title": "Trang không tìm thấy",
+    "description": "Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển. Có thể món ăn này đã hết trong thực đơn!",
+    "back_home": "Về trang chủ",
+    "back": "Quay lại",
+    "or_visit": "Hoặc truy cập:",
+    "restaurant": "Nhà hàng",
+    "login": "Đăng nhập",
+    "customer": "Khách hàng"
   }
 }
