@@ -2,26 +2,26 @@
 
 import ThemeToggle from "@/app/components/ThemeToggle";
 import {
-  ArrowLeftOutlined,
-  GlobalOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  ShopOutlined,
-  UserOutlined,
+    ArrowLeftOutlined,
+    GlobalOutlined,
+    MailOutlined,
+    PhoneOutlined,
+    ShopOutlined,
+    UserOutlined,
 } from "@ant-design/icons";
 import type { FormProps } from "antd";
 import {
-  Breadcrumb,
-  Button,
-  Card,
-  Col,
-  Form,
-  Input,
-  Row,
-  Select,
-  Space,
-  Typography,
-  message,
+    Breadcrumb,
+    Button,
+    Card,
+    Col,
+    Form,
+    Input,
+    Row,
+    Select,
+    Space,
+    Typography,
+    message,
 } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,12 +31,17 @@ const { TextArea } = Input;
 const { Title, Paragraph, Text } = Typography;
 
 interface CreateTenantFormValues {
-  restaurantName: string;
-  slug: string;
-  phone: string;
-  address?: string;
-  ownerName: string;
+  name: string;
+  hostName: string;
+  businessName: string;
+  phoneNumber: string;
+  addressLine1: string;
+  addressLine2: string;
+  addressLine3: string;
+  addressLine4: string;
   ownerEmail: string;
+  ownerPassword: string;
+  mailRestaurant: string;
   plan: "basic" | "pro" | "enterprise";
 }
 
@@ -149,7 +154,7 @@ const CreateTenantPage: React.FC = () => {
               {/* Left Column: Restaurant Info */}
               <Col xs={24} lg={14}>
                 <Card
-                  bordered={false}
+                  variant="borderless"
                   className="shadow-md h-full"
                   style={{
                     background: "var(--card)",
@@ -162,24 +167,24 @@ const CreateTenantPage: React.FC = () => {
                   }
                 >
                   <Form.Item
-                    label={<span style={{ color: "var(--text-muted)" }}>Restaurant Name</span>}
-                    name="restaurantName"
-                    rules={[{ required: true, message: "Please enter restaurant name" }]}
+                    label={<span style={{ color: "var(--text-muted)" }}>Name</span>}
+                    name="name"
+                    rules={[{ required: true, message: "Please enter name" }]}
                   >
                     <Input 
                       size="large" 
-                      placeholder="e.g., ABC Restaurant" 
+                      placeholder="e.g., ABC" 
                       prefix={<ShopOutlined className="text-gray-400 mr-1" />}
                     />
                   </Form.Item>
 
                   <Form.Item
-                    label={<span style={{ color: "var(--text-muted)" }}>Domain Slug</span>}
-                    name="slug"
+                    label={<span style={{ color: "var(--text-muted)" }}>Host Name</span>}
+                    name="hostName"
                     rules={[{ validator: validateSlug }]}
                     extra={
                       <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                        Access URL: <Text code>slug.restx.food</Text>
+                        Access URL: <Text code>hostname.restx.food</Text>
                       </span>
                     }
                   >
@@ -204,7 +209,7 @@ const CreateTenantPage: React.FC = () => {
                             .toLowerCase()
                             .replace(/\s+/g, "-")
                             .replace(/[^a-z0-9-]/g, "");
-                          form.setFieldValue("slug", value);
+                          form.setFieldValue("hostName", value);
                         }}
                       />
                       <Input
@@ -223,8 +228,20 @@ const CreateTenantPage: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Form.Item
+                        label={<span style={{ color: "var(--text-muted)" }}>Business Name</span>}
+                        name="businessName"
+                        rules={[{ required: true, message: "Please enter business name" }]}
+                    >
+                        <Input 
+                            size="large" 
+                            placeholder="ABC Restaurant" 
+                            prefix={<ShopOutlined className="text-gray-400 mr-1" />}
+                        />
+                    </Form.Item>
+                    
+                    <Form.Item
                         label={<span style={{ color: "var(--text-muted)" }}>Phone Number</span>}
-                        name="phone"
+                        name="phoneNumber"
                         rules={[
                         { required: true, message: "Please enter phone number" },
                         { pattern: /^[0-9]{10,11}$/, message: "Invalid phone number" },
@@ -236,21 +253,69 @@ const CreateTenantPage: React.FC = () => {
                             prefix={<PhoneOutlined className="text-gray-400 mr-1" />}
                         />
                     </Form.Item>
-                     
-                     {/* Placeholder for future field or just empty structure */}
-                     <div className="hidden md:block"></div>
                   </div>
 
                   <Form.Item
-                    label={<span style={{ color: "var(--text-muted)" }}>Detailed Address</span>}
-                    name="address"
+                    label={<span style={{ color: "var(--text-muted)" }}>Mail Restaurant</span>}
+                    name="mailRestaurant"
+                    rules={[
+                      { required: true, message: "Please enter restaurant email" },
+                      { type: "email", message: "Invalid email" },
+                    ]}
                   >
-                    <TextArea
-                      rows={4}
-                      placeholder="House number, street, ward/district..."
-                      style={{ resize: 'none' }}
+                    <Input 
+                      size="large" 
+                      type="email" 
+                      placeholder="restaurant@example.com" 
+                      prefix={<MailOutlined className="text-gray-400 mr-1" />}
                     />
                   </Form.Item>
+
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
+                      Restaurant Address
+                    </label>
+                    
+                    <Form.Item
+                      name="addressLine1"
+                      rules={[{ required: true, message: "Please enter street number" }]}
+                    >
+                      <Input 
+                        size="large" 
+                        placeholder="Street number (e.g., 123)" 
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="addressLine2"
+                      rules={[{ required: true, message: "Please enter street name" }]}
+                    >
+                      <Input 
+                        size="large" 
+                        placeholder="Street name (e.g., Nguyen Van Linh)" 
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="addressLine3"
+                      rules={[{ required: true, message: "Please enter city" }]}
+                    >
+                      <Input 
+                        size="large" 
+                        placeholder="City (e.g., Da Nang)" 
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="addressLine4"
+                      rules={[{ required: true, message: "Please enter country" }]}
+                    >
+                      <Input 
+                        size="large" 
+                        placeholder="Country (e.g., Vietnam)" 
+                      />
+                    </Form.Item>
+                  </div>
                 </Card>
               </Col>
 
@@ -259,7 +324,7 @@ const CreateTenantPage: React.FC = () => {
                 <div className="flex flex-col gap-6 h-full">
                     {/* Owner Info Card */}
                     <Card
-                    bordered={false}
+                    variant="borderless"
                     className="shadow-md"
                     style={{
                         background: "var(--card)",
@@ -272,19 +337,7 @@ const CreateTenantPage: React.FC = () => {
                     }
                     >
                     <Form.Item
-                        label={<span style={{ color: "var(--text-muted)" }}>Full Name</span>}
-                        name="ownerName"
-                        rules={[{ required: true, message: "Please enter owner name" }]}
-                    >
-                        <Input 
-                            size="large" 
-                            placeholder="John Doe" 
-                            prefix={<UserOutlined className="text-gray-400 mr-1" />}
-                        />
-                    </Form.Item>
-
-                    <Form.Item
-                        label={<span style={{ color: "var(--text-muted)" }}>Login Email</span>}
+                        label={<span style={{ color: "var(--text-muted)" }}>Owner Email</span>}
                         name="ownerEmail"
                         rules={[
                         { required: true, message: "Please enter email" },
@@ -298,11 +351,25 @@ const CreateTenantPage: React.FC = () => {
                             prefix={<MailOutlined className="text-gray-400 mr-1" />}
                         />
                     </Form.Item>
+
+                    <Form.Item
+                        label={<span style={{ color: "var(--text-muted)" }}>Owner Password</span>}
+                        name="ownerPassword"
+                        rules={[
+                        { required: true, message: "Please enter password" },
+                        { min: 6, message: "Password must be at least 6 characters" },
+                        ]}
+                    >
+                        <Input.Password 
+                            size="large" 
+                            placeholder="Enter password" 
+                        />
+                    </Form.Item>
                     </Card>
 
                     {/* Plan Selection Card */}
                     <Card
-                    bordered={false}
+                    variant="borderless"
                     className="shadow-md flex-1"
                     style={{
                         background: "var(--card)",

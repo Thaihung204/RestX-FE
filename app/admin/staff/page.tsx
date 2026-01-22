@@ -15,6 +15,7 @@ interface Staff {
   status: "active" | "inactive";
   avatar?: string;
   joinDate: string;
+  salary: number;
   shift: string;
   rating: number;
 }
@@ -30,6 +31,7 @@ export default function StaffPage() {
       role: "Manager",
       status: "active",
       joinDate: "2023-01-15",
+      salary: 25000000,
       shift: "Morning",
       rating: 4.9,
     },
@@ -41,6 +43,7 @@ export default function StaffPage() {
       role: "Waiter",
       status: "active",
       joinDate: "2024-02-20",
+      salary: 8000000,
       shift: "Evening",
       rating: 4.5,
     },
@@ -52,6 +55,7 @@ export default function StaffPage() {
       role: "Chef",
       status: "inactive",
       joinDate: "2023-11-10",
+      salary: 15000000,
       shift: "Afternoon",
       rating: 4.7,
     },
@@ -429,10 +433,27 @@ export default function StaffPage() {
                           className="font-medium text-sm"
                           style={{ color: "var(--text)" }}>
                           {new Date(member.joinDate).toLocaleDateString(
-                            "en-US",
-                            { month: "short", year: "numeric" },
+                            "vi-VN",
+                            { day: "2-digit", month: "2-digit", year: "numeric" },
                           )}
                         </p>
+                      </div>
+                      <div className="col-span-2 border-t border-dashed border-gray-700 pt-3 mt-1">
+                        <div className="flex justify-between items-center">
+                          <p
+                            className="text-xs"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("dashboard.staff.card.salary")}
+                          </p>
+                          <p
+                            className="font-medium text-sm"
+                            style={{ color: "#FF380B" }}>
+                            {new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(member.salary)}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
@@ -490,35 +511,6 @@ export default function StaffPage() {
                         />
                       </svg>
                     </Link>
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                      <button
-                        className="flex-1 px-3 py-2 bg-orange-500/10 text-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition-all font-medium text-sm"
-                        suppressHydrationWarning>
-                        {t("dashboard.staff.card.view_profile")}
-                      </button>
-                      <button
-                        className="px-3 py-2 rounded-lg transition-all"
-                        style={{
-                          background: 'var(--surface)',
-                          color: 'var(--text-muted)',
-                          border: '1px solid var(--border)',
-                        }}
-                        suppressHydrationWarning>
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </button>
-                    </div>
                   </div>
                 </div>
               ))}

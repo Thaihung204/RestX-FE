@@ -101,7 +101,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
             justifyContent: "center",
             boxShadow: "0 0 20px rgba(212, 175, 55, 0.4)",
           }}>
-          <SketchOutlined style={{ fontSize: 24, color: '#fff' }} />
+          <SketchOutlined style={{ fontSize: 20, color: '#fff' }} />
         </div>
       </div>
 

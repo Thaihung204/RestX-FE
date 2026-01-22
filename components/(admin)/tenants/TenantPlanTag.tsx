@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
 import { Tag } from "antd";
+import React from "react";
 
 type TenantPlan = "basic" | "pro" | "enterprise";
 
@@ -35,7 +35,7 @@ const TenantPlanTag: React.FC<Props> = ({ plan }) => {
 
   return (
     <Tag
-      bordered={false}
+      variant="filled"
       style={{
         textTransform: "uppercase",
         fontSize: 10,

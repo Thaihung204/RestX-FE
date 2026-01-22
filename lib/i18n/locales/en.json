@@ -436,7 +436,8 @@
       },
       "card": {
         "shift": "Shift",
-        "joined": "Joined",
+        "joined": "Joining Date",
+        "salary": "Salary",
         "view_profile": "View Profile"
       },
       "roles": {

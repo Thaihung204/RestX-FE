@@ -436,7 +436,8 @@
       },
       "card": {
         "shift": "Ca làm",
-        "joined": "Ngày vào",
+        "joined": "Ngày vào làm",
+        "salary": "Lương",
         "view_profile": "Xem hồ sơ"
       },
       "roles": {
