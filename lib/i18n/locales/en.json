@@ -13,7 +13,6 @@
       },
       "actions": {
         "view_schedule": "View Schedule",
-        "create_order": "Create New Order",
         "view_table_map": "View Table Map",
         "quick_actions": "Quick Actions",
         "refresh_data": "Refresh Data"
@@ -49,7 +48,6 @@
         "placeholder": "Search orders...",
         "placeholder_full": "Search by order ID or table name..."
       },
-      "create_order": "Create New Order",
       "create_order_short": "Create Order",
       "stats": {
         "pending": "Pending",
@@ -72,22 +70,9 @@
         "other_items": "other items",
         "items_not_done": "not done"
       },
-      "status": {
-        "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready",
-        "served": "Served",
-        "cancelled": "Cancelled"
-      },
-      "item_status": {
-        "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready",
-        "served": "Served"
-      },
+
       "modal": {
         "order_detail": "Order Details",
-        "new_order": "Create New Order",
         "cart": "Cart",
         "select_table": "Select Table",
         "no_items": "No items yet",
@@ -350,6 +335,7 @@
         "tables": "Tables",
         "menu": "Menu",
         "orders": "Orders",
+        "customers": "Customers",
         "staff": "Staff",
         "settings": "Settings",
         "help": "Help"
@@ -627,7 +613,20 @@
   },
   "common": {
     "time": {
-      "minutes_ago": "{{count}} minutes ago"
+      "just_now": "Just now",
+      "minutes_ago": "{{count}} minutes ago",
+      "hours_ago": "{{count}} hours ago",
+      "days_ago": "{{count}} days ago"
+    },
+    "status": {
+      "pending": "Pending",
+      "preparing": "Preparing",
+      "ready": "Ready",
+      "served": "Served",
+      "cancelled": "Cancelled"
+    },
+    "actions": {
+      "create_order": "Create New Order"
     },
     "language": "Language",
     "english": "English",
@@ -783,45 +782,217 @@
       "about": "About",
       "menu": {
         "title": "Menu",
-        "all": "All Items",
+        "all": "All",
         "appetizer": "Appetizers",
-        "main": "Main Courses",
+        "main": "Mains",
         "dessert": "Desserts",
         "drink": "Drinks"
       },
       "featured": "Featured",
       "daily": "Daily Specials",
       "news": "News",
-      "book_table": "Book Table",
-      "title": "RestX Restaurant"
+      "title": "RestX",
+      "book_table": "Book a Table"
     },
     "hero": {
-      "title": "RestX Restaurant",
-      "subtitle": "Diverse cuisine",
-      "cta": "BOOK NOW"
+      "title": "Exquisite Tastes",
+      "subtitle": "Experience world-class dining with dishes crafted from the freshest ingredients.",
+      "cta": "EXPLORE NOW"
     },
     "about": {
-      "subtitle": "About Us",
-      "title": "Passion for Food",
-      "description": "We bring exquisite culinary experiences with dishes prepared from the freshest ingredients.",
-      "years_experience": "Years Experience",
-      "master_chefs": "Master Chefs",
-      "read_more": "Read More"
+      "title": "About Us",
+      "restaurant_name": "RestX Restaurant",
+      "description": "At RestX Restaurant, we put our customers first. With a dedicated staff and unique recipes, we are committed to providing the best dining experience. Each dish is carefully prepared with the freshest ingredients, creating a special flavor found nowhere else. We sincerely thank you for your support.",
+      "see_more": "See More"
     },
     "categories": {
       "title": "Featured Categories",
       "appetizer": "Appetizers",
-      "main": "Mains",
+      "main": "Main Courses",
       "dessert": "Desserts",
       "drinks": "Drinks"
     },
-    "menu": {
-      "subtitle": "Discover",
-      "title": "Today's Menu",
-      "all": "All",
-      "starter": "Starters",
-      "main": "Mains",
-      "dessert": "Desserts"
+    "menu_section": {
+      "title": "Our Menu",
+      "not_updated": "Menu is being updated..."
     }
+  },
+  "customers": {
+    "title": "Customer Management",
+    "birthday_alert": {
+      "title": "Birthday Today!",
+      "message": "There are {{count}} customers having birthday today. Send them best wishes!"
+    },
+    "search": {
+      "label": "Search",
+      "placeholder": "Name, email or phone number..."
+    },
+    "filters": {
+      "tier": "Membership Tier",
+      "all_tiers": "All"
+    },
+    "list": {
+      "found_count": "Found {{count}} customers",
+      "headers": {
+        "customer": "Customer",
+        "contact": "Contact",
+        "vip_tier": "VIP Tier",
+        "orders": "Orders",
+        "total_spent": "Total Spent",
+        "points": "Points",
+        "status": "Status"
+      },
+      "status": {
+        "birthday": "Birthday",
+        "active": "Active"
+      },
+      "empty": "No customers found"
+    },
+    "detail": {
+      "member_since": "Joined {{date}}",
+      "orders": "Orders",
+      "spent": "Spent",
+      "points": "Points",
+      "last_visit": "Last Visit",
+      "favorite_items": "Favorite Items",
+      "birthday_banner": {
+        "title": "Customer has birthday today!",
+        "subtitle": "Don't forget to send wishes."
+      },
+      "member_tier": "Member {{tier}}"
+    }
+  },
+  "points_card": {
+    "title": "RestX Rewards",
+    "points": "points",
+    "gold_progress": "Gold Tier Progress",
+    "remaining_points": "{{count}} points left",
+    "view_rewards": "View Rewards"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "mark_read": "Mark as read",
+    "empty": "No notifications"
+  },
+  "menu_page": {
+    "title": "Today's Menu",
+    "restx_menu": "RESTX MENU",
+    "search_placeholder": "Search items...",
+    "viewing_category": "Viewing Category",
+    "showing_items": "Showing {{count}} items",
+    "no_items_found": "No matching items found.",
+    "cart": {
+      "title": "Cart",
+      "items_count": "{{count}} items",
+      "empty": "Your cart is empty",
+      "food_section": "Food",
+      "drink_section": "Drinks",
+      "added_success": "Added {{name}} to cart",
+      "removed_success": "Removed item from cart",
+      "total": "Total",
+      "confirm": "Confirm Order"
+    },
+    "detail_modal": {
+      "add_to_cart": "Add to Cart",
+      "price": "Price"
+    },
+    "best_seller": "Best Seller",
+    "default_food_desc": "Excellent dish made from the freshest ingredients.",
+    "tags": {
+      "spicy": "Spicy",
+      "new": "New",
+      "best": "Best",
+      "vegan": "Vegan"
+    },
+    "sections": {
+      "all_title": "All Dishes",
+      "all_desc": "Discover the entire elite menu of RestX.",
+      "special_title": "Special Bowls",
+      "special_desc": "Signature poke bowls with fresh fish, pickled vegetables and rich sauces.",
+      "sushi_title": "Honi Sushi",
+      "sushi_desc": "Fresh sushi combos, diverse for every taste.",
+      "boba_title": "Honi Boba",
+      "boba_desc": "Freshly made milk tea and fruit juices."
+    }
+  },
+  "auth": {
+    "admin_login_header": {
+      "title": "Admin Portal",
+      "subtitle": "Restaurant Management System",
+      "forgot_password": "Forgot your password?"
+    },
+    "login_header": {
+      "default_title": "Login",
+      "subtitle": "Welcome to Restaurant"
+    },
+    "login_button": {
+      "login_text": "LOGIN",
+      "create_account": "CREATE ACCOUNT",
+      "loading": "Loading..."
+    },
+    "login_page": {
+      "phone_label": "Phone Number",
+      "phone_placeholder": "0123456789",
+      "name_label": "Name",
+      "name_placeholder": "Enter your name",
+      "terms_text": "By continuing, you agree to RestX's",
+      "terms_of_service": "Terms of Service",
+      "privacy_policy": "Privacy Policy",
+      "or_login_with": "Or login with",
+      "email_password": "Email & Password",
+      "validation": {
+        "phone_length": "Phone number must be exactly 10 digits",
+        "phone_digits": "Phone number must contain only digits",
+        "name_length": "Name must be at least 2 characters"
+      },
+      "alerts": {
+        "submitted": "Login Form Submitted!\n\nPhone: {{phone}}\nName: {{name}}\nRemember Me: {{remember}}\n\n(This is UI demo only - No API integration)"
+      }
+    },
+    "register_page": {
+      "title": "Create Account",
+      "subtitle": "Join RestX today",
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "email": "Email",
+      "phone": "Phone Number",
+      "password": "Password",
+      "confirm_password": "Confirm Password",
+      "password_placeholder": "Enter your password",
+      "confirm_password_placeholder": "Confirm your password",
+      "i_agree": "I agree to RestX's",
+      "create_account_btn": "CREATE ACCOUNT",
+      "already_have_account": "Already have an account?",
+      "sign_in_here": "Sign in here",
+      "validation": {
+        "required_first_name": "Please enter your first name",
+        "required_last_name": "Please enter your last name",
+        "invalid_email": "Please enter a valid email address",
+        "invalid_phone": "Please enter a valid 10-digit phone number",
+        "password_mismatch": "Passwords do not match"
+      },
+      "password_requirements": {
+        "length": "At least 8 characters",
+        "lowercase": "At least one lowercase letter (a-z)",
+        "uppercase": "At least one uppercase letter (A-Z)",
+        "number": "At least one number (0-9)",
+        "special": "At least one special character (!@#$%...)"
+      },
+      "alerts": {
+        "accept_terms": "Please accept the Terms of Service and Privacy Policy",
+        "submitted": "Registration Submitted!\n\nName: {{firstName}} {{lastName}}\nEmail: {{email}}\nPhone: {{phone}}\n\n(This is UI demo only - No API integration)"
+      }
+    },
+    "remember_me": "Keep me logged in"
+  },
+  "not_found": {
+    "title": "Page Not Found",
+    "description": "Sorry, the page you are looking for does not exist or has been moved. Maybe this dish is out of stock?",
+    "back_home": "Back to Home",
+    "back": "Go Back",
+    "or_visit": "Or visit:",
+    "restaurant": "Restaurant",
+    "login": "Login",
+    "customer": "Customer"
   }
 }

@@ -4,6 +4,7 @@ import { useNotifications } from '@/lib/contexts/NotificationContext';
 import { CheckOutlined, CloseOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { Button, Empty, Modal, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const { Text } = Typography;
 
@@ -13,6 +14,7 @@ interface NotificationSheetProps {
 }
 
 export default function NotificationSheet({ open, onClose }: NotificationSheetProps) {
+  const { t } = useTranslation('common');
   const { notifications, markAsRead, markAllAsRead } = useNotifications();
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<typeof notifications[0] | null>(null);
@@ -85,10 +87,10 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'Vừa xong';
-    if (minutes < 60) return `${minutes} phút trước`;
-    if (hours < 24) return `${hours} giờ trước`;
-    if (days < 7) return `${days} ngày trước`;
+    if (minutes < 1) return t('notifications.time.just_now');
+    if (minutes < 60) return t('notifications.time.minutes_ago', { count: minutes });
+    if (hours < 24) return t('notifications.time.hours_ago', { count: hours });
+    if (days < 7) return t('notifications.time.days_ago', { count: days });
     return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
@@ -146,7 +148,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
               color: 'var(--text, #ECECEC)',
             }}
           >
-            Thông báo
+            {t('notifications.title')}
           </Text>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {notifications.some(n => n.unread) && (
@@ -161,7 +163,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                   height: 'auto',
                 }}
               >
-                Đánh dấu đã đọc
+                {t('notifications.mark_read')}
               </Button>
             )}
             <Button
@@ -192,7 +194,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
         >
           {notifications.length === 0 ? (
             <Empty
-              description="Không có thông báo"
+              description={t('notifications.empty')}
               style={{
                 marginTop: 60,
                 color: 'var(--text-muted, #C5C5C5)',
@@ -413,7 +415,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                     fontWeight: 700,
                   }}
                 >
-                  Thông báo
+                  {t('notifications.title')}
                 </Text>
                 <div
                   style={{
