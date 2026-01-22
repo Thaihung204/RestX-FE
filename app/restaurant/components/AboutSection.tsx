@@ -1,11 +1,14 @@
 'use client';
 
+import { Button, Col, Row, Typography } from 'antd';
 import React from 'react';
-import { Typography, Row, Col, Button } from 'antd';
+
+import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
 
 const AboutSection: React.FC = () => {
+  const { t } = useTranslation();
   const foodImages = [
     '/images/restaurant/dish1.png',
     '/images/restaurant/dish2.png',
@@ -35,7 +38,7 @@ const AboutSection: React.FC = () => {
                 fontFamily: 'serif',
                 marginBottom: 16,
               }}>
-              Về Chúng Tôi
+              {t('restaurant.about.title')}
             </Title>
             <Title
               level={3}
@@ -46,7 +49,7 @@ const AboutSection: React.FC = () => {
                 fontFamily: 'serif',
                 marginBottom: 24,
               }}>
-              RestX Restaurant
+              {t('restaurant.about.restaurant_name')}
             </Title>
             <Paragraph
               style={{
@@ -55,10 +58,7 @@ const AboutSection: React.FC = () => {
                 lineHeight: 1.8,
                 marginBottom: 24,
               }}>
-              Tại RestX Restaurant, chúng tôi đặt khách hàng lên hàng đầu. Với đội ngũ nhân viên tận tâm và
-              những công thức nấu ăn độc đáo, chúng tôi cam kết mang đến trải nghiệm ẩm thực tuyệt vời nhất.
-              Mỗi món ăn được chế biến cẩn thận với nguyên liệu tươi ngon nhất, tạo nên hương vị đặc biệt
-              không thể tìm thấy ở đâu khác. Chúng tôi xin chân thành cảm ơn sự ủng hộ của quý khách.
+              {t('restaurant.about.description')}
             </Paragraph>
             <Button
               type="link"
@@ -69,7 +69,7 @@ const AboutSection: React.FC = () => {
                 textDecoration: 'underline',
                 height: 'auto',
               }}>
-              Xem Thêm
+              {t('restaurant.about.see_more')}
             </Button>
           </Col>
 

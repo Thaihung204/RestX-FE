@@ -2,29 +2,35 @@
 
 import NotificationSystem from "@/components/notifications/NotificationSystem";
 import {
-    DeleteOutlined,
-    DownOutlined,
-    FilterOutlined,
-    MinusOutlined,
-    PlusOutlined,
-    SearchOutlined,
-    ShoppingCartOutlined,
+  ArrowLeftOutlined,
+  CloseOutlined,
+  CoffeeOutlined,
+  DeleteOutlined,
+  DownOutlined,
+  FilterOutlined,
+  FireOutlined,
+  MinusOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  ShoppingCartOutlined,
 } from "@ant-design/icons";
 import {
-    Affix,
-    Button,
-    Card,
-    Col,
-    ConfigProvider,
-    Input,
-    Modal,
-    Row,
-    Select,
-    Typography,
-    message,
-    theme,
+  Affix,
+  Button,
+  Card,
+  Col,
+  ConfigProvider,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Typography,
+  message,
+  theme,
 } from "antd";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
 
@@ -53,103 +59,110 @@ type MenuSection = {
   items: MenuItem[];
 };
 
-const sections: MenuSection[] = [
-  {
-    key: "all",
-    title: "Tất cả món ăn",
-    description: "Khám phá toàn bộ thực đơn tinh hoa của RestX.",
-    items: [], // Will be merged automatically
-  },
-  {
-    key: "special",
-    title: "Special Bowls",
-    description: "Signature poke bowls với cá tươi, rau củ muối và sốt đậm đà.",
-    items: [
-      {
-        name: "Honi Poke",
-        price: "89.000",
-        tags: ["spicy"],
-        note: "Best Seller",
-        description:
-          "Cá hồi tươi sống kết hợp cùng rong biển, dưa chuột, bơ và sốt cay đặc trưng",
-        image: "/images/menu/Honi-Poke.png",
-      },
-      {
-        name: "Ahi Poke",
-        price: "89.000",
-        description:
-          "Cá ngừ đại dương sốt Shoyu, hành tây, mè rang và rau củ tươi mát",
-        image: "/images/menu/ahi-poke.png",
-      },
-      {
-        name: "Sriracha Mayo Salmon",
-        price: "89.000",
-        tags: ["new"],
-        description:
-          "Cá hồi nướng phủ sốt Sriracha Mayo cay ngọt hòa quyện hoàn hảo",
-        image: "/images/menu/Sriracha-Mayo-Salmon.png",
-      },
-    ],
-  },
-  {
-    key: "sushi",
-    title: "Honi Sushi",
-    description: "Combo sushi tươi, phong phú cho mọi khẩu vị.",
-    items: [
-      {
-        name: "Salmon Lover Set",
-        price: "95.000",
-        description:
-          "Combo gồm 8 miếng nigiri cá hồi tươi và 6 miếng maki cá hồi chuẩn Nhật",
-        image: "/images/menu/Salmon-Lover-Set.png",
-      },
-      {
-        name: "Rainbow Roll",
-        price: "85.000",
-        tags: ["spicy"],
-        description:
-          "Cuộn sushi 7 màu sắc với nhiều loại cá tươi, bơ và sốt đặc biệt",
-        image: "/images/menu/Rainbow-Roll.png",
-      },
-      {
-        name: "Vegan Garden Roll",
-        price: "75.000",
-        tags: ["vegan"],
-        description:
-          "Cuộn chay với rau củ tươi, bơ, dưa chuột và nấm truffle thuần chay",
-        image: "/images/menu/Vegan-Garden-Roll.png",
-      },
-    ],
-  },
-  {
-    key: "boba",
-    title: "Honi Boba",
-    description: "Trà sữa và nước trái cây pha chế tươi mát.",
-    items: [
-      {
-        name: "Brown Sugar Milk",
-        price: "45.000",
-        tags: ["best"],
-        description:
-          "Trà sữa trân châu đường đen thơm ngon, ngọt ngào với vị caramel đặc trưng",
-        image: "/images/menu/Brown-Sugar-Milk.png",
-      },
-      {
-        name: "Matcha Cream Foam",
-        price: "42.000",
-        description:
-          "Trà xanh matcha Nhật Bản phủ lớp kem cheese mềm mịn thơm béo",
-        image: "/images/menu/matcha-cold-cream.png",
-      },
-    ],
-  },
-];
-
-// Merge all items into the "All" section
-const allItems = sections.flatMap((s) => s.items);
-sections[0].items = allItems;
+// Sections moved inside component for translation support
 
 export default function MenuPage() {
+  const { t } = useTranslation("common");
+  const sections = useMemo<MenuSection[]>(() => {
+    const rawSections = [
+      {
+        key: "special",
+        title: t("menu_page.sections.special_title"),
+        description: t("menu_page.sections.special_desc"),
+        items: [
+          {
+            name: "Honi Poke",
+            price: "89.000",
+            tags: ["spicy"],
+            note: t("menu_page.best_seller"),
+            description:
+              "Cá hồi tươi sống kết hợp cùng rong biển, dưa chuột, bơ và sốt cay đặc trưng",
+            image: "/images/menu/Honi-Poke.png",
+          },
+          {
+            name: "Ahi Poke",
+            price: "89.000",
+            description:
+              "Cá ngừ đại dương sốt Shoyu, hành tây, mè rang và rau củ tươi mát",
+            image: "/images/menu/ahi-poke.png",
+          },
+          {
+            name: "Sriracha Mayo Salmon",
+            price: "89.000",
+            tags: ["new"],
+            description:
+              "Cá hồi nướng phủ sốt Sriracha Mayo cay ngọt hòa quyện hoàn hảo",
+            image: "/images/menu/Sriracha-Mayo-Salmon.png",
+          },
+        ],
+      },
+      {
+        key: "sushi",
+        title: t("menu_page.sections.sushi_title"),
+        description: t("menu_page.sections.sushi_desc"),
+        items: [
+          {
+            name: "Salmon Lover Set",
+            price: "95.000",
+            description:
+              "Combo gồm 8 miếng nigiri cá hồi tươi và 6 miếng maki cá hồi chuẩn Nhật",
+            image: "/images/menu/Salmon-Lover-Set.png",
+          },
+          {
+            name: "Rainbow Roll",
+            price: "85.000",
+            tags: ["spicy"],
+            description:
+              "Cuộn sushi 7 màu sắc với nhiều loại cá tươi, bơ và sốt đặc biệt",
+            image: "/images/menu/Rainbow-Roll.png",
+          },
+          {
+            name: "Vegan Garden Roll",
+            price: "75.000",
+            tags: ["vegan"],
+            description:
+              "Cuộn chay với rau củ tươi, bơ, dưa chuột và nấm truffle thuần chay",
+            image: "/images/menu/Vegan-Garden-Roll.png",
+          },
+        ],
+      },
+      {
+        key: "boba",
+        title: t("menu_page.sections.boba_title"),
+        description: t("menu_page.sections.boba_desc"),
+        items: [
+          {
+            name: "Brown Sugar Milk",
+            price: "45.000",
+            tags: ["best"],
+            description:
+              "Trà sữa trân châu đường đen thơm ngon, ngọt ngào với vị caramel đặc trưng",
+            image: "/images/menu/Brown-Sugar-Milk.png",
+          },
+          {
+            name: "Matcha Cream Foam",
+            price: "42.000",
+            description:
+              "Trà xanh matcha Nhật Bản phủ lớp kem cheese mềm mịn thơm béo",
+            image: "/images/menu/matcha-cold-cream.png",
+          },
+        ],
+      },
+    ];
+
+    const allItems = rawSections.flatMap((s) => s.items);
+
+    return [
+      {
+        key: "all",
+        title: t("menu_page.sections.all_title"),
+        description: t("menu_page.sections.all_desc"),
+        items: allItems,
+      },
+      ...rawSections,
+    ];
+  }, [t]);
+  const router = useRouter();
   // Default to the first section
   const [activeSectionKey, setActiveSectionKey] = useState<string>("all");
   const [searchText, setSearchText] = useState("");
@@ -164,7 +177,7 @@ export default function MenuPage() {
   // 2. If search text exists -> filter by name inside that section
   const currentSection = useMemo(
     () => sections.find((s) => s.key === activeSectionKey) || sections[1],
-    [activeSectionKey]
+    [activeSectionKey],
   );
 
   const displayedItems = useMemo(() => {
@@ -200,7 +213,7 @@ export default function MenuPage() {
         return prev.map((cartItem) =>
           cartItem.name === item.name
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
+            : cartItem,
         );
       } else {
         return [
@@ -215,12 +228,12 @@ export default function MenuPage() {
         ];
       }
     });
-    messageApi.success(`Đã thêm ${item.name} vào giỏ hàng`);
+    messageApi.success(t("menu_page.cart.added_success", { name: item.name }));
   };
 
   const handleRemoveFromCart = (itemName: string) => {
     setCartItems((prev) => prev.filter((item) => item.name !== itemName));
-    messageApi.success("Đã xóa món khỏi giỏ hàng");
+    messageApi.success(t("menu_page.cart.removed_success"));
   };
 
   const handleUpdateQuantity = (itemName: string, newQuantity: number) => {
@@ -230,8 +243,8 @@ export default function MenuPage() {
     }
     setCartItems((prev) =>
       prev.map((item) =>
-        item.name === itemName ? { ...item, quantity: newQuantity } : item
-      )
+        item.name === itemName ? { ...item, quantity: newQuantity } : item,
+      ),
     );
   };
 
@@ -315,6 +328,28 @@ export default function MenuPage() {
               }}
             />
 
+            {/* Back Button */}
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.push("/customer")}
+              style={{
+                position: "absolute",
+                top: 16,
+                left: 16,
+                background: "rgba(0,0,0,0.5)",
+                backdropFilter: "blur(8px)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "#fff",
+                height: 40,
+                width: 40,
+                borderRadius: 12,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 10,
+              }}
+            />
+
             <div
               style={{
                 position: "absolute",
@@ -335,7 +370,7 @@ export default function MenuPage() {
                 RestX Menu
               </Text>
               <Title level={2} style={{ margin: "4px 0 0", color: "#fff" }}>
-                Thực đơn hôm nay
+                {t("menu_page.title")}
               </Title>
             </div>
           </div>
@@ -386,7 +421,7 @@ export default function MenuPage() {
                     <div suppressHydrationWarning style={{ width: "100%" }}>
                       <Input
                         prefix={<SearchOutlined style={{ color: "#666" }} />}
-                        placeholder="Tìm món..."
+                        placeholder={t("menu_page.search_placeholder")}
                         allowClear
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
@@ -419,7 +454,7 @@ export default function MenuPage() {
                     textTransform: "uppercase",
                     fontSize: 13,
                   }}>
-                  Đang xem danh mục
+                  {t("menu_page.viewing_category")}
                 </Text>
               </div>
               <Title level={3} style={{ color: "#fff", margin: 0 }}>
@@ -438,7 +473,7 @@ export default function MenuPage() {
             {/* Result Count */}
             <div style={{ marginBottom: 12 }}>
               <Text style={{ color: "#666", fontSize: 13 }}>
-                Hiển thị {displayedItems.length} món ăn
+                {t("menu_page.showing_items", { count: displayedItems.length })}
               </Text>
             </div>
 
@@ -507,8 +542,7 @@ export default function MenuPage() {
                                 overflow: "hidden",
                                 position: "relative",
                               }}>
-                              <div style={{ textAlign: "center" }}>
-                              </div>
+                              <div style={{ textAlign: "center" }}></div>
                             </div>
                           )}
                         </div>
@@ -576,7 +610,7 @@ export default function MenuPage() {
                   span={24}
                   style={{ textAlign: "center", padding: "40px 0" }}>
                   <Text style={{ color: "#666" }}>
-                    Không tìm thấy món nào phù hợp.
+                    {t("menu_page.no_items_found")}
                   </Text>
                 </Col>
               )}
@@ -655,7 +689,8 @@ export default function MenuPage() {
               <div
                 style={{
                   position: "relative",
-                  background: "linear-gradient(160deg, #1f1f1f 0%, #0a0a0a 100%)",
+                  background:
+                    "linear-gradient(160deg, #1f1f1f 0%, #0a0a0a 100%)",
                   borderRadius: 24,
                   padding: "18px 16px",
                   border: "1px solid rgba(255,255,255,0.08)",
@@ -698,7 +733,9 @@ export default function MenuPage() {
                     backdropFilter: "blur(4px)",
                     border: "1px solid rgba(255,255,255,0.05)",
                   }}>
-                  <div style={{ color: "#888", fontSize: 14 }}>✕</div>
+                  <div style={{ color: "#888", fontSize: 14 }}>
+                    <CloseOutlined />
+                  </div>
                 </div>
 
                 <div
@@ -732,7 +769,7 @@ export default function MenuPage() {
                         letterSpacing: 1,
                         fontWeight: 700,
                       }}>
-                      Giỏ hàng
+                      {t("menu_page.cart.title")}
                     </Text>
                     <div
                       style={{
@@ -741,7 +778,9 @@ export default function MenuPage() {
                         fontWeight: 700,
                         marginTop: -2,
                       }}>
-                      {cartItemCount} sản phẩm
+                      {t("menu_page.cart.items_count", {
+                        count: cartItemCount,
+                      })}
                     </div>
                   </div>
                 </div>
@@ -773,7 +812,7 @@ export default function MenuPage() {
                           fontSize: 14,
                           display: "block",
                         }}>
-                        Giỏ hàng của bạn đang trống
+                        {t("menu_page.cart.empty")}
                       </Text>
                     </div>
                   ) : (
@@ -791,13 +830,13 @@ export default function MenuPage() {
                               textTransform: "uppercase",
                               letterSpacing: 1,
                             }}>
-                            Đồ ăn
+                            {t("menu_page.cart.food_section")}
                           </Text>
                           {foodItems.map((item) => (
                             <Card
                               key={item.name}
                               style={{
-                              background:
+                                background:
                                   "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
                                 border: "1px solid rgba(255,255,255,0.06)",
                                 borderRadius: 12,
@@ -881,7 +920,7 @@ export default function MenuPage() {
                                     onClick={() =>
                                       handleUpdateQuantity(
                                         item.name,
-                                        item.quantity - 1
+                                        item.quantity - 1,
                                       )
                                     }
                                     style={{
@@ -906,7 +945,7 @@ export default function MenuPage() {
                                     onClick={() =>
                                       handleUpdateQuantity(
                                         item.name,
-                                        item.quantity + 1
+                                        item.quantity + 1,
                                       )
                                     }
                                     style={{
@@ -923,8 +962,9 @@ export default function MenuPage() {
                                     fontWeight: 600,
                                   }}>
                                   {(
-                                    parseFloat(item.price.replace(/[£,]/g, "")) *
-                                    item.quantity
+                                    parseFloat(
+                                      item.price.replace(/[£,]/g, ""),
+                                    ) * item.quantity
                                   ).toFixed(2)}
                                   £
                                 </Text>
@@ -947,7 +987,8 @@ export default function MenuPage() {
                               textTransform: "uppercase",
                               letterSpacing: 1,
                             }}>
-                            🥤 Nước uống
+                            <CoffeeOutlined className="mr-2" />{" "}
+                            {t("menu_page.cart.drink_section")}
                           </Text>
                           {drinkItems.map((item) => (
                             <Card
@@ -1037,7 +1078,7 @@ export default function MenuPage() {
                                     onClick={() =>
                                       handleUpdateQuantity(
                                         item.name,
-                                        item.quantity - 1
+                                        item.quantity - 1,
                                       )
                                     }
                                     style={{
@@ -1062,7 +1103,7 @@ export default function MenuPage() {
                                     onClick={() =>
                                       handleUpdateQuantity(
                                         item.name,
-                                        item.quantity + 1
+                                        item.quantity + 1,
                                       )
                                     }
                                     style={{
@@ -1079,8 +1120,9 @@ export default function MenuPage() {
                                     fontWeight: 600,
                                   }}>
                                   {(
-                                    parseFloat(item.price.replace(/[£,]/g, "")) *
-                                    item.quantity
+                                    parseFloat(
+                                      item.price.replace(/[£,]/g, ""),
+                                    ) * item.quantity
                                   ).toFixed(2)}
                                   £
                                 </Text>
@@ -1120,7 +1162,7 @@ export default function MenuPage() {
                             textTransform: "uppercase",
                             letterSpacing: 1,
                           }}>
-                          Tổng cộng
+                          {t("menu_page.cart.total")}
                         </Text>
                         <div
                           style={{
@@ -1137,7 +1179,9 @@ export default function MenuPage() {
                           color: "rgba(255,255,255,0.5)",
                           fontSize: 12,
                         }}>
-                        {cartItemCount} món
+                        {t("menu_page.cart.items_count", {
+                          count: cartItemCount,
+                        })}
                       </div>
                     </div>
                     <Button
@@ -1152,7 +1196,7 @@ export default function MenuPage() {
                         fontSize: 16,
                         boxShadow: "0 10px 25px rgba(255,56,11,0.35)",
                       }}>
-                      Đặt món
+                      {t("menu_page.cart.confirm")}
                     </Button>
                   </div>
                 )}
@@ -1180,8 +1224,7 @@ export default function MenuPage() {
                   background: "transparent",
                   padding: 0,
                 },
-              }}
-            >
+              }}>
               {selectedFood && (
                 <div
                   style={{
@@ -1191,9 +1234,8 @@ export default function MenuPage() {
                     borderRadius: 24,
                     padding: "30px 24px",
                     overflow: "hidden",
-                  }}
-                >
-                  {/* Decoration Glow - Hiệu ứng ánh sáng cam */}
+                  }}>
+                  {/* Decoration Glow */}
                   <div
                     style={{
                       position: "absolute",
@@ -1226,9 +1268,10 @@ export default function MenuPage() {
                       zIndex: 10,
                       backdropFilter: "blur(4px)",
                       border: "1px solid rgba(255,255,255,0.05)",
-                    }}
-                  >
-                    <div style={{ color: "#888", fontSize: 14 }}>✕</div>
+                    }}>
+                    <div style={{ color: "#888", fontSize: 14 }}>
+                      <CloseOutlined />
+                    </div>
                   </div>
 
                   {/* --- Content Body --- */}
@@ -1244,8 +1287,7 @@ export default function MenuPage() {
                         border: "1px solid rgba(255,255,255,0.1)",
                         boxShadow: "0 8px 20px rgba(0,0,0,0.4)",
                         position: "relative",
-                      }}
-                    >
+                      }}>
                       {selectedFood.image ? (
                         <img
                           src={selectedFood.image}
@@ -1265,30 +1307,30 @@ export default function MenuPage() {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                          }}
-                        >
-                          <span style={{ fontSize: 40 }}>🍽️</span>
+                          }}>
+                          <FireOutlined
+                            style={{ fontSize: 40, color: "#FF380B" }}
+                          />
                         </div>
                       )}
-                      
+
                       {/* Note Badge on Image (if exists) */}
                       {selectedFood.note && (
                         <div
-                           style={{
-                               position: 'absolute',
-                               top: 10,
-                               left: 10,
-                               background: "rgba(255, 193, 7, 0.9)",
-                               color: "#000",
-                               padding: "4px 10px",
-                               borderRadius: 20,
-                               fontSize: 11,
-                               fontWeight: 700,
-                               backdropFilter: 'blur(4px)',
-                               boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
-                           }}
-                        >
-                            {selectedFood.note}
+                          style={{
+                            position: "absolute",
+                            top: 10,
+                            left: 10,
+                            background: "rgba(255, 193, 7, 0.9)",
+                            color: "#000",
+                            padding: "4px 10px",
+                            borderRadius: 20,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            backdropFilter: "blur(4px)",
+                            boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+                          }}>
+                          {selectedFood.note}
                         </div>
                       )}
                     </div>
@@ -1303,8 +1345,7 @@ export default function MenuPage() {
                           fontSize: 22,
                           fontWeight: 700,
                           letterSpacing: 0.5,
-                        }}
-                      >
+                        }}>
                         {selectedFood.name}
                       </Title>
 
@@ -1315,8 +1356,7 @@ export default function MenuPage() {
                             display: "flex",
                             gap: 6,
                             flexWrap: "wrap",
-                          }}
-                        >
+                          }}>
                           {selectedFood.tags.map((tag, idx) => (
                             <span
                               key={idx}
@@ -1328,10 +1368,11 @@ export default function MenuPage() {
                                 fontSize: 11,
                                 fontWeight: 500,
                                 border: "1px solid rgba(255, 56, 11, 0.2)",
-                                textTransform: 'capitalize'
-                              }}
-                            >
-                              {tag}
+                                textTransform: "capitalize",
+                              }}>
+                              {t("menu_page.tags." + tag, {
+                                defaultValue: tag,
+                              })}
                             </span>
                           ))}
                         </div>
@@ -1339,20 +1380,21 @@ export default function MenuPage() {
                     </div>
 
                     {/* Description */}
-                    <div style={{ 
-                        marginBottom: 24, 
-                        background: 'rgba(255,255,255,0.02)', 
-                        padding: 12, 
-                        borderRadius: 12 
-                    }}>
+                    <div
+                      style={{
+                        marginBottom: 24,
+                        background: "rgba(255,255,255,0.02)",
+                        padding: 12,
+                        borderRadius: 12,
+                      }}>
                       <Text
                         style={{
                           color: "rgba(255,255,255,0.6)",
                           fontSize: 14,
                           lineHeight: 1.6,
-                        }}
-                      >
-                        {selectedFood.description || "Món ăn tuyệt vời từ nguyên liệu tươi ngon nhất."}
+                        }}>
+                        {selectedFood.description ||
+                          t("menu_page.default_food_desc")}
                       </Text>
                     </div>
 
@@ -1367,8 +1409,7 @@ export default function MenuPage() {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                      }}
-                    >
+                      }}>
                       <div>
                         <Text
                           style={{
@@ -1377,26 +1418,27 @@ export default function MenuPage() {
                             textTransform: "uppercase",
                             letterSpacing: 1,
                             display: "block",
-                            marginBottom: 2
-                          }}
-                        >
-                          Price
+                            marginBottom: 2,
+                          }}>
+                          {t("menu_page.detail_modal.price")}
                         </Text>
                         <Text
                           style={{
                             color: "#fff",
                             fontSize: 20,
                             fontWeight: 700,
-                          }}
-                        >
-                          {selectedFood.price} <span style={{fontSize: 14, color: '#FF380B'}}>đ</span>
+                          }}>
+                          {selectedFood.price}{" "}
+                          <span style={{ fontSize: 14, color: "#FF380B" }}>
+                            đ
+                          </span>
                         </Text>
                       </div>
 
-                      {/* Logic nút thêm/tăng giảm */}
+                      {/* Add/Update Quantity Logic */}
                       {(() => {
                         const cartItem = cartItems.find(
-                          (item) => item.name === selectedFood.name
+                          (item) => item.name === selectedFood.name,
                         );
                         if (cartItem) {
                           return (
@@ -1408,15 +1450,16 @@ export default function MenuPage() {
                                 background: "rgba(255,255,255,0.05)",
                                 padding: "4px 6px",
                                 borderRadius: 12,
-                                border: "1px solid rgba(255,255,255,0.1)"
-                              }}
-                            >
+                                border: "1px solid rgba(255,255,255,0.1)",
+                              }}>
                               <Button
-                                icon={<MinusOutlined style={{ fontSize: 12 }} />}
+                                icon={
+                                  <MinusOutlined style={{ fontSize: 12 }} />
+                                }
                                 onClick={() =>
                                   handleUpdateQuantity(
                                     selectedFood.name,
-                                    cartItem.quantity - 1
+                                    cartItem.quantity - 1,
                                   )
                                 }
                                 size="small"
@@ -1435,8 +1478,7 @@ export default function MenuPage() {
                                   fontWeight: 700,
                                   minWidth: 20,
                                   textAlign: "center",
-                                }}
-                              >
+                                }}>
                                 {cartItem.quantity}
                               </Text>
                               <Button
@@ -1444,7 +1486,7 @@ export default function MenuPage() {
                                 onClick={() =>
                                   handleUpdateQuantity(
                                     selectedFood.name,
-                                    cartItem.quantity + 1
+                                    cartItem.quantity + 1,
                                   )
                                 }
                                 size="small"
@@ -1455,7 +1497,7 @@ export default function MenuPage() {
                                   width: 28,
                                   height: 28,
                                   borderRadius: 8,
-                                  boxShadow: "0 4px 10px rgba(255,56,11,0.3)"
+                                  boxShadow: "0 4px 10px rgba(255,56,11,0.3)",
                                 }}
                               />
                             </div>
@@ -1475,9 +1517,8 @@ export default function MenuPage() {
                                 fontWeight: 600,
                                 fontSize: 14,
                                 boxShadow: "0 4px 12px rgba(255,56,11,0.3)",
-                              }}
-                            >
-                              Thêm
+                              }}>
+                              {t("menu_page.detail_modal.add_to_cart")}
                             </Button>
                           );
                         }

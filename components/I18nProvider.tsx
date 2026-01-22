@@ -1,14 +1,15 @@
 'use client';
 
+import { LanguageContext } from '@/lib/contexts/LanguageContext';
+import '@/lib/i18n/i18n';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import '@/lib/i18n/i18n';
-import { LanguageContext } from '@/lib/contexts/LanguageContext';
 
 export { useLanguage } from '@/lib/contexts/LanguageContext';
 
 export default function I18nProvider({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
+  console.log('I18nProvider initializing', { language: i18n.language });
   // Initialize state from localStorage if available (client-side only)
   const getInitialLanguage = (): string => {
     if (typeof window !== 'undefined') {
