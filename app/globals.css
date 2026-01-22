@@ -245,3 +245,12 @@ body {
   box-shadow: none !important;
   border: none !important;
 }
+
+/* RestX Logo Dark Mode - Invert colors for better visibility */
+[data-theme="dark"] .app-logo-img {
+  filter: invert(1) hue-rotate(180deg) brightness(1.1);
+}
+
+[data-theme="light"] .app-logo-img {
+  filter: none;
+}

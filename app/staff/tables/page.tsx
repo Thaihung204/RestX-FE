@@ -14,14 +14,9 @@ import {
   Modal,
   Form,
   InputNumber,
-  Select,
   Tabs,
-  Badge,
-  Tooltip,
   message,
   Divider,
-  Avatar,
-  Timeline,
   Flex,
 } from 'antd';
 import {
@@ -39,7 +34,6 @@ import {
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 // Table status types
 type TableStatus = 'available' | 'occupied' | 'reserved' | 'cleaning';
@@ -139,7 +133,6 @@ export default function TableManagement() {
   const statusConfig = getStatusConfig(mode, t);
 
 
-
   const filteredTables = activeZone === 'all'
     ? tables
     : tables.filter(t => t.zone === activeZone);
@@ -150,6 +143,8 @@ export default function TableManagement() {
     reserved: tables.filter(t => t.status === 'reserved').length,
     cleaning: tables.filter(t => t.status === 'cleaning').length,
   };
+
+
 
   const handleTableClick = (table: TableData) => {
     setSelectedTable(table);
@@ -359,7 +354,8 @@ export default function TableManagement() {
         })}
       </Row>
 
-      {/* Zone Tabs & Table Grid */}
+
+      {/* Grid View - Original Table Cards */}
       <Card
         style={{
           borderRadius: 12,
@@ -392,7 +388,6 @@ export default function TableManagement() {
           </Row>
         </div>
       </Card>
-
       {/* Table Detail Modal */}
       <Modal
         title={
@@ -852,6 +847,7 @@ export default function TableManagement() {
           color: ${mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.85)'} !important;
         }
       `}</style>
+
     </div>
   );
 }
