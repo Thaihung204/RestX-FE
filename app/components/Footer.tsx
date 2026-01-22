@@ -9,6 +9,7 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
 const { Title, Text, Link } = Typography;
 
@@ -26,6 +27,7 @@ interface FooterColumn {
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
   const currentYear = new Date().getFullYear();
 
   const footerColumns: FooterColumn[] = [
@@ -104,10 +106,10 @@ const Footer: React.FC = () => {
   return (
     <footer
       style={{
-        background: 'var(--surface)',
+        background: mode === 'dark' ? '#141414' : '#ffffff',
         padding: '64px 24px 32px',
-        color: 'var(--text)',
-        borderTop: '1px solid var(--border)',
+        color: mode === 'dark' ? 'white' : '#1a1a1a',
+        borderTop: mode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb',
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -127,6 +129,9 @@ const Footer: React.FC = () => {
                       style={{
                         width: 44,
                         height: 44,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         overflow: 'hidden',
                       }}
                     >
@@ -137,12 +142,12 @@ const Footer: React.FC = () => {
                         style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
                       />
                     </div>
-                    <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
+                    <Title level={4} style={{ margin: 0, color: mode === 'dark' ? 'white' : '#1a1a1a' }}>
                       Rest<span style={{ color: '#FF380B' }}>X</span>
                     </Title>
                   </div>
 
-                  <Text style={{ color: 'var(--text-muted)', lineHeight: 1.7, display: 'block', maxWidth: 280 }}>
+                  <Text style={{ color: mode === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.65)', lineHeight: 1.7, display: 'block', maxWidth: 280 }}>
                     {t('homepage.footer.tagline')}
                   </Text>
 
@@ -214,7 +219,7 @@ const Footer: React.FC = () => {
                   <Col xs={12} sm={6} key={index}>
                     <motion.div variants={itemVariants}>
                       <Space orientation="vertical" size={16}>
-                        <Text strong style={{ color: 'var(--text)', fontSize: 15 }}>
+                        <Text strong style={{ color: mode === 'dark' ? 'white' : '#1a1a1a', fontSize: 15 }}>
                           {column.title}
                         </Text>
                         <Space orientation="vertical" size={12}>
@@ -223,7 +228,7 @@ const Footer: React.FC = () => {
                               key={linkIndex}
                               href={link.href}
                               style={{
-                                color: 'var(--text-muted)',
+                                color: mode === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)',
                                 fontSize: 14,
                                 transition: 'color 0.2s ease',
                               }}
@@ -247,7 +252,7 @@ const Footer: React.FC = () => {
           viewport={{ once: true }}
           variants={bottomVariants}
         >
-          <Divider style={{ borderColor: 'var(--border)', margin: '48px 0 24px' }} />
+          <Divider style={{ borderColor: mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f0f0f0', margin: '48px 0 24px' }} />
 
           {/* Bottom Bar */}
           <div
@@ -259,17 +264,17 @@ const Footer: React.FC = () => {
               gap: 16,
             }}
           >
-            <Text style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+            <Text style={{ color: mode === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)', fontSize: 14 }}>
               {t('homepage.footer.copyright', { year: currentYear })}
             </Text>
             <Space size={24}>
-              <Link href="#privacy" style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+              <Link href="#privacy" style={{ color: mode === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)', fontSize: 14 }}>
                 {t('homepage.footer.privacy')}
               </Link>
-              <Link href="#terms" style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+              <Link href="#terms" style={{ color: mode === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)', fontSize: 14 }}>
                 {t('homepage.footer.terms')}
               </Link>
-              <Link href="#cookies" style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+              <Link href="#cookies" style={{ color: mode === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)', fontSize: 14 }}>
                 {t('homepage.footer.cookies')}
               </Link>
             </Space>

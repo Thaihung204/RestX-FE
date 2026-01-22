@@ -215,7 +215,7 @@ export default function DashboardSidebar() {
           {!collapsed && (
             <div>
               <h2 className="font-bold text-lg" style={{ color: "var(--text)" }}>
-                RestX
+                Rest<span style={{ color: '#FF380B' }}>X</span>
               </h2>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 {t("dashboard.sidebar.management")}

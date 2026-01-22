@@ -101,6 +101,9 @@ const Header: React.FC = () => {
               style={{
                 width: 38,
                 height: 38,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 overflow: 'hidden',
               }}
             >
@@ -194,7 +197,7 @@ const Header: React.FC = () => {
                     boxShadow: '0 4px 14px rgba(255, 56, 11, 0.35)',
                   }}
                 >
-                  {t('homepage.header.signup')}
+                  Sign up
                 </Button>
               </motion.div>
             </Space>
@@ -220,14 +223,9 @@ const Header: React.FC = () => {
               style={{
                 width: 32,
                 height: 32,
-                background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
-                borderRadius: 8,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'white',
-                fontWeight: 700,
-                fontSize: 14,
                 overflow: 'hidden',
               }}
             >

@@ -27,4 +27,4 @@ const LoginHeader: React.FC<LoginHeaderProps> = ({ title }) => {
   );
 };
 
-        export default LoginHeader;
+export default LoginHeader;
