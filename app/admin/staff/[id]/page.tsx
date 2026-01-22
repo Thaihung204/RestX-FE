@@ -17,6 +17,8 @@ export default function StaffFormPage() {
     phone: "",
     role: "",
     status: "active" as "active" | "inactive",
+    startDate: "",
+    salary: "",
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -32,6 +34,8 @@ export default function StaffFormPage() {
         phone: "0901234567",
         role: "Manager",
         status: "active" as "active" | "inactive",
+        startDate: "2024-01-15",
+        salary: "15000000",
       };
       setFormData(mockStaff);
     }
@@ -275,6 +279,59 @@ export default function StaffFormPage() {
                           <option value="active">Active</option>
                           <option value="inactive">Inactive</option>
                         </select>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="startDate"
+                          className="block text-sm font-medium mb-2"
+                          style={{ color: "var(--text)" }}>
+                          Ngày vào làm <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          id="startDate"
+                          name="startDate"
+                          value={formData.startDate}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }}
+                          onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 2px #FF380B'}
+                          onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="salary"
+                          className="block text-sm font-medium mb-2"
+                          style={{ color: "var(--text)" }}>
+                          Lương (VNĐ) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          id="salary"
+                          name="salary"
+                          value={formData.salary}
+                          onChange={handleChange}
+                          required
+                          min="0"
+                          step="100000"
+                          className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }}
+                          onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 2px #FF380B'}
+                          onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
+                          placeholder="15000000"
+                        />
                       </div>
                     </div>
                   </div>

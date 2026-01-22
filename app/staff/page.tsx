@@ -1,28 +1,25 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Statistic, Typography, Table, Tag, Progress, Space, Avatar, Button, Tooltip, Flex } from 'antd';
 import {
-  TableOutlined,
-  ShoppingCartOutlined,
-  DollarOutlined,
-  ClockCircleOutlined,
-  ArrowUpOutlined,
-  CheckCircleOutlined,
-  SyncOutlined,
-  ExclamationCircleOutlined,
-  RightOutlined,
-  ReloadOutlined,
-  BellOutlined,
-  FireOutlined,
-  ThunderboltOutlined,
-  CalendarOutlined,
-  SmileOutlined,
+    CalendarOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    DollarOutlined,
+    ExclamationCircleOutlined,
+    ReloadOutlined,
+    RightOutlined,
+    ShoppingCartOutlined,
+    SmileOutlined,
+    SyncOutlined,
+    TableOutlined,
+    ThunderboltOutlined
 } from '@ant-design/icons';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Button, Card, Col, Flex, Progress, Row, Space, Table, Tag, Tooltip, Typography } from 'antd';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import PageTransition from '../components/PageTransition';
-import { useTranslation, Trans } from 'react-i18next';
 import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
 const { Title, Text } = Typography;
@@ -335,10 +332,10 @@ export default function StaffDashboard() {
       width: '24%',
       render: (status: string) => {
         const statusConfig: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-          pending: { color: 'orange', text: t('staff.orders.status.pending'), icon: <ExclamationCircleOutlined /> },
-          preparing: { color: 'blue', text: t('staff.orders.status.preparing'), icon: <SyncOutlined spin /> },
-          ready: { color: 'green', text: t('staff.orders.status.ready'), icon: <CheckCircleOutlined /> },
-          served: { color: 'default', text: t('staff.orders.status.served'), icon: <CheckCircleOutlined /> },
+          pending: { color: 'orange', text: t('common.status.pending'), icon: <ExclamationCircleOutlined /> },
+          preparing: { color: 'blue', text: t('common.status.preparing'), icon: <SyncOutlined spin /> },
+          ready: { color: 'green', text: t('common.status.ready'), icon: <CheckCircleOutlined /> },
+          served: { color: 'default', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
           // Mock data contains these exact status strings 
         };
         const config = statusConfig[status] || { color: 'default', text: status, icon: null };
@@ -497,7 +494,7 @@ export default function StaffDashboard() {
                           }}
                           className="welcome-btn-primary"
                         >
-                          {t('staff.dashboard.actions.create_order')}
+                          {t('common.actions.create_order')}
                         </Button>
                       </Link>
                     </Flex>
