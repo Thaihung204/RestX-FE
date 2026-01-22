@@ -109,10 +109,18 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
                     background: 'rgba(24, 144, 255, 0.1)',
                     border: '1px solid rgba(24, 144, 255, 0.3)',
                     borderRadius: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
                 }}
             >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1890ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 18h6" />
+                    <path d="M10 22h4" />
+                    <path d="M15 2a6 6 0 0 1 0 12H9a6 6 0 0 1 0-12h6z" />
+                </svg>
                 <p style={{ fontSize: 12, color: '#1890ff', margin: 0 }}>
-                    💡 <strong>Tip:</strong> Drag tables to arrange your floor plan. Click on a table to view details.
+                    <strong>Tip:</strong> Drag tables to arrange your floor plan. Click on a table to view details.
                 </p>
             </div>
         </div>
