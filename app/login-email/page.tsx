@@ -3,10 +3,14 @@
 import LoginButton from "@/components/auth/LoginButton";
 import LoginHeader from "@/components/auth/LoginHeader";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function LoginEmailPage() {
+  const router = useRouter();
+  const { login } = useAuth();
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
   // Get initial theme from localStorage to prevent flash
@@ -79,7 +83,7 @@ export default function LoginEmailPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
@@ -101,30 +105,47 @@ export default function LoginEmailPage() {
       return;
     }
 
-    // Simulate loading for demo
+    // Call API login
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const user = await login({ email, password, rememberMe: remember });
+
+      // Redirect sau khi login thành công
+      // alert(`Login successful! Welcome ${user.name}!`); // Optional: remove alert for smoother UX or keep it
+      console.log('Logged in user:', user);
+
+      // Redirect to dashboard or home page based on user role
+      if (user.role === 'admin') {
+        router.push('/admin');
+      } else if (user.role === 'shop') {
+        router.push('/staff');
+      } else {
+        router.push('/customer');
+      }
+
+    } catch (error: any) {
+      const errorMessage = error.message || 'Login failed. Please try again.';
+      alert(errorMessage);
+      console.error('Login error:', error);
+    } finally {
       setLoading(false);
-      alert(
-        `Login Form Submitted!\n\nEmail: ${email}\nRemember Me: ${remember}\n\n(This is UI demo only - No API integration)`
-      );
-    }, 1000);
+    }
   };
-  
+
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient"
     >
       {/* Decorative elements */}
-      <div 
+      <div
         className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"
       ></div>
-      <div 
+      <div
         className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"
       ></div>
 
       <div className="max-w-[420px] w-full space-y-8 relative z-10">
-        <div 
+        <div
           className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
         >
           <LoginHeader title="Login with Email" />
@@ -254,7 +275,7 @@ export default function LoginEmailPage() {
               </a>
             </div>
 
-            <div 
+            <div
               className="text-center text-sm mt-4 pt-4 border-t auth-text"
               style={{ borderColor: 'var(--border)' }}
             >
@@ -270,7 +291,7 @@ export default function LoginEmailPage() {
               </a>
             </div>
 
-            <div 
+            <div
               className="text-center text-sm mt-2 auth-text"
             >
               Or login with{" "}

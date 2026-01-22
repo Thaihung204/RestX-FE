@@ -1,6 +1,7 @@
 "use client";
 
 import LoginButton from "@/components/auth/LoginButton";
+import authService from "@/lib/services/authService";
 import React, { useState } from "react";
 
 export default function ForgotPasswordPage() {
@@ -8,6 +9,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const validateEmail = (email: string) => {
     if (!email) {
@@ -32,7 +34,7 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setEmailTouched(true);
@@ -41,30 +43,37 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    // Simulate loading for demo
+    // Call API to send reset link
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await authService.requestPasswordReset(email);
+      setSuccess(true);
       alert(
-        `Password Reset Link Sent!\n\nEmail: ${email}\n\nPlease check your email for the reset link.\n\n(This is UI demo only - No API integration)`
+        `Password Reset Link Sent!\n\nEmail: ${email}\n\nPlease check your email for the reset link.`
       );
-    }, 1000);
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to send reset link. Please try again.';
+      alert(errorMessage);
+      console.error('Forgot password error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient"
     >
       {/* Decorative elements */}
-      <div 
+      <div
         className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"
       ></div>
-      <div 
+      <div
         className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"
       ></div>
 
       <div className="max-w-[420px] w-full space-y-8 relative z-10">
-        <div 
+        <div
           className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
         >
           <div className="text-center mb-6">
@@ -82,7 +91,7 @@ export default function ForgotPasswordPage() {
                 />
               </svg>
             </div>
-            <h2 
+            <h2
               className="text-3xl font-bold mb-2 auth-title"
             >
               Forgot Password
@@ -119,9 +128,9 @@ export default function ForgotPasswordPage() {
 
             <LoginButton loading={loading} text="SEND RESET LINK" />
 
-            <div 
+            <div
               className="text-center pt-4 border-t"
-              style={{ 
+              style={{
                 borderColor: 'var(--border)'
               }}
             >

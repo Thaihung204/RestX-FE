@@ -2,6 +2,7 @@
 
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
+import authService from "@/lib/services/authService";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
@@ -133,7 +134,7 @@ export default function RegisterPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Mark all fields as touched
@@ -177,35 +178,61 @@ export default function RegisterPage() {
       return;
     }
 
-    // Simulate loading for demo
+    // Call API to register
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const result = await authService.register({
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        fullName: `${formData.firstName} ${formData.lastName}`,
+        phoneNumber: formData.phone,
+      });
+
+      if (result.requireLogin) {
+        // Registration successful but needs manual login
+        alert(result.message || 'Registration successful! Please login with your credentials.');
+        window.location.href = '/login-email';
+      } else {
+        // Auto-login successful
+        alert(
+          t('register_page.alerts.submitted', {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone
+          })
+        );
+        // Redirect to home or dashboard
+        window.location.href = '/';
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to register. Please try again.';
+      alert(errorMessage);
+      console.error('Registration error:', error);
+    } finally {
       setLoading(false);
-      setLoading(false);
-      alert(
-        t('register_page.alerts.submitted', { firstName: formData.firstName, lastName: formData.lastName, email: formData.email, phone: formData.phone })
-      );
-    }, 1000);
+    }
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient"
     >
       {/* Decorative elements */}
-      <div 
+      <div
         className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"
       ></div>
-      <div 
+      <div
         className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"
       ></div>
 
       <div className="max-w-[480px] w-full space-y-8 relative z-10">
-        <div 
+        <div
           className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
         >
           <div className="text-center mb-6">
-            <h2 
+            <h2
               className="text-3xl font-bold mb-2 auth-title"
             >
               {t('register_page.title')}
@@ -342,7 +369,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none auth-icon-button"
-                  >
+                >
                   {showPassword ? (
                     <svg
                       className="w-5 h-5"
@@ -414,7 +441,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none auth-icon-button"
-                  >
+                >
                   {showConfirmPassword ? (
                     <svg
                       className="w-5 h-5"
