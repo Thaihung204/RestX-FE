@@ -230,14 +230,13 @@ const FeatureSection: React.FC = () => {
                   <motion.div
                     whileHover={{ y: -8 }}
                     transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
-                    style={{ height: '100%' }}
+                    style={{ height: '100%', willChange: 'transform' }}
                   >
                     <Card
-                      hoverable
                       style={{
                         height: '100%',
                         borderRadius: 20,
-                        border: hoveredIndex === index ? `2px solid ${feature.color}30` : '1px solid var(--border)',
+                        border: hoveredIndex === index ? `2px solid ${feature.color}30` : '2px solid transparent',
                         transition: 'all 0.3s ease',
                         background: hoveredIndex === index
                           ? `linear-gradient(135deg, ${feature.color}05 0%, var(--card) 100%)`
@@ -245,6 +244,7 @@ const FeatureSection: React.FC = () => {
                         boxShadow: hoveredIndex === index
                           ? `0 20px 40px ${feature.color}15`
                           : '0 4px 20px rgba(0, 0, 0, 0.05)',
+                        outline: hoveredIndex !== index ? '1px solid var(--border)' : 'none',
                       }}
                       styles={{ body: { padding: 28 } }}
                     >

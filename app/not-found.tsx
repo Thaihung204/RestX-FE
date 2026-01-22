@@ -138,7 +138,7 @@ export default function NotFound() {
                 404
               </div>
             </motion.div>
-            
+
             {/* Animated Icon */}
             <motion.div
               variants={pulseVariants}
@@ -152,7 +152,7 @@ export default function NotFound() {
                   background: isDark
                     ? 'rgba(255, 56, 11, 0.1)'
                     : 'rgba(255, 56, 11, 0.05)',
-                  border: `2px solid ${isDark ? 'rgba(255, 56, 11, 0.3)' : 'rgba(255, 56, 11, 0.2)'}`, 
+                  border: `2px solid ${isDark ? 'rgba(255, 56, 11, 0.3)' : 'rgba(255, 56, 11, 0.2)'}`,
                 }}>
                 <CoffeeOutlined
                   style={{
@@ -212,7 +212,7 @@ export default function NotFound() {
                 }}>
                 {t('not_found.back_home')}
               </Button>
-              
+
               <Button
                 size="large"
                 icon={<ArrowLeftOutlined />}

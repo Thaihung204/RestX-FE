@@ -422,6 +422,12 @@
         "order": "Order",
         "reserved_at": "Reserved at",
         "view_details": "View Details"
+      },
+      "status": {
+        "available": "Available",
+        "occupied": "Occupied",
+        "reserved": "Reserved",
+        "cleaning": "Cleaning"
       }
     },
     "staff": {

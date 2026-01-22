@@ -34,6 +34,7 @@ export default function ThemeToggle({ style, className }: ThemeToggleProps) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          color: style?.color,
           ...style,
         }}
       />

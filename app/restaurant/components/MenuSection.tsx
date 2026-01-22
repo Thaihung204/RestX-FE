@@ -1,6 +1,7 @@
 'use client';
 
 import { Typography } from 'antd';
+import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
 import React from 'react';
 
 import { useTranslation } from 'react-i18next';
@@ -8,12 +9,14 @@ import { useTranslation } from 'react-i18next';
 const { Title } = Typography;
 
 const MenuSection: React.FC = () => {
+  const { mode } = useThemeMode();
   const { t } = useTranslation();
+
   return (
     <section
       id="menu"
       style={{
-        background: '#1a1a1a',
+        background: mode === 'dark' ? '#1a1a1a' : '#ffffff',
         padding: '80px 24px',
       }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
@@ -30,7 +33,7 @@ const MenuSection: React.FC = () => {
             <Title
               level={2}
               style={{
-                color: 'white',
+                color: mode === 'dark' ? 'white' : '#1a1a1a',
                 fontSize: 48,
                 fontWeight: 400,
                 fontFamily: 'serif',
@@ -50,7 +53,7 @@ const MenuSection: React.FC = () => {
 
         {/* Menu content will be added here */}
         <div style={{ textAlign: 'center', marginTop: 60 }}>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 16 }}>
+          <p style={{ color: mode === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.65)', fontSize: 16 }}>
             {t('restaurant.menu_section.not_updated')}
           </p>
         </div>
