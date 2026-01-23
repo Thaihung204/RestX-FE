@@ -3,11 +3,13 @@
 import React from "react";
 import { Typography, Row, Col, Card } from "antd";
 import { useTranslation } from "react-i18next";
+import { useThemeMode } from "@/app/theme/AutoDarkThemeProvider";
 
 const { Title } = Typography;
 
 const FeaturedCategories: React.FC = () => {
     const { t } = useTranslation();
+    const { mode } = useThemeMode();
 
     const categories = [
         {
@@ -33,12 +35,12 @@ const FeaturedCategories: React.FC = () => {
     ];
 
     return (
-        <section style={{ padding: "80px 24px", background: "#141414" }}>
+        <section style={{ padding: "80px 24px", background: mode === 'dark' ? "#141414" : "#f5f5f5" }}>
             <div style={{ maxWidth: 1200, margin: "0 auto" }}>
                 <Title
                     level={2}
                     style={{
-                        color: "white",
+                        color: mode === 'dark' ? "white" : "#1a1a1a",
                         textAlign: "center",
                         marginBottom: 48,
                         fontSize: 36,
