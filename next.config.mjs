@@ -14,6 +14,7 @@ const nextConfig = {
   // Optional: Change the output directory `out` -> `dist`. Remember to update
   // it in .gitlab-ci.yml as well.
   // distDir: 'dist',
+  reactStrictMode: false,
 };
 
 export default nextConfig;
