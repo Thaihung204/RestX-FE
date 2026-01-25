@@ -7,6 +7,10 @@ const axiosInstance = axios.create({
   },
 });
 
+export const setAxiosBaseUrl = (baseUrl: string) => {
+  axiosInstance.defaults.baseURL = baseUrl;
+};
+
 axiosInstance.interceptors.request.use(
   (config) => {
     // Ensure we are in the browser before accessing localStorage
@@ -25,6 +29,7 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&

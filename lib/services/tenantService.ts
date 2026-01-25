@@ -1,4 +1,5 @@
 import axiosInstance from './axiosInstance';
+import adminAxiosInstance from './adminAxiosInstance';
 
 export interface TenantConfig {
     id: string;
@@ -19,7 +20,7 @@ export interface TenantConfig {
 
     // Network & Config
     networkIp?: string;
-    connectionString?: string; 
+    connectionString?: string;
     status: boolean;
     hostname: string;
     expiredAt: string;
@@ -49,7 +50,7 @@ export interface TenantConfig {
 
 export const tenantService = {
     getTenantConfig: async (domain: string): Promise<TenantConfig> => {
-        const response = await axiosInstance.get(`/tenants/${domain}`);
+        const response = await adminAxiosInstance.get(`/tenants/${domain}`);
         return response.data;
     },
 
