@@ -61,8 +61,8 @@ export default axiosInstance;
 
 // Mock implementation for UI demo only
 export default {
-  get: async () => ({ data: {} }),
-  post: async () => ({ data: {} }),
-  put: async () => ({ data: {} }),
-  delete: async () => ({ data: {} }),
+  get: async (...args: any[]) => ({ data: {} as any }),
+  post: async (...args: any[]) => ({ data: {} as any }),
+  put: async (...args: any[]) => ({ data: {} as any }),
+  delete: async (...args: any[]) => ({ data: {} as any }),
 };
