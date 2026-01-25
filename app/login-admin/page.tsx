@@ -3,7 +3,7 @@
 import AdminLoginHeader from "@/components/auth/AdminLoginHeader";
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function AdminLoginPage() {
@@ -11,9 +11,13 @@ export default function AdminLoginPage() {
   const [mounted, setMounted] = useState(false);
   // Get initial theme from localStorage to prevent flash
   const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('restx-theme-mode');
-      return stored === 'dark' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("restx-theme-mode");
+      return (
+        stored === "dark" ||
+        (stored === null &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      );
     }
     return false;
   });
@@ -33,7 +37,9 @@ export default function AdminLoginPage() {
       return false;
     }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
+    // Improved email regex validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
       setEmailError("Please enter a valid email address");
       return false;
     }
@@ -81,7 +87,7 @@ export default function AdminLoginPage() {
   useEffect(() => {
     setMounted(true);
     // Update isDark when mode changes
-    setIsDark(mode === 'dark');
+    setIsDark(mode === "dark");
   }, [mode]);
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,25 +98,59 @@ export default function AdminLoginPage() {
     }
   };
 
+  const handleEmailBlur = () => {
+    setEmailTouched(true);
+    if (!email) {
+      setEmailError("Please enter your email address");
+    } else {
+      validateEmail(email);
+    }
+  };
+
+  const handlePasswordBlur = () => {
+    setPasswordTouched(true);
+    if (!password) {
+      setPasswordErrors(["Please enter your password"]);
+    } else {
+      validatePassword(password);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
-    if (!email || !password) {
-      if (!email) setEmailTouched(true);
-      if (!password) setPasswordTouched(true);
+    // Mark all fields as touched
+    setEmailTouched(true);
+    setPasswordTouched(true);
+
+    // Check if fields are empty
+    if (!email || !email.trim()) {
+      setEmailError("Please enter your email address");
+      if (!password || !password.trim()) {
+        setPasswordErrors(["Please enter your password"]);
+      }
       return;
     }
 
-    // Email validation
-    if (!validateEmail(email)) {
-      setEmailTouched(true);
+    if (!password || !password.trim()) {
+      setPasswordErrors(["Please enter your password"]);
       return;
     }
 
-    // Strong password validation
-    if (!validatePassword(password)) {
-      setPasswordTouched(true);
+    // Validate email format
+    const isEmailValid = validateEmail(email);
+    if (!isEmailValid) {
+      return;
+    }
+
+    // Validate strong password
+    const isPasswordValid = validatePassword(password);
+    if (!isPasswordValid) {
+      return;
+    }
+
+    // Don't proceed if there are any errors
+    if (emailError || passwordErrors.length > 0) {
       return;
     }
 
@@ -119,56 +159,56 @@ export default function AdminLoginPage() {
     setTimeout(() => {
       setLoading(false);
       alert(
-        `Login Form Submitted!\n\nEmail: ${email}\nRemember Me: ${remember}\n\n(This is UI demo only - No API integration)`
+        `Login Form Submitted!\n\nEmail: ${email}\nRemember Me: ${remember}\n\n(This is UI demo only - No API integration)`,
       );
     }, 1000);
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex"
-      style={{ background: isDark ? '#0E121A' : '#f3f4f6' }}
-    >
+      style={{ background: isDark ? "#0E121A" : "#f3f4f6" }}>
       {/* Left side - Empty space for future design */}
-      <div 
+      <div
         className="hidden lg:flex lg:w-1/2 items-center justify-center p-12"
-        style={{ background: isDark ? '#141927' : '#fff' }}
-      >
-        <div className="text-center" style={{ color: isDark ? '#9ca3af' : '#9ca3af' }}>
+        style={{ background: isDark ? "#141927" : "#fff" }}>
+        <div
+          className="text-center"
+          style={{ color: isDark ? "#9ca3af" : "#9ca3af" }}>
           {/* Placeholder for future design */}
           <p className="text-sm">Design placeholder</p>
         </div>
       </div>
 
       {/* Right side - Background with Login Form */}
-      <div 
+      <div
         className="flex-1 relative overflow-hidden"
         style={{
-          background: isDark 
-            ? 'linear-gradient(135deg, #0E121A 0%, #141927 50%, #1a1a2e 100%)'
-            : 'linear-gradient(135deg, #1f2937 0%, #000000 50%, #7c2d12 100%)'
-        }}
-      >
+          background: isDark
+            ? "linear-gradient(135deg, #0E121A 0%, #141927 50%, #1a1a2e 100%)"
+            : "linear-gradient(135deg, #1f2937 0%, #000000 50%, #7c2d12 100%)",
+        }}>
         {/* Decorative elements */}
-        <div 
+        <div
           className="absolute top-10 right-10 w-64 h-64 rounded-full filter blur-3xl opacity-20 animate-pulse"
-          style={{ background: '#FF380B' }}
-        ></div>
-        <div 
+          style={{ background: "#FF380B" }}></div>
+        <div
           className="absolute bottom-10 left-10 w-64 h-64 rounded-full filter blur-3xl opacity-10"
-          style={{ background: '#FF380B' }}
-        ></div>
+          style={{ background: "#FF380B" }}></div>
 
         {/* Login Form Container */}
         <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 relative z-10">
           <div className="w-full max-w-[420px]">
-            <div 
+            <div
               className="rounded-2xl shadow-2xl p-6 sm:p-8 border"
               style={{
-                background: isDark ? 'rgba(20, 25, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 56, 11, 0.2)'
-              }}
-            >
+                background: isDark
+                  ? "rgba(20, 25, 39, 0.95)"
+                  : "rgba(255, 255, 255, 0.95)",
+                borderColor: isDark
+                  ? "rgba(255, 255, 255, 0.1)"
+                  : "rgba(255, 56, 11, 0.2)",
+              }}>
               <AdminLoginHeader />
 
               <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -176,8 +216,7 @@ export default function AdminLoginPage() {
                   <label
                     htmlFor="email"
                     className="block text-sm font-medium mb-2"
-                    style={{ color: isDark ? '#ECECEC' : '#374151' }}
-                  >
+                    style={{ color: isDark ? "#ECECEC" : "#374151" }}>
                     Email
                   </label>
                   <input
@@ -185,19 +224,25 @@ export default function AdminLoginPage() {
                     type="email"
                     value={email}
                     onChange={handleEmailChange}
+                    onBlur={handleEmailBlur}
                     placeholder="admin@restx.com"
                     className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
                     style={{
-                      background: isDark ? '#141927' : '#fff',
-                      color: isDark ? '#ECECEC' : '#111827',
-                      borderColor: emailTouched && emailError 
-                        ? '#ef4444' 
-                        : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                      background: isDark ? "#141927" : "#fff",
+                      color: isDark ? "#ECECEC" : "#111827",
+                      borderColor:
+                        emailTouched && emailError
+                          ? "#ef4444"
+                          : isDark
+                            ? "rgba(255, 255, 255, 0.2)"
+                            : "#e5e7eb",
                     }}
                     suppressHydrationWarning
                   />
                   {emailTouched && emailError && (
-                    <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{emailError}</p>
+                    <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
+                      {emailError}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -205,17 +250,19 @@ export default function AdminLoginPage() {
                     <label
                       htmlFor="password"
                       className="block text-sm font-medium"
-                      style={{ color: isDark ? '#ECECEC' : '#374151' }}
-                    >
+                      style={{ color: isDark ? "#ECECEC" : "#374151" }}>
                       Password
                     </label>
                     <a
                       href="/forgot-password"
                       className="text-sm font-medium transition-colors"
-                      style={{ color: '#FF380B' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
-                    >
+                      style={{ color: "#FF380B" }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.color = "#CC2D08")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.color = "#FF380B")
+                      }>
                       Forgot password?
                     </a>
                   </div>
@@ -225,14 +272,18 @@ export default function AdminLoginPage() {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={handlePasswordChange}
+                      onBlur={handlePasswordBlur}
                       placeholder="Enter your password"
                       className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
                       style={{
-                        background: isDark ? '#141927' : '#fff',
-                        color: isDark ? '#ECECEC' : '#111827',
-                        borderColor: passwordTouched && passwordErrors.length > 0 
-                          ? '#ef4444' 
-                          : (isDark ? 'rgba(255, 255, 255, 0.2)' : '#e5e7eb'),
+                        background: isDark ? "#141927" : "#fff",
+                        color: isDark ? "#ECECEC" : "#111827",
+                        borderColor:
+                          passwordTouched && passwordErrors.length > 0
+                            ? "#ef4444"
+                            : isDark
+                              ? "rgba(255, 255, 255, 0.2)"
+                              : "#e5e7eb",
                       }}
                       suppressHydrationWarning
                     />
@@ -240,9 +291,17 @@ export default function AdminLoginPage() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none"
-                      style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = isDark ? '#d1d5db' : '#374151'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = isDark ? '#9ca3af' : '#6b7280'}
+                      style={{ color: isDark ? "#9ca3af" : "#6b7280" }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.color = isDark
+                          ? "#d1d5db"
+                          : "#374151")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.color = isDark
+                          ? "#9ca3af"
+                          : "#6b7280")
+                      }
                       suppressHydrationWarning>
                       {showPassword ? (
                         <svg
@@ -282,7 +341,10 @@ export default function AdminLoginPage() {
                   {passwordTouched && passwordErrors.length > 0 && (
                     <div className="mt-1 space-y-0.5">
                       {passwordErrors.map((error, index) => (
-                        <p key={index} className="text-sm" style={{ color: '#ef4444' }}>
+                        <p
+                          key={index}
+                          className="text-sm"
+                          style={{ color: "#ef4444" }}>
                           {error}
                         </p>
                       ))}
@@ -291,43 +353,55 @@ export default function AdminLoginPage() {
                 </div>
                 <RememberCheckbox checked={remember} onChange={setRemember} />
                 <LoginButton loading={loading} text="LOGIN" />
-                <div className="text-center text-sm mt-6" style={{ color: isDark ? '#C5C5C5' : '#4b5563' }}>
+                <div
+                  className="text-center text-sm mt-6"
+                  style={{ color: isDark ? "#C5C5C5" : "#4b5563" }}>
                   By continuing, you agree to RestX&apos;s{" "}
                   <a
                     href="/terms"
                     className="font-medium"
-                    style={{ color: '#FF380B' }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
-                  >
+                    style={{ color: "#FF380B" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "#CC2D08")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "#FF380B")
+                    }>
                     Terms of Service
                   </a>{" "}
                   and{" "}
                   <a
                     href="/privacy"
                     className="font-medium"
-                    style={{ color: '#FF380B' }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
-                  >
+                    style={{ color: "#FF380B" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "#CC2D08")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "#FF380B")
+                    }>
                     Privacy Policy
                   </a>
                 </div>
-                <div 
+                <div
                   className="text-center text-sm mt-4 pt-4 border-t"
-                  style={{ 
-                    color: isDark ? '#C5C5C5' : '#4b5563',
-                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb'
-                  }}
-                >
+                  style={{
+                    color: isDark ? "#C5C5C5" : "#4b5563",
+                    borderColor: isDark
+                      ? "rgba(255, 255, 255, 0.1)"
+                      : "#e5e7eb",
+                  }}>
                   Don&apos;t have an account?{" "}
                   <a
                     href="/register"
                     className="font-semibold transition-colors"
-                    style={{ color: '#FF380B' }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
-                  >
+                    style={{ color: "#FF380B" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "#CC2D08")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "#FF380B")
+                    }>
                     Sign up here
                   </a>
                 </div>

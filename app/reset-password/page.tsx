@@ -39,8 +39,23 @@ export default function ResetPasswordPage() {
       return false;
     }
 
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      setPasswordError("Password must contain uppercase, lowercase, and number");
+    if (!/(?=.*[a-z])/.test(password)) {
+      setPasswordError("Password must contain at least one lowercase letter");
+      return false;
+    }
+
+    if (!/(?=.*[A-Z])/.test(password)) {
+      setPasswordError("Password must contain at least one uppercase letter");
+      return false;
+    }
+
+    if (!/(?=.*\d)/.test(password)) {
+      setPasswordError("Password must contain at least one number");
+      return false;
+    }
+
+    if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(password)) {
+      setPasswordError("Password must contain at least one special character (!@#$%...)");
       return false;
     }
 
@@ -83,16 +98,59 @@ export default function ResetPasswordPage() {
     }
   };
 
+  const handlePasswordBlur = () => {
+    setPasswordTouched(true);
+    if (!password) {
+      setPasswordError("Please enter a password");
+    } else {
+      validatePassword(password);
+    }
+  };
+
+  const handleConfirmPasswordBlur = () => {
+    setConfirmPasswordTouched(true);
+    if (!confirmPassword) {
+      setConfirmPasswordError("Please confirm your password");
+    } else {
+      validateConfirmPassword(confirmPassword);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Mark all fields as touched
     setPasswordTouched(true);
     setConfirmPasswordTouched(true);
 
-    const isPasswordValid = validatePassword(password);
-    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
+    // Check if fields are empty
+    if (!password || !password.trim()) {
+      setPasswordError("Please enter a password");
+      if (!confirmPassword || !confirmPassword.trim()) {
+        setConfirmPasswordError("Please confirm your password");
+      }
+      return;
+    }
 
-    if (!isPasswordValid || !isConfirmPasswordValid) {
+    if (!confirmPassword || !confirmPassword.trim()) {
+      setConfirmPasswordError("Please confirm your password");
+      return;
+    }
+
+    // Validate password
+    const isPasswordValid = validatePassword(password);
+    if (!isPasswordValid) {
+      return;
+    }
+
+    // Validate confirm password
+    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
+    if (!isConfirmPasswordValid) {
+      return;
+    }
+
+    // Don't proceed if there are any errors
+    if (passwordError || confirmPasswordError) {
       return;
     }
 
@@ -162,7 +220,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 value={password}
                 onChange={handlePasswordChange}
-                onBlur={() => setPasswordTouched(true)}
+                onBlur={handlePasswordBlur}
                 placeholder="Enter new password"
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
@@ -189,7 +247,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 value={confirmPassword}
                 onChange={handleConfirmPasswordChange}
-                onBlur={() => setConfirmPasswordTouched(true)}
+                onBlur={handleConfirmPasswordBlur}
                 placeholder="Confirm new password"
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
