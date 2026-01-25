@@ -199,34 +199,14 @@ export default function DashboardSidebar() {
 
   return (
     <aside
-      className={`flex flex-col transition-all duration-300 ${collapsed ? "w-20" : "w-64"
+      className={`flex flex-col transition-all duration-300 z-30 ${collapsed ? "w-20" : "w-64"
         }`}
       style={{ color: "var(--text)" }}>
-      {/* Logo */}
-      <div className="p-6" style={{ borderBottom: "1px solid var(--border)" }}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 overflow-hidden">
-            <img
-              src="/images/logo/restx-removebg-preview.png"
-              alt="RestX Logo"
-              className="w-full h-full object-contain app-logo-img"
-            />
-          </div>
-          {!collapsed && (
-            <div>
-              <h2 className="font-bold text-lg" style={{ color: "var(--text)" }}>
-                Rest<span style={{ color: '#FF380B' }}>X</span>
-              </h2>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.sidebar.management")}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Logo Removed - Moved to Header */}
+      <div className="h-4"></div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-6 px-3 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 py-6 px-3 overflow-y-auto">
         <ul className="space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.path;
@@ -310,21 +290,6 @@ export default function DashboardSidebar() {
         </svg>
       </button>
 
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #374151;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #4b5563;
-        }
-      `}</style>
     </aside>
   );
 }
