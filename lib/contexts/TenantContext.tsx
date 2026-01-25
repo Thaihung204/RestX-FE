@@ -19,15 +19,28 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const fetchTenant = async () => {
             try {
-                // User requested full host name to handle cases with multiple subdomains or specific ports
-                // e.g. "kfc.restx.food" or "localhost:3000"
                 const param = window.location.host;
 
                 const data = await tenantService.getTenantConfig(param);
+
+                // Switch main Axios instance to point to this Tenant's specific API
+                if (data.hostname) {
+
+                    const protocol = window.location.protocol;
+                    // Remove trailing slash if any and append /api
+                    // Using setAxiosBaseUrl ensuring all next requests go to correct Tenant Server
+                    const apiUrl = `${protocol}//${data.hostname}/api`;
+
+                    // Dynamic import to avoid circular dependencies if any, or just direct call
+                    const { setAxiosBaseUrl } = await import('@/lib/services/axiosInstance');
+                    setAxiosBaseUrl(apiUrl);
+                }
+
                 setTenant(data);
             } catch (err) {
                 console.error("Failed to load tenant config", err);
-                setError("Failed to load tenant configuration");
+                setError("Tenant not found");
+                window.location.href = "https://restx.food";
             } finally {
                 setLoading(false);
             }
