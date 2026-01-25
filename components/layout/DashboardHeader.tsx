@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { useLanguage } from "@/components/I18nProvider";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function DashboardHeader() {
@@ -140,7 +140,7 @@ export default function DashboardHeader() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${language === "en" ? "bg-orange-500/10 text-orange-500" : "hover:bg-gray-100 dark:hover:bg-gray-800"
                         }`}
                       style={{ color: language === "en" ? undefined : "var(--text)" }}>
-                      <span>🇬🇧</span> English
+                      <span className="font-mono font-bold text-xs bg-[var(--surface)] px-1.5 py-0.5 rounded border border-[var(--border)]">EN</span> English
                     </button>
                     <button
                       onClick={() => {
@@ -150,7 +150,7 @@ export default function DashboardHeader() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${language === "vi" ? "bg-orange-500/10 text-orange-500" : "hover:bg-gray-100 dark:hover:bg-gray-800"
                         }`}
                       style={{ color: language === "vi" ? undefined : "var(--text)" }}>
-                      <span>🇻🇳</span> Tiếng Việt
+                      <span className="font-mono font-bold text-xs bg-[var(--surface)] px-1.5 py-0.5 rounded border border-[var(--border)]">VI</span> Tiếng Việt
                     </button>
                   </div>
                 </>

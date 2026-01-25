@@ -156,8 +156,7 @@ export default function StaffLayout({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 20,
-              fontWeight: 700,
+              overflow: 'hidden',
             }}
           >
             <img

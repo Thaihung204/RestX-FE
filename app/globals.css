@@ -213,11 +213,6 @@ body {
   background: var(--text-muted, #999) !important;
 }
 
-/* Invert logo color in dark mode to make it visible without background */
-[data-theme="dark"] .app-logo-img {
-  filter: invert(1) hue-rotate(180deg);
-}
-
 /* Notification Sheet Animations */
 @keyframes fadeIn {
   from {
@@ -249,4 +244,13 @@ body {
   border-radius: 0 !important;
   box-shadow: none !important;
   border: none !important;
+}
+
+/* RestX Logo Dark Mode - Invert colors for better visibility */
+[data-theme="dark"] .app-logo-img {
+  filter: invert(1) hue-rotate(180deg) brightness(1.1);
+}
+
+[data-theme="light"] .app-logo-img {
+  filter: none;
 }

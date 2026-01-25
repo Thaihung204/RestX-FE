@@ -4,9 +4,11 @@ import LoginButton from "@/components/auth/LoginButton";
 import LoginHeader from "@/components/auth/LoginHeader";
 
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function LoginPage() {
+  const { t } = useTranslation('auth');
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
   // Get initial theme from localStorage to prevent flash
@@ -44,32 +46,27 @@ export default function LoginPage() {
 
     const phoneDigits = phone.replace(/\D/g, "");
 
-    if (phoneDigits.length === 10 && /^0[0-9]{9}$/.test(phoneDigits)) {
-      setPhoneError("");
-      return true;
+    if (phoneDigits.length !== 10) {
+      setPhoneError(t('login_page.validation.phone_length'));
+      return false;
     }
 
-    if (phoneDigits.length === 11 && /^84[0-9]{9}$/.test(phoneDigits)) {
-      setPhoneError("");
-      return true;
+    if (!/^[0-9]{10}$/.test(phoneDigits)) {
+      setPhoneError(t('login_page.validation.phone_digits'));
+      return false;
     }
 
-    if (phoneDigits.length !== 10 && phoneDigits.length !== 11) {
-      setPhoneError(
-        "Phone number must be 10 digits (starting with 0) or 11 digits (starting with 84)",
-      );
-    } else {
-      setPhoneError("Invalid phone number format");
-    }
-    return false;
+    setPhoneError("");
+    return true;
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
     if (value.length <= 11) {
       setPhone(value);
-      if (phoneTouched) {
-        validatePhone(value);
+      // Clear error if phone becomes valid after submit attempt
+      if (phoneTouched && value.length === 10) {
+        setPhoneError("");
       }
     }
   };
@@ -81,7 +78,7 @@ export default function LoginPage() {
     }
 
     if (name.trim().length < 2) {
-      setNameError("Name must be at least 2 characters");
+      setNameError(t('login_page.validation.name_length'));
       return false;
     }
 
@@ -92,27 +89,18 @@ export default function LoginPage() {
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setName(value);
-    if (nameTouched) {
-      validateName(value);
+    // Clear error if name becomes valid after submit attempt
+    if (nameTouched && value.trim().length >= 2) {
+      setNameError("");
     }
   };
 
   const handlePhoneBlur = () => {
-    setPhoneTouched(true);
-    if (!phone) {
-      setPhoneError("Please enter your phone number");
-    } else {
-      validatePhone(phone);
-    }
+    // Only mark as touched, validation happens on submit
   };
 
   const handleNameBlur = () => {
-    setNameTouched(true);
-    if (!name) {
-      setNameError("Please enter your name");
-    } else {
-      validateName(name);
-    }
+    // Only mark as touched, validation happens on submit
   };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,15 +111,15 @@ export default function LoginPage() {
 
     // Check if fields are empty
     if (!phone || !phone.trim()) {
-      setPhoneError("Please enter your phone number");
+      setPhoneError(t('login_page.validation.required_phone'));
       if (!name || !name.trim()) {
-        setNameError("Please enter your name");
+        setNameError(t('login_page.validation.required_name'));
       }
       return;
     }
 
     if (!name || !name.trim()) {
-      setNameError("Please enter your name");
+      setNameError(t('login_page.validation.required_name'));
       return;
     }
 
@@ -157,7 +145,7 @@ export default function LoginPage() {
     setTimeout(() => {
       setLoading(false);
       alert(
-        `Login Form Submitted!\n\nPhone: ${phone}\nName: ${name}\nRemember Me: ${remember}\n\n(This is UI demo only - No API integration)`,
+        t('login_page.alerts.submitted', { phone, name, remember })
       );
     }, 1000);
   };
@@ -176,8 +164,9 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="phone"
-                className="block text-sm font-medium mb-2 auth-label">
-                Phone Number
+                className="block text-sm font-medium mb-2 auth-label"
+              >
+                {t('login_page.phone_label')}
               </label>
               <input
                 id="phone"
@@ -185,8 +174,8 @@ export default function LoginPage() {
                 value={phone}
                 onChange={handlePhoneChange}
                 onBlur={handlePhoneBlur}
-                placeholder="0123456789"
-                maxLength={11}
+                placeholder={t('login_page.phone_placeholder')}
+                maxLength={10}
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
                   borderColor:
@@ -203,8 +192,9 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium mb-2 auth-label">
-                Name
+                className="block text-sm font-medium mb-2 auth-label"
+              >
+                {t('login_page.name_label')}
               </label>
               <input
                 id="name"
@@ -212,7 +202,7 @@ export default function LoginPage() {
                 value={name}
                 onChange={handleNameChange}
                 onBlur={handleNameBlur}
-                placeholder="Enter your name"
+                placeholder={t('login_page.name_placeholder')}
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
                   borderColor: nameTouched && nameError ? "#ef4444" : undefined,
@@ -225,38 +215,42 @@ export default function LoginPage() {
               )}
             </div>
 
-            <LoginButton loading={loading} text="LOGIN" />
+            <LoginButton loading={loading} text={t('login_button.login_text')} />
 
             <div className="text-center text-sm mt-6 auth-text">
-              By continuing, you agree to RestX&apos;s{" "}
+              {t('login_page.terms_text')}{" "}
               <a
                 href="/terms"
                 className="font-medium"
-                style={{ color: "#FF380B" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                Terms of Service
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}>
+                {t('login_page.terms_of_service')}
               </a>{" "}
-              and{" "}
+              &
               <a
                 href="/privacy"
                 className="font-medium"
-                style={{ color: "#FF380B" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                Privacy Policy
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
+              >
+                {t('login_page.privacy_policy')}
               </a>
             </div>
 
-            <div className="text-center text-sm mt-4 auth-text">
-              Or login with{" "}
+            <div 
+              className="text-center text-sm mt-4 auth-text"
+            >
+              {t('login_page.or_login_with')}{" "}
               <a
                 href="/login-email"
                 className="font-semibold transition-colors"
-                style={{ color: "#FF380B" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                Email & Password
+                style={{ color: '#FF380B' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
+              >
+                {t('login_page.email_password')}
               </a>
             </div>
           </form>

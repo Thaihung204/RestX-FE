@@ -1,11 +1,16 @@
 'use client';
 
+import { Button, Col, Row, Typography } from 'antd';
 import React from 'react';
-import { Typography, Row, Col, Button } from 'antd';
+import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
+
+import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
 
 const AboutSection: React.FC = () => {
+  const { mode } = useThemeMode();
+  const { t } = useTranslation();
   const foodImages = [
     '/images/restaurant/dish1.png',
     '/images/restaurant/dish2.png',
@@ -19,7 +24,7 @@ const AboutSection: React.FC = () => {
     <section
       id="about"
       style={{
-        background: '#1a1a1a',
+        background: mode === 'dark' ? '#1a1a1a' : '#ffffff',
         padding: '80px 24px',
       }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
@@ -29,47 +34,44 @@ const AboutSection: React.FC = () => {
             <Title
               level={2}
               style={{
-                color: 'white',
+                color: mode === 'dark' ? 'white' : '#1a1a1a',
                 fontSize: 48,
                 fontWeight: 400,
                 fontFamily: 'serif',
                 marginBottom: 16,
               }}>
-              Về Chúng Tôi
+              {t('restaurant.about.title')}
             </Title>
             <Title
               level={3}
               style={{
-                color: 'white',
+                color: mode === 'dark' ? 'white' : '#1a1a1a',
                 fontSize: 36,
                 fontWeight: 400,
                 fontFamily: 'serif',
                 marginBottom: 24,
               }}>
-              RestX Restaurant
+              {t('restaurant.about.restaurant_name')}
             </Title>
             <Paragraph
               style={{
-                color: 'rgba(255,255,255,0.9)',
+                color: mode === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
                 fontSize: 16,
                 lineHeight: 1.8,
                 marginBottom: 24,
               }}>
-              Tại RestX Restaurant, chúng tôi đặt khách hàng lên hàng đầu. Với đội ngũ nhân viên tận tâm và
-              những công thức nấu ăn độc đáo, chúng tôi cam kết mang đến trải nghiệm ẩm thực tuyệt vời nhất.
-              Mỗi món ăn được chế biến cẩn thận với nguyên liệu tươi ngon nhất, tạo nên hương vị đặc biệt
-              không thể tìm thấy ở đâu khác. Chúng tôi xin chân thành cảm ơn sự ủng hộ của quý khách.
+              {t('restaurant.about.description')}
             </Paragraph>
             <Button
               type="link"
               style={{
-                color: 'white',
+                color: mode === 'dark' ? 'white' : '#1a1a1a',
                 padding: 0,
                 fontSize: 16,
                 textDecoration: 'underline',
                 height: 'auto',
               }}>
-              Xem Thêm
+              {t('restaurant.about.see_more')}
             </Button>
           </Col>
 

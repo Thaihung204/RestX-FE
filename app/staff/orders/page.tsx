@@ -1,45 +1,40 @@
 'use client';
 
-import React, { useState } from 'react';
 import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Tag,
-  Button,
-  Space,
-  Modal,
-  Avatar,
-  Badge,
-  Tabs,
-  Input,
-  Select,
-  Divider,
-  Empty,
-  InputNumber,
-  App,
-} from 'antd';
-import { useTranslation } from 'react-i18next';
-import {
-  ShoppingCartOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  SyncOutlined,
-  ExclamationCircleOutlined,
-  SearchOutlined,
-  PlusOutlined,
-  MinusOutlined,
-  DeleteOutlined,
-  FireOutlined,
-  CoffeeOutlined,
-  TableOutlined,
-  UserOutlined,
-  PrinterOutlined,
-  SendOutlined,
-  AppstoreOutlined,
-  ShoppingOutlined,
+    AppstoreOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CoffeeOutlined,
+    ExclamationCircleOutlined,
+    FireOutlined,
+    MinusOutlined,
+    PlusOutlined,
+    PrinterOutlined,
+    SearchOutlined,
+    SendOutlined,
+    ShoppingCartOutlined,
+    SyncOutlined
 } from '@ant-design/icons';
+import {
+    App,
+    Avatar,
+    Badge,
+    Button,
+    Card,
+    Col,
+    Divider,
+    Empty,
+    Input,
+    Modal,
+    Row,
+    Select,
+    Space,
+    Tabs,
+    Tag,
+    Typography
+} from 'antd';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
 
 const { Title, Text, Paragraph } = Typography;
@@ -175,18 +170,18 @@ export default function OrderManagement() {
 
   // Create status configs inside component to use translations
   const statusConfig: Record<OrderStatus, { color: string; text: string; icon: React.ReactNode }> = {
-    pending: { color: 'orange', text: t('staff.orders.status.pending'), icon: <ExclamationCircleOutlined /> },
-    preparing: { color: 'blue', text: t('staff.orders.status.preparing'), icon: <SyncOutlined spin /> },
-    ready: { color: 'green', text: t('staff.orders.status.ready'), icon: <CheckCircleOutlined /> },
-    served: { color: 'default', text: t('staff.orders.status.served'), icon: <CheckCircleOutlined /> },
-    cancelled: { color: 'red', text: t('staff.orders.status.cancelled'), icon: <ClockCircleOutlined /> },
+    pending: { color: 'orange', text: t('common.status.pending'), icon: <ExclamationCircleOutlined /> },
+    preparing: { color: 'blue', text: t('common.status.preparing'), icon: <SyncOutlined spin /> },
+    ready: { color: 'green', text: t('common.status.ready'), icon: <CheckCircleOutlined /> },
+    served: { color: 'default', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
+    cancelled: { color: 'red', text: t('common.status.cancelled'), icon: <ClockCircleOutlined /> },
   };
 
   const itemStatusConfig: Record<OrderItemStatus, { color: string; text: string }> = {
-    pending: { color: 'orange', text: t('staff.orders.item_status.pending') },
-    preparing: { color: 'blue', text: t('staff.orders.item_status.preparing') },
-    ready: { color: 'green', text: t('staff.orders.item_status.ready') },
-    served: { color: 'default', text: t('staff.orders.item_status.served') },
+    pending: { color: 'orange', text: t('common.status.pending') },
+    preparing: { color: 'blue', text: t('common.status.preparing') },
+    ready: { color: 'green', text: t('common.status.ready') },
+    served: { color: 'default', text: t('common.status.served') },
   };
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -616,7 +611,7 @@ export default function OrderManagement() {
                 width: '100%',
               }}
             >
-              {isMobile || isTablet ? t('staff.orders.create_order_short') : t('staff.orders.create_order')}
+              {isMobile || isTablet ? t('staff.orders.create_order_short') : t('common.actions.create_order')}
             </Button>
           </Col>
         </Row>
@@ -785,10 +780,10 @@ export default function OrderManagement() {
                     style={{ width: isMobile ? 90 : 110 }}
                     onChange={(value) => handleUpdateItemStatus(selectedOrder.id, item.id, value)}
                     options={[
-                      { value: 'pending', label: t('staff.orders.item_status.pending') },
-                      { value: 'preparing', label: t('staff.orders.item_status.preparing') },
-                      { value: 'ready', label: t('staff.orders.item_status.ready') },
-                      { value: 'served', label: t('staff.orders.item_status.served') },
+                      { value: 'pending', label: t('common.status.pending') },
+                      { value: 'preparing', label: t('common.status.preparing') },
+                      { value: 'ready', label: t('common.status.ready') },
+                      { value: 'served', label: t('common.status.served') },
                     ]}
                   />
                 </div>
@@ -852,7 +847,7 @@ export default function OrderManagement() {
         title={
           <Space>
             <PlusOutlined style={{ color: '#FF380B' }} />
-            <span>{t('staff.orders.modal.new_order')}</span>
+            <span>{t('common.actions.create_order')}</span>
           </Space>
         }
         open={isNewOrderModalOpen}

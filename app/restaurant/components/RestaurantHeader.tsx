@@ -14,12 +14,15 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
 
 const RestaurantHeader: React.FC = () => {
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const headerContentColor = scrolled ? (mode === 'dark' ? 'white' : '#1a1a1a') : 'white';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,8 +44,8 @@ const RestaurantHeader: React.FC = () => {
   }, []);
 
   const menuItems = [
-    { key: 'home', label: <Link href="/restaurant">{t('restaurant.header.home')}</Link> },
-    { key: 'about', label: <a href="#about">{t('restaurant.header.about')}</a> },
+    { key: 'home', label: <Link href="/restaurant" style={{ color: 'inherit', textDecoration: 'none' }}>{t('restaurant.header.home')}</Link> },
+    { key: 'about', label: <a href="#about" style={{ color: 'inherit', textDecoration: 'none' }}>{t('restaurant.header.about')}</a> },
     {
       key: 'menu',
       label: (
@@ -56,16 +59,16 @@ const RestaurantHeader: React.FC = () => {
               { key: 'drink', label: t('restaurant.header.menu.drink') },
             ],
           }}>
-          <Space>
+          <Space style={{ color: 'inherit' }}>
             {t('restaurant.header.menu.title')}
-            <DownOutlined style={{ fontSize: 10 }} />
+            <DownOutlined style={{ fontSize: 10, color: 'inherit' }} />
           </Space>
         </Dropdown>
       ),
     },
-    { key: 'featured', label: <a href="#featured">{t('restaurant.header.featured')}</a> },
-    { key: 'daily', label: <a href="#daily">{t('restaurant.header.daily')}</a> },
-    { key: 'news', label: <a href="#news">{t('restaurant.header.news')}</a> },
+    { key: 'featured', label: <a href="#featured" style={{ color: 'inherit', textDecoration: 'none' }}>{t('restaurant.header.featured')}</a> },
+    { key: 'daily', label: <a href="#daily" style={{ color: 'inherit', textDecoration: 'none' }}>{t('restaurant.header.daily')}</a> },
+    { key: 'news', label: <a href="#news" style={{ color: 'inherit', textDecoration: 'none' }}>{t('restaurant.header.news')}</a> },
   ];
 
   return (
@@ -76,7 +79,9 @@ const RestaurantHeader: React.FC = () => {
         left: 0,
         right: 0,
         zIndex: 1000,
-        background: scrolled ? 'rgba(26, 26, 26, 0.95)' : 'transparent', // Modified to be transparent initially if desired, or keep generic
+        background: scrolled
+          ? (mode === 'dark' ? 'rgba(26, 26, 26, 0.95)' : 'rgba(255, 255, 255, 0.95)')
+          : 'transparent',
         backdropFilter: 'blur(10px)',
         transition: 'all 0.3s ease',
         borderBottom: scrolled ? '1px solid rgba(255, 56, 11, 0.2)' : 'none',
@@ -96,20 +101,28 @@ const RestaurantHeader: React.FC = () => {
             style={{
               width: 48,
               height: 48,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #FF6B3B 0%, #CC2D08 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(255, 56, 11, 0.3)',
+              overflow: 'hidden',
             }}>
-            <span style={{ fontSize: 24, fontWeight: 'bold', color: 'white' }}>R</span>
+            <img
+              src="/images/logo/restx-removebg-preview.png"
+              alt="RestX Logo"
+              className="app-logo-img"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                filter: headerContentColor === 'white' ? 'invert(1) hue-rotate(180deg) brightness(1.1)' : 'none'
+              }}
+            />
           </div>
           <span
             style={{
               fontSize: 20,
               fontWeight: 700,
-              color: 'white',
+              color: headerContentColor,
               fontFamily: 'serif',
             }}>
             {t('restaurant.header.title')}
@@ -120,21 +133,20 @@ const RestaurantHeader: React.FC = () => {
         <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           <Space size="large" style={{ display: isMobile ? 'none' : 'flex' }}>
             {menuItems.map((item) => (
-              <span key={item.key} style={{ color: 'white', fontSize: 15, cursor: 'pointer' }}>
+              <span key={item.key} style={{ color: headerContentColor, fontSize: 15, cursor: 'pointer' }}>
                 {item.label}
               </span>
             ))}
           </Space>
 
-          {/* Icons & Actions */}
           <Space size="middle" style={{ marginLeft: 24 }}>
             {/* Add Language Switcher and Theme Toggle here */}
-            <LanguageSwitcher style={{ color: 'white' }} />
-            <ThemeToggle style={{ color: 'white' }} />
+            <LanguageSwitcher style={{ color: headerContentColor }} />
+            <ThemeToggle style={{ color: headerContentColor }} />
 
-            <SearchOutlined style={{ fontSize: 20, color: 'white', cursor: 'pointer' }} />
-            <UserOutlined style={{ fontSize: 20, color: 'white', cursor: 'pointer' }} />
-            <ShoppingCartOutlined style={{ fontSize: 20, color: 'white', cursor: 'pointer' }} />
+            <SearchOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
+            <UserOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
+            <ShoppingCartOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
             <Button
               type="primary"
               style={{
@@ -151,7 +163,7 @@ const RestaurantHeader: React.FC = () => {
             <MenuOutlined
               style={{
                 fontSize: 24,
-                color: 'white',
+                color: headerContentColor,
                 cursor: 'pointer',
                 display: isMobile ? 'block' : 'none',
               }}
@@ -162,22 +174,24 @@ const RestaurantHeader: React.FC = () => {
       </div>
 
       {/* Mobile Drawer */}
+      {/* Mobile Drawer */}
       <Drawer
-        title="Menu"
+        title={<span style={{ color: mode === 'dark' ? 'white' : '#1a1a1a' }}>Menu</span>}
         placement="right"
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
-        style={{ background: '#1a1a1a' }}
-        styles={{ body: { background: '#1a1a1a' } }}>
+        closeIcon={<CloseOutlined style={{ color: mode === 'dark' ? 'white' : '#1a1a1a' }} />}
+        style={{ background: mode === 'dark' ? '#1a1a1a' : '#ffffff' }}
+        styles={{ body: { background: mode === 'dark' ? '#1a1a1a' : '#ffffff' } }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           {menuItems.map((item) => (
-            <div key={item.key} style={{ color: 'white', fontSize: 16 }}>
+            <div key={item.key} style={{ color: mode === 'dark' ? 'white' : '#1a1a1a', fontSize: 16 }}>
               {item.label}
             </div>
           ))}
           <div style={{ display: 'flex', gap: 16, marginTop: 24 }}>
-            <LanguageSwitcher style={{ color: 'white' }} />
-            <ThemeToggle style={{ color: 'white' }} />
+            <LanguageSwitcher />
+            <ThemeToggle />
           </div>
         </Space>
       </Drawer>
