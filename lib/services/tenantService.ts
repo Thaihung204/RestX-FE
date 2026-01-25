@@ -1,9 +1,8 @@
 import axiosInstance from './axiosInstance';
 
-// Interface matching the .NET Backend Tenant model
 export interface TenantConfig {
     id: string;
-    prefix?: string;
+    prefix: string;
     name: string;
 
     // Branding & Assets
@@ -12,19 +11,40 @@ export interface TenantConfig {
     backgroundUrl?: string; // Banner/Hero image
 
     // Theme Colors
-    baseColor?: string;
-    primaryColor?: string;
-    secondaryColor?: string;
+    baseColor: string;
+    primaryColor: string;
+    secondaryColor: string;
+    headerColor: string;
+    footerColor: string;
 
     // Network & Config
     networkIp?: string;
-    status?: string; // e.g. "Active", "Inactive"
+    connectionString?: string; 
+    status: boolean;
     hostname: string;
-    expiredAt?: string;
+    expiredAt: string;
 
-    // Contact Info (May be separate or extended in backend)
-    phone?: string;
-    address?: string;
+    // Business Info
+    businessName: string;
+    businessAddressLine1?: string;
+    businessAddressLine2?: string;
+    businessAddressLine3?: string;
+    businessAddressLine4?: string;
+    businessCounty?: string;
+    businessPostCode?: string;
+    businessCountry?: string;
+    businessPrimaryPhone?: string;
+    businessSecondaryPhone?: string;
+    businessEmailAddress?: string;
+    businessCompanyNumber?: string;
+    businessOpeningHours?: string;
+
+    // Meta
+    createdDate: string;
+    modifiedDate: string;
+    createdBy: string;
+    modifiedBy: string;
+    tenantSettings: any[];
 }
 
 export const tenantService = {

@@ -19,21 +19,11 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const fetchTenant = async () => {
             try {
-                const hostname = window.location.hostname;
-                let subdomain = "demo"; // Default fallback
+                // User requested full host name to handle cases with multiple subdomains or specific ports
+                // e.g. "kfc.restx.food" or "localhost:3000"
+                const param = window.location.host;
 
-                // Extract subdomain logic
-                if (!hostname.includes("localhost") && !hostname.includes("127.0.0.1")) {
-                    const parts = hostname.split(".");
-                    // If we have sub.domain.com (3 parts), taking parts[0] is 'sub'
-                    // If we have domain.com (2 parts), taking parts[0] is 'domain' which might be wrong if we expect subdomain only.
-                    // Assuming the app is always served on a subdomain for tenants like *.restx.food
-                    if (parts.length >= 3) {
-                        subdomain = parts[0];
-                    }
-                }
-
-                const data = await tenantService.getTenantConfig(subdomain);
+                const data = await tenantService.getTenantConfig(param);
                 setTenant(data);
             } catch (err) {
                 console.error("Failed to load tenant config", err);
