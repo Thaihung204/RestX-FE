@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const adminAxiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://admin.restx.food/api',
+    // Use relative path to leverage Next.js Rewrites (avoids CORS)
+    baseURL: '/api/admin',
     headers: {
         'Content-Type': 'application/json',
     },
