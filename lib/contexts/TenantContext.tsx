@@ -21,6 +21,12 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
             try {
                 const param = window.location.host;
 
+                // Prevent infinite loop: If we are already on the main landing page, stop checking.
+                if (param === "restx.food" || param === "www.restx.food") {
+                    setLoading(false);
+                    return;
+                }
+
                 const data = await tenantService.getTenantConfig(param);
 
                 // Switch main Axios instance to point to this Tenant's specific API
@@ -40,7 +46,12 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
             } catch (err) {
                 console.error("Failed to load tenant config", err);
                 setError("Tenant not found");
-                window.location.href = "https://restx.food";
+
+                // Do not redirect if running on localhost to avoid disrupting development
+                const host = window.location.host;
+                if (!host.includes("localhost") && !host.includes("127.0.0.1")) {
+                    window.location.href = "https://restx.food";
+                }
             } finally {
                 setLoading(false);
             }
