@@ -22,8 +22,6 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
                 const host = window.location.host; // e.g., demo.restx.food:3000
 
                 // 1. Check for Landing or Admin domains (Skip API call)
-                // "admin.restx.food -> redirect sang, không cần call api"
-                // "restx.food" -> Landing page
                 if (
                     host === "restx.food" ||
                     host === "www.restx.food" ||
@@ -52,7 +50,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
                 // 3. Handle Tenant Not Found (204)
                 if (!data) {
-                    // "tenant không tồn tại status 204 → redirect sang restx.food"
+                    // Redirect to landing page if tenant not found
                     if (!host.includes("localhost") && !host.includes("127.0.0.1")) {
                         window.location.href = "https://restx.food";
                     }
