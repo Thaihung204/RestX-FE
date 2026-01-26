@@ -49,9 +49,20 @@ export interface TenantConfig {
 }
 
 export const tenantService = {
-    getTenantConfig: async (domain: string): Promise<TenantConfig> => {
-        const response = await adminAxiosInstance.get(`/tenants/${domain}`);
-        return response.data;
+    getTenantConfig: async (domain: string): Promise<TenantConfig | null> => {
+        try {
+            const response = await adminAxiosInstance.get('/tenant', {
+                params: { domain }
+            });
+
+            if (response.status === 204) {
+                return null;
+            }
+
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
     },
 
     // Method to match the UpsertTenant (for Admin usage likely)
