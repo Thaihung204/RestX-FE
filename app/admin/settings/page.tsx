@@ -143,7 +143,6 @@ export default function SettingsPage() {
                     />
                   </div>
                 </div>
-<<<<<<< HEAD
                 <div>
                   <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                     {t("dashboard.settings.general.address")}
@@ -192,99 +191,6 @@ export default function SettingsPage() {
                       }}
                       suppressHydrationWarning
                     />
-=======
-
-                <div
-                  className="rounded-xl p-6"
-                  style={{
-                    background: 'var(--card)',
-                    border: '1px solid var(--border)',
-                  }}>
-                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
-                    {t("dashboard.settings.general.business_settings")}
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          {t("dashboard.settings.general.currency")}
-                        </label>
-                        <select
-                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                          style={{
-                            background: 'var(--surface)',
-                            border: '1px solid var(--border)',
-                            color: 'var(--text)',
-                          }}
-                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
-                          disabled
-                          defaultValue="VND (₫)"
-                          suppressHydrationWarning>
-                          <option value="VND (₫)">VND (₫)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          {t("dashboard.settings.general.tax_rate")}
-                        </label>
-                        <input
-                          type="number"
-                          defaultValue="10"
-                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                          style={{
-                            background: 'var(--surface)',
-                            border: '1px solid var(--border)',
-                            color: 'var(--text)',
-                          }}
-                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
-                          suppressHydrationWarning
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          {t("dashboard.settings.general.timezone")}
-                        </label>
-                        <select
-                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                          style={{
-                            background: 'var(--surface)',
-                            border: '1px solid var(--border)',
-                            color: 'var(--text)',
-                          }}
-                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
-                          suppressHydrationWarning>
-                          <option>UTC-5 (EST)</option>
-                          <option>UTC-8 (PST)</option>
-                          <option>UTC+7 (ICT)</option>
-                          <option>UTC+0 (GMT)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                          {t("dashboard.settings.general.date_format")}
-                        </label>
-                        <select
-                          className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                          style={{
-                            background: 'var(--surface)',
-                            border: '1px solid var(--border)',
-                            color: 'var(--text)',
-                          }}
-                          onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
-                          suppressHydrationWarning>
-                          <option>MM/DD/YYYY</option>
-                          <option>DD/MM/YYYY</option>
-                          <option>YYYY-MM-DD</option>
-                        </select>
-                      </div>
-                    </div>
->>>>>>> 94d9ab9be690a46cbd51f3c1ec575f8ca86e575d
                   </div>
                 </div>
               </div>

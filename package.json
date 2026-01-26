@@ -15,11 +15,7 @@
     "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.6",
     "antd": "^6.0.1",
-<<<<<<< HEAD
-    "axios": "^1.13.2",
-=======
     "axios": "^1.13.3",
->>>>>>> 94d9ab9be690a46cbd51f3c1ec575f8ca86e575d
     "framer-motion": "^11.18.2",
     "i18next": "^25.6.2",
     "next": "^15.3.0",
