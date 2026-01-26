@@ -1,4 +1,3 @@
-// Axios Instance configured for .NET Backend
 import axios from 'axios';
 
 const axiosInstance = axios.create({
@@ -10,33 +9,39 @@ const axiosInstance = axios.create({
   timeout: 30000, // 30 seconds timeout
 });
 
-// Request Interceptor - Thêm token vào mỗi request
+export const setAxiosBaseUrl = (baseUrl: string) => {
+  axiosInstance.defaults.baseURL = baseUrl;
+};
+
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Ensure we are in the browser before accessing localStorage
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor - Xử lý lỗi và refresh token
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Xử lý lỗi 401 (Unauthorized) - Token hết hạn
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url.includes('/refresh-token') &&
-      !originalRequest.url.includes('/login')
+      !originalRequest.url?.includes('/refresh-token') &&
+      !originalRequest.url?.includes('/login')
     ) {
       originalRequest._retry = true;
       try {
+        if (typeof window === 'undefined') throw new Error('No window object');
+
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) throw new Error('No refresh token available');
 
@@ -49,11 +54,10 @@ axiosInstance.interceptors.response.use(
           return axiosInstance(originalRequest);
         }
       } catch (refreshError) {
-        // Refresh token failed - logout user
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userInfo');
         if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('userInfo');
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);

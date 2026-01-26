@@ -595,7 +595,7 @@ export default function StaffDashboard() {
                             </span>
                           )}
                           {stat.isMoney && (
-                            <span style={{ fontSize: isMobile ? 12 : 16, color: 'var(--text-muted)', marginLeft: 2 }}>đ</span>
+                            <span style={{ fontSize: isMobile ? 12 : 16, color: 'var(--text-muted)' }}>đ</span>
                           )}
                         </div>
                         {stat.total && (

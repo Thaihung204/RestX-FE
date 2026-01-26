@@ -1,15 +1,15 @@
 "use client";
 
+import { Col, Row, Typography } from "antd";
 import React from "react";
-import { Typography, Row, Col, Card } from "antd";
 import { useTranslation } from "react-i18next";
-import { useThemeMode } from "@/app/theme/AutoDarkThemeProvider";
+
 
 const { Title } = Typography;
 
 const FeaturedCategories: React.FC = () => {
     const { t } = useTranslation();
-    const { mode } = useThemeMode();
+
 
     const categories = [
         {
@@ -35,12 +35,12 @@ const FeaturedCategories: React.FC = () => {
     ];
 
     return (
-        <section style={{ padding: "80px 24px", background: mode === 'dark' ? "#141414" : "#f5f5f5" }}>
+        <section style={{ padding: "80px 24px", background: 'transparent' }}>
             <div style={{ maxWidth: 1200, margin: "0 auto" }}>
                 <Title
                     level={2}
                     style={{
-                        color: mode === 'dark' ? "white" : "#1a1a1a",
+                        color: 'var(--text)',
                         textAlign: "center",
                         marginBottom: 48,
                         fontSize: 36,
@@ -80,7 +80,7 @@ const FeaturedCategories: React.FC = () => {
                                         left: 0,
                                         right: 0,
                                         padding: 16,
-                                        background: "linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%)",
+                                        background: "linear-gradient(0deg, rgba(14, 18, 26, 0.9) 0%, transparent 100%)",
                                     }}
                                 >
                                     <h3 style={{ color: "white", margin: 0, textAlign: "center", fontSize: 18 }}>

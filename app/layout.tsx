@@ -1,7 +1,11 @@
+import I18nProvider from "@/components/I18nProvider";
+import { AuthProvider } from "@/lib/contexts/AuthContext";
+import { TenantProvider } from "@/lib/contexts/TenantContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
+import AutoDarkThemeProvider from "./theme/AutoDarkThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -85,7 +89,14 @@ export default function RootLayout({
         `}</style>
       </head>
       <body className={inter.className} suppressHydrationWarning>
-        <Providers>{children}</Providers>
+        {/* I18n Provider Wrapper */}
+        <I18nProvider>
+          <TenantProvider>
+            <AuthProvider>
+              <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
+            </AuthProvider>
+          </TenantProvider>
+        </I18nProvider>
       </body>
     </html>
   );
