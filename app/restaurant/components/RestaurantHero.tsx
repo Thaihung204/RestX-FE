@@ -11,6 +11,7 @@ const RestaurantHero: React.FC = () => {
 
   return (
     <section
+      id="home"
       style={{
         position: 'relative',
         minHeight: '90vh',
