@@ -74,6 +74,12 @@ type Category = {
   name: string;
 };
 
+// Hardcoded categories (temporary solution until API is ready)
+const STATIC_CATEGORIES: Category[] = [
+  { id: "600DCEDC-D5E1-43CE-B8C9-08A64937A66C", name: "Món chính" },
+  { id: "C7F1CA77-9B44-4418-B69A-8825BAD9FD6A", name: "Đồ uống" },
+];
+
 export default function MenuPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
@@ -118,38 +124,37 @@ export default function MenuPage() {
       if (arrayData && Array.isArray(arrayData)) {
         const mappedDishes: MenuItem[] = arrayData
           .filter((item: any) => item.isActive !== false) // Only show active items
-          .map((item: any) => ({
-            id: item.id?.toString() || item.dishId?.toString() || "",
-            name: item.name || "",
-            price: item.price?.toString() || "0",
-            description: item.description || t("menu_page.default_food_desc"),
-            image: item.mainImageUrl || item.imageUrl || item.image || "/placeholder-dish.jpg",
-            categoryId: item.categoryId || "",
-            categoryName: item.categoryName || item.category || "",
-            isPopular: item.isPopular || false,
-            isBestSeller: item.isBestSeller || false,
-            isSpicy: item.isSpicy || false,
-            isVegetarian: item.isVegetarian || false,
-            tags: [
-              item.isSpicy && "spicy",
-              item.isVegetarian && "vegan",
-              item.isBestSeller && "best",
-            ].filter(Boolean) as string[],
-            note: item.isBestSeller ? t("menu_page.best_seller") : undefined,
-          }));
+          .map((item: any) => {
+            // Map categoryName to categoryId from STATIC_CATEGORIES
+            const matchedCategory = STATIC_CATEGORIES.find(
+              cat => cat.name === (item.categoryName || item.category)
+            );
+            
+            return {
+              id: item.id?.toString() || item.dishId?.toString() || "",
+              name: item.name || "",
+              price: item.price?.toString() || "0",
+              description: item.description || t("menu_page.default_food_desc"),
+              image: item.mainImageUrl || item.imageUrl || item.image || "/placeholder-dish.jpg",
+              categoryId: matchedCategory?.id || item.categoryId || "",
+              categoryName: item.categoryName || item.category || "",
+              isPopular: item.isPopular || false,
+              isBestSeller: item.isBestSeller || false,
+              isSpicy: item.isSpicy || false,
+              isVegetarian: item.isVegetarian || false,
+              tags: [
+                item.isSpicy && "spicy",
+                item.isVegetarian && "vegan",
+                item.isBestSeller && "best",
+              ].filter(Boolean) as string[],
+              note: item.isBestSeller ? t("menu_page.best_seller") : undefined,
+            };
+          });
 
         setDishes(mappedDishes);
 
-        // Extract unique categories from dishes
-        const uniqueCategories = Array.from(
-          new Map(
-            mappedDishes
-              .filter((dish) => dish.categoryId && dish.categoryName)
-              .map((dish) => [dish.categoryId, { id: dish.categoryId!, name: dish.categoryName! }])
-          ).values()
-        );
-
-        setCategories(uniqueCategories);
+        // Use static categories instead of extracting from dishes
+        setCategories(STATIC_CATEGORIES);
       }
     } catch (err) {
       console.error("Failed to fetch menu data:", err);
