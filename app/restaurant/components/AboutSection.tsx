@@ -2,14 +2,14 @@
 
 import { Button, Col, Row, Typography } from 'antd';
 import React from 'react';
-import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
+
 
 import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
 
 const AboutSection: React.FC = () => {
-  const { mode } = useThemeMode();
+
   const { t } = useTranslation();
   const foodImages = [
     '/images/restaurant/dish1.png',
@@ -24,7 +24,7 @@ const AboutSection: React.FC = () => {
     <section
       id="about"
       style={{
-        background: mode === 'dark' ? '#1a1a1a' : '#ffffff',
+        background: 'var(--bg-base)',
         padding: '80px 24px',
       }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
@@ -34,7 +34,7 @@ const AboutSection: React.FC = () => {
             <Title
               level={2}
               style={{
-                color: mode === 'dark' ? 'white' : '#1a1a1a',
+                color: 'var(--text)',
                 fontSize: 48,
                 fontWeight: 400,
                 fontFamily: 'serif',
@@ -45,7 +45,7 @@ const AboutSection: React.FC = () => {
             <Title
               level={3}
               style={{
-                color: mode === 'dark' ? 'white' : '#1a1a1a',
+                color: 'var(--text)',
                 fontSize: 36,
                 fontWeight: 400,
                 fontFamily: 'serif',
@@ -55,7 +55,7 @@ const AboutSection: React.FC = () => {
             </Title>
             <Paragraph
               style={{
-                color: mode === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
+                color: 'var(--text-muted)',
                 fontSize: 16,
                 lineHeight: 1.8,
                 marginBottom: 24,
@@ -65,7 +65,7 @@ const AboutSection: React.FC = () => {
             <Button
               type="link"
               style={{
-                color: mode === 'dark' ? 'white' : '#1a1a1a',
+                color: 'var(--text)',
                 padding: 0,
                 fontSize: 16,
                 textDecoration: 'underline',

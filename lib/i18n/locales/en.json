@@ -334,6 +334,7 @@
         "analytics": "Analytics",
         "tables": "Tables",
         "menu": "Menu",
+        "ingredients": "Ingredients",
         "orders": "Orders",
         "customers": "Customers",
         "staff": "Staff",
@@ -459,6 +460,54 @@
         "off_duty": "Off Duty",
         "on_leave": "On Leave"
       }
+    },
+    "ingredients": {
+      "title": "Ingredient Management",
+      "subtitle": "Manage restaurant ingredients and inventory",
+      "add_ingredient": "Add Ingredient",
+      "stats": {
+        "total_items": "Total Ingredients",
+        "in_stock": "In Stock",
+        "low_stock": "Low Stock",
+        "out_of_stock": "Out of Stock"
+      },
+      "tabs": {
+        "all": "All",
+        "in-stock": "In Stock",
+        "low-stock": "Low Stock",
+        "out-of-stock": "Out of Stock"
+      },
+      "search": {
+        "placeholder": "Search ingredients or suppliers..."
+      },
+      "filter": {
+        "all": "All Categories"
+      },
+      "categories": {
+        "seafood": "Seafood",
+        "grains": "Grains",
+        "vegetables": "Vegetables",
+        "sauces": "Sauces",
+        "spices": "Spices",
+        "dairy": "Dairy"
+      },
+      "table": {
+        "name": "Ingredient",
+        "category": "Category",
+        "quantity": "Quantity",
+        "price": "Unit Price",
+        "supplier": "Supplier",
+        "status": "Status",
+        "actions": "Actions",
+        "last_updated": "Updated",
+        "min": "Min"
+      },
+      "status": {
+        "in-stock": "In Stock",
+        "low-stock": "Low Stock",
+        "out-of-stock": "Out of Stock"
+      },
+      "no_results": "No ingredients found"
     },
     "settings": {
       "title": "Settings",

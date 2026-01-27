@@ -576,6 +576,7 @@ export default function MenuPage() {
                               flexShrink: 0,
                             }}>
                             {item.price}
+                            <span style={{ fontSize: 13, color: "#FF380B" }}>đ</span>
                           </Text>
                           <div suppressHydrationWarning>
                             <Button
@@ -887,7 +888,7 @@ export default function MenuPage() {
                                         fontSize: 13,
                                         fontWeight: 600,
                                       }}>
-                                      {item.price}
+                                      {item.price}đ
                                     </Text>
                                   </div>
                                   <Button
@@ -961,12 +962,11 @@ export default function MenuPage() {
                                     fontSize: 14,
                                     fontWeight: 600,
                                   }}>
-                                  {(
+                                  {formatVND(
                                     parseFloat(
-                                      item.price.replace(/[£,]/g, ""),
+                                      item.price.replace(/[.,]/g, ""),
                                     ) * item.quantity
-                                  ).toFixed(2)}
-                                  £
+                                  )}
                                 </Text>
                               </div>
                             </Card>
@@ -1045,7 +1045,7 @@ export default function MenuPage() {
                                         fontSize: 13,
                                         fontWeight: 600,
                                       }}>
-                                      {item.price}
+                                      {item.price}đ
                                     </Text>
                                   </div>
                                   <Button
@@ -1119,12 +1119,11 @@ export default function MenuPage() {
                                     fontSize: 14,
                                     fontWeight: 600,
                                   }}>
-                                  {(
+                                  {formatVND(
                                     parseFloat(
-                                      item.price.replace(/[£,]/g, ""),
+                                      item.price.replace(/[.,]/g, ""),
                                     ) * item.quantity
-                                  ).toFixed(2)}
-                                  £
+                                  )}
                                 </Text>
                               </div>
                             </Card>

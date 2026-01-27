@@ -512,7 +512,7 @@ export default function MenuPage() {
                           Price
                         </p>
                         <p className="text-2xl font-bold" style={{color: '#FF380B'}}>
-                          ${item.price}
+                          {formatPrice(item.price)}đ
                         </p>
                       </div>
                       <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded-full text-xs font-medium border border-blue-500/20">

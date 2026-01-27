@@ -19,25 +19,49 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const fetchTenant = async () => {
             try {
-                const param = window.location.host;
+                const host = window.location.host; // e.g., demo.restx.food:3000
 
-                // Prevent infinite loop: If we are already on the main landing page, stop checking.
-                if (param === "restx.food" || param === "www.restx.food") {
+                // 1. Check for Landing or Admin domains (Skip API call)
+                if (
+                    host === "restx.food" ||
+                    host === "www.restx.food" ||
+                    host === "admin.restx.food" ||
+                    host.startsWith("admin.")
+                ) {
                     setLoading(false);
                     return;
                 }
 
-                const data = await tenantService.getTenantConfig(param);
+                // 2. Extract Subdomain
+                // Ex: demo.restx.food -> demo
+                let subdomain = host;
+                if (host.includes(".restx.food")) {
+                    subdomain = host.split(".")[0];
+                } else if (host.includes("localhost") || host.includes("127.0.0.1")) {
+                    subdomain = host.split(".")[0];
+                }
 
-                // Switch main Axios instance to point to this Tenant's specific API
+                // Remove port if present
+                if (subdomain.includes(":")) {
+                    subdomain = subdomain.split(":")[0];
+                }
+
+                const data = await tenantService.getTenantConfig(subdomain);
+
+                // 3. Handle Tenant Not Found (204)
+                if (!data) {
+                    // Redirect to landing page if tenant not found
+                    if (!host.includes("localhost") && !host.includes("127.0.0.1")) {
+                        window.location.href = "https://restx.food";
+                    }
+                    setLoading(false);
+                    return;
+                }
                 if (data.hostname) {
 
                     const protocol = window.location.protocol;
-                    // Remove trailing slash if any and append /api
-                    // Using setAxiosBaseUrl ensuring all next requests go to correct Tenant Server
                     const apiUrl = `${protocol}//${data.hostname}/api`;
 
-                    // Dynamic import to avoid circular dependencies if any, or just direct call
                     const { setAxiosBaseUrl } = await import('@/lib/services/axiosInstance');
                     setAxiosBaseUrl(apiUrl);
                 }
