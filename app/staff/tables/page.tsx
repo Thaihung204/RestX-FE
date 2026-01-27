@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import { TableMap2D } from '../../admin/tables/components/TableMap2D';
+import { TableData as Map2DTableData } from '../../admin/tables/components/DraggableTable';
+
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -108,6 +111,7 @@ const getStatusConfig = (mode: 'light' | 'dark', t: (key: string) => string) => 
   } as Record<TableStatus, { color: string; bgColor: string; text: string; icon: React.ReactNode }>;
 };
 
+type ViewMode = 'grid' | 'map';
 
 export default function TableManagement() {
   const { mode } = useThemeMode();
@@ -118,6 +122,7 @@ export default function TableManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpenTableModal, setIsOpenTableModal] = useState(false);
   const [activeZone, setActiveZone] = useState('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const [form] = Form.useForm();
   const [isMobile, setIsMobile] = useState(false);
@@ -132,23 +137,84 @@ export default function TableManagement() {
 
   const statusConfig = getStatusConfig(mode, t);
 
-
   const filteredTables = activeZone === 'all'
     ? tables
     : tables.filter(t => t.zone === activeZone);
 
-  const stats = {
-    available: tables.filter(t => t.status === 'available').length,
-    occupied: tables.filter(t => t.status === 'occupied').length,
-    reserved: tables.filter(t => t.status === 'reserved').length,
-    cleaning: tables.filter(t => t.status === 'cleaning').length,
-  };
+  // Convert tables to Map2D format
+  // Calculate map layout (positions and markers)
+  const { map2DTables, mapMarkers, mapHeight } = React.useMemo(() => {
+    const markers: { id: string; label: string; position: { x: number; y: number }; style?: React.CSSProperties }[] = [];
+    const mappedTables: Map2DTableData[] = [];
 
+    // Group tables by zone
+    const tablesByZone: Record<string, TableData[]> = {};
+    const zones = activeZone === 'all'
+      ? Array.from(new Set(tables.map(t => t.zone))).sort()
+      : [activeZone];
 
+    zones.forEach(zone => {
+      tablesByZone[zone] = tables.filter(t => t.zone === zone);
+    });
+
+    let currentY = 40;
+    const itemsPerRow = 5;
+    const itemWidth = 130;
+    const itemHeight = 130;
+
+    zones.forEach(zone => {
+      const zoneTables = tablesByZone[zone];
+      if (zoneTables.length === 0) return;
+
+      // Add Zone Label Marker
+      markers.push({
+        id: `zone-${zone}`,
+        label: `${t('staff.tables.zones.zone_' + zone.toLowerCase()) || 'Zone ' + zone}`,
+        position: { x: 40, y: currentY - 30 },
+        style: {
+          fontSize: 18,
+          fontWeight: 'bold',
+          color: mode === 'dark' ? '#fff' : '#000',
+          opacity: 0.8,
+        }
+      });
+
+      // Position tables for this zone
+      zoneTables.forEach((table, index) => {
+        mappedTables.push({
+          id: table.id,
+          tenantId: 'tenant-1',
+          name: table.name,
+          seats: table.capacity,
+          status: table.status === 'available' ? 'AVAILABLE' :
+            table.status === 'occupied' ? 'OCCUPIED' :
+              table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
+          area: table.zone,
+          position: {
+            x: 40 + (index % itemsPerRow) * itemWidth,
+            y: currentY + Math.floor(index / itemsPerRow) * itemHeight
+          },
+        });
+      });
+
+      // Update Y for next zone (rows + specific gap)
+      const rows = Math.ceil(zoneTables.length / itemsPerRow);
+      currentY += rows * itemHeight + 80; // 80px gap between zones
+    });
+
+    return { map2DTables: mappedTables, mapMarkers: markers, mapHeight: Math.max(600, currentY + 50) };
+  }, [tables, activeZone, mode, t]);
 
   const handleTableClick = (table: TableData) => {
     setSelectedTable(table);
     setIsModalOpen(true);
+  };
+
+  const handleMap2DTableClick = (mapTable: Map2DTableData) => {
+    const foundTable = tables.find(t => t.id === mapTable.id);
+    if (foundTable) {
+      handleTableClick(foundTable);
+    }
   };
 
   const handleOpenTable = () => {
@@ -308,54 +374,8 @@ export default function TableManagement() {
     <div>
       {contextHolder}
       {/* Header Stats */}
-      <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
-        {Object.entries(stats).map(([key, value]) => {
-          const config = statusConfig[key as TableStatus];
-          return (
-            <Col xs={24} sm={12} md={6} lg={6} key={key} style={{ display: 'flex' }}>
-              <Card
-                style={{
-                  borderRadius: 12,
-                  border: `1px solid ${config.color}30`,
-                  background: config.bgColor,
-                  width: '100%',
-                  height: '100%',
-                  overflow: 'hidden',
-                }}
-                styles={{ body: { padding: isMobile ? '12px 16px' : '16px 20px', background: config.bgColor } }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
-                  <div
-                    style={{
-                      width: isMobile ? 36 : 44,
-                      height: isMobile ? 36 : 44,
-                      borderRadius: isMobile ? 10 : 12,
-                      background: config.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#fff',
-                      fontSize: isMobile ? 16 : 20,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {config.icon}
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <Text style={{ fontSize: isMobile ? 22 : 28, fontWeight: 500, color: 'var(--text)', display: 'block' }}>
-                      {value}
-                    </Text>
-                    <Text style={{ fontSize: isMobile ? 13 : 15, color: 'var(--text-muted)', display: 'block', fontWeight: 400 }}>{config.text}</Text>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-          );
-        })}
-      </Row>
+      {/* ... (existing stats render) ... */}
 
-
-      {/* Grid View - Original Table Cards */}
       <Card
         style={{
           borderRadius: 12,
@@ -365,20 +385,46 @@ export default function TableManagement() {
         }}
         styles={{ body: { padding: isMobile ? 12 : 24 } }}
       >
-        <Tabs
-          activeKey={activeZone}
-          onChange={setActiveZone}
-          style={{ marginBottom: isMobile ? 12 : 16 }}
-          size={isMobile ? 'small' : 'middle'}
-          items={[
-            { key: 'all', label: `${t('staff.tables.zones.all')} (${tables.length})` },
-            { key: 'A', label: `${t('staff.tables.zones.zone_a')} (${tables.filter(t => t.zone === 'A').length})` },
-            { key: 'B', label: `${t('staff.tables.zones.zone_b')} (${tables.filter(t => t.zone === 'B').length})` },
-            { key: 'VIP', label: `${t('staff.tables.zones.zone_vip')} (${tables.filter(t => t.zone === 'VIP').length})` },
-          ]}
-        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 12 : 16 }}>
+          <Tabs
+            activeKey={activeZone}
+            onChange={setActiveZone}
+            size={isMobile ? 'small' : 'middle'}
+            items={[
+              { key: 'all', label: `${t('staff.tables.zones.all')} (${tables.length})` },
+              { key: 'A', label: `${t('staff.tables.zones.zone_a')} (${tables.filter(t => t.zone === 'A').length})` },
+              { key: 'B', label: `${t('staff.tables.zones.zone_b')} (${tables.filter(t => t.zone === 'B').length})` },
+              { key: 'VIP', label: `${t('staff.tables.zones.zone_vip')} (${tables.filter(t => t.zone === 'VIP').length})` },
+            ]}
+          />
 
-        <div>
+          <div className="flex gap-2">
+            <Button
+              type={viewMode === 'grid' ? 'primary' : 'default'}
+              onClick={() => setViewMode('grid')}
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              }
+            >
+              Grid
+            </Button>
+            <Button
+              type={viewMode === 'map' ? 'primary' : 'default'}
+              onClick={() => setViewMode('map')}
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              }
+            >
+              Map
+            </Button>
+          </div>
+        </div>
+
+        {viewMode === 'grid' ? (
           <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]}>
             {filteredTables.map(table => (
               <Col xs={12} sm={8} md={6} lg={6} xl={4} key={table.id} style={{ display: 'flex' }}>
@@ -386,7 +432,42 @@ export default function TableManagement() {
               </Col>
             ))}
           </Row>
-        </div>
+        ) : (
+          <TableMap2D
+            tables={map2DTables}
+            onTableClick={handleMap2DTableClick}
+            onTablePositionChange={() => { }}
+            readOnly={true}
+            height={mapHeight}
+            showGrid={true}
+            mapMarkers={mapMarkers}
+            renderTableContent={(table) => {
+              const hasOrder = table.status === 'OCCUPIED' || table.status === 'RESERVED';
+              return (
+                hasOrder && (
+                  <div style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    background: '#FF380B',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: 20,
+                    height: 20,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}>
+                    !
+                  </div>
+                )
+              );
+            }}
+          />
+        )}
       </Card>
       {/* Table Detail Modal */}
       <Modal

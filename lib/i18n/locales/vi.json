@@ -410,6 +410,35 @@
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
       "add_table": "Thêm bàn",
+      "add_area": "Thêm khu vực",
+      "add_area_modal": {
+        "title": "Thêm khu vực mới",
+        "name_label": "Tên khu vực",
+        "name_placeholder": "VD: Sân thượng",
+        "cancel": "Hủy",
+        "submit": "Thêm khu vực"
+      },
+      "add_table_modal": {
+        "title": "Tạo bàn mới",
+        "subtitle": "Thêm bàn mới vào sơ đồ nhà hàng",
+        "table_number": "Số bàn",
+        "table_number_placeholder": "Nhập số bàn",
+        "capacity": "Sức chứa",
+        "capacity_placeholder": "Số ghế (1-20)",
+        "area": "Khu vực ăn uống",
+        "cancel": "Hủy",
+        "submit": "Tạo bàn",
+        "errors": {
+          "number_required": "Yêu cầu nhập số bàn",
+          "capacity_min": "Sức chứa tối thiểu là 1",
+          "capacity_max": "Sức chứa tối đa là 20"
+        },
+        "areas": {
+          "vip": "Khu vực VIP",
+          "indoor": "Trong nhà",
+          "outdoor": "Ngoài trời"
+        }
+      },
       "stats": {
         "total_tables": "Tổng số bàn",
         "available": "Trống",
