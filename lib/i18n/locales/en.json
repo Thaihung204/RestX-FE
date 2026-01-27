@@ -337,6 +337,7 @@
         "orders": "Orders",
         "customers": "Customers",
         "staff": "Staff",
+        "schedules": "Schedules",
         "settings": "Settings",
         "help": "Help"
       }
@@ -990,6 +991,47 @@
       }
     },
     "remember_me": "Keep me logged in"
+  },
+  "schedule": {
+    "title": "Schedule Management",
+    "subtitle": "Plan and manage staff shifts efficiently",
+    "manage_time_slots": "Manage Time Slots",
+    "export_schedule": "Export Schedule",
+    "loading": "Loading schedule...",
+    "no_data": "No schedule data available",
+    "time_slot": "Time Slot",
+    "legend": {
+      "past": "Past",
+      "live_now": "Live (Now)",
+      "future": "Future"
+    },
+    "week_navigator": {
+      "today": "Today",
+      "week": "Week",
+      "copy_previous_week": "Copy Previous Week"
+    },
+    "staff_modal": {
+      "title": "Staff Schedule",
+      "assigned_staff": "Assigned Staff",
+      "no_staff": "No staff assigned yet",
+      "person": "person",
+      "people": "people",
+      "assign_new_staff": "Assign New Staff",
+      "select_staff": "Select Staff",
+      "assign": "Assign Staff",
+      "cancel": "Cancel",
+      "add_staff_assignment": "Add Staff Assignment"
+    },
+    "status": {
+      "confirmed": "confirmed",
+      "registered": "registered",
+      "cancelled": "cancelled",
+      "no_staff": "No staff",
+      "staff_assigned": "staff assigned"
+    },
+    "export": {
+      "alert": "Export feature will be available when connected to backend API"
+    }
   },
   "not_found": {
     "title": "Page Not Found",
