@@ -6,10 +6,13 @@ export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   // Landing domains - serve public landing page
-  const LANDING_DOMAINS = new Set(["restx.food", "www.restx.food"]);
+  const LANDING_DOMAINS = new Set([
+    "restx.food", "www.restx.food",
+    "restx.local", "www.restx.local" // For local testing
+  ]);
 
   // Super Admin domain - serve /tenants (manage all tenants)
-  const ADMIN_DOMAIN = 'admin.restx.food';
+  const ADMIN_DOMAIN = ['admin.restx.food', 'admin.restx.local'];
 
   // Development domains - no routing logic
   const DEVELOPMENT_DOMAINS = new Set(["localhost", "127.0.0.1"]);
@@ -62,7 +65,7 @@ export function middleware(req: NextRequest) {
   }
 
   // Super Admin domain (admin.restx.food) - route to /tenants
-  if (host === ADMIN_DOMAIN) {
+  if (ADMIN_DOMAIN.includes(host)) {
     if (pathname === '/') {
       return NextResponse.rewrite(new URL('/tenants', req.url));
     }
@@ -74,8 +77,11 @@ export function middleware(req: NextRequest) {
     return NextResponse.rewrite(new URL(`/tenants${pathname}`, req.url));
   }
 
-  // Tenant domains (*.restx.food excluding www, admin, and root)
-  const isTenantDomain = host.endsWith('.restx.food') && !LANDING_DOMAINS.has(host) && host !== ADMIN_DOMAIN;
+  // Tenant domains (*.restx.food or *.restx.local excluding www, admin, and root)
+  const isTenantDomain = 
+    (host.endsWith('.restx.food') || host.endsWith('.restx.local')) && 
+    !LANDING_DOMAINS.has(host) && 
+    !ADMIN_DOMAIN.includes(host);
 
   if (isTenantDomain) {
     // Root path → restaurant page (for customers)

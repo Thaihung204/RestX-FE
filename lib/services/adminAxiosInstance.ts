@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+/**
+ * Admin Axios Instance
+ * Uses relative path '/api/admin' to leverage Next.js API Routes
+ * This avoids CORS issues and allows authentication via middleware
+ * All requests go through Next.js backend proxy
+ */
 const adminAxiosInstance = axios.create({
-    // Use relative path to leverage Next.js Rewrites (avoids CORS)
     baseURL: '/api/admin',
     headers: {
         'Content-Type': 'application/json',
