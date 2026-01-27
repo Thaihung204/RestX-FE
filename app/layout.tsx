@@ -1,5 +1,6 @@
 import I18nProvider from "@/components/I18nProvider";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
+import { TenantProvider } from "@/lib/contexts/TenantContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -89,9 +90,11 @@ export default function RootLayout({
       <body className={inter.className} suppressHydrationWarning>
         {/* I18n Provider Wrapper */}
         <I18nProvider>
-          <AuthProvider>
-            <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
-          </AuthProvider>
+          <TenantProvider>
+            <AuthProvider>
+              <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
+            </AuthProvider>
+          </TenantProvider>
         </I18nProvider>
       </body>
     </html>

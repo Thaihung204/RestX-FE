@@ -220,11 +220,10 @@ export default function SettingsPage() {
                           }}
                           onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
                           onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                          disabled
+                          defaultValue="VND (₫)"
                           suppressHydrationWarning>
-                          <option>USD ($)</option>
-                          <option>EUR (€)</option>
-                          <option>GBP (£)</option>
-                          <option>VND (₫)</option>
+                          <option value="VND (₫)">VND (₫)</option>
                         </select>
                       </div>
                       <div>

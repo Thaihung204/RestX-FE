@@ -15,6 +15,15 @@ const nextConfig = {
   // it in .gitlab-ci.yml as well.
   // distDir: 'dist',
   reactStrictMode: false,
+  // Bypass CORS for Admin API during development
+  async rewrites() {
+    return [
+      {
+        source: '/api/admin/:path*',
+        destination: 'https://admin.restx.food/api/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -1,7 +1,3 @@
-// Mock Axios Instance - Chỉ dùng để demo UI, không call API thật
-// Khi có backend, uncomment code dưới và cài đặt axios: npm install axios
-
-/*
 import axios from 'axios';
 
 const axiosInstance = axios.create({
@@ -11,11 +7,18 @@ const axiosInstance = axios.create({
   },
 });
 
+export const setAxiosBaseUrl = (baseUrl: string) => {
+  axiosInstance.defaults.baseURL = baseUrl;
+};
+
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Ensure we are in the browser before accessing localStorage
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -26,14 +29,17 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url.includes('/refresh-token') &&
-      !originalRequest.url.includes('/login')
+      !originalRequest.url?.includes('/refresh-token') &&
+      !originalRequest.url?.includes('/login')
     ) {
       originalRequest._retry = true;
       try {
+        if (typeof window === 'undefined') throw new Error('No window object');
+
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) throw new Error('No refresh token available');
 
@@ -45,10 +51,12 @@ axiosInstance.interceptors.response.use(
           return axiosInstance(originalRequest);
         }
       } catch (refreshError) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userInfo');
-        window.location.href = '/login';
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('userInfo');
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
@@ -57,12 +65,3 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-*/
-
-// Mock implementation for UI demo only
-export default {
-  get: async () => ({ data: {} }),
-  post: async () => ({ data: {} }),
-  put: async () => ({ data: {} }),
-  delete: async () => ({ data: {} }),
-};
