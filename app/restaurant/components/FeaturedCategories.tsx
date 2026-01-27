@@ -35,7 +35,7 @@ const FeaturedCategories: React.FC = () => {
     ];
 
     return (
-        <section style={{ padding: "80px 24px", background: 'transparent' }}>
+        <section id="featured" style={{ padding: "80px 24px", background: 'transparent' }}>
             <div style={{ maxWidth: 1200, margin: "0 auto" }}>
                 <Title
                     level={2}

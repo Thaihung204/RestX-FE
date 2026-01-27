@@ -4,17 +4,18 @@ import ThemeToggle from '@/app/components/ThemeToggle';
 import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import {
-    CloseOutlined,
-    DownOutlined,
-    MenuOutlined,
-    SearchOutlined,
-    ShoppingCartOutlined,
-    UserOutlined,
+  CloseOutlined,
+  DownOutlined,
+  MenuOutlined,
+  SearchOutlined,
+  ShoppingCartOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { Button, Drawer, Dropdown, Space } from 'antd';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Navbar from './Navbar';
 
 const RestaurantHeader: React.FC = () => {
   const { t } = useTranslation();
@@ -22,6 +23,8 @@ const RestaurantHeader: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [activeItem, setActiveItem] = useState('home');
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const headerContentColor = scrolled ? (mode === 'dark' ? 'white' : '#1a1a1a') : 'white';
 
   useEffect(() => {
@@ -44,8 +47,16 @@ const RestaurantHeader: React.FC = () => {
   }, []);
 
   const menuItems = [
-    { key: 'home', label: <Link href="/restaurant" style={{ color: 'inherit', textDecoration: 'none' }}>{t('restaurant.header.home')}</Link> },
-    { key: 'about', label: <a href="#about" style={{ color: 'inherit', textDecoration: 'none' }}>{t('restaurant.header.about')}</a> },
+    { 
+      key: 'home', 
+      label: t('restaurant.header.home'),
+      href: '/restaurant' 
+    },
+    { 
+      key: 'about', 
+      label: t('restaurant.header.about'),
+      href: '/restaurant#about' 
+    },
     {
       key: 'menu',
       label: (
@@ -65,10 +76,23 @@ const RestaurantHeader: React.FC = () => {
           </Space>
         </Dropdown>
       ),
+      href: '/restaurant#menu'
     },
-    { key: 'featured', label: <a href="#featured" style={{ color: 'inherit', textDecoration: 'none' }}>{t('restaurant.header.featured')}</a> },
-    { key: 'daily', label: <a href="#daily" style={{ color: 'inherit', textDecoration: 'none' }}>{t('restaurant.header.daily')}</a> },
-    { key: 'news', label: <a href="#news" style={{ color: 'inherit', textDecoration: 'none' }}>{t('restaurant.header.news')}</a> },
+    { 
+      key: 'featured', 
+      label: t('restaurant.header.featured'),
+      href: '/restaurant#featured' 
+    },
+    { 
+      key: 'daily', 
+      label: t('restaurant.header.daily'),
+      href: '/restaurant#daily' 
+    },
+    { 
+      key: 'news', 
+      label: t('restaurant.header.news'),
+      href: '/restaurant#news' 
+    },
   ];
 
   return (
@@ -131,13 +155,13 @@ const RestaurantHeader: React.FC = () => {
 
         {/* Desktop Navigation */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-          <Space size="large" style={{ display: isMobile ? 'none' : 'flex' }}>
-            {menuItems.map((item) => (
-              <span key={item.key} style={{ color: headerContentColor, fontSize: 15, cursor: 'pointer' }}>
-                {item.label}
-              </span>
-            ))}
-          </Space>
+          <div style={{ display: isMobile ? 'none' : 'block' }}>
+            <Navbar 
+              items={menuItems} 
+              scrolled={scrolled}
+              textColor={headerContentColor} 
+            />
+          </div>
 
           <Space size="middle" style={{ marginLeft: 24 }}>
             {/* Add Language Switcher and Theme Toggle here */}
@@ -184,8 +208,36 @@ const RestaurantHeader: React.FC = () => {
         style={{ background: 'var(--bg-base)' }}
         styles={{ body: { background: 'var(--bg-base)' } }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          {menuItems.map((item) => (
-            <div key={item.key} style={{ color: 'var(--text)', fontSize: 16 }}>
+          {menuItems.map((item, index) => (
+            <div
+              key={item.key}
+              onClick={() => {
+                setActiveItem(item.key);
+                setDrawerOpen(false);
+              }}
+              style={{
+                color: 'var(--text)',
+                fontSize: 16,
+                padding: '12px 16px',
+                borderRadius: 8,
+                background: activeItem === item.key ? 'rgba(255, 107, 59, 0.1)' : 'transparent',
+                borderLeft: activeItem === item.key ? '3px solid #FF6B3B' : '3px solid transparent',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer',
+                animation: `slideIn 0.3s ease ${index * 0.1}s both`,
+              }}
+              onMouseEnter={(e) => {
+                if (activeItem !== item.key) {
+                  e.currentTarget.style.background = 'rgba(255, 107, 59, 0.05)';
+                  e.currentTarget.style.transform = 'translateX(8px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeItem !== item.key) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                }
+              }}>
               {item.label}
             </div>
           ))}
@@ -195,6 +247,31 @@ const RestaurantHeader: React.FC = () => {
           </div>
         </Space>
       </Drawer>
+
+      {/* Keyframe animations */}
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+          }
+          50% {
+            opacity: 0.5;
+            transform: translateX(-50%) scale(1.5);
+          }
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </header>
   );
 };
