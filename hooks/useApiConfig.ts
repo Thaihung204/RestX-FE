@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getApiBaseUrl, getTenantFromDomain, isAdminDomain, isTenantDomain } from '@/lib/config/apiConfig';
-import { setAxiosBaseUrl } from '@/lib/services/axiosInstance';
+import { getApiBaseUrl, getTenantFromHost, isAdminDomain, isTenantDomain } from '@/utils/getApiBaseUrl';
 
 /**
  * Hook to get API configuration based on current domain
- * Automatically updates axios instance when domain changes
+ * Lightweight version without context overhead
  */
 export function useApiConfig() {
   const [config, setConfig] = useState({
@@ -15,20 +14,12 @@ export function useApiConfig() {
   });
 
   useEffect(() => {
-    const baseUrl = getApiBaseUrl();
-    const tenant = getTenantFromDomain();
-    const isAdmin = isAdminDomain();
-    const isTenant = isTenantDomain();
-
     setConfig({
-      baseUrl,
-      tenant,
-      isAdmin,
-      isTenant,
+      baseUrl: getApiBaseUrl(),
+      tenant: getTenantFromHost(),
+      isAdmin: isAdminDomain(),
+      isTenant: isTenantDomain(),
     });
-
-    // Update axios instance base URL
-    setAxiosBaseUrl(baseUrl);
   }, []);
 
   return config;
@@ -41,7 +32,7 @@ export function useTenant() {
   const [tenant, setTenant] = useState<string | null>(null);
 
   useEffect(() => {
-    setTenant(getTenantFromDomain());
+    setTenant(getTenantFromHost());
   }, []);
 
   return tenant;

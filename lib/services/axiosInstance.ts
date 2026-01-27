@@ -1,16 +1,18 @@
 import axios from 'axios';
-import { getApiBaseUrl } from '@/lib/config/apiConfig';
+import { getApiBaseUrl } from '@/utils/getApiBaseUrl';
 
 const axiosInstance = axios.create({
-  baseURL: getApiBaseUrl(),
+  baseURL: '',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-export const setAxiosBaseUrl = (baseUrl: string) => {
-  axiosInstance.defaults.baseURL = baseUrl;
-};
+// Set baseURL only in browser environment
+// This ensures correct tenant/domain detection
+if (typeof window !== 'undefined') {
+  axiosInstance.defaults.baseURL = getApiBaseUrl();
+}
 
 axiosInstance.interceptors.request.use(
   (config) => {
