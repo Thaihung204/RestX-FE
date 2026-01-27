@@ -6,7 +6,6 @@ import {
   CloseOutlined,
   CoffeeOutlined,
   DeleteOutlined,
-  DownOutlined,
   FilterOutlined,
   FireOutlined,
   MinusOutlined,
@@ -83,7 +82,7 @@ const STATIC_CATEGORIES: Category[] = [
 export default function MenuPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
-  
+
   // State management
   const [activeSectionKey, setActiveSectionKey] = useState<string>("all");
   const [searchText, setSearchText] = useState("");
@@ -92,7 +91,7 @@ export default function MenuPage() {
   const [foodDetailModalOpen, setFoodDetailModalOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState<MenuItem | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
-  
+
   // API state
   const [dishes, setDishes] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -119,7 +118,11 @@ export default function MenuPage() {
       });
 
       const dishesData = dishesResponse.data;
-      const arrayData = dishesData.dishes || dishesData.data || dishesData.items || (Array.isArray(dishesData) ? dishesData : []);
+      const arrayData =
+        dishesData.dishes ||
+        dishesData.data ||
+        dishesData.items ||
+        (Array.isArray(dishesData) ? dishesData : []);
 
       if (arrayData && Array.isArray(arrayData)) {
         const mappedDishes: MenuItem[] = arrayData
@@ -127,15 +130,19 @@ export default function MenuPage() {
           .map((item: any) => {
             // Map categoryName to categoryId from STATIC_CATEGORIES
             const matchedCategory = STATIC_CATEGORIES.find(
-              cat => cat.name === (item.categoryName || item.category)
+              (cat) => cat.name === (item.categoryName || item.category),
             );
-            
+
             return {
               id: item.id?.toString() || item.dishId?.toString() || "",
               name: item.name || "",
               price: item.price?.toString() || "0",
               description: item.description || t("menu_page.default_food_desc"),
-              image: item.mainImageUrl || item.imageUrl || item.image || "/placeholder-dish.jpg",
+              image:
+                item.mainImageUrl ||
+                item.imageUrl ||
+                item.image ||
+                "/placeholder-dish.jpg",
               categoryId: matchedCategory?.id || item.categoryId || "",
               categoryName: item.categoryName || item.category || "",
               isPopular: item.isPopular || false,
@@ -211,7 +218,11 @@ export default function MenuPage() {
   const getItemCategory = (item: MenuItem): "food" | "drink" => {
     // Determine category based on categoryName or default to food
     const categoryLower = item.categoryName?.toLowerCase() || "";
-    if (categoryLower.includes("drink") || categoryLower.includes("đồ uống") || categoryLower.includes("boba")) {
+    if (
+      categoryLower.includes("drink") ||
+      categoryLower.includes("đồ uống") ||
+      categoryLower.includes("boba")
+    ) {
       return "drink";
     }
     return "food";
@@ -273,7 +284,7 @@ export default function MenuPage() {
   };
 
   const formatPrice = (price: string | number) => {
-    const priceNum = typeof price === 'string' ? parseFloat(price) : price;
+    const priceNum = typeof price === "string" ? parseFloat(price) : price;
     return new Intl.NumberFormat("vi-VN").format(priceNum);
   };
 
@@ -469,13 +480,20 @@ export default function MenuPage() {
                       style={{ width: "100%" }}
                       value={activeSectionKey}
                       onChange={setActiveSectionKey}
-                      suffixIcon={<FilterOutlined style={{ color: "#FF380B" }} />}
+                      suffixIcon={
+                        <FilterOutlined style={{ color: "#FF380B" }} />
+                      }
                       showSearch={false}
                       placeholder="Filter by category"
                       options={[
                         {
                           label: (
-                            <span style={{ fontWeight: 600, fontSize: 15, color: "#FF380B" }}>
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                fontSize: 15,
+                                color: "#FF380B",
+                              }}>
                               All Dishes
                             </span>
                           ),
@@ -540,12 +558,14 @@ export default function MenuPage() {
                     textTransform: "uppercase",
                     fontSize: 13,
                   }}>
-                  {activeSectionKey === "all" ? "All Dishes" : currentSection.title}
+                  {activeSectionKey === "all"
+                    ? "All Dishes"
+                    : currentSection.title}
                 </Text>
               </div>
               <Title level={3} style={{ color: "#fff", margin: 0 }}>
-                {activeSectionKey === "all" 
-                  ? "All Dishes" 
+                {activeSectionKey === "all"
+                  ? "All Dishes"
                   : currentSection.title}
               </Title>
               <Text
@@ -1050,8 +1070,11 @@ export default function MenuPage() {
                                     fontWeight: 600,
                                   }}>
                                   {formatPrice(
-                                    (parseFloat(item.price) * item.quantity).toString()
-                                  )}đ
+                                    (
+                                      parseFloat(item.price) * item.quantity
+                                    ).toString(),
+                                  )}
+                                  đ
                                 </Text>
                               </div>
                             </Card>
@@ -1205,8 +1228,11 @@ export default function MenuPage() {
                                     fontWeight: 600,
                                   }}>
                                   {formatPrice(
-                                    (parseFloat(item.price) * item.quantity).toString()
-                                  )}đ
+                                    (
+                                      parseFloat(item.price) * item.quantity
+                                    ).toString(),
+                                  )}
+                                  đ
                                 </Text>
                               </div>
                             </Card>
