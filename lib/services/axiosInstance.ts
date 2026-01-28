@@ -1,10 +1,12 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://116.105.73.163:5000/api',
   headers: {
     'Content-Type': 'application/json',
+    'accept': '*/*',
   },
+  timeout: 30000, // 30 seconds timeout
 });
 
 export const setAxiosBaseUrl = (baseUrl: string) => {
@@ -43,6 +45,7 @@ axiosInstance.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) throw new Error('No refresh token available');
 
+        // Call refresh token API
         const response = await axiosInstance.post(`/auth/refresh-token`, { refreshToken });
         if (response.data.success) {
           const { accessToken } = response.data.data;
