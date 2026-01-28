@@ -129,6 +129,7 @@ export default function CategorySettings() {
                                 >
                                     <td className="p-4">
                                         <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 relative shadow-sm group-hover:shadow-md transition-all">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
                                                 src={cat.image || "/images/placeholder.jpg"}
                                                 alt={cat.name}
@@ -176,7 +177,7 @@ export default function CategorySettings() {
                             {categories.length === 0 && (
                                 <tr>
                                     <td colSpan={4} className="p-8 text-center text-gray-500">
-                                        No categories found. Click "Add Category" to create one.
+                                        No categories found. Click &quot;Add Category&quot; to create one.
                                     </td>
                                 </tr>
                             )}
@@ -261,6 +262,7 @@ export default function CategorySettings() {
                                 {/* Image Preview */}
                                 {formData.image && (
                                     <div className="mt-3 aspect-video rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
                                             src={formData.image}
                                             alt="Preview"
