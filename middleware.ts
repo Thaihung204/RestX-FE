@@ -66,8 +66,11 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Super Admin domain (admin.restx.food) - route to /tenants
-  if (host === ADMIN_DOMAIN) {
+  // Super Admin domain (admin.restx.food or admin.localhost) - route to /tenants
+  const hostWithoutPort = host.includes(':') ? host.split(':')[0] : host;
+  const isAdminDomain = host === ADMIN_DOMAIN || hostWithoutPort === 'admin.localhost';
+
+  if (isAdminDomain) {
     if (pathname === '/') {
       return NextResponse.rewrite(new URL('/tenants', req.url));
     }
@@ -81,10 +84,10 @@ export function middleware(req: NextRequest) {
 
   // Tenant domains:
   // - Production: *.restx.food (excluding www, admin, and root)
-  // - Development: *.localhost (e.g., demo.localhost:3000)
+  // - Development: *.localhost (e.g., demo.localhost:3000, excluding admin.localhost)
   const isTenantDomain =
     (host.endsWith('.restx.food') && !LANDING_DOMAINS.has(host) && host !== ADMIN_DOMAIN) ||
-    (host.includes('.localhost'));
+    (host.includes('.localhost') && hostWithoutPort !== 'admin.localhost');
 
   if (isTenantDomain) {
     // Root path → restaurant page (for customers)
