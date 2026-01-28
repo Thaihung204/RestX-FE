@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Admin API base URL configuration
 // - Production: Always use admin.restx.food/api
-// - Development (localhost): Use relative path with Next.js rewrites
+// - Development (localhost): Use relative path - Next.js rewrites handle proxy to backend
 const getAdminBaseUrl = (): string => {
     if (typeof window === 'undefined') {
         // Server-side: use env variable or default
@@ -10,9 +10,14 @@ const getAdminBaseUrl = (): string => {
     }
 
     const host = window.location.host;
+    const hostWithoutPort = host.includes(':') ? host.split(':')[0] : host;
 
-    // Development mode: use relative path (Next.js rewrites handle it)
-    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    // Development mode: use relative path for ALL localhost variants
+    // This avoids CORS issues between demo.localhost:3000 and localhost:3000
+    // Next.js rewrites will proxy the request to the actual backend
+    if (hostWithoutPort === 'localhost' ||
+        hostWithoutPort === '127.0.0.1' ||
+        hostWithoutPort.endsWith('.localhost')) {
         return '/api/admin';
     }
 
