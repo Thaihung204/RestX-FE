@@ -49,11 +49,16 @@ export interface TenantConfig {
 }
 
 export const tenantService = {
+    /**
+     * Get tenant config by domain/hostname
+     * Backend endpoint: GET /api/tenants/{data}
+     * where {data} can be tenant ID or hostname (e.g., "demo")
+     */
     getTenantConfig: async (domain: string): Promise<TenantConfig | null> => {
         try {
-            const response = await adminAxiosInstance.get('/tenant', {
-                params: { domain }
-            });
+            // Backend uses path param, not query param
+            // e.g., /api/tenants/demo (not /api/tenants?domain=demo)
+            const response = await adminAxiosInstance.get(`/tenants/${domain}`);
 
             if (response.status === 204) {
                 return null;
@@ -65,8 +70,28 @@ export const tenantService = {
         }
     },
 
-    // Method to match the UpsertTenant (for Admin usage likely)
+    /**
+     * Create or update tenant
+     * Backend endpoint: POST /api/tenants
+     */
     upsertTenant: async (tenant: TenantConfig) => {
-        return await axiosInstance.post('/tenant', tenant);
+        return await adminAxiosInstance.post('/tenants', tenant);
+    },
+
+    /**
+     * Get all tenants (for admin panel)
+     * Backend endpoint: GET /api/tenants
+     */
+    getAllTenants: async (): Promise<TenantConfig[]> => {
+        const response = await adminAxiosInstance.get('/tenants');
+        return response.data;
+    },
+
+    /**
+     * Delete tenant
+     * Backend endpoint: DELETE /api/tenants/{id}
+     */
+    deleteTenant: async (id: string): Promise<void> => {
+        await adminAxiosInstance.delete(`/tenants/${id}`);
     }
 };
