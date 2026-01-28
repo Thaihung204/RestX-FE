@@ -1,45 +1,41 @@
 'use client';
 
-import React, { useState } from 'react';
 import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Tag,
-  Button,
-  Space,
-  Modal,
-  Avatar,
-  Tabs,
-  Input,
-  Divider,
-  message,
-  Radio,
-  InputNumber,
-  Result,
-  Statistic,
-  Flex,
-} from 'antd';
-import {
-  DollarOutlined,
-  CreditCardOutlined,
-  QrcodeOutlined,
-  WalletOutlined,
-  PrinterOutlined,
-  CheckCircleOutlined,
-  TableOutlined,
-  UserOutlined,
-  ClockCircleOutlined,
-  CalculatorOutlined,
-  GiftOutlined,
-  PercentageOutlined,
-  SearchOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CreditCardOutlined,
+    DollarOutlined,
+    GiftOutlined,
+    PrinterOutlined,
+    QrcodeOutlined,
+    SearchOutlined,
+    TableOutlined,
+    UserOutlined,
+    WalletOutlined
 } from '@ant-design/icons';
-import { motion } from 'framer-motion';
-import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import {
+    Avatar,
+    Button,
+    Card,
+    Col,
+    Divider,
+    Flex,
+    Input,
+    InputNumber,
+    message,
+    Modal,
+    Radio,
+    Result,
+    Row,
+    Space,
+    Statistic,
+    Tag,
+    Typography
+} from 'antd';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../../components/I18nProvider';
+import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -279,7 +275,7 @@ export default function CheckoutPage() {
             <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>Tổng thanh toán</Text>
             <br />
             <Text strong style={{ fontSize: isMobile ? 18 : 24, color: '#FF380B' }}>
-              {bill.total.toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
+              {bill.total.toLocaleString('vi-VN')}đ
             </Text>
           </div>
           <Button
@@ -451,13 +447,13 @@ export default function CheckoutPage() {
                 <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.bill')}: {selectedBill?.id}</Text>
                 <br />
                 <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#52c41a' }}>
-                  {calculateFinalTotal().toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
+                  {calculateFinalTotal().toLocaleString('vi-VN')}đ
                 </Text>
                 {paymentMethod === 'cash' && cashReceived > calculateFinalTotal() && (
                   <div style={{ marginTop: 12 }}>
                     <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.change')}: </Text>
                     <Text strong style={{ color: '#FF380B', fontSize: isMobile ? 15 : 16 }}>
-                      {(cashReceived - calculateFinalTotal()).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
+                      {(cashReceived - calculateFinalTotal()).toLocaleString('vi-VN')}đ
                     </Text>
                   </div>
                 )}
@@ -556,7 +552,7 @@ export default function CheckoutPage() {
                           <Text style={{ fontSize: isMobile ? 12 : 14 }}>
                             {item.name} <Tag style={{ fontSize: isMobile ? 10 : 12 }}>{item.quantity}x</Tag>
                           </Text>
-                          <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>{(item.price * item.quantity).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ</Text>
+                          <Text strong style={{ fontSize: isMobile ? 12 : 14 }}>{(item.price * item.quantity).toLocaleString('vi-VN')}đ</Text>
                         </div>
                       ))}
                     </div>
@@ -619,7 +615,7 @@ export default function CheckoutPage() {
                       }}>
                         <Text strong style={{ fontSize: isMobile ? 15 : 17, fontWeight: 600 }}>{t('staff.checkout.payment.total')}</Text>
                         <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B', fontWeight: 500 }}>
-                          {calculateFinalTotal().toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
+                          {calculateFinalTotal().toLocaleString('vi-VN')}đ
                         </Text>
                       </div>
                     </div>
@@ -679,7 +675,7 @@ export default function CheckoutPage() {
                         {cashReceived >= calculateFinalTotal() && cashReceived > 0 && (
                           <div style={{ marginTop: 8, padding: isMobile ? '6px 10px' : '8px 12px', background: '#f6ffed', borderRadius: 8 }}>
                             <Text style={{ color: '#52c41a', fontSize: isMobile ? 12 : 14 }}>
-                              {t('staff.checkout.payment.change')}: <strong>{(cashReceived - calculateFinalTotal()).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ</strong>
+                              {t('staff.checkout.payment.change')}: <strong>{(cashReceived - calculateFinalTotal()).toLocaleString('vi-VN')}đ</strong>
                             </Text>
                           </div>
                         )}

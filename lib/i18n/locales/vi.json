@@ -334,6 +334,7 @@
         "analytics": "Phân tích",
         "tables": "Bàn",
         "menu": "Thực đơn",
+        "ingredients": "Nguyên liệu",
         "orders": "Đơn hàng",
         "customers": "Khách hàng",
         "staff": "Nhân viên",
@@ -458,6 +459,54 @@
         "off_duty": "Nghỉ ca",
         "on_leave": "Nghỉ phép"
       }
+    },
+    "ingredients": {
+      "title": "Quản lý nguyên liệu",
+      "subtitle": "Quản lý nguyên liệu và kho hàng nhà hàng",
+      "add_ingredient": "Thêm nguyên liệu",
+      "stats": {
+        "total_items": "Tổng nguyên liệu",
+        "in_stock": "Còn hàng",
+        "low_stock": "Sắp hết",
+        "out_of_stock": "Hết hàng"
+      },
+      "tabs": {
+        "all": "Tất cả",
+        "in-stock": "Còn hàng",
+        "low-stock": "Sắp hết",
+        "out-of-stock": "Hết hàng"
+      },
+      "search": {
+        "placeholder": "Tìm nguyên liệu hoặc nhà cung cấp..."
+      },
+      "filter": {
+        "all": "Tất cả danh mục"
+      },
+      "categories": {
+        "seafood": "Hải sản",
+        "grains": "Ngũ cốc",
+        "vegetables": "Rau củ",
+        "sauces": "Gia vị & Sốt",
+        "spices": "Gia vị",
+        "dairy": "Sữa"
+      },
+      "table": {
+        "name": "Tên nguyên liệu",
+        "category": "Danh mục",
+        "quantity": "Số lượng",
+        "price": "Đơn giá",
+        "supplier": "Nhà cung cấp",
+        "status": "Trạng thái",
+        "actions": "Hành động",
+        "last_updated": "Cập nhật",
+        "min": "Tối thiểu"
+      },
+      "status": {
+        "in-stock": "Còn hàng",
+        "low-stock": "Sắp hết",
+        "out-of-stock": "Hết hàng"
+      },
+      "no_results": "Không tìm thấy nguyên liệu nào"
     },
     "settings": {
       "title": "Cài đặt",

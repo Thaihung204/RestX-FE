@@ -32,7 +32,7 @@ export default function OrdersPage() {
       customerName: "John Doe",
       tableNumber: 5,
       items: 3,
-      total: 85.5,
+      total: 2137500,
       status: "preparing",
       time: "10 mins ago",
       paymentStatus: "unpaid",
@@ -43,7 +43,7 @@ export default function OrdersPage() {
       customerName: "Sarah Wilson",
       tableNumber: 12,
       items: 2,
-      total: 62.0,
+      total: 1550000,
       status: "ready",
       time: "15 mins ago",
       paymentStatus: "unpaid",
@@ -54,7 +54,7 @@ export default function OrdersPage() {
       customerName: "Mike Johnson",
       tableNumber: 8,
       items: 4,
-      total: 124.99,
+      total: 3125000,
       status: "served",
       time: "25 mins ago",
       paymentStatus: "paid",
@@ -65,7 +65,7 @@ export default function OrdersPage() {
       customerName: "Emma Brown",
       tableNumber: 3,
       items: 2,
-      total: 48.5,
+      total: 1212500,
       status: "pending",
       time: "5 mins ago",
       paymentStatus: "unpaid",
@@ -76,7 +76,7 @@ export default function OrdersPage() {
       customerName: "David Lee",
       tableNumber: 15,
       items: 5,
-      total: 156.75,
+      total: 3918750,
       status: "completed",
       time: "1 hour ago",
       paymentStatus: "paid",
@@ -408,17 +408,17 @@ export default function OrdersPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span style={{ color: 'var(--text-muted)' }}>
-                            Table {order.tableNumber}
+                            {t("dashboard.orders.table.table")} {order.tableNumber}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span style={{ color: 'var(--text-muted)' }}>
-                            {order.items} items
+                            {order.items} {t("dashboard.orders.table.items").toLowerCase()}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-green-500 font-bold">
-                            ${order.total.toFixed(2)}
+                            {order.total.toLocaleString('vi-VN')}đ
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

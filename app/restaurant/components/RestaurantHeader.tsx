@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import {
-  SearchOutlined,
-  UserOutlined,
-  ShoppingCartOutlined,
-  DownOutlined,
-  MenuOutlined,
-  CloseOutlined,
-} from '@ant-design/icons';
-import { Button, Drawer, Space, Dropdown } from 'antd';
-import Link from 'next/link';
-import { useTranslation } from 'react-i18next';
 import ThemeToggle from '@/app/components/ThemeToggle';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import {
+    CloseOutlined,
+    DownOutlined,
+    MenuOutlined,
+    SearchOutlined,
+    ShoppingCartOutlined,
+    UserOutlined,
+} from '@ant-design/icons';
+import { Button, Drawer, Dropdown, Space } from 'antd';
+import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const RestaurantHeader: React.FC = () => {
   const { t } = useTranslation();
@@ -80,7 +80,7 @@ const RestaurantHeader: React.FC = () => {
         right: 0,
         zIndex: 1000,
         background: scrolled
-          ? (mode === 'dark' ? 'rgba(26, 26, 26, 0.95)' : 'rgba(255, 255, 255, 0.95)')
+          ? (mode === 'dark' ? 'rgba(14, 18, 26, 0.95)' : 'rgba(255, 255, 255, 0.95)')
           : 'transparent',
         backdropFilter: 'blur(10px)',
         transition: 'all 0.3s ease',
@@ -176,16 +176,16 @@ const RestaurantHeader: React.FC = () => {
       {/* Mobile Drawer */}
       {/* Mobile Drawer */}
       <Drawer
-        title={<span style={{ color: mode === 'dark' ? 'white' : '#1a1a1a' }}>Menu</span>}
+        title={<span style={{ color: 'var(--text)' }}>Menu</span>}
         placement="right"
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
-        closeIcon={<CloseOutlined style={{ color: mode === 'dark' ? 'white' : '#1a1a1a' }} />}
-        style={{ background: mode === 'dark' ? '#1a1a1a' : '#ffffff' }}
-        styles={{ body: { background: mode === 'dark' ? '#1a1a1a' : '#ffffff' } }}>
+        closeIcon={<CloseOutlined style={{ color: 'var(--text)' }} />}
+        style={{ background: 'var(--bg-base)' }}
+        styles={{ body: { background: 'var(--bg-base)' } }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           {menuItems.map((item) => (
-            <div key={item.key} style={{ color: mode === 'dark' ? 'white' : '#1a1a1a', fontSize: 16 }}>
+            <div key={item.key} style={{ color: 'var(--text)', fontSize: 16 }}>
               {item.label}
             </div>
           ))}

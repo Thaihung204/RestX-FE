@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
+  // output: 'export', // Temporarily disable static export for i18n testing
 
   async rewrites() {
     // Admin API URL - for tenant verification and super admin operations (RestX.Admin port 4999)
