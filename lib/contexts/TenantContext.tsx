@@ -20,55 +20,88 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         const fetchTenant = async () => {
             try {
                 const host = window.location.host; // e.g., demo.restx.food:3000
+                console.log('[TenantContext] Current host:', host);
 
-                // 1. Check for Landing or Admin domains (Skip API call)
+                // 1. Check for Landing domains (Skip API call)
                 if (
                     host === "restx.food" ||
-                    host === "www.restx.food" ||
-                    host === "admin.restx.food" ||
-                    host.startsWith("admin.")
+                    host === "www.restx.food"
                 ) {
+                    console.log('[TenantContext] Landing domain detected, skipping tenant fetch');
                     setLoading(false);
                     return;
                 }
 
-                // 2. Extract Subdomain
+                // 2. Check for Admin domain (Skip tenant fetch, admin has its own context)
+                if (host === "admin.restx.food" || host.startsWith("admin.")) {
+                    console.log('[TenantContext] Admin domain detected, skipping tenant fetch');
+                    setLoading(false);
+                    return;
+                }
+
+                // 3. Check for Development domains (Skip tenant fetch for all localhost variants)
+                // This includes plain localhost and subdomains like demo.localhost
+                // In development, we don't need to verify tenant existence
+                const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
+                const isLocalhost = hostWithoutPort === "localhost" ||
+                    hostWithoutPort === "127.0.0.1" ||
+                    hostWithoutPort.endsWith(".localhost");
+
+                if (isLocalhost) {
+                    console.log('[TenantContext] Localhost detected, skipping tenant fetch');
+                    setLoading(false);
+                    return;
+                }
+
+                // 4. Extract domain for tenant lookup
                 // Ex: demo.restx.food -> demo
-                let subdomain = host;
-                if (host.includes(".restx.food")) {
-                    subdomain = host.split(".")[0];
-                } else if (host.includes("localhost") || host.includes("127.0.0.1")) {
-                    subdomain = host.split(".")[0];
+                // Ex: demo.localhost:3000 -> demo
+                let domain = hostWithoutPort;
+
+                // For *.restx.food, extract the subdomain (prefix)
+                if (domain.endsWith(".restx.food")) {
+                    domain = domain.replace(".restx.food", "");
+                }
+                // For *.localhost, extract the subdomain (prefix)
+                else if (domain.endsWith(".localhost")) {
+                    domain = domain.replace(".localhost", "");
                 }
 
-                // Remove port if present
-                if (subdomain.includes(":")) {
-                    subdomain = subdomain.split(":")[0];
-                }
+                console.log('[TenantContext] Fetching tenant config for domain:', domain);
 
-                const data = await tenantService.getTenantConfig(subdomain);
+                // 4. Call admin API to get tenant config
+                const data = await tenantService.getTenantConfig(domain);
+                console.log('[TenantContext] Tenant config response:', data);
 
-                // 3. Handle Tenant Not Found (204)
+                // 5. Handle Tenant Not Found (204 or null)
                 if (!data) {
+                    console.warn('[TenantContext] Tenant not found for domain:', domain);
                     // Redirect to landing page if tenant not found
-                    if (!host.includes("localhost") && !host.includes("127.0.0.1")) {
+                    // Skip redirect for localhost
+                    if (
+                        !host.includes("localhost") &&
+                        !host.includes("127.0.0.1")
+                    ) {
                         window.location.href = "https://restx.food";
                     }
                     setLoading(false);
                     return;
                 }
-                if (data.hostname) {
 
+                // 6. Override axios base URL if hostname is provided in tenant config
+                if (data.hostname) {
                     const protocol = window.location.protocol;
                     const apiUrl = `${protocol}//${data.hostname}/api`;
+                    console.log('[TenantContext] Setting axios base URL to:', apiUrl);
 
                     const { setAxiosBaseUrl } = await import('@/lib/services/axiosInstance');
                     setAxiosBaseUrl(apiUrl);
                 }
 
                 setTenant(data);
+                console.log('[TenantContext] Tenant loaded successfully:', data.name);
             } catch (err) {
-                console.error("Failed to load tenant config", err);
+                console.error("[TenantContext] Failed to load tenant config", err);
                 setError("Tenant not found");
 
                 // Do not redirect if running on localhost to avoid disrupting development
