@@ -39,43 +39,39 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
                     return;
                 }
 
-                // 3. Check for Development domains (Skip tenant fetch for all localhost variants)
-                // This includes plain localhost and subdomains like demo.localhost
-                // In development, we don't need to verify tenant existence
+                // 3. Check for plain Development domains (Skip tenant fetch)
+                // Only skip for plain localhost, NOT for subdomains like demo.localhost
+                // Subdomains need to fetch tenant config (with hostname converted to production format)
                 const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
-                const isLocalhost = hostWithoutPort === "localhost" ||
-                    hostWithoutPort === "127.0.0.1" ||
-                    hostWithoutPort.endsWith(".localhost");
+                const isPlainLocalhost = hostWithoutPort === "localhost" || hostWithoutPort === "127.0.0.1";
 
-                if (isLocalhost) {
-                    console.log('[TenantContext] Localhost detected, skipping tenant fetch');
+                if (isPlainLocalhost) {
+                    console.log('[TenantContext] Plain localhost detected, skipping tenant fetch');
                     setLoading(false);
                     return;
                 }
 
-                // 4. Extract domain for tenant lookup
-                // Ex: demo.restx.food -> demo
-                // Ex: demo.localhost:3000 -> demo
-                let domain = hostWithoutPort;
+                // 4. Get hostname for tenant lookup
+                // Pass full hostname to API: demo.restx.food (not just "demo")
+                // For localhost development, construct equivalent hostname
+                let hostname = hostWithoutPort;
 
-                // For *.restx.food, extract the subdomain (prefix)
-                if (domain.endsWith(".restx.food")) {
-                    domain = domain.replace(".restx.food", "");
-                }
-                // For *.localhost, extract the subdomain (prefix)
-                else if (domain.endsWith(".localhost")) {
-                    domain = domain.replace(".localhost", "");
+                // For *.localhost in development, convert to equivalent production hostname
+                // e.g., demo.localhost -> demo.restx.food
+                if (hostname.endsWith(".localhost")) {
+                    const subdomain = hostname.replace(".localhost", "");
+                    hostname = `${subdomain}.restx.food`;
                 }
 
-                console.log('[TenantContext] Fetching tenant config for domain:', domain);
+                console.log('[TenantContext] Fetching tenant config for hostname:', hostname);
 
-                // 4. Call admin API to get tenant config
-                const data = await tenantService.getTenantConfig(domain);
+                // 5. Call admin API to get tenant config
+                const data = await tenantService.getTenantConfig(hostname);
                 console.log('[TenantContext] Tenant config response:', data);
 
                 // 5. Handle Tenant Not Found (204 or null)
                 if (!data) {
-                    console.warn('[TenantContext] Tenant not found for domain:', domain);
+                    console.warn('[TenantContext] Tenant not found for hostname:', hostname);
                     // Redirect to landing page if tenant not found
                     // Skip redirect for localhost
                     if (
