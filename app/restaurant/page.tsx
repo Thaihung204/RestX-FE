@@ -1,28 +1,29 @@
 'use client';
 
-import React from 'react';
-import RestaurantHeader from './components/RestaurantHeader';
-import RestaurantHero from './components/RestaurantHero';
+import Footer from '../components/Footer';
+import { TenantGuard } from '@/components/tenant';
+
 import AboutSection from './components/AboutSection';
 import FeaturedCategories from './components/FeaturedCategories';
 import MenuSection from './components/MenuSection';
-import Footer from '../components/Footer';
-import { useThemeMode } from '../theme/AutoDarkThemeProvider';
+import RestaurantHeader from './components/RestaurantHeader';
+import RestaurantHero from './components/RestaurantHero';
 
 export default function RestaurantPage() {
-  const { mode } = useThemeMode();
-
   return (
-    <div style={{ minHeight: '100vh', background: mode === 'dark' ? '#1a1a1a' : '#FFFFFF' }}>
-      <RestaurantHeader />
-      <main>
-        <RestaurantHero />
-        <AboutSection />
-        <FeaturedCategories />
-        <MenuSection />
-      </main>
-      <Footer />
-    </div>
+    <TenantGuard>
+      <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
+        <RestaurantHeader />
+        <main>
+          <RestaurantHero />
+          <AboutSection />
+          <FeaturedCategories />
+          <MenuSection />
+        </main>
+        <Footer />
+      </div>
+    </TenantGuard>
   );
 }
+
 

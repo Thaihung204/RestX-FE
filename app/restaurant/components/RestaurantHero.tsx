@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { Button, Typography } from 'antd';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
@@ -50,7 +50,7 @@ const RestaurantHero: React.FC = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'linear-gradient(180deg, rgba(26, 26, 26, 0.4) 0%, rgba(26, 26, 26, 0.7) 100%)',
+          background: 'linear-gradient(180deg, rgba(14, 18, 26, 0.4) 0%, rgba(14, 18, 26, 0.7) 100%)',
           zIndex: 2,
         }}
       />

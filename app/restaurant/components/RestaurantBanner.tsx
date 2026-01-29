@@ -36,7 +36,7 @@ const RestaurantBanner: React.FC = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'linear-gradient(180deg, rgba(26, 26, 26, 0.3) 0%, rgba(26, 26, 26, 0.6) 100%)',
+            background: 'linear-gradient(180deg, rgba(14, 18, 26, 0.3) 0%, rgba(14, 18, 26, 0.6) 100%)',
           }}
         />
       </div>
