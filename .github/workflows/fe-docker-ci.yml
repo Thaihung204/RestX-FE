@@ -37,6 +37,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd /opt/restx-fe
+            cd /opt/restx
             docker compose pull
             docker compose up -d
