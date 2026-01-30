@@ -4,21 +4,15 @@ import axios from 'axios';
 // This is called once during module initialization
 const getInitialBaseUrl = (): string => {
   if (typeof window === 'undefined') {
-    // Server-side: use env variable or default
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    // Server-side: use internal Docker network URL or localhost for development
+    // In Docker, services communicate via internal network names
+    return process.env.INTERNAL_API_URL || 'http://localhost:5000/api';
   }
 
-  const host = window.location.host;
-  const protocol = window.location.protocol;
-
-  // Development mode: use relative path (Next.js rewrites handle it)
-  if (host.includes('localhost') || host.includes('127.0.0.1')) {
-    return '/api';
-  }
-
-  // Production: construct API URL from current host
-  // e.g., demo.restx.food -> https://demo.restx.food/api
-  return `${protocol}//${host}/api`;
+  // Client-side: Always use relative path
+  // The reverse proxy will route /api/* requests to the correct backend
+  // based on the Host header (e.g., demo.restx.food -> tenant backend)
+  return '/api';
 };
 
 const axiosInstance = axios.create({

@@ -70,16 +70,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
                 console.log('[TenantContext] Tenant config response:', data);
 
                 if (data) {
-                    // Tenant found - set it and configure axios
-                    if (data.hostname) {
-                        const protocol = window.location.protocol;
-                        const apiUrl = `${protocol}//${data.hostname}/api`;
-                        console.log('[TenantContext] Setting axios base URL to:', apiUrl);
-
-                        const { setAxiosBaseUrl } = await import('@/lib/services/axiosInstance');
-                        setAxiosBaseUrl(apiUrl);
-                    }
-
+                    // Tenant found - axios already uses relative /api path
+                    // Reverse proxy routes requests based on Host header
                     setTenant(data);
                     console.log('[TenantContext] Tenant loaded successfully:', data.name);
                 } else {
