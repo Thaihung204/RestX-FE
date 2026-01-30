@@ -1,12 +1,39 @@
 import axios from 'axios';
 
+// Get initial base URL based on current host
+// This is called once during module initialization
+const getInitialBaseUrl = (): string => {
+  if (typeof window === 'undefined') {
+    // Server-side: use env variable or default
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  }
+
+  const host = window.location.host;
+  const protocol = window.location.protocol;
+
+  // Development mode: use relative path (Next.js rewrites handle it)
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    return '/api';
+  }
+
+  // Production: construct API URL from current host
+  // e.g., demo.restx.food -> https://demo.restx.food/api
+  return `${protocol}//${host}/api`;
+};
+
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseURL: getInitialBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+// Update baseURL on client-side after hydration
+if (typeof window !== 'undefined') {
+  axiosInstance.defaults.baseURL = getInitialBaseUrl();
+}
+
+// Allow manual override of base URL (used by TenantContext when hostname is provided)
 export const setAxiosBaseUrl = (baseUrl: string) => {
   axiosInstance.defaults.baseURL = baseUrl;
 };

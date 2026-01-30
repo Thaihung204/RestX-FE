@@ -408,7 +408,9 @@ export default function MenuPage() {
                       suppressHydrationWarning>
                       {category === "All"
                         ? t("dashboard.menu.filter")
-                        : category}
+                        : t(
+                            `dashboard.menu.categories.${category.toLowerCase().replace(" ", "_")}`,
+                          )}
                     </button>
                   ))}
                 </div>
