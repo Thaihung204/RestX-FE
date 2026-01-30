@@ -1,6 +1,7 @@
 "use client";
 
 import LoginButton from "@/components/auth/LoginButton";
+import authService from "@/lib/services/authService";
 import React, { useState } from "react";
 
 export default function ForgotPasswordPage() {
@@ -8,6 +9,8 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   const validateEmail = (email: string) => {
     if (!email) {
@@ -15,13 +18,28 @@ export default function ForgotPasswordPage() {
       return false;
     }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
+    // Improved email regex validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
       setEmailError("Please enter a valid email address");
       return false;
     }
 
     setEmailError("");
     return true;
+  };
+
+  const checkEmailExists = async (email: string) => {
+    setCheckingEmail(true);
+
+    return new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        // Simulate: emails containing "test" don't exist in DB
+        const exists = !email.toLowerCase().includes("test");
+        setCheckingEmail(false);
+        resolve(exists);
+      }, 500);
+    });
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,43 +50,62 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleEmailBlur = () => {
+    setEmailTouched(true);
+    if (!email) {
+      setEmailError("Please enter your email address");
+    } else {
+      validateEmail(email);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setEmailTouched(true);
 
+    // Check if email is empty first
+    if (!email || !email.trim()) {
+      setEmailError("Please enter your email address");
+      return;
+    }
+
+    // Validate email format
     if (!validateEmail(email)) {
       return;
     }
 
-    // Simulate loading for demo
+    // Call API to send reset link
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setSuccess(false);
+
+    try {
+      await authService.requestPasswordReset(email);
+      setSuccess(true);
       alert(
-        `Password Reset Link Sent!\n\nEmail: ${email}\n\nPlease check your email for the reset link.\n\n(This is UI demo only - No API integration)`
+        `Password Reset Link Sent!\n\nEmail: ${email}\n\nPlease check your email for the reset link.`
       );
-    }, 1000);
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to send reset link. Please try again.';
+      alert(errorMessage);
+      console.error('Forgot password error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient"
-    >
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient">
       {/* Decorative elements */}
-      <div 
-        className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"
-      ></div>
-      <div 
-        className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"
-      ></div>
+      <div className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"></div>
 
       <div className="max-w-[420px] w-full space-y-8 relative z-10">
-        <div 
-          className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
-        >
+        <div className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card">
           <div className="text-center mb-6">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl" style={{ background: '#FF380B' }}>
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl"
+              style={{ background: "#FF380B" }}>
               <svg
                 className="w-8 h-8 text-white"
                 fill="none"
@@ -82,9 +119,7 @@ export default function ForgotPasswordPage() {
                 />
               </svg>
             </div>
-            <h2 
-              className="text-3xl font-bold mb-2 auth-title"
-            >
+            <h2 className="text-3xl font-bold mb-2 auth-title">
               Forgot Password
             </h2>
             <p className="auth-text">
@@ -97,8 +132,7 @@ export default function ForgotPasswordPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium mb-2 auth-label"
-              >
+                className="block text-sm font-medium mb-2 auth-label">
                 Email Address
               </label>
               <input
@@ -106,32 +140,35 @@ export default function ForgotPasswordPage() {
                 type="email"
                 value={email}
                 onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
                 placeholder="your.email@example.com"
+                disabled={loading}
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
-                  borderColor: emailTouched && emailError ? '#ef4444' : undefined,
+                  borderColor:
+                    emailTouched && emailError ? "#ef4444" : undefined,
                 }}
               />
               {emailTouched && emailError && (
-                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{emailError}</p>
+                <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
+                  {emailError}
+                </p>
               )}
             </div>
 
             <LoginButton loading={loading} text="SEND RESET LINK" />
 
-            <div 
+            <div
               className="text-center pt-4 border-t"
-              style={{ 
-                borderColor: 'var(--border)'
-              }}
-            >
+              style={{
+                borderColor: "var(--border)",
+              }}>
               <a
                 href="/login"
                 className="text-sm font-semibold transition-colors inline-flex items-center"
-                style={{ color: '#FF380B' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
-              >
+                style={{ color: "#FF380B" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
                 <svg
                   className="w-4 h-4 mr-1"
                   fill="none"
