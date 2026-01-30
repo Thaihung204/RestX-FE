@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - main
-      - RX-68-AuthenAPI
-  pull_request:
-    branches:
-      - main
-
 
 jobs:
   build-and-push:
@@ -34,27 +29,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Prepare VPS directory
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
-            mkdir -p /opt/restx-fe
-
-      - name: Copy files to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
-          source: "docker-compose.yml"
-          target: "/opt/restx-fe"
-
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -63,9 +37,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd /opt/restx-fe
-            docker stop restx-frontend || true
-            docker rm restx-frontend || true
-            docker compose down --remove-orphans || true
+            cd /opt/restx
             docker compose pull
             docker compose up -d
