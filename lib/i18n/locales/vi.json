@@ -337,6 +337,7 @@
         "orders": "Đơn hàng",
         "customers": "Khách hàng",
         "staff": "Nhân viên",
+        "schedules": "Lịch làm việc",
         "settings": "Cài đặt",
         "help": "Trợ giúp"
       }
@@ -1059,6 +1060,47 @@
       }
     },
     "remember_me": "Ghi nhớ đăng nhập"
+  },
+  "schedule": {
+    "title": "Quản lý lịch làm việc",
+    "subtitle": "Lập kế hoạch và quản lý ca làm việc của nhân viên",
+    "manage_time_slots": "Quản lý khung giờ",
+    "export_schedule": "Xuất lịch làm việc",
+    "loading": "Đang tải lịch làm việc...",
+    "no_data": "Không có dữ liệu lịch làm việc",
+    "time_slot": "Khung giờ",
+    "legend": {
+      "past": "Đã qua",
+      "live_now": "Hiện tại",
+      "future": "Tương lai"
+    },
+    "week_navigator": {
+      "today": "Hôm nay",
+      "week": "Tuần",
+      "copy_previous_week": "Sao chép tuần trước"
+    },
+    "staff_modal": {
+      "title": "Lịch làm việc",
+      "assigned_staff": "Nhân viên được phân công",
+      "no_staff": "Chưa có nhân viên",
+      "person": "người",
+      "people": "người",
+      "assign_new_staff": "Phân công nhân viên mới",
+      "select_staff": "Chọn nhân viên",
+      "assign": "Phân công",
+      "cancel": "Hủy",
+      "add_staff_assignment": "Thêm phân công"
+    },
+    "status": {
+      "confirmed": "đã xác nhận",
+      "registered": "đã đăng ký",
+      "cancelled": "đã hủy",
+      "no_staff": "Chưa có người",
+      "staff_assigned": "đã phân công"
+    },
+    "export": {
+      "alert": "Tính năng xuất file sẽ khả dụng khi kết nối với backend API"
+    }
   },
   "not_found": {
     "title": "Trang không tìm thấy",
