@@ -21,12 +21,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
-
-
   useEffect(() => {
-    setMounted(true);
-
     const initializeAuth = async () => {
       try {
         // Chỉ lấy user từ localStorage
@@ -48,10 +43,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initializeAuth();
   }, []);
 
-  // Prevent hydration mismatch by not rendering until mounted
-  // if (!mounted) {
-  //   return <>{children}</>;
-  // }
 
   const login = async (credentials: LoginCredentials): Promise<User> => {
     try {
