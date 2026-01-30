@@ -24,18 +24,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        // Chỉ lấy user từ localStorage
+        // Backend chưa có /auth/me endpoint nên không call API
         const user = authService.getCurrentUser();
         if (user) {
-          const serverUser = await authService.getCurrentUserFromServer();
-          if (serverUser) {
-            setUser(serverUser);
-          } else {
-            setUser(null);
-          }
+          setUser(user);
+        } else {
+          setUser(null);
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
-        authService.logout();
         setUser(null);
       } finally {
         setLoading(false);

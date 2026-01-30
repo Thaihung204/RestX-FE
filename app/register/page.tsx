@@ -2,6 +2,7 @@
 
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
+import authService from "@/lib/services/authService";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
@@ -72,32 +73,7 @@ export default function RegisterPage() {
     return "";
   };
 
-  const checkEmailExists = async (email: string): Promise<boolean> => {
-    // Simulate API call to check if email exists
-    // TODO: Replace with actual API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Simulate: admin@restx.com and user@restx.com already exist
-        const exists =
-          email.toLowerCase() === "admin@restx.com" ||
-          email.toLowerCase() === "user@restx.com";
-        resolve(exists);
-      }, 300);
-    });
-  };
 
-  const checkPhoneExists = async (phone: string): Promise<boolean> => {
-    // Simulate API call to check if phone exists
-    // TODO: Replace with actual API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Simulate: 0123456789 already exists
-        const phoneDigits = phone.replace(/\D/g, "");
-        const exists = phoneDigits === "0123456789";
-        resolve(exists);
-      }, 300);
-    });
-  };
 
   const validatePassword = (pwd: string): string[] => {
     if (!pwd) return [];
@@ -217,37 +193,44 @@ export default function RegisterPage() {
       return;
     }
 
-    // Check for duplicate email and phone
+    // Call API to register
     setLoading(true);
+    try {
+      const result = await authService.register({
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        fullName: `${formData.firstName} ${formData.lastName}`,
+        phoneNumber: formData.phone,
+      });
 
-    const emailExists = await checkEmailExists(formData.email);
-    if (emailExists) {
+      if (result.requireLogin) {
+        // Registration successful but needs manual login
+        alert(result.message || 'Registration successful! Please login with your credentials.');
+        window.location.href = '/login-email';
+      } else {
+        // Auto-login successful
+        alert(
+          t('register_page.alerts.submitted', {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone
+          })
+        );
+        // Redirect to home or dashboard
+        window.location.href = '/';
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to register. Please try again.';
+      alert(errorMessage);
+      console.error('Registration error:', error);
+    } finally {
       setLoading(false);
-      setErrors((prev) => ({
-        ...prev,
-        email: t('register_page.validation.email_exists'),
-      }));
-      return;
     }
-
-    const phoneExists = await checkPhoneExists(formData.phone);
-    if (phoneExists) {
-      setLoading(false);
-      setErrors((prev) => ({
-        ...prev,
-        phone: t('register_page.validation.phone_exists'),
-      }));
-      return;
-    }
-
-    // Simulate registration
-    setTimeout(() => {
-      setLoading(false);
-      alert(
-        t('register_page.alerts.submitted', { firstName: formData.firstName, lastName: formData.lastName, email: formData.email, phone: formData.phone })
-      );
-    }, 1000);
   };
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient">
@@ -258,7 +241,7 @@ export default function RegisterPage() {
       <div className="max-w-[480px] w-full space-y-8 relative z-10">
         <div className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card">
           <div className="text-center mb-6">
-            <h2 
+            <h2
               className="text-3xl font-bold mb-2 auth-title"
             >
               {t('register_page.title')}

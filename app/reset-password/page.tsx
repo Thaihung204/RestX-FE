@@ -1,11 +1,14 @@
 "use client";
 
 import LoginButton from "@/components/auth/LoginButton";
+import authService from "@/lib/services/authService";
 import React, { useState, useEffect } from "react";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useSearchParams } from 'next/navigation';
 
 export default function ResetPasswordPage() {
   const { mode } = useThemeMode();
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -14,7 +17,9 @@ export default function ResetPasswordPage() {
     }
     return false;
   });
-  
+
+  const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,7 +31,13 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     setMounted(true);
     setIsDark(mode === 'dark');
-  }, [mode]);
+
+    // Get email and token from URL params
+    const emailParam = searchParams.get('email') || '';
+    const tokenParam = searchParams.get('token') || '';
+    setEmail(emailParam);
+    setToken(tokenParam);
+  }, [mode, searchParams]);
 
   const validatePassword = (password: string) => {
     if (!password) {
@@ -116,7 +127,7 @@ export default function ResetPasswordPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Mark all fields as touched
@@ -154,32 +165,47 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // Simulate loading for demo
+    if (!email || !token) {
+      alert('Invalid reset link. Please request a new password reset.');
+      return;
+    }
+
+    // Call API to reset password
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      alert(
-        `Password Reset Successfully!\n\nYour password has been updated.\n\n(This is UI demo only - No API integration)`
-      );
+    try {
+      await authService.resetPassword({
+        email,
+        token,
+        newPassword: password,
+        confirmNewPassword: confirmPassword,
+      });
+
+      alert('Password Reset Successfully!\n\nYour password has been updated.');
       // Redirect to login page
-      window.location.href = '/login';
-    }, 1000);
+      window.location.href = '/login-email';
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to reset password. Please try again.';
+      alert(errorMessage);
+      console.error('Reset password error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient"
     >
       {/* Decorative elements */}
-      <div 
+      <div
         className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"
       ></div>
-      <div 
+      <div
         className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"
       ></div>
 
       <div className="max-w-[420px] w-full space-y-8 relative z-10">
-        <div 
+        <div
           className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
         >
           <div className="text-center mb-6">
@@ -197,7 +223,7 @@ export default function ResetPasswordPage() {
                 />
               </svg>
             </div>
-            <h2 
+            <h2
               className="text-3xl font-bold mb-2 auth-title"
             >
               Reset Password

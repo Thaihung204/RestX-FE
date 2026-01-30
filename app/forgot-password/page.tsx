@@ -1,6 +1,7 @@
 "use client";
 
 import LoginButton from "@/components/auth/LoginButton";
+import authService from "@/lib/services/authService";
 import React, { useState } from "react";
 
 export default function ForgotPasswordPage() {
@@ -8,6 +9,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
 
   const validateEmail = (email: string) => {
@@ -73,28 +75,23 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    // Don't proceed if there are any errors
-    if (emailError) {
-      return;
-    }
-
-    // Check if email exists in database
+    // Call API to send reset link
     setLoading(true);
-    const emailExists = await checkEmailExists(email);
+    setSuccess(false);
 
-    if (!emailExists) {
-      setLoading(false);
-      setEmailError("This email is not registered in our system");
-      return;
-    }
-
-    // Simulate sending reset link
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await authService.requestPasswordReset(email);
+      setSuccess(true);
       alert(
-        `Password Reset Link Sent!\n\nEmail: ${email}\n\nPlease check your email for the reset link.\n\n(This is UI demo only - No API integration)`,
+        `Password Reset Link Sent!\n\nEmail: ${email}\n\nPlease check your email for the reset link.`
       );
-    }, 1000);
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to send reset link. Please try again.';
+      alert(errorMessage);
+      console.error('Forgot password error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -145,19 +142,14 @@ export default function ForgotPasswordPage() {
                 onChange={handleEmailChange}
                 onBlur={handleEmailBlur}
                 placeholder="your.email@example.com"
-                disabled={loading || checkingEmail}
+                disabled={loading}
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
                   borderColor:
                     emailTouched && emailError ? "#ef4444" : undefined,
                 }}
               />
-              {checkingEmail && (
-                <p className="mt-1 text-sm" style={{ color: "#6b7280" }}>
-                  Checking email...
-                </p>
-              )}
-              {emailTouched && emailError && !checkingEmail && (
+              {emailTouched && emailError && (
                 <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
                   {emailError}
                 </p>

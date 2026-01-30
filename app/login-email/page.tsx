@@ -3,10 +3,14 @@
 import LoginButton from "@/components/auth/LoginButton";
 import LoginHeader from "@/components/auth/LoginHeader";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import React, { useEffect, useState } from "react";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function LoginEmailPage() {
+  const router = useRouter();
+  const { login } = useAuth();
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
   // Get initial theme from localStorage to prevent flash
@@ -103,7 +107,7 @@ export default function LoginEmailPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Mark all fields as touched
@@ -141,14 +145,30 @@ export default function LoginEmailPage() {
       return;
     }
 
-    // Simulate loading for demo
+    // Call API login
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const user = await login({ email, password, rememberMe: remember });
+
+      // Redirect sau khi login thành công
+      console.log('Logged in user:', user);
+
+      // Redirect to dashboard or home page based on user role
+      if (user.role === 'admin') {
+        router.push('/admin');
+      } else if (user.role === 'shop') {
+        router.push('/staff');
+      } else {
+        router.push('/customer');
+      }
+
+    } catch (error: any) {
+      const errorMessage = error.message || 'Login failed. Please try again.';
+      alert(errorMessage);
+      console.error('Login error:', error);
+    } finally {
       setLoading(false);
-      alert(
-        `Login Form Submitted!\n\nEmail: ${email}\nRemember Me: ${remember}\n\n(This is UI demo only - No API integration)`,
-      );
-    }, 1000);
+    }
   };
 
   return (

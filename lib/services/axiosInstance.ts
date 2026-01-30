@@ -25,7 +25,9 @@ const axiosInstance = axios.create({
   baseURL: getInitialBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
+    'accept': '*/*',
   },
+  timeout: 30000, // 30 seconds timeout
 });
 
 // Update baseURL on client-side after hydration
@@ -52,6 +54,7 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Response Interceptor - Xử lý lỗi và refresh token
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -70,6 +73,7 @@ axiosInstance.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) throw new Error('No refresh token available');
 
+        // Call refresh token API
         const response = await axiosInstance.post(`/auth/refresh-token`, { refreshToken });
         if (response.data.success) {
           const { accessToken } = response.data.data;
