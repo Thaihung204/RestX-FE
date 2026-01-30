@@ -7,6 +7,4 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      # Internal API URLs for SSR - uses Docker container names
-      - INTERNAL_API_URL=http://web:5000/api
-      - INTERNAL_ADMIN_API_URL=http://admin:4999/api
+
