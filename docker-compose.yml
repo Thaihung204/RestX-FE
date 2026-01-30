@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   restx-frontend:
     image: hunghuynh5724/restx-frontend:latest
