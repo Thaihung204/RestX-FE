@@ -998,7 +998,9 @@
       "validation": {
         "phone_length": "Số điện thoại phải có đúng 10 chữ số",
         "phone_digits": "Số điện thoại chỉ được chứa chữ số",
-        "name_length": "Tên phải có ít nhất 2 ký tự"
+        "name_length": "Tên phải có ít nhất 2 ký tự",
+        "required_phone": "Vui lòng nhập số điện thoại của bạn",
+        "required_name": "Vui lòng nhập tên của bạn"
       },
       "alerts": {
         "submitted": "Đã gửi biểu mẫu đăng nhập!\n\nSố điện thoại: {{phone}}\nTên: {{name}}\nGhi nhớ: {{remember}}\n\n(Đây chỉ là bản demo giao diện - Chưa tích hợp API)"
@@ -1022,9 +1024,15 @@
       "validation": {
         "required_first_name": "Vui lòng nhập họ của bạn",
         "required_last_name": "Vui lòng nhập tên của bạn",
+        "required_email": "Vui lòng nhập địa chỉ email của bạn",
         "invalid_email": "Vui lòng nhập địa chỉ email hợp lệ",
+        "required_phone": "Vui lòng nhập số điện thoại của bạn",
         "invalid_phone": "Vui lòng nhập số điện thoại 10 chữ số hợp lệ",
-        "password_mismatch": "Mật khẩu không khớp"
+        "required_password": "Vui lòng nhập mật khẩu",
+        "required_confirm_password": "Vui lòng xác nhận mật khẩu của bạn",
+        "password_mismatch": "Mật khẩu không khớp",
+        "email_exists": "Email này đã được đăng ký",
+        "phone_exists": "Số điện thoại này đã được đăng ký"
       },
       "password_requirements": {
         "length": "Ít nhất 8 ký tự",
