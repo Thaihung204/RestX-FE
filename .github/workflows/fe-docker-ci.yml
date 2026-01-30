@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+      - RX-68-AuthenAPI
+  pull_request:
+    branches:
+      - main
+
 
 jobs:
   build-and-push:
