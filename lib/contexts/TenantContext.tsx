@@ -18,63 +18,90 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const fetchTenant = async () => {
+            const host = window.location.host; // e.g., demo.restx.food:3000
+            console.log('[TenantContext] Current host:', host);
+
+            // 1. Check for Landing domains (Skip API call)
+            if (
+                host === "restx.food" ||
+                host === "www.restx.food"
+            ) {
+                console.log('[TenantContext] Landing domain detected, skipping tenant fetch');
+                setLoading(false);
+                return;
+            }
+
+            // 2. Check for Admin domain (Skip tenant fetch, admin has its own context)
+            if (host === "admin.restx.food" || host.startsWith("admin.")) {
+                console.log('[TenantContext] Admin domain detected, skipping tenant fetch');
+                setLoading(false);
+                return;
+            }
+
+            // 3. Check for plain Development domains (Skip tenant fetch)
+            // Only skip for plain localhost, NOT for subdomains like demo.localhost
+            // Subdomains need to fetch tenant config (with hostname converted to production format)
+            const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
+            const isPlainLocalhost = hostWithoutPort === "localhost" || hostWithoutPort === "127.0.0.1";
+
+            if (isPlainLocalhost) {
+                console.log('[TenantContext] Plain localhost detected, skipping tenant fetch');
+                setLoading(false);
+                return;
+            }
+
+            // 4. Get hostname for tenant lookup
+            // Pass full hostname to API: demo.restx.food (not just "demo")
+            // For localhost development, construct equivalent hostname
+            let hostname = hostWithoutPort;
+
+            // For *.localhost in development, convert to equivalent production hostname
+            // e.g., demo.localhost -> demo.restx.food
+            if (hostname.endsWith(".localhost")) {
+                const subdomain = hostname.replace(".localhost", "");
+                hostname = `${subdomain}.restx.food`;
+            }
+
+            console.log('[TenantContext] Fetching tenant config for hostname:', hostname);
+
             try {
-                const host = window.location.host; // e.g., demo.restx.food:3000
+                // 5. Call API to get tenant config
+                const data = await tenantService.getTenantConfig(hostname);
+                console.log('[TenantContext] Tenant config response:', data);
 
-                // 1. Check for Landing or Admin domains (Skip API call)
-                if (
-                    host === "restx.food" ||
-                    host === "www.restx.food" ||
-                    host === "admin.restx.food" ||
-                    host.startsWith("admin.")
-                ) {
-                    setLoading(false);
-                    return;
-                }
+                if (data) {
+                    // Tenant found - set it and configure axios
+                    if (data.hostname) {
+                        const protocol = window.location.protocol;
+                        const apiUrl = `${protocol}//${data.hostname}/api`;
+                        console.log('[TenantContext] Setting axios base URL to:', apiUrl);
 
-                // 2. Extract Subdomain
-                // Ex: demo.restx.food -> demo
-                let subdomain = host;
-                if (host.includes(".restx.food")) {
-                    subdomain = host.split(".")[0];
-                } else if (host.includes("localhost") || host.includes("127.0.0.1")) {
-                    subdomain = host.split(".")[0];
-                }
-
-                // Remove port if present
-                if (subdomain.includes(":")) {
-                    subdomain = subdomain.split(":")[0];
-                }
-
-                const data = await tenantService.getTenantConfig(subdomain);
-
-                // 3. Handle Tenant Not Found (204)
-                if (!data) {
-                    // Redirect to landing page if tenant not found
-                    if (!host.includes("localhost") && !host.includes("127.0.0.1")) {
-                        window.location.href = "https://restx.food";
+                        const { setAxiosBaseUrl } = await import('@/lib/services/axiosInstance');
+                        setAxiosBaseUrl(apiUrl);
                     }
-                    setLoading(false);
-                    return;
+
+                    setTenant(data);
+                    console.log('[TenantContext] Tenant loaded successfully:', data.name);
+                } else {
+                    // Tenant not found (204 or null response)
+                    // DO NOT REDIRECT - show error state instead
+                    console.warn('[TenantContext] Tenant not found for hostname:', hostname);
+                    setError("Tenant not found");
                 }
-                if (data.hostname) {
+            } catch (err: any) {
+                // API error (401, 403, 500, network error, etc.)
+                // DO NOT REDIRECT - show error state instead
+                console.error("[TenantContext] Failed to load tenant config:", err);
 
-                    const protocol = window.location.protocol;
-                    const apiUrl = `${protocol}//${data.hostname}/api`;
-
-                    const { setAxiosBaseUrl } = await import('@/lib/services/axiosInstance');
-                    setAxiosBaseUrl(apiUrl);
-                }
-
-                setTenant(data);
-            } catch (err) {
-                console.error("Failed to load tenant config", err);
-                setError("Tenant not found");
-
-                // Do not redirect if running on localhost to avoid disrupting development
-                const host = window.location.host;
-                if (!host.includes("localhost") && !host.includes("127.0.0.1")) {
-                    window.location.href = "https://restx.food";
+                // Provide meaningful error messages
+                if (err.response?.status === 401 || err.response?.status === 403) {
+                    setError("Unable to load tenant configuration");
+                } else if (err.response?.status === 404) {
+                    setError("Tenant not found");
+                } else if (!err.response) {
+                    setError("Network error - please check your connection");
+                } else {
+                    setError("Failed to load tenant");
                 }
             } finally {
                 setLoading(false);

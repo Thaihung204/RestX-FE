@@ -999,7 +999,9 @@
       "validation": {
         "phone_length": "Phone number must be exactly 10 digits",
         "phone_digits": "Phone number must contain only digits",
-        "name_length": "Name must be at least 2 characters"
+        "name_length": "Name must be at least 2 characters",
+        "required_phone": "Please enter your phone number",
+        "required_name": "Please enter your name"
       },
       "alerts": {
         "submitted": "Login Form Submitted!\n\nPhone: {{phone}}\nName: {{name}}\nRemember Me: {{remember}}\n\n(This is UI demo only - No API integration)"
@@ -1023,9 +1025,15 @@
       "validation": {
         "required_first_name": "Please enter your first name",
         "required_last_name": "Please enter your last name",
+        "required_email": "Please enter your email address",
         "invalid_email": "Please enter a valid email address",
+        "required_phone": "Please enter your phone number",
         "invalid_phone": "Please enter a valid 10-digit phone number",
-        "password_mismatch": "Passwords do not match"
+        "required_password": "Please enter a password",
+        "required_confirm_password": "Please confirm your password",
+        "password_mismatch": "Passwords do not match",
+        "email_exists": "This email is already registered",
+        "phone_exists": "This phone number is already registered"
       },
       "password_requirements": {
         "length": "At least 8 characters",
