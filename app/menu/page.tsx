@@ -28,7 +28,7 @@ import {
   message,
   theme,
 } from "antd";
-import axios from "axios";
+import axiosInstance from "@/lib/services/axiosInstance";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -107,10 +107,9 @@ export default function MenuPage() {
     try {
       setLoading(true);
       setError(null);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
       // Fetch dishes
-      const dishesResponse = await axios.get(`${apiUrl}/dishes`, {
+      const dishesResponse = await axiosInstance.get(`/dishes`, {
         params: {
           page: 1,
           itemsPerPage: 100,
