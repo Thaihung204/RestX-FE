@@ -2,7 +2,7 @@
 
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
-import axios from "axios";
+import axiosInstance from "@/lib/services/axiosInstance";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -37,14 +37,12 @@ export default function MenuPage() {
   const fetchMenuItems = async () => {
     try {
       setLoading(true);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-      const response = await axios.get(`${apiUrl}/dishes`, {
+      const response = await axiosInstance.get(`/dishes`, {
         params: {
           page: 1,
           itemsPerPage: 100,
         },
-        timeout: 30000,
       });
 
       const data = response.data;
@@ -91,8 +89,8 @@ export default function MenuPage() {
         console.warn("Could not find array data in response:", data);
         setError("Data structure not supported");
       }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
+    } catch (err: any) {
+      if (err.response) {
         console.error("Axios error:", {
           message: err.message,
           code: err.code,
@@ -126,22 +124,18 @@ export default function MenuPage() {
     if (!itemToDelete) return;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      await axios.delete(`${apiUrl}/dishes/${itemToDelete.id}`);
+      await axiosInstance.delete(`/dishes/${itemToDelete.id}`);
 
       setShowDeleteConfirm(false);
       setItemToDelete(null);
 
       // Refresh the menu items list
       await fetchMenuItems();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to delete menu item:", err);
-      if (axios.isAxiosError(err)) {
-        const errorMsg = err.response?.data?.message || err.message;
-        alert(`Failed to delete item: ${errorMsg}`);
-      } else {
-        alert("Failed to delete item");
-      }
+      const errorMsg =
+        err.response?.data?.message || err.message || "Unknown error";
+      alert(`Failed to delete item: ${errorMsg}`);
       setShowDeleteConfirm(false);
       setItemToDelete(null);
     }
@@ -408,9 +402,7 @@ export default function MenuPage() {
                       suppressHydrationWarning>
                       {category === "All"
                         ? t("dashboard.menu.filter")
-                        : t(
-                            `${category}`,
-                          )}
+                        : t(`${category}`)}
                     </button>
                   ))}
                 </div>
