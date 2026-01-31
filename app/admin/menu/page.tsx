@@ -409,7 +409,7 @@ export default function MenuPage() {
                       {category === "All"
                         ? t("dashboard.menu.filter")
                         : t(
-                            `dashboard.menu.categories.${category.toLowerCase().replace(" ", "_")}`,
+                            `${category}`,
                           )}
                     </button>
                   ))}
