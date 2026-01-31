@@ -2,7 +2,7 @@
 
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
-import axios from "axios";
+import axiosInstance from "@/lib/services/axiosInstance";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -55,9 +55,8 @@ export default function MenuItemFormPage() {
   const fetchMenuItem = async () => {
     try {
       setLoading(true);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       console.log("Fetching menu item ID:", id);
-      const response = await axios.get(`${apiUrl}/dishes/${id}`);
+      const response = await axiosInstance.get(`/dishes/${id}`);
 
       const item = response.data;
       console.log("Fetched item data:", item);
@@ -87,23 +86,26 @@ export default function MenuItemFormPage() {
         quantity: item.quantity?.toString() || "0",
         isActive: item.isActive !== undefined ? item.isActive : true,
         isPopular: item.isPopular !== undefined ? item.isPopular : false,
-        isVegetarian: item.isVegetarian !== undefined ? item.isVegetarian : false,
+        isVegetarian:
+          item.isVegetarian !== undefined ? item.isVegetarian : false,
         isSpicy: item.isSpicy !== undefined ? item.isSpicy : false,
-        isBestSeller: item.isBestSeller !== undefined ? item.isBestSeller : false,
-        autoDisableByStock: item.autoDisableByStock !== undefined ? item.autoDisableByStock : false,
+        isBestSeller:
+          item.isBestSeller !== undefined ? item.isBestSeller : false,
+        autoDisableByStock:
+          item.autoDisableByStock !== undefined
+            ? item.autoDisableByStock
+            : false,
       });
 
       if (item.image || item.mainImageUrl) {
         setImagePreview(item.image || item.mainImageUrl);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to fetch menu item:", err);
-      if (axios.isAxiosError(err)) {
-        console.error("Error details:", {
-          status: err.response?.status,
-          data: err.response?.data,
-        });
-      }
+      console.error("Error details:", {
+        status: err.response?.status,
+        data: err.response?.data,
+      });
       setError("Failed to load menu item");
     } finally {
       setLoading(false);
@@ -116,8 +118,6 @@ export default function MenuItemFormPage() {
     try {
       setLoading(true);
       setError(null);
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
       // Prepare JSON payload (backend expects JSON, not FormData)
       const submitData = {
@@ -140,41 +140,28 @@ export default function MenuItemFormPage() {
 
       if (isNewItem) {
         // Create new item
-        const response = await axios.post(`${apiUrl}/dishes`, submitData, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await axiosInstance.post(`/dishes`, submitData);
         console.log("Menu item created successfully:", response.data);
       } else {
         // Update existing item
-        const response = await axios.put(`${apiUrl}/dishes/${id}`, submitData, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await axiosInstance.put(`/dishes/${id}`, submitData);
         console.log("Menu item updated successfully:", response.data);
       }
 
       router.push("/admin/menu");
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.error("API error details:", {
-          status: err.response?.status,
-          statusText: err.response?.statusText,
-          data: err.response?.data,
-          headers: err.response?.headers,
-        });
-        const errorMsg =
-          err.response?.data?.message ||
-          err.response?.data?.title ||
-          err.response?.data?.error ||
-          `Failed to save menu item (${err.response?.status})`;
-        setError(errorMsg);
-      } else {
-        console.error("Error:", err);
-        setError("An unexpected error occurred");
-      }
+    } catch (err: any) {
+      console.error("API error details:", {
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+        headers: err.response?.headers,
+      });
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.title ||
+        err.response?.data?.error ||
+        `Failed to save menu item (${err.response?.status || "Unknown"})`;
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
