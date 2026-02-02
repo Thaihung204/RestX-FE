@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import TenantBrandingSettings from "./components/TenantBrandingSettings";
+
 export default function SettingsPage() {
   const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState<
@@ -290,6 +292,8 @@ export default function SettingsPage() {
         {/* Appearance Settings */}
         {activeTab === "appearance" && (
           <div className="space-y-6">
+            <TenantBrandingSettings />
+
             <div
               className="rounded-xl p-6"
               style={{

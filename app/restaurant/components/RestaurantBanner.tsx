@@ -1,8 +1,11 @@
 'use client';
 
+import { useTenant } from '@/lib/contexts/TenantContext';
 import React from 'react';
 
 const RestaurantBanner: React.FC = () => {
+  const { tenant } = useTenant();
+
   return (
     <section
       style={{
@@ -19,8 +22,8 @@ const RestaurantBanner: React.FC = () => {
           height: '100%',
         }}>
         <img
-          src="/images/restaurant/banner.png"
-          alt="RestX Restaurant Banner"
+          src={tenant?.backgroundUrl || "/images/restaurant/banner.png"}
+          alt="Restaurant Banner"
           style={{
             width: '100%',
             height: '100%',
