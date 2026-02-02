@@ -419,6 +419,35 @@
       "title": "Table Management",
       "subtitle": "Manage restaurant tables and reservations",
       "add_table": "Add Table",
+      "add_area": "Add Area",
+      "add_area_modal": {
+        "title": "Add New Area",
+        "name_label": "Area Name",
+        "name_placeholder": "e.g. Roof Top",
+        "cancel": "Cancel",
+        "submit": "Add Area"
+      },
+      "add_table_modal": {
+        "title": "Create New Table",
+        "subtitle": "Add a new table to your restaurant layout",
+        "table_number": "Table Number",
+        "table_number_placeholder": "Enter table number",
+        "capacity": "Seating Capacity",
+        "capacity_placeholder": "Number of seats (1-20)",
+        "area": "Dining Area",
+        "cancel": "Cancel",
+        "submit": "Create Table",
+        "errors": {
+          "number_required": "Table number is required",
+          "capacity_min": "Minimum capacity is 1",
+          "capacity_max": "Maximum capacity is 20"
+        },
+        "areas": {
+          "vip": "VIP Section",
+          "indoor": "Indoor Dining",
+          "outdoor": "Outdoor Terrace"
+        }
+      },
       "stats": {
         "total_tables": "Total Tables",
         "available": "Available",

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface AddTableModalProps {
     open: boolean;
@@ -10,6 +11,7 @@ interface AddTableModalProps {
 }
 
 export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onAdd }) => {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({
         number: '',
         capacity: '4',
@@ -22,9 +24,9 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onA
         e.preventDefault();
         const newErrors: Record<string, string> = {};
 
-        if (!formData.number) newErrors.number = 'Table number is required';
-        if (parseInt(formData.capacity) < 1) newErrors.capacity = 'Minimum capacity is 1';
-        if (parseInt(formData.capacity) > 20) newErrors.capacity = 'Maximum capacity is 20';
+        if (!formData.number) newErrors.number = t('dashboard.tables.add_table_modal.errors.number_required');
+        if (parseInt(formData.capacity) < 1) newErrors.capacity = t('dashboard.tables.add_table_modal.errors.capacity_min');
+        if (parseInt(formData.capacity) > 20) newErrors.capacity = t('dashboard.tables.add_table_modal.errors.capacity_max');
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -112,10 +114,10 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onA
                                         </svg>
                                     </motion.div>
                                     <h2 style={{ margin: '0 0 8px 0', fontSize: 26, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
-                                        Create New Table
+                                        {t('dashboard.tables.add_table_modal.title')}
                                     </h2>
                                     <p style={{ margin: 0, fontSize: 14, color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.5 }}>
-                                        Add a new table to your restaurant layout
+                                        {t('dashboard.tables.add_table_modal.subtitle')}
                                     </p>
                                 </div>
                             </div>
@@ -138,7 +140,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onA
                                                 marginBottom: 8,
                                                 letterSpacing: '-0.01em',
                                             }}>
-                                                Table Number <span style={{ color: '#ff4d4f' }}>*</span>
+                                                {t('dashboard.tables.add_table_modal.table_number')} <span style={{ color: '#ff4d4f' }}>*</span>
                                             </label>
                                             <input
                                                 id="number"
@@ -150,7 +152,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onA
                                                     setFormData({ ...formData, number: e.target.value });
                                                     if (errors.number) setErrors({ ...errors, number: '' });
                                                 }}
-                                                placeholder="Enter table number"
+                                                placeholder={t('dashboard.tables.add_table_modal.table_number_placeholder')}
                                                 required
                                                 style={{
                                                     width: '100%',
@@ -192,7 +194,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onA
                                                 marginBottom: 8,
                                                 letterSpacing: '-0.01em',
                                             }}>
-                                                Seating Capacity <span style={{ color: '#ff4d4f' }}>*</span>
+                                                {t('dashboard.tables.add_table_modal.capacity')} <span style={{ color: '#ff4d4f' }}>*</span>
                                             </label>
                                             <input
                                                 id="capacity"
@@ -205,7 +207,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onA
                                                     setFormData({ ...formData, capacity: e.target.value });
                                                     if (errors.capacity) setErrors({ ...errors, capacity: '' });
                                                 }}
-                                                placeholder="Number of seats (1-20)"
+                                                placeholder={t('dashboard.tables.add_table_modal.capacity_placeholder')}
                                                 required
                                                 style={{
                                                     width: '100%',
@@ -247,7 +249,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onA
                                                 marginBottom: 8,
                                                 letterSpacing: '-0.01em',
                                             }}>
-                                                Dining Area <span style={{ color: '#ff4d4f' }}>*</span>
+                                                {t('dashboard.tables.add_table_modal.area')} <span style={{ color: '#ff4d4f' }}>*</span>
                                             </label>
                                             <div style={{ position: 'relative' }}>
                                                 <select
@@ -274,9 +276,9 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onA
                                                     onFocus={(e) => e.target.style.borderColor = '#FF380B'}
                                                     onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                                                 >
-                                                    <option value="VIP">VIP Section</option>
-                                                    <option value="Indoor">Indoor Dining</option>
-                                                    <option value="Outdoor">Outdoor Terrace</option>
+                                                    <option value="VIP">{t('dashboard.tables.add_table_modal.areas.vip')}</option>
+                                                    <option value="Indoor">{t('dashboard.tables.add_table_modal.areas.indoor')}</option>
+                                                    <option value="Outdoor">{t('dashboard.tables.add_table_modal.areas.outdoor')}</option>
                                                 </select>
                                                 <svg
                                                     style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
@@ -318,7 +320,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onA
                                                 letterSpacing: '-0.01em',
                                             }}
                                         >
-                                            Cancel
+                                            {t('dashboard.tables.add_table_modal.cancel')}
                                         </motion.button>
                                         <motion.button
                                             whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(255, 56, 11, 0.4)' }}
@@ -345,7 +347,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({ open, onClose, onA
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                                                 <path d="M12 5v14M5 12h14" />
                                             </svg>
-                                            Create Table
+                                            {t('dashboard.tables.add_table_modal.submit')}
                                         </motion.button>
                                     </motion.div>
                                 </form>

@@ -5,14 +5,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface DeleteConfirmModalProps {
     open: boolean;
-    tableName: string | number;
+    itemName: string | number;
+    itemType?: 'Table' | 'Area';
     onClose: () => void;
     onConfirm: () => void;
 }
 
 export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
     open,
-    tableName,
+    itemName,
+    itemType = 'Table',
     onClose,
     onConfirm
 }) => {
@@ -97,7 +99,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                                             color: 'var(--text)',
                                             letterSpacing: '-0.02em',
                                         }}>
-                                            Delete Table
+                                            Delete {itemType}
                                         </h2>
                                         <p style={{
                                             margin: 0,
@@ -144,7 +146,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                                                 color: '#ff4d4f',
                                                 letterSpacing: '-0.01em',
                                             }}>
-                                                Table {tableName}
+                                                {itemType} {itemName}
                                             </span>
                                         </div>
                                     </div>

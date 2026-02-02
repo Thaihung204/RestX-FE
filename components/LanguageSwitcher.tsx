@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Dropdown, Space } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
 import { useLanguage } from './I18nProvider';
 
 interface LanguageSwitcherProps {
@@ -8,90 +10,92 @@ interface LanguageSwitcherProps {
   className?: string;
 }
 
+const FlagVN = ({ className = "w-6 h-4", style }: { className?: string, style?: React.CSSProperties }) => (
+  <svg className={className} style={style} viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg">
+    <rect width="3" height="2" fill="#DA251D" />
+    <polygon points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836" fill="#FF0" />
+  </svg>
+);
+
+const FlagEN = ({ className = "w-6 h-4", style }: { className?: string, style?: React.CSSProperties }) => (
+  <svg className={className} style={style} viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+    <clipPath id="s">
+      <path d="M0,0 v30 h60 v-30 z" />
+    </clipPath>
+    <clipPath id="t">
+      <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
+    </clipPath>
+    <g clipPath="url(#s)">
+      <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+      <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t)" stroke="#C8102E" strokeWidth="4" />
+      <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
+      <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
+    </g>
+  </svg>
+);
+
 const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ style, className }) => {
   const { language, changeLanguage } = useLanguage();
-  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+
+  const items = [
+    {
+      key: 'vi',
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+          <FlagVN style={{ width: 24, height: 16, borderRadius: 2, objectFit: 'cover' }} />
+          <span style={{ fontWeight: 500 }}>Tiếng Việt</span>
+        </div>
+      ),
+    },
+    {
+      key: 'en',
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+          <FlagEN style={{ width: 24, height: 16, borderRadius: 2, objectFit: 'cover' }} />
+          <span style={{ fontWeight: 500 }}>English</span>
+        </div>
+      ),
+    },
+  ];
+
+  const CurrentFlag = language === 'vi' ? FlagVN : FlagEN;
 
   return (
-    <div className={`relative ${className || ''}`} style={style}>
-      <button
-        onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-        className="p-2 rounded-lg transition-colors group flex items-center gap-2"
+    <Dropdown
+      menu={{
+        items,
+        selectedKeys: [language],
+        onClick: ({ key }) => changeLanguage(key),
+      }}
+      trigger={['click']}
+      placement="bottomRight"
+      overlayStyle={{ minWidth: 160 }}
+    >
+      <Space
+        className={className}
         style={{
-          background: "var(--surface)",
-          color: "var(--text-muted)",
-          border: "1px solid var(--border)"
+          cursor: 'pointer',
+          padding: '6px 10px',
+          borderRadius: 8,
+          transition: 'all 0.2s',
+          border: '1px solid transparent',
+          ...style,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.04)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent';
         }}
       >
-        <img
-          src={language === 'vi' ? "https://flagcdn.com/w40/vn.png" : "https://flagcdn.com/w40/gb.png"}
-          alt={language}
-          className="w-6 h-4 object-cover rounded-[2px] shadow-sm"
-        />
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
-
-      {isLangMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-30"
-            onClick={() => setIsLangMenuOpen(false)}
-          />
-          <div
-            className="absolute top-full right-0 mt-2 w-40 rounded-xl shadow-lg border p-1 z-40 transition-all"
-            style={{
-              background: "var(--card)",
-              borderColor: "var(--border)",
-            }}
-          >
-            <button
-              onClick={() => {
-                changeLanguage("en");
-                setIsLangMenuOpen(false);
-              }}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === "en" ? "bg-orange-500/10 text-orange-500" : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              style={{ color: language === "en" ? undefined : "var(--text)" }}
-            >
-              <img
-                src="https://flagcdn.com/w40/gb.png"
-                alt="English"
-                className="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"
-              />
-              <span>English</span>
-            </button>
-            <button
-              onClick={() => {
-                changeLanguage("vi");
-                setIsLangMenuOpen(false);
-              }}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === "vi" ? "bg-orange-500/10 text-orange-500" : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              style={{ color: language === "vi" ? undefined : "var(--text)" }}
-            >
-              <img
-                src="https://flagcdn.com/w40/vn.png"
-                alt="Tiếng Việt"
-                className="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"
-              />
-              <span>Tiếng Việt</span>
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+        <CurrentFlag style={{ width: 24, height: 16, borderRadius: 2, objectFit: 'cover', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
+        <span style={{ fontSize: 14, fontWeight: 500, color: style?.color || 'var(--text)' }}>
+          {language.toUpperCase()}
+        </span>
+        <DownOutlined style={{ fontSize: 10, color: style?.color ? 'rgba(255,255,255,0.7)' : 'var(--text-muted)', marginLeft: 2 }} />
+      </Space>
+    </Dropdown>
   );
 };
 

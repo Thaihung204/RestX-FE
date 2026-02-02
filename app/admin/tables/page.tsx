@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { TableMap2D } from "./components/TableMap2D";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { AddTableModal } from "./components/AddTableModal";
+import { AddAreaModal } from "./components/AddAreaModal";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 
 interface Table {
@@ -21,7 +23,7 @@ interface Table {
 type ViewMode = "grid" | "map";
 
 export default function TablesPage() {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -97,21 +99,72 @@ export default function TablesPage() {
     },
   };
 
+  /* State for Map Layout - Added availableAreas */
+  const [availableAreas, setAvailableAreas] = useState<string[]>(["VIP", "Indoor", "Outdoor"]);
+  /* Add Area Modal State */
+  const [addAreaModalOpen, setAddAreaModalOpen] = useState(false);
+  const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
+
   // Convert tables to Map2D format
-  const map2DTables: Map2DTableData[] = tables.map((table, index) => ({
-    id: table.id,
-    tenantId: 'tenant-1',
-    name: `Table ${table.number}`,
-    seats: table.capacity,
-    status: table.status === 'available' ? 'AVAILABLE' :
-      table.status === 'occupied' ? 'OCCUPIED' :
-        table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
-    area: table.area,
-    position: {
-      x: 40 + (index % 5) * 130,
-      y: 40 + Math.floor(index / 5) * 130
-    },
-  }));
+  // Calculate map layout (positions and markers) with useMemo
+  const { map2DTables, mapMarkers, mapHeight, zones } = useMemo(() => {
+    const markers: { id: string; label: string; position: { x: number; y: number }; style?: React.CSSProperties }[] = [];
+    const mappedTables: Map2DTableData[] = [];
+    const calculatedZones: { id: string; label: string; y: number; height: number }[] = [];
+
+    // Use availableAreas for order and completeness
+    const areas = availableAreas;
+
+    let currentY = 40;
+    const itemsPerRow = 5;
+    const itemWidth = 130;
+    const itemHeight = 130;
+
+    areas.forEach(area => {
+      // Find all tables in this area
+      const areaTables = tables.filter(t => t.area === area);
+
+      const rows = Math.max(1, Math.ceil(areaTables.length / itemsPerRow));
+      const sectionHeight = rows * itemHeight + 60; // 60px padding/header
+
+      // Add Zone Boundary
+      calculatedZones.push({
+        id: area,
+        label: t(`dashboard.table_status.areas.${area.toLowerCase()}`, { defaultValue: area }),
+        y: currentY - 20, // Start slightly above text
+        height: sectionHeight + 20
+      });
+
+      // Position tables for this area
+      areaTables.forEach((table, index) => {
+        mappedTables.push({
+          id: table.id,
+          tenantId: 'tenant-1',
+          name: `Table ${table.number}`,
+          seats: table.capacity,
+          status: table.status === 'available' ? 'AVAILABLE' :
+            table.status === 'occupied' ? 'OCCUPIED' :
+              table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
+          area: table.area,
+          position: {
+            x: 40 + (index % itemsPerRow) * itemWidth,
+            y: currentY + 40 + Math.floor(index / itemsPerRow) * itemHeight
+          },
+        });
+      });
+
+      // Update Y for next area
+      currentY += sectionHeight + 40; // Gap between areas
+    });
+
+    return {
+      map2DTables: mappedTables,
+      mapMarkers: markers,
+      mapHeight: Math.max(600, currentY + 50),
+      zones: calculatedZones
+    };
+  }, [tables, t, availableAreas]);
+
 
 
   // Map2D handlers
@@ -125,8 +178,88 @@ export default function TablesPage() {
   };
 
   const handleMap2DTablePositionChange = (tableId: string, position: { x: number; y: number }) => {
-    console.log(`Table ${tableId} moved to`, position);
-    // You can save the position to backend here
+    // Calculate center of the table (assuming ~100px height)
+    const yCenter = position.y + 50;
+
+    // Check if dropped into a different zone using center point
+    const droppedZone = zones.find(z => yCenter >= z.y && yCenter <= z.y + z.height);
+
+    if (droppedZone) {
+      const table = tables.find(t => t.id === tableId);
+      if (table && table.area !== droppedZone.id) {
+        // Update table area
+        setTables(prev => prev.map(t =>
+          t.id === tableId ? { ...t, area: droppedZone.id as any } : t
+        ));
+        console.log(`Moved table ${tableId} to ${droppedZone.id}`);
+      }
+    }
+  };
+
+  const handleZoneReorder = (startIndex: number, endIndex: number) => {
+    const newAreas = [...availableAreas];
+    const [removed] = newAreas.splice(startIndex, 1);
+    newAreas.splice(endIndex, 0, removed);
+    setAvailableAreas(newAreas);
+  };
+
+  const handleZoneRename = (oldName: string, newName: string) => {
+    if (oldName === newName) return;
+
+    // Update availableAreas
+    setAvailableAreas(prev => prev.map(a => a === oldName ? newName : a));
+
+    // Update tables in that area
+    setTables(prev => prev.map(t =>
+      t.area === oldName ? { ...t, area: newName as any } : t
+    ));
+  };
+
+  const handleTableMerge = (sourceTableId: string, targetTableId: string) => {
+    setTables(prev => {
+      const sourceTable = prev.find(t => t.id === sourceTableId);
+      const targetTable = prev.find(t => t.id === targetTableId);
+
+      if (!sourceTable || !targetTable) return prev;
+
+      // Create merged table
+      const newCapacity = sourceTable.capacity + targetTable.capacity;
+
+      // Remove source table and update target table
+      return prev
+        .filter(t => t.id !== sourceTableId)
+        .map(t => t.id === targetTableId ? { ...t, capacity: newCapacity } : t);
+    });
+  };
+
+  const handleZoneDelete = (zoneId: string) => {
+    if (availableAreas.length <= 1) {
+      alert(t("Cannot delete the last area."));
+      return;
+    }
+    setZoneToDelete(zoneId);
+  };
+
+  const confirmDeleteZone = () => {
+    if (zoneToDelete) {
+      // Remove area
+      setAvailableAreas(prev => prev.filter(area => area !== zoneToDelete));
+
+      // Move tables to the first available area (or default 'Indoor')
+      const fallbackArea = availableAreas.find(a => a !== zoneToDelete) || 'Indoor';
+      setTables(prev => prev.map(t =>
+        t.area === zoneToDelete ? { ...t, area: fallbackArea as any } : t
+      ));
+
+      setZoneToDelete(null);
+    }
+  };
+
+  const handleAddArea = (name: string) => {
+    if (!availableAreas.includes(name)) {
+      setAvailableAreas([...availableAreas, name]);
+      setAddAreaModalOpen(false);
+    }
   };
 
   // CRUD Handlers
@@ -177,7 +310,6 @@ export default function TablesPage() {
     <div className="flex-1 flex flex-col h-full bg-[var(--bg-base)]">
       <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="space-y-6">
-          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
@@ -187,25 +319,57 @@ export default function TablesPage() {
                 {t("dashboard.tables.subtitle")}
               </p>
             </div>
-            <button
-              onClick={() => setAddModalOpen(true)}
-              className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-              style={{ background: '#FF380B' }}
-              suppressHydrationWarning>
-              <svg
-                className="w-5 h-5 inline-block mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              {t("dashboard.tables.add_table")}
-            </button>
+            <div className="flex gap-2">
+              <div className="flex items-center bg-[var(--card)] p-1 rounded-lg border border-[var(--border)]">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-2 rounded-md transition-all ${viewMode === "grid"
+                    ? "bg-[var(--bg-base)] shadow-sm text-[var(--text)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                    }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode("map")}
+                  className={`p-2 rounded-md transition-all ${viewMode === "map"
+                    ? "bg-[var(--bg-base)] shadow-sm text-[var(--text)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                    }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                </button>
+              </div>
+              <button
+                onClick={() => setAddAreaModalOpen(true)}
+                className="px-4 py-2 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium transition-all hover:bg-[var(--bg-base)]"
+              >
+                + {t("dashboard.tables.add_area")}
+              </button>
+              <button
+                onClick={() => setAddModalOpen(true)}
+                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                style={{ background: '#FF380B' }}
+                suppressHydrationWarning>
+                <svg
+                  className="w-5 h-5 inline-block mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                {t("dashboard.tables.add_table")}
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
@@ -340,64 +504,54 @@ export default function TablesPage() {
             </div>
           </div>
 
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
-              View:
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "grid" ? "shadow-sm" : ""
-                  }`}
-                style={{
-                  background: viewMode === "grid" ? '#FF380B' : 'var(--card)',
-                  color: viewMode === "grid" ? '#fff' : 'var(--text-muted)',
-                  border: viewMode === "grid" ? 'none' : '1px solid var(--border)',
+          {/* 2D Map View */}
+          {viewMode === "map" && (
+            <div>
+              <TableMap2D
+                tables={map2DTables}
+                onTableClick={handleMap2DTableClick}
+                onTablePositionChange={handleMap2DTablePositionChange}
+                height={mapHeight}
+                showGrid={true}
+                selectedTableId={selectedTable?.id}
+                mapMarkers={mapMarkers}
+                zones={zones}
+                onZoneReorder={handleZoneReorder}
+                onZoneRename={handleZoneRename}
+                onTableMerge={handleTableMerge}
+                onZoneDelete={handleZoneDelete}
+                filter={{
+                  floor: undefined,
+                  status: 'all'
                 }}
-              >
-                <svg
-                  className="w-4 h-4 inline-block mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-                Grid View
-              </button>
-              <button
-                onClick={() => setViewMode("map")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "map" ? "shadow-sm" : ""
-                  }`}
-                style={{
-                  background: viewMode === "map" ? '#FF380B' : 'var(--card)',
-                  color: viewMode === "map" ? '#fff' : 'var(--text-muted)',
-                  border: viewMode === "map" ? 'none' : '1px solid var(--border)',
+                renderTableContent={(table) => {
+                  const hasOrder = table.status === 'OCCUPIED' || table.status === 'RESERVED';
+                  return (
+                    hasOrder && (
+                      <div style={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        background: '#FF380B',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: 20,
+                        height: 20,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}>
+                        !
+                      </div>
+                    )
+                  );
                 }}
-              >
-                <svg
-                  className="w-4 h-4 inline-block mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                  />
-                </svg>
-                2D Map
-              </button>
+              />
             </div>
-          </div>
+          )}
 
           {/* Tables Grid */}
           {viewMode === "grid" && (
@@ -525,19 +679,6 @@ export default function TablesPage() {
               </div>
             </div>
           )}
-
-          {/* 2D Map View */}
-          {viewMode === "map" && (
-            <div>
-              <TableMap2D
-                tables={map2DTables}
-                onTableClick={handleMap2DTableClick}
-                onTablePositionChange={handleMap2DTablePositionChange}
-                height={600}
-                showGrid={true}
-              />
-            </div>
-          )}
         </div>
       </main>
 
@@ -560,13 +701,32 @@ export default function TablesPage() {
         onAdd={handleAddTable}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Add Area Modal */}
+      <AddAreaModal
+        open={addAreaModalOpen}
+        onClose={() => setAddAreaModalOpen(false)}
+        onAdd={handleAddArea}
+      />
+
+
+
+      {/* Delete Confirmation Modal for Table */}
       <DeleteConfirmModal
         open={deleteConfirmOpen}
-        tableName={selectedTable?.number || 0}
+        itemName={selectedTable?.number || 0}
+        itemType="Table"
         onClose={() => setDeleteConfirmOpen(false)}
         onConfirm={confirmDelete}
       />
-    </div >
+
+      {/* Delete Confirmation Modal for Zone */}
+      <DeleteConfirmModal
+        open={!!zoneToDelete}
+        itemName={zoneToDelete || ''}
+        itemType="Area"
+        onClose={() => setZoneToDelete(null)}
+        onConfirm={confirmDeleteZone}
+      />
+    </div>
   );
 }

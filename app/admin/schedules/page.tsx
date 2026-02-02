@@ -4,8 +4,6 @@ import StaffListModal from "@/components/admin/schedule/StaffListModal";
 import TimeSlotGrid from "@/components/admin/schedule/TimeSlotGrid";
 import TimeSlotManagementModal from "@/components/admin/schedule/TimeSlotManagementModal";
 import WeekNavigator from "@/components/admin/schedule/WeekNavigator";
-import DashboardHeader from "@/components/layout/DashboardHeader";
-import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import {
   ScheduleCell,
   Staff,
@@ -117,9 +115,9 @@ export default function SchedulesPage() {
       cells: weekSchedule.cells.map((c) =>
         c.date === selectedCell.date && c.timeSlotId === selectedCell.timeSlotId
           ? {
-              ...c,
-              assignments: c.assignments.filter((a) => a.id !== assignmentId),
-            }
+            ...c,
+            assignments: c.assignments.filter((a) => a.id !== assignmentId),
+          }
           : c,
       ),
     });
@@ -137,97 +135,93 @@ export default function SchedulesPage() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ background: "var(--bg-base)", color: "var(--text)" }}>
-      <DashboardSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <DashboardHeader />
-        <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
-          <div className="max-w-[1600px] mx-auto space-y-6">
-            {/* Content Section */}
-            <div className="space-y-6 animate-fadeIn">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="p-3 rounded-xl shadow-sm border"
-                    style={{ background: "var(--card)", borderColor: "var(--border)" }}
-                  >
-                    <ScheduleOutlined
-                      style={{ fontSize: "24px", color: "#f97316" }}
-                    />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text)" }}>
-                      {t("schedule.title")}
-                    </h2>
-                    <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                      {t("schedule.subtitle")}
-                    </p>
-                  </div>
+    <div className="flex-1 flex flex-col h-full bg-[var(--bg-base)]">
+      <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+        <div className="max-w-[1600px] mx-auto space-y-6">
+          {/* Content Section */}
+          <div className="space-y-6 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className="p-3 rounded-xl shadow-sm border"
+                  style={{ background: "var(--card)", borderColor: "var(--border)" }}
+                >
+                  <ScheduleOutlined
+                    style={{ fontSize: "24px", color: "#f97316" }}
+                  />
                 </div>
-                <div className="flex items-center gap-3">
-                  <Button
-                    icon={<SettingOutlined />}
-                    size="large"
-                    onClick={() => setIsManageSlotsOpen(true)}
-                    className="shadow-sm border"
-                    style={{ 
-                      background: "var(--card)", 
-                      borderColor: "var(--border)",
-                      color: "var(--text)" 
-                    }}
-                  >
-                    {t("schedule.manage_time_slots")}
-                  </Button>
-                  <Button
-                    icon={<DownloadOutlined />}
-                    size="large"
-                    onClick={handleExport}
-                    className="shadow-sm border"
-                    style={{ 
-                      background: "var(--card)", 
-                      borderColor: "var(--border)",
-                      color: "var(--text)" 
-                    }}
-                  >
-                    {t("schedule.export_schedule")}
-                  </Button>
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text)" }}>
+                    {t("schedule.title")}
+                  </h2>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                    {t("schedule.subtitle")}
+                  </p>
                 </div>
               </div>
-
-              <WeekNavigator
-                currentWeek={currentWeek}
-                onWeekChange={setCurrentWeek}
-              />
-
-              {loading ? (
-                <div 
-                  className="min-h-[400px] rounded-xl flex items-center justify-center border shadow-sm"
-                  style={{ background: "var(--card)", borderColor: "var(--border)" }}
+              <div className="flex items-center gap-3">
+                <Button
+                  icon={<SettingOutlined />}
+                  size="large"
+                  onClick={() => setIsManageSlotsOpen(true)}
+                  className="shadow-sm border"
+                  style={{
+                    background: "var(--card)",
+                    borderColor: "var(--border)",
+                    color: "var(--text)"
+                  }}
                 >
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                    <p className="font-medium" style={{ color: "var(--text-muted)" }}>
-                      Loading schedule...
-                    </p>
-                  </div>
-                </div>
-              ) : weekSchedule ? (
-                <TimeSlotGrid
-                  weekSchedule={weekSchedule}
-                  onCellClick={handleCellClick}
-                />
-              ) : (
-                <div 
-                  className="min-h-[300px] rounded-xl p-12 text-center border"
-                  style={{ background: "var(--card)", borderColor: "var(--border)" }}
+                  {t("schedule.manage_time_slots")}
+                </Button>
+                <Button
+                  icon={<DownloadOutlined />}
+                  size="large"
+                  onClick={handleExport}
+                  className="shadow-sm border"
+                  style={{
+                    background: "var(--card)",
+                    borderColor: "var(--border)",
+                    color: "var(--text)"
+                  }}
                 >
-                  <p style={{ color: "var(--text-muted)" }}>No schedule data available</p>
-                </div>
-              )}
+                  {t("schedule.export_schedule")}
+                </Button>
+              </div>
             </div>
+
+            <WeekNavigator
+              currentWeek={currentWeek}
+              onWeekChange={setCurrentWeek}
+            />
+
+            {loading ? (
+              <div
+                className="min-h-[400px] rounded-xl flex items-center justify-center border shadow-sm"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}
+              >
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                  <p className="font-medium" style={{ color: "var(--text-muted)" }}>
+                    Loading schedule...
+                  </p>
+                </div>
+              </div>
+            ) : weekSchedule ? (
+              <TimeSlotGrid
+                weekSchedule={weekSchedule}
+                onCellClick={handleCellClick}
+              />
+            ) : (
+              <div
+                className="min-h-[300px] rounded-xl p-12 text-center border"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}
+              >
+                <p style={{ color: "var(--text-muted)" }}>No schedule data available</p>
+              </div>
+            )}
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
 
       {selectedCell && (
         <StaffListModal

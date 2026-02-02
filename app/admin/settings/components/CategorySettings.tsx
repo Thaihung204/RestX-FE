@@ -151,7 +151,7 @@ export default function CategorySettings() {
                                         </span>
                                     </td>
                                     <td className="p-4 text-right">
-                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex justify-end gap-2">
                                             <button
                                                 onClick={() => handleOpenModal(cat)}
                                                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-blue-500 hover:text-blue-600"

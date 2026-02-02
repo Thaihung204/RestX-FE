@@ -19,6 +19,8 @@ interface DraggableTableProps {
     table: TableData;
     onDragEnd: (tableId: string, newPosition: { x: number; y: number }) => void;
     onClick: (table: TableData) => void;
+    draggable?: boolean;
+    renderContent?: (table: TableData) => React.ReactNode;
 }
 
 const STATUS_CONFIG = {
@@ -52,13 +54,15 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
     table,
     onDragEnd,
     onClick,
+    draggable = true,
+    renderContent,
 }) => {
     const statusStyle = STATUS_CONFIG[table.status];
     const [isDragging, setIsDragging] = React.useState(false);
 
     return (
         <motion.div
-            drag
+            drag={draggable}
             dragMomentum={false}
             dragElastic={0}
             onDragStart={() => setIsDragging(true)}
@@ -87,7 +91,7 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
                 position: 'absolute',
                 width: 100,
                 height: 100,
-                cursor: table.status === 'DISABLED' ? 'not-allowed' : 'grab',
+                cursor: (draggable && table.status !== 'DISABLED') ? 'grab' : 'pointer',
                 userSelect: 'none',
                 touchAction: 'none',
                 zIndex: 1,
@@ -109,19 +113,7 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
                     position: 'relative',
                 }}
             >
-                {/* Status indicator */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: 4,
-                        right: 4,
-                        width: 12,
-                        height: 12,
-                        borderRadius: '50%',
-                        backgroundColor: statusStyle.color,
-                        boxShadow: `0 0 8px ${statusStyle.color}`,
-                    }}
-                />
+
 
                 {/* Table icon */}
                 <svg
@@ -164,6 +156,7 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
                     </svg>
                     {table.seats}
                 </div>
+                {renderContent?.(table)}
             </div>
         </motion.div>
     );
