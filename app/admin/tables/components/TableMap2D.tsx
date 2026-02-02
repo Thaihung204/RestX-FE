@@ -296,9 +296,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    if (confirm("Are you sure you want to delete this zone? Tables will be moved to default area.")) {
-                                                        onZoneDelete(zone.id);
-                                                    }
+                                                    onZoneDelete(zone.id);
                                                 }}
                                                 style={{
                                                     background: 'transparent',

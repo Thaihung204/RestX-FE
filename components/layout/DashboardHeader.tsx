@@ -101,23 +101,36 @@ export default function DashboardHeader() {
             <div className="relative">
               <button
                 onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                className="p-2 rounded-lg transition-colors group flex items-center gap-2"
+                className="p-2 rounded-lg transition-colors group flex items-center gap-2.5 h-10"
                 style={{ background: "var(--surface)", color: "var(--text-muted)" }}>
-                <svg
-                  className="w-6 h-6 group-hover:text-orange-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-sm font-medium uppercase group-hover:text-orange-500">
+                {language === 'vi' ? (
+                  <svg className="w-6 h-4 rounded-[2px] shadow-sm" viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="3" height="2" fill="#DA251D" />
+                    <polygon points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836" fill="#FF0" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-4 rounded-[2px] shadow-sm" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+                    <clipPath id="s">
+                      <path d="M0,0 v30 h60 v-30 z" />
+                    </clipPath>
+                    <clipPath id="t">
+                      <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
+                    </clipPath>
+                    <g clipPath="url(#s)">
+                      <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
+                      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+                      <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t)" stroke="#C8102E" strokeWidth="4" />
+                      <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
+                      <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
+                    </g>
+                  </svg>
+                )}
+                <span className="text-sm font-medium uppercase group-hover:text-orange-500 leading-none pt-[1px]">
                   {language}
                 </span>
+                <svg className="w-3 h-3 text-[var(--text-muted)] opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
 
               {isLangMenuOpen && (
@@ -127,7 +140,7 @@ export default function DashboardHeader() {
                     onClick={() => setIsLangMenuOpen(false)}
                   />
                   <div
-                    className="absolute top-full right-0 mt-2 w-32 rounded-xl shadow-lg border p-1 z-40 transition-all"
+                    className="absolute top-full right-0 mt-2 w-40 rounded-xl shadow-lg border p-1 z-40 transition-all"
                     style={{
                       background: "var(--card)",
                       borderColor: "var(--border)",
@@ -137,20 +150,49 @@ export default function DashboardHeader() {
                         changeLanguage("en");
                         setIsLangMenuOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${language === "en" ? "bg-orange-500/10 text-orange-500" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === "en" ? "bg-orange-500/10 text-orange-500" : "hover:bg-[var(--bg-base)]"
                         }`}
                       style={{ color: language === "en" ? undefined : "var(--text)" }}>
-                      <span className="font-mono font-bold text-xs bg-[var(--surface)] px-1.5 py-0.5 rounded border border-[var(--border)]">EN</span> English
+                      <svg className="w-6 h-4 rounded-[2px] shadow-sm flex-shrink-0" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+                        <clipPath id="s">
+                          <path d="M0,0 v30 h60 v-30 z" />
+                        </clipPath>
+                        <clipPath id="t">
+                          <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
+                        </clipPath>
+                        <g clipPath="url(#s)">
+                          <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
+                          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+                          <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t)" stroke="#C8102E" strokeWidth="4" />
+                          <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
+                          <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
+                        </g>
+                      </svg>
+                      <span className="font-medium">English</span>
+                      {language === "en" && (
+                        <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
                     </button>
                     <button
                       onClick={() => {
                         changeLanguage("vi");
                         setIsLangMenuOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${language === "vi" ? "bg-orange-500/10 text-orange-500" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === "vi" ? "bg-orange-500/10 text-orange-500" : "hover:bg-[var(--bg-base)]"
                         }`}
                       style={{ color: language === "vi" ? undefined : "var(--text)" }}>
-                      <span className="font-mono font-bold text-xs bg-[var(--surface)] px-1.5 py-0.5 rounded border border-[var(--border)]">VI</span> Tiếng Việt
+                      <svg className="w-6 h-4 rounded-[2px] shadow-sm flex-shrink-0" viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="3" height="2" fill="#DA251D" />
+                        <polygon points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836" fill="#FF0" />
+                      </svg>
+                      <span className="font-medium">Tiếng Việt</span>
+                      {language === "vi" && (
+                        <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
                     </button>
                   </div>
                 </>

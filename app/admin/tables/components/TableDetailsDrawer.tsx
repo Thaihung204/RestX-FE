@@ -104,25 +104,27 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                         }}
                     />
 
-                    {/* Drawer */}
+                    {/* Modal */}
                     <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        initial={{ scale: 0.9, opacity: 0, x: "-50%", y: "-50%" }}
+                        animate={{ scale: 1, opacity: 1, x: "-50%", y: "-50%" }}
+                        exit={{ scale: 0.9, opacity: 0, x: "-50%", y: "-50%" }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                         style={{
                             position: 'fixed',
-                            top: 0,
-                            right: 0,
-                            bottom: 0,
-                            width: '480px',
+                            top: '50%',
+                            left: '50%',
+                            width: '520px',
                             maxWidth: '90vw',
+                            maxHeight: '90vh',
                             background: 'var(--card)',
-                            boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.3)',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
                             zIndex: 1000,
                             display: 'flex',
                             flexDirection: 'column',
-                            borderLeft: '1px solid var(--border)',
+                            borderRadius: '16px',
+                            border: '1px solid var(--border)',
+                            overflow: 'hidden',
                         }}
                     >
                         {/* Header */}
