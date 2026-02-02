@@ -339,7 +339,15 @@
         "staff": "Nhân viên",
         "schedules": "Lịch làm việc",
         "settings": "Cài đặt",
+        "manage": "Quản lý",
         "help": "Trợ giúp"
+      }
+    },
+    "manage": {
+      "title": "Quản lý",
+      "subtitle": "Quản lý danh mục và cấu hình nhà hàng",
+      "tabs": {
+        "categories": "Danh mục"
       }
     },
     "header": {

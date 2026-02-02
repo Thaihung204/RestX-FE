@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import CategorySettings from "./components/CategorySettings";
 
 export default function SettingsPage() {
   const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState<
-    "general" | "appearance" | "notifications" | "security" | "categories"
+    "general" | "appearance" | "notifications" | "security"
   >("general");
 
   return (
@@ -46,11 +45,7 @@ export default function SettingsPage() {
               label: t("dashboard.settings.tabs.security"),
               icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
             },
-            {
-              id: "categories" as const,
-              label: t("dashboard.settings.tabs.categories"),
-              icon: "M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z",
-            },
+
           ].map((tab) => (
             <button
               key={tab.id}
@@ -655,10 +650,6 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Categories Settings */}
-        {activeTab === "categories" && (
-          <CategorySettings />
-        )}
 
         {/* Save Button */}
         <div className="flex justify-end gap-3 pt-6">

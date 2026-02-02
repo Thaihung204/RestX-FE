@@ -339,7 +339,15 @@
         "staff": "Staff",
         "schedules": "Schedules",
         "settings": "Settings",
+        "manage": "Manage",
         "help": "Help"
+      }
+    },
+    "manage": {
+      "title": "Manage",
+      "subtitle": "Manage your restaurant categories and configurations",
+      "tabs": {
+        "categories": "Categories"
       }
     },
     "header": {
