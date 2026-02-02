@@ -39,6 +39,9 @@ export function TenantGuard({ children, strict = true }: TenantGuardProps) {
         ? window.location.host
         : undefined;
 
+    // Check if we're in development mode
+    const isDevelopment = process.env.NODE_ENV === "development";
+
     // If not strict mode, always render children
     if (!strict) {
         return <>{children}</>;
@@ -47,6 +50,13 @@ export function TenantGuard({ children, strict = true }: TenantGuardProps) {
     // Show loading state
     if (loading) {
         return <TenantLoading />;
+    }
+
+    // In development mode, allow rendering even without tenant config
+    // This helps developers work on the UI without needing a running backend
+    if (isDevelopment && (error || !tenant)) {
+        console.warn('[TenantGuard] Development mode: Rendering without tenant config due to error:', error);
+        return <>{children}</>;
     }
 
     // Show error state (NO REDIRECT)

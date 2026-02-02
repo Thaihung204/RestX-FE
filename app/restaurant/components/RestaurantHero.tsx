@@ -1,5 +1,6 @@
 'use client';
 
+import { useTenant } from '@/lib/contexts/TenantContext'; // Ensure this path is correct
 import { Button, Typography } from 'antd';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +9,7 @@ const { Title, Text } = Typography;
 
 const RestaurantHero: React.FC = () => {
   const { t } = useTranslation();
+  const { tenant } = useTenant();
 
   return (
     <section
@@ -32,8 +34,8 @@ const RestaurantHero: React.FC = () => {
           zIndex: 1,
         }}>
         <img
-          src="/images/restaurant/banner.png"
-          alt="RestX Restaurant Banner"
+          src={tenant?.backgroundUrl || "/images/restaurant/banner.png"} // Use tenant background
+          alt="Restaurant Banner"
           style={{
             width: '100%',
             height: '100%',

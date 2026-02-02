@@ -1,9 +1,10 @@
 'use client';
 
+import { useTenant } from "@/lib/contexts/TenantContext";
 import {
-    FacebookFilled,
-    LinkedinFilled,
-    YoutubeFilled,
+  FacebookFilled,
+  LinkedinFilled,
+  YoutubeFilled,
 } from '@ant-design/icons';
 import { Col, Divider, Row, Space, Typography } from 'antd';
 import { motion } from 'framer-motion';
@@ -22,9 +23,9 @@ interface FooterColumn {
 }
 
 
-
 const Footer: React.FC = () => {
   const { t } = useTranslation();
+  const { tenant } = useTenant();
   const currentYear = new Date().getFullYear();
 
   const footerColumns: FooterColumn[] = [
@@ -133,14 +134,14 @@ const Footer: React.FC = () => {
                       }}
                     >
                       <img
-                        src="/images/logo/restx-removebg-preview.png"
-                        alt="RestX Logo"
+                        src={tenant?.logoUrl || "/images/logo/restx-removebg-preview.png"}
+                        alt="Restaurant Logo"
                         className="app-logo-img"
                         style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
                       />
                     </div>
                     <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
-                      Rest<span style={{ color: '#FF380B' }}>X</span>
+                      {tenant?.name || <>Rest<span style={{ color: '#FF380B' }}>X</span></>}
                     </Title>
                   </div>
 

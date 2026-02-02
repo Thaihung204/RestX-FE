@@ -3,6 +3,7 @@
 import ThemeToggle from '@/app/components/ThemeToggle';
 import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTenant } from "@/lib/contexts/TenantContext";
 import {
   CloseOutlined,
   DownOutlined,
@@ -19,6 +20,7 @@ import Navbar from './Navbar';
 
 const RestaurantHeader: React.FC = () => {
   const { t } = useTranslation();
+  const { tenant } = useTenant();
   const { mode } = useThemeMode();
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -47,15 +49,15 @@ const RestaurantHeader: React.FC = () => {
   }, []);
 
   const menuItems = [
-    { 
-      key: 'home', 
+    {
+      key: 'home',
       label: t('restaurant.header.home'),
-      href: '/restaurant' 
+      href: '/restaurant'
     },
-    { 
-      key: 'about', 
+    {
+      key: 'about',
       label: t('restaurant.header.about'),
-      href: '/restaurant#about' 
+      href: '/restaurant#about'
     },
     {
       key: 'menu',
@@ -78,20 +80,20 @@ const RestaurantHeader: React.FC = () => {
       ),
       href: '/restaurant#menu'
     },
-    { 
-      key: 'featured', 
+    {
+      key: 'featured',
       label: t('restaurant.header.featured'),
-      href: '/restaurant#featured' 
+      href: '/restaurant#featured'
     },
-    { 
-      key: 'daily', 
+    {
+      key: 'daily',
       label: t('restaurant.header.daily'),
-      href: '/restaurant#daily' 
+      href: '/restaurant#daily'
     },
-    { 
-      key: 'news', 
+    {
+      key: 'news',
       label: t('restaurant.header.news'),
-      href: '/restaurant#news' 
+      href: '/restaurant#news'
     },
   ];
 
@@ -131,8 +133,8 @@ const RestaurantHeader: React.FC = () => {
               overflow: 'hidden',
             }}>
             <img
-              src="/images/logo/restx-removebg-preview.png"
-              alt="RestX Logo"
+              src={tenant?.logoUrl || "/images/logo/restx-removebg-preview.png"}
+              alt="Restaurant Logo"
               className="app-logo-img"
               style={{
                 width: '100%',
@@ -149,17 +151,17 @@ const RestaurantHeader: React.FC = () => {
               color: headerContentColor,
               fontFamily: 'serif',
             }}>
-            {t('restaurant.header.title')}
+            {tenant?.name || t('restaurant.header.title')}
           </span>
         </Link>
 
         {/* Desktop Navigation */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           <div style={{ display: isMobile ? 'none' : 'block' }}>
-            <Navbar 
-              items={menuItems} 
+            <Navbar
+              items={menuItems}
               scrolled={scrolled}
-              textColor={headerContentColor} 
+              textColor={headerContentColor}
             />
           </div>
 
