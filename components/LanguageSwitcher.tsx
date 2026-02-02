@@ -3,7 +3,6 @@
 import React from 'react';
 import { Dropdown, Space } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
 import { useLanguage } from './I18nProvider';
 
 interface LanguageSwitcherProps {
@@ -37,7 +36,6 @@ const FlagEN = ({ className = "w-6 h-4", style }: { className?: string, style?: 
 );
 
 const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ style, className }) => {
-  const { t } = useTranslation();
   const { language, changeLanguage } = useLanguage();
 
   const items = [

@@ -1,36 +1,36 @@
 'use client';
 
 import {
-    CheckCircleOutlined,
-    ClockCircleOutlined,
-    CreditCardOutlined,
-    DollarOutlined,
-    GiftOutlined,
-    PrinterOutlined,
-    QrcodeOutlined,
-    SearchOutlined,
-    TableOutlined,
-    UserOutlined,
-    WalletOutlined
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CreditCardOutlined,
+  DollarOutlined,
+  GiftOutlined,
+  PrinterOutlined,
+  QrcodeOutlined,
+  SearchOutlined,
+  TableOutlined,
+  UserOutlined,
+  WalletOutlined
 } from '@ant-design/icons';
 import {
-    Avatar,
-    Button,
-    Card,
-    Col,
-    Divider,
-    Flex,
-    Input,
-    InputNumber,
-    message,
-    Modal,
-    Radio,
-    Result,
-    Row,
-    Space,
-    Statistic,
-    Tag,
-    Typography
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Divider,
+  Flex,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Radio,
+  Result,
+  Row,
+  Space,
+  Statistic,
+  Tag,
+  Typography
 } from 'antd';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -168,9 +168,9 @@ export default function CheckoutPage() {
   }, []);
 
   const paymentMethods = [
-    { key: 'cash', label: t('staff.checkout.payment.cash'), icon: <WalletOutlined />, color: '#52c41a' },
-    { key: 'transfer', label: t('staff.checkout.payment.transfer'), icon: <CreditCardOutlined />, color: '#1890ff' },
-    { key: 'momo', label: t('staff.checkout.payment.momo'), icon: <QrcodeOutlined />, color: '#cf1322' },
+    { key: 'cash', label: t('staff.checkout.methods.cash'), icon: <WalletOutlined />, color: '#52c41a' },
+    { key: 'transfer', label: t('staff.checkout.methods.transfer'), icon: <CreditCardOutlined />, color: '#1890ff' },
+    { key: 'momo', label: t('staff.checkout.methods.momo'), icon: <QrcodeOutlined />, color: '#cf1322' },
   ];
 
   const filteredBills = bills.filter(

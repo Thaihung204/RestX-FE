@@ -13,7 +13,7 @@ export default function DashboardHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40"
+      className="sticky top-0 z-50 w-full"
       style={{
         background: "var(--card)",
         backdropFilter: "blur(8px)",
@@ -22,27 +22,48 @@ export default function DashboardHeader() {
       }}>
       <div className="px-6 py-4">
         <div className="flex items-center justify-between gap-4">
-          {/* Page Title & Breadcrumb */}
-          <div>
-            <div className="flex items-center gap-2 text-sm mb-1" style={{ color: "var(--text-muted)" }}>
-              <span>{t("dashboard.header.pages")}</span>
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
+          <div className="flex items-center gap-6">
+            {/* Logo - Moved from Sidebar */}
+            <div className="flex items-center gap-3 border-r pr-6" style={{ borderColor: "var(--border)" }}>
+              <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <img
+                  src="/images/logo/restx-removebg-preview.png"
+                  alt="RestX Logo"
+                  className="w-full h-full object-contain app-logo-img"
                 />
-              </svg>
-              <span>{t("dashboard.header.dashboard")}</span>
+              </div>
+              <div>
+                <h2 className="font-bold text-lg" style={{ color: "var(--text)" }}>
+                  Rest<span style={{ color: '#FF380B' }}>X</span>
+                </h2>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  {t("dashboard.sidebar.management")}
+                </p>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>
-              {t("dashboard.header.main_dashboard")}
-            </h1>
+
+            {/* Page Title & Breadcrumb */}
+            <div>
+              <div className="flex items-center gap-2 text-sm mb-1" style={{ color: "var(--text-muted)" }}>
+                <span>{t("dashboard.header.pages")}</span>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+                <span>{t("dashboard.header.dashboard")}</span>
+              </div>
+              <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>
+                {t("dashboard.header.main_dashboard")}
+              </h1>
+            </div>
           </div>
 
           {/* Right Section */}
