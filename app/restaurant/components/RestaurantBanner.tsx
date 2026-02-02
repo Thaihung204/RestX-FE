@@ -22,7 +22,7 @@ const RestaurantBanner: React.FC = () => {
           height: '100%',
         }}>
         <img
-          src={tenant?.backgroundUrl || "/images/restaurant/banner.png"}
+          src={(tenant?.backgroundUrl && tenant.backgroundUrl.trim() !== '') ? tenant.backgroundUrl : "/images/restaurant/banner.png"}
           alt="Restaurant Banner"
           style={{
             width: '100%',
@@ -30,6 +30,7 @@ const RestaurantBanner: React.FC = () => {
             objectFit: 'cover',
             objectPosition: 'center',
           }}
+          onError={(e) => { e.currentTarget.src = '/images/restaurant/banner.png'; }}
         />
         {/* Overlay gradient for better text readability if needed */}
         <div
