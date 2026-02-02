@@ -70,7 +70,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ style, className })
       }}
       trigger={['click']}
       placement="bottomRight"
-      overlayStyle={{ minWidth: 160 }}
+      styles={{ root: { minWidth: 160 } }}
     >
       <Space
         className={className}
