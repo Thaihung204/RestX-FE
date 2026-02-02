@@ -48,7 +48,6 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor - Xử lý lỗi và refresh token
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {

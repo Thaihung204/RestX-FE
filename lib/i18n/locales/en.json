@@ -70,7 +70,6 @@
         "other_items": "other items",
         "items_not_done": "not done"
       },
-
       "modal": {
         "order_detail": "Order Details",
         "cart": "Cart",
@@ -340,7 +339,15 @@
         "staff": "Staff",
         "schedules": "Schedules",
         "settings": "Settings",
+        "manage": "Manage",
         "help": "Help"
+      }
+    },
+    "manage": {
+      "title": "Manage",
+      "subtitle": "Manage your restaurant categories and configurations",
+      "tabs": {
+        "categories": "Categories"
       }
     },
     "header": {
@@ -516,7 +523,20 @@
         "general": "General",
         "appearance": "Appearance",
         "notifications": "Notifications",
-        "security": "Security"
+        "security": "Security",
+        "categories": "Categories"
+      },
+      "categories": {
+        "title": "Category Management",
+        "subtitle": "Manage menu categories for your restaurant",
+        "add_category": "Add Category",
+        "edit_category": "Edit Category",
+        "delete_category": "Delete Category",
+        "name": "Category Name",
+        "description": "Description",
+        "image": "Image",
+        "actions": "Actions",
+        "confirm_delete": "Are you sure you want to delete this category?"
       },
       "general": {
         "restaurant_info": "Restaurant Information",

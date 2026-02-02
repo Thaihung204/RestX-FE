@@ -70,7 +70,6 @@
         "other_items": "món khác",
         "items_not_done": "chưa xong"
       },
-
       "modal": {
         "order_detail": "Chi tiết Order",
         "cart": "Giỏ hàng",
@@ -340,7 +339,15 @@
         "staff": "Nhân viên",
         "schedules": "Lịch làm việc",
         "settings": "Cài đặt",
+        "manage": "Quản lý",
         "help": "Trợ giúp"
+      }
+    },
+    "manage": {
+      "title": "Quản lý",
+      "subtitle": "Quản lý danh mục và cấu hình nhà hàng",
+      "tabs": {
+        "categories": "Danh mục"
       }
     },
     "header": {
@@ -516,7 +523,20 @@
         "general": "Chung",
         "appearance": "Giao diện",
         "notifications": "Thông báo",
-        "security": "Bảo mật"
+        "security": "Bảo mật",
+        "categories": "Danh mục"
+      },
+      "categories": {
+        "title": "Quản lý danh mục",
+        "subtitle": "Quản lý các danh mục thực đơn của nhà hàng",
+        "add_category": "Thêm danh mục",
+        "edit_category": "Sửa danh mục",
+        "delete_category": "Xóa danh mục",
+        "name": "Tên danh mục",
+        "description": "Mô tả",
+        "image": "Hình ảnh",
+        "actions": "Hành động",
+        "confirm_delete": "Bạn có chắc chắn muốn xóa danh mục này?"
       },
       "general": {
         "restaurant_info": "Thông tin nhà hàng",
