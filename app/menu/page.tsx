@@ -6,7 +6,6 @@ import {
   CloseOutlined,
   CoffeeOutlined,
   DeleteOutlined,
-  DownOutlined,
   FilterOutlined,
   FireOutlined,
   MinusOutlined,
@@ -24,27 +23,37 @@ import {
   Modal,
   Row,
   Select,
+  Spin,
   Typography,
   message,
   theme,
 } from "antd";
+import axiosInstance from "@/lib/services/axiosInstance";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
 
-// --- Sample data ---
+// --- Types ---
 type MenuItem = {
+  id: string;
   name: string;
   price: string;
   tags?: string[];
   note?: string;
   description?: string;
   image?: string;
+  categoryId?: string;
+  categoryName?: string;
+  isPopular?: boolean;
+  isBestSeller?: boolean;
+  isSpicy?: boolean;
+  isVegetarian?: boolean;
 };
 
 type CartItem = {
+  id: string;
   name: string;
   price: string;
   quantity: number;
@@ -59,111 +68,22 @@ type MenuSection = {
   items: MenuItem[];
 };
 
-// Sections moved inside component for translation support
+type Category = {
+  id: string;
+  name: string;
+};
+
+// Hardcoded categories (temporary solution until API is ready)
+const STATIC_CATEGORIES: Category[] = [
+  { id: "600DCEDC-D5E1-43CE-B8C9-08A64937A66C", name: "Món chính" },
+  { id: "C7F1CA77-9B44-4418-B69A-8825BAD9FD6A", name: "Đồ uống" },
+];
 
 export default function MenuPage() {
   const { t } = useTranslation("common");
-  const sections = useMemo<MenuSection[]>(() => {
-    const rawSections = [
-      {
-        key: "special",
-        title: t("menu_page.sections.special_title"),
-        description: t("menu_page.sections.special_desc"),
-        items: [
-          {
-            name: "Honi Poke",
-            price: "89.000",
-            tags: ["spicy"],
-            note: t("menu_page.best_seller"),
-            description:
-              "Cá hồi tươi sống kết hợp cùng rong biển, dưa chuột, bơ và sốt cay đặc trưng",
-            image: "/images/menu/Honi-Poke.png",
-          },
-          {
-            name: "Ahi Poke",
-            price: "89.000",
-            description:
-              "Cá ngừ đại dương sốt Shoyu, hành tây, mè rang và rau củ tươi mát",
-            image: "/images/menu/ahi-poke.png",
-          },
-          {
-            name: "Sriracha Mayo Salmon",
-            price: "89.000",
-            tags: ["new"],
-            description:
-              "Cá hồi nướng phủ sốt Sriracha Mayo cay ngọt hòa quyện hoàn hảo",
-            image: "/images/menu/Sriracha-Mayo-Salmon.png",
-          },
-        ],
-      },
-      {
-        key: "sushi",
-        title: t("menu_page.sections.sushi_title"),
-        description: t("menu_page.sections.sushi_desc"),
-        items: [
-          {
-            name: "Salmon Lover Set",
-            price: "95.000",
-            description:
-              "Combo gồm 8 miếng nigiri cá hồi tươi và 6 miếng maki cá hồi chuẩn Nhật",
-            image: "/images/menu/Salmon-Lover-Set.png",
-          },
-          {
-            name: "Rainbow Roll",
-            price: "85.000",
-            tags: ["spicy"],
-            description:
-              "Cuộn sushi 7 màu sắc với nhiều loại cá tươi, bơ và sốt đặc biệt",
-            image: "/images/menu/Rainbow-Roll.png",
-          },
-          {
-            name: "Vegan Garden Roll",
-            price: "75.000",
-            tags: ["vegan"],
-            description:
-              "Cuộn chay với rau củ tươi, bơ, dưa chuột và nấm truffle thuần chay",
-            image: "/images/menu/Vegan-Garden-Roll.png",
-          },
-        ],
-      },
-      {
-        key: "boba",
-        title: t("menu_page.sections.boba_title"),
-        description: t("menu_page.sections.boba_desc"),
-        items: [
-          {
-            name: "Brown Sugar Milk",
-            price: "45.000",
-            tags: ["best"],
-            description:
-              "Trà sữa trân châu đường đen thơm ngon, ngọt ngào với vị caramel đặc trưng",
-            image: "/images/menu/Brown-Sugar-Milk.png",
-          },
-          {
-            name: "Matcha Cream Foam",
-            price: "42.000",
-            description:
-              "Trà xanh matcha Nhật Bản phủ lớp kem cheese mềm mịn thơm béo",
-            image: "/images/menu/matcha-cold-cream.png",
-          },
-        ],
-      },
-    ];
-
-    const allItems = rawSections.flatMap((s) => s.items);
-
-    return [
-      {
-        key: "all",
-        title: t("menu_page.sections.all_title"),
-        description: t("menu_page.sections.all_desc"),
-        items: allItems,
-      },
-      ...rawSections,
-    ];
-  }, [t]);
   const router = useRouter();
-  // Default to the first section
+
+  // State management
   const [activeSectionKey, setActiveSectionKey] = useState<string>("all");
   const [searchText, setSearchText] = useState("");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -172,15 +92,116 @@ export default function MenuPage() {
   const [selectedFood, setSelectedFood] = useState<MenuItem | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
 
+  // API state
+  const [dishes, setDishes] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch data from API
+  useEffect(() => {
+    fetchMenuData();
+  }, []);
+
+  const fetchMenuData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch dishes
+      const dishesResponse = await axiosInstance.get(`/dishes`, {
+        params: {
+          page: 1,
+          itemsPerPage: 100,
+        },
+      });
+
+      const dishesData = dishesResponse.data;
+      const arrayData =
+        dishesData.dishes ||
+        dishesData.data ||
+        dishesData.items ||
+        (Array.isArray(dishesData) ? dishesData : []);
+
+      if (arrayData && Array.isArray(arrayData)) {
+        const mappedDishes: MenuItem[] = arrayData
+          .filter((item: any) => item.isActive !== false) // Only show active items
+          .map((item: any) => {
+            // Map categoryName to categoryId from STATIC_CATEGORIES
+            const matchedCategory = STATIC_CATEGORIES.find(
+              (cat) => cat.name === (item.categoryName || item.category),
+            );
+
+            return {
+              id: item.id?.toString() || item.dishId?.toString() || "",
+              name: item.name || "",
+              price: item.price?.toString() || "0",
+              description: item.description || t("menu_page.default_food_desc"),
+              image:
+                item.mainImageUrl ||
+                item.imageUrl ||
+                item.image ||
+                "/placeholder-dish.jpg",
+              categoryId: matchedCategory?.id || item.categoryId || "",
+              categoryName: item.categoryName || item.category || "",
+              isPopular: item.isPopular || false,
+              isBestSeller: item.isBestSeller || false,
+              isSpicy: item.isSpicy || false,
+              isVegetarian: item.isVegetarian || false,
+              tags: [
+                item.isSpicy && "spicy",
+                item.isVegetarian && "vegan",
+                item.isBestSeller && "best",
+              ].filter(Boolean) as string[],
+              note: item.isBestSeller ? t("menu_page.best_seller") : undefined,
+            };
+          });
+
+        setDishes(mappedDishes);
+
+        // Use static categories instead of extracting from dishes
+        setCategories(STATIC_CATEGORIES);
+      }
+    } catch (err) {
+      console.error("Failed to fetch menu data:", err);
+      setError("Failed to load menu. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Build sections from API data
+  const sections = useMemo<MenuSection[]>(() => {
+    if (loading || dishes.length === 0) return [];
+
+    const categorySections: MenuSection[] = categories.map((cat) => ({
+      key: cat.id,
+      title: cat.name,
+      description: `${dishes.filter((d) => d.categoryId === cat.id).length} dishes`,
+      items: dishes.filter((d) => d.categoryId === cat.id),
+    }));
+
+    return [
+      {
+        key: "all",
+        title: "All Dishes",
+        description: `${dishes.length} dishes available`,
+        items: dishes,
+      },
+      ...categorySections,
+    ];
+  }, [dishes, categories, loading]);
+
   // Filter logic:
   // 1. Use the current section
   // 2. If search text exists -> filter by name inside that section
   const currentSection = useMemo(
-    () => sections.find((s) => s.key === activeSectionKey) || sections[1],
-    [activeSectionKey],
+    () => sections.find((s) => s.key === activeSectionKey) || sections[0],
+    [activeSectionKey, sections],
   );
 
   const displayedItems = useMemo(() => {
+    if (!currentSection) return [];
     let items = currentSection.items;
     if (searchText) {
       const lowerSearch = searchText.toLowerCase();
@@ -193,25 +214,26 @@ export default function MenuPage() {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   }, [cartItems]);
 
-  const getItemCategory = (itemName: string): "food" | "drink" => {
-    // Find item in sections to determine category
-    for (const section of sections) {
-      const foundItem = section.items.find((i) => i.name === itemName);
-      if (foundItem) {
-        // If section key is "boba" it's a drink, otherwise food
-        return section.key === "boba" ? "drink" : "food";
-      }
+  const getItemCategory = (item: MenuItem): "food" | "drink" => {
+    // Determine category based on categoryName or default to food
+    const categoryLower = item.categoryName?.toLowerCase() || "";
+    if (
+      categoryLower.includes("drink") ||
+      categoryLower.includes("đồ uống") ||
+      categoryLower.includes("boba")
+    ) {
+      return "drink";
     }
-    return "food"; // Default to food
+    return "food";
   };
 
   const handleAddToCart = (item: MenuItem) => {
-    const category = getItemCategory(item.name);
+    const category = getItemCategory(item);
     setCartItems((prev) => {
-      const existingItem = prev.find((cartItem) => cartItem.name === item.name);
+      const existingItem = prev.find((cartItem) => cartItem.id === item.id);
       if (existingItem) {
         return prev.map((cartItem) =>
-          cartItem.name === item.name
+          cartItem.id === item.id
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
             : cartItem,
         );
@@ -219,6 +241,7 @@ export default function MenuPage() {
         return [
           ...prev,
           {
+            id: item.id,
             name: item.name,
             price: item.price,
             quantity: 1,
@@ -231,19 +254,19 @@ export default function MenuPage() {
     messageApi.success(t("menu_page.cart.added_success", { name: item.name }));
   };
 
-  const handleRemoveFromCart = (itemName: string) => {
-    setCartItems((prev) => prev.filter((item) => item.name !== itemName));
+  const handleRemoveFromCart = (itemId: string) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== itemId));
     messageApi.success(t("menu_page.cart.removed_success"));
   };
 
-  const handleUpdateQuantity = (itemName: string, newQuantity: number) => {
+  const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      handleRemoveFromCart(itemName);
+      handleRemoveFromCart(itemId);
       return;
     }
     setCartItems((prev) =>
       prev.map((item) =>
-        item.name === itemName ? { ...item, quantity: newQuantity } : item,
+        item.id === itemId ? { ...item, quantity: newQuantity } : item,
       ),
     );
   };
@@ -259,6 +282,11 @@ export default function MenuPage() {
     return new Intl.NumberFormat("vi-VN").format(amount) + "đ";
   };
 
+  const formatPrice = (price: string | number) => {
+    const priceNum = typeof price === "string" ? parseFloat(price) : price;
+    return new Intl.NumberFormat("vi-VN").format(priceNum);
+  };
+
   const foodItems = useMemo(() => {
     return cartItems.filter((item) => item.category === "food");
   }, [cartItems]);
@@ -266,6 +294,63 @@ export default function MenuPage() {
   const drinkItems = useMemo(() => {
     return cartItems.filter((item) => item.category === "drink");
   }, [cartItems]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+          token: {
+            colorPrimary: "#FF380B",
+          },
+        }}>
+        <div
+          style={{
+            minHeight: "100vh",
+            backgroundColor: "#050505",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: 16,
+          }}>
+          <Spin size="large" />
+          <Text style={{ color: "#999" }}>Loading menu...</Text>
+        </div>
+      </ConfigProvider>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+          token: {
+            colorPrimary: "#FF380B",
+          },
+        }}>
+        <div
+          style={{
+            minHeight: "100vh",
+            backgroundColor: "#050505",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: 16,
+            padding: 24,
+          }}>
+          <Text style={{ color: "#ff4d4f", fontSize: 18 }}>{error}</Text>
+          <Button type="primary" onClick={fetchMenuData}>
+            Retry
+          </Button>
+        </div>
+      </ConfigProvider>
+    );
+  }
 
   return (
     <>
@@ -388,22 +473,40 @@ export default function MenuPage() {
               }}>
               <div style={{ maxWidth: 1200, margin: "0 auto" }}>
                 <Row gutter={[12, 12]}>
-                  {/* Dropdown chọn danh mục (Chiếm diện tích lớn trên mobile) */}
+                  {/* Category Filter Dropdown */}
                   <Col xs={14} md={8}>
                     <Select
                       style={{ width: "100%" }}
                       value={activeSectionKey}
                       onChange={setActiveSectionKey}
-                      suffixIcon={<DownOutlined style={{ color: "#FF380B" }} />}
+                      suffixIcon={
+                        <FilterOutlined style={{ color: "#FF380B" }} />
+                      }
                       showSearch={false}
-                      options={sections.map((s) => ({
-                        label: (
-                          <span style={{ fontWeight: 500, fontSize: 15 }}>
-                            {s.title}
-                          </span>
-                        ),
-                        value: s.key,
-                      }))}
+                      placeholder="Filter by category"
+                      options={[
+                        {
+                          label: (
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                fontSize: 15,
+                                color: "#FF380B",
+                              }}>
+                              All Dishes
+                            </span>
+                          ),
+                          value: "all",
+                        },
+                        ...categories.map((cat) => ({
+                          label: (
+                            <span style={{ fontWeight: 500, fontSize: 15 }}>
+                              {cat.name}
+                            </span>
+                          ),
+                          value: cat.id,
+                        })),
+                      ]}
                       styles={{
                         popup: {
                           root: {
@@ -454,11 +557,15 @@ export default function MenuPage() {
                     textTransform: "uppercase",
                     fontSize: 13,
                   }}>
-                  {t("menu_page.viewing_category")}
+                  {activeSectionKey === "all"
+                    ? "All Dishes"
+                    : currentSection.title}
                 </Text>
               </div>
               <Title level={3} style={{ color: "#fff", margin: 0 }}>
-                {currentSection.title}
+                {activeSectionKey === "all"
+                  ? "All Dishes"
+                  : currentSection.title}
               </Title>
               <Text
                 style={{
@@ -575,8 +682,7 @@ export default function MenuPage() {
                               fontSize: 15,
                               flexShrink: 0,
                             }}>
-                            {item.price}
-                            <span style={{ fontSize: 13, color: "#FF380B" }}>đ</span>
+                            {formatPrice(item.price)}đ
                           </Text>
                           <div suppressHydrationWarning>
                             <Button
@@ -835,7 +941,7 @@ export default function MenuPage() {
                           </Text>
                           {foodItems.map((item) => (
                             <Card
-                              key={item.name}
+                              key={item.id}
                               style={{
                                 background:
                                   "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
@@ -888,14 +994,14 @@ export default function MenuPage() {
                                         fontSize: 13,
                                         fontWeight: 600,
                                       }}>
-                                      {item.price}đ
+                                      {formatPrice(item.price)}đ
                                     </Text>
                                   </div>
                                   <Button
                                     type="text"
                                     icon={<DeleteOutlined />}
                                     onClick={() =>
-                                      handleRemoveFromCart(item.name)
+                                      handleRemoveFromCart(item.id)
                                     }
                                     style={{ color: "#ff4d4f", flexShrink: 0 }}
                                     size="small"
@@ -920,7 +1026,7 @@ export default function MenuPage() {
                                     icon={<MinusOutlined />}
                                     onClick={() =>
                                       handleUpdateQuantity(
-                                        item.name,
+                                        item.id,
                                         item.quantity - 1,
                                       )
                                     }
@@ -945,7 +1051,7 @@ export default function MenuPage() {
                                     icon={<PlusOutlined />}
                                     onClick={() =>
                                       handleUpdateQuantity(
-                                        item.name,
+                                        item.id,
                                         item.quantity + 1,
                                       )
                                     }
@@ -962,11 +1068,12 @@ export default function MenuPage() {
                                     fontSize: 14,
                                     fontWeight: 600,
                                   }}>
-                                  {formatVND(
-                                    parseFloat(
-                                      item.price.replace(/[.,]/g, ""),
-                                    ) * item.quantity
+                                  {formatPrice(
+                                    (
+                                      parseFloat(item.price) * item.quantity
+                                    ).toString(),
                                   )}
+                                  đ
                                 </Text>
                               </div>
                             </Card>
@@ -992,7 +1099,7 @@ export default function MenuPage() {
                           </Text>
                           {drinkItems.map((item) => (
                             <Card
-                              key={item.name}
+                              key={item.id}
                               style={{
                                 background:
                                   "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
@@ -1045,14 +1152,14 @@ export default function MenuPage() {
                                         fontSize: 13,
                                         fontWeight: 600,
                                       }}>
-                                      {item.price}đ
+                                      {formatPrice(item.price)}đ
                                     </Text>
                                   </div>
                                   <Button
                                     type="text"
                                     icon={<DeleteOutlined />}
                                     onClick={() =>
-                                      handleRemoveFromCart(item.name)
+                                      handleRemoveFromCart(item.id)
                                     }
                                     style={{ color: "#ff4d4f", flexShrink: 0 }}
                                     size="small"
@@ -1077,7 +1184,7 @@ export default function MenuPage() {
                                     icon={<MinusOutlined />}
                                     onClick={() =>
                                       handleUpdateQuantity(
-                                        item.name,
+                                        item.id,
                                         item.quantity - 1,
                                       )
                                     }
@@ -1102,7 +1209,7 @@ export default function MenuPage() {
                                     icon={<PlusOutlined />}
                                     onClick={() =>
                                       handleUpdateQuantity(
-                                        item.name,
+                                        item.id,
                                         item.quantity + 1,
                                       )
                                     }
@@ -1119,11 +1226,12 @@ export default function MenuPage() {
                                     fontSize: 14,
                                     fontWeight: 600,
                                   }}>
-                                  {formatVND(
-                                    parseFloat(
-                                      item.price.replace(/[.,]/g, ""),
-                                    ) * item.quantity
+                                  {formatPrice(
+                                    (
+                                      parseFloat(item.price) * item.quantity
+                                    ).toString(),
                                   )}
+                                  đ
                                 </Text>
                               </div>
                             </Card>

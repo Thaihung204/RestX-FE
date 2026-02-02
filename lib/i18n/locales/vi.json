@@ -338,6 +338,7 @@
         "orders": "Đơn hàng",
         "customers": "Khách hàng",
         "staff": "Nhân viên",
+        "schedules": "Lịch làm việc",
         "settings": "Cài đặt",
         "help": "Trợ giúp"
       }
@@ -1027,7 +1028,9 @@
       "validation": {
         "phone_length": "Số điện thoại phải có đúng 10 chữ số",
         "phone_digits": "Số điện thoại chỉ được chứa chữ số",
-        "name_length": "Tên phải có ít nhất 2 ký tự"
+        "name_length": "Tên phải có ít nhất 2 ký tự",
+        "required_phone": "Vui lòng nhập số điện thoại của bạn",
+        "required_name": "Vui lòng nhập tên của bạn"
       },
       "alerts": {
         "submitted": "Đã gửi biểu mẫu đăng nhập!\n\nSố điện thoại: {{phone}}\nTên: {{name}}\nGhi nhớ: {{remember}}\n\n(Đây chỉ là bản demo giao diện - Chưa tích hợp API)"
@@ -1051,9 +1054,15 @@
       "validation": {
         "required_first_name": "Vui lòng nhập họ của bạn",
         "required_last_name": "Vui lòng nhập tên của bạn",
+        "required_email": "Vui lòng nhập địa chỉ email của bạn",
         "invalid_email": "Vui lòng nhập địa chỉ email hợp lệ",
+        "required_phone": "Vui lòng nhập số điện thoại của bạn",
         "invalid_phone": "Vui lòng nhập số điện thoại 10 chữ số hợp lệ",
-        "password_mismatch": "Mật khẩu không khớp"
+        "required_password": "Vui lòng nhập mật khẩu",
+        "required_confirm_password": "Vui lòng xác nhận mật khẩu của bạn",
+        "password_mismatch": "Mật khẩu không khớp",
+        "email_exists": "Email này đã được đăng ký",
+        "phone_exists": "Số điện thoại này đã được đăng ký"
       },
       "password_requirements": {
         "length": "Ít nhất 8 ký tự",
@@ -1068,6 +1077,47 @@
       }
     },
     "remember_me": "Ghi nhớ đăng nhập"
+  },
+  "schedule": {
+    "title": "Quản lý lịch làm việc",
+    "subtitle": "Lập kế hoạch và quản lý ca làm việc của nhân viên",
+    "manage_time_slots": "Quản lý khung giờ",
+    "export_schedule": "Xuất lịch làm việc",
+    "loading": "Đang tải lịch làm việc...",
+    "no_data": "Không có dữ liệu lịch làm việc",
+    "time_slot": "Khung giờ",
+    "legend": {
+      "past": "Đã qua",
+      "live_now": "Hiện tại",
+      "future": "Tương lai"
+    },
+    "week_navigator": {
+      "today": "Hôm nay",
+      "week": "Tuần",
+      "copy_previous_week": "Sao chép tuần trước"
+    },
+    "staff_modal": {
+      "title": "Lịch làm việc",
+      "assigned_staff": "Nhân viên được phân công",
+      "no_staff": "Chưa có nhân viên",
+      "person": "người",
+      "people": "người",
+      "assign_new_staff": "Phân công nhân viên mới",
+      "select_staff": "Chọn nhân viên",
+      "assign": "Phân công",
+      "cancel": "Hủy",
+      "add_staff_assignment": "Thêm phân công"
+    },
+    "status": {
+      "confirmed": "đã xác nhận",
+      "registered": "đã đăng ký",
+      "cancelled": "đã hủy",
+      "no_staff": "Chưa có người",
+      "staff_assigned": "đã phân công"
+    },
+    "export": {
+      "alert": "Tính năng xuất file sẽ khả dụng khi kết nối với backend API"
+    }
   },
   "not_found": {
     "title": "Trang không tìm thấy",

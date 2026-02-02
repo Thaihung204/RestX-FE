@@ -1,11 +1,14 @@
 "use client";
 
 import LoginButton from "@/components/auth/LoginButton";
+import authService from "@/lib/services/authService";
 import React, { useState, useEffect } from "react";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useSearchParams } from 'next/navigation';
 
 export default function ResetPasswordPage() {
   const { mode } = useThemeMode();
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -14,7 +17,9 @@ export default function ResetPasswordPage() {
     }
     return false;
   });
-  
+
+  const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,7 +31,13 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     setMounted(true);
     setIsDark(mode === 'dark');
-  }, [mode]);
+
+    // Get email and token from URL params
+    const emailParam = searchParams.get('email') || '';
+    const tokenParam = searchParams.get('token') || '';
+    setEmail(emailParam);
+    setToken(tokenParam);
+  }, [mode, searchParams]);
 
   const validatePassword = (password: string) => {
     if (!password) {
@@ -39,8 +50,23 @@ export default function ResetPasswordPage() {
       return false;
     }
 
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      setPasswordError("Password must contain uppercase, lowercase, and number");
+    if (!/(?=.*[a-z])/.test(password)) {
+      setPasswordError("Password must contain at least one lowercase letter");
+      return false;
+    }
+
+    if (!/(?=.*[A-Z])/.test(password)) {
+      setPasswordError("Password must contain at least one uppercase letter");
+      return false;
+    }
+
+    if (!/(?=.*\d)/.test(password)) {
+      setPasswordError("Password must contain at least one number");
+      return false;
+    }
+
+    if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(password)) {
+      setPasswordError("Password must contain at least one special character (!@#$%...)");
       return false;
     }
 
@@ -83,45 +109,103 @@ export default function ResetPasswordPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handlePasswordBlur = () => {
+    setPasswordTouched(true);
+    if (!password) {
+      setPasswordError("Please enter a password");
+    } else {
+      validatePassword(password);
+    }
+  };
+
+  const handleConfirmPasswordBlur = () => {
+    setConfirmPasswordTouched(true);
+    if (!confirmPassword) {
+      setConfirmPasswordError("Please confirm your password");
+    } else {
+      validateConfirmPassword(confirmPassword);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Mark all fields as touched
     setPasswordTouched(true);
     setConfirmPasswordTouched(true);
 
-    const isPasswordValid = validatePassword(password);
-    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
-
-    if (!isPasswordValid || !isConfirmPasswordValid) {
+    // Check if fields are empty
+    if (!password || !password.trim()) {
+      setPasswordError("Please enter a password");
+      if (!confirmPassword || !confirmPassword.trim()) {
+        setConfirmPasswordError("Please confirm your password");
+      }
       return;
     }
 
-    // Simulate loading for demo
+    if (!confirmPassword || !confirmPassword.trim()) {
+      setConfirmPasswordError("Please confirm your password");
+      return;
+    }
+
+    // Validate password
+    const isPasswordValid = validatePassword(password);
+    if (!isPasswordValid) {
+      return;
+    }
+
+    // Validate confirm password
+    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
+    if (!isConfirmPasswordValid) {
+      return;
+    }
+
+    // Don't proceed if there are any errors
+    if (passwordError || confirmPasswordError) {
+      return;
+    }
+
+    if (!email || !token) {
+      alert('Invalid reset link. Please request a new password reset.');
+      return;
+    }
+
+    // Call API to reset password
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      alert(
-        `Password Reset Successfully!\n\nYour password has been updated.\n\n(This is UI demo only - No API integration)`
-      );
+    try {
+      await authService.resetPassword({
+        email,
+        token,
+        newPassword: password,
+        confirmNewPassword: confirmPassword,
+      });
+
+      alert('Password Reset Successfully!\n\nYour password has been updated.');
       // Redirect to login page
-      window.location.href = '/login';
-    }, 1000);
+      window.location.href = '/login-email';
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to reset password. Please try again.';
+      alert(errorMessage);
+      console.error('Reset password error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient"
     >
       {/* Decorative elements */}
-      <div 
+      <div
         className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"
       ></div>
-      <div 
+      <div
         className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"
       ></div>
 
       <div className="max-w-[420px] w-full space-y-8 relative z-10">
-        <div 
+        <div
           className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
         >
           <div className="text-center mb-6">
@@ -139,7 +223,7 @@ export default function ResetPasswordPage() {
                 />
               </svg>
             </div>
-            <h2 
+            <h2
               className="text-3xl font-bold mb-2 auth-title"
             >
               Reset Password
@@ -162,7 +246,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 value={password}
                 onChange={handlePasswordChange}
-                onBlur={() => setPasswordTouched(true)}
+                onBlur={handlePasswordBlur}
                 placeholder="Enter new password"
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
@@ -189,7 +273,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 value={confirmPassword}
                 onChange={handleConfirmPasswordChange}
-                onBlur={() => setConfirmPasswordTouched(true)}
+                onBlur={handleConfirmPasswordBlur}
                 placeholder="Confirm new password"
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{

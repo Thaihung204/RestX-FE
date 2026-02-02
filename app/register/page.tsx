@@ -2,6 +2,7 @@
 
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
+import authService from "@/lib/services/authService";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
@@ -12,9 +13,13 @@ export default function RegisterPage() {
   const [mounted, setMounted] = useState(false);
   // Get initial theme from localStorage to prevent flash
   const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('restx-theme-mode');
-      return stored === 'dark' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("restx-theme-mode");
+      return (
+        stored === "dark" ||
+        (stored === null &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      );
     }
     return false;
   });
@@ -53,7 +58,8 @@ export default function RegisterPage() {
 
   const validateEmail = (email: string) => {
     if (!email) return "";
-    if (!/\S+@\S+\.\S+/.test(email)) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
       return t('register_page.validation.invalid_email');
     }
     return "";
@@ -66,6 +72,8 @@ export default function RegisterPage() {
     }
     return "";
   };
+
+
 
   const validatePassword = (pwd: string): string[] => {
     if (!pwd) return [];
@@ -94,7 +102,7 @@ export default function RegisterPage() {
   useEffect(() => {
     setMounted(true);
     // Update isDark when mode changes
-    setIsDark(mode === 'dark');
+    setIsDark(mode === "dark");
   }, [mode]);
 
   const validateConfirmPassword = (confirmPwd: string, pwd: string) => {
@@ -109,31 +117,37 @@ export default function RegisterPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
+    // Only clear errors if field becomes valid after submit attempt
     if (touched[name as keyof typeof touched]) {
-      // Validate on change if already touched
-      if (name === "email") {
-        setErrors((prev) => ({ ...prev, email: validateEmail(value) }));
-      } else if (name === "phone") {
-        setErrors((prev) => ({ ...prev, phone: validatePhone(value) }));
+      if (name === "firstName" && value.trim()) {
+        setErrors((prev) => ({ ...prev, firstName: "" }));
+      } else if (name === "lastName" && value.trim()) {
+        setErrors((prev) => ({ ...prev, lastName: "" }));
+      } else if (name === "email" && !validateEmail(value)) {
+        setErrors((prev) => ({ ...prev, email: "" }));
+      } else if (name === "phone" && !validatePhone(value)) {
+        setErrors((prev) => ({ ...prev, phone: "" }));
       } else if (name === "password") {
-        setErrors((prev) => ({
-          ...prev,
-          password: validatePassword(value),
-          confirmPassword: validateConfirmPassword(
-            formData.confirmPassword,
-            value
-          ),
-        }));
-      } else if (name === "confirmPassword") {
-        setErrors((prev) => ({
-          ...prev,
-          confirmPassword: validateConfirmPassword(value, formData.password),
-        }));
+        const passwordErrors = validatePassword(value);
+        if (passwordErrors.length === 0) {
+          setErrors((prev) => ({ ...prev, password: [] }));
+        }
+        // Also check confirm password match
+        if (formData.confirmPassword && value === formData.confirmPassword) {
+          setErrors((prev) => ({ ...prev, confirmPassword: "" }));
+        }
+      } else if (name === "confirmPassword" && value === formData.password) {
+        setErrors((prev) => ({ ...prev, confirmPassword: "" }));
       }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Only mark as touched, don't validate yet
+    // Validation will happen on submit
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Mark all fields as touched
@@ -150,10 +164,10 @@ export default function RegisterPage() {
     const newErrors = {
       firstName: !formData.firstName ? t('register_page.validation.required_first_name') : "",
       lastName: !formData.lastName ? t('register_page.validation.required_last_name') : "",
-      email: validateEmail(formData.email),
-      phone: validatePhone(formData.phone),
-      password: validatePassword(formData.password),
-      confirmPassword: validateConfirmPassword(
+      email: !formData.email ? t('register_page.validation.required_email') : validateEmail(formData.email),
+      phone: !formData.phone ? t('register_page.validation.required_phone') : validatePhone(formData.phone),
+      password: !formData.password ? [t('register_page.validation.required_password')] : validatePassword(formData.password),
+      confirmPassword: !formData.confirmPassword ? t('register_page.validation.required_confirm_password') : validateConfirmPassword(
         formData.confirmPassword,
         formData.password
       ),
@@ -170,42 +184,64 @@ export default function RegisterPage() {
       newErrors.password.length > 0 ||
       newErrors.confirmPassword;
 
-    if (hasErrors) return;
+    if (hasErrors) {
+      return;
+    }
 
     if (!acceptTerms) {
       alert(t('register_page.alerts.accept_terms'));
       return;
     }
 
-    // Simulate loading for demo
+    // Call API to register
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const result = await authService.register({
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        fullName: `${formData.firstName} ${formData.lastName}`,
+        phoneNumber: formData.phone,
+      });
+
+      if (result.requireLogin) {
+        // Registration successful but needs manual login
+        alert(result.message || 'Registration successful! Please login with your credentials.');
+        window.location.href = '/login-email';
+      } else {
+        // Auto-login successful
+        alert(
+          t('register_page.alerts.submitted', {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone
+          })
+        );
+        // Redirect to home or dashboard
+        window.location.href = '/';
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to register. Please try again.';
+      alert(errorMessage);
+      console.error('Registration error:', error);
+    } finally {
       setLoading(false);
-      setLoading(false);
-      alert(
-        t('register_page.alerts.submitted', { firstName: formData.firstName, lastName: formData.lastName, email: formData.email, phone: formData.phone })
-      );
-    }, 1000);
+    }
   };
 
+
+
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient"
-    >
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient">
       {/* Decorative elements */}
-      <div 
-        className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"
-      ></div>
-      <div 
-        className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"
-      ></div>
+      <div className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"></div>
 
       <div className="max-w-[480px] w-full space-y-8 relative z-10">
-        <div 
-          className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
-        >
+        <div className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card">
           <div className="text-center mb-6">
-            <h2 
+            <h2
               className="text-3xl font-bold mb-2 auth-title"
             >
               {t('register_page.title')}
@@ -229,14 +265,18 @@ export default function RegisterPage() {
                   type="text"
                   value={formData.firstName}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder="John"
                   className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                   style={{
-                    borderColor: touched.firstName && errors.firstName ? '#ef4444' : undefined,
+                    borderColor:
+                      touched.firstName && errors.firstName
+                        ? "#ef4444"
+                        : undefined,
                   }}
                 />
                 {touched.firstName && errors.firstName && (
-                  <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>
+                  <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
                     {errors.firstName}
                   </p>
                 )}
@@ -255,14 +295,20 @@ export default function RegisterPage() {
                   type="text"
                   value={formData.lastName}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder="Doe"
                   className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                   style={{
-                    borderColor: touched.lastName && errors.lastName ? '#ef4444' : undefined,
+                    borderColor:
+                      touched.lastName && errors.lastName
+                        ? "#ef4444"
+                        : undefined,
                   }}
                 />
                 {touched.lastName && errors.lastName && (
-                  <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.lastName}</p>
+                  <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
+                    {errors.lastName}
+                  </p>
                 )}
               </div>
             </div>
@@ -281,14 +327,18 @@ export default function RegisterPage() {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="your.email@example.com"
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
-                  borderColor: touched.email && errors.email ? '#ef4444' : undefined,
+                  borderColor:
+                    touched.email && errors.email ? "#ef4444" : undefined,
                 }}
               />
               {touched.email && errors.email && (
-                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.email}</p>
+                <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
+                  {errors.email}
+                </p>
               )}
             </div>
 
@@ -306,14 +356,18 @@ export default function RegisterPage() {
                 type="tel"
                 value={formData.phone}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="0123456789"
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
-                  borderColor: touched.phone && errors.phone ? '#ef4444' : undefined,
+                  borderColor:
+                    touched.phone && errors.phone ? "#ef4444" : undefined,
                 }}
               />
               {touched.phone && errors.phone && (
-                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.phone}</p>
+                <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
+                  {errors.phone}
+                </p>
               )}
             </div>
 
@@ -332,17 +386,20 @@ export default function RegisterPage() {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder={t('register_page.password_placeholder')}
                   className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                   style={{
-                    borderColor: touched.password && errors.password.length > 0 ? '#ef4444' : undefined,
+                    borderColor:
+                      touched.password && errors.password.length > 0
+                        ? "#ef4444"
+                        : undefined,
                   }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none auth-icon-button"
-                  >
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none auth-icon-button">
                   {showPassword ? (
                     <svg
                       className="w-5 h-5"
@@ -381,7 +438,10 @@ export default function RegisterPage() {
               {touched.password && errors.password.length > 0 && (
                 <div className="mt-1 space-y-0.5">
                   {errors.password.map((error, index) => (
-                    <p key={index} className="text-sm" style={{ color: '#ef4444' }}>
+                    <p
+                      key={index}
+                      className="text-sm"
+                      style={{ color: "#ef4444" }}>
                       {error}
                     </p>
                   ))}
@@ -404,17 +464,20 @@ export default function RegisterPage() {
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.confirmPassword}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder={t('register_page.confirm_password_placeholder')}
                   className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                   style={{
-                    borderColor: touched.confirmPassword && errors.confirmPassword ? '#ef4444' : undefined,
+                    borderColor:
+                      touched.confirmPassword && errors.confirmPassword
+                        ? "#ef4444"
+                        : undefined,
                   }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none auth-icon-button"
-                  >
+                  className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none auth-icon-button">
                   {showConfirmPassword ? (
                     <svg
                       className="w-5 h-5"
@@ -451,7 +514,7 @@ export default function RegisterPage() {
                 </button>
               </div>
               {touched.confirmPassword && errors.confirmPassword && (
-                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>
+                <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
                   {errors.confirmPassword}
                 </p>
               )}
@@ -466,7 +529,9 @@ export default function RegisterPage() {
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
                   className="w-4 h-4 border rounded cursor-pointer auth-checkbox"
-                  style={{ '--tw-ring-color': '#FF380B' } as React.CSSProperties}
+                  style={
+                    { "--tw-ring-color": "#FF380B" } as React.CSSProperties
+                  }
                 />
               </div>
               <label htmlFor="terms" className="ml-3 text-sm auth-text">
