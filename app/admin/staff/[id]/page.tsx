@@ -1,509 +1,599 @@
-"use client";
+ "use client";
 
+import employeeService from "@/lib/services/employeeService";
+import { useToast } from "@/lib/contexts/ToastContext";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+const ROLES = ["Manager", "Chef", "Waiter", "Cashier", "Staff"];
+const SALARY_TYPES = ["Hourly", "Monthly", "Daily"];
 
 export default function StaffFormPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const isNew = id === "new";
+  const isNewStaff = id === "new";
+  const { showToast } = useToast();
+  const { t } = useTranslation(["common"]);
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
-    phone: "",
-    role: "",
-    status: "active" as "active" | "inactive",
-    startDate: "",
+    fullName: "",
+    phoneNumber: "",
+    address: "",
+    position: "",
+    hireDate: new Date().toISOString().split("T")[0],
     salary: "",
+    salaryType: "Monthly",
+    role: "Staff",
+    isActive: true,
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  const roles = ["Manager", "Waiter", "Chef", "Cashier"];
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isNew) {
-      const mockStaff = {
-        name: "John Doe",
-        email: "john@restaurant.com",
-        phone: "0901234567",
-        role: "Manager",
-        status: "active" as "active" | "inactive",
-        startDate: "2024-01-15",
-        salary: "15000000",
-      };
-      setFormData(mockStaff);
+    if (!isNewStaff) {
+      fetchStaff();
     }
-  }, [id, isNew]);
+  }, [id, isNewStaff]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isNew) {
-      console.log("Creating new staff:", formData);
-    } else {
-      console.log("Updating staff:", id, formData);
+  const fetchStaff = async () => {
+    try {
+      setLoading(true);
+      const response = await employeeService.getEmployeeById(id);
+
+      // Extract employee data from response
+      const employee = response.data || response;
+
+      setFormData({
+        email: employee.email || "",
+        fullName: employee.fullName || "",
+        phoneNumber: employee.phoneNumber || "",
+        address: employee.address || "",
+        position: employee.position || "",
+        hireDate: employee.hireDate
+          ? new Date(employee.hireDate).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        salary: employee.salary?.toString() || "0",
+        salaryType: employee.salaryType || "Monthly",
+        role: employee.roles?.[0] || "Staff",
+        isActive: employee.isActive !== undefined ? employee.isActive : true,
+      });
+    } catch (err: any) {
+      console.error("Failed to load staff:", err);
+    } finally {
+      setLoading(false);
     }
-    router.push("/admin/staff");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+
+      // Validation
+      if (!formData.fullName.trim()) {
+        showToast(
+          "error",
+          t("dashboard.toasts.staff.validation_error_title"),
+          t("dashboard.toasts.staff.validation_full_name_required"),
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.email.trim()) {
+        showToast(
+          "error",
+          t("dashboard.toasts.staff.validation_error_title"),
+          t("dashboard.toasts.staff.validation_email_required"),
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.position.trim()) {
+        showToast(
+          "error",
+          t("dashboard.toasts.staff.validation_error_title"),
+          t("dashboard.toasts.staff.validation_position_required"),
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (
+        !formData.salary ||
+        parseInt(formData.salary.replace(/\D/g, "")) <= 0
+      ) {
+        showToast(
+          "error",
+          t("dashboard.toasts.staff.validation_error_title"),
+          t("dashboard.toasts.staff.validation_salary_required"),
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (isNewStaff) {
+        // Create new staff
+        const submitData = {
+          email: formData.email.trim(),
+          fullName: formData.fullName.trim(),
+          phoneNumber: formData.phoneNumber?.trim() || undefined,
+          address: formData.address?.trim() || undefined,
+          position: formData.position.trim(),
+          hireDate: formData.hireDate,
+          salary: parseInt(formData.salary.replace(/\D/g, "")) || 0,
+          salaryType: formData.salaryType,
+          role: formData.role,
+        };
+
+        await employeeService.createEmployee(submitData);
+        showToast(
+          "success",
+          t("dashboard.toasts.staff.created_title"),
+          t("dashboard.toasts.staff.created_message"),
+        );
+        setTimeout(() => router.push("/admin/staff"), 1500);
+        return;
+      } else {
+        // Update existing staff
+        const submitData = {
+          fullName: formData.fullName.trim(),
+          phoneNumber: formData.phoneNumber?.trim() || undefined,
+          address: formData.address?.trim() || undefined,
+          position: formData.position.trim(),
+          hireDate: formData.hireDate,
+          salary: parseInt(formData.salary.replace(/\D/g, "")) || 0,
+          salaryType: formData.salaryType,
+          isActive: formData.isActive,
+        };
+
+        await employeeService.updateEmployee(id, submitData);
+        showToast(
+          "success",
+          t("dashboard.toasts.staff.updated_title"),
+          t("dashboard.toasts.staff.updated_message"),
+        );
+        setTimeout(() => router.push("/admin/staff"), 1500);
+        return;
+      }
+    } catch (err: any) {
+      let errorMsg = "Failed to save staff";
+
+      if (err.response) {
+        const status = err.response.status;
+        const data = err.response.data;
+
+        if (status === 400) {
+          errorMsg =
+            data?.message ||
+            data?.title ||
+            "Invalid data. Please check your input.";
+        } else if (status === 401) {
+          errorMsg = "Unauthorized. Please login again.";
+          setTimeout(() => router.push("/login"), 2000);
+        } else if (status === 403) {
+          errorMsg = "You don't have permission to perform this action.";
+        } else if (status === 404) {
+          errorMsg = "Staff not found.";
+        } else if (status === 500) {
+          errorMsg = "Server error. Please try again later.";
+        } else {
+          errorMsg =
+            data?.message || data?.title || data?.error || `Error ${status}`;
+        }
+      } else if (err.request) {
+        errorMsg = "No response from server. Please check your connection.";
+      } else {
+        errorMsg = err.message || "Unknown error occurred";
+      }
+
+      console.error("Error saving staff:", errorMsg);
+      showToast(
+        "error",
+        t("dashboard.toasts.staff.save_failed_title"),
+        errorMsg,
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+    }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File size must be less than 5MB");
-        return;
-      }
-
-      const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
-      if (!validTypes.includes(file.type)) {
-        alert("Only PNG, JPG, JPEG, and WEBP files are allowed");
-        return;
-      }
-
-      setImageFile(file);
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-  };
-
-  const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this staff member?")) {
-      console.log("Deleting staff:", id);
-      router.push("/admin/staff");
-    }
-  };
+  if (loading && !isNewStaff) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
 
   return (
-    <main className="flex-1 p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-lg hover:bg-orange-500/10 transition-all"
-            style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-            }}>
-            <svg
-              className="w-5 h-5"
-              style={{ color: "var(--text)" }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <div>
+    <div className="flex-1 flex flex-col h-full bg-[var(--bg-base)]">
+      <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="mb-6">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 mb-4 transition-colors"
+              style={{ color: "var(--text-muted)" }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--text)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--text-muted)")
+              }>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              Back to Staff List
+            </button>
             <h2
               className="text-3xl font-bold mb-2"
               style={{ color: "var(--text)" }}>
-              {isNew ? "Add New Staff Member" : "Edit Staff Member"}
+              {isNewStaff ? "Add New Staff" : "Edit Staff"}
             </h2>
             <p style={{ color: "var(--text-muted)" }}>
-              {isNew
+              {isNewStaff
                 ? "Fill in the details to add a new staff member"
                 : "Update staff member information"}
             </p>
           </div>
-        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 space-y-4">
-              <div
-                className="rounded-xl p-4"
-                style={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                }}>
-                <h3
-                  className="text-lg font-bold mb-3"
-                  style={{ color: "var(--text)" }}>
-                  Personal Information
-                </h3>
-                <div className="space-y-3">
+          {/* Form */}
+          <form onSubmit={handleSubmit}>
+            <div
+              className="rounded-xl p-6 mb-6"
+              style={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+              }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
+                Basic Information
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Full Name */}
+                <div>
+                  <label
+                    className="block mb-2 font-medium"
+                    style={{ color: "var(--text)" }}>
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                    placeholder="Enter full name"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label
+                    className="block mb-2 font-medium"
+                    style={{ color: "var(--text)" }}>
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    disabled={!isNewStaff}
+                    className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                    placeholder="Enter email"
+                  />
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label
+                    className="block mb-2 font-medium"
+                    style={{ color: "var(--text)" }}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+
+                {/* Position */}
+                <div>
+                  <label
+                    className="block mb-2 font-medium"
+                    style={{ color: "var(--text)" }}>
+                    Position <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="position"
+                    value={formData.position}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                    placeholder="e.g., Head Chef, Server, etc."
+                  />
+                </div>
+
+                {/* Role (only for new staff) */}
+                {isNewStaff && (
                   <div>
                     <label
-                      htmlFor="name"
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text)" }}>
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.boxShadow = "0 0 0 2px #FF380B")
-                      }
-                      onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-                      placeholder="e.g., John Doe"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text)" }}>
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.boxShadow = "0 0 0 2px #FF380B")
-                      }
-                      onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-                      placeholder="john@restaurant.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text)" }}>
-                      Phone Number <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.boxShadow = "0 0 0 2px #FF380B")
-                      }
-                      onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-                      placeholder="0901234567"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="role"
-                      className="block text-sm font-medium mb-2"
+                      className="block mb-2 font-medium"
                       style={{ color: "var(--text)" }}>
                       Role <span className="text-red-500">*</span>
                     </label>
                     <select
-                      id="role"
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
                       style={{
                         background: "var(--surface)",
                         border: "1px solid var(--border)",
                         color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.boxShadow = "0 0 0 2px #FF380B")
-                      }
-                      onBlur={(e) =>
-                        (e.currentTarget.style.boxShadow = "none")
-                      }>
-                      <option value="">Select a role</option>
-                      {roles.map((role) => (
+                      }}>
+                      {ROLES.map((role) => (
                         <option key={role} value={role}>
                           {role}
                         </option>
                       ))}
                     </select>
                   </div>
+                )}
 
-                  <div>
-                    <label
-                      htmlFor="status"
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text)" }}>
-                      Status
-                    </label>
-                    <select
-                      id="status"
-                      name="status"
-                      value={formData.status}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.boxShadow = "0 0 0 2px #FF380B")
-                      }
-                      onBlur={(e) =>
-                        (e.currentTarget.style.boxShadow = "none")
-                      }>
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </div>
+                {/* Hire Date */}
+                <div>
+                  <label
+                    className="block mb-2 font-medium"
+                    style={{ color: "var(--text)" }}>
+                    Hire Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="hireDate"
+                    value={formData.hireDate}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                  />
+                </div>
 
-                  <div>
-                    <label
-                      htmlFor="startDate"
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text)" }}>
-                      Ngày vào làm <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      id="startDate"
-                      name="startDate"
-                      value={formData.startDate}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.boxShadow = "0 0 0 2px #FF380B")
-                      }
-                      onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="salary"
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text)" }}>
-                      Lương (VNĐ) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      id="salary"
-                      name="salary"
-                      value={formData.salary}
-                      onChange={handleChange}
-                      required
-                      min="0"
-                      step="100000"
-                      className="w-full px-4 py-3 rounded-lg outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.boxShadow = "0 0 0 2px #FF380B")
-                      }
-                      onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-                      placeholder="15000000"
-                    />
-                  </div>
+                {/* Address - full width */}
+                <div className="md:col-span-2">
+                  <label
+                    className="block mb-2 font-medium"
+                    style={{ color: "var(--text)" }}>
+                    Address
+                  </label>
+                  <textarea
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                    placeholder="Enter address"
+                  />
                 </div>
               </div>
             </div>
 
-            <div className="lg:col-span-1">
+            {/* Salary Information */}
+            <div
+              className="rounded-xl p-6 mb-6"
+              style={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+              }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
+                Salary Information
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Salary */}
+                <div>
+                  <label
+                    className="block mb-2 font-medium"
+                    style={{ color: "var(--text)" }}>
+                    Salary (VND) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="salary"
+                    value={formData.salary}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      setFormData((prev) => ({ ...prev, salary: value }));
+                    }}
+                    required
+                    className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                    placeholder="0"
+                  />
+                  {formData.salary && (
+                    <p
+                      className="text-sm mt-1"
+                      style={{ color: "var(--text-muted)" }}>
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(parseInt(formData.salary) || 0)}
+                    </p>
+                  )}
+                </div>
+
+                {/* Salary Type */}
+                <div>
+                  <label
+                    className="block mb-2 font-medium"
+                    style={{ color: "var(--text)" }}>
+                    Salary Type <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="salaryType"
+                    value={formData.salaryType}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}>
+                    {SALARY_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Status (only for edit) */}
+            {!isNewStaff && (
               <div
-                className="rounded-xl p-4 sticky top-4"
+                className="rounded-xl p-6 mb-6"
                 style={{
                   background: "var(--card)",
                   border: "1px solid var(--border)",
                 }}>
                 <h3
-                  className="text-lg font-bold mb-3"
+                  className="text-xl font-bold mb-4"
                   style={{ color: "var(--text)" }}>
-                  Profile Picture
+                  Status
                 </h3>
-                {imagePreview ? (
-                  <div className="relative aspect-square">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all shadow-lg">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <label
-                    htmlFor="image-upload"
-                    className="border-2 border-dashed rounded-lg text-center transition-all cursor-pointer flex items-center justify-center aspect-square"
-                    style={{ borderColor: "var(--border)" }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.borderColor = "#FF380B80")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.borderColor = "var(--border)")
-                    }>
-                    <div className="flex flex-col items-center gap-2 p-4">
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center"
-                        style={{ background: "var(--surface)" }}>
-                        <svg
-                          className="w-6 h-6"
-                          style={{ color: "var(--text-muted)" }}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p
-                          className="text-xs font-medium"
-                          style={{ color: "var(--text)" }}>
-                          Click to upload
-                        </p>
-                        <p
-                          className="text-xs mt-1"
-                          style={{ color: "var(--text-muted)" }}>
-                          PNG, JPG, WEBP (5MB)
-                        </p>
-                      </div>
-                      <span
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                        style={{ background: "#FF380B1A", color: "#FF380B" }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = "#FF380B33")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = "#FF380B1A")
-                        }>
-                        Choose File
-                      </span>
-                    </div>
-                    <input
-                      id="image-upload"
-                      type="file"
-                      accept="image/png,image/jpeg,image/jpg,image/webp"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-            </div>
-          </div>
 
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="flex-1 px-4 py-2.5 rounded-lg font-medium transition-all hover:bg-gray-500/10"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}>
-              Cancel
-            </button>
-            {!isNew && (
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    checked={formData.isActive}
+                    onChange={handleChange}
+                    className="w-5 h-5 rounded border-2 border-gray-300 focus:ring-2 focus:ring-orange-500 cursor-pointer"
+                    style={{
+                      accentColor: "#FF380B",
+                    }}
+                  />
+                  <span style={{ color: "var(--text)" }}>
+                    Active (Staff member is currently working)
+                  </span>
+                </label>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
               <button
                 type="button"
-                onClick={handleDelete}
-                className="px-4 py-2.5 rounded-lg font-medium transition-all"
-                style={{ background: "#ef444410", color: "#ef4444" }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#ef444420")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#ef444410")
-                }>
-                Delete
+                onClick={() => router.back()}
+                className="flex-1 px-6 py-3 rounded-lg font-medium transition-all"
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }}>
+                Cancel
               </button>
-            )}
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-all shadow-lg"
-              style={{
-                background: "linear-gradient(to right, #FF380B, #FF380BF0)",
-                boxShadow:
-                  "0 10px 15px -3px #FF380B33, 0 4px 6px -4px #FF380B33",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background =
-                  "linear-gradient(to right, #FF380BF0, #FF380BE0)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background =
-                  "linear-gradient(to right, #FF380B, #FF380BF0)";
-              }}>
-              {isNew ? "Add Staff Member" : "Save Changes"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </main>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 px-6 py-3 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: loading ? "#CC2D08" : "#FF380B",
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) e.currentTarget.style.background = "#CC2D08";
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) e.currentTarget.style.background = "#FF380B";
+                }}>
+                {loading
+                  ? "Saving..."
+                  : isNewStaff
+                    ? "Create Staff"
+                    : "Update Staff"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
   );
 }

@@ -270,6 +270,26 @@
     }
   },
   "dashboard": {
+    "toasts": {
+      "staff": {
+        "load_error_title": "Error",
+        "load_network_error_title": "Network Error",
+        "load_error_message": "Failed to load staff list",
+        "deactivated_title": "Success",
+        "deactivated_message": "Staff member deactivated successfully",
+        "action_failed_title": "Action Failed",
+        "validation_error_title": "Validation Error",
+        "validation_full_name_required": "Full name is required",
+        "validation_email_required": "Email is required",
+        "validation_position_required": "Position is required",
+        "validation_salary_required": "Salary must be greater than 0",
+        "created_title": "Staff Created",
+        "created_message": "New staff member has been created successfully",
+        "updated_title": "Staff Updated",
+        "updated_message": "Staff information has been updated successfully",
+        "save_failed_title": "Save Failed"
+      }
+    },
     "kpi": {
       "bookings": "Today's Bookings",
       "bookings_subtitle": "{{count}} pending confirmations",

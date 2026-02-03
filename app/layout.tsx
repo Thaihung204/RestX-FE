@@ -1,10 +1,10 @@
 import I18nProvider from "@/components/I18nProvider";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { TenantProvider } from "@/lib/contexts/TenantContext";
+import { ToastProvider } from "@/lib/contexts/ToastContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Providers from "./providers";
 import AutoDarkThemeProvider from "./theme/AutoDarkThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -93,7 +93,9 @@ export default function RootLayout({
         <I18nProvider>
           <TenantProvider>
             <AuthProvider>
-              <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
+              <ToastProvider>
+                <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
+              </ToastProvider>
             </AuthProvider>
           </TenantProvider>
         </I18nProvider>

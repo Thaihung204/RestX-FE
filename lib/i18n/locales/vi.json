@@ -270,6 +270,26 @@
     }
   },
   "dashboard": {
+    "toasts": {
+      "staff": {
+        "load_error_title": "Lỗi",
+        "load_network_error_title": "Lỗi mạng",
+        "load_error_message": "Không thể tải danh sách nhân viên",
+        "deactivated_title": "Thành công",
+        "deactivated_message": "Đã ngừng kích hoạt nhân viên thành công",
+        "action_failed_title": "Thao tác thất bại",
+        "validation_error_title": "Lỗi xác thực",
+        "validation_full_name_required": "Vui lòng nhập họ tên",
+        "validation_email_required": "Vui lòng nhập email",
+        "validation_position_required": "Vui lòng nhập vị trí",
+        "validation_salary_required": "Lương phải lớn hơn 0",
+        "created_title": "Đã tạo nhân viên",
+        "created_message": "Nhân viên mới đã được tạo thành công",
+        "updated_title": "Đã cập nhật nhân viên",
+        "updated_message": "Thông tin nhân viên đã được cập nhật thành công",
+        "save_failed_title": "Lưu thất bại"
+      }
+    },
     "kpi": {
       "bookings": "Đặt bàn hôm nay",
       "bookings_subtitle": "{{count}} chờ xác nhận",
