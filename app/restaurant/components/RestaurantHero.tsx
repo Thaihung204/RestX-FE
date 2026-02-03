@@ -34,7 +34,7 @@ const RestaurantHero: React.FC = () => {
           zIndex: 1,
         }}>
         <img
-          src={tenant?.backgroundUrl || "/images/restaurant/banner.png"} // Use tenant background
+          src={(tenant?.backgroundUrl && tenant.backgroundUrl.trim() !== '') ? tenant.backgroundUrl : "/images/restaurant/banner.png"}
           alt="Restaurant Banner"
           style={{
             width: '100%',
@@ -42,6 +42,7 @@ const RestaurantHero: React.FC = () => {
             objectFit: 'cover',
             objectPosition: 'center',
           }}
+          onError={(e) => { e.currentTarget.src = '/images/restaurant/banner.png'; }}
         />
       </div>
 

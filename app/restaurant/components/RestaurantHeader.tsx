@@ -133,7 +133,7 @@ const RestaurantHeader: React.FC = () => {
               overflow: 'hidden',
             }}>
             <img
-              src={tenant?.logoUrl || "/images/logo/restx-removebg-preview.png"}
+              src={(tenant?.logoUrl && tenant.logoUrl.trim() !== '') ? tenant.logoUrl : "/images/logo/restx-removebg-preview.png"}
               alt="Restaurant Logo"
               className="app-logo-img"
               style={{
@@ -142,6 +142,7 @@ const RestaurantHeader: React.FC = () => {
                 objectFit: 'contain',
                 filter: headerContentColor === 'white' ? 'invert(1) hue-rotate(180deg) brightness(1.1)' : 'none'
               }}
+              onError={(e) => { e.currentTarget.src = '/images/logo/restx-removebg-preview.png'; }}
             />
           </div>
           <span
