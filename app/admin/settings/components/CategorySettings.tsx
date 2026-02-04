@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 interface Category {
@@ -187,14 +188,18 @@ export default function CategorySettings() {
             </div>
 
             {/* Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+            {isModalOpen && typeof document !== 'undefined' && createPortal(
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in"
+                    onClick={handleCloseModal}
+                >
                     <div
                         className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all animate-scale-in"
                         style={{
                             background: 'var(--card)',
                             border: '1px solid var(--border)'
                         }}
+                        onClick={(e) => e.stopPropagation()}
                     >
                         <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
                             <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
@@ -294,7 +299,8 @@ export default function CategorySettings() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

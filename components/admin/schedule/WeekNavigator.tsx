@@ -1,17 +1,18 @@
 import {
-    CalendarOutlined,
-    CopyOutlined,
-    LeftOutlined,
-    RightOutlined,
+  CalendarOutlined,
+  CopyOutlined,
+  LeftOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 import {
-    addWeeks,
-    endOfWeek,
-    format,
-    isSameWeek,
-    startOfWeek,
-    subWeeks,
+  addWeeks,
+  endOfWeek,
+  format,
+  isSameWeek,
+  startOfWeek,
+  subWeeks,
 } from "date-fns";
+import { enUS, vi } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 
 interface WeekNavigatorProps {
@@ -23,7 +24,7 @@ export default function WeekNavigator({
   currentWeek,
   onWeekChange,
 }: WeekNavigatorProps) {
-  const { t } = useTranslation("common");
+  const { t, i18n } = useTranslation("common");
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 1 });
   const isCurrentWeek = isSameWeek(currentWeek, new Date(), {
@@ -42,7 +43,7 @@ export default function WeekNavigator({
         border: "1px solid var(--border)",
       }}>
       <div className="flex items-center gap-3 mb-4 md:mb-0">
-        <div 
+        <div
           className="flex p-1 rounded-lg border shadow-sm"
           style={{ background: "var(--surface)", borderColor: "var(--border)" }}
         >
@@ -57,11 +58,10 @@ export default function WeekNavigator({
           <button
             onClick={handleToday}
             disabled={isCurrentWeek}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
-              isCurrentWeek
-                ? "shadow-sm"
-                : "hover:shadow-sm"
-            }`}
+            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${isCurrentWeek
+              ? "shadow-sm"
+              : "hover:shadow-sm"
+              }`}
             style={{
               background: isCurrentWeek ? "var(--bg-base)" : "transparent",
               color: isCurrentWeek ? "#ea580c" : "var(--text-muted)", // orange-600
@@ -85,9 +85,9 @@ export default function WeekNavigator({
         <h3 className="text-lg md:text-xl font-bold flex items-center gap-2" style={{ color: "var(--text)" }}>
           <CalendarOutlined className="text-orange-500" />
           <span>
-            {format(weekStart, "MMMM d")}{" "}
+            {format(weekStart, "MMMM d", { locale: i18n.language === 'vi' ? vi : enUS })}{" "}
             <span className="font-light" style={{ color: "var(--text-muted)" }}>-</span>{" "}
-            {format(weekEnd, "MMMM d, yyyy")}
+            {format(weekEnd, "MMMM d, yyyy", { locale: i18n.language === 'vi' ? vi : enUS })}
           </span>
         </h3>
         <p className="text-xs font-medium uppercase tracking-wider mt-1 opacity-60" style={{ color: "var(--text-muted)" }}>

@@ -6,6 +6,7 @@ import { TableMap2D } from '../../admin/tables/components/TableMap2D';
 import { TableData as Map2DTableData } from '../../admin/tables/components/DraggableTable';
 
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../components/I18nProvider';
 import {
   Card,
   Row,
@@ -115,7 +116,8 @@ type ViewMode = 'grid' | 'map';
 
 export default function TableManagement() {
   const { mode } = useThemeMode();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { language } = useLanguage();
   const [messageApi, contextHolder] = message.useMessage();
   const [tables, setTables] = useState<TableData[]>(initialTables);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
@@ -169,7 +171,9 @@ export default function TableManagement() {
       // Add Zone Label Marker
       markers.push({
         id: `zone-${zone}`,
-        label: `${t('staff.tables.zones.zone_' + zone.toLowerCase()) || 'Zone ' + zone}`,
+        label: i18n.exists('staff.tables.zones.zone_' + zone.toLowerCase())
+          ? t('staff.tables.zones.zone_' + zone.toLowerCase())
+          : `${t('staff.tables.zones.zone')} ${zone}`,
         position: { x: 40, y: currentY - 30 },
         style: {
           fontSize: 18,
@@ -233,7 +237,7 @@ export default function TableManagement() {
               ...t,
               status: 'occupied' as TableStatus,
               guests: values.guests,
-              startTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+              startTime: new Date().toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' }),
             }
             : t
         )
@@ -318,7 +322,7 @@ export default function TableManagement() {
 
             {/* Capacity */}
             <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>
-              <UserOutlined /> {table.capacity} chỗ
+              <UserOutlined /> {table.capacity} {t('staff.tables.table.seats')}
             </Text>
 
             {/* Status Tag */}
@@ -408,7 +412,7 @@ export default function TableManagement() {
                 </svg>
               }
             >
-              Grid
+              {t('staff.tables.view.grid')}
             </Button>
             <Button
               type={viewMode === 'map' ? 'primary' : 'default'}
@@ -419,7 +423,7 @@ export default function TableManagement() {
                 </svg>
               }
             >
-              Map
+              {t('staff.tables.view.map')}
             </Button>
           </div>
         </div>
@@ -555,9 +559,9 @@ export default function TableManagement() {
                   styles={{ body: { padding: '16px 20px' } }}
                 >
                   <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                    Khu vực
+                    {t('staff.tables.modal.zone')}
                   </Text>
-                  <Text strong style={{ fontSize: 16, display: 'block' }}>Khu {selectedTable.zone}</Text>
+                  <Text strong style={{ fontSize: 16, display: 'block' }}>{t('staff.tables.zones.zone')} {selectedTable.zone}</Text>
                 </Card>
               </Col>
               <Col span={12}>
@@ -574,9 +578,9 @@ export default function TableManagement() {
                   styles={{ body: { padding: '16px 20px' } }}
                 >
                   <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                    Sức chứa
+                    {t('staff.tables.modal.capacity')}
                   </Text>
-                  <Text strong style={{ fontSize: 16, display: 'block' }}>{selectedTable.capacity} người</Text>
+                  <Text strong style={{ fontSize: 16, display: 'block' }}>{selectedTable.capacity} {t('staff.tables.table.guests')}</Text>
                 </Card>
               </Col>
             </Row>
@@ -596,7 +600,7 @@ export default function TableManagement() {
                 <Row gutter={[16, 0]}>
                   <Col span={8}>
                     <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      Số khách
+                      {t('staff.tables.modal.guest_count')}
                     </Text>
                     <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2 }}>
                       {selectedTable.guests}
@@ -604,7 +608,7 @@ export default function TableManagement() {
                   </Col>
                   <Col span={8}>
                     <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      Bắt đầu
+                      {t('staff.tables.modal.start_time')}
                     </Text>
                     <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2 }}>
                       {selectedTable.startTime}
@@ -612,7 +616,7 @@ export default function TableManagement() {
                   </Col>
                   <Col span={8}>
                     <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      Tổng tiền
+                      {t('staff.tables.modal.total')}
                     </Text>
                     <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2, color: '#FF380B' }}>
                       {selectedTable.order.total.toLocaleString('vi-VN')}đ
@@ -641,19 +645,19 @@ export default function TableManagement() {
                 <Flex vertical gap={16} style={{ width: '100%' }}>
                   <div>
                     <Text style={{ fontSize: 13, display: 'block', marginBottom: 6, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      Khách đặt
+                      {t('staff.tables.modal.reserved_by')}
                     </Text>
                     <Text strong style={{ fontSize: 15, display: 'block' }}>{selectedTable.reservation.name}</Text>
                   </div>
                   <div>
                     <Text style={{ fontSize: 13, display: 'block', marginBottom: 6, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      Thời gian đặt
+                      {t('staff.tables.modal.reservation_time')}
                     </Text>
                     <Text strong style={{ fontSize: 15, display: 'block' }}>{selectedTable.reservation.time}</Text>
                   </div>
                   <div>
                     <Text style={{ fontSize: 13, display: 'block', marginBottom: 6, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      Số điện thoại
+                      {t('staff.tables.modal.phone')}
                     </Text>
                     <Text strong style={{ fontSize: 15, display: 'block' }}>{selectedTable.reservation.phone}</Text>
                   </div>

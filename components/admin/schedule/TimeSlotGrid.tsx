@@ -3,14 +3,15 @@
 import { ScheduleCell, TimeSlot, WeekSchedule } from "@/lib/types/schedule";
 import { ClockCircleOutlined, UserOutlined } from "@ant-design/icons";
 import {
-    addDays,
-    format,
-    isAfter,
-    isBefore,
-    isSameDay,
-    set,
-    startOfWeek,
+  addDays,
+  format,
+  isAfter,
+  isBefore,
+  isSameDay,
+  set,
+  startOfWeek,
 } from "date-fns";
+import { enUS, vi } from "date-fns/locale";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -23,7 +24,7 @@ export default function TimeSlotGrid({
   weekSchedule,
   onCellClick,
 }: TimeSlotGridProps) {
-  const { t } = useTranslation("common");
+  const { t, i18n } = useTranslation("common");
   const [currentVNTime, setCurrentVNTime] = useState<Date | null>(null);
 
   // Initialize and tick clock for Vietnam Time
@@ -116,11 +117,11 @@ export default function TimeSlotGrid({
       "border-2 hover:border-gray-400 custom-transition relative overflow-hidden flex flex-col gap-2 rounded-xl p-3 w-full h-[120px]";
 
     if (hasAssignments) {
-       // assigned style - keep partial transparent blue for now, or use variable if available
-       // Using a hardcoded light blue overlay effect might be safest if variables aren't defined for "assigned"
-       // But better to use standard surface and let the assigned indicator be the text/highlight
-       style.background = "rgba(59, 130, 246, 0.1)"; // blue-500 @ 10%
-       style.borderColor = "rgba(59, 130, 246, 0.3)";
+      // assigned style - keep partial transparent blue for now, or use variable if available
+      // Using a hardcoded light blue overlay effect might be safest if variables aren't defined for "assigned"
+      // But better to use standard surface and let the assigned indicator be the text/highlight
+      style.background = "rgba(59, 130, 246, 0.1)"; // blue-500 @ 10%
+      style.borderColor = "rgba(59, 130, 246, 0.3)";
     }
 
     // Overlay Time Status Styles
@@ -135,7 +136,7 @@ export default function TimeSlotGrid({
   };
 
   return (
-    <div 
+    <div
       className="rounded-xl overflow-hidden shadow-sm border flex flex-col h-full"
       style={{
         background: "var(--card)",
@@ -143,7 +144,7 @@ export default function TimeSlotGrid({
       }}
     >
       {/* Legend / Status Info */}
-      <div 
+      <div
         className="p-3 border-b flex items-center justify-end gap-4 text-xs"
         style={{
           background: "var(--surface)",
@@ -177,7 +178,7 @@ export default function TimeSlotGrid({
         <table className="w-full min-w-[1000px] border-collapse">
           <thead>
             <tr>
-              <th 
+              <th
                 className="p-4 text-left font-semibold sticky left-0 z-20 border-b border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[140px]"
                 style={{
                   background: "var(--surface)",
@@ -206,13 +207,13 @@ export default function TimeSlotGrid({
                       className="font-bold text-lg"
                       style={{ color: isToday ? "#2563eb" : "var(--text)" }} // blue-600
                     >
-                      {format(day, "EEE")}
+                      {format(day, "EEE", { locale: i18n.language === 'vi' ? vi : enUS })}
                     </div>
                     <div
                       className="text-xs font-medium uppercase tracking-wider mt-1"
                       style={{ color: isToday ? "#3b82f6" : "var(--text-muted)" }} // blue-500
                     >
-                      {format(day, "MMM d")}
+                      {format(day, "MMM d", { locale: i18n.language === 'vi' ? vi : enUS })}
                     </div>
                     {isToday && (
                       <div className="absolute top-0 right-0 left-0 h-1 bg-blue-500" />
@@ -229,7 +230,7 @@ export default function TimeSlotGrid({
                 key={timeSlot.id}
                 className="group transition-colors hover:bg-black/5"
               >
-                <td 
+                <td
                   className="p-4 font-medium sticky left-0 z-10 border-r border-b shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors"
                   style={{
                     background: "var(--card)",
@@ -256,8 +257,8 @@ export default function TimeSlotGrid({
                       key={dayIndex}
                       className="p-3 border-b align-top relative"
                       style={{
-                         borderColor: "var(--border)",
-                         background: timeStatus === "current" ? "rgba(59, 130, 246, 0.05)" : undefined 
+                        borderColor: "var(--border)",
+                        background: timeStatus === "current" ? "rgba(59, 130, 246, 0.05)" : undefined
                       }}
                     >
                       <button
@@ -282,10 +283,8 @@ export default function TimeSlotGrid({
                             </div>
                             <div className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
                               {assignedCount === 0
-                                ? "No staff"
-                                : assignedCount === 1
-                                  ? "staff assigned"
-                                  : "staff assigned"}
+                                ? t("schedule.status.no_staff")
+                                : t("schedule.status.staff_assigned")}
                             </div>
                           </div>
                         </div>

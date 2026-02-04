@@ -32,7 +32,7 @@
       },
       "table_status": {
         "title": "Table Status",
-        "vacant": "Vacant",
+        "available": "Available",
         "occupied": "Occupied"
       },
       "quick_action_items": {
@@ -99,11 +99,16 @@
         "reserved": "Reserved",
         "cleaning": "Cleaning"
       },
+      "view": {
+        "grid": "Grid",
+        "map": "Map"
+      },
       "zones": {
         "all": "All",
         "zone_a": "Zone A",
         "zone_b": "Zone B",
-        "zone_vip": "VIP Zone"
+        "zone_vip": "VIP Zone",
+        "zone": "Zone"
       },
       "table": {
         "seats": "seats",
@@ -123,7 +128,11 @@
         "reservation_name": "Reservation Name",
         "reservation_time": "Reservation Time",
         "phone": "Phone Number",
-        "confirm_open": "Confirm Open Table"
+        "confirm_open": "Confirm Open Table",
+        "guest_count": "Guest Count",
+        "capacity": "Capacity",
+        "total": "Total Amount",
+        "reserved_by": "Reserved By"
       },
       "actions": {
         "open_table": "Open Table",
@@ -167,8 +176,10 @@
       "title": "Checkout",
       "stats": {
         "total_pending": "Total Pending Payment",
-        "tables_pending": "Tables Pending Payment",
-        "paid": "Paid"
+        "pending_tables": "Tables Pending Payment",
+        "paid": "Paid",
+        "tables": "tables",
+        "orders": "orders"
       },
       "search": {
         "placeholder": "Search table or bill...",
@@ -216,10 +227,11 @@
       "on_break": "On Break",
       "end_break": "End Break",
       "stats": {
-        "worked_days": "Worked Days",
+        "work_days": "Worked Days",
         "late_days": "Late Days",
         "leave_days": "Leave Days",
-        "total_hours": "Total Working Hours"
+        "total_hours": "Total Working Hours",
+        "days": "days"
       },
       "table": {
         "date": "Date",
@@ -398,6 +410,19 @@
         "appetizer": "Appetizer",
         "dessert": "Dessert",
         "beverages": "Beverages"
+      },
+      "best_seller": "Best Seller",
+      "no_description": "No description",
+      "loading": "Loading menu items...",
+      "no_items": "No menu items found",
+      "add_first_item": "Add your first menu item",
+      "empty_category": "No items in \"{{category}}\" category",
+      "modal": {
+        "delete_title": "Delete Menu Item",
+        "delete_confirm": "Are you sure you want to delete",
+        "cannot_undo": "This action cannot be undone.",
+        "cancel": "Cancel",
+        "delete": "Delete"
       }
     },
     "orders": {
@@ -479,7 +504,11 @@
         "capacity": "Capacity: {{count}} seats",
         "order": "Order",
         "reserved_at": "Reserved at",
-        "view_details": "View Details"
+        "view_details": "View Details",
+        "table_name": "Table {{number}}"
+      },
+      "errors": {
+        "cannot_delete_last_area": "Cannot delete the last area."
       },
       "status": {
         "available": "Available",
@@ -1132,6 +1161,8 @@
       "password_placeholder": "Enter your password",
       "confirm_password_placeholder": "Confirm your password",
       "i_agree": "I agree to RestX's",
+      "terms_of_service": "Terms of Service",
+      "privacy_policy": "Privacy Policy",
       "create_account_btn": "CREATE ACCOUNT",
       "already_have_account": "Already have an account?",
       "sign_in_here": "Sign in here",
@@ -1160,7 +1191,124 @@
         "submitted": "Registration Submitted!\n\nName: {{firstName}} {{lastName}}\nEmail: {{email}}\nPhone: {{phone}}\n\n(This is UI demo only - No API integration)"
       }
     },
-    "remember_me": "Keep me logged in"
+    "remember_me": "Keep me logged in",
+    "login_email_page": {
+      "title": "Login with Email",
+      "email_label": "Email",
+      "email_placeholder": "your.email@example.com",
+      "password_label": "Password",
+      "password_placeholder": "Enter your password",
+      "forgot_password": "Forgot password?",
+      "login_btn": "LOGIN",
+      "terms_text": "By continuing, you agree to RestX's",
+      "terms_of_service": "Terms of Service",
+      "and": "and",
+      "privacy_policy": "Privacy Policy",
+      "no_account": "Don't have an account?",
+      "sign_up_here": "Sign up here",
+      "or_login_with": "Or login with",
+      "phone_number": "Phone Number",
+      "validation": {
+        "required_email": "Please enter your email address",
+        "invalid_email": "Please enter a valid email address",
+        "required_password": "Please enter your password",
+        "password_min": "Password must be at least 6 characters"
+      }
+    },
+    "login_admin_page": {
+      "title": "Admin Portal",
+      "subtitle": "Restaurant Management System",
+      "email_label": "Email",
+      "email_placeholder": "admin@restx.com",
+      "password_label": "Password",
+      "password_placeholder": "Enter your password",
+      "forgot_password": "Forgot password?",
+      "login_btn": "LOGIN",
+      "terms_text": "By continuing, you agree to RestX's",
+      "terms_of_service": "Terms of Service",
+      "and": "and",
+      "privacy_policy": "Privacy Policy",
+      "no_account": "Don't have an account?",
+      "sign_up_here": "Sign up here",
+      "design_placeholder": "Design placeholder",
+      "validation": {
+        "required_email": "Please enter your email address",
+        "invalid_email": "Please enter a valid email address",
+        "required_password": "Please enter your password",
+        "password_requirements": {
+          "length": "At least 8 characters",
+          "lowercase": "At least one lowercase letter (a-z)",
+          "uppercase": "At least one uppercase letter (A-Z)",
+          "special": "At least one special character (!@#$%...)"
+        }
+      }
+    },
+    "forgot_password_page": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your email address and we will send you a link to reset your password.",
+      "email_label": "Email Address",
+      "email_placeholder": "your.email@example.com",
+      "send_btn": "SEND RESET LINK",
+      "back_to_login": "Back to Login",
+      "validation": {
+        "required_email": "Please enter your email address",
+        "invalid_email": "Please enter a valid email address"
+      },
+      "alerts": {
+        "success": "Password Reset Link Sent!\n\nEmail: {{email}}\n\nPlease check your email for the reset link."
+      }
+    },
+    "reset_password_page": {
+      "title": "Reset Password",
+      "subtitle": "Enter your new password to secure your account.",
+      "new_password_label": "New Password",
+      "new_password_placeholder": "Enter new password",
+      "confirm_password_label": "Confirm Password",
+      "confirm_password_placeholder": "Confirm new password",
+      "reset_btn": "RESET PASSWORD",
+      "password_strong": "Password is strong",
+      "passwords_match": "Passwords match",
+      "validation": {
+        "required_password": "Please enter a password",
+        "required_confirm": "Please confirm your password",
+        "password_min": "Password must be at least 8 characters",
+        "password_lowercase": "Password must contain at least one lowercase letter",
+        "password_uppercase": "Password must contain at least one uppercase letter",
+        "password_number": "Password must contain at least one number",
+        "password_special": "Password must contain at least one special character (!@#$%...)",
+        "password_mismatch": "Passwords do not match"
+      },
+      "alerts": {
+        "invalid_link": "Invalid reset link. Please request a new password reset.",
+        "success": "Password Reset Successfully!\n\nYour password has been updated."
+      }
+    },
+    "change_password_page": {
+      "title": "Change Password",
+      "subtitle": "Update your password to keep your account secure",
+      "current_password_label": "Current Password",
+      "current_password_placeholder": "Enter current password",
+      "new_password_label": "New Password",
+      "new_password_placeholder": "Enter new password",
+      "confirm_password_label": "Confirm New Password",
+      "confirm_password_placeholder": "Confirm new password",
+      "change_btn": "CHANGE PASSWORD",
+      "back_to_dashboard": "Back to Dashboard",
+      "password_strong": "Password is strong",
+      "passwords_match": "Passwords match",
+      "validation": {
+        "required_current": "Please enter your current password",
+        "required_new": "Please enter a new password",
+        "required_confirm": "Please confirm your new password",
+        "password_min": "Password must be at least 8 characters",
+        "password_requirements": "Password must contain uppercase, lowercase, and number",
+        "password_same": "New password must be different from current password",
+        "password_mismatch": "Passwords do not match"
+      },
+      "alerts": {
+        "success": "Password Changed Successfully!\n\nYour password has been updated."
+      }
+    }
   },
   "schedule": {
     "title": "Schedule Management",
@@ -1212,5 +1360,148 @@
     "restaurant": "Restaurant",
     "login": "Login",
     "customer": "Customer"
+  },
+  "components": {
+    "delete_modal": {
+      "title": "Delete {{item}}",
+      "subtitle": "This action cannot be undone",
+      "warning": "You are about to permanently delete:",
+      "data_loss_warning": "All associated data will be permanently removed from the system.",
+      "cancel": "Cancel",
+      "confirm": "Delete Permanently",
+      "types": {
+        "Table": "Table",
+        "Area": "Area",
+        "Dish": "Dish",
+        "Staff": "Staff"
+      }
+    }
+  },
+  "tenants": {
+    "breadcrumb": {
+      "admin": "Admin",
+      "tenants": "Tenants"
+    },
+    "title": "Tenant Management",
+    "subtitle": "Manage restaurants in the RestX system, track tenant count and total system revenue.",
+    "add_tenant": "Add Tenant",
+    "stats": {
+      "total_tenants": "Total Tenants",
+      "active_tenants": "Active Tenants",
+      "monthly_revenue": "Monthly Revenue (mock)"
+    },
+    "tabs": {
+      "restaurant_list": "Restaurant List (Tenants)",
+      "system_revenue": "System Revenue"
+    },
+    "table": {
+      "tenant_info": "Tenant Info",
+      "contact": "Contact",
+      "address": "Address",
+      "plan": "Plan",
+      "status": "Status",
+      "owner": "Owner",
+      "last_active": "Last Active",
+      "total": "Total {{count}} tenants"
+    },
+    "filter": {
+      "search_placeholder": "Search by name, slug, email...",
+      "all_status": "All Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "maintenance": "Maintenance",
+      "refresh": "Refresh"
+    },
+    "actions": {
+      "view_details": "View Details",
+      "configure_domain": "Configure Domain",
+      "suspend_tenant": "Suspend Tenant"
+    },
+    "revenue": {
+      "title": "Total System Revenue",
+      "subtitle": "View revenue trends by day / week / month / year.",
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "messages": {
+      "refresh_success": "Refreshed successfully"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "maintenance": "Maintenance"
+    },
+    "plans": {
+      "basic": "BASIC",
+      "pro": "PRO",
+      "enterprise": "ENTERPRISE"
+    },
+    "create": {
+      "breadcrumb_create": "Create",
+      "title": "Create New Restaurant",
+      "subtitle": "Add a new tenant (restaurant) to the RestX system.",
+      "back": "Back",
+      "restaurant_info": "Restaurant Information",
+      "owner_info": "Owner Information",
+      "subscription_plan": "Subscription Plan",
+      "fields": {
+        "name": "Name",
+        "name_placeholder": "e.g., ABC",
+        "host_name": "Host Name",
+        "host_name_placeholder": "my-restaurant",
+        "access_url": "Access URL:",
+        "business_name": "Business Name",
+        "business_name_placeholder": "ABC Restaurant",
+        "phone_number": "Phone Number",
+        "phone_placeholder": "0912...",
+        "mail_restaurant": "Mail Restaurant",
+        "mail_restaurant_placeholder": "restaurant@example.com",
+        "address": "Restaurant Address",
+        "street_number": "Street number (e.g., 123)",
+        "street_name": "Street name (e.g., Nguyen Van Linh)",
+        "city": "City (e.g., Da Nang)",
+        "country": "Country (e.g., Vietnam)",
+        "owner_email": "Owner Email",
+        "owner_email_placeholder": "owner@example.com",
+        "owner_password": "Owner Password",
+        "password_placeholder": "Enter password",
+        "select_plan": "Select service plan"
+      },
+      "plan_options": {
+        "basic": "Basic Plan",
+        "basic_desc": "- Basic",
+        "pro": "Pro Plan",
+        "pro_desc": "- Popular",
+        "enterprise": "Enterprise",
+        "enterprise_desc": "- Full"
+      },
+      "buttons": {
+        "create": "Complete & Create",
+        "cancel": "Cancel"
+      },
+      "validation": {
+        "name_required": "Please enter name",
+        "slug_required": "Slug is required",
+        "slug_invalid": "Slug can only contain lowercase letters, numbers, and hyphens",
+        "business_name_required": "Please enter business name",
+        "phone_required": "Please enter phone number",
+        "phone_invalid": "Invalid phone number",
+        "email_required": "Please enter email",
+        "email_invalid": "Invalid email",
+        "restaurant_email_required": "Please enter restaurant email",
+        "password_required": "Please enter password",
+        "password_min": "Password must be at least 6 characters",
+        "plan_required": "Please select a plan",
+        "street_number_required": "Please enter street number",
+        "street_name_required": "Please enter street name",
+        "city_required": "Please enter city",
+        "country_required": "Please enter country"
+      },
+      "messages": {
+        "success": "Restaurant created successfully!"
+      }
+    }
   }
 }

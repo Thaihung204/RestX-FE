@@ -3,10 +3,12 @@
 import LoginButton from "@/components/auth/LoginButton";
 import authService from "@/lib/services/authService";
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 import { useSearchParams } from 'next/navigation';
 
 export default function ResetPasswordPage() {
+  const { t } = useTranslation('auth');
   const { mode } = useThemeMode();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
@@ -41,32 +43,32 @@ export default function ResetPasswordPage() {
 
   const validatePassword = (password: string) => {
     if (!password) {
-      setPasswordError("Please enter a password");
+      setPasswordError(t('reset_password_page.validation.required_password'));
       return false;
     }
 
     if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
+      setPasswordError(t('reset_password_page.validation.password_min'));
       return false;
     }
 
     if (!/(?=.*[a-z])/.test(password)) {
-      setPasswordError("Password must contain at least one lowercase letter");
+      setPasswordError(t('reset_password_page.validation.password_lowercase'));
       return false;
     }
 
     if (!/(?=.*[A-Z])/.test(password)) {
-      setPasswordError("Password must contain at least one uppercase letter");
+      setPasswordError(t('reset_password_page.validation.password_uppercase'));
       return false;
     }
 
     if (!/(?=.*\d)/.test(password)) {
-      setPasswordError("Password must contain at least one number");
+      setPasswordError(t('reset_password_page.validation.password_number'));
       return false;
     }
 
     if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(password)) {
-      setPasswordError("Password must contain at least one special character (!@#$%...)");
+      setPasswordError(t('reset_password_page.validation.password_special'));
       return false;
     }
 
@@ -76,12 +78,12 @@ export default function ResetPasswordPage() {
 
   const validateConfirmPassword = (confirmPassword: string) => {
     if (!confirmPassword) {
-      setConfirmPasswordError("Please confirm your password");
+      setConfirmPasswordError(t('reset_password_page.validation.required_confirm'));
       return false;
     }
 
     if (confirmPassword !== password) {
-      setConfirmPasswordError("Passwords do not match");
+      setConfirmPasswordError(t('reset_password_page.validation.password_mismatch'));
       return false;
     }
 
@@ -112,7 +114,7 @@ export default function ResetPasswordPage() {
   const handlePasswordBlur = () => {
     setPasswordTouched(true);
     if (!password) {
-      setPasswordError("Please enter a password");
+      setPasswordError(t('reset_password_page.validation.required_password'));
     } else {
       validatePassword(password);
     }
@@ -121,7 +123,7 @@ export default function ResetPasswordPage() {
   const handleConfirmPasswordBlur = () => {
     setConfirmPasswordTouched(true);
     if (!confirmPassword) {
-      setConfirmPasswordError("Please confirm your password");
+      setConfirmPasswordError(t('reset_password_page.validation.required_confirm'));
     } else {
       validateConfirmPassword(confirmPassword);
     }
@@ -136,15 +138,15 @@ export default function ResetPasswordPage() {
 
     // Check if fields are empty
     if (!password || !password.trim()) {
-      setPasswordError("Please enter a password");
+      setPasswordError(t('reset_password_page.validation.required_password'));
       if (!confirmPassword || !confirmPassword.trim()) {
-        setConfirmPasswordError("Please confirm your password");
+        setConfirmPasswordError(t('reset_password_page.validation.required_confirm'));
       }
       return;
     }
 
     if (!confirmPassword || !confirmPassword.trim()) {
-      setConfirmPasswordError("Please confirm your password");
+      setConfirmPasswordError(t('reset_password_page.validation.required_confirm'));
       return;
     }
 
@@ -166,7 +168,7 @@ export default function ResetPasswordPage() {
     }
 
     if (!email || !token) {
-      alert('Invalid reset link. Please request a new password reset.');
+      alert(t('reset_password_page.alerts.invalid_link'));
       return;
     }
 
@@ -180,7 +182,7 @@ export default function ResetPasswordPage() {
         confirmNewPassword: confirmPassword,
       });
 
-      alert('Password Reset Successfully!\n\nYour password has been updated.');
+      alert(t('reset_password_page.alerts.success'));
       // Redirect to login page
       window.location.href = '/login-email';
     } catch (error: any) {
@@ -226,10 +228,10 @@ export default function ResetPasswordPage() {
             <h2
               className="text-3xl font-bold mb-2 auth-title"
             >
-              Reset Password
+              {t('reset_password_page.title')}
             </h2>
             <p className="auth-text">
-              Enter your new password to secure your account.
+              {t('reset_password_page.subtitle')}
             </p>
           </div>
 
@@ -239,7 +241,7 @@ export default function ResetPasswordPage() {
                 htmlFor="password"
                 className="block text-sm font-medium mb-2 auth-label"
               >
-                New Password
+                {t('reset_password_page.new_password_label')}
               </label>
               <input
                 id="password"
@@ -247,7 +249,7 @@ export default function ResetPasswordPage() {
                 value={password}
                 onChange={handlePasswordChange}
                 onBlur={handlePasswordBlur}
-                placeholder="Enter new password"
+                placeholder={t('reset_password_page.new_password_placeholder')}
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
                   borderColor: passwordTouched && passwordError ? '#ef4444' : undefined,
@@ -257,7 +259,7 @@ export default function ResetPasswordPage() {
                 <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{passwordError}</p>
               )}
               {passwordTouched && !passwordError && password && (
-                <p className="mt-1 text-sm" style={{ color: '#22c55e' }}>Password is strong</p>
+                <p className="mt-1 text-sm" style={{ color: '#22c55e' }}>{t('reset_password_page.password_strong')}</p>
               )}
             </div>
 
@@ -266,7 +268,7 @@ export default function ResetPasswordPage() {
                 htmlFor="confirmPassword"
                 className="block text-sm font-medium mb-2 auth-label"
               >
-                Confirm Password
+                {t('reset_password_page.confirm_password_label')}
               </label>
               <input
                 id="confirmPassword"
@@ -274,7 +276,7 @@ export default function ResetPasswordPage() {
                 value={confirmPassword}
                 onChange={handleConfirmPasswordChange}
                 onBlur={handleConfirmPasswordBlur}
-                placeholder="Confirm new password"
+                placeholder={t('reset_password_page.confirm_password_placeholder')}
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
                   borderColor: confirmPasswordTouched && confirmPasswordError ? '#ef4444' : undefined,
@@ -284,11 +286,11 @@ export default function ResetPasswordPage() {
                 <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{confirmPasswordError}</p>
               )}
               {confirmPasswordTouched && !confirmPasswordError && confirmPassword && (
-                <p className="mt-1 text-sm" style={{ color: '#22c55e' }}>Passwords match</p>
+                <p className="mt-1 text-sm" style={{ color: '#22c55e' }}>{t('reset_password_page.passwords_match')}</p>
               )}
             </div>
 
-            <LoginButton loading={loading} text="RESET PASSWORD" />
+            <LoginButton loading={loading} text={t('reset_password_page.reset_btn')} />
           </form>
         </div>
       </div>

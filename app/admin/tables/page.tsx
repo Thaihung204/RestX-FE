@@ -140,7 +140,7 @@ export default function TablesPage() {
         mappedTables.push({
           id: table.id,
           tenantId: 'tenant-1',
-          name: `Table ${table.number}`,
+          name: t("dashboard.tables.card.table_name", { number: table.number }),
           seats: table.capacity,
           status: table.status === 'available' ? 'AVAILABLE' :
             table.status === 'occupied' ? 'OCCUPIED' :
@@ -234,7 +234,7 @@ export default function TablesPage() {
 
   const handleZoneDelete = (zoneId: string) => {
     if (availableAreas.length <= 1) {
-      alert(t("Cannot delete the last area."));
+      alert(t("dashboard.tables.errors.cannot_delete_last_area"));
       return;
     }
     setZoneToDelete(zoneId);
@@ -578,7 +578,7 @@ export default function TablesPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h4 className="text-lg font-bold" style={{ color: 'var(--text)' }}>
-                          Table {table.number}
+                          {t("dashboard.tables.card.table_name", { number: table.number })}
                         </h4>
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           {table.area} {t("dashboard.tables.card.area")}

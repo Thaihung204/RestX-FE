@@ -3,8 +3,10 @@
 import LoginButton from "@/components/auth/LoginButton";
 import authService from "@/lib/services/authService";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation('auth');
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
@@ -14,14 +16,14 @@ export default function ForgotPasswordPage() {
 
   const validateEmail = (email: string) => {
     if (!email) {
-      setEmailError("Please enter your email address");
+      setEmailError(t('forgot_password_page.validation.required_email'));
       return false;
     }
 
     // Improved email regex validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
-      setEmailError("Please enter a valid email address");
+      setEmailError(t('forgot_password_page.validation.invalid_email'));
       return false;
     }
 
@@ -53,7 +55,7 @@ export default function ForgotPasswordPage() {
   const handleEmailBlur = () => {
     setEmailTouched(true);
     if (!email) {
-      setEmailError("Please enter your email address");
+      setEmailError(t('forgot_password_page.validation.required_email'));
     } else {
       validateEmail(email);
     }
@@ -66,7 +68,7 @@ export default function ForgotPasswordPage() {
 
     // Check if email is empty first
     if (!email || !email.trim()) {
-      setEmailError("Please enter your email address");
+      setEmailError(t('forgot_password_page.validation.required_email'));
       return;
     }
 
@@ -82,9 +84,7 @@ export default function ForgotPasswordPage() {
     try {
       await authService.requestPasswordReset(email);
       setSuccess(true);
-      alert(
-        `Password Reset Link Sent!\n\nEmail: ${email}\n\nPlease check your email for the reset link.`
-      );
+      alert(t('forgot_password_page.alerts.success', { email }));
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to send reset link. Please try again.';
       alert(errorMessage);
@@ -120,11 +120,10 @@ export default function ForgotPasswordPage() {
               </svg>
             </div>
             <h2 className="text-3xl font-bold mb-2 auth-title">
-              Forgot Password
+              {t('forgot_password_page.title')}
             </h2>
             <p className="auth-text">
-              Enter your email address and we will send you a link to reset your
-              password.
+              {t('forgot_password_page.subtitle')}
             </p>
           </div>
 
@@ -133,7 +132,7 @@ export default function ForgotPasswordPage() {
               <label
                 htmlFor="email"
                 className="block text-sm font-medium mb-2 auth-label">
-                Email Address
+                {t('forgot_password_page.email_label')}
               </label>
               <input
                 id="email"
@@ -141,7 +140,7 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={handleEmailChange}
                 onBlur={handleEmailBlur}
-                placeholder="your.email@example.com"
+                placeholder={t('forgot_password_page.email_placeholder')}
                 disabled={loading}
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
@@ -156,7 +155,7 @@ export default function ForgotPasswordPage() {
               )}
             </div>
 
-            <LoginButton loading={loading} text="SEND RESET LINK" />
+            <LoginButton loading={loading} text={t('forgot_password_page.send_btn')} />
 
             <div
               className="text-center pt-4 border-t"
@@ -181,7 +180,7 @@ export default function ForgotPasswordPage() {
                     d="M10 19l-7-7m0 0l7-7m-7 7h18"
                   />
                 </svg>
-                Back to Login
+                {t('forgot_password_page.back_to_login')}
               </a>
             </div>
           </form>

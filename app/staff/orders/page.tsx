@@ -1,37 +1,37 @@
 'use client';
 
 import {
-    AppstoreOutlined,
-    CheckCircleOutlined,
-    ClockCircleOutlined,
-    CoffeeOutlined,
-    ExclamationCircleOutlined,
-    FireOutlined,
-    MinusOutlined,
-    PlusOutlined,
-    PrinterOutlined,
-    SearchOutlined,
-    SendOutlined,
-    ShoppingCartOutlined,
-    SyncOutlined
+  AppstoreOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CoffeeOutlined,
+  ExclamationCircleOutlined,
+  FireOutlined,
+  MinusOutlined,
+  PlusOutlined,
+  PrinterOutlined,
+  SearchOutlined,
+  SendOutlined,
+  ShoppingCartOutlined,
+  SyncOutlined
 } from '@ant-design/icons';
 import {
-    App,
-    Avatar,
-    Badge,
-    Button,
-    Card,
-    Col,
-    Divider,
-    Empty,
-    Input,
-    Modal,
-    Row,
-    Select,
-    Space,
-    Tabs,
-    Tag,
-    Typography
+  App,
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Col,
+  Divider,
+  Empty,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Space,
+  Tabs,
+  Tag,
+  Typography
 } from 'antd';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -383,7 +383,7 @@ export default function OrderManagement() {
                   </Tag>
                 ))}
                 {order.items.length > (isMobile ? 2 : 3) && (
-                  <Tag style={{ borderRadius: 8, fontSize: isMobile ? 12 : 13, fontWeight: 400 }}>+{order.items.length - (isMobile ? 2 : 3)} món khác</Tag>
+                  <Tag style={{ borderRadius: 8, fontSize: isMobile ? 12 : 13, fontWeight: 400 }}>+{order.items.length - (isMobile ? 2 : 3)} {t('staff.orders.order.more_items')}</Tag>
                 )}
               </div>
 
@@ -393,7 +393,7 @@ export default function OrderManagement() {
                 </Text>
                 {pendingItems > 0 && (
                   <Badge
-                    count={isMobile ? `${pendingItems} chưa xong` : `${pendingItems} món chưa xong`}
+                    count={isMobile ? `${pendingItems} ${t('staff.orders.order.not_done')}` : `${pendingItems} ${t('staff.orders.order.items_not_done')}`}
                     style={{
                       backgroundColor: mode === 'dark' ? 'rgba(255, 56, 11, 0.2)' : 'rgba(255, 56, 11, 0.1)',
                       color: '#FF380B',
@@ -472,7 +472,7 @@ export default function OrderManagement() {
                   color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
                   fontWeight: 400,
                   display: 'block',
-                }}>Chờ xử lý</Text>
+                }}>{t('staff.orders.stats.pending')}</Text>
               </div>
             </div>
           </Card>
@@ -519,7 +519,7 @@ export default function OrderManagement() {
                   color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
                   fontWeight: 400,
                   display: 'block',
-                }}>Đang nấu</Text>
+                }}>{t('staff.orders.stats.preparing')}</Text>
               </div>
             </div>
           </Card>
@@ -566,7 +566,7 @@ export default function OrderManagement() {
                   color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
                   fontWeight: 400,
                   display: 'block',
-                }}>Sẵn sàng</Text>
+                }}>{t('staff.orders.stats.ready')}</Text>
               </div>
             </div>
           </Card>
@@ -652,7 +652,7 @@ export default function OrderManagement() {
           ))
         ) : (
           <Empty
-            description="Không có order nào"
+            description={t('staff.orders.empty')}
             style={{
               color: mode === 'dark' ? undefined : '#4F4F4F',
             }}
@@ -721,19 +721,19 @@ export default function OrderManagement() {
               <Row gutter={[16, 0]}>
                 <Col xs={8}>
                   <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12, display: 'block', marginBottom: 8, fontWeight: 500 }}>
-                    Bàn
+                    {t('staff.orders.order.table')}
                   </Text>
                   <Text strong style={{ fontSize: isMobile ? 15 : 17, display: 'block' }}>{selectedOrder.tableName}</Text>
                 </Col>
                 <Col xs={8}>
                   <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12, display: 'block', marginBottom: 8, fontWeight: 500 }}>
-                    Thời gian
+                    {t('staff.orders.order.time')}
                   </Text>
                   <Text strong style={{ fontSize: isMobile ? 15 : 17, display: 'block' }}>{selectedOrder.createdAt}</Text>
                 </Col>
                 <Col xs={8}>
                   <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12, display: 'block', marginBottom: 8, fontWeight: 500 }}>
-                    Trạng thái
+                    {t('staff.orders.order.status')}
                   </Text>
                   <Tag
                     icon={statusConfig[selectedOrder.status].icon}
@@ -802,7 +802,7 @@ export default function OrderManagement() {
 
             {/* Actions */}
             <Row gutter={[8, 8]} style={{ marginTop: isMobile ? 16 : 24 }}>
-              <Col xs={12} sm={8}>
+              <Col xs={12} sm={6}>
                 <Button
                   icon={<PrinterOutlined />}
                   size={isMobile ? 'middle' : 'large'}
@@ -812,7 +812,7 @@ export default function OrderManagement() {
                   {isMobile ? t('staff.orders.modal.print_short') : t('staff.orders.modal.print')}
                 </Button>
               </Col>
-              <Col xs={12} sm={8}>
+              <Col xs={12} sm={6}>
                 <Button
                   icon={<PlusOutlined />}
                   size={isMobile ? 'middle' : 'large'}
@@ -822,7 +822,7 @@ export default function OrderManagement() {
                   {t('staff.orders.modal.add_item')}
                 </Button>
               </Col>
-              <Col xs={24} sm={8}>
+              <Col xs={24} sm={12}>
                 <Button
                   type="primary"
                   icon={<SendOutlined />}
@@ -901,10 +901,10 @@ export default function OrderManagement() {
                 value={selectedTable || undefined}
                 onChange={setSelectedTable}
                 options={[
-                  { value: 'A01', label: 'Bàn A01' },
-                  { value: 'A05', label: 'Bàn A05' },
-                  { value: 'B02', label: 'Bàn B02' },
-                  { value: 'VIP02', label: 'Bàn VIP02' },
+                  { value: 'A01', label: `${t('staff.orders.order.table')} A01` },
+                  { value: 'A05', label: `${t('staff.orders.order.table')} A05` },
+                  { value: 'B02', label: `${t('staff.orders.order.table')} B02` },
+                  { value: 'VIP02', label: `${t('staff.orders.order.table')} VIP02` },
                 ]}
               />
             </div>
@@ -1068,7 +1068,7 @@ export default function OrderManagement() {
                 </>
               ) : (
                 <Empty
-                  description="Chưa có món nào"
+                  description={t('staff.orders.modal.no_items')}
                   styles={{
                     image: {
                       opacity: mode === 'dark' ? 0.65 : 0.4,

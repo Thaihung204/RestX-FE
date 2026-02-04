@@ -2,6 +2,7 @@
 
 import ThemeToggle from "@/app/components/ThemeToggle";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
+import { useLanguage } from "@/components/I18nProvider";
 import {
   CheckCircleOutlined,
   MailOutlined,
@@ -33,6 +34,7 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import TenantPlanTag from "../../../components/(admin)/tenants/TenantPlanTag";
 import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
 
@@ -277,6 +279,9 @@ const formatDate = (isoDate: string) => {
 // --- MAIN PAGE COMPONENT ---
 
 const TenantPage: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  const { language, changeLanguage } = useLanguage();
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [activeRevenueRange, setActiveRevenueRange] = useState<
@@ -308,22 +313,29 @@ const TenantPage: React.FC = () => {
   }, []);
 
   const handleRefresh = () => {
-    message.success("Refreshed successfully");
+    message.success(t("tenants.messages.refresh_success"));
   };
 
+  const STATUS_OPTIONS_TRANSLATED = [
+    { label: t("tenants.filter.all_status"), value: "all" },
+    { label: t("tenants.filter.active"), value: "active" },
+    { label: t("tenants.filter.inactive"), value: "inactive" },
+    { label: t("tenants.filter.maintenance"), value: "maintenance" },
+  ];
+
   const menuItems: MenuProps["items"] = [
-    { key: "view", label: "View Details" },
-    { key: "domain", label: "Configure Domain" },
+    { key: "view", label: t("tenants.actions.view_details") },
+    { key: "domain", label: t("tenants.actions.configure_domain") },
     { type: "divider" },
     {
       key: "suspend",
-      label: <span className="text-red-500">Suspend Tenant</span>,
+      label: <span className="text-red-500">{t("tenants.actions.suspend_tenant")}</span>,
     },
   ];
 
   const columns: ColumnsType<ITenant> = [
     {
-      title: "Tenant Info",
+      title: t("tenants.table.tenant_info"),
       dataIndex: "name",
       key: "tenant",
       width: 280,
@@ -356,7 +368,7 @@ const TenantPage: React.FC = () => {
       ),
     },
     {
-      title: "Contact",
+      title: t("tenants.table.contact"),
       key: "contact",
       width: 200,
       render: (_, record) => (
@@ -371,7 +383,7 @@ const TenantPage: React.FC = () => {
       ),
     },
     {
-      title: "Address",
+      title: t("tenants.table.address"),
       key: "address",
       width: 220,
       render: (_, record) => (
@@ -386,21 +398,21 @@ const TenantPage: React.FC = () => {
       ),
     },
     {
-      title: "Plan",
+      title: t("tenants.table.plan"),
       dataIndex: "plan",
       key: "plan",
       width: 100,
       render: (plan: ITenant["plan"]) => <TenantPlanTag plan={plan} />,
     },
     {
-      title: "Status",
+      title: t("tenants.table.status"),
       dataIndex: "status",
       key: "status",
       width: 120,
       render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
     },
     {
-      title: "Owner",
+      title: t("tenants.table.owner"),
       dataIndex: "ownerEmail",
       key: "ownerEmail",
       width: 180,
@@ -411,7 +423,7 @@ const TenantPage: React.FC = () => {
       ),
     },
     {
-      title: "Last Active",
+      title: t("tenants.table.last_active"),
       dataIndex: "lastActive",
       key: "lastActive",
       width: 110,
@@ -455,7 +467,7 @@ const TenantPage: React.FC = () => {
             {/* Header Section - Admin Tenants */}
             <div>
               <Breadcrumb
-                items={[{ title: "Admin" }, { title: "Tenants" }]}
+                items={[{ title: t("tenants.breadcrumb.admin") }, { title: t("tenants.breadcrumb.tenants") }]}
                 className="text-xs font-medium mb-1"
               />
               <Typography.Title
@@ -467,7 +479,7 @@ const TenantPage: React.FC = () => {
                   color: "var(--text)",
                 }}>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B3B] to-red-500">
-                  Tenant Management
+                  {t("tenants.title")}
                 </span>
               </Typography.Title>
               <Typography.Paragraph
@@ -476,20 +488,111 @@ const TenantPage: React.FC = () => {
                   marginBottom: 0,
                   color: "var(--text-muted)",
                 }}>
-                Manage restaurants in the RestX system, track tenant count and
-                total system revenue.
+                {t("tenants.subtitle")}
               </Typography.Paragraph>
             </div>
 
-            {/* Theme toggle + create button */}
+            {/* Language + Theme toggle + create button */}
             <div className="flex items-center gap-3">
+              {/* Language Switcher */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+                  className="p-2 rounded-lg transition-colors group flex items-center gap-2.5 h-10"
+                  style={{ background: "var(--surface)", color: "var(--text-muted)" }}>
+                  {language === 'vi' ? (
+                    <svg className="w-6 h-4 rounded-[2px] shadow-sm" viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="3" height="2" fill="#DA251D" />
+                      <polygon points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836" fill="#FF0" />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-4 rounded-[2px] shadow-sm" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+                      <clipPath id="s"><path d="M0,0 v30 h60 v-30 z" /></clipPath>
+                      <clipPath id="t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" /></clipPath>
+                      <g clipPath="url(#s)">
+                        <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
+                        <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+                        <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t)" stroke="#C8102E" strokeWidth="4" />
+                        <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
+                        <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
+                      </g>
+                    </svg>
+                  )}
+                  <span className="text-sm font-medium uppercase group-hover:text-orange-500 leading-none pt-[1px]">
+                    {language}
+                  </span>
+                  <svg className="w-3 h-3 text-[var(--text-muted)] opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isLangMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setIsLangMenuOpen(false)}
+                    />
+                    <div
+                      className="absolute top-full right-0 mt-2 w-40 rounded-xl shadow-lg border p-1 z-40 transition-all"
+                      style={{
+                        background: "var(--card)",
+                        borderColor: "var(--border)",
+                      }}>
+                      <button
+                        onClick={() => {
+                          changeLanguage("en");
+                          setIsLangMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === "en" ? "bg-orange-500/10 text-orange-500" : "hover:bg-[var(--bg-base)]"}`}
+                        style={{ color: language === "en" ? undefined : "var(--text)" }}>
+                        <svg className="w-6 h-4 rounded-[2px] shadow-sm flex-shrink-0" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+                          <clipPath id="s2"><path d="M0,0 v30 h60 v-30 z" /></clipPath>
+                          <clipPath id="t2"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" /></clipPath>
+                          <g clipPath="url(#s2)">
+                            <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
+                            <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+                            <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t2)" stroke="#C8102E" strokeWidth="4" />
+                            <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
+                            <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
+                          </g>
+                        </svg>
+                        <span className="font-medium">English</span>
+                        {language === "en" && (
+                          <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          changeLanguage("vi");
+                          setIsLangMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === "vi" ? "bg-orange-500/10 text-orange-500" : "hover:bg-[var(--bg-base)]"}`}
+                        style={{ color: language === "vi" ? undefined : "var(--text)" }}>
+                        <svg className="w-6 h-4 rounded-[2px] shadow-sm flex-shrink-0" viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="3" height="2" fill="#DA251D" />
+                          <polygon points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836" fill="#FF0" />
+                        </svg>
+                        <span className="font-medium">Tiếng Việt</span>
+                        {language === "vi" && (
+                          <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <ThemeToggle />
               <Link href="/tenants/create">
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
                   className="shadow-orange-900/20 shadow-lg border-none">
-                  Add Tenant
+                  {t("tenants.add_tenant")}
                 </Button>
               </Link>
             </div>
@@ -509,7 +612,7 @@ const TenantPage: React.FC = () => {
                   <span
                     className="font-medium"
                     style={{ color: "var(--text-muted)" }}>
-                    Total Tenants
+                    {t("tenants.stats.total_tenants")}
                   </span>
                 }
                 value={stats.total}
@@ -530,7 +633,7 @@ const TenantPage: React.FC = () => {
                   <span
                     className="font-medium"
                     style={{ color: "var(--text-muted)" }}>
-                    Active Tenants
+                    {t("tenants.stats.active_tenants")}
                   </span>
                 }
                 value={stats.active}
@@ -551,7 +654,7 @@ const TenantPage: React.FC = () => {
                   <span
                     className="font-medium"
                     style={{ color: "var(--text-muted)" }}>
-                    Monthly Revenue (mock)
+                    {t("tenants.stats.monthly_revenue")}
                   </span>
                 }
                 value={125_000_000}
@@ -571,7 +674,7 @@ const TenantPage: React.FC = () => {
             items={[
               {
                 key: "tenants",
-                label: "Restaurant List (Tenants)",
+                label: t("tenants.tabs.restaurant_list"),
                 children: (
                   <Card
                     variant="borderless"
@@ -592,7 +695,7 @@ const TenantPage: React.FC = () => {
                         <Input
                           size="large"
                           allowClear
-                          placeholder="Search by name, slug, email..."
+                          placeholder={t("tenants.filter.search_placeholder")}
                           prefix={
                             <SearchOutlined
                               style={{ color: "var(--text-muted)" }}
@@ -606,7 +709,7 @@ const TenantPage: React.FC = () => {
                           className="w-48"
                           value={status}
                           onChange={setStatus}
-                          options={STATUS_OPTIONS}
+                          options={STATUS_OPTIONS_TRANSLATED}
                         />
                       </div>
                       <Button
@@ -614,7 +717,7 @@ const TenantPage: React.FC = () => {
                         onClick={handleRefresh}
                         size="large"
                         type="text">
-                        Refresh
+                        {t("tenants.filter.refresh")}
                       </Button>
                     </div>
 
@@ -627,7 +730,7 @@ const TenantPage: React.FC = () => {
                         pageSize: 8,
                         showTotal: (total) => (
                           <span style={{ color: "var(--text-muted)" }}>
-                            Total {total} tenants
+                            {t("tenants.table.total", { count: total })}
                           </span>
                         ),
                         className: "px-5 pb-4",
@@ -638,7 +741,7 @@ const TenantPage: React.FC = () => {
               },
               {
                 key: "revenue",
-                label: "System Revenue",
+                label: t("tenants.tabs.system_revenue"),
                 children: (
                   <div className="space-y-4">
                     {/* Filter bar for revenue */}
@@ -656,11 +759,11 @@ const TenantPage: React.FC = () => {
                               margin: 0,
                               color: "var(--text)",
                             }}>
-                            Total System Revenue
+                            {t("tenants.revenue.title")}
                           </Typography.Title>
                           <Typography.Text
                             style={{ color: "var(--text-muted)" }}>
-                            View revenue trends by day / week / month / year.
+                            {t("tenants.revenue.subtitle")}
                           </Typography.Text>
                         </div>
                         <div className="flex flex-wrap gap-3">
@@ -670,10 +773,10 @@ const TenantPage: React.FC = () => {
                               setActiveRevenueRange(e.target.value)
                             }
                             options={[
-                              { label: "Day", value: "day" },
-                              { label: "Week", value: "week" },
-                              { label: "Month", value: "month" },
-                              { label: "Year", value: "year" },
+                              { label: t("tenants.revenue.day"), value: "day" },
+                              { label: t("tenants.revenue.week"), value: "week" },
+                              { label: t("tenants.revenue.month"), value: "month" },
+                              { label: t("tenants.revenue.year"), value: "year" },
                             ]}
                             optionType="button"
                             buttonStyle="solid"

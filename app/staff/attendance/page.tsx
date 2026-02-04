@@ -416,7 +416,7 @@ export default function AttendancePage() {
             background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
           }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Ngày công</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>{t('staff.attendance.stats.work_days')}</span>}
               value={monthlyStats.workedDays}
               suffix={`/${monthlyStats.totalDays}`}
               styles={{ content: { color: '#52c41a', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
@@ -435,9 +435,9 @@ export default function AttendancePage() {
             background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
           }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Đi muộn</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>{t('staff.attendance.stats.late_days')}</span>}
               value={monthlyStats.lateDays}
-              suffix="ngày"
+              suffix={t('staff.attendance.stats.days')}
               styles={{ content: { color: '#faad14', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
               prefix={<ClockCircleOutlined />}
             />
@@ -454,9 +454,9 @@ export default function AttendancePage() {
             background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
           }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Nghỉ phép</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>{t('staff.attendance.stats.leave_days')}</span>}
               value={monthlyStats.leaveDays}
-              suffix="ngày"
+              suffix={t('staff.attendance.stats.days')}
               styles={{ content: { color: '#1890ff', fontWeight: 500, fontSize: isMobile ? 24 : 32 } }}
               prefix={<HistoryOutlined />}
             />
@@ -473,7 +473,7 @@ export default function AttendancePage() {
             background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
           }} styles={{ body: { padding: isMobile ? '16px 18px' : '24px 28px' } }}>
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Tổng giờ làm</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>{t('staff.attendance.stats.total_hours')}</span>}
               value={monthlyStats.totalHours}
               suffix="h"
               styles={{ content: { color: '#FF380B', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
@@ -534,7 +534,7 @@ export default function AttendancePage() {
           >
             <div style={{ marginBottom: isMobile ? 16 : 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.attendance.stats.worked_days')}</Text>
+                <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.attendance.stats.work_days')}</Text>
                 <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>
                   {monthlyStats.workedDays}/{monthlyStats.totalDays}
                 </Text>
