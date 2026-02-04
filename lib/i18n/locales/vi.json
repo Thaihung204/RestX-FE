@@ -282,6 +282,26 @@
     }
   },
   "dashboard": {
+    "toasts": {
+      "staff": {
+        "load_error_title": "Lỗi",
+        "load_network_error_title": "Lỗi mạng",
+        "load_error_message": "Không thể tải danh sách nhân viên",
+        "deactivated_title": "Thành công",
+        "deactivated_message": "Đã ngừng kích hoạt nhân viên thành công",
+        "action_failed_title": "Thao tác thất bại",
+        "validation_error_title": "Lỗi xác thực",
+        "validation_full_name_required": "Vui lòng nhập họ tên",
+        "validation_email_required": "Vui lòng nhập email",
+        "validation_position_required": "Vui lòng nhập vị trí",
+        "validation_salary_required": "Lương phải lớn hơn 0",
+        "created_title": "Đã tạo nhân viên",
+        "created_message": "Nhân viên mới đã được tạo thành công",
+        "updated_title": "Đã cập nhật nhân viên",
+        "updated_message": "Thông tin nhân viên đã được cập nhật thành công",
+        "save_failed_title": "Lưu thất bại"
+      }
+    },
     "kpi": {
       "bookings": "Đặt bàn hôm nay",
       "bookings_subtitle": "{{count}} chờ xác nhận",
@@ -501,11 +521,52 @@
       "title": "Quản lý nhân viên",
       "subtitle": "Quản lý đội ngũ nhân viên",
       "add_staff": "Thêm nhân viên",
+      "back_to_list": "Quay lại danh sách",
+      "add_new_staff": "Thêm nhân viên mới",
+      "edit_staff": "Sửa thông tin nhân viên",
+      "fill_details_new": "Điền thông tin để thêm nhân viên mới",
+      "update_staff_info": "Cập nhật thông tin nhân viên",
+      "basic_information": "Thông tin cơ bản",
+      "create_staff": "Tạo nhân viên",
+      "update_staff": "Cập nhật",
+      "search_placeholder": "Tìm theo tên hoặc email...",
+      "all_roles": "Tất cả vai trò",
+      "employee_code": "Mã nhân viên",
+      "hire_date": "Ngày vào làm",
+      "view_profile": "Xem hồ sơ",
+      "activate": "Kích hoạt",
+      "deactivate": "Ngừng kích hoạt",
+      "no_staff_found": "Không tìm thấy nhân viên",
+      "try_adjusting_filters": "Thử điều chỉnh tìm kiếm hoặc bộ lọc",
       "stats": {
         "total_staff": "Tổng nhân viên",
         "on_duty": "Đang làm",
         "departments": "Bộ phận",
-        "avg_rating": "Đánh giá TB"
+        "avg_rating": "Đánh giá TB",
+        "inactive": "Ngừng hoạt động",
+        "positions": "Vị trí"
+      },
+      "form": {
+        "full_name": "Họ tên",
+        "email": "Email",
+        "phone_number": "Số điện thoại",
+        "position": "Vị trí",
+        "role": "Vai trò",
+        "hire_date": "Ngày vào làm",
+        "address": "Địa chỉ",
+        "status": "Trạng thái",
+        "enter_full_name": "Nhập họ tên",
+        "enter_email": "Nhập email",
+        "enter_phone": "Nhập số điện thoại",
+        "enter_address": "Nhập địa chỉ",
+        "position_placeholder": "Ví dụ: Bếp trưởng, Nhân viên phục vụ, v.v.",
+        "active_description": "Hoạt động (Nhân viên đang làm việc)"
+      },
+      "modal": {
+        "activate_title": "Kích hoạt nhân viên",
+        "deactivate_title": "Ngừng kích hoạt nhân viên",
+        "activate_message": "Bạn có chắc chắn muốn kích hoạt {{name}} ?",
+        "deactivate_message": "Bạn có chắc chắn muốn ngừng kích hoạt {{name}} ?"
       },
       "card": {
         "shift": "Ca làm",
@@ -521,7 +582,8 @@
         "cleaner": "Lao công"
       },
       "status": {
-        "active": "Đang làm",
+        "active": "Hoạt động",
+        "inactive": "Ngừng hoạt động",
         "off_duty": "Nghỉ ca",
         "on_leave": "Nghỉ phép"
       }
@@ -746,6 +808,8 @@
     }
   },
   "common": {
+    "cancel": "Hủy",
+    "saving": "Đang lưu...",
     "time": {
       "just_now": "Vừa xong",
       "minutes_ago": "{{count}} phút trước",
