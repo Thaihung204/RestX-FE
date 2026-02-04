@@ -1,13 +1,12 @@
- "use client";
+"use client";
 
-import employeeService from "@/lib/services/employeeService";
 import { useToast } from "@/lib/contexts/ToastContext";
+import employeeService from "@/lib/services/employeeService";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const ROLES = ["Manager", "Chef", "Waiter", "Cashier", "Staff"];
-const SALARY_TYPES = ["Hourly", "Monthly", "Daily"];
+const ROLES = ["Kitchen Staff", "Waiter"];
 
 export default function StaffFormPage() {
   const router = useRouter();
@@ -24,8 +23,6 @@ export default function StaffFormPage() {
     address: "",
     position: "",
     hireDate: new Date().toISOString().split("T")[0],
-    salary: "",
-    salaryType: "Monthly",
     role: "Staff",
     isActive: true,
   });
@@ -53,8 +50,6 @@ export default function StaffFormPage() {
         hireDate: employee.hireDate
           ? new Date(employee.hireDate).toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0],
-        salary: employee.salary?.toString() || "0",
-        salaryType: employee.salaryType || "Monthly",
         role: employee.roles?.[0] || "Staff",
         isActive: employee.isActive !== undefined ? employee.isActive : true,
       });
@@ -102,19 +97,6 @@ export default function StaffFormPage() {
         return;
       }
 
-      if (
-        !formData.salary ||
-        parseInt(formData.salary.replace(/\D/g, "")) <= 0
-      ) {
-        showToast(
-          "error",
-          t("dashboard.toasts.staff.validation_error_title"),
-          t("dashboard.toasts.staff.validation_salary_required"),
-        );
-        setLoading(false);
-        return;
-      }
-
       if (isNewStaff) {
         // Create new staff
         const submitData = {
@@ -124,8 +106,6 @@ export default function StaffFormPage() {
           address: formData.address?.trim() || undefined,
           position: formData.position.trim(),
           hireDate: formData.hireDate,
-          salary: parseInt(formData.salary.replace(/\D/g, "")) || 0,
-          salaryType: formData.salaryType,
           role: formData.role,
         };
 
@@ -145,8 +125,6 @@ export default function StaffFormPage() {
           address: formData.address?.trim() || undefined,
           position: formData.position.trim(),
           hireDate: formData.hireDate,
-          salary: parseInt(formData.salary.replace(/\D/g, "")) || 0,
-          salaryType: formData.salaryType,
           isActive: formData.isActive,
         };
 
@@ -250,17 +228,17 @@ export default function StaffFormPage() {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              Back to Staff List
+              {t("dashboard.staff.back_to_list")}
             </button>
             <h2
               className="text-3xl font-bold mb-2"
               style={{ color: "var(--text)" }}>
-              {isNewStaff ? "Add New Staff" : "Edit Staff"}
+              {isNewStaff ? t("dashboard.staff.add_new_staff") : t("dashboard.staff.edit_staff")}
             </h2>
             <p style={{ color: "var(--text-muted)" }}>
               {isNewStaff
-                ? "Fill in the details to add a new staff member"
-                : "Update staff member information"}
+                ? t("dashboard.staff.fill_details_new")
+                : t("dashboard.staff.update_staff_info")}
             </p>
           </div>
 
@@ -275,7 +253,7 @@ export default function StaffFormPage() {
               <h3
                 className="text-xl font-bold mb-4"
                 style={{ color: "var(--text)" }}>
-                Basic Information
+                {t("dashboard.staff.basic_information")}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -284,7 +262,7 @@ export default function StaffFormPage() {
                   <label
                     className="block mb-2 font-medium"
                     style={{ color: "var(--text)" }}>
-                    Full Name <span className="text-red-500">*</span>
+                    {t("dashboard.staff.form.full_name")}
                   </label>
                   <input
                     type="text"
@@ -298,7 +276,7 @@ export default function StaffFormPage() {
                       border: "1px solid var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder="Enter full name"
+                    placeholder={t("dashboard.staff.form.enter_full_name")}
                   />
                 </div>
 
@@ -307,7 +285,7 @@ export default function StaffFormPage() {
                   <label
                     className="block mb-2 font-medium"
                     style={{ color: "var(--text)" }}>
-                    Email <span className="text-red-500">*</span>
+                    {t("dashboard.staff.form.email")}
                   </label>
                   <input
                     type="email"
@@ -322,7 +300,7 @@ export default function StaffFormPage() {
                       border: "1px solid var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder="Enter email"
+                    placeholder={t("dashboard.staff.form.enter_email")}
                   />
                 </div>
 
@@ -331,7 +309,7 @@ export default function StaffFormPage() {
                   <label
                     className="block mb-2 font-medium"
                     style={{ color: "var(--text)" }}>
-                    Phone Number
+                    {t("dashboard.staff.form.phone_number")}
                   </label>
                   <input
                     type="tel"
@@ -344,7 +322,7 @@ export default function StaffFormPage() {
                       border: "1px solid var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder="Enter phone number"
+                    placeholder={t("dashboard.staff.form.enter_phone")}
                   />
                 </div>
 
@@ -353,7 +331,7 @@ export default function StaffFormPage() {
                   <label
                     className="block mb-2 font-medium"
                     style={{ color: "var(--text)" }}>
-                    Position <span className="text-red-500">*</span>
+                    {t("dashboard.staff.form.position")}
                   </label>
                   <input
                     type="text"
@@ -367,7 +345,7 @@ export default function StaffFormPage() {
                       border: "1px solid var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder="e.g., Head Chef, Server, etc."
+                    placeholder={t("dashboard.staff.form.position_placeholder")}
                   />
                 </div>
 
@@ -377,7 +355,7 @@ export default function StaffFormPage() {
                     <label
                       className="block mb-2 font-medium"
                       style={{ color: "var(--text)" }}>
-                      Role <span className="text-red-500">*</span>
+                      {t("dashboard.staff.form.role")}
                     </label>
                     <select
                       name="role"
@@ -404,7 +382,7 @@ export default function StaffFormPage() {
                   <label
                     className="block mb-2 font-medium"
                     style={{ color: "var(--text)" }}>
-                    Hire Date <span className="text-red-500">*</span>
+                    {t("dashboard.staff.form.hire_date")}
                   </label>
                   <input
                     type="date"
@@ -426,7 +404,7 @@ export default function StaffFormPage() {
                   <label
                     className="block mb-2 font-medium"
                     style={{ color: "var(--text)" }}>
-                    Address
+                    {t("dashboard.staff.form.address")}
                   </label>
                   <textarea
                     name="address"
@@ -439,86 +417,8 @@ export default function StaffFormPage() {
                       border: "1px solid var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder="Enter address"
+                    placeholder={t("dashboard.staff.form.enter_address")}
                   />
-                </div>
-              </div>
-            </div>
-
-            {/* Salary Information */}
-            <div
-              className="rounded-xl p-6 mb-6"
-              style={{
-                background: "var(--card)",
-                border: "1px solid var(--border)",
-              }}>
-              <h3
-                className="text-xl font-bold mb-4"
-                style={{ color: "var(--text)" }}>
-                Salary Information
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Salary */}
-                <div>
-                  <label
-                    className="block mb-2 font-medium"
-                    style={{ color: "var(--text)" }}>
-                    Salary (VND) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="salary"
-                    value={formData.salary}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "");
-                      setFormData((prev) => ({ ...prev, salary: value }));
-                    }}
-                    required
-                    className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-                    style={{
-                      background: "var(--surface)",
-                      border: "1px solid var(--border)",
-                      color: "var(--text)",
-                    }}
-                    placeholder="0"
-                  />
-                  {formData.salary && (
-                    <p
-                      className="text-sm mt-1"
-                      style={{ color: "var(--text-muted)" }}>
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(parseInt(formData.salary) || 0)}
-                    </p>
-                  )}
-                </div>
-
-                {/* Salary Type */}
-                <div>
-                  <label
-                    className="block mb-2 font-medium"
-                    style={{ color: "var(--text)" }}>
-                    Salary Type <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="salaryType"
-                    value={formData.salaryType}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-                    style={{
-                      background: "var(--surface)",
-                      border: "1px solid var(--border)",
-                      color: "var(--text)",
-                    }}>
-                    {SALARY_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
             </div>
@@ -534,7 +434,7 @@ export default function StaffFormPage() {
                 <h3
                   className="text-xl font-bold mb-4"
                   style={{ color: "var(--text)" }}>
-                  Status
+                  {t("dashboard.staff.form.status")}
                 </h3>
 
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -549,7 +449,7 @@ export default function StaffFormPage() {
                     }}
                   />
                   <span style={{ color: "var(--text)" }}>
-                    Active (Staff member is currently working)
+                    {t("dashboard.staff.form.active_description")}
                   </span>
                 </label>
               </div>
@@ -566,7 +466,7 @@ export default function StaffFormPage() {
                   border: "1px solid var(--border)",
                   color: "var(--text)",
                 }}>
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="submit"
@@ -582,10 +482,10 @@ export default function StaffFormPage() {
                   if (!loading) e.currentTarget.style.background = "#FF380B";
                 }}>
                 {loading
-                  ? "Saving..."
+                  ? t("common.saving")
                   : isNewStaff
-                    ? "Create Staff"
-                    : "Update Staff"}
+                    ? t("dashboard.staff.create_staff")
+                    : t("dashboard.staff.update_staff")}
               </button>
             </div>
           </form>

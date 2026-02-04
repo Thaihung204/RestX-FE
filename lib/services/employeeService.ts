@@ -16,8 +16,8 @@ export interface CreateEmployeeDto {
   address?: string;
   position: string;
   hireDate: string;
-  salary: number;
-  salaryType: string;
+  // salary: number;
+  // salaryType: string;
   role: string;
 }
 
@@ -29,8 +29,8 @@ export interface UpdateEmployeeDto {
   position?: string;
   hireDate?: string;
   terminationDate?: string;
-  salary?: number;
-  salaryType?: string;
+  // salary?: number;
+  // salaryType?: string;
   isActive?: boolean;
 }
 
@@ -41,8 +41,8 @@ export interface EmployeeResponseDto {
   position: string;
   hireDate: string;
   terminationDate?: string;
-  salary: number;
-  salaryType: string;
+  // salary: number;
+  // salaryType: string;
   isActive: boolean;
   createdDate: string;
   modifiedDate?: string;

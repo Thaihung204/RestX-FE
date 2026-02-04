@@ -27,10 +27,11 @@ export default function StaffPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{
+  const [showStatusConfirm, setShowStatusConfirm] = useState(false);
+  const [itemToToggle, setItemToToggle] = useState<{
     id: string;
     name: string;
+    currentStatus: "active" | "inactive";
   } | null>(null);
 
   const roles = ["Manager", "Waiter", "Chef", "Cashier"];
@@ -96,11 +97,7 @@ export default function StaffPage() {
             ? err.message
             : t("dashboard.toasts.staff.load_error_message");
         setError(msg);
-        showToast(
-          "error",
-          t("dashboard.toasts.staff.load_error_title"),
-          msg,
-        );
+        showToast("error", t("dashboard.toasts.staff.load_error_title"), msg);
       }
     } finally {
       setLoading(false);
@@ -111,26 +108,32 @@ export default function StaffPage() {
     fetchStaffList();
   }, []);
 
-  const handleDelete = async (id: string, name: string) => {
-    setItemToDelete({ id, name });
-    setShowDeleteConfirm(true);
+  const handleToggleStatus = async (
+    id: string,
+    name: string,
+    currentStatus: "active" | "inactive",
+  ) => {
+    setItemToToggle({ id, name, currentStatus });
+    setShowStatusConfirm(true);
   };
 
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
+  const confirmToggleStatus = async () => {
+    if (!itemToToggle) return;
 
     try {
-      // Soft delete: set isActive = false instead of hard delete
-      await employeeService.updateEmployee(itemToDelete.id, {
-        isActive: false,
+      const newStatus = itemToToggle.currentStatus === "active" ? false : true;
+      await employeeService.updateEmployee(itemToToggle.id, {
+        isActive: newStatus,
       });
+
+      const action = newStatus ? "activated" : "deactivated";
       showToast(
         "success",
-        t("dashboard.toasts.staff.deactivated_title"),
-        t("dashboard.toasts.staff.deactivated_message"),
+        `Staff ${action}`,
+        `${itemToToggle.name} has been ${action} successfully`,
       );
-      setShowDeleteConfirm(false);
-      setItemToDelete(null);
+      setShowStatusConfirm(false);
+      setItemToToggle(null);
       await fetchStaffList();
     } catch (err: any) {
       const errorMsg =
@@ -140,14 +143,14 @@ export default function StaffPage() {
         t("dashboard.toasts.staff.action_failed_title"),
         errorMsg,
       );
-      setShowDeleteConfirm(false);
-      setItemToDelete(null);
+      setShowStatusConfirm(false);
+      setItemToToggle(null);
     }
   };
 
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
-    setItemToDelete(null);
+  const cancelToggleStatus = () => {
+    setShowStatusConfirm(false);
+    setItemToToggle(null);
   };
 
   const filteredStaff = staffList.filter((staff) => {
@@ -217,7 +220,7 @@ export default function StaffPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or email..."
+                placeholder={t("dashboard.staff.search_placeholder")}
                 className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
                 style={{
                   background: "var(--surface)",
@@ -236,7 +239,7 @@ export default function StaffPage() {
                   border: "1px solid var(--border)",
                   color: "var(--text)",
                 }}>
-                <option value="all">All Roles</option>
+                <option value="all">{t("dashboard.staff.all_roles")}</option>
                 {roles.map((role) => (
                   <option key={role} value={role}>
                     {role}
@@ -336,7 +339,7 @@ export default function StaffPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                    Inactive
+                    {t("dashboard.staff.stats.inactive")}
                   </p>
                   <p
                     className="text-3xl font-bold mt-1"
@@ -373,7 +376,7 @@ export default function StaffPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                    Positions
+                    {t("dashboard.staff.stats.positions")}
                   </p>
                   <p className="text-3xl font-bold text-purple-500 mt-1">
                     {
@@ -451,7 +454,7 @@ export default function StaffPage() {
                           ? "bg-green-500/10 text-green-500"
                           : "bg-gray-500/10 text-gray-500"
                       }`}>
-                      {member.status === "active" ? "Active" : "Inactive"}
+                      {member.status === "active" ? t("dashboard.staff.status.active") : t("dashboard.staff.status.inactive")}
                     </span>
                   </div>
 
@@ -482,7 +485,7 @@ export default function StaffPage() {
                       <p
                         className="text-xs mb-1"
                         style={{ color: "var(--text-muted)" }}>
-                        Employee Code
+                        {t("dashboard.staff.employee_code")}
                       </p>
                       <p
                         className="font-medium text-sm"
@@ -494,7 +497,7 @@ export default function StaffPage() {
                       <p
                         className="text-xs mb-1"
                         style={{ color: "var(--text-muted)" }}>
-                        Hire Date
+                        {t("dashboard.staff.hire_date")}
                       </p>
                       <p
                         className="font-medium text-sm"
@@ -526,7 +529,7 @@ export default function StaffPage() {
                           "rgba(255, 56, 11, 0.1)";
                         e.currentTarget.style.color = "#FF380B";
                       }}>
-                      View Profile
+                      {t("dashboard.staff.view_profile")}
                       <svg
                         className="w-4 h-4"
                         fill="none"
@@ -541,22 +544,48 @@ export default function StaffPage() {
                       </svg>
                     </Link>
                     <button
-                      onClick={() => handleDelete(member.id, member.name)}
+                      onClick={() =>
+                        handleToggleStatus(
+                          member.id,
+                          member.name,
+                          member.status,
+                        )
+                      }
                       className="px-3 py-2.5 rounded-lg transition-all font-medium text-sm"
                       style={{
-                        backgroundColor: "rgba(239, 68, 68, 0.1)",
-                        color: "rgb(239, 68, 68)",
+                        backgroundColor:
+                          member.status === "active"
+                            ? "rgba(239, 68, 68, 0.1)"
+                            : "rgba(34, 197, 94, 0.1)",
+                        color:
+                          member.status === "active"
+                            ? "rgb(239, 68, 68)"
+                            : "rgb(34, 197, 94)",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                          "rgb(239, 68, 68)";
+                        if (member.status === "active") {
+                          e.currentTarget.style.backgroundColor =
+                            "rgb(239, 68, 68)";
+                        } else {
+                          e.currentTarget.style.backgroundColor =
+                            "rgb(34, 197, 94)";
+                        }
                         e.currentTarget.style.color = "white";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                          "rgba(239, 68, 68, 0.1)";
-                        e.currentTarget.style.color = "rgb(239, 68, 68)";
-                      }}>
+                        if (member.status === "active") {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(239, 68, 68, 0.1)";
+                          e.currentTarget.style.color = "rgb(239, 68, 68)";
+                        } else {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(34, 197, 94, 0.1)";
+                          e.currentTarget.style.color = "rgb(34, 197, 94)";
+                        }
+                      }}
+                      title={
+                        member.status === "active" ? t("dashboard.staff.deactivate") : t("dashboard.staff.activate")
+                      }>
                       <svg
                         className="w-4 h-4"
                         fill="none"
@@ -566,7 +595,7 @@ export default function StaffPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
                         />
                       </svg>
                     </button>
@@ -599,20 +628,20 @@ export default function StaffPage() {
               <p
                 className="text-lg font-medium"
                 style={{ color: "var(--text)" }}>
-                No staff found
+                {t("dashboard.staff.no_staff_found")}
               </p>
               <p
                 className="text-sm mt-1"
                 style={{ color: "var(--text-muted)" }}>
-                Try adjusting your search or filters
+                {t("dashboard.staff.try_adjusting_filters")}
               </p>
             </div>
           )}
         </div>
       </main>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && itemToDelete && (
+      {/* Status Toggle Confirmation Modal */}
+      {showStatusConfirm && itemToToggle && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div
             className="rounded-xl p-6 max-w-md w-full"
@@ -621,9 +650,22 @@ export default function StaffPage() {
               border: "1px solid var(--border)",
             }}>
             <div className="flex items-start gap-4 mb-4">
-              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{
+                  backgroundColor:
+                    itemToToggle.currentStatus === "active"
+                      ? "rgba(239, 68, 68, 0.1)"
+                      : "rgba(34, 197, 94, 0.1)",
+                }}>
                 <svg
-                  className="w-6 h-6 text-red-500"
+                  className="w-6 h-6"
+                  style={{
+                    color:
+                      itemToToggle.currentStatus === "active"
+                        ? "rgb(239, 68, 68)"
+                        : "rgb(34, 197, 94)",
+                  }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24">
@@ -631,7 +673,7 @@ export default function StaffPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
                   />
                 </svg>
               </div>
@@ -639,30 +681,55 @@ export default function StaffPage() {
                 <h3
                   className="text-lg font-bold mb-2"
                   style={{ color: "var(--text)" }}>
-                  Deactivate Staff Member
+                  {itemToToggle.currentStatus === "active"
+                    ? t("dashboard.staff.modal.deactivate_title")
+                    : t("dashboard.staff.modal.activate_title")}
                 </h3>
                 <p style={{ color: "var(--text-muted)" }}>
-                  Are you sure you want to deactivate{" "}
-                  <strong>{itemToDelete.name}</strong>? This will set their
-                  status to inactive.
+                  {itemToToggle.currentStatus === "active"
+                    ? t("dashboard.staff.modal.deactivate_message", { name: itemToToggle.name })
+                    : t("dashboard.staff.modal.activate_message", { name: itemToToggle.name })}
+                  .
                 </p>
               </div>
             </div>
             <div className="flex gap-3 justify-end">
               <button
-                onClick={cancelDelete}
+                onClick={cancelToggleStatus}
                 className="px-4 py-2 rounded-lg font-medium transition-all"
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   color: "var(--text)",
                 }}>
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all">
-                Deactivate
+                onClick={confirmToggleStatus}
+                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                style={{
+                  backgroundColor:
+                    itemToToggle.currentStatus === "active"
+                      ? "rgb(239, 68, 68)"
+                      : "rgb(34, 197, 94)",
+                }}
+                onMouseEnter={(e) => {
+                  if (itemToToggle.currentStatus === "active") {
+                    e.currentTarget.style.backgroundColor = "rgb(220, 38, 38)";
+                  } else {
+                    e.currentTarget.style.backgroundColor = "rgb(21, 128, 61)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (itemToToggle.currentStatus === "active") {
+                    e.currentTarget.style.backgroundColor = "rgb(239, 68, 68)";
+                  } else {
+                    e.currentTarget.style.backgroundColor = "rgb(34, 197, 94)";
+                  }
+                }}>
+                {itemToToggle.currentStatus === "active"
+                  ? t("dashboard.staff.deactivate")
+                  : t("dashboard.staff.activate")}
               </button>
             </div>
           </div>

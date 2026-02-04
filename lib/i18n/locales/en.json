@@ -492,11 +492,52 @@
       "title": "Staff Management",
       "subtitle": "Manage your restaurant team members",
       "add_staff": "Add Staff",
+      "back_to_list": "Back to Staff List",
+      "add_new_staff": "Add New Staff",
+      "edit_staff": "Edit Staff",
+      "fill_details_new": "Fill in the details to add a new staff member",
+      "update_staff_info": "Update staff member information",
+      "basic_information": "Basic Information",
+      "create_staff": "Create Staff",
+      "update_staff": "Update Staff",
+      "search_placeholder": "Search by name or email...",
+      "all_roles": "All Roles",
+      "employee_code": "Employee Code",
+      "hire_date": "Hire Date",
+      "view_profile": "View Profile",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "no_staff_found": "No staff found",
+      "try_adjusting_filters": "Try adjusting your search or filters",
       "stats": {
         "total_staff": "Total Staff",
         "on_duty": "On Duty",
         "departments": "Departments",
-        "avg_rating": "Avg Rating"
+        "avg_rating": "Avg Rating",
+        "inactive": "Inactive",
+        "positions": "Positions"
+      },
+      "form": {
+        "full_name": "Full Name",
+        "email": "Email",
+        "phone_number": "Phone Number",
+        "position": "Position",
+        "role": "Role",
+        "hire_date": "Hire Date",
+        "address": "Address",
+        "status": "Status",
+        "enter_full_name": "Enter full name",
+        "enter_email": "Enter email",
+        "enter_phone": "Enter phone number",
+        "enter_address": "Enter address",
+        "position_placeholder": "e.g., Head Chef, Server, etc.",
+        "active_description": "Active (Staff member is currently working)"
+      },
+      "modal": {
+        "activate_title": "Activate Staff Member",
+        "deactivate_title": "Deactivate Staff Member",
+        "activate_message": "Are you sure you want to activate {{name}} ?",
+        "deactivate_message": "Are you sure you want to deactivate {{name}} ?"
       },
       "card": {
         "shift": "Shift",
@@ -513,6 +554,7 @@
       },
       "status": {
         "active": "Active",
+        "inactive": "Inactive",
         "off_duty": "Off Duty",
         "on_leave": "On Leave"
       }
@@ -737,6 +779,8 @@
     }
   },
   "common": {
+    "cancel": "Cancel",
+    "saving": "Saving...",
     "time": {
       "just_now": "Just now",
       "minutes_ago": "{{count}} minutes ago",
