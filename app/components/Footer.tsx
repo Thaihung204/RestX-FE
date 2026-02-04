@@ -134,10 +134,11 @@ const Footer: React.FC = () => {
                       }}
                     >
                       <img
-                        src={tenant?.logoUrl || "/images/logo/restx-removebg-preview.png"}
+                        src={(tenant?.logoUrl && tenant.logoUrl.trim() !== '') ? tenant.logoUrl : "/images/logo/restx-removebg-preview.png"}
                         alt="Restaurant Logo"
                         className="app-logo-img"
                         style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
+                        onError={(e) => { e.currentTarget.src = '/images/logo/restx-removebg-preview.png'; }}
                       />
                     </div>
                     <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
