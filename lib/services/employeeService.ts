@@ -80,13 +80,8 @@ export interface EmployeeListResponseDto {
   itemsPerPage?: number;
 }
 
-/**
- * Employee Service - Handles all employee/staff related API calls
- */
 class EmployeeService {
-  /**
-   * Get all employees with pagination and filters
-   */
+
   async getEmployees(
     filter?: EmployeeFilterParams,
   ): Promise<EmployeeListResponseDto> {
@@ -100,17 +95,14 @@ class EmployeeService {
     return response.data;
   }
 
-  /**
-   * Get a single employee by ID
-   */
   async getEmployeeById(id: string): Promise<EmployeeResponseDto> {
     const response = await axiosInstance.get(`/employees/${id}`);
-    return response.data;
+    const body = response.data as EmployeeResponseDto | { data?: EmployeeResponseDto };
+    return (body && typeof body === "object" && "data" in body && body.data)
+      ? body.data
+      : (body as EmployeeResponseDto);
   }
 
-  /**
-   * Create a new employee
-   */
   async createEmployee(
     employee: CreateEmployeeDto,
   ): Promise<EmployeeResponseDto> {
@@ -118,9 +110,6 @@ class EmployeeService {
     return response.data;
   }
 
-  /**
-   * Update an existing employee
-   */
   async updateEmployee(
     id: string,
     employee: UpdateEmployeeDto,
@@ -129,16 +118,10 @@ class EmployeeService {
     return response.data;
   }
 
-  /**
-   * Delete an employee
-   */
   async deleteEmployee(id: string): Promise<void> {
     await axiosInstance.delete(`/employees/${id}`);
   }
 
-  /**
-   * Toggle employee active status
-   */
   async toggleEmployeeStatus(
     id: string,
     isActive: boolean,
@@ -150,6 +133,5 @@ class EmployeeService {
   }
 }
 
-// Export singleton instance
 export const employeeService = new EmployeeService();
 export default employeeService;

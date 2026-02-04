@@ -42,10 +42,7 @@ export default function StaffFormPage() {
   const fetchStaff = async () => {
     try {
       setLoading(true);
-      const response = await employeeService.getEmployeeById(id);
-
-      // Extract employee data from response
-      const employee = response.data || response;
+      const employee = await employeeService.getEmployeeById(id);
 
       setFormData({
         email: employee.email || "",

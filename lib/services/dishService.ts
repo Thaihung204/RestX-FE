@@ -15,7 +15,6 @@ export interface DishCreateDto {
 }
 
 export interface DishUpdateDto extends DishCreateDto {
-  // Same fields as create
 }
 
 export interface DishResponseDto {
@@ -46,13 +45,8 @@ export interface DishListResponseDto {
   itemsPerPage?: number;
 }
 
-/**
- * Dish Service - Handles all dish/menu related API calls
- */
 class DishService {
-  /**
-   * Get all dishes with pagination
-   */
+
   async getDishes(
     page: number = 1,
     itemsPerPage: number = 100,
@@ -63,40 +57,25 @@ class DishService {
     return response.data;
   }
 
-  /**
-   * Get a single dish by ID
-   */
   async getDishById(id: string): Promise<DishResponseDto> {
     const response = await axiosInstance.get(`/dishes/${id}`);
     return response.data;
   }
 
-  /**
-   * Create a new dish
-   */
   async createDish(dish: DishCreateDto): Promise<DishResponseDto> {
     const response = await axiosInstance.post("/dishes", dish);
     return response.data;
   }
 
-  /**
-   * Update an existing dish
-   */
   async updateDish(id: string, dish: DishUpdateDto): Promise<DishResponseDto> {
     const response = await axiosInstance.put(`/dishes/${id}`, dish);
     return response.data;
   }
 
-  /**
-   * Delete a dish
-   */
   async deleteDish(id: string): Promise<void> {
     await axiosInstance.delete(`/dishes/${id}`);
   }
 
-  /**
-   * Upload dish image (if backend supports it)
-   */
   async uploadDishImage(
     id: string,
     imageFile: File,
@@ -112,9 +91,6 @@ class DishService {
     return response.data;
   }
 
-  /**
-   * Toggle dish active status
-   */
   async toggleDishStatus(
     id: string,
     isActive: boolean,
@@ -126,6 +102,5 @@ class DishService {
   }
 }
 
-// Export singleton instance
 export const dishService = new DishService();
 export default dishService;
