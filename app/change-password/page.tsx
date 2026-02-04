@@ -3,8 +3,10 @@
 import LoginButton from "@/components/auth/LoginButton";
 import authService from "@/lib/services/authService";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function ChangePasswordPage() {
+    const { t } = useTranslation('auth');
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -20,7 +22,7 @@ export default function ChangePasswordPage() {
 
     const validateCurrentPassword = (password: string) => {
         if (!password) {
-            setCurrentPasswordError("Please enter your current password");
+            setCurrentPasswordError(t('change_password_page.validation.required_current'));
             return false;
         }
         setCurrentPasswordError("");
@@ -29,22 +31,22 @@ export default function ChangePasswordPage() {
 
     const validateNewPassword = (password: string) => {
         if (!password) {
-            setNewPasswordError("Please enter a new password");
+            setNewPasswordError(t('change_password_page.validation.required_new'));
             return false;
         }
 
         if (password.length < 8) {
-            setNewPasswordError("Password must be at least 8 characters");
+            setNewPasswordError(t('change_password_page.validation.password_min'));
             return false;
         }
 
         if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-            setNewPasswordError("Password must contain uppercase, lowercase, and number");
+            setNewPasswordError(t('change_password_page.validation.password_requirements'));
             return false;
         }
 
         if (password === currentPassword) {
-            setNewPasswordError("New password must be different from current password");
+            setNewPasswordError(t('change_password_page.validation.password_same'));
             return false;
         }
 
@@ -54,12 +56,12 @@ export default function ChangePasswordPage() {
 
     const validateConfirmPassword = (confirm: string) => {
         if (!confirm) {
-            setConfirmPasswordError("Please confirm your new password");
+            setConfirmPasswordError(t('change_password_page.validation.required_confirm'));
             return false;
         }
 
         if (confirm !== newPassword) {
-            setConfirmPasswordError("Passwords do not match");
+            setConfirmPasswordError(t('change_password_page.validation.password_mismatch'));
             return false;
         }
 
@@ -119,7 +121,7 @@ export default function ChangePasswordPage() {
                 confirmNewPassword,
             });
 
-            alert('Password Changed Successfully!\n\nYour password has been updated.');
+            alert(t('change_password_page.alerts.success'));
 
             // Clear form
             setCurrentPassword("");
@@ -176,10 +178,10 @@ export default function ChangePasswordPage() {
                         <h2
                             className="text-3xl font-bold mb-2 auth-title"
                         >
-                            Change Password
+                            {t('change_password_page.title')}
                         </h2>
                         <p className="auth-text">
-                            Update your password to keep your account secure
+                            {t('change_password_page.subtitle')}
                         </p>
                     </div>
 
@@ -189,7 +191,7 @@ export default function ChangePasswordPage() {
                                 htmlFor="currentPassword"
                                 className="block text-sm font-medium mb-2 auth-label"
                             >
-                                Current Password
+                                {t('change_password_page.current_password_label')}
                             </label>
                             <input
                                 id="currentPassword"
@@ -197,7 +199,7 @@ export default function ChangePasswordPage() {
                                 value={currentPassword}
                                 onChange={handleCurrentPasswordChange}
                                 onBlur={() => setCurrentPasswordTouched(true)}
-                                placeholder="Enter current password"
+                                placeholder={t('change_password_page.current_password_placeholder')}
                                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                                 style={{
                                     borderColor: currentPasswordTouched && currentPasswordError ? '#ef4444' : undefined,
@@ -213,7 +215,7 @@ export default function ChangePasswordPage() {
                                 htmlFor="newPassword"
                                 className="block text-sm font-medium mb-2 auth-label"
                             >
-                                New Password
+                                {t('change_password_page.new_password_label')}
                             </label>
                             <input
                                 id="newPassword"
@@ -221,7 +223,7 @@ export default function ChangePasswordPage() {
                                 value={newPassword}
                                 onChange={handleNewPasswordChange}
                                 onBlur={() => setNewPasswordTouched(true)}
-                                placeholder="Enter new password"
+                                placeholder={t('change_password_page.new_password_placeholder')}
                                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                                 style={{
                                     borderColor: newPasswordTouched && newPasswordError ? '#ef4444' : undefined,
@@ -231,7 +233,7 @@ export default function ChangePasswordPage() {
                                 <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{newPasswordError}</p>
                             )}
                             {newPasswordTouched && !newPasswordError && newPassword && (
-                                <p className="mt-1 text-sm" style={{ color: '#22c55e' }}>Password is strong</p>
+                                <p className="mt-1 text-sm" style={{ color: '#22c55e' }}>{t('change_password_page.password_strong')}</p>
                             )}
                         </div>
 
@@ -240,7 +242,7 @@ export default function ChangePasswordPage() {
                                 htmlFor="confirmNewPassword"
                                 className="block text-sm font-medium mb-2 auth-label"
                             >
-                                Confirm New Password
+                                {t('change_password_page.confirm_password_label')}
                             </label>
                             <input
                                 id="confirmNewPassword"
@@ -248,7 +250,7 @@ export default function ChangePasswordPage() {
                                 value={confirmNewPassword}
                                 onChange={handleConfirmPasswordChange}
                                 onBlur={() => setConfirmPasswordTouched(true)}
-                                placeholder="Confirm new password"
+                                placeholder={t('change_password_page.confirm_password_placeholder')}
                                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                                 style={{
                                     borderColor: confirmPasswordTouched && confirmPasswordError ? '#ef4444' : undefined,
@@ -258,11 +260,11 @@ export default function ChangePasswordPage() {
                                 <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{confirmPasswordError}</p>
                             )}
                             {confirmPasswordTouched && !confirmPasswordError && confirmNewPassword && (
-                                <p className="mt-1 text-sm" style={{ color: '#22c55e' }}>Passwords match</p>
+                                <p className="mt-1 text-sm" style={{ color: '#22c55e' }}>{t('change_password_page.passwords_match')}</p>
                             )}
                         </div>
 
-                        <LoginButton loading={loading} text="CHANGE PASSWORD" />
+                        <LoginButton loading={loading} text={t('change_password_page.change_btn')} />
 
                         <div
                             className="text-center pt-4 border-t"
@@ -289,7 +291,7 @@ export default function ChangePasswordPage() {
                                         d="M10 19l-7-7m0 0l7-7m-7 7h18"
                                     />
                                 </svg>
-                                Back to Dashboard
+                                {t('change_password_page.back_to_dashboard')}
                             </a>
                         </div>
                     </form>

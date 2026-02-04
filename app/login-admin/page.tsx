@@ -4,9 +4,11 @@ import AdminLoginHeader from "@/components/auth/AdminLoginHeader";
 import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function AdminLoginPage() {
+  const { t } = useTranslation('auth');
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
   // Get initial theme from localStorage to prevent flash
@@ -40,7 +42,7 @@ export default function AdminLoginPage() {
     // Improved email regex validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
-      setEmailError("Please enter a valid email address");
+      setEmailError(t('login_admin_page.validation.invalid_email'));
       return false;
     }
 
@@ -65,19 +67,19 @@ export default function AdminLoginPage() {
     const errors: string[] = [];
 
     if (pwd.length < 8) {
-      errors.push("At least 8 characters");
+      errors.push(t('login_admin_page.validation.password_requirements.length'));
     }
 
     if (!/(?=.*[a-z])/.test(pwd)) {
-      errors.push("At least one lowercase letter (a-z)");
+      errors.push(t('login_admin_page.validation.password_requirements.lowercase'));
     }
 
     if (!/(?=.*[A-Z])/.test(pwd)) {
-      errors.push("At least one uppercase letter (A-Z)");
+      errors.push(t('login_admin_page.validation.password_requirements.uppercase'));
     }
 
     if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(pwd)) {
-      errors.push("At least one special character (!@#$%...)");
+      errors.push(t('login_admin_page.validation.password_requirements.special'));
     }
 
     setPasswordErrors(errors);
@@ -101,7 +103,7 @@ export default function AdminLoginPage() {
   const handleEmailBlur = () => {
     setEmailTouched(true);
     if (!email) {
-      setEmailError("Please enter your email address");
+      setEmailError(t('login_admin_page.validation.required_email'));
     } else {
       validateEmail(email);
     }
@@ -110,7 +112,7 @@ export default function AdminLoginPage() {
   const handlePasswordBlur = () => {
     setPasswordTouched(true);
     if (!password) {
-      setPasswordErrors(["Please enter your password"]);
+      setPasswordErrors([t('login_admin_page.validation.required_password')]);
     } else {
       validatePassword(password);
     }
@@ -125,15 +127,15 @@ export default function AdminLoginPage() {
 
     // Check if fields are empty
     if (!email || !email.trim()) {
-      setEmailError("Please enter your email address");
+      setEmailError(t('login_admin_page.validation.required_email'));
       if (!password || !password.trim()) {
-        setPasswordErrors(["Please enter your password"]);
+        setPasswordErrors([t('login_admin_page.validation.required_password')]);
       }
       return;
     }
 
     if (!password || !password.trim()) {
-      setPasswordErrors(["Please enter your password"]);
+      setPasswordErrors([t('login_admin_page.validation.required_password')]);
       return;
     }
 
@@ -176,7 +178,7 @@ export default function AdminLoginPage() {
           className="text-center"
           style={{ color: isDark ? "#9ca3af" : "#9ca3af" }}>
           {/* Placeholder for future design */}
-          <p className="text-sm">Design placeholder</p>
+          <p className="text-sm">{t('login_admin_page.design_placeholder')}</p>
         </div>
       </div>
 
@@ -217,7 +219,7 @@ export default function AdminLoginPage() {
                     htmlFor="email"
                     className="block text-sm font-medium mb-2"
                     style={{ color: isDark ? "#ECECEC" : "#374151" }}>
-                    Email
+                    {t('login_admin_page.email_label')}
                   </label>
                   <input
                     id="email"
@@ -225,7 +227,7 @@ export default function AdminLoginPage() {
                     value={email}
                     onChange={handleEmailChange}
                     onBlur={handleEmailBlur}
-                    placeholder="admin@restx.com"
+                    placeholder={t('login_admin_page.email_placeholder')}
                     className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
                     style={{
                       background: isDark ? "#141927" : "#fff",
@@ -251,7 +253,7 @@ export default function AdminLoginPage() {
                       htmlFor="password"
                       className="block text-sm font-medium"
                       style={{ color: isDark ? "#ECECEC" : "#374151" }}>
-                      Password
+                      {t('login_admin_page.password_label')}
                     </label>
                     <a
                       href="/forgot-password"
@@ -263,7 +265,7 @@ export default function AdminLoginPage() {
                       onMouseLeave={(e) =>
                         (e.currentTarget.style.color = "#FF380B")
                       }>
-                      Forgot password?
+                      {t('login_admin_page.forgot_password')}
                     </a>
                   </div>
                   <div className="relative">
@@ -273,7 +275,7 @@ export default function AdminLoginPage() {
                       value={password}
                       onChange={handlePasswordChange}
                       onBlur={handlePasswordBlur}
-                      placeholder="Enter your password"
+                      placeholder={t('login_admin_page.password_placeholder')}
                       className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
                       style={{
                         background: isDark ? "#141927" : "#fff",
@@ -293,14 +295,14 @@ export default function AdminLoginPage() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none"
                       style={{ color: isDark ? "#9ca3af" : "#6b7280" }}
                       onMouseEnter={(e) =>
-                        (e.currentTarget.style.color = isDark
-                          ? "#d1d5db"
-                          : "#374151")
+                      (e.currentTarget.style.color = isDark
+                        ? "#d1d5db"
+                        : "#374151")
                       }
                       onMouseLeave={(e) =>
-                        (e.currentTarget.style.color = isDark
-                          ? "#9ca3af"
-                          : "#6b7280")
+                      (e.currentTarget.style.color = isDark
+                        ? "#9ca3af"
+                        : "#6b7280")
                       }
                       suppressHydrationWarning>
                       {showPassword ? (
@@ -352,11 +354,11 @@ export default function AdminLoginPage() {
                   )}
                 </div>
                 <RememberCheckbox checked={remember} onChange={setRemember} />
-                <LoginButton loading={loading} text="LOGIN" />
+                <LoginButton loading={loading} text={t('login_admin_page.login_btn')} />
                 <div
                   className="text-center text-sm mt-6"
                   style={{ color: isDark ? "#C5C5C5" : "#4b5563" }}>
-                  By continuing, you agree to RestX&apos;s{" "}
+                  {t('login_admin_page.terms_text')}{" "}
                   <a
                     href="/terms"
                     className="font-medium"
@@ -367,9 +369,9 @@ export default function AdminLoginPage() {
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.color = "#FF380B")
                     }>
-                    Terms of Service
+                    {t('login_admin_page.terms_of_service')}
                   </a>{" "}
-                  and{" "}
+                  {t('login_admin_page.and')}{" "}
                   <a
                     href="/privacy"
                     className="font-medium"
@@ -380,7 +382,7 @@ export default function AdminLoginPage() {
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.color = "#FF380B")
                     }>
-                    Privacy Policy
+                    {t('login_admin_page.privacy_policy')}
                   </a>
                 </div>
                 <div
@@ -391,7 +393,7 @@ export default function AdminLoginPage() {
                       ? "rgba(255, 255, 255, 0.1)"
                       : "#e5e7eb",
                   }}>
-                  Don&apos;t have an account?{" "}
+                  {t('login_admin_page.no_account')}{" "}
                   <a
                     href="/register"
                     className="font-semibold transition-colors"
@@ -402,7 +404,7 @@ export default function AdminLoginPage() {
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.color = "#FF380B")
                     }>
-                    Sign up here
+                    {t('login_admin_page.sign_up_here')}
                   </a>
                 </div>
               </form>

@@ -1161,6 +1161,8 @@
       "password_placeholder": "Enter your password",
       "confirm_password_placeholder": "Confirm your password",
       "i_agree": "I agree to RestX's",
+      "terms_of_service": "Terms of Service",
+      "privacy_policy": "Privacy Policy",
       "create_account_btn": "CREATE ACCOUNT",
       "already_have_account": "Already have an account?",
       "sign_in_here": "Sign in here",
@@ -1189,7 +1191,124 @@
         "submitted": "Registration Submitted!\n\nName: {{firstName}} {{lastName}}\nEmail: {{email}}\nPhone: {{phone}}\n\n(This is UI demo only - No API integration)"
       }
     },
-    "remember_me": "Keep me logged in"
+    "remember_me": "Keep me logged in",
+    "login_email_page": {
+      "title": "Login with Email",
+      "email_label": "Email",
+      "email_placeholder": "your.email@example.com",
+      "password_label": "Password",
+      "password_placeholder": "Enter your password",
+      "forgot_password": "Forgot password?",
+      "login_btn": "LOGIN",
+      "terms_text": "By continuing, you agree to RestX's",
+      "terms_of_service": "Terms of Service",
+      "and": "and",
+      "privacy_policy": "Privacy Policy",
+      "no_account": "Don't have an account?",
+      "sign_up_here": "Sign up here",
+      "or_login_with": "Or login with",
+      "phone_number": "Phone Number",
+      "validation": {
+        "required_email": "Please enter your email address",
+        "invalid_email": "Please enter a valid email address",
+        "required_password": "Please enter your password",
+        "password_min": "Password must be at least 6 characters"
+      }
+    },
+    "login_admin_page": {
+      "title": "Admin Portal",
+      "subtitle": "Restaurant Management System",
+      "email_label": "Email",
+      "email_placeholder": "admin@restx.com",
+      "password_label": "Password",
+      "password_placeholder": "Enter your password",
+      "forgot_password": "Forgot password?",
+      "login_btn": "LOGIN",
+      "terms_text": "By continuing, you agree to RestX's",
+      "terms_of_service": "Terms of Service",
+      "and": "and",
+      "privacy_policy": "Privacy Policy",
+      "no_account": "Don't have an account?",
+      "sign_up_here": "Sign up here",
+      "design_placeholder": "Design placeholder",
+      "validation": {
+        "required_email": "Please enter your email address",
+        "invalid_email": "Please enter a valid email address",
+        "required_password": "Please enter your password",
+        "password_requirements": {
+          "length": "At least 8 characters",
+          "lowercase": "At least one lowercase letter (a-z)",
+          "uppercase": "At least one uppercase letter (A-Z)",
+          "special": "At least one special character (!@#$%...)"
+        }
+      }
+    },
+    "forgot_password_page": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your email address and we will send you a link to reset your password.",
+      "email_label": "Email Address",
+      "email_placeholder": "your.email@example.com",
+      "send_btn": "SEND RESET LINK",
+      "back_to_login": "Back to Login",
+      "validation": {
+        "required_email": "Please enter your email address",
+        "invalid_email": "Please enter a valid email address"
+      },
+      "alerts": {
+        "success": "Password Reset Link Sent!\n\nEmail: {{email}}\n\nPlease check your email for the reset link."
+      }
+    },
+    "reset_password_page": {
+      "title": "Reset Password",
+      "subtitle": "Enter your new password to secure your account.",
+      "new_password_label": "New Password",
+      "new_password_placeholder": "Enter new password",
+      "confirm_password_label": "Confirm Password",
+      "confirm_password_placeholder": "Confirm new password",
+      "reset_btn": "RESET PASSWORD",
+      "password_strong": "Password is strong",
+      "passwords_match": "Passwords match",
+      "validation": {
+        "required_password": "Please enter a password",
+        "required_confirm": "Please confirm your password",
+        "password_min": "Password must be at least 8 characters",
+        "password_lowercase": "Password must contain at least one lowercase letter",
+        "password_uppercase": "Password must contain at least one uppercase letter",
+        "password_number": "Password must contain at least one number",
+        "password_special": "Password must contain at least one special character (!@#$%...)",
+        "password_mismatch": "Passwords do not match"
+      },
+      "alerts": {
+        "invalid_link": "Invalid reset link. Please request a new password reset.",
+        "success": "Password Reset Successfully!\n\nYour password has been updated."
+      }
+    },
+    "change_password_page": {
+      "title": "Change Password",
+      "subtitle": "Update your password to keep your account secure",
+      "current_password_label": "Current Password",
+      "current_password_placeholder": "Enter current password",
+      "new_password_label": "New Password",
+      "new_password_placeholder": "Enter new password",
+      "confirm_password_label": "Confirm New Password",
+      "confirm_password_placeholder": "Confirm new password",
+      "change_btn": "CHANGE PASSWORD",
+      "back_to_dashboard": "Back to Dashboard",
+      "password_strong": "Password is strong",
+      "passwords_match": "Passwords match",
+      "validation": {
+        "required_current": "Please enter your current password",
+        "required_new": "Please enter a new password",
+        "required_confirm": "Please confirm your new password",
+        "password_min": "Password must be at least 8 characters",
+        "password_requirements": "Password must contain uppercase, lowercase, and number",
+        "password_same": "New password must be different from current password",
+        "password_mismatch": "Passwords do not match"
+      },
+      "alerts": {
+        "success": "Password Changed Successfully!\n\nYour password has been updated."
+      }
+    }
   },
   "schedule": {
     "title": "Schedule Management",

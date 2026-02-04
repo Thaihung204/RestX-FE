@@ -1161,6 +1161,8 @@
       "password_placeholder": "Nhập mật khẩu của bạn",
       "confirm_password_placeholder": "Xác nhận mật khẩu của bạn",
       "i_agree": "Tôi đồng ý với",
+      "terms_of_service": "Điều khoản dịch vụ",
+      "privacy_policy": "Chính sách bảo mật",
       "create_account_btn": "TẠO TÀI KHOẢN",
       "already_have_account": "Đã có tài khoản?",
       "sign_in_here": "Đăng nhập tại đây",
@@ -1189,7 +1191,124 @@
         "submitted": "Đăng ký thành công!\n\nTên: {{firstName}} {{lastName}}\nEmail: {{email}}\nSố điện thoại: {{phone}}\n\n(Đây chỉ là bản demo giao diện - Chưa tích hợp API)"
       }
     },
-    "remember_me": "Ghi nhớ đăng nhập"
+    "remember_me": "Ghi nhớ đăng nhập",
+    "login_email_page": {
+      "title": "Đăng nhập bằng Email",
+      "email_label": "Email",
+      "email_placeholder": "email.cuaban@example.com",
+      "password_label": "Mật khẩu",
+      "password_placeholder": "Nhập mật khẩu của bạn",
+      "forgot_password": "Quên mật khẩu?",
+      "login_btn": "ĐĂNG NHẬP",
+      "terms_text": "Bằng việc tiếp tục, bạn đồng ý với",
+      "terms_of_service": "Điều khoản dịch vụ",
+      "and": "và",
+      "privacy_policy": "Chính sách bảo mật",
+      "no_account": "Chưa có tài khoản?",
+      "sign_up_here": "Đăng ký tại đây",
+      "or_login_with": "Hoặc đăng nhập bằng",
+      "phone_number": "Số điện thoại",
+      "validation": {
+        "required_email": "Vui lòng nhập địa chỉ email của bạn",
+        "invalid_email": "Vui lòng nhập địa chỉ email hợp lệ",
+        "required_password": "Vui lòng nhập mật khẩu của bạn",
+        "password_min": "Mật khẩu phải có ít nhất 6 ký tự"
+      }
+    },
+    "login_admin_page": {
+      "title": "Cổng Quản trị",
+      "subtitle": "Hệ thống Quản lý Nhà hàng",
+      "email_label": "Email",
+      "email_placeholder": "admin@restx.com",
+      "password_label": "Mật khẩu",
+      "password_placeholder": "Nhập mật khẩu của bạn",
+      "forgot_password": "Quên mật khẩu?",
+      "login_btn": "ĐĂNG NHẬP",
+      "terms_text": "Bằng việc tiếp tục, bạn đồng ý với",
+      "terms_of_service": "Điều khoản dịch vụ",
+      "and": "và",
+      "privacy_policy": "Chính sách bảo mật",
+      "no_account": "Chưa có tài khoản?",
+      "sign_up_here": "Đăng ký tại đây",
+      "design_placeholder": "Vị trí thiết kế",
+      "validation": {
+        "required_email": "Vui lòng nhập địa chỉ email của bạn",
+        "invalid_email": "Vui lòng nhập địa chỉ email hợp lệ",
+        "required_password": "Vui lòng nhập mật khẩu của bạn",
+        "password_requirements": {
+          "length": "Ít nhất 8 ký tự",
+          "lowercase": "Ít nhất một chữ thường (a-z)",
+          "uppercase": "Ít nhất một chữ hoa (A-Z)",
+          "special": "Ít nhất một ký tự đặc biệt (!@#$%...)"
+        }
+      }
+    },
+    "forgot_password_page": {
+      "title": "Quên Mật khẩu",
+      "subtitle": "Nhập địa chỉ email của bạn và chúng tôi sẽ gửi cho bạn liên kết để đặt lại mật khẩu.",
+      "email_label": "Địa chỉ Email",
+      "email_placeholder": "email.cuaban@example.com",
+      "send_btn": "GỬI LIÊN KẾT ĐẶT LẠI",
+      "back_to_login": "Quay lại đăng nhập",
+      "validation": {
+        "required_email": "Vui lòng nhập địa chỉ email của bạn",
+        "invalid_email": "Vui lòng nhập địa chỉ email hợp lệ"
+      },
+      "alerts": {
+        "success": "Đã gửi liên kết đặt lại mật khẩu!\n\nEmail: {{email}}\n\nVui lòng kiểm tra email để lấy liên kết đặt lại."
+      }
+    },
+    "reset_password_page": {
+      "title": "Đặt lại Mật khẩu",
+      "subtitle": "Nhập mật khẩu mới để bảo mật tài khoản của bạn.",
+      "new_password_label": "Mật khẩu mới",
+      "new_password_placeholder": "Nhập mật khẩu mới",
+      "confirm_password_label": "Xác nhận Mật khẩu",
+      "confirm_password_placeholder": "Xác nhận mật khẩu mới",
+      "reset_btn": "ĐẶT LẠI MẬT KHẨU",
+      "password_strong": "Mật khẩu mạnh",
+      "passwords_match": "Mật khẩu khớp",
+      "validation": {
+        "required_password": "Vui lòng nhập mật khẩu",
+        "required_confirm": "Vui lòng xác nhận mật khẩu của bạn",
+        "password_min": "Mật khẩu phải có ít nhất 8 ký tự",
+        "password_lowercase": "Mật khẩu phải chứa ít nhất một chữ thường",
+        "password_uppercase": "Mật khẩu phải chứa ít nhất một chữ hoa",
+        "password_number": "Mật khẩu phải chứa ít nhất một chữ số",
+        "password_special": "Mật khẩu phải chứa ít nhất một ký tự đặc biệt (!@#$%...)",
+        "password_mismatch": "Mật khẩu không khớp"
+      },
+      "alerts": {
+        "invalid_link": "Liên kết đặt lại không hợp lệ. Vui lòng yêu cầu đặt lại mật khẩu mới.",
+        "success": "Đặt lại mật khẩu thành công!\n\nMật khẩu của bạn đã được cập nhật."
+      }
+    },
+    "change_password_page": {
+      "title": "Đổi Mật khẩu",
+      "subtitle": "Cập nhật mật khẩu để bảo mật tài khoản của bạn",
+      "current_password_label": "Mật khẩu hiện tại",
+      "current_password_placeholder": "Nhập mật khẩu hiện tại",
+      "new_password_label": "Mật khẩu mới",
+      "new_password_placeholder": "Nhập mật khẩu mới",
+      "confirm_password_label": "Xác nhận Mật khẩu mới",
+      "confirm_password_placeholder": "Xác nhận mật khẩu mới",
+      "change_btn": "ĐỔI MẬT KHẨU",
+      "back_to_dashboard": "Quay lại Dashboard",
+      "password_strong": "Mật khẩu mạnh",
+      "passwords_match": "Mật khẩu khớp",
+      "validation": {
+        "required_current": "Vui lòng nhập mật khẩu hiện tại",
+        "required_new": "Vui lòng nhập mật khẩu mới",
+        "required_confirm": "Vui lòng xác nhận mật khẩu mới",
+        "password_min": "Mật khẩu phải có ít nhất 8 ký tự",
+        "password_requirements": "Mật khẩu phải chứa chữ hoa, chữ thường và chữ số",
+        "password_same": "Mật khẩu mới phải khác mật khẩu hiện tại",
+        "password_mismatch": "Mật khẩu không khớp"
+      },
+      "alerts": {
+        "success": "Đổi mật khẩu thành công!\n\nMật khẩu của bạn đã được cập nhật."
+      }
+    }
   },
   "schedule": {
     "title": "Quản lý lịch làm việc",

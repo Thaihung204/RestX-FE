@@ -6,9 +6,11 @@ import RememberCheckbox from "@/components/auth/RememberCheckbox";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 export default function LoginEmailPage() {
+  const { t } = useTranslation('auth');
   const router = useRouter();
   const { login } = useAuth();
   const { mode } = useThemeMode();
@@ -50,7 +52,7 @@ export default function LoginEmailPage() {
     // Improved email regex validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
-      setEmailError("Please enter a valid email address");
+      setEmailError(t('login_email_page.validation.invalid_email'));
       return false;
     }
 
@@ -69,7 +71,7 @@ export default function LoginEmailPage() {
   const handleEmailBlur = () => {
     setEmailTouched(true);
     if (!email) {
-      setEmailError("Please enter your email address");
+      setEmailError(t('login_email_page.validation.required_email'));
     } else {
       validateEmail(email);
     }
@@ -82,7 +84,7 @@ export default function LoginEmailPage() {
     }
 
     if (pwd.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
+      setPasswordError(t('login_email_page.validation.password_min'));
       return false;
     }
 
@@ -101,7 +103,7 @@ export default function LoginEmailPage() {
   const handlePasswordBlur = () => {
     setPasswordTouched(true);
     if (!password) {
-      setPasswordError("Please enter your password");
+      setPasswordError(t('login_email_page.validation.required_password'));
     } else {
       validatePassword(password);
     }
@@ -116,15 +118,15 @@ export default function LoginEmailPage() {
 
     // Check if fields are empty
     if (!email || !email.trim()) {
-      setEmailError("Please enter your email address");
+      setEmailError(t('login_email_page.validation.required_email'));
       if (!password || !password.trim()) {
-        setPasswordError("Please enter your password");
+        setPasswordError(t('login_email_page.validation.required_password'));
       }
       return;
     }
 
     if (!password || !password.trim()) {
-      setPasswordError("Please enter your password");
+      setPasswordError(t('login_email_page.validation.required_password'));
       return;
     }
 
@@ -179,14 +181,14 @@ export default function LoginEmailPage() {
 
       <div className="max-w-[420px] w-full space-y-8 relative z-10">
         <div className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card">
-          <LoginHeader title="Login with Email" />
+          <LoginHeader title={t('login_email_page.title')} />
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
               <label
                 htmlFor="email"
                 className="block text-sm font-medium mb-2 auth-label">
-                Email
+                {t('login_email_page.email_label')}
               </label>
               <input
                 id="email"
@@ -194,7 +196,7 @@ export default function LoginEmailPage() {
                 value={email}
                 onChange={handleEmailChange}
                 onBlur={handleEmailBlur}
-                placeholder="your.email@example.com"
+                placeholder={t('login_email_page.email_placeholder')}
                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                 style={{
                   borderColor:
@@ -213,7 +215,7 @@ export default function LoginEmailPage() {
                 <label
                   htmlFor="password"
                   className="block text-sm font-medium auth-label">
-                  Password
+                  {t('login_email_page.password_label')}
                 </label>
                 <a
                   href="/forgot-password"
@@ -225,7 +227,7 @@ export default function LoginEmailPage() {
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.color = "#FF380B")
                   }>
-                  Forgot password?
+                  {t('login_email_page.forgot_password')}
                 </a>
               </div>
               <div className="relative">
@@ -235,7 +237,7 @@ export default function LoginEmailPage() {
                   value={password}
                   onChange={handlePasswordChange}
                   onBlur={handlePasswordBlur}
-                  placeholder="Enter your password"
+                  placeholder={t('login_email_page.password_placeholder')}
                   className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                   style={{
                     borderColor:
@@ -289,52 +291,52 @@ export default function LoginEmailPage() {
             </div>
 
             <RememberCheckbox checked={remember} onChange={setRemember} />
-            <LoginButton loading={loading} text="LOGIN" />
+            <LoginButton loading={loading} text={t('login_email_page.login_btn')} />
 
             <div className="text-center text-sm mt-6 auth-text">
-              By continuing, you agree to RestX&apos;s{" "}
+              {t('login_email_page.terms_text')}{" "}
               <a
                 href="/terms"
                 className="font-medium"
                 style={{ color: "#FF380B" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                Terms of Service
+                {t('login_email_page.terms_of_service')}
               </a>{" "}
-              and{" "}
+              {t('login_email_page.and')}{" "}
               <a
                 href="/privacy"
                 className="font-medium"
                 style={{ color: "#FF380B" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                Privacy Policy
+                {t('login_email_page.privacy_policy')}
               </a>
             </div>
 
             <div
               className="text-center text-sm mt-4 pt-4 border-t auth-text"
               style={{ borderColor: "var(--border)" }}>
-              Don&apos;t have an account?{" "}
+              {t('login_email_page.no_account')}{" "}
               <a
                 href="/register"
                 className="font-semibold transition-colors"
                 style={{ color: "#FF380B" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                Sign up here
+                {t('login_email_page.sign_up_here')}
               </a>
             </div>
 
             <div className="text-center text-sm mt-2 auth-text">
-              Or login with{" "}
+              {t('login_email_page.or_login_with')}{" "}
               <a
                 href="/login"
                 className="font-semibold transition-colors"
                 style={{ color: "#FF380B" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                Phone Number
+                {t('login_email_page.phone_number')}
               </a>
             </div>
           </form>
