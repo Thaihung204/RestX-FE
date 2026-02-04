@@ -1,74 +1,166 @@
 "use client";
 
+import { useToast } from "@/lib/contexts/ToastContext";
+import employeeService from "@/lib/services/employeeService";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Staff {
   id: string;
   name: string;
+  code: string;
   email: string;
-  phone: string;
   role: string;
+  position: string;
   status: "active" | "inactive";
-  avatar?: string;
   joinDate: string;
-  salary: number;
-  shift: string;
-  rating: number;
+  createdDate: string;
 }
 
 export default function StaffPage() {
-  const { t } = useTranslation("common");
-  const [staffList] = useState<Staff[]>([
-    {
-      id: "1",
-      name: "Michael Chen",
-      email: "michael.chen@restx.com",
-      phone: "+1 234-567-8901",
-      role: "Manager",
-      status: "active",
-      joinDate: "2023-01-15",
-      salary: 25000000,
-      shift: "Morning",
-      rating: 4.9,
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      email: "jane@restaurant.com",
-      phone: "0907654321",
-      role: "Waiter",
-      status: "active",
-      joinDate: "2024-02-20",
-      salary: 8000000,
-      shift: "Evening",
-      rating: 4.5,
-    },
-    {
-      id: "3",
-      name: "Mike Johnson",
-      email: "mike@restaurant.com",
-      phone: "0909876543",
-      role: "Chef",
-      status: "inactive",
-      joinDate: "2023-11-10",
-      salary: 15000000,
-      shift: "Afternoon",
-      rating: 4.7,
-    },
-  ]);
+  const { t } = useTranslation(["common", "dashboard"]);
+  const { showToast } = useToast();
+  const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
+  const [showStatusConfirm, setShowStatusConfirm] = useState(false);
+  const [itemToToggle, setItemToToggle] = useState<{
+    id: string;
+    name: string;
+    currentStatus: "active" | "inactive";
+  } | null>(null);
 
   const roles = ["Manager", "Waiter", "Chef", "Cashier"];
+
+  const fetchStaffList = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await employeeService.getEmployees({
+        page: 1,
+        itemsPerPage: 100,
+      });
+
+      // Extract array from response
+      const arrayData =
+        data.data?.employees ||
+        data.data?.data ||
+        data.data?.items ||
+        data.employees ||
+        (Array.isArray(data.data) ? data.data : null);
+
+      if (arrayData && Array.isArray(arrayData)) {
+        const mappedData = arrayData.map((item: any, index: number) => ({
+          id: item.id?.toString() || `staff-${index}-${Date.now()}`,
+          name: item.fullName || "",
+          code: item.code || "",
+          email: item.email || "",
+          role: item.position || "Staff",
+          position: item.position || "",
+          status: (item.isActive ? "active" : "inactive") as
+            | "active"
+            | "inactive",
+          joinDate: item.hireDate || new Date().toISOString(),
+          createdDate: item.createdDate || new Date().toISOString(),
+        }));
+
+        setStaffList(mappedData);
+        setError(null);
+      } else {
+        setError("Data structure not supported");
+      }
+    } catch (err: any) {
+      if (err.response) {
+        const msg = `API Error: ${err.response?.status} - ${err.response?.data?.message || err.message}`;
+        setError(msg);
+        showToast(
+          "error",
+          t("dashboard.toasts.staff.load_error_title"),
+          msg || t("dashboard.toasts.staff.load_error_message"),
+        );
+      } else if (err.request) {
+        const msg = t("dashboard.toasts.staff.load_error_message");
+        setError(msg);
+        showToast(
+          "error",
+          t("dashboard.toasts.staff.load_network_error_title"),
+          msg,
+        );
+      } else {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : t("dashboard.toasts.staff.load_error_message");
+        setError(msg);
+        showToast("error", t("dashboard.toasts.staff.load_error_title"), msg);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStaffList();
+  }, []);
+
+  const handleToggleStatus = async (
+    id: string,
+    name: string,
+    currentStatus: "active" | "inactive",
+  ) => {
+    setItemToToggle({ id, name, currentStatus });
+    setShowStatusConfirm(true);
+  };
+
+  const confirmToggleStatus = async () => {
+    if (!itemToToggle) return;
+
+    try {
+      const newStatus = itemToToggle.currentStatus === "active" ? false : true;
+      await employeeService.updateEmployee(itemToToggle.id, {
+        isActive: newStatus,
+      });
+
+      const action = newStatus ? "activated" : "deactivated";
+      showToast(
+        "success",
+        `Staff ${action}`,
+        `${itemToToggle.name} has been ${action} successfully`,
+      );
+      setShowStatusConfirm(false);
+      setItemToToggle(null);
+      await fetchStaffList();
+    } catch (err: any) {
+      const errorMsg =
+        err.response?.data?.message || err.message || "Unknown error";
+      showToast(
+        "error",
+        t("dashboard.toasts.staff.action_failed_title"),
+        errorMsg,
+      );
+      setShowStatusConfirm(false);
+      setItemToToggle(null);
+    }
+  };
+
+  const cancelToggleStatus = () => {
+    setShowStatusConfirm(false);
+    setItemToToggle(null);
+  };
 
   const filteredStaff = staffList.filter((staff) => {
     const matchesSearch =
       staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       staff.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = filterRole === "all" || staff.role === filterRole;
+    const matchesRole =
+      filterRole === "all" ||
+      staff.role === filterRole ||
+      staff.position === filterRole;
     return matchesSearch && matchesRole;
   });
 
@@ -114,6 +206,13 @@ export default function StaffPage() {
             </Link>
           </div>
 
+          {/* Loading Spinner */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+            </div>
+          )}
+
           {/* Search and Filter */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
@@ -121,7 +220,7 @@ export default function StaffPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or email..."
+                placeholder={t("dashboard.staff.search_placeholder")}
                 className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
                 style={{
                   background: "var(--surface)",
@@ -140,7 +239,7 @@ export default function StaffPage() {
                   border: "1px solid var(--border)",
                   color: "var(--text)",
                 }}>
-                <option value="all">All Roles</option>
+                <option value="all">{t("dashboard.staff.all_roles")}</option>
                 {roles.map((role) => (
                   <option key={role} value={role}>
                     {role}
@@ -175,9 +274,7 @@ export default function StaffPage() {
               }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p
-                    className="text-sm"
-                    style={{ color: "var(--text-muted)" }}>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.staff.stats.total_staff")}
                   </p>
                   <p className="text-3xl font-bold text-blue-500 mt-1">
@@ -209,9 +306,7 @@ export default function StaffPage() {
               }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p
-                    className="text-sm"
-                    style={{ color: "var(--text-muted)" }}>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.staff.stats.on_duty")}
                   </p>
                   <p className="text-3xl font-bold text-green-500 mt-1">
@@ -243,15 +338,13 @@ export default function StaffPage() {
               }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p
-                    className="text-sm"
-                    style={{ color: "var(--text-muted)" }}>
-                    {t("dashboard.staff.stats.departments")}
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.staff.stats.inactive")}
                   </p>
                   <p
                     className="text-3xl font-bold mt-1"
                     style={{ color: "#FF380B" }}>
-                    5
+                    {staffList.filter((s) => s.status === "inactive").length}
                   </p>
                 </div>
                 <div
@@ -267,7 +360,7 @@ export default function StaffPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
                     />
                   </svg>
                 </div>
@@ -282,21 +375,28 @@ export default function StaffPage() {
               }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p
-                    className="text-sm"
-                    style={{ color: "var(--text-muted)" }}>
-                    {t("dashboard.staff.stats.avg_rating")}
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.staff.stats.positions")}
                   </p>
                   <p className="text-3xl font-bold text-purple-500 mt-1">
-                    4.7
+                    {
+                      new Set(staffList.map((s) => s.position).filter(Boolean))
+                        .size
+                    }
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
                   <svg
                     className="w-6 h-6 text-purple-500"
-                    fill="currentColor"
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   </svg>
                 </div>
               </div>
@@ -319,20 +419,8 @@ export default function StaffPage() {
                     <div className="flex items-center gap-3">
                       <div
                         className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
-                        style={{
-                          background: member.avatar
-                            ? "transparent"
-                            : "#FF380B",
-                        }}>
-                        {member.avatar ? (
-                          <img
-                            src={member.avatar}
-                            alt={member.name}
-                            className="w-full h-full object-cover rounded-full"
-                          />
-                        ) : (
-                          member.name.charAt(0)
-                        )}
+                        style={{ background: "#FF380B" }}>
+                        {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <h3
@@ -341,15 +429,18 @@ export default function StaffPage() {
                           {member.name}
                         </h3>
                         <span
-                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${member.role === "Manager"
-                            ? "bg-purple-500/10 text-purple-500"
-                            : member.role === "Chef"
-                              ? "bg-orange-500/10 text-orange-500"
-                              : member.role === "Waiter"
-                                ? "bg-blue-500/10 text-blue-500"
-                                : "bg-gray-500/10 text-gray-500"
-                            }`}>
-                          {t(`dashboard.staff.roles.${member.role.toLowerCase()}`)}
+                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${
+                            member.role === "Manager"
+                              ? "bg-purple-500/10 text-purple-500"
+                              : member.role === "Chef"
+                                ? "bg-orange-500/10 text-orange-500"
+                                : member.role === "Waiter"
+                                  ? "bg-blue-500/10 text-blue-500"
+                                  : "bg-gray-500/10 text-gray-500"
+                          }`}>
+                          {t(
+                            `dashboard.staff.roles.${member.role.toLowerCase()}`,
+                          )}
                         </span>
                         {/* Role badge translated */}
                         <div className="flex items-center gap-2 mt-1">
@@ -358,16 +449,17 @@ export default function StaffPage() {
                       </div>
                     </div>
                     <span
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${member.status === "active"
-                        ? "bg-green-500/10 text-green-500"
-                        : "bg-gray-500/10 text-gray-500"
-                        }`}>
-                      {member.status === "active" ? "Active" : "Inactive"}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                        member.status === "active"
+                          ? "bg-green-500/10 text-green-500"
+                          : "bg-gray-500/10 text-gray-500"
+                      }`}>
+                      {member.status === "active" ? t("dashboard.staff.status.active") : t("dashboard.staff.status.inactive")}
                     </span>
                   </div>
 
                   {/* Contact Info */}
-                  <div className="space-y-2 mb-4">
+                  <div className="mb-4">
                     <div
                       className="flex items-center gap-2 text-sm"
                       style={{ color: "var(--text-muted)" }}>
@@ -385,9 +477,59 @@ export default function StaffPage() {
                       </svg>
                       <span className="truncate">{member.email}</span>
                     </div>
-                    <div
-                      className="flex items-center gap-2 text-sm"
-                      style={{ color: "var(--text-muted)" }}>
+                  </div>
+
+                  {/* Employee Info */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p
+                        className="text-xs mb-1"
+                        style={{ color: "var(--text-muted)" }}>
+                        {t("dashboard.staff.employee_code")}
+                      </p>
+                      <p
+                        className="font-medium text-sm"
+                        style={{ color: "var(--text)" }}>
+                        {member.code || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p
+                        className="text-xs mb-1"
+                        style={{ color: "var(--text-muted)" }}>
+                        {t("dashboard.staff.hire_date")}
+                      </p>
+                      <p
+                        className="font-medium text-sm"
+                        style={{ color: "var(--text)" }}>
+                        {new Date(member.joinDate).toLocaleDateString("vi-VN", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/admin/staff/${member.id}`}
+                      className="flex-1 py-2.5 rounded-lg transition-all font-medium text-sm text-center flex items-center justify-center gap-2"
+                      style={{
+                        backgroundColor: "rgba(255, 56, 11, 0.1)",
+                        color: "#FF380B",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#FF380B";
+                        e.currentTarget.style.color = "white";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor =
+                          "rgba(255, 56, 11, 0.1)";
+                        e.currentTarget.style.color = "#FF380B";
+                      }}>
+                      {t("dashboard.staff.view_profile")}
                       <svg
                         className="w-4 h-4"
                         fill="none"
@@ -397,121 +539,73 @@ export default function StaffPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                         />
                       </svg>
-                      <span>{member.phone}</span>
-                    </div>
+                    </Link>
+                    <button
+                      onClick={() =>
+                        handleToggleStatus(
+                          member.id,
+                          member.name,
+                          member.status,
+                        )
+                      }
+                      className="px-3 py-2.5 rounded-lg transition-all font-medium text-sm"
+                      style={{
+                        backgroundColor:
+                          member.status === "active"
+                            ? "rgba(239, 68, 68, 0.1)"
+                            : "rgba(34, 197, 94, 0.1)",
+                        color:
+                          member.status === "active"
+                            ? "rgb(239, 68, 68)"
+                            : "rgb(34, 197, 94)",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (member.status === "active") {
+                          e.currentTarget.style.backgroundColor =
+                            "rgb(239, 68, 68)";
+                        } else {
+                          e.currentTarget.style.backgroundColor =
+                            "rgb(34, 197, 94)";
+                        }
+                        e.currentTarget.style.color = "white";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (member.status === "active") {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(239, 68, 68, 0.1)";
+                          e.currentTarget.style.color = "rgb(239, 68, 68)";
+                        } else {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(34, 197, 94, 0.1)";
+                          e.currentTarget.style.color = "rgb(34, 197, 94)";
+                        }
+                      }}
+                      title={
+                        member.status === "active" ? t("dashboard.staff.deactivate") : t("dashboard.staff.activate")
+                      }>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                      </svg>
+                    </button>
                   </div>
-
-                  {/* Shift and Joined */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p
-                        className="text-xs mb-1"
-                        style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.staff.card.shift")}
-                      </p>
-                      <p
-                        className="font-medium text-sm"
-                        style={{ color: "var(--text)" }}>
-                        {member.shift}
-                      </p>
-                    </div>
-                    <div>
-                      <p
-                        className="text-xs mb-1"
-                        style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.staff.card.joined")}
-                      </p>
-                      <p
-                        className="font-medium text-sm"
-                        style={{ color: "var(--text)" }}>
-                        {new Date(member.joinDate).toLocaleDateString(
-                          "vi-VN",
-                          { day: "2-digit", month: "2-digit", year: "numeric" },
-                        )}
-                      </p>
-                    </div>
-                    <div className="col-span-2 border-t border-dashed border-gray-700 pt-3 mt-1">
-                      <div className="flex justify-between items-center">
-                        <p
-                          className="text-xs"
-                          style={{ color: "var(--text-muted)" }}>
-                          {t("dashboard.staff.card.salary")}
-                        </p>
-                        <p
-                          className="font-medium text-sm"
-                          style={{ color: "#FF380B" }}>
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(member.salary)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Rating */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <svg
-                          key={star}
-                          className={`w-4 h-4 ${star <= Math.floor(member.rating)
-                            ? "text-yellow-500"
-                            : "text-gray-300"
-                            }`}
-                          fill="currentColor"
-                          viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <span
-                      className="text-sm font-medium"
-                      style={{ color: "var(--text)" }}>
-                      {member.rating}/5.0
-                    </span>
-                  </div>
-
-                  {/* View Profile Button */}
-                  <Link
-                    href={`/admin/staff/${member.id}`}
-                    className="w-full py-2.5 rounded-lg transition-all font-medium text-sm text-center flex items-center justify-center gap-2"
-                    style={{
-                      backgroundColor: "rgba(255, 56, 11, 0.1)",
-                      color: "#FF380B",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "#FF380B";
-                      e.currentTarget.style.color = "white";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        "rgba(255, 56, 11, 0.1)";
-                      e.currentTarget.style.color = "#FF380B";
-                    }}>
-                    View Profile
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </Link>
                 </div>
               </div>
             ))}
           </div>
 
-          {filteredStaff.length === 0 && (
+          {filteredStaff.length === 0 && !loading && (
             <div
               className="text-center py-12 rounded-xl"
               style={{
@@ -534,17 +628,113 @@ export default function StaffPage() {
               <p
                 className="text-lg font-medium"
                 style={{ color: "var(--text)" }}>
-                No staff found
+                {t("dashboard.staff.no_staff_found")}
               </p>
               <p
                 className="text-sm mt-1"
                 style={{ color: "var(--text-muted)" }}>
-                Try adjusting your search or filters
+                {t("dashboard.staff.try_adjusting_filters")}
               </p>
             </div>
           )}
         </div>
       </main>
+
+      {/* Status Toggle Confirmation Modal */}
+      {showStatusConfirm && itemToToggle && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div
+            className="rounded-xl p-6 max-w-md w-full"
+            style={{
+              background: "var(--card)",
+              border: "1px solid var(--border)",
+            }}>
+            <div className="flex items-start gap-4 mb-4">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{
+                  backgroundColor:
+                    itemToToggle.currentStatus === "active"
+                      ? "rgba(239, 68, 68, 0.1)"
+                      : "rgba(34, 197, 94, 0.1)",
+                }}>
+                <svg
+                  className="w-6 h-6"
+                  style={{
+                    color:
+                      itemToToggle.currentStatus === "active"
+                        ? "rgb(239, 68, 68)"
+                        : "rgb(34, 197, 94)",
+                  }}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3
+                  className="text-lg font-bold mb-2"
+                  style={{ color: "var(--text)" }}>
+                  {itemToToggle.currentStatus === "active"
+                    ? t("dashboard.staff.modal.deactivate_title")
+                    : t("dashboard.staff.modal.activate_title")}
+                </h3>
+                <p style={{ color: "var(--text-muted)" }}>
+                  {itemToToggle.currentStatus === "active"
+                    ? t("dashboard.staff.modal.deactivate_message", { name: itemToToggle.name })
+                    : t("dashboard.staff.modal.activate_message", { name: itemToToggle.name })}
+                  .
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelToggleStatus}
+                className="px-4 py-2 rounded-lg font-medium transition-all"
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }}>
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={confirmToggleStatus}
+                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                style={{
+                  backgroundColor:
+                    itemToToggle.currentStatus === "active"
+                      ? "rgb(239, 68, 68)"
+                      : "rgb(34, 197, 94)",
+                }}
+                onMouseEnter={(e) => {
+                  if (itemToToggle.currentStatus === "active") {
+                    e.currentTarget.style.backgroundColor = "rgb(220, 38, 38)";
+                  } else {
+                    e.currentTarget.style.backgroundColor = "rgb(21, 128, 61)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (itemToToggle.currentStatus === "active") {
+                    e.currentTarget.style.backgroundColor = "rgb(239, 68, 68)";
+                  } else {
+                    e.currentTarget.style.backgroundColor = "rgb(34, 197, 94)";
+                  }
+                }}>
+                {itemToToggle.currentStatus === "active"
+                  ? t("dashboard.staff.deactivate")
+                  : t("dashboard.staff.activate")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
