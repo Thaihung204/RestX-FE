@@ -11,6 +11,11 @@
         "dishes_ready": "món sẵn sàng",
         "tables_payment": "bàn cần thanh toán"
       },
+      "table_status": {
+        "title": "Tình trạng bàn",
+        "available": "Trống",
+        "occupied": "Đang phục vụ"
+      },
       "actions": {
         "view_schedule": "Xem lịch làm việc",
         "view_table_map": "Xem sơ đồ bàn",
@@ -29,11 +34,6 @@
         "title": "Order gần đây",
         "processing_count": "{{count}} đang xử lý",
         "view_all": "Xem tất cả"
-      },
-      "table_status": {
-        "title": "Tình trạng bàn",
-        "vacant": "Trống",
-        "occupied": "Đang dùng"
       },
       "quick_action_items": {
         "open_table": "Mở bàn",
@@ -95,15 +95,20 @@
       "title": "Quản lý bàn",
       "status": {
         "available": "Trống",
-        "occupied": "Đang dùng",
+        "occupied": "Đang phục vụ",
         "reserved": "Đã đặt",
         "cleaning": "Đang dọn"
+      },
+      "view": {
+        "grid": "Lưới",
+        "map": "Bản đồ"
       },
       "zones": {
         "all": "Tất cả",
         "zone_a": "Khu A",
         "zone_b": "Khu B",
-        "zone_vip": "Khu VIP"
+        "zone_vip": "Khu VIP",
+        "zone": "Khu"
       },
       "table": {
         "seats": "chỗ",
@@ -123,7 +128,11 @@
         "reservation_name": "Khách đặt",
         "reservation_time": "Thời gian đặt",
         "phone": "Số điện thoại",
-        "confirm_open": "Xác nhận mở bàn"
+        "confirm_open": "Xác nhận mở bàn",
+        "guest_count": "Số khách",
+        "capacity": "Sức chứa",
+        "total": "Tổng tiền",
+        "reserved_by": "Khách đặt"
       },
       "actions": {
         "open_table": "Mở bàn",
@@ -167,8 +176,10 @@
       "title": "Thanh toán",
       "stats": {
         "total_pending": "Tổng tiền chờ thanh toán",
-        "tables_pending": "Bàn chờ thanh toán",
-        "paid": "Đã thanh toán"
+        "pending_tables": "Bàn chờ thanh toán",
+        "paid": "Đã thanh toán",
+        "tables": "bàn",
+        "orders": "đơn"
       },
       "search": {
         "placeholder": "Tìm bàn hoặc hóa đơn...",
@@ -216,10 +227,11 @@
       "on_break": "Đang nghỉ giải lao",
       "end_break": "Kết thúc nghỉ",
       "stats": {
-        "worked_days": "Ngày công",
+        "work_days": "Ngày công",
         "late_days": "Đi muộn",
         "leave_days": "Nghỉ phép",
-        "total_hours": "Tổng giờ làm"
+        "total_hours": "Tổng giờ làm",
+        "days": "ngày"
       },
       "table": {
         "date": "Ngày",
@@ -378,6 +390,19 @@
         "appetizer": "Khai vị",
         "dessert": "Tráng miệng",
         "beverages": "Đồ uống"
+      },
+      "best_seller": "Bán chạy",
+      "no_description": "Không có mô tả",
+      "loading": "Đang tải dữ liệu...",
+      "no_items": "Không tìm thấy món ăn nào",
+      "add_first_item": "Thêm món ăn đầu tiên của bạn",
+      "empty_category": "Không có món nào trong danh mục \"{{category}}\"",
+      "modal": {
+        "delete_title": "Xóa món ăn",
+        "delete_confirm": "Bạn có chắc chắn muốn xóa",
+        "cannot_undo": "Hành động này không thể hoàn tác.",
+        "cancel": "Hủy",
+        "delete": "Xóa"
       }
     },
     "orders": {
@@ -459,7 +484,11 @@
         "capacity": "Sức chứa: {{count}} ghế",
         "order": "Đơn",
         "reserved_at": "Đặt lúc",
-        "view_details": "Xem chi tiết"
+        "view_details": "Xem chi tiết",
+        "table_name": "Bàn {{number}}"
+      },
+      "errors": {
+        "cannot_delete_last_area": "Không thể xóa khu vực cuối cùng."
       },
       "status": {
         "available": "Trống",
@@ -1148,5 +1177,148 @@
     "restaurant": "Nhà hàng",
     "login": "Đăng nhập",
     "customer": "Khách hàng"
+  },
+  "components": {
+    "delete_modal": {
+      "title": "Xóa {{item}}",
+      "subtitle": "Hành động này không thể hoàn tác",
+      "warning": "Bạn đang chuẩn bị xóa vĩnh viễn:",
+      "data_loss_warning": "Tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn khỏi hệ thống.",
+      "cancel": "Hủy",
+      "confirm": "Xóa vĩnh viễn",
+      "types": {
+        "Table": "Bàn",
+        "Area": "Khu vực",
+        "Dish": "Món ăn",
+        "Staff": "Nhân viên"
+      }
+    }
+  },
+  "tenants": {
+    "breadcrumb": {
+      "admin": "Quản trị",
+      "tenants": "Nhà hàng"
+    },
+    "title": "Quản lý nhà hàng",
+    "subtitle": "Quản lý các nhà hàng trong hệ thống RestX, theo dõi số lượng và tổng doanh thu.",
+    "add_tenant": "Thêm nhà hàng",
+    "stats": {
+      "total_tenants": "Tổng nhà hàng",
+      "active_tenants": "Đang hoạt động",
+      "monthly_revenue": "Doanh thu tháng (giả lập)"
+    },
+    "tabs": {
+      "restaurant_list": "Danh sách nhà hàng",
+      "system_revenue": "Doanh thu hệ thống"
+    },
+    "table": {
+      "tenant_info": "Thông tin nhà hàng",
+      "contact": "Liên hệ",
+      "address": "Địa chỉ",
+      "plan": "Gói",
+      "status": "Trạng thái",
+      "owner": "Chủ sở hữu",
+      "last_active": "Hoạt động cuối",
+      "total": "Tổng cộng {{count}} nhà hàng"
+    },
+    "filter": {
+      "search_placeholder": "Tìm theo tên, slug, email...",
+      "all_status": "Tất cả trạng thái",
+      "active": "Hoạt động",
+      "inactive": "Không hoạt động",
+      "maintenance": "Bảo trì",
+      "refresh": "Làm mới"
+    },
+    "actions": {
+      "view_details": "Xem chi tiết",
+      "configure_domain": "Cấu hình tên miền",
+      "suspend_tenant": "Tạm ngừng nhà hàng"
+    },
+    "revenue": {
+      "title": "Tổng doanh thu hệ thống",
+      "subtitle": "Xem xu hướng doanh thu theo ngày / tuần / tháng / năm.",
+      "day": "Ngày",
+      "week": "Tuần",
+      "month": "Tháng",
+      "year": "Năm"
+    },
+    "messages": {
+      "refresh_success": "Làm mới thành công"
+    },
+    "status": {
+      "active": "Hoạt động",
+      "inactive": "Không hoạt động",
+      "maintenance": "Bảo trì"
+    },
+    "plans": {
+      "basic": "CƠ BẢN",
+      "pro": "CHUYÊN NGHIỆP",
+      "enterprise": "DOANH NGHIỆP"
+    },
+    "create": {
+      "breadcrumb_create": "Tạo mới",
+      "title": "Tạo nhà hàng mới",
+      "subtitle": "Thêm nhà hàng mới vào hệ thống RestX.",
+      "back": "Quay lại",
+      "restaurant_info": "Thông tin nhà hàng",
+      "owner_info": "Thông tin chủ sở hữu",
+      "subscription_plan": "Gói đăng ký",
+      "fields": {
+        "name": "Tên",
+        "name_placeholder": "VD: ABC",
+        "host_name": "Tên miền phụ",
+        "host_name_placeholder": "nha-hang-cua-toi",
+        "access_url": "URL truy cập:",
+        "business_name": "Tên doanh nghiệp",
+        "business_name_placeholder": "Nhà hàng ABC",
+        "phone_number": "Số điện thoại",
+        "phone_placeholder": "0912...",
+        "mail_restaurant": "Email nhà hàng",
+        "mail_restaurant_placeholder": "restaurant@example.com",
+        "address": "Địa chỉ nhà hàng",
+        "street_number": "Số nhà (VD: 123)",
+        "street_name": "Tên đường (VD: Nguyễn Văn Linh)",
+        "city": "Thành phố (VD: Đà Nẵng)",
+        "country": "Quốc gia (VD: Việt Nam)",
+        "owner_email": "Email chủ sở hữu",
+        "owner_email_placeholder": "owner@example.com",
+        "owner_password": "Mật khẩu chủ sở hữu",
+        "password_placeholder": "Nhập mật khẩu",
+        "select_plan": "Chọn gói dịch vụ"
+      },
+      "plan_options": {
+        "basic": "Gói cơ bản",
+        "basic_desc": "- Cơ bản",
+        "pro": "Gói Pro",
+        "pro_desc": "- Phổ biến",
+        "enterprise": "Doanh nghiệp",
+        "enterprise_desc": "- Đầy đủ"
+      },
+      "buttons": {
+        "create": "Hoàn tất & Tạo",
+        "cancel": "Hủy"
+      },
+      "validation": {
+        "name_required": "Vui lòng nhập tên",
+        "slug_required": "Slug là bắt buộc",
+        "slug_invalid": "Slug chỉ có thể chứa chữ thường, số và dấu gạch ngang",
+        "business_name_required": "Vui lòng nhập tên doanh nghiệp",
+        "phone_required": "Vui lòng nhập số điện thoại",
+        "phone_invalid": "Số điện thoại không hợp lệ",
+        "email_required": "Vui lòng nhập email",
+        "email_invalid": "Email không hợp lệ",
+        "restaurant_email_required": "Vui lòng nhập email nhà hàng",
+        "password_required": "Vui lòng nhập mật khẩu",
+        "password_min": "Mật khẩu phải có ít nhất 6 ký tự",
+        "plan_required": "Vui lòng chọn một gói",
+        "street_number_required": "Vui lòng nhập số nhà",
+        "street_name_required": "Vui lòng nhập tên đường",
+        "city_required": "Vui lòng nhập thành phố",
+        "country_required": "Vui lòng nhập quốc gia"
+      },
+      "messages": {
+        "success": "Tạo nhà hàng thành công!"
+      }
+    }
   }
 }

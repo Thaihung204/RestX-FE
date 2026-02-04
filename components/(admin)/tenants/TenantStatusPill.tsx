@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 type TenantStatus = "active" | "inactive" | "maintenance";
 
@@ -10,24 +11,21 @@ interface Props {
 
 const STATUS_CONFIG: Record<
   TenantStatus,
-  { label: string; bg: string; border: string; text: string; dot: string }
+  { bg: string; border: string; text: string; dot: string }
 > = {
   active: {
-    label: "Active",
     bg: "rgba(34,197,94,0.12)", // green-500
     border: "rgba(34,197,94,0.35)",
     text: "#166534",
     dot: "#22C55E",
   },
   inactive: {
-    label: "Inactive",
     bg: "rgba(248,113,113,0.10)", // red-400
     border: "rgba(248,113,113,0.35)",
     text: "#991B1B",
     dot: "#F97373",
   },
   maintenance: {
-    label: "Maintenance",
     bg: "rgba(255,56,11,0.10)",
     border: "rgba(249,115,22,0.35)",
     text: "#9A3412",
@@ -36,6 +34,7 @@ const STATUS_CONFIG: Record<
 };
 
 const TenantStatusPill: React.FC<Props> = ({ status }) => {
+  const { t } = useTranslation();
   const style = STATUS_CONFIG[status];
 
   return (
@@ -67,12 +66,10 @@ const TenantStatusPill: React.FC<Props> = ({ status }) => {
           color: style.text,
         }}
       >
-        {style.label}
+        {t(`tenants.status.${status}`)}
       </span>
     </div>
   );
 };
 
 export default TenantStatusPill;
-
-

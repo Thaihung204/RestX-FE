@@ -1,6 +1,5 @@
 "use client";
 
-import ActivityTimeline from "@/components/admin/ActivityTimeline";
 import AreaDistributionChart from "@/components/admin/charts/AreaDistributionChart";
 import OrdersBarChart from "@/components/admin/charts/OrdersBarChart";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
@@ -32,11 +31,8 @@ export default function DashboardPage() {
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <TableStatusMap />
-          </div>
-          <div className="lg:col-span-1">
-            <ActivityTimeline />
           </div>
         </section>
       </div>

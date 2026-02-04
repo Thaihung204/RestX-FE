@@ -1,24 +1,24 @@
 'use client';
 
 import {
-    CalendarOutlined,
-    CheckCircleOutlined,
-    ClockCircleOutlined,
-    DollarOutlined,
-    ExclamationCircleOutlined,
-    ReloadOutlined,
-    RightOutlined,
-    ShoppingCartOutlined,
-    SmileOutlined,
-    SyncOutlined,
-    TableOutlined,
-    ThunderboltOutlined
+  CalendarOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  DollarOutlined,
+  ExclamationCircleOutlined,
+  ReloadOutlined,
+  RightOutlined,
+  ShoppingCartOutlined,
+  SmileOutlined,
+  SyncOutlined,
+  TableOutlined,
+  ThunderboltOutlined
 } from '@ant-design/icons';
 import { Button, Card, Col, Flex, Progress, Row, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import PageTransition from '../components/PageTransition';
 import { useThemeMode } from '../theme/AutoDarkThemeProvider';
 
@@ -44,97 +44,49 @@ const itemVariants = {
   }
 };
 
-// Mock data for statistics - chỉ hiển thị thông tin hữu ích cho nhân viên
-const statsData = [
-  {
-    title: 'Bàn đang phục vụ',
-    value: 12,
-    total: 20,
-    icon: <TableOutlined />,
-    color: '#FF380B',
-    bgColor: 'rgba(255, 56, 11, 0.1)',
-  },
-  {
-    title: 'Order đang xử lý',
-    value: 8,
-    icon: <ShoppingCartOutlined />,
-    color: '#1890ff',
-    bgColor: 'rgba(24, 144, 255, 0.1)',
-    suffix: 'đơn',
-    href: '/staff/orders',
-    urgent: true,
-  },
-  {
-    title: 'Món sẵn sàng',
-    value: 3,
-    icon: <CheckCircleOutlined />,
-    color: '#52c41a',
-    bgColor: 'rgba(82, 196, 26, 0.1)',
-    suffix: 'món',
-    href: '/staff/orders',
-    urgent: true,
-  },
-  {
-    title: 'Bàn cần thanh toán',
-    value: 2,
-    icon: <DollarOutlined />,
-    color: '#FF380B',
-    bgColor: 'rgba(255, 56, 11, 0.1)',
-    suffix: 'bàn',
-    href: '/staff/checkout',
-    urgent: true,
-  },
-  {
-    title: 'Bàn đang phục vụ',
-    value: 12,
-    total: 20,
-    icon: <TableOutlined />,
-    color: '#FF380B',
-    bgColor: 'rgba(255, 56, 11, 0.1)',
-    href: '/staff/tables',
-  },
-];
+// Mock data omitted - using localized statsData inside component
 
-// Mock data for urgent orders - chỉ hiển thị order cần xử lý
+// Mock data for urgent orders logic omitted as it is used locally via recentOrders
+// Mock data needed for local logic below
 const urgentOrders = [
   {
     key: '1',
-    table: 'Bàn 05',
+    table: '05',
     items: 4,
     status: 'pending',
-    time: '5 phút trước',
+    time: 5,
     priority: 'high',
   },
   {
     key: '2',
-    table: 'Bàn 12',
+    table: '12',
     items: 6,
     status: 'preparing',
-    time: '12 phút trước',
+    time: 12,
     priority: 'medium',
   },
   {
     key: '3',
-    table: 'Bàn 03',
+    table: '03',
     items: 2,
     status: 'ready',
-    time: '18 phút trước',
+    time: 18,
     priority: 'urgent',
   },
   {
     key: '5',
-    table: 'Bàn 15',
+    table: '15',
     items: 3,
     status: 'preparing',
-    time: '32 phút trước',
+    time: 32,
     priority: 'medium',
   },
   {
     key: '6',
-    table: 'Bàn 02',
+    table: '02',
     items: 7,
     status: 'pending',
-    time: '45 phút trước',
+    time: 45,
     priority: 'high',
   },
 ];
@@ -142,18 +94,7 @@ const urgentOrders = [
 // Mock data for recent orders
 const recentOrders = urgentOrders.slice(0, 5);
 
-// Mock data for tables needing payment
-const tablesNeedingPayment = [
-  { table: 'A02', total: 750000, time: '2 giờ', guests: 3 },
-  { table: 'A05', total: 1250000, time: '1.5 giờ', guests: 4 },
-];
-
-// Mock data for table status
-const tableStatus = [
-  { zone: 'Khu A', available: 4, occupied: 6, total: 10 },
-  { zone: 'Khu B', available: 2, occupied: 4, total: 6 },
-  { zone: 'Khu VIP', available: 1, occupied: 3, total: 4 },
-];
+// Mock data omitted - using localized tableStatus inside component
 
 
 
@@ -399,16 +340,17 @@ export default function StaffDashboard() {
                       {getGreeting()}, Nguyễn Văn A! <SmileOutlined style={{ marginLeft: 8 }} />
                     </Title>
                     <Text style={{ color: 'var(--text)', fontSize: isMobile ? 14 : 16 }}>
-                      Bạn đang có{' '}
-                      <motion.strong
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
-                        style={{ display: 'inline-block', color: '#FF380B' }}
-                      >
-                        8 order
-                      </motion.strong>{' '}
-                      cần xử lý và{' '}
-                      <strong style={{ color: '#FF380B' }}>12 bàn</strong> đang phục vụ.
+                      <Trans i18nKey="staff.dashboard.welcome_message" values={{ orders: 8, tables: 12 }} components={[
+                        <span key="0" />,
+                        <motion.strong
+                          key="1"
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                          style={{ display: 'inline-block', color: '#FF380B' }}
+                        />,
+                        <span key="2" />,
+                        <strong key="3" style={{ color: '#FF380B' }} />
+                      ]} />
                     </Text>
 
                     <div style={{ marginTop: isMobile ? 16 : 16, display: 'flex', gap: isMobile ? 10 : 16, flexWrap: 'wrap' }}>
@@ -426,7 +368,7 @@ export default function StaffDashboard() {
                           color: 'var(--text)',
                           fontSize: isMobile ? 13 : 14,
                           fontWeight: 500,
-                        }}>3 món sẵn sàng</Text>
+                        }}>3 {t('staff.dashboard.live_status.dishes_ready')}</Text>
                       </div>
                       <div style={{
                         display: 'flex',
@@ -442,7 +384,7 @@ export default function StaffDashboard() {
                           color: 'var(--text)',
                           fontSize: isMobile ? 13 : 14,
                           fontWeight: 500,
-                        }}>2 bàn cần thanh toán</Text>
+                        }}>2 {t('staff.dashboard.live_status.tables_payment')}</Text>
                       </div>
                     </div>
                   </motion.div>
@@ -704,7 +646,7 @@ export default function StaffDashboard() {
                 title={
                   <Space>
                     <TableOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
-                    <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>Tình trạng bàn</span>
+                    <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>{t('staff.dashboard.table_status.title')}</span>
                   </Space>
                 }
                 style={{
@@ -744,7 +686,7 @@ export default function StaffDashboard() {
                         >
                           {zone.available}
                         </motion.span>
-                        /{zone.total} trống
+                        /{zone.total} {t('staff.dashboard.table_status.available')}
                       </Text>
                     </div>
                     <motion.div
@@ -777,7 +719,7 @@ export default function StaffDashboard() {
                           }}
                         />
                         <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                          Trống: {zone.available}
+                          {t('staff.dashboard.table_status.available')}: {zone.available}
                         </Text>
                       </Space>
                       <Space size={4}>
@@ -790,7 +732,7 @@ export default function StaffDashboard() {
                           }}
                         />
                         <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                          Đang phục vụ: {zone.occupied}
+                          {t('staff.dashboard.table_status.occupied')}: {zone.occupied}
                         </Text>
                       </Space>
                     </div>
@@ -817,7 +759,7 @@ export default function StaffDashboard() {
                           boxShadow: '0 4px 15px rgba(255, 56, 11, 0.3)',
                         }}
                       >
-                        Xem sơ đồ bàn
+                        {t('staff.dashboard.actions.view_table_map')}
                       </Button>
                     </motion.div>
                   </Link>
@@ -860,10 +802,10 @@ export default function StaffDashboard() {
           >
             <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}>
               {[
-                { icon: <TableOutlined />, title: 'Mở bàn', color: '#FF380B', href: '/staff/tables' },
-                { icon: <ShoppingCartOutlined />, title: 'Tạo order', color: '#1890ff', href: '/staff/orders' },
-                { icon: <DollarOutlined />, title: 'Thanh toán', color: '#52c41a', href: '/staff/checkout' },
-                { icon: <ClockCircleOutlined />, title: 'Chấm công', color: '#722ed1', href: '/staff/attendance' },
+                { icon: <TableOutlined />, title: t('staff.dashboard.quick_action_items.open_table'), color: '#FF380B', href: '/staff/tables' },
+                { icon: <ShoppingCartOutlined />, title: t('staff.dashboard.quick_action_items.create_order'), color: '#1890ff', href: '/staff/orders' },
+                { icon: <DollarOutlined />, title: t('staff.dashboard.quick_action_items.checkout'), color: '#52c41a', href: '/staff/checkout' },
+                { icon: <ClockCircleOutlined />, title: t('staff.dashboard.quick_action_items.attendance'), color: '#722ed1', href: '/staff/attendance' },
               ].map((action, index) => (
                 <Col xs={12} sm={6} key={index}>
                   <Link href={action.href}>
@@ -911,6 +853,7 @@ export default function StaffDashboard() {
           background: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : '#F8F8F8'} !important;
           border-color: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.4)' : '#FF380B'} !important;
           transform: translateY(-1px);
+        }
         .welcome-btn:hover {
           transform: scale(1.03);
           background: rgba(255, 255, 255, 0.3) !important;
@@ -921,6 +864,7 @@ export default function StaffDashboard() {
         .luxury-btn-primary:hover {
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(255, 56, 11, 0.4) !important;
+        }
         .welcome-btn-primary:hover {
           transform: scale(1.03);
           box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;

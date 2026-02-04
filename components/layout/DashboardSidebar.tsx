@@ -256,7 +256,7 @@ export default function DashboardSidebar() {
 
   return (
     <aside
-      className={`flex flex-col transition-all duration-300 z-30 ${collapsed ? "w-20" : "w-64"
+      className={`relative flex flex-col transition-all duration-300 z-30 ${collapsed ? "w-20" : "w-64"
         }`}
       style={{ color: "var(--text)" }}>
       {/* Logo Removed - Moved to Header */}

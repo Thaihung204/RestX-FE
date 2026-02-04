@@ -268,7 +268,7 @@ export default function StaffLayout({
             </Text>
           </div>
           <Text style={{ color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)', fontSize: 12 }}>
-            Bắt đầu: 08:00 - Hôm nay
+            {t('staff.sidebar.started')}: 08:00 - {t('staff.sidebar.today')}
           </Text>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface DeleteConfirmModalProps {
     open: boolean;
@@ -18,6 +19,9 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
     onClose,
     onConfirm
 }) => {
+    const { t } = useTranslation();
+    const translatedType = t(`components.delete_modal.types.${itemType}`, { defaultValue: itemType });
+
     return (
         <AnimatePresence>
             {open && (
@@ -99,7 +103,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                                             color: 'var(--text)',
                                             letterSpacing: '-0.02em',
                                         }}>
-                                            Delete {itemType}
+                                            {t("components.delete_modal.title", { item: translatedType })}
                                         </h2>
                                         <p style={{
                                             margin: 0,
@@ -107,7 +111,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                                             color: 'var(--text-muted)',
                                             lineHeight: 1.6,
                                         }}>
-                                            This action cannot be undone
+                                            {t("components.delete_modal.subtitle")}
                                         </p>
                                     </div>
                                 </div>
@@ -127,7 +131,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                                         color: 'var(--text-muted)',
                                         fontWeight: 500,
                                     }}>
-                                        You are about to permanently delete:
+                                        {t("components.delete_modal.warning")}
                                     </p>
                                     <div style={{
                                         padding: '12px 16px',
@@ -146,7 +150,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                                                 color: '#ff4d4f',
                                                 letterSpacing: '-0.01em',
                                             }}>
-                                                {itemType} {itemName}
+                                                {translatedType} {itemName}
                                             </span>
                                         </div>
                                     </div>
@@ -166,7 +170,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                                         lineHeight: 1.5,
                                         fontWeight: 500,
                                     }}>
-                                        All associated data will be permanently removed from the system.
+                                        {t("components.delete_modal.data_loss_warning")}
                                     </p>
                                 </div>
                             </div>
@@ -198,7 +202,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                                         letterSpacing: '-0.01em',
                                     }}
                                 >
-                                    Cancel
+                                    {t("components.delete_modal.cancel")}
                                 </motion.button>
                                 <motion.button
                                     whileHover={{
@@ -230,7 +234,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                                         <line x1="10" y1="11" x2="10" y2="17" />
                                         <line x1="14" y1="11" x2="14" y2="17" />
                                     </svg>
-                                    Delete Permanently
+                                    {t("components.delete_modal.confirm")}
                                 </motion.button>
                             </div>
                         </motion.div>

@@ -253,7 +253,7 @@ export default function CheckoutPage() {
             <br />
             <Space size={isMobile ? 8 : 16}>
               <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>
-                <UserOutlined /> {bill.guests} khách
+                <UserOutlined /> {bill.guests} {t('staff.checkout.bill.guests')}
               </Text>
               <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>
                 <ClockCircleOutlined /> {bill.startTime}
@@ -272,7 +272,7 @@ export default function CheckoutPage() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
           <div>
-            <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>Tổng thanh toán</Text>
+            <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>{t('staff.checkout.bill.total_payment')}</Text>
             <br />
             <Text strong style={{ fontSize: isMobile ? 18 : 24, color: '#FF380B' }}>
               {bill.total.toLocaleString('vi-VN')}đ
@@ -331,9 +331,9 @@ export default function CheckoutPage() {
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Bàn chờ thanh toán</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>{t('staff.checkout.stats.pending_tables')}</span>}
               value={bills.filter(b => b.status === 'pending').length}
-              suffix="bàn"
+              suffix={t('staff.checkout.stats.tables')}
               styles={{ content: { color: 'var(--text)', fontSize: isMobile ? 24 : 32, fontWeight: 500 } }}
               prefix={<TableOutlined style={{ color: '#FF380B' }} />}
             />
@@ -349,9 +349,9 @@ export default function CheckoutPage() {
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
             <Statistic
-              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>Đã thanh toán</span>}
+              title={<span style={{ fontSize: isMobile ? 13 : 15 }}>{t('staff.checkout.stats.paid')}</span>}
               value={12}
-              suffix="đơn"
+              suffix={t('staff.checkout.stats.orders')}
               styles={{ content: { color: '#52c41a', fontSize: isMobile ? 24 : 32, fontWeight: 500 } }}
               prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
             />
@@ -517,7 +517,7 @@ export default function CheckoutPage() {
                 <Col xs={24} lg={14} style={{ display: 'flex', width: '100%' }}>
                   <Card
                     size="small"
-                    title={<span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>Chi tiết hóa đơn</span>}
+                    title={<span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>{t('staff.checkout.payment.bill_detail')}</span>}
                     style={{
                       borderRadius: 16,
                       width: '100%',
@@ -592,12 +592,12 @@ export default function CheckoutPage() {
                     {/* Summary */}
                     <div style={{ marginBottom: isMobile ? 18 : 24 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 12, borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #F0F0F0' }}>
-                        <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>Tạm tính</Text>
+                        <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{t('staff.checkout.payment.subtotal')}</Text>
                         <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{selectedBill.subtotal.toLocaleString('vi-VN')}đ</Text>
                       </div>
                       {discountPercent > 0 && (
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 12, borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #F0F0F0' }}>
-                          <Text style={{ color: '#52c41a', fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>Giảm giá ({discountPercent}%)</Text>
+                          <Text style={{ color: '#52c41a', fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{t('staff.checkout.payment.discount_amount', { percent: discountPercent })}</Text>
                           <Text style={{ color: '#52c41a', fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>-{calculateDiscount().toLocaleString('vi-VN')}đ</Text>
                         </div>
                       )}
@@ -623,7 +623,7 @@ export default function CheckoutPage() {
                     {/* Payment Methods */}
                     <div style={{ marginBottom: isMobile ? 18 : 24 }}>
                       <Text strong style={{ display: 'block', marginBottom: isMobile ? 12 : 16, fontSize: isMobile ? 14 : 15, fontWeight: 600 }}>
-                        Phương thức thanh toán
+                        {t('staff.checkout.payment.payment_method')}
                       </Text>
                       <Radio.Group
                         value={paymentMethod}

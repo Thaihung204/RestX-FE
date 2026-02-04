@@ -2,6 +2,7 @@
 
 import { Tag } from "antd";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 type TenantPlan = "basic" | "pro" | "enterprise";
 
@@ -31,6 +32,7 @@ const PLAN_CONFIG: Record<
 };
 
 const TenantPlanTag: React.FC<Props> = ({ plan }) => {
+  const { t } = useTranslation();
   const style = PLAN_CONFIG[plan];
 
   return (
@@ -49,11 +51,9 @@ const TenantPlanTag: React.FC<Props> = ({ plan }) => {
         letterSpacing: 0.4,
       }}
     >
-      {plan}
+      {t(`tenants.plans.${plan}`)}
     </Tag>
   );
 };
 
 export default TenantPlanTag;
-
-
