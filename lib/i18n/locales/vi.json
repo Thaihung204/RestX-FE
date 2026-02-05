@@ -1496,7 +1496,42 @@
       "year": "Năm"
     },
     "messages": {
-      "refresh_success": "Làm mới thành công"
+      "refresh_success": "Làm mới thành công",
+      "fetch_success": "Tải danh sách nhà hàng thành công",
+      "fetch_error": "Không thể tải danh sách nhà hàng. Vui lòng thử lại."
+    },
+    "toasts": {
+      "fetch_success_title": "Thành công",
+      "fetch_success_message": "Tải danh sách nhà hàng thành công",
+      "fetch_error_title": "Tải thất bại",
+      "fetch_error_message": "Không thể tải danh sách nhà hàng. Vui lòng thử lại.",
+      "detail_error_title": "Tải thất bại",
+      "detail_error_message": "Không thể tải thông tin nhà hàng. Đang chuyển hướng...",
+      "feature_coming_title": "Sắp ra mắt",
+      "feature_coming_message": "Tính năng này đang được phát triển",
+      "create_success_title": "Thành công",
+      "create_success_message": "Tạo nhà hàng thành công",
+      "update_success_title": "Thành công",
+      "update_success_message": "Cập nhật nhà hàng thành công",
+      "save_error_title": "Lưu thất bại",
+      "save_error_message": "Không thể lưu nhà hàng. Vui lòng thử lại."
+    },
+    "detail": {
+      "back": "Quay lại",
+      "edit": "Chỉnh sửa",
+      "restaurant_info": "Thông tin nhà hàng",
+      "contact_info": "Thông tin liên hệ",
+      "status_plan": "Trạng thái & Gói",
+      "quick_actions": "Thao tác nhanh",
+      "business_name": "Tên doanh nghiệp",
+      "hostname": "Tên miền",
+      "address": "Địa chỉ",
+      "phone": "Số điện thoại",
+      "email": "Email",
+      "owner_email": "Email chủ sở hữu",
+      "visit_site": "Truy cập trang web",
+      "configure_domain": "Cấu hình tên miền",
+      "suspend_tenant": "Tạm ngừng nhà hàng"
     },
     "status": {
       "active": "Hoạt động",
@@ -1570,7 +1605,18 @@
         "country_required": "Vui lòng nhập quốc gia"
       },
       "messages": {
-        "success": "Tạo nhà hàng thành công!"
+        "success": "Tạo nhà hàng thành công!",
+        "error": "Không thể tạo nhà hàng. Vui lòng thử lại."
+      }
+    },
+    "edit": {
+      "breadcrumb_edit": "Chỉnh sửa",
+      "title": "Chỉnh sửa nhà hàng",
+      "subtitle": "Cập nhật thông tin nhà hàng trong hệ thống RestX.",
+      "back": "Quay lại",
+      "buttons": {
+        "update": "Lưu thay đổi",
+        "cancel": "Hủy"
       }
     }
   }

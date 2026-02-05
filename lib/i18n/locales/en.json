@@ -1496,7 +1496,42 @@
       "year": "Year"
     },
     "messages": {
-      "refresh_success": "Refreshed successfully"
+      "refresh_success": "Refreshed successfully",
+      "fetch_success": "Tenants loaded successfully",
+      "fetch_error": "Failed to load tenants. Please try again."
+    },
+    "toasts": {
+      "fetch_success_title": "Success",
+      "fetch_success_message": "Tenants loaded successfully",
+      "fetch_error_title": "Load Failed",
+      "fetch_error_message": "Failed to load tenants. Please try again.",
+      "detail_error_title": "Load Failed",
+      "detail_error_message": "Failed to load tenant details. Redirecting...",
+      "feature_coming_title": "Coming Soon",
+      "feature_coming_message": "This feature is under development",
+      "create_success_title": "Success",
+      "create_success_message": "Tenant created successfully",
+      "update_success_title": "Success",
+      "update_success_message": "Tenant updated successfully",
+      "save_error_title": "Save Failed",
+      "save_error_message": "Failed to save tenant. Please try again."
+    },
+    "detail": {
+      "back": "Back",
+      "edit": "Edit",
+      "restaurant_info": "Restaurant Information",
+      "contact_info": "Contact Information",
+      "status_plan": "Status & Plan",
+      "quick_actions": "Quick Actions",
+      "business_name": "Business Name",
+      "hostname": "Hostname",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "owner_email": "Owner Email",
+      "visit_site": "Visit Site",
+      "configure_domain": "Configure Domain",
+      "suspend_tenant": "Suspend Tenant"
     },
     "status": {
       "active": "Active",
@@ -1570,7 +1605,18 @@
         "country_required": "Please enter country"
       },
       "messages": {
-        "success": "Restaurant created successfully!"
+        "success": "Restaurant created successfully!",
+        "error": "Failed to create restaurant. Please try again."
+      }
+    },
+    "edit": {
+      "breadcrumb_edit": "Edit",
+      "title": "Edit Restaurant",
+      "subtitle": "Update tenant (restaurant) information in the RestX system.",
+      "back": "Back",
+      "buttons": {
+        "update": "Save Changes",
+        "cancel": "Cancel"
       }
     }
   }
