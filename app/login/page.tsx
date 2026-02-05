@@ -102,7 +102,7 @@ export default function LoginPage() {
   const handleNameBlur = () => {
     // Only mark as touched, validation happens on submit
   };
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Mark all fields as touched
@@ -140,14 +140,65 @@ export default function LoginPage() {
       return;
     }
 
-    // Simulate loading for demo
     setLoading(true);
-    setTimeout(() => {
+    try {
+      // Import axios dynamically to avoid issues
+      const axiosInstance = (await import('@/lib/services/axiosInstance')).default;
+
+      // Step 1: Check if phone exists
+      const checkResponse = await axiosInstance.post('/auth/customer/check-phone', {
+        phoneNumber: phone
+      });
+
+
+      let loginResponse;
+
+      // Check multiple possible response formats
+      const checkData = checkResponse.data?.data || checkResponse.data;
+      const phoneExists = checkData?.exists === true;
+
+
+      if (phoneExists) {
+        // Phone exists - login
+        loginResponse = await axiosInstance.post('/auth/customer/phone-login', {
+          phoneNumber: phone
+        });
+      } else {
+        // Phone doesn't exist - register with name
+        loginResponse = await axiosInstance.post('/auth/customer/phone-register', {
+          phoneNumber: phone,
+          fullName: name.trim()
+        });
+      }
+
+      if (loginResponse.data?.success && loginResponse.data?.data) {
+        const data = loginResponse.data.data;
+
+        // Save tokens
+        if (data.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken);
+        }
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+
+        // Save user info
+        if (data.user) {
+          localStorage.setItem('userInfo', JSON.stringify(data.user));
+        }
+
+        // Redirect to customer page
+        window.location.href = '/customer';
+      } else {
+        throw new Error(loginResponse.data?.message || 'Login failed');
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Đăng nhập thất bại';
+      alert(errorMessage);
+    } finally {
       setLoading(false);
-      alert(
-        t('login_page.alerts.submitted', { phone, name, remember })
-      );
-    }, 1000);
+    }
   };
 
   return (
@@ -239,7 +290,7 @@ export default function LoginPage() {
               </a>
             </div>
 
-            <div 
+            <div
               className="text-center text-sm mt-4 auth-text"
             >
               {t('login_page.or_login_with')}{" "}

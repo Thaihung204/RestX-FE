@@ -832,6 +832,76 @@
     "theme": {
       "switch_to_light": "Switch to Light mode",
       "switch_to_dark": "Switch to Dark mode"
+    },
+    "loading": "Loading...",
+    "loading_menu": "Loading menu...",
+    "save_changes": "Save Changes",
+    "edit": "Edit",
+    "delete": "Delete",
+    "errors": {
+      "data_not_supported": "Data structure not supported",
+      "api_error": "API Error: {{status}} - {{message}}",
+      "network_error": "Network Error: {{message}}",
+      "unknown_error": "An unexpected error occurred"
+    }
+  },
+  "charts": {
+    "revenue": {
+      "title": "Revenue Trend",
+      "subtitle": "Last 7 days performance"
+    },
+    "orders": {
+      "title": "Orders Overview",
+      "subtitle": "Daily order volume",
+      "total_orders": "Total Orders",
+      "orders_suffix": "orders"
+    },
+    "area_distribution": {
+      "title": "Area Distribution",
+      "subtitle": "Table allocation by zone",
+      "tables": "Tables",
+      "tables_suffix": "tables"
+    }
+  },
+  "time_slots": {
+    "modal_title": "Manage Time Slots",
+    "add_new": "Add New Time Slot",
+    "label": "Label (Auto-generated)",
+    "label_placeholder": "e.g. 7h - 9h",
+    "time_range": "Time Range",
+    "no_slots": "No time slots configured",
+    "messages": {
+      "added": "Time slot added",
+      "updated": "Time slot updated",
+      "deleted": "Time slot deleted"
+    },
+    "delete_confirm": {
+      "title": "Delete this slot?",
+      "description": "This will affect existing schedules."
+    },
+    "validation": {
+      "label_required": "Please enter a label",
+      "time_required": "Please select time range"
+    }
+  },
+  "customer_actions": {
+    "call_service": "Call Service",
+    "request_bill": "Request Bill",
+    "give_feedback": "Give Feedback"
+  },
+  "menu_form": {
+    "errors": {
+      "load_failed": "Failed to load menu item",
+      "name_required": "Name is required",
+      "category_required": "Please select a category",
+      "price_invalid": "Price must be greater than 0"
+    }
+  },
+  "table_form": {
+    "errors": {
+      "number_min": "Table number must be at least 1",
+      "capacity_min": "Capacity must be at least 1",
+      "capacity_max": "Capacity cannot exceed 20"
     }
   },
   "homepage": {
