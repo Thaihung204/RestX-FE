@@ -18,10 +18,14 @@ const nextConfig = {
   reactStrictMode: false,
   // Bypass CORS for Admin API during development
   async rewrites() {
-    // Internal API URLs - for development, these point to localhost
-    // In Docker, these would be set to internal container names
-    const adminApiUrl = process.env.INTERNAL_ADMIN_API_URL || 'http://localhost:4999/api';
-    const tenantApiUrl = process.env.INTERNAL_API_URL || 'http://localhost:5000/api';
+    // Internal API URLs - default to production since local BE is not running
+    console.log('API Config:', {
+      INTERNAL_ADMIN_API_URL: process.env.INTERNAL_ADMIN_API_URL,
+      INTERNAL_API_URL: process.env.INTERNAL_API_URL
+    });
+
+    const adminApiUrl = process.env.INTERNAL_ADMIN_API_URL || 'https://admin.restx.food/api';
+    const tenantApiUrl = process.env.INTERNAL_API_URL || 'https://demo.restx.food/api';
 
     return [
       // Admin API rewrites - always go to admin backend
