@@ -13,7 +13,7 @@ import {
   ReloadOutlined,
   RiseOutlined,
   SearchOutlined,
-  ShopOutlined
+  ShopOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import {
@@ -35,7 +35,7 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TenantPlanTag from "../../../components/(admin)/tenants/TenantPlanTag";
 import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
@@ -127,14 +127,14 @@ const TenantPage: React.FC = () => {
       showToast(
         "success",
         t("tenants.toasts.fetch_success_title"),
-        t("tenants.toasts.fetch_success_message")
+        t("tenants.toasts.fetch_success_message"),
       );
     } catch (error) {
-      console.error('Failed to fetch tenants:', error);
+      console.error("Failed to fetch tenants:", error);
       showToast(
         "error",
         t("tenants.toasts.fetch_error_title"),
-        t("tenants.toasts.fetch_error_message")
+        t("tenants.toasts.fetch_error_message"),
       );
       setTenants([]);
     } finally {
@@ -156,7 +156,7 @@ const TenantPage: React.FC = () => {
         item.mailRestaurant.toLowerCase().includes(query);
       return matchesStatus && matchesQuery;
     });
-  }, [search, status]);
+  }, [search, status, tenants]);
 
   const stats = useMemo(() => {
     return {
@@ -181,9 +181,17 @@ const TenantPage: React.FC = () => {
     if (key === "view") {
       router.push(`/tenants/${record.id}`);
     } else if (key === "domain") {
-      showToast("info", t("tenants.toasts.feature_coming_title"), t("tenants.toasts.feature_coming_message"));
+      showToast(
+        "info",
+        t("tenants.toasts.feature_coming_title"),
+        t("tenants.toasts.feature_coming_message"),
+      );
     } else if (key === "suspend") {
-      showToast("info", t("tenants.toasts.feature_coming_title"), t("tenants.toasts.feature_coming_message"));
+      showToast(
+        "info",
+        t("tenants.toasts.feature_coming_title"),
+        t("tenants.toasts.feature_coming_message"),
+      );
     }
   };
 
@@ -193,7 +201,11 @@ const TenantPage: React.FC = () => {
     { type: "divider" },
     {
       key: "suspend",
-      label: <span className="text-red-500">{t("tenants.actions.suspend_tenant")}</span>,
+      label: (
+        <span className="text-red-500">
+          {t("tenants.actions.suspend_tenant")}
+        </span>
+      ),
     },
   ];
 
@@ -217,9 +229,7 @@ const TenantPage: React.FC = () => {
               style={{ color: "var(--text)" }}>
               {record.name}
             </span>
-            <span
-              className="text-xs"
-              style={{ color: "var(--text-muted)" }}>
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
               {record.businessName}
             </span>
             <span
@@ -334,7 +344,10 @@ const TenantPage: React.FC = () => {
             {/* Header Section - Admin Tenants */}
             <div>
               <Breadcrumb
-                items={[{ title: t("tenants.breadcrumb.admin") }, { title: t("tenants.breadcrumb.tenants") }]}
+                items={[
+                  { title: t("tenants.breadcrumb.admin") },
+                  { title: t("tenants.breadcrumb.tenants") },
+                ]}
                 className="text-xs font-medium mb-1"
               />
               <Typography.Title
@@ -366,30 +379,72 @@ const TenantPage: React.FC = () => {
                 <button
                   onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
                   className="p-2 rounded-lg transition-colors group flex items-center gap-2.5 h-10"
-                  style={{ background: "var(--surface)", color: "var(--text-muted)" }}>
-                  {language === 'vi' ? (
-                    <svg className="w-6 h-4 rounded-[2px] shadow-sm" viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg">
+                  style={{
+                    background: "var(--surface)",
+                    color: "var(--text-muted)",
+                  }}>
+                  {language === "vi" ? (
+                    <svg
+                      className="w-6 h-4 rounded-[2px] shadow-sm"
+                      viewBox="0 0 3 2"
+                      xmlns="http://www.w3.org/2000/svg">
                       <rect width="3" height="2" fill="#DA251D" />
-                      <polygon points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836" fill="#FF0" />
+                      <polygon
+                        points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836"
+                        fill="#FF0"
+                      />
                     </svg>
                   ) : (
-                    <svg className="w-6 h-4 rounded-[2px] shadow-sm" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
-                      <clipPath id="s"><path d="M0,0 v30 h60 v-30 z" /></clipPath>
-                      <clipPath id="t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" /></clipPath>
+                    <svg
+                      className="w-6 h-4 rounded-[2px] shadow-sm"
+                      viewBox="0 0 60 30"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <clipPath id="s">
+                        <path d="M0,0 v30 h60 v-30 z" />
+                      </clipPath>
+                      <clipPath id="t">
+                        <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
+                      </clipPath>
                       <g clipPath="url(#s)">
                         <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
-                        <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
-                        <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t)" stroke="#C8102E" strokeWidth="4" />
-                        <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
-                        <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
+                        <path
+                          d="M0,0 L60,30 M60,0 L0,30"
+                          stroke="#fff"
+                          strokeWidth="6"
+                        />
+                        <path
+                          d="M0,0 L60,30 M60,0 L0,30"
+                          clipPath="url(#t)"
+                          stroke="#C8102E"
+                          strokeWidth="4"
+                        />
+                        <path
+                          d="M30,0 v30 M0,15 h60"
+                          stroke="#fff"
+                          strokeWidth="10"
+                        />
+                        <path
+                          d="M30,0 v30 M0,15 h60"
+                          stroke="#C8102E"
+                          strokeWidth="6"
+                        />
                       </g>
                     </svg>
                   )}
                   <span className="text-sm font-medium uppercase group-hover:text-orange-500 leading-none pt-[1px]">
                     {language}
                   </span>
-                  <svg className="w-3 h-3 text-[var(--text-muted)] opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                  <svg
+                    className="w-3 h-3 text-[var(--text-muted)] opacity-70"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
 
@@ -411,22 +466,57 @@ const TenantPage: React.FC = () => {
                           setIsLangMenuOpen(false);
                         }}
                         className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === "en" ? "bg-orange-500/10 text-orange-500" : "hover:bg-[var(--bg-base)]"}`}
-                        style={{ color: language === "en" ? undefined : "var(--text)" }}>
-                        <svg className="w-6 h-4 rounded-[2px] shadow-sm flex-shrink-0" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
-                          <clipPath id="s2"><path d="M0,0 v30 h60 v-30 z" /></clipPath>
-                          <clipPath id="t2"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" /></clipPath>
+                        style={{
+                          color: language === "en" ? undefined : "var(--text)",
+                        }}>
+                        <svg
+                          className="w-6 h-4 rounded-[2px] shadow-sm flex-shrink-0"
+                          viewBox="0 0 60 30"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <clipPath id="s2">
+                            <path d="M0,0 v30 h60 v-30 z" />
+                          </clipPath>
+                          <clipPath id="t2">
+                            <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
+                          </clipPath>
                           <g clipPath="url(#s2)">
                             <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
-                            <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
-                            <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t2)" stroke="#C8102E" strokeWidth="4" />
-                            <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
-                            <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
+                            <path
+                              d="M0,0 L60,30 M60,0 L0,30"
+                              stroke="#fff"
+                              strokeWidth="6"
+                            />
+                            <path
+                              d="M0,0 L60,30 M60,0 L0,30"
+                              clipPath="url(#t2)"
+                              stroke="#C8102E"
+                              strokeWidth="4"
+                            />
+                            <path
+                              d="M30,0 v30 M0,15 h60"
+                              stroke="#fff"
+                              strokeWidth="10"
+                            />
+                            <path
+                              d="M30,0 v30 M0,15 h60"
+                              stroke="#C8102E"
+                              strokeWidth="6"
+                            />
                           </g>
                         </svg>
                         <span className="font-medium">English</span>
                         {language === "en" && (
-                          <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          <svg
+                            className="w-4 h-4 ml-auto"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                         )}
                       </button>
@@ -436,15 +526,32 @@ const TenantPage: React.FC = () => {
                           setIsLangMenuOpen(false);
                         }}
                         className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === "vi" ? "bg-orange-500/10 text-orange-500" : "hover:bg-[var(--bg-base)]"}`}
-                        style={{ color: language === "vi" ? undefined : "var(--text)" }}>
-                        <svg className="w-6 h-4 rounded-[2px] shadow-sm flex-shrink-0" viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg">
+                        style={{
+                          color: language === "vi" ? undefined : "var(--text)",
+                        }}>
+                        <svg
+                          className="w-6 h-4 rounded-[2px] shadow-sm flex-shrink-0"
+                          viewBox="0 0 3 2"
+                          xmlns="http://www.w3.org/2000/svg">
                           <rect width="3" height="2" fill="#DA251D" />
-                          <polygon points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836" fill="#FF0" />
+                          <polygon
+                            points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836"
+                            fill="#FF0"
+                          />
                         </svg>
                         <span className="font-medium">Tiếng Việt</span>
                         {language === "vi" && (
-                          <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          <svg
+                            className="w-4 h-4 ml-auto"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                         )}
                       </button>
@@ -595,15 +702,15 @@ const TenantPage: React.FC = () => {
                         columns={columns}
                         dataSource={filteredData}
                         pagination={{
-                        pageSize: 8,
-                        showTotal: (total) => (
-                          <span style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.table.total", { count: total })}
-                          </span>
-                        ),
-                        className: "px-5 pb-4",
-                      }}
-                    />
+                          pageSize: 8,
+                          showTotal: (total) => (
+                            <span style={{ color: "var(--text-muted)" }}>
+                              {t("tenants.table.total", { count: total })}
+                            </span>
+                          ),
+                          className: "px-5 pb-4",
+                        }}
+                      />
                     </Spin>
                   </Card>
                 ),
@@ -643,9 +750,18 @@ const TenantPage: React.FC = () => {
                             }
                             options={[
                               { label: t("tenants.revenue.day"), value: "day" },
-                              { label: t("tenants.revenue.week"), value: "week" },
-                              { label: t("tenants.revenue.month"), value: "month" },
-                              { label: t("tenants.revenue.year"), value: "year" },
+                              {
+                                label: t("tenants.revenue.week"),
+                                value: "week",
+                              },
+                              {
+                                label: t("tenants.revenue.month"),
+                                value: "month",
+                              },
+                              {
+                                label: t("tenants.revenue.year"),
+                                value: "year",
+                              },
                             ]}
                             optionType="button"
                             buttonStyle="solid"
