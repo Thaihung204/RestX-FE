@@ -316,7 +316,7 @@ export default function MenuPage() {
             gap: 16,
           }}>
           <Spin size="large" />
-          <Text style={{ color: "#999" }}>Loading menu...</Text>
+          <Text style={{ color: "#999" }}>{t('common.loading_menu')}</Text>
         </div>
       </ConfigProvider>
     );

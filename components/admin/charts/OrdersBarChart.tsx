@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 const ordersData = [
   { label: "Mon", orders: 45 },
   { label: "Tue", orders: 62 },
@@ -11,6 +13,7 @@ const ordersData = [
 ];
 
 export default function OrdersBarChart() {
+  const { t } = useTranslation();
   const maxOrders = Math.max(...ordersData.map((d) => d.orders));
 
   return (
@@ -22,10 +25,10 @@ export default function OrdersBarChart() {
       }}>
       <div className="mb-6">
         <h3 className="text-xl font-bold mb-1" style={{ color: 'var(--text)' }}>
-          Orders Overview
+          {t('charts.orders.title')}
         </h3>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-          Daily order volume
+          {t('charts.orders.subtitle')}
         </p>
       </div>
 
@@ -38,7 +41,7 @@ export default function OrdersBarChart() {
                 <div className="relative w-full flex items-end justify-center h-48">
                   <div
                     className="w-full rounded-t-lg transition-all duration-500 group relative"
-                    style={{ 
+                    style={{
                       background: 'linear-gradient(to top, #FF380B, #FF380B)',
                       height: `${height}%`
                     }}>
@@ -49,7 +52,7 @@ export default function OrdersBarChart() {
                         color: 'var(--text)',
                         border: '1px solid var(--border)',
                       }}>
-                      {item.orders} orders
+                      {item.orders} {t('charts.orders.orders_suffix')}
                     </div>
                   </div>
                 </div>
@@ -69,7 +72,7 @@ export default function OrdersBarChart() {
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded" style={{ background: 'linear-gradient(to bottom right, #FF380B, #FF380B)' }}></div>
           <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            Total Orders
+            {t('charts.orders.total_orders')}
           </span>
         </div>
       </div>

@@ -22,11 +22,8 @@ export interface ResetPasswordRequest {
 }
 
 export interface RegisterRequest {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  fullName: string;
   phoneNumber: string;
+  fullName: string;
 }
 
 export interface RegisterResponse {
@@ -37,6 +34,7 @@ export interface RegisterResponse {
 
 export interface User {
   id: string;
+  customerId?: string;  // Customer ID from login response
   email: string;
   name?: string;  // Frontend format
   fullName?: string;  // Backend format
@@ -142,6 +140,7 @@ const authService = {
       // Normalize user data để có cả name và role cho frontend dễ dùng
       const normalizedUser: User = {
         ...user,
+        customerId: user.customerId,  // Preserve customerId from backend
         name: user.name || user.fullName || user.email.split('@')[0],
         fullName: user.fullName || user.name || user.email.split('@')[0],
         role: user.role || (user.roles && user.roles[0]?.toLowerCase() as 'user' | 'admin' | 'shop') || 'user',
@@ -202,8 +201,8 @@ const authService = {
   // Register new user
   async register(data: RegisterRequest): Promise<RegisterResponse> {
     try {
-      // Call API register
-      const response = await axiosInstance.post<any>('/auth/register', data);
+      // Call API register - customer phone register
+      const response = await axiosInstance.post<any>('/auth/customer/phone-register', data);
 
       // Log response để debug
       console.log('Register API Response:', response.data);
@@ -294,8 +293,10 @@ const authService = {
 
     } catch (error: any) {
       // Log error để debug
-      console.error('Register error:', error);
-      console.error('Error response:', error.response?.data);
+      console.warn('Register error:', error);
+      if (error.response?.data) {
+        console.warn('Error response:', error.response.data);
+      }
 
       // Lỗi từ backend (response error)
       if (error.response?.data?.error) {

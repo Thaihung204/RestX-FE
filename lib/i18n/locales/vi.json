@@ -832,6 +832,76 @@
     "theme": {
       "switch_to_light": "Chuyển chế độ Sáng",
       "switch_to_dark": "Chuyển chế độ Tối"
+    },
+    "loading": "Đang tải...",
+    "loading_menu": "Đang tải thực đơn...",
+    "save_changes": "Lưu thay đổi",
+    "edit": "Sửa",
+    "delete": "Xóa",
+    "errors": {
+      "data_not_supported": "Cấu trúc dữ liệu không được hỗ trợ",
+      "api_error": "Lỗi API: {{status}} - {{message}}",
+      "network_error": "Lỗi mạng: {{message}}",
+      "unknown_error": "Đã xảy ra lỗi không mong muốn"
+    }
+  },
+  "charts": {
+    "revenue": {
+      "title": "Xu hướng doanh thu",
+      "subtitle": "Hiệu suất 7 ngày qua"
+    },
+    "orders": {
+      "title": "Tổng quan đơn hàng",
+      "subtitle": "Số lượng đơn hàng theo ngày",
+      "total_orders": "Tổng đơn hàng",
+      "orders_suffix": "đơn"
+    },
+    "area_distribution": {
+      "title": "Phân bố khu vực",
+      "subtitle": "Phân bổ bàn theo khu vực",
+      "tables": "Bàn",
+      "tables_suffix": "bàn"
+    }
+  },
+  "time_slots": {
+    "modal_title": "Quản lý khung giờ",
+    "add_new": "Thêm khung giờ mới",
+    "label": "Nhãn (Tự động tạo)",
+    "label_placeholder": "VD: 7h - 9h",
+    "time_range": "Khoảng thời gian",
+    "no_slots": "Chưa có khung giờ nào được cấu hình",
+    "messages": {
+      "added": "Đã thêm khung giờ",
+      "updated": "Đã cập nhật khung giờ",
+      "deleted": "Đã xóa khung giờ"
+    },
+    "delete_confirm": {
+      "title": "Xóa khung giờ này?",
+      "description": "Điều này sẽ ảnh hưởng đến lịch làm việc hiện có."
+    },
+    "validation": {
+      "label_required": "Vui lòng nhập nhãn",
+      "time_required": "Vui lòng chọn khoảng thời gian"
+    }
+  },
+  "customer_actions": {
+    "call_service": "Gọi phục vụ",
+    "request_bill": "Tính tiền",
+    "give_feedback": "Góp ý dịch vụ"
+  },
+  "menu_form": {
+    "errors": {
+      "load_failed": "Không thể tải thông tin món ăn",
+      "name_required": "Vui lòng nhập tên món",
+      "category_required": "Vui lòng chọn danh mục",
+      "price_invalid": "Giá phải lớn hơn 0"
+    }
+  },
+  "table_form": {
+    "errors": {
+      "number_min": "Số bàn phải từ 1 trở lên",
+      "capacity_min": "Sức chứa phải từ 1 trở lên",
+      "capacity_max": "Sức chứa không được vượt quá 20"
     }
   },
   "homepage": {
