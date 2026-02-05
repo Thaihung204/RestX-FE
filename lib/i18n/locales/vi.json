@@ -1619,5 +1619,35 @@
         "cancel": "Hủy"
       }
     }
+  },
+  "menu_page": {
+    "title": "Thực đơn",
+    "logo_title": "Thực đơn RestX",
+    "loading": "Đang tải thực đơn...",
+    "retry": "Thử lại",
+    "error_load": "Không thể tải thực đơn. Vui lòng thử lại sau.",
+    "items": "món",
+    "default_food_desc": "Món ăn ngon",
+    "best_seller": "Bán chạy",
+    "tags": {
+      "spicy": "Cay",
+      "vegan": "Chay",
+      "best": "Bán chạy"
+    },
+    "cart": {
+      "title": "Giỏ hàng",
+      "items_count": "{{count}} món",
+      "empty": "Giỏ hàng trống",
+      "food_section": "Món ăn",
+      "drink_section": "Đồ uống",
+      "total": "Tổng cộng",
+      "confirm": "Xác nhận đơn",
+      "added_success": "Đã thêm {{name}} vào giỏ",
+      "removed_success": "Đã xóa khỏi giỏ hàng"
+    },
+    "detail_modal": {
+      "price": "Giá",
+      "add_to_cart": "Thêm vào giỏ"
+    }
   }
 }

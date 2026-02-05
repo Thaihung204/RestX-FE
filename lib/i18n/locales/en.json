@@ -1619,5 +1619,35 @@
         "cancel": "Cancel"
       }
     }
+  },
+  "menu_page": {
+    "title": "Menu",
+    "logo_title": "RestX Menu",
+    "loading": "Loading menu...",
+    "retry": "Retry",
+    "error_load": "Failed to load menu. Please try again later.",
+    "items": "items",
+    "default_food_desc": "No description available",
+    "best_seller": "Best Seller",
+    "tags": {
+      "spicy": "Spicy",
+      "vegan": "Vegan",
+      "best": "Best Seller"
+    },
+    "cart": {
+      "title": "Your Cart",
+      "items_count": "{{count}} items",
+      "empty": "Your cart is empty",
+      "food_section": "Food",
+      "drink_section": "Drinks",
+      "total": "Total",
+      "confirm": "Confirm Order",
+      "added_success": "Added {{name}} to cart",
+      "removed_success": "Removed from cart"
+    },
+    "detail_modal": {
+      "price": "Price",
+      "add_to_cart": "Add to Cart"
+    }
   }
 }
