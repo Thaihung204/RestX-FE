@@ -197,11 +197,8 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const result = await authService.register({
-        email: formData.email,
-        password: formData.password,
-        confirmPassword: formData.confirmPassword,
-        fullName: `${formData.firstName} ${formData.lastName}`,
         phoneNumber: formData.phone,
+        fullName: `${formData.firstName} ${formData.lastName}`,
       });
 
       if (result.requireLogin) {
@@ -223,8 +220,17 @@ export default function RegisterPage() {
       }
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to register. Please try again.';
-      alert(errorMessage);
-      console.error('Registration error:', error);
+
+      // Handle specific validation errors
+      if (errorMessage.toLowerCase().includes('phone number') && errorMessage.toLowerCase().includes('registered')) {
+        setErrors(prev => ({ ...prev, phone: errorMessage }));
+      } else if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('exists')) {
+        setErrors(prev => ({ ...prev, email: errorMessage }));
+      } else {
+        alert(errorMessage);
+      }
+
+      console.warn('Registration error:', error);
     } finally {
       setLoading(false);
     }

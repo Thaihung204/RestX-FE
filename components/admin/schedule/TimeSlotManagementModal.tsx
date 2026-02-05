@@ -5,6 +5,7 @@ import { ClockCircleOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/i
 import { Button, Form, Input, message, Modal, Popconfirm, TimePicker } from "antd";
 import dayjs from "dayjs";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface TimeSlotManagementModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export default function TimeSlotManagementModal({
   timeSlots,
   onUpdateSlots,
 }: TimeSlotManagementModalProps) {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -37,21 +39,21 @@ export default function TimeSlotManagementModal({
 
     if (editingId === "new") {
       onUpdateSlots([...timeSlots, newSlot]);
-      message.success("Time slot added");
+      message.success(t('time_slots.messages.added'));
     } else {
       onUpdateSlots(
         timeSlots.map((slot) => (slot.id === editingId ? newSlot : slot))
       );
-      message.success("Time slot updated");
+      message.success(t('time_slots.messages.updated'));
     }
-    
+
     setEditingId(null);
     form.resetFields();
   };
 
   const handleDelete = (id: string) => {
     onUpdateSlots(timeSlots.filter((slot) => slot.id !== id));
-    message.success("Time slot deleted");
+    message.success(t('time_slots.messages.deleted'));
   };
 
   const handleEdit = (slot: TimeSlot) => {
@@ -67,14 +69,14 @@ export default function TimeSlotManagementModal({
 
   return (
     <Modal
-      title="Manage Time Slots"
+      title={t('time_slots.modal_title')}
       open={isOpen}
       onCancel={() => {
         setEditingId(null);
         onClose();
       }}
       footer={null}
-      destroyOnHidden={true} 
+      destroyOnHidden={true}
       centered
       className="timeslot-modal"
     >
@@ -105,22 +107,22 @@ export default function TimeSlotManagementModal({
           >
             <Form.Item
               name="label"
-              label="Label (Auto-generated)"
-              rules={[{ required: true, message: "Please enter a label" }]}
+              label={t('time_slots.label')}
+              rules={[{ required: true, message: t('time_slots.validation.label_required') }]}
             >
-              <Input placeholder="e.g. 7h - 9h" size="large" />
+              <Input placeholder={t('time_slots.label_placeholder')} size="large" />
             </Form.Item>
             <Form.Item
               name="timeRange"
-              label="Time Range"
-              rules={[{ required: true, message: "Please select time range" }]}
+              label={t('time_slots.time_range')}
+              rules={[{ required: true, message: t('time_slots.validation.time_required') }]}
             >
               <TimePicker.RangePicker format="HH:mm" className="w-full" size="large" />
             </Form.Item>
             <div className="flex justify-end gap-3 pt-2">
-              <Button onClick={() => setEditingId(null)} size="large">Cancel</Button>
+              <Button onClick={() => setEditingId(null)} size="large">{t('common.cancel')}</Button>
               <Button type="primary" htmlType="submit" size="large" className="bg-orange-500 hover:bg-orange-600">
-                Save Changes
+                {t('common.save_changes')}
               </Button>
             </div>
           </Form>
@@ -133,11 +135,11 @@ export default function TimeSlotManagementModal({
             onClick={handleAddStart}
             className="mb-6 h-12 hover:text-orange-500 hover:border-orange-500"
             style={{
-               color: "var(--text-muted)",
-               borderColor: "var(--border)"
+              color: "var(--text-muted)",
+              borderColor: "var(--border)"
             }}
           >
-            Add New Time Slot
+            {t('time_slots.add_new')}
           </Button>
         )}
 
@@ -152,7 +154,7 @@ export default function TimeSlotManagementModal({
               }}
             >
               <div className="flex items-center gap-4">
-                <div 
+                <div
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors`}
                   style={{
                     backgroundColor: editingId === slot.id ? "rgba(249, 115, 22, 0.2)" : "var(--surface)",
@@ -169,30 +171,30 @@ export default function TimeSlotManagementModal({
               </div>
 
               <div className="flex items-center gap-2">
-                <Button 
+                <Button
                   type="text"
                   className="text-orange-600 hover:bg-orange-50"
                   onClick={() => handleEdit(slot)}
                   disabled={editingId !== null}
                 >
-                  Edit
+                  {t('common.edit')}
                 </Button>
-                
+
                 <div className="w-px h-4 mx-1" style={{ background: "var(--border)" }} />
-                
+
                 <Popconfirm
-                  title="Delete this slot?"
-                  description="This will affect existing schedules."
+                  title={t('time_slots.delete_confirm.title')}
+                  description={t('time_slots.delete_confirm.description')}
                   onConfirm={() => handleDelete(slot.id)}
-                  okText="Delete"
-                  cancelText="Cancel"
+                  okText={t('common.delete')}
+                  cancelText={t('common.cancel')}
                   okButtonProps={{ danger: true }}
                   disabled={editingId !== null}
                 >
-                  <Button 
-                    type="text" 
-                    danger 
-                    icon={<DeleteOutlined />} 
+                  <Button
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined />}
                     disabled={editingId !== null}
                     className="hover:bg-red-50"
                   />
@@ -200,11 +202,11 @@ export default function TimeSlotManagementModal({
               </div>
             </div>
           ))}
-          
+
           {timeSlots.length === 0 && (
             <div className="text-center py-8" style={{ color: "var(--text-muted)" }}>
               <ClockCircleOutlined className="text-4xl opacity-20 mb-3" />
-              <p>No time slots configured</p>
+              <p>{t('time_slots.no_slots')}</p>
             </div>
           )}
         </div>
