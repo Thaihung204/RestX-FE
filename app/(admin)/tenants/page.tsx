@@ -3,6 +3,7 @@
 import ThemeToggle from "@/app/components/ThemeToggle";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import { useLanguage } from "@/components/I18nProvider";
+import { useToast } from "@/lib/contexts/ToastContext";
 import {
   CheckCircleOutlined,
   MailOutlined,
@@ -25,200 +26,21 @@ import {
   Input,
   Radio,
   Select,
+  Spin,
   Statistic,
   Table,
   Tabs,
   Typography,
-  message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
-import React, { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import TenantPlanTag from "../../../components/(admin)/tenants/TenantPlanTag";
 import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
-
-// --- TYPES ---
-interface ITenant {
-  id: string;
-  name: string;
-  hostName: string;
-  businessName: string;
-  phoneNumber: string;
-  addressLine1: string;
-  addressLine2: string;
-  addressLine3: string;
-  addressLine4: string;
-  ownerEmail: string;
-  mailRestaurant: string;
-  plan: "basic" | "pro" | "enterprise";
-  status: "active" | "inactive" | "maintenance";
-  lastActive: string;
-}
-
-// --- MOCK DATA ---
-const MOCK_DATA: ITenant[] = [
-  {
-    id: "t-001",
-    name: "KFC Da Nang",
-    hostName: "kfc-danang",
-    businessName: "KFC Da Nang Restaurant",
-    phoneNumber: "0236123456",
-    addressLine1: "123",
-    addressLine2: "Nguyen Van Linh",
-    addressLine3: "Da Nang",
-    addressLine4: "Vietnam",
-    ownerEmail: "ops.danang@kfc.com",
-    mailRestaurant: "contact@kfc-danang.vn",
-    plan: "enterprise",
-    status: "active",
-    lastActive: "2025-01-10T09:15:00Z",
-  },
-  {
-    id: "t-002",
-    name: "Pizza Hut Hanoi",
-    hostName: "pizzahut-hanoi",
-    businessName: "Pizza Hut Hanoi Branch",
-    phoneNumber: "0241234567",
-    addressLine1: "456",
-    addressLine2: "Tran Duy Hung",
-    addressLine3: "Hanoi",
-    addressLine4: "Vietnam",
-    ownerEmail: "owner@pizzahut.vn",
-    mailRestaurant: "info@pizzahut-hanoi.vn",
-    plan: "pro",
-    status: "active",
-    lastActive: "2025-01-09T14:25:00Z",
-  },
-  {
-    id: "t-003",
-    name: "Highlands Coffee HCMC",
-    hostName: "highlands-hcmc",
-    businessName: "Highlands Coffee Ho Chi Minh",
-    phoneNumber: "0281234567",
-    addressLine1: "789",
-    addressLine2: "Le Lai",
-    addressLine3: "Ho Chi Minh",
-    addressLine4: "Vietnam",
-    ownerEmail: "franchise@highlands.vn",
-    mailRestaurant: "hcmc@highlands.vn",
-    plan: "enterprise",
-    status: "maintenance",
-    lastActive: "2025-01-08T05:45:00Z",
-  },
-  {
-    id: "t-004",
-    name: "Jollibee Hue",
-    hostName: "jollibee-hue",
-    businessName: "Jollibee Hue City",
-    phoneNumber: "0234567890",
-    addressLine1: "101",
-    addressLine2: "Hung Vuong",
-    addressLine3: "Hue",
-    addressLine4: "Vietnam",
-    ownerEmail: "contact@jollibee.vn",
-    mailRestaurant: "hue@jollibee.vn",
-    plan: "basic",
-    status: "inactive",
-    lastActive: "2024-12-20T11:00:00Z",
-  },
-  {
-    id: "t-005",
-    name: "Lotteria Da Lat",
-    hostName: "lotteria-dalat",
-    businessName: "Lotteria Da Lat Branch",
-    phoneNumber: "0263456789",
-    addressLine1: "202",
-    addressLine2: "Tran Phu",
-    addressLine3: "Da Lat",
-    addressLine4: "Vietnam",
-    ownerEmail: "dalat@lotteria.vn",
-    mailRestaurant: "contact@lotteria-dalat.vn",
-    plan: "pro",
-    status: "active",
-    lastActive: "2025-01-07T07:10:00Z",
-  },
-  {
-    id: "t-006",
-    name: "Starbucks District 1",
-    hostName: "starbucks-d1",
-    businessName: "Starbucks District 1 HCMC",
-    phoneNumber: "0287654321",
-    addressLine1: "303",
-    addressLine2: "Dong Khoi",
-    addressLine3: "Ho Chi Minh",
-    addressLine4: "Vietnam",
-    ownerEmail: "d1@starbucks.vn",
-    mailRestaurant: "district1@starbucks.vn",
-    plan: "enterprise",
-    status: "active",
-    lastActive: "2025-01-11T10:00:00Z",
-  },
-  {
-    id: "t-007",
-    name: "TocoToco Hai Phong",
-    hostName: "tocotoco-haiphong",
-    businessName: "TocoToco Hai Phong Store",
-    phoneNumber: "0225678901",
-    addressLine1: "404",
-    addressLine2: "Tran Hung Dao",
-    addressLine3: "Hai Phong",
-    addressLine4: "Vietnam",
-    ownerEmail: "hp@tocotoco.vn",
-    mailRestaurant: "haiphong@tocotoco.vn",
-    plan: "basic",
-    status: "inactive",
-    lastActive: "2024-12-18T16:30:00Z",
-  },
-  {
-    id: "t-008",
-    name: "The Coffee House Nha Trang",
-    hostName: "tch-nhatrang",
-    businessName: "The Coffee House Nha Trang",
-    phoneNumber: "0258901234",
-    addressLine1: "505",
-    addressLine2: "Tran Phu",
-    addressLine3: "Nha Trang",
-    addressLine4: "Vietnam",
-    ownerEmail: "nhatrang@coffeehouse.vn",
-    mailRestaurant: "contact@tch-nhatrang.vn",
-    plan: "pro",
-    status: "maintenance",
-    lastActive: "2025-01-05T12:05:00Z",
-  },
-  {
-    id: "t-009",
-    name: "Phuc Long Thu Duc",
-    hostName: "phuclong-thuduc",
-    businessName: "Phuc Long Thu Duc District",
-    phoneNumber: "0289012345",
-    addressLine1: "606",
-    addressLine2: "Vo Van Ngan",
-    addressLine3: "Ho Chi Minh",
-    addressLine4: "Vietnam",
-    ownerEmail: "thuduc@phuclong.vn",
-    mailRestaurant: "thuduc@phuclong.vn",
-    plan: "pro",
-    status: "active",
-    lastActive: "2025-01-10T21:40:00Z",
-  },
-  {
-    id: "t-010",
-    name: "Texas Chicken Da Nang",
-    hostName: "texas-danang",
-    businessName: "Texas Chicken Da Nang Branch",
-    phoneNumber: "0236901234",
-    addressLine1: "707",
-    addressLine2: "Bach Dang",
-    addressLine3: "Da Nang",
-    addressLine4: "Vietnam",
-    ownerEmail: "texas.dn@texaschicken.vn",
-    mailRestaurant: "danang@texaschicken.vn",
-    plan: "basic",
-    status: "active",
-    lastActive: "2025-01-06T09:55:00Z",
-  },
-];
+import { tenantService } from "../../../lib/services/tenantService";
+import { ITenant } from "../../../lib/types/tenant";
 
 const STATUS_OPTIONS = [
   { label: "All Status", value: "all" },
@@ -279,6 +101,8 @@ const formatDate = (isoDate: string) => {
 // --- MAIN PAGE COMPONENT ---
 
 const TenantPage: React.FC = () => {
+  const { showToast } = useToast();
+  const router = useRouter();
   const { t, i18n } = useTranslation();
   const { language, changeLanguage } = useLanguage();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -287,10 +111,40 @@ const TenantPage: React.FC = () => {
   const [activeRevenueRange, setActiveRevenueRange] = useState<
     "day" | "week" | "month" | "year"
   >("month");
+  const [tenants, setTenants] = useState<ITenant[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch tenants from API
+  useEffect(() => {
+    fetchTenants();
+  }, []);
+
+  const fetchTenants = async () => {
+    try {
+      setLoading(true);
+      const data = await tenantService.getAllTenantsForAdmin();
+      setTenants(data);
+      showToast(
+        "success",
+        t("tenants.toasts.fetch_success_title"),
+        t("tenants.toasts.fetch_success_message")
+      );
+    } catch (error) {
+      console.error('Failed to fetch tenants:', error);
+      showToast(
+        "error",
+        t("tenants.toasts.fetch_error_title"),
+        t("tenants.toasts.fetch_error_message")
+      );
+      setTenants([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredData = useMemo(() => {
     const query = search.toLowerCase().trim();
-    return MOCK_DATA.filter((item) => {
+    return tenants.filter((item) => {
       const matchesStatus = status === "all" || item.status === status;
       const matchesQuery =
         !query ||
@@ -306,14 +160,14 @@ const TenantPage: React.FC = () => {
 
   const stats = useMemo(() => {
     return {
-      total: MOCK_DATA.length,
-      active: MOCK_DATA.filter((t) => t.status === "active").length,
-      maintenance: MOCK_DATA.filter((t) => t.status === "maintenance").length,
+      total: tenants.length,
+      active: tenants.filter((t) => t.status === "active").length,
+      maintenance: tenants.filter((t) => t.status === "maintenance").length,
     };
-  }, []);
+  }, [tenants]);
 
-  const handleRefresh = () => {
-    message.success(t("tenants.messages.refresh_success"));
+  const handleRefresh = async () => {
+    await fetchTenants();
   };
 
   const STATUS_OPTIONS_TRANSLATED = [
@@ -322,6 +176,16 @@ const TenantPage: React.FC = () => {
     { label: t("tenants.filter.inactive"), value: "inactive" },
     { label: t("tenants.filter.maintenance"), value: "maintenance" },
   ];
+
+  const handleMenuClick = (key: string, record: ITenant) => {
+    if (key === "view") {
+      router.push(`/tenants/${record.id}`);
+    } else if (key === "domain") {
+      showToast("info", t("tenants.toasts.feature_coming_title"), t("tenants.toasts.feature_coming_message"));
+    } else if (key === "suspend") {
+      showToast("info", t("tenants.toasts.feature_coming_title"), t("tenants.toasts.feature_coming_message"));
+    }
+  };
 
   const menuItems: MenuProps["items"] = [
     { key: "view", label: t("tenants.actions.view_details") },
@@ -441,7 +305,10 @@ const TenantPage: React.FC = () => {
       width: 50,
       render: (_, record) => (
         <Dropdown
-          menu={{ items: menuItems }}
+          menu={{
+            items: menuItems,
+            onClick: ({ key }) => handleMenuClick(key, record),
+          }}
           trigger={["click"]}
           placement="bottomRight">
           <Button
@@ -722,11 +589,12 @@ const TenantPage: React.FC = () => {
                     </div>
 
                     {/* Table */}
-                    <Table
-                      rowKey="id"
-                      columns={columns}
-                      dataSource={filteredData}
-                      pagination={{
+                    <Spin spinning={loading}>
+                      <Table
+                        rowKey="id"
+                        columns={columns}
+                        dataSource={filteredData}
+                        pagination={{
                         pageSize: 8,
                         showTotal: (total) => (
                           <span style={{ color: "var(--text-muted)" }}>
@@ -736,6 +604,7 @@ const TenantPage: React.FC = () => {
                         className: "px-5 pb-4",
                       }}
                     />
+                    </Spin>
                   </Card>
                 ),
               },

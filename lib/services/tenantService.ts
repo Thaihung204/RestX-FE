@@ -1,5 +1,6 @@
 import axiosInstance from './axiosInstance';
 import adminAxiosInstance from './adminAxiosInstance';
+import { ITenant, TenantApiResponse, TenantCreateInput } from '../types/tenant';
 
 export interface TenantConfig {
     id: string;
@@ -48,6 +49,43 @@ export interface TenantConfig {
     tenantSettings: any[];
 }
 
+// Helper function to convert API response to frontend ITenant format
+const mapApiResponseToTenant = (apiTenant: TenantApiResponse): ITenant => {
+    return {
+        id: apiTenant.id,
+        name: apiTenant.name,
+        hostName: apiTenant.hostname,
+        businessName: apiTenant.businessName,
+        phoneNumber: apiTenant.businessPrimaryPhone || '',
+        addressLine1: apiTenant.businessAddressLine1 || '',
+        addressLine2: apiTenant.businessAddressLine2 || '',
+        addressLine3: apiTenant.businessAddressLine3 || '',
+        addressLine4: apiTenant.businessAddressLine4 || '',
+        ownerEmail: '', // Backend doesn't have this field yet
+        mailRestaurant: apiTenant.businessEmailAddress || '',
+        plan: 'basic', // Backend doesn't have this field yet
+        status: apiTenant.status ? 'active' : 'inactive',
+        lastActive: apiTenant.modifiedDate || apiTenant.createdDate || new Date().toISOString(),
+    };
+};
+
+// Helper function to convert frontend create input to API format
+const mapCreateInputToApi = (input: TenantCreateInput) => {
+    return {
+        name: input.name,
+        hostname: input.hostName,
+        businessName: input.businessName,
+        businessAddressLine1: input.addressLine1,
+        businessAddressLine2: input.addressLine2,
+        businessAddressLine3: input.addressLine3,
+        businessAddressLine4: input.addressLine4,
+        businessPrimaryPhone: input.phoneNumber,
+        businessEmailAddress: input.mailRestaurant,
+        status: true,
+        // ownerEmail, ownerPassword and plan will need to be added to backend
+    };
+};
+
 export const tenantService = {
     /**
      * Get tenant config by domain/hostname
@@ -68,6 +106,44 @@ export const tenantService = {
         } catch (error) {
             throw error;
         }
+    },
+
+    /**
+     * Get all tenants for admin panel (mapped to ITenant format)
+     * Backend endpoint: GET /api/tenants
+     */
+    getAllTenantsForAdmin: async (): Promise<ITenant[]> => {
+        const response = await adminAxiosInstance.get<TenantApiResponse[]>('/tenants');
+        return response.data.map(mapApiResponseToTenant);
+    },
+
+    /**
+     * Get tenant by ID (mapped to ITenant format)
+     * Backend endpoint: GET /api/tenants/{id}
+     */
+    getTenantById: async (id: string): Promise<ITenant> => {
+        const response = await adminAxiosInstance.get<TenantApiResponse>(`/tenants/${id}`);
+        return mapApiResponseToTenant(response.data);
+    },
+
+    /**
+     * Create tenant
+     * Backend endpoint: POST /api/tenants
+     */
+    createTenant: async (input: TenantCreateInput): Promise<TenantApiResponse> => {
+        const apiData = mapCreateInputToApi(input);
+        const response = await adminAxiosInstance.post('/tenants', apiData);
+        return response.data;
+    },
+
+    /**
+     * Update tenant
+     * Backend endpoint: PUT /api/tenants/{id}
+     */
+    updateTenant: async (id: string, input: TenantCreateInput): Promise<TenantApiResponse> => {
+        const apiData = mapCreateInputToApi(input);
+        const response = await adminAxiosInstance.put(`/tenants/${id}`, apiData);
+        return response.data;
     },
 
     /**
