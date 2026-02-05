@@ -244,14 +244,17 @@ const TenantPage: React.FC = () => {
     {
       title: t("tenants.table.contact"),
       key: "contact",
-      width: 200,
+      width: 220,
       render: (_, record) => (
         <div className="flex flex-col gap-1">
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-            <PhoneOutlined /> {record.phoneNumber}
+          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+            <PhoneOutlined className="mr-1" /> {record.phoneNumber}
           </span>
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-            <MailOutlined /> {record.mailRestaurant}
+          <span
+            className="text-[11px] truncate max-w-[200px]"
+            style={{ color: "var(--text-muted)" }}
+            title={record.mailRestaurant}>
+            <MailOutlined className="mr-1" /> {record.mailRestaurant}
           </span>
         </div>
       ),
@@ -259,13 +262,13 @@ const TenantPage: React.FC = () => {
     {
       title: t("tenants.table.address"),
       key: "address",
-      width: 220,
+      width: 240,
       render: (_, record) => (
         <div className="flex flex-col">
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
             {record.addressLine1} {record.addressLine2}
           </span>
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
             {record.addressLine3}, {record.addressLine4}
           </span>
         </div>
@@ -282,16 +285,19 @@ const TenantPage: React.FC = () => {
       title: t("tenants.table.status"),
       dataIndex: "status",
       key: "status",
-      width: 120,
+      width: 140,
       render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
     },
     {
       title: t("tenants.table.owner"),
       dataIndex: "ownerEmail",
       key: "ownerEmail",
-      width: 180,
+      width: 200,
       render: (email) => (
-        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+        <span
+          className="text-[11px] truncate max-w-[180px] block"
+          style={{ color: "var(--text-muted)" }}
+          title={email}>
           {email}
         </span>
       ),
@@ -300,10 +306,10 @@ const TenantPage: React.FC = () => {
       title: t("tenants.table.last_active"),
       dataIndex: "lastActive",
       key: "lastActive",
-      width: 110,
+      width: 120,
       render: (value: string) => (
         <span
-          className="text-xs font-variant-numeric tabular-nums"
+          className="text-[11px] font-variant-numeric tabular-nums whitespace-nowrap"
           style={{ color: "var(--text-muted)" }}>
           {formatDate(value)}
         </span>
