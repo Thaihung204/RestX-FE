@@ -18,9 +18,16 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Navbar from './Navbar';
 
-const RestaurantHeader: React.FC = () => {
+import { TenantConfig } from '@/lib/services/tenantService';
+
+interface RestaurantHeaderProps {
+  tenant: TenantConfig | null;
+}
+
+const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant }) => {
   const { t } = useTranslation();
-  const { tenant } = useTenant();
+  const { tenant: contextTenant } = useTenant();
+  const tenant = propTenant || contextTenant;
   const { mode } = useThemeMode();
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);

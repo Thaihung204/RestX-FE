@@ -64,7 +64,26 @@ export interface GenericResponse {
 }
 
 const authService = {
-  // Login với .NET Backend
+  // Check phone existence
+  async checkPhone(phoneNumber: string): Promise<{ exists: boolean; name?: string }> {
+    try {
+      // API call returns { exists: boolean, customerName: string, customerId: string } directly
+      const response = await axiosInstance.post<any>('/auth/customer/check-phone', { phoneNumber });
+
+      // Handle both flat structure (from screenshot) and wrapped structure (just in case)
+      const data = response.data?.data || response.data;
+
+      return {
+        exists: !!data?.exists,
+        name: data?.customerName || data?.name
+      };
+    } catch (error) {
+      console.error('Check phone error:', error);
+      return { exists: false };
+    }
+  },
+
+  // Login with .NET Backend
   async login(credentials: LoginCredentials): Promise<User> {
     try {
       // Call API login

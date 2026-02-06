@@ -36,6 +36,26 @@ export interface DishResponseDto {
   image?: string;
 }
 
+export interface MenuItem {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  unit: string;
+  imageUrl?: string;
+  isVegetarian: boolean;
+  isSpicy: boolean;
+  isBestSeller: boolean;
+  categoryId: string;
+  categoryName: string;
+}
+
+export interface MenuCategory {
+  categoryId: string;
+  categoryName: string;
+  items: MenuItem[];
+}
+
 export interface DishListResponseDto {
   dishes?: DishResponseDto[];
   data?: DishResponseDto[];
@@ -59,6 +79,11 @@ class DishService {
 
   async getDishById(id: string): Promise<DishResponseDto> {
     const response = await axiosInstance.get(`/dishes/${id}`);
+    return response.data;
+  }
+
+  async getMenu(): Promise<MenuCategory[]> {
+    const response = await axiosInstance.get("/dishes/menu");
     return response.data;
   }
 
