@@ -96,7 +96,7 @@ export default function MenuPage() {
                 price: item.price?.toString() || "0",
                 description:
                   item.description || t("menu_page.default_food_desc"),
-                image: item.imageUrl || "/placeholder-dish.jpg",
+                image: item.imageUrl ?? undefined,
                 categoryId: item.categoryId || categoryGroup.categoryId || "",
                 categoryName:
                   item.categoryName || categoryGroup.categoryName || "",
