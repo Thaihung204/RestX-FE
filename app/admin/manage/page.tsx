@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import CategorySettings from "../settings/components/CategorySettings";
+import SupplierSettings from "../settings/components/SupplierSettings";
 
 export default function ManagePage() {
     const { t } = useTranslation("common");
-    const [activeTab, setActiveTab] = useState<"categories">("categories");
+    const [activeTab, setActiveTab] = useState<"categories" | "suppliers">("categories");
 
     return (
         <main className="p-6 lg:p-8">
@@ -28,6 +29,11 @@ export default function ManagePage() {
                             id: "categories" as const,
                             label: t("dashboard.manage.tabs.categories"),
                             icon: "M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z",
+                        },
+                        {
+                            id: "suppliers" as const,
+                            label: "Suppliers",
+                            icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
                         },
                     ].map((tab) => (
                         <button
@@ -59,6 +65,11 @@ export default function ManagePage() {
                 {/* Categories Tab */}
                 {activeTab === "categories" && (
                     <CategorySettings />
+                )}
+
+                {/* Suppliers Tab */}
+                {activeTab === "suppliers" && (
+                    <SupplierSettings />
                 )}
             </div>
         </main>
