@@ -1087,6 +1087,7 @@
   },
   "customers": {
     "title": "Customer Management",
+    "subtitle": "View and manage your restaurant's customer information",
     "birthday_alert": {
       "title": "Birthday Today!",
       "message": "There are {{count}} customers having birthday today. Send them best wishes!"
@@ -1105,6 +1106,7 @@
         "customer": "Customer",
         "contact": "Contact",
         "vip_tier": "VIP Tier",
+        "rank": "Rank",
         "orders": "Orders",
         "total_spent": "Total Spent",
         "points": "Points",
@@ -1112,7 +1114,8 @@
       },
       "status": {
         "birthday": "Birthday",
-        "active": "Active"
+        "active": "Active",
+        "inactive": "Inactive"
       },
       "empty": "No customers found"
     },

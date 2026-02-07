@@ -1087,6 +1087,7 @@
   },
   "customers": {
     "title": "Quản lý khách hàng",
+    "subtitle": "Xem và quản lý thông tin khách hàng của nhà hàng",
     "birthday_alert": {
       "title": "Sinh nhật hôm nay!",
       "message": "Có {{count}} khách hàng sinh nhật hôm nay. Hãy gửi lời chúc mừng!"
@@ -1105,6 +1106,7 @@
         "customer": "Khách hàng",
         "contact": "Liên hệ",
         "vip_tier": "Hạng VIP",
+        "rank": "Hạng",
         "orders": "Đơn hàng",
         "total_spent": "Tổng chi tiêu",
         "points": "Điểm tích lũy",
@@ -1112,7 +1114,8 @@
       },
       "status": {
         "birthday": "Sinh nhật",
-        "active": "Hoạt động"
+        "active": "Hoạt động",
+        "inactive": "Ngừng hoạt động"
       },
       "empty": "Không tìm thấy khách hàng nào"
     },

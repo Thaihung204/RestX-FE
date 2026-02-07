@@ -2,15 +2,17 @@
 
 import customerService, { Customer } from "@/lib/services/customerService";
 import {
-    Cake,
-    Close,
-    Diamond,
-    Email,
-    EmojiEvents,
-    History,
-    Phone,
-    Star,
-    WorkspacePremium
+  Cake,
+  Cancel,
+  CheckCircle,
+  Close,
+  Diamond,
+  Email,
+  EmojiEvents,
+  History,
+  Phone,
+  Star,
+  WorkspacePremium
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
@@ -41,12 +43,12 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
   };
 
   const getVipIcon = (tier?: string) => {
-    const commonProps = { sx: { fontSize: 14 } };
+    const commonProps = { sx: { fontSize: 20 } };
     switch(tier) {
-      case 'platinum': return <Diamond className="text-zinc-800" {...commonProps} />;
-      case 'gold': return <EmojiEvents className="text-zinc-800" {...commonProps} />;
-      case 'silver': return <Star className="text-zinc-800" {...commonProps} />;
-      default: return <WorkspacePremium className="text-white" {...commonProps} />; // Bronze is darker orange, white is ok
+      case 'platinum': return <Diamond sx={{ ...commonProps.sx, color: '#E5E7EB' }} />;
+      case 'gold': return <EmojiEvents sx={{ ...commonProps.sx, color: '#EAB308' }} />;
+      case 'silver': return <Star sx={{ ...commonProps.sx, color: '#9CA3AF' }} />;
+      default: return <WorkspacePremium sx={{ ...commonProps.sx, color: '#FB923C' }} />;
     }
   };
 
@@ -92,40 +94,37 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
                   alt={customer.name}
                   className="w-24 h-24 rounded-full border-2 border-[#27272a] object-cover"
                 />
-                {/* VIP Badge - Positioned clearly separate but attached */}
-                {customer.vipTier && (
-                  <div 
-                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center border-4 border-[#18181b] z-10"
-                    style={{ background: getVipBadgeColor(customer.vipTier) }}
-                    title={t('customers.detail.member_tier', { tier: customer.vipTier })}
-                  >
-                    {getVipIcon(customer.vipTier)}
-                  </div>
-                )}
               </div>
             </div>
             
-            <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2 justify-center">
               {customer.name}
+              {customer.isActive ? (
+                <CheckCircle sx={{ fontSize: 20, color: '#22c55e' }} titleAccess={t('customers.list.status.active')} />
+              ) : (
+                <Cancel sx={{ fontSize: 20, color: '#ef4444' }} titleAccess={t('customers.list.status.inactive')} />
+              )}
               {isBirthday && <Cake sx={{ fontSize: 20, color: primaryColor }} className="animate-pulse" />}
             </h2>
             
             <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
-               <span 
-                className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-white/10"
-                style={{ color: getVipBadgeColor(customer.vipTier) }}
-              >
-                {customer.vipTier || 'Member'}
-              </span>
+               <div className="flex items-center gap-1" title={t('customers.detail.member_tier', { tier: customer.vipTier })}>
+                 {getVipIcon(customer.vipTier)}
+                 <span style={{ color: getVipBadgeColor(customer.vipTier) }} className="font-bold uppercase text-[12px]">
+                   {customer.vipTier || 'Member'}
+                 </span>
+               </div>
               <span className="w-1 h-1 rounded-full bg-gray-600"></span>
               <span>{t('customers.detail.member_since', { date: formatDate(customer.memberSince) })}</span>
             </div>
 
-            <div className="flex gap-4 items-center justify-center w-full">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#27272a] text-xs text-gray-300 border border-white/5">
-                <Email sx={{ fontSize: 14, color: primaryColor }} />
-                <span className="truncate max-w-[150px]">{customer.email}</span>
-              </div>
+            <div className="flex gap-4 items-center justify-center w-full flex-wrap">
+              {customer.email && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#27272a] text-xs text-gray-300 border border-white/5">
+                  <Email sx={{ fontSize: 14, color: primaryColor }} />
+                  <span className="truncate max-w-[150px]">{customer.email}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#27272a] text-xs text-gray-300 border border-white/5">
                 <Phone sx={{ fontSize: 14, color: primaryColor }} />
                 <span>{customer.phone}</span>
