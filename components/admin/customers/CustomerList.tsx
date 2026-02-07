@@ -1,7 +1,7 @@
 "use client";
 
 import customerService, { Customer } from "@/lib/services/customerService";
-import { Cake, Diamond, EmojiEvents, Star, WorkspacePremium } from "@mui/icons-material";
+import { Cake, Cancel, CheckCircle, Diamond, EmojiEvents, Star, WorkspacePremium } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CustomerDetail from "./CustomerDetail";
@@ -132,9 +132,11 @@ export default function CustomerList() {
         </div>
       </div>
 
-      {/* Customer Table */}
+      {/* Customer List Container */}
       <div className="rounded-lg overflow-hidden" style={{ background: "var(--bg-surface)" }}>
-        <div className="overflow-x-auto">
+        
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr style={{ background: "var(--bg-base)", borderBottom: "2px solid var(--border)" }}>
@@ -145,7 +147,7 @@ export default function CustomerList() {
                   {t('customers.list.headers.contact')}
                 </th>
                 <th className="text-center px-6 py-4 text-sm font-semibold" style={{ color: "var(--text)" }}>
-                  {t('customers.list.headers.vip_tier')}
+                  {t('customers.list.headers.rank')}
                 </th>
                 <th className="text-center px-6 py-4 text-sm font-semibold" style={{ color: "var(--text)" }}>
                   {t('customers.list.headers.orders')}
@@ -177,30 +179,18 @@ export default function CustomerList() {
                     }}
                   >
                     {/* Customer Info */}
+                    {/* Customer Info */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="relative">
+                        <div className="relative flex-shrink-0">
                           <img
                             src={customer.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=4F46E5&color=fff`}
                             alt={customer.name}
                             className="w-10 h-10 rounded-full object-cover"
                           />
-                          {customer.vipTier && (
-                            <div 
-                              className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs border-2"
-                              style={{ 
-                                background: customerService.getVipTierColor(customer.vipTier),
-                                borderColor: 'var(--bg-surface)'
-                              }}
-                            >
-                              {customer.vipTier === 'platinum' ? <Diamond sx={{ fontSize: 12 }} /> : 
-                               customer.vipTier === 'gold' ? <EmojiEvents sx={{ fontSize: 12 }} /> : 
-                               customer.vipTier === 'silver' ? <Star sx={{ fontSize: 12 }} /> : <WorkspacePremium sx={{ fontSize: 12 }} />}
-                            </div>
-                          )}
                         </div>
-                        <div>
-                          <p className="font-semibold" style={{ color: "var(--text)" }}>
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate" style={{ color: "var(--text)" }}>
                             {customer.name}
                           </p>
                         </div>
@@ -217,14 +207,14 @@ export default function CustomerList() {
                       </p>
                     </td>
 
-                    {/* VIP Tier */}
+                    {/* VIP Tier (Rank) - Icons */}
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ 
-                        background: customerService.getVipTierColor(customer.vipTier) + '20',
-                        color: customerService.getVipTierColor(customer.vipTier)
-                      }}>
-                        {customerService.getVipTierName(customer.vipTier)}
-                      </span>
+                      <div className="flex justify-center items-center" title={customerService.getVipTierName(customer.vipTier)}>
+                         {customer.vipTier === 'platinum' ? <Diamond sx={{ fontSize: 24, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
+                          customer.vipTier === 'gold' ? <EmojiEvents sx={{ fontSize: 24, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
+                          customer.vipTier === 'silver' ? <Star sx={{ fontSize: 24, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
+                          <WorkspacePremium sx={{ fontSize: 24, color: customerService.getVipTierColor(customer.vipTier) }} />}
+                      </div>
                     </td>
 
                     {/* Total Orders */}
@@ -255,9 +245,13 @@ export default function CustomerList() {
                           <Cake sx={{ fontSize: 14 }} /> {t('customers.list.status.birthday')}
                         </span>
                       ) : (
-                        <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
-                          {t('customers.list.status.active')}
-                        </span>
+                        <div className="flex justify-center" title={customer.isActive ? t('customers.list.status.active') : t('customers.list.status.inactive')}>
+                          {customer.isActive ? (
+                            <CheckCircle sx={{ fontSize: 20, color: "#22c55e" }} />
+                          ) : (
+                            <Cancel sx={{ fontSize: 20, color: "#ef4444" }} />
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -265,6 +259,84 @@ export default function CustomerList() {
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Customer List (Mobile Cards) */}
+        <div className="md:hidden space-y-4 p-4">
+          {sortedCustomers.map((customer) => {
+            const isBirthday = customerService.isBirthday(customer.birthday);
+            return (
+              <div 
+                key={customer.id}
+                onClick={() => setSelectedCustomer(customer)}
+                className="p-4 rounded-lg cursor-pointer hover:opacity-90 transition-all border"
+                style={{ 
+                  background: isBirthday ? "rgba(251, 191, 36, 0.1)" : "var(--bg-surface)",
+                  borderColor: isBirthday ? "#FBBF24" : "var(--border)",
+                }}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                     <div className="relative flex-shrink-0">
+                      <img
+                          src={customer.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=4F46E5&color=fff`}
+                          alt={customer.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-lg truncate" style={{ color: "var(--text)" }}>
+                          {customer.name}
+                        </p>
+                        <p className="text-sm truncate" style={{ color: "var(--text-secondary)" }}>
+                          {customer.email}
+                        </p>
+                      </div>
+                  </div>
+                   <div className="flex flex-col items-end flex-shrink-0 ml-2" title={customerService.getVipTierName(customer.vipTier)}>
+                      {customer.vipTier === 'platinum' ? <Diamond sx={{ fontSize: 32, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
+                       customer.vipTier === 'gold' ? <EmojiEvents sx={{ fontSize: 32, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
+                       customer.vipTier === 'silver' ? <Star sx={{ fontSize: 32, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
+                       <WorkspacePremium sx={{ fontSize: 32, color: customerService.getVipTierColor(customer.vipTier) }} />}
+                   </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-sm mt-3 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
+                    <div>
+                      <span className="block text-xs" style={{ color: "var(--text-secondary)" }}>{t('customers.list.headers.orders')}</span>
+                      <span className="font-semibold" style={{ color: "var(--text)" }}>{customer.totalOrders}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs" style={{ color: "var(--text-secondary)" }}>{t('customers.list.headers.total_spent')}</span>
+                      <span className="font-semibold" style={{ color: "var(--text)" }}>{customer.totalSpent.toLocaleString('vi-VN')}₫</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs" style={{ color: "var(--text-secondary)" }}>{t('customers.list.headers.points')}</span>
+                      <span className="font-semibold" style={{ color: "var(--text)" }}>{customer.loyaltyPoints}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs" style={{ color: "var(--text-secondary)" }}>{t('customers.list.headers.status')}</span>
+                      {isBirthday ? (
+                          <span className="inline-flex items-center gap-1 font-bold text-yellow-500">
+                            <Cake sx={{ fontSize: 14 }} /> Birthday
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                             {customer.isActive ? (
+                                <CheckCircle sx={{ fontSize: 18, color: "#22c55e" }} />
+                              ) : (
+                                <Cancel sx={{ fontSize: 18, color: "#ef4444" }} />
+                              )}
+                              <span style={{ color: customer.isActive ? "#22c55e" : "#ef4444", fontSize: "0.875rem" }}>
+                                {customer.isActive ? t('customers.list.status.active') : t('customers.list.status.inactive')}
+                              </span>
+                          </div>
+                        )}
+                    </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {sortedCustomers.length === 0 && (

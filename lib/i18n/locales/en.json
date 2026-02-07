@@ -1087,6 +1087,7 @@
   },
   "customers": {
     "title": "Customer Management",
+    "subtitle": "View and manage your restaurant's customer information",
     "birthday_alert": {
       "title": "Birthday Today!",
       "message": "There are {{count}} customers having birthday today. Send them best wishes!"
@@ -1105,6 +1106,7 @@
         "customer": "Customer",
         "contact": "Contact",
         "vip_tier": "VIP Tier",
+        "rank": "Rank",
         "orders": "Orders",
         "total_spent": "Total Spent",
         "points": "Points",
@@ -1112,7 +1114,8 @@
       },
       "status": {
         "birthday": "Birthday",
-        "active": "Active"
+        "active": "Active",
+        "inactive": "Inactive"
       },
       "empty": "No customers found"
     },
@@ -1144,6 +1147,10 @@
   },
   "menu_page": {
     "title": "Today's Menu",
+    "loading": "Loading menu...",
+    "retry": "Retry",
+    "error_load": "Failed to load menu. Please try again later.",
+    "items": "items",
     "restx_menu": "RESTX MENU",
     "search_placeholder": "Search items...",
     "viewing_category": "Viewing Category",
@@ -1196,6 +1203,7 @@
     "login_button": {
       "login_text": "LOGIN",
       "create_account": "CREATE ACCOUNT",
+      "register_text": "REGISTER",
       "loading": "Loading..."
     },
     "login_page": {
@@ -1208,6 +1216,7 @@
       "privacy_policy": "Privacy Policy",
       "or_login_with": "Or login with",
       "email_password": "Email & Password",
+      "welcome_back": "Welcome back",
       "validation": {
         "phone_length": "Phone number must be exactly 10 digits",
         "phone_digits": "Phone number must contain only digits",
@@ -1618,36 +1627,6 @@
         "update": "Save Changes",
         "cancel": "Cancel"
       }
-    }
-  },
-  "menu_page": {
-    "title": "Menu",
-    "logo_title": "RestX Menu",
-    "loading": "Loading menu...",
-    "retry": "Retry",
-    "error_load": "Failed to load menu. Please try again later.",
-    "items": "items",
-    "default_food_desc": "No description available",
-    "best_seller": "Best Seller",
-    "tags": {
-      "spicy": "Spicy",
-      "vegan": "Vegan",
-      "best": "Best Seller"
-    },
-    "cart": {
-      "title": "Your Cart",
-      "items_count": "{{count}} items",
-      "empty": "Your cart is empty",
-      "food_section": "Food",
-      "drink_section": "Drinks",
-      "total": "Total",
-      "confirm": "Confirm Order",
-      "added_success": "Added {{name}} to cart",
-      "removed_success": "Removed from cart"
-    },
-    "detail_modal": {
-      "price": "Price",
-      "add_to_cart": "Add to Cart"
     }
   }
 }

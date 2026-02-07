@@ -6,6 +6,7 @@ export interface TenantConfig {
     id: string;
     prefix: string;
     name: string;
+    aboutUs?: string;
 
     // Branding & Assets
     logoUrl?: string;
@@ -87,6 +88,8 @@ const mapCreateInputToApi = (input: TenantCreateInput) => {
 };
 
 export const tenantService = {
+
+
     /**
      * Get tenant config by domain/hostname
      * Backend endpoint: GET /api/tenants/{data}
