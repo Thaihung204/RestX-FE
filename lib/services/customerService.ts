@@ -14,6 +14,7 @@ export interface Customer {
   favoriteItems?: string[];
   loyaltyPoints?: number;
   vipTier?: 'bronze' | 'silver' | 'gold' | 'platinum';
+  isActive: boolean;
 }
 
 export interface CustomerResponseDto {
@@ -68,6 +69,16 @@ interface ApiResponse<T> {
   data: T;
 }
 
+interface PaginatedResponse<T> {
+  items: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 const membershipToVipTier = (level: string): Customer['vipTier'] => {
   switch (level.toUpperCase()) {
     case 'PLATINUM': return 'platinum';
@@ -90,6 +101,7 @@ const mapCustomerResponseToCustomer = (dto: CustomerResponseDto): Customer => ({
   lastVisit: dto.modifiedDate,
   loyaltyPoints: dto.loyaltyPoints,
   vipTier: membershipToVipTier(dto.membershipLevel),
+  isActive: dto.isActive,
 });
 
 const mapListItemToCustomer = (dto: CustomerListItemDto): Customer => ({
@@ -103,6 +115,7 @@ const mapListItemToCustomer = (dto: CustomerListItemDto): Customer => ({
   memberSince: dto.createdDate,
   loyaltyPoints: dto.loyaltyPoints,
   vipTier: membershipToVipTier(dto.membershipLevel),
+  isActive: dto.isActive,
 });
 
 const customerService = {
@@ -120,12 +133,12 @@ const customerService = {
       if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
     }
 
-    const response = await axiosInstance.get<ApiResponse<CustomerListItemDto[]>>(
+    const response = await axiosInstance.get<ApiResponse<PaginatedResponse<CustomerListItemDto>>>(
       `/customers${params.toString() ? `?${params.toString()}` : ''}`
     );
 
-    if (response.data.success) {
-      return response.data.data.map(mapListItemToCustomer);
+    if (response.data.success && response.data.data?.items) {
+      return response.data.data.items.map(mapListItemToCustomer);
     }
 
     throw new Error(response.data.message || 'Failed to fetch customers');
@@ -169,7 +182,7 @@ const customerService = {
   },
 
   async getCustomerByEmail(email: string): Promise<CustomerResponseDto | null> {
-    const response = await axiosInstance.get<ApiResponse<{ items: CustomerListItemDto[] }>>(
+    const response = await axiosInstance.get<ApiResponse<PaginatedResponse<CustomerListItemDto>>>(
       `/customers?search=${encodeURIComponent(email)}`
     );
 
