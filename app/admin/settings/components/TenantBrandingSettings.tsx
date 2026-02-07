@@ -126,8 +126,19 @@ export default function TenantBrandingSettings() {
                 backgroundUrl: newBannerUrl,
             };
 
-            await tenantService.upsertTenant(updatedTenant);
+            const result = await tenantService.upsertTenant(updatedTenant);
+            console.log('[TenantBrandingSettings] Upsert result:', result);
+
             message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Branding updated successfully!" }));
+
+            // Update local preview to show saved data
+            setFormData(prev => ({
+                ...prev,
+                logoUrl: newLogoUrl,
+                backgroundUrl: newBannerUrl,
+                logoFile: null,
+                bannerFile: null,
+            }));
 
         } catch (error) {
             console.error("Failed to update branding:", error);
