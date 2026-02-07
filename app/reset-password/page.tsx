@@ -6,6 +6,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 import { useSearchParams } from 'next/navigation';
+import { message } from "antd";
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation('auth');
@@ -168,7 +169,7 @@ export default function ResetPasswordPage() {
     }
 
     if (!email || !token) {
-      alert(t('reset_password_page.alerts.invalid_link'));
+      message.error(t('reset_password_page.alerts.invalid_link'));
       return;
     }
 
@@ -187,7 +188,7 @@ export default function ResetPasswordPage() {
       window.location.href = '/login-email';
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to reset password. Please try again.';
-      alert(errorMessage);
+      message.error(errorMessage);
       console.error('Reset password error:', error);
     } finally {
       setLoading(false);

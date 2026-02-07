@@ -6,6 +6,7 @@ import LoginHeader from "@/components/auth/LoginHeader";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { message } from "antd";
 
 export default function LoginPage() {
   const { t } = useTranslation('auth');
@@ -193,7 +194,7 @@ export default function LoginPage() {
         if (result.user || !result.requireLogin) {
           window.location.href = '/customer';
         } else {
-          alert(result.message || 'Registration successful. Please login.');
+          message.info(result.message || 'Registration successful. Please login.');
         }
 
       } else {
@@ -210,7 +211,16 @@ export default function LoginPage() {
           if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
           if (data.user) localStorage.setItem('userInfo', JSON.stringify(data.user));
 
-          window.location.href = '/customer';
+
+          // Role-based redirection
+          const userRole = data.user?.role;
+          if (userRole === 'Staff' || userRole === 'Manager' || userRole === 'Chef' || userRole === 'Waiter' || userRole === 'Cashier') {
+            window.location.href = '/staff';
+          } else if (userRole === 'Admin' || userRole === 'Owner') {
+            window.location.href = '/admin';
+          } else {
+            window.location.href = '/customer';
+          }
         } else {
           throw new Error(response.data?.message || 'Login failed');
         }
@@ -219,7 +229,7 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error('Auth error:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Đăng nhập thất bại';
-      alert(errorMessage);
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
