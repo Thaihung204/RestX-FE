@@ -5,14 +5,23 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { message } from "antd";
 
+// Helper to generate ID safely
+const generateId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
 interface Supplier {
-    id: number;
+    id: string;
     name: string;
-    contactPerson: string;
-    email: string;
     phone: string;
+    email: string;
     address: string;
-    status: 'active' | 'inactive';
+    isActive: boolean;
+    createdAt?: string; // Changed to string to match JSON persistence
+    updatedAt?: string; // Changed to string to match JSON persistence
 }
 
 export default function SupplierSettings() {
@@ -21,13 +30,12 @@ export default function SupplierSettings() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
     const [formData, setFormData] = useState<Supplier>({
-        id: 0,
+        id: "",
         name: "",
-        contactPerson: "",
-        email: "",
         phone: "",
+        email: "",
         address: "",
-        status: 'active'
+        isActive: true
     });
 
     // Load suppliers from localStorage on mount
@@ -55,22 +63,24 @@ export default function SupplierSettings() {
     const loadDefaultSuppliers = () => {
         setSuppliers([
             {
-                id: 1,
+                id: generateId(),
                 name: "Fresh Veggies Co.",
-                contactPerson: "John Smith",
-                email: "john@freshveggies.com",
+                email: "contact@freshveggies.com",
                 phone: "0123456789",
                 address: "123 Market Street, District 1",
-                status: 'active',
+                isActive: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
             },
             {
-                id: 2,
+                id: generateId(),
                 name: "Ocean Seafood Ltd.",
-                contactPerson: "Sarah Johnson",
-                email: "sarah@oceanseafood.com",
+                email: "contact@oceanseafood.com",
                 phone: "0987654321",
                 address: "456 Harbor Road, District 2",
-                status: 'active',
+                isActive: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
             },
         ]);
     };
@@ -82,13 +92,12 @@ export default function SupplierSettings() {
         } else {
             setEditingSupplier(null);
             setFormData({
-                id: 0,
+                id: "",
                 name: "",
-                contactPerson: "",
-                email: "",
                 phone: "",
+                email: "",
                 address: "",
-                status: 'active'
+                isActive: true
             });
         }
         setIsModalOpen(true);
@@ -105,38 +114,45 @@ export default function SupplierSettings() {
             message.error('Please enter supplier name');
             return;
         }
-        if (!formData.contactPerson.trim()) {
-            message.error('Please enter contact person');
-            return;
-        }
         if (!formData.phone.trim()) {
             message.error('Please enter phone number');
             return;
         }
 
+        const now = new Date().toISOString();
+
         if (editingSupplier) {
             // Edit
-            setSuppliers(suppliers.map(s => s.id === editingSupplier.id ? { ...formData, id: s.id } : s));
+            setSuppliers(suppliers.map(s =>
+                s.id === editingSupplier.id
+                    ? { ...formData, id: s.id, updatedAt: now }
+                    : s
+            ));
             message.success('Supplier updated successfully');
         } else {
             // Add
-            const newId = Math.max(...suppliers.map(s => s.id), 0) + 1;
-            setSuppliers([...suppliers, { ...formData, id: newId }]);
+            const newSupplier: Supplier = {
+                ...formData,
+                id: generateId(),
+                createdAt: now,
+                updatedAt: now
+            };
+            setSuppliers([...suppliers, newSupplier]);
             message.success('Supplier added successfully');
         }
         handleCloseModal();
     };
 
-    const handleDelete = (id: number) => {
+    const handleDelete = (id: string) => {
         if (window.confirm("Are you sure you want to delete this supplier?")) {
             setSuppliers(suppliers.filter(s => s.id !== id));
             message.success('Supplier deleted');
         }
     };
 
-    const toggleStatus = (id: number) => {
+    const toggleStatus = (id: string) => {
         setSuppliers(suppliers.map(s =>
-            s.id === id ? { ...s, status: s.status === 'active' ? 'inactive' : 'active' } : s
+            s.id === id ? { ...s, isActive: !s.isActive, updatedAt: new Date().toISOString() } : s
         ));
     };
 
@@ -175,7 +191,6 @@ export default function SupplierSettings() {
                         <thead style={{ background: 'var(--bg-base)' }}>
                             <tr>
                                 <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>Supplier</th>
-                                <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>Contact</th>
                                 <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>Email</th>
                                 <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>Phone</th>
                                 <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>Status</th>
@@ -199,13 +214,8 @@ export default function SupplierSettings() {
                                         </div>
                                     </td>
                                     <td className="p-4">
-                                        <span className="text-sm" style={{ color: 'var(--text)' }}>
-                                            {supplier.contactPerson}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
                                         <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                                            {supplier.email}
+                                            {supplier.email || '-'}
                                         </span>
                                     </td>
                                     <td className="p-4">
@@ -216,12 +226,12 @@ export default function SupplierSettings() {
                                     <td className="p-4">
                                         <button
                                             onClick={() => toggleStatus(supplier.id)}
-                                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${supplier.status === 'active'
-                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${supplier.isActive
+                                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
                                                 }`}
                                         >
-                                            {supplier.status === 'active' ? 'Active' : 'Inactive'}
+                                            {supplier.isActive ? 'Active' : 'Inactive'}
                                         </button>
                                     </td>
                                     <td className="p-4 text-right">
@@ -250,7 +260,7 @@ export default function SupplierSettings() {
                             ))}
                             {suppliers.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                                    <td colSpan={5} className="p-8 text-center text-gray-500">
                                         No suppliers found. Click &quot;Add Supplier&quot; to create one.
                                     </td>
                                 </tr>
@@ -281,63 +291,25 @@ export default function SupplierSettings() {
                         </div>
 
                         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                        Supplier Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
-                                        style={{
-                                            background: 'var(--bg-base)',
-                                            borderColor: 'var(--border)',
-                                            color: 'var(--text)'
-                                        }}
-                                        placeholder="e.g. Fresh Veggies Co."
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                        Contact Person *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.contactPerson}
-                                        onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
-                                        style={{
-                                            background: 'var(--bg-base)',
-                                            borderColor: 'var(--border)',
-                                            color: 'var(--text)'
-                                        }}
-                                        placeholder="e.g. John Smith"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
+                                    Supplier Name *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
+                                    style={{
+                                        background: 'var(--bg-base)',
+                                        borderColor: 'var(--border)',
+                                        color: 'var(--text)'
+                                    }}
+                                    placeholder="e.g. Fresh Veggies Co."
+                                />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                        Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
-                                        style={{
-                                            background: 'var(--bg-base)',
-                                            borderColor: 'var(--border)',
-                                            color: 'var(--text)'
-                                        }}
-                                        placeholder="contact@supplier.com"
-                                    />
-                                </div>
-
                                 <div>
                                     <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
                                         Phone *
@@ -353,6 +325,24 @@ export default function SupplierSettings() {
                                             color: 'var(--text)'
                                         }}
                                         placeholder="0123456789"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
+                                        style={{
+                                            background: 'var(--bg-base)',
+                                            borderColor: 'var(--border)',
+                                            color: 'var(--text)'
+                                        }}
+                                        placeholder="contact@supplier.com"
                                     />
                                 </div>
                             </div>
@@ -376,22 +366,17 @@ export default function SupplierSettings() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                    Status
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.isActive}
+                                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                                        className="w-4 h-4 rounded border-gray-300 text-[#FF380B] focus:ring-[#FF380B]"
+                                    />
+                                    <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
+                                        Active
+                                    </span>
                                 </label>
-                                <select
-                                    value={formData.status}
-                                    onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
-                                    className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
-                                    style={{
-                                        background: 'var(--bg-base)',
-                                        borderColor: 'var(--border)',
-                                        color: 'var(--text)'
-                                    }}
-                                >
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
                             </div>
                         </div>
 
