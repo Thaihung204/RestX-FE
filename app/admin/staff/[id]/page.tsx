@@ -1,7 +1,7 @@
 "use client";
 
-import { useToast } from "@/lib/contexts/ToastContext";
 import employeeService from "@/lib/services/employeeService";
+import { message } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,6 @@ export default function StaffFormPage() {
   const params = useParams();
   const id = params.id as string;
   const isNewStaff = id === "new";
-  const { showToast } = useToast();
   const { t } = useTranslation(["common"]);
 
   const [formData, setFormData] = useState({
@@ -23,7 +22,7 @@ export default function StaffFormPage() {
     address: "",
     position: "",
     hireDate: new Date().toISOString().split("T")[0],
-    role: "Staff",
+    role: "Kitchen Staff",
     isActive: true,
   });
 
@@ -50,7 +49,7 @@ export default function StaffFormPage() {
         hireDate: employee.hireDate
           ? new Date(employee.hireDate).toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0],
-        role: employee.roles?.[0] || "Staff",
+        role: employee.roles?.[0] || "Kitchen Staff",
         isActive: employee.isActive !== undefined ? employee.isActive : true,
       });
     } catch (err: any) {
@@ -68,31 +67,19 @@ export default function StaffFormPage() {
 
       // Validation
       if (!formData.fullName.trim()) {
-        showToast(
-          "error",
-          t("dashboard.toasts.staff.validation_error_title"),
-          t("dashboard.toasts.staff.validation_full_name_required"),
-        );
+        message.error(t("dashboard.toasts.staff.validation_full_name_required"));
         setLoading(false);
         return;
       }
 
       if (!formData.email.trim()) {
-        showToast(
-          "error",
-          t("dashboard.toasts.staff.validation_error_title"),
-          t("dashboard.toasts.staff.validation_email_required"),
-        );
+        message.error(t("dashboard.toasts.staff.validation_email_required"));
         setLoading(false);
         return;
       }
 
       if (!formData.position.trim()) {
-        showToast(
-          "error",
-          t("dashboard.toasts.staff.validation_error_title"),
-          t("dashboard.toasts.staff.validation_position_required"),
-        );
+        message.error(t("dashboard.toasts.staff.validation_position_required"));
         setLoading(false);
         return;
       }
@@ -110,11 +97,7 @@ export default function StaffFormPage() {
         };
 
         await employeeService.createEmployee(submitData);
-        showToast(
-          "success",
-          t("dashboard.toasts.staff.created_title"),
-          t("dashboard.toasts.staff.created_message"),
-        );
+        message.success(t("dashboard.toasts.staff.created_message"));
         setTimeout(() => router.push("/admin/staff"), 1500);
         return;
       } else {
@@ -129,11 +112,7 @@ export default function StaffFormPage() {
         };
 
         await employeeService.updateEmployee(id, submitData);
-        showToast(
-          "success",
-          t("dashboard.toasts.staff.updated_title"),
-          t("dashboard.toasts.staff.updated_message"),
-        );
+        message.success(t("dashboard.toasts.staff.updated_message"));
         setTimeout(() => router.push("/admin/staff"), 1500);
         return;
       }
@@ -169,11 +148,7 @@ export default function StaffFormPage() {
       }
 
       console.error("Error saving staff:", errorMsg);
-      showToast(
-        "error",
-        t("dashboard.toasts.staff.save_failed_title"),
-        errorMsg,
-      );
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
