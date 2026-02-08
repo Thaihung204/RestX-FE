@@ -1,19 +1,18 @@
 "use client";
 
+import MultiImageUpload from "@/components/MultiImageUpload";
+import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-interface Category {
-  id: string;
-  name: string;
+interface ImageItem {
+  uid: string;
+  url?: string;
+  file?: File;
+  preview?: string;
+  isMain: boolean;
 }
-
-// Hardcoded categories (temporary solution)
-const STATIC_CATEGORIES: Category[] = [
-  { id: "600DCEDC-D5E1-43CE-B8C9-08A64937A66C", name: "Món chính" },
-  { id: "C7F1CA77-9B44-4418-B69A-8825BAD9FD6A", name: "Đồ uống" },
-];
 
 export default function MenuItemFormPage() {
   const router = useRouter();
@@ -35,18 +34,38 @@ export default function MenuItemFormPage() {
     autoDisableByStock: false,
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<Category[]>(STATIC_CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (!isNewItem) {
       fetchMenuItem();
     }
   }, [id, isNewItem]);
+
+  const formatPrice = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    return numbers.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const data = await categoryService.getCategories();
+      setCategories(data.filter(cat => cat.isActive));
+    } catch (err) {
+      console.error('Failed to load categories:', err);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   const fetchMenuItem = async () => {
     try {
@@ -56,12 +75,10 @@ export default function MenuItemFormPage() {
       // Handle both categoryId (GUID) and categoryName cases
       let categoryId = "";
       if (item.categoryId) {
-        // Backend returns categoryId directly
         categoryId = item.categoryId;
       } else if (item.categoryName) {
-        // Backend returns categoryName, find matching ID
-        const category = STATIC_CATEGORIES.find(
-          (cat) => cat.name === item.categoryName,
+        const category = categories.find(
+          (cat: Category) => cat.name === item.categoryName,
         );
         categoryId = category?.id || "";
       }
@@ -69,7 +86,7 @@ export default function MenuItemFormPage() {
       setFormData({
         name: item.name || "",
         categoryId: categoryId,
-        price: item.price?.toString() || "",
+        price: item.price ? formatPrice(item.price.toString()) : "",
         description: item.description || "",
         unit: item.unit || "portion",
         quantity: item.quantity?.toString() || "0",
@@ -85,8 +102,20 @@ export default function MenuItemFormPage() {
             : false,
       });
 
-      if (item.image || item.mainImageUrl) {
-        setImagePreview(item.image || item.mainImageUrl || null);
+      if (item.images && item.images.length > 0) {
+        const loadedImages: ImageItem[] = item.images.map((img) => ({
+          uid: img.id,
+          url: img.imageUrl,
+          isMain: img.imageType === 0,
+        }));
+        setImages(loadedImages);
+      } else if (item.image || item.mainImageUrl) {
+        const imageUrl = item.image || item.mainImageUrl || '';
+        setImages([{
+          uid: 'legacy-image',
+          url: imageUrl,
+          isMain: true,
+        }]);
       }
     } catch (err: any) {
       setError("Failed to load menu item");
@@ -114,17 +143,42 @@ export default function MenuItemFormPage() {
         setLoading(false);
         return;
       }
-      if (!formData.price || parseInt(formData.price.replace(/\D/g, "")) <= 0) {
+      
+      // Parse price to number (supports decimals)
+      const priceValue = parseFloat(formData.price.replace(/\./g, '').replace(/,/g, '.'));
+      if (!formData.price || priceValue <= 0 || isNaN(priceValue)) {
         setError("Price must be greater than 0");
         setLoading(false);
         return;
       }
 
-      // Prepare JSON payload (backend expects JSON, not FormData)
-      const submitData = {
+      // Prepare image data for submission
+      const imagesToSubmit: any[] = [];
+      
+      images.forEach((img, index) => {
+        if (img.file) {
+          // New uploaded image
+          imagesToSubmit.push({
+            file: img.file,
+            imageType: img.isMain ? 0 : 1,
+            displayOrder: index + 1,
+            isActive: true
+          });
+        } else if (img.uid !== 'legacy-image') {
+          // Existing image from database
+          imagesToSubmit.push({
+            id: img.uid,
+            imageType: img.isMain ? 0 : 1,
+            displayOrder: index + 1,
+            isActive: true
+          });
+        }
+      });
+
+      const submitData: any = {
         name: formData.name.trim(),
         categoryId: formData.categoryId,
-        price: parseInt(formData.price.replace(/\D/g, "")) || 0,
+        price: priceValue,
         description: formData.description.trim(),
         unit: formData.unit,
         quantity: formData.quantity ? parseInt(formData.quantity) : 0,
@@ -133,20 +187,20 @@ export default function MenuItemFormPage() {
         isSpicy: formData.isSpicy,
         isBestSeller: formData.isBestSeller,
         autoDisableByStock: formData.autoDisableByStock,
+        images: imagesToSubmit
       };
 
       if (isNewItem) {
-        // Create new item
         const result = await dishService.createDish(submitData);
         alert("Menu item created successfully!");
       } else {
-        // Update existing item
         const result = await dishService.updateDish(id, submitData);
         alert("Menu item updated successfully!");
       }
 
       router.push("/admin/menu");
     } catch (err: any) {
+      
       let errorMsg = "Failed to save menu item";
 
       if (err.response) {
@@ -155,10 +209,19 @@ export default function MenuItemFormPage() {
         const data = err.response.data;
 
         if (status === 400) {
-          errorMsg =
-            data?.message ||
-            data?.title ||
-            "Invalid data. Please check your input.";
+          // Try to extract validation errors
+          if (data?.errors) {
+            const validationErrors = Object.entries(data.errors)
+              .map(([field, messages]: [string, any]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+              .join('\n');
+            errorMsg = `Validation errors:\n${validationErrors}`;
+          } else {
+            errorMsg =
+              data?.message ||
+              data?.title ||
+              data?.error ||
+              "Invalid data. Please check your input.";
+          }
         } else if (status === 401) {
           errorMsg = "Unauthorized. Please login again.";
           setTimeout(() => router.push("/login"), 2000);
@@ -167,7 +230,7 @@ export default function MenuItemFormPage() {
         } else if (status === 404) {
           errorMsg = "Menu item not found.";
         } else if (status === 500) {
-          errorMsg = "Server error. Please try again later.";
+          errorMsg = `Server error: ${data?.message || data?.title || 'Please try again later.'}`;
         } else {
           errorMsg =
             data?.message || data?.title || data?.error || `Error ${status}`;
@@ -198,41 +261,6 @@ export default function MenuItemFormPage() {
       [name]:
         type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File size must be less than 5MB");
-        return;
-      }
-
-      const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
-      if (!validTypes.includes(file.type)) {
-        alert("Only PNG, JPG, JPEG, and WEBP files are allowed");
-        return;
-      }
-
-      setImageFile(file);
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-  };
-
-  const formatPrice = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    return numbers.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -304,7 +332,7 @@ export default function MenuItemFormPage() {
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 space-y-4">
+              <div className="lg:col-span-3 space-y-4">
                 <div
                   className="rounded-xl p-4"
                   style={{
@@ -702,11 +730,9 @@ export default function MenuItemFormPage() {
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="lg:col-span-1">
                 <div
-                  className="rounded-xl p-4 sticky top-4"
+                  className="rounded-xl p-4"
                   style={{
                     background: "var(--card)",
                     border: "1px solid var(--border)",
@@ -714,104 +740,14 @@ export default function MenuItemFormPage() {
                   <h3
                     className="text-lg font-bold mb-3"
                     style={{ color: "var(--text)" }}>
-                    Item Image
+                    Item Images
                   </h3>
-                  {imagePreview ? (
-                    <div className="relative" style={{ aspectRatio: "4/3" }}>
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all shadow-lg">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  ) : (
-                    <label
-                      htmlFor="image-upload"
-                      className="border-2 border-dashed rounded-lg text-center transition-all cursor-pointer block"
-                      style={{
-                        borderColor: "var(--border)",
-                        aspectRatio: "4/3",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.borderColor = "#FF380B80")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.borderColor = "var(--border)")
-                      }>
-                      <div className="flex flex-col items-center gap-2 p-4">
-                        <div
-                          className="w-12 h-12 rounded-full flex items-center justify-center"
-                          style={{ background: "var(--surface)" }}>
-                          <svg
-                            className="w-6 h-6"
-                            style={{ color: "var(--text-muted)" }}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <p
-                            className="text-xs font-medium"
-                            style={{ color: "var(--text)" }}>
-                            Click to upload
-                          </p>
-                          <p
-                            className="text-xs mt-1"
-                            style={{ color: "var(--text-muted)" }}>
-                            PNG, JPG, WEBP (5MB)
-                          </p>
-                        </div>
-                        <span
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                          style={{
-                            background: "#FF380B1A",
-                            color: "#FF380B",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = "#FF380B33")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = "#FF380B1A")
-                          }>
-                          Choose File
-                        </span>
-                      </div>
-                      <input
-                        id="image-upload"
-                        type="file"
-                        accept="image/png,image/jpeg,image/jpg,image/webp"
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
+                  
+                  <MultiImageUpload
+                    value={images}
+                    onChange={setImages}
+                    maxCount={5}
+                  />
                 </div>
               </div>
             </div>
