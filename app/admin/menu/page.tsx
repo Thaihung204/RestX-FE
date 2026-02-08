@@ -99,7 +99,7 @@ export default function MenuPage() {
       title: t("dashboard.menu.modal.delete_title"),
       content: (
         <>
-          {t("dashboard.menu.modal.delete_confirm")} <strong>"{name}"</strong>?
+          {t("dashboard.menu.modal.delete_confirm")} <strong>&quot;{name}&quot;</strong>?
           <br />
           {t("dashboard.menu.modal.cannot_undo")}
         </>
