@@ -381,7 +381,8 @@
       "tabs": {
         "categories": "Categories",
         "ingredient_categories": "Ingredient Categories",
-        "suppliers": "Suppliers"
+        "suppliers": "Suppliers",
+        "loyalty": "Loyalty Bands"
       },
       "ingredient_categories": {
         "title": "Ingredient Categories",
@@ -466,6 +467,35 @@
             "address": "456 Harbor Road, District 2"
           }
         }
+      },
+      "loyalty": {
+        "title": "Loyalty Point Bands",
+        "desc": "Manage loyalty tiers and benefits",
+        "add_new": "Add New Band",
+        "edit": "Edit Loyalty Band",
+        "create": "Create Loyalty Band",
+        "name": "Band Name",
+        "range": "Points Range",
+        "discount": "Discount",
+        "benefits": "Benefits",
+        "status": "Status",
+        "form": {
+          "name": "Band Name",
+          "logo": "Logo",
+          "range": "Points Range",
+          "max_tooltip": "Leave empty for infinite range",
+          "discount": "Discount Percentage (%)",
+          "benefits": "Benefits Description"
+        }
+      },
+      "notifications": {
+        "delete_success": "Deleted successfully",
+        "update_success": "Updated successfully",
+        "create_success": "Created successfully"
+      },
+      "errors": {
+        "fetch_failed": "Failed to fetch loyalty point bands",
+        "delete_failed": "Failed to delete"
       }
     },
     "header": {
@@ -909,6 +939,9 @@
       "days_ago": "{{count}} days ago"
     },
     "status": {
+      "label": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
       "pending": "Pending",
       "preparing": "Preparing",
       "ready": "Ready",
@@ -916,6 +949,9 @@
       "cancelled": "Cancelled"
     },
     "actions": {
+      "title": "Actions",
+      "yes": "Yes",
+      "no": "No",
       "create_order": "Create New Order"
     },
     "language": "Language",

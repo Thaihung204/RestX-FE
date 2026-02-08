@@ -5,10 +5,11 @@ import { useTranslation } from "react-i18next";
 import CategorySettings from "../settings/components/CategorySettings";
 import SupplierSettings from "../settings/components/SupplierSettings";
 import IngredientCategorySettings from "../settings/components/IngredientCategorySettings";
+import LoyaltyPointBandSettings from "../settings/components/LoyaltyPointBandSettings";
 
 export default function ManagePage() {
     const { t } = useTranslation("common");
-    const [activeTab, setActiveTab] = useState<"categories" | "suppliers" | "ingredientCategories">("categories");
+    const [activeTab, setActiveTab] = useState<"categories" | "suppliers" | "ingredientCategories" | "loyalty">("categories");
 
     return (
         <main className="p-6 lg:p-8">
@@ -46,6 +47,11 @@ export default function ManagePage() {
                             id: "suppliers" as const,
                             label: t("dashboard.manage.tabs.suppliers", { defaultValue: "Suppliers" }),
                             icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+                        },
+                        {
+                            id: "loyalty" as const,
+                            label: t("dashboard.manage.tabs.loyalty", { defaultValue: "Loyalty Bands" }),
+                            icon: "M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7",
                         },
                     ].map((tab) => (
                         <button
@@ -90,6 +96,11 @@ export default function ManagePage() {
                 {/* Suppliers Tab */}
                 {activeTab === "suppliers" && (
                     <SupplierSettings />
+                )}
+
+                {/* Loyalty Bands Tab */}
+                {activeTab === "loyalty" && (
+                    <LoyaltyPointBandSettings />
                 )}
             </div>
         </main>
