@@ -150,11 +150,60 @@ export const tenantService = {
     },
 
     /**
-     * Create or update tenant
+     * Create or update tenant (JSON body - no file upload)
      * Backend endpoint: POST /api/tenants
      */
     upsertTenant: async (tenant: TenantConfig) => {
         return await adminAxiosInstance.post('/tenants', tenant);
+    },
+
+    /**
+     * Create or update tenant with file uploads
+     * Backend endpoint: POST /api/tenants (FormData)
+     * Use this when uploading logo/background files
+     */
+    upsertTenantWithFiles: async (
+        tenant: TenantConfig,
+        logoFile?: File | null,
+        backgroundFile?: File | null,
+        faviconFile?: File | null
+    ) => {
+        const formData = new FormData();
+
+        // Append all tenant fields
+        Object.entries(tenant).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                // Skip file URL fields if we're uploading new files
+                if (key === 'logoUrl' && logoFile) return;
+                if (key === 'backgroundUrl' && backgroundFile) return;
+                if (key === 'faviconUrl' && faviconFile) return;
+
+                if (typeof value === 'object' && !(value instanceof Date)) {
+                    formData.append(key, JSON.stringify(value));
+                } else if (value instanceof Date) {
+                    formData.append(key, value.toISOString());
+                } else {
+                    formData.append(key, String(value));
+                }
+            }
+        });
+
+        // Append files if provided
+        if (logoFile) {
+            formData.append('logoFile', logoFile);
+        }
+        if (backgroundFile) {
+            formData.append('backgroundFile', backgroundFile);
+        }
+        if (faviconFile) {
+            formData.append('faviconFile', faviconFile);
+        }
+
+        return await adminAxiosInstance.post('/tenants', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     },
 
     /**

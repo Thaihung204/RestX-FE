@@ -8,7 +8,7 @@ import { message } from "antd";
 
 export default function TenantBrandingSettings() {
     const { t } = useTranslation("common");
-    const { tenant, loading: tenantLoading } = useTenant();
+    const { tenant, loading: tenantLoading, refreshTenant } = useTenant();
     const [loading, setLoading] = useState(false);
 
     const logoInputRef = useRef<HTMLInputElement>(null);
@@ -100,45 +100,39 @@ export default function TenantBrandingSettings() {
 
         setLoading(true);
         try {
-            // TODO: In production, upload files to a storage service (S3, Azure Blob, etc.)
-            // and get back URLs. For now, we'll use base64 or existing URLs.
+            // Check if we have files to upload
+            const hasFilesToUpload = formData.logoFile || formData.bannerFile;
 
-            let newLogoUrl = formData.logoUrl;
-            let newBannerUrl = formData.backgroundUrl;
+            if (hasFilesToUpload) {
+                // Use FormData upload - BE will upload to Cloudinary and return URLs
+                console.log('[TenantBrandingSettings] Uploading files via FormData...');
 
-            // If new files were uploaded, use the preview (base64) or upload to storage
-            if (formData.logoFile) {
-                // In a real app, you would upload to storage here:
-                // newLogoUrl = await uploadToStorage(formData.logoFile);
-                newLogoUrl = logoPreview; // Using base64 for demo
+                const result = await tenantService.upsertTenantWithFiles(
+                    tenant,
+                    formData.logoFile,
+                    formData.bannerFile,
+                    null // faviconFile
+                );
+                console.log('[TenantBrandingSettings] Upload result:', result);
+            } else {
+                // No new files, just update tenant data
+                console.log('[TenantBrandingSettings] No files to upload, updating tenant data...');
+                await tenantService.upsertTenant(tenant);
             }
-
-            if (formData.bannerFile) {
-                // In a real app, you would upload to storage here:
-                // newBannerUrl = await uploadToStorage(formData.bannerFile);
-                newBannerUrl = bannerPreview; // Using base64 for demo
-            }
-
-            // Prepare updated tenant object
-            const updatedTenant: TenantConfig = {
-                ...tenant,
-                logoUrl: newLogoUrl,
-                backgroundUrl: newBannerUrl,
-            };
-
-            const result = await tenantService.upsertTenant(updatedTenant);
-            console.log('[TenantBrandingSettings] Upsert result:', result);
 
             message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Branding updated successfully!" }));
 
-            // Update local preview to show saved data
+            // Clear file selections after successful save
             setFormData(prev => ({
                 ...prev,
-                logoUrl: newLogoUrl,
-                backgroundUrl: newBannerUrl,
                 logoFile: null,
                 bannerFile: null,
             }));
+
+            // Refresh tenant context to get updated URLs from server
+            if (refreshTenant) {
+                await refreshTenant();
+            }
 
         } catch (error) {
             console.error("Failed to update branding:", error);
