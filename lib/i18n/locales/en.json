@@ -379,7 +379,93 @@
       "title": "Manage",
       "subtitle": "Manage your restaurant categories and configurations",
       "tabs": {
-        "categories": "Categories"
+        "categories": "Categories",
+        "ingredient_categories": "Ingredient Categories",
+        "suppliers": "Suppliers"
+      },
+      "ingredient_categories": {
+        "title": "Ingredient Categories",
+        "subtitle": "Organize your ingredients by category for better inventory management",
+        "add": "Add Category",
+        "edit": "Edit Category",
+        "name": "Name",
+        "description": "Description",
+        "unit": "Default Unit",
+        "actions": "Actions",
+        "empty": "No ingredient categories found. Click \"Add Category\" to create one.",
+        "confirm_delete": "Are you sure you want to delete this category?",
+        "name_placeholder": "e.g. Vegetables, Meat, Dairy...",
+        "description_placeholder": "Brief description of this ingredient category",
+        "defaults": {
+          "vegetables": {
+            "name": "Vegetables",
+            "description": "Fresh vegetables and greens"
+          },
+          "meat": {
+            "name": "Meat",
+            "description": "Beef, pork, chicken, etc."
+          },
+          "seafood": {
+            "name": "Seafood",
+            "description": "Fish, shrimp, crab, etc."
+          },
+          "dairy": {
+            "name": "Dairy products",
+            "description": "Milk, cheese, butter, etc."
+          },
+          "spices": {
+            "name": "Spices",
+            "description": "Salt, pepper, herbs, etc."
+          },
+          "sauces": {
+            "name": "Sauces",
+            "description": "Soy sauce, fish sauce, etc."
+          }
+        },
+        "units": {
+          "kg": "kg",
+          "gram": "gram",
+          "liter": "liter",
+          "ml": "ml",
+          "piece": "piece",
+          "bottle": "bottle",
+          "can": "can",
+          "pack": "pack",
+          "box": "box"
+        }
+      },
+      "suppliers": {
+        "title": "Supplier Management",
+        "subtitle": "Manage your restaurant suppliers and vendors",
+        "add": "Add Supplier",
+        "edit": "Edit Supplier",
+        "name": "Supplier Name",
+        "phone": "Phone",
+        "email": "Email",
+        "address": "Address",
+        "status": "Status",
+        "actions": "Actions",
+        "active": "Active",
+        "inactive": "Inactive",
+        "empty": "No suppliers found. Click \"Add Supplier\" to create one.",
+        "confirm_delete": "Are you sure you want to delete this supplier?",
+        "created": "Supplier created successfully",
+        "updated": "Supplier updated successfully",
+        "deleted": "Supplier deleted",
+        "name_placeholder": "e.g. Fresh Veggies Co.",
+        "phone_placeholder": "0123456789",
+        "email_placeholder": "contact@supplier.com",
+        "address_placeholder": "Full address of the supplier",
+        "defaults": {
+          "supplier1": {
+            "name": "Fresh Veggies Co.",
+            "address": "123 Market Street, District 1"
+          },
+          "supplier2": {
+            "name": "Ocean Seafood Ltd.",
+            "address": "456 Harbor Road, District 2"
+          }
+        }
       }
     },
     "header": {
@@ -656,7 +742,13 @@
         "description": "Description",
         "image": "Image",
         "actions": "Actions",
-        "confirm_delete": "Are you sure you want to delete this category?"
+        "confirm_delete": "Are you sure you want to delete this category?",
+        "change_image": "Change Image",
+        "upload_image": "Upload Image",
+        "file_size_error": "File size must be less than 5MB",
+        "name_placeholder": "e.g. Appetizers",
+        "description_placeholder": "Brief description of the category",
+        "no_categories": "No categories found. Click \"Add Category\" to create one."
       },
       "general": {
         "restaurant_info": "Restaurant Information",
@@ -1079,6 +1171,18 @@
       "main": "Main Courses",
       "dessert": "Desserts",
       "drinks": "Drinks"
+    },
+    "descriptions": {
+      "appetizer": "Salads, soups, and starters",
+      "main": "Steak, seafood, and pasta",
+      "dessert": "Cakes, ice cream, and fruits",
+      "drinks": "Cocktails, wine, and soft drinks"
+    },
+    "messages": {
+      "name_required": "Please enter name",
+      "phone_required": "Please enter phone number",
+      "supplier_added": "Supplier added successfully",
+      "supplier_updated": "Supplier updated successfully"
     },
     "menu_section": {
       "title": "Our Menu",

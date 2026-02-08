@@ -12,7 +12,7 @@ export default function ManagePage() {
 
     return (
         <main className="p-6 lg:p-8">
-            <div className="space-y-6 max-w-5xl">
+            <div className="space-y-8 max-w-7xl mx-auto">
                 {/* Header */}
                 <div>
                     <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
@@ -23,8 +23,14 @@ export default function ManagePage() {
                     </p>
                 </div>
 
-                {/* Tabs */}
-                <div className="flex gap-2 flex-wrap" style={{ borderBottom: '1px solid var(--border)' }}>
+                {/* Modern Pill Tabs */}
+                <div
+                    className="flex p-1 rounded-xl backdrop-blur w-fit"
+                    style={{
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)'
+                    }}
+                >
                     {[
                         {
                             id: "categories" as const,
@@ -45,21 +51,24 @@ export default function ManagePage() {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className="px-4 py-3 font-medium transition-all flex items-center gap-2"
+                            className="relative px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center gap-2 hover:opacity-80"
                             style={{
+                                background: activeTab === tab.id ? 'var(--bg-base)' : 'transparent',
                                 color: activeTab === tab.id ? '#FF380B' : 'var(--text-muted)',
-                                borderBottom: activeTab === tab.id ? '2px solid #FF380B' : 'none',
+                                boxShadow: activeTab === tab.id ? '0 1px 2px 0 rgba(0, 0, 0, 0.05)' : 'none',
+                                border: activeTab === tab.id ? '1px solid var(--border)' : '1px solid transparent'
                             }}
-                            suppressHydrationWarning>
+                            suppressHydrationWarning
+                        >
                             <svg
-                                className="w-5 h-5"
+                                className={`w-4 h-4 ${activeTab === tab.id ? 'stroke-2' : 'stroke-[1.5]'}`}
                                 fill="none"
                                 stroke="currentColor"
-                                viewBox="0 0 24 24">
+                                viewBox="0 0 24 24"
+                            >
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    strokeWidth={2}
                                     d={tab.icon}
                                 />
                             </svg>

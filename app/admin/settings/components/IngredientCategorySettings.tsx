@@ -11,14 +11,7 @@ interface IngredientCategory {
     unit: string;
 }
 
-const DEFAULT_CATEGORIES: IngredientCategory[] = [
-    { id: "1", name: "Vegetables", description: "Fresh vegetables and greens", unit: "kg" },
-    { id: "2", name: "Meat", description: "Beef, pork, chicken, etc.", unit: "kg" },
-    { id: "3", name: "Seafood", description: "Fish, shrimp, crab, etc.", unit: "kg" },
-    { id: "4", name: "Dairy", description: "Milk, cheese, butter, etc.", unit: "liter" },
-    { id: "5", name: "Spices", description: "Salt, pepper, herbs, etc.", unit: "gram" },
-    { id: "6", name: "Sauces", description: "Soy sauce, fish sauce, etc.", unit: "bottle" },
-];
+
 
 export default function IngredientCategorySettings() {
     const { t } = useTranslation("common");
@@ -32,6 +25,45 @@ export default function IngredientCategorySettings() {
         unit: "kg"
     });
 
+    const getDefaultCategories = (): IngredientCategory[] => [
+        {
+            id: "1",
+            name: t("dashboard.manage.ingredient_categories.defaults.vegetables.name", { defaultValue: "Vegetables" }),
+            description: t("dashboard.manage.ingredient_categories.defaults.vegetables.description", { defaultValue: "Fresh vegetables and greens" }),
+            unit: "kg"
+        },
+        {
+            id: "2",
+            name: t("dashboard.manage.ingredient_categories.defaults.meat.name", { defaultValue: "Meat" }),
+            description: t("dashboard.manage.ingredient_categories.defaults.meat.description", { defaultValue: "Beef, pork, chicken, etc." }),
+            unit: "kg"
+        },
+        {
+            id: "3",
+            name: t("dashboard.manage.ingredient_categories.defaults.seafood.name", { defaultValue: "Seafood" }),
+            description: t("dashboard.manage.ingredient_categories.defaults.seafood.description", { defaultValue: "Fish, shrimp, crab, etc." }),
+            unit: "kg"
+        },
+        {
+            id: "4",
+            name: t("dashboard.manage.ingredient_categories.defaults.dairy.name", { defaultValue: "Dairy" }),
+            description: t("dashboard.manage.ingredient_categories.defaults.dairy.description", { defaultValue: "Milk, cheese, butter, etc." }),
+            unit: "liter"
+        },
+        {
+            id: "5",
+            name: t("dashboard.manage.ingredient_categories.defaults.spices.name", { defaultValue: "Spices" }),
+            description: t("dashboard.manage.ingredient_categories.defaults.spices.description", { defaultValue: "Salt, pepper, herbs, etc." }),
+            unit: "gram"
+        },
+        {
+            id: "6",
+            name: t("dashboard.manage.ingredient_categories.defaults.sauces.name", { defaultValue: "Sauces" }),
+            description: t("dashboard.manage.ingredient_categories.defaults.sauces.description", { defaultValue: "Soy sauce, fish sauce, etc." }),
+            unit: "bottle"
+        },
+    ];
+
     // Load from localStorage on mount
     useEffect(() => {
         const saved = localStorage.getItem('ingredient-categories');
@@ -39,12 +71,12 @@ export default function IngredientCategorySettings() {
             try {
                 setCategories(JSON.parse(saved));
             } catch {
-                setCategories(DEFAULT_CATEGORIES);
+                setCategories(getDefaultCategories());
             }
         } else {
-            setCategories(DEFAULT_CATEGORIES);
+            setCategories(getDefaultCategories());
         }
-    }, []);
+    }, [t]);
 
     // Save to localStorage
     useEffect(() => {
@@ -179,7 +211,7 @@ export default function IngredientCategorySettings() {
                                                 color: '#FF380B'
                                             }}
                                         >
-                                            {cat.unit}
+                                            {t(`dashboard.manage.ingredient_categories.units.${cat.unit}`, { defaultValue: cat.unit })}
                                         </span>
                                     </td>
                                     <td className="p-4 text-right">
@@ -208,10 +240,28 @@ export default function IngredientCategorySettings() {
                             ))}
                             {categories.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="p-8 text-center" style={{ color: 'var(--text-muted)' }}>
-                                        {t("dashboard.manage.ingredient_categories.empty", {
-                                            defaultValue: "No ingredient categories found. Click \"Add Category\" to create one."
-                                        })}
+                                    <td colSpan={4} className="p-12 text-center">
+                                        <div className="flex flex-col items-center justify-center text-gray-400">
+                                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 dark:bg-zinc-800">
+                                                <svg className="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                </svg>
+                                            </div>
+                                            <p className="text-lg font-medium" style={{ color: 'var(--text)' }}>
+                                                {t("dashboard.manage.ingredient_categories.empty_title", { defaultValue: "No Categories Found" })}
+                                            </p>
+                                            <p className="text-sm mt-1 max-w-sm mx-auto" style={{ color: 'var(--text-muted)' }}>
+                                                {t("dashboard.manage.ingredient_categories.empty", {
+                                                    defaultValue: "Get started by adding your first ingredient category."
+                                                })}
+                                            </p>
+                                            <button
+                                                onClick={() => handleOpenModal()}
+                                                className="mt-4 px-4 py-2 text-sm text-[#FF380B] font-medium hover:bg-[#FF380B]/10 rounded-lg transition-colors"
+                                            >
+                                                {t("dashboard.manage.ingredient_categories.add", { defaultValue: "Add Category" })}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             )}
@@ -223,42 +273,53 @@ export default function IngredientCategorySettings() {
             {/* Modal */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
                 <div
-                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in"
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
                     onClick={handleCloseModal}
                 >
                     <div
-                        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all animate-scale-in"
+                        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all animate-scale-in flex flex-col max-h-[90vh]"
                         style={{
                             background: 'var(--card)',
                             border: '1px solid var(--border)'
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
+                        {/* Header */}
+                        <div className="p-6 border-b flex justify-between items-center bg-white/50 dark:bg-black/20 backdrop-blur-sm sticky top-0 z-10" style={{ borderColor: 'var(--border)' }}>
                             <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
                                 {editingCategory
                                     ? t("dashboard.manage.ingredient_categories.edit", { defaultValue: "Edit Category" })
                                     : t("dashboard.manage.ingredient_categories.add", { defaultValue: "Add Category" })
                                 }
                             </h3>
+                            <button
+                                onClick={handleCloseModal}
+                                className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                                style={{ color: 'var(--text-muted)' }}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        {/* Scrollable Content */}
+                        <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
                             <div>
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                    {t("dashboard.manage.ingredient_categories.name", { defaultValue: "Name" })} *
+                                    {t("dashboard.manage.ingredient_categories.name", { defaultValue: "Name" })} <span className="text-[#FF380B]">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
+                                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
                                     style={{
                                         background: 'var(--bg-base)',
                                         borderColor: 'var(--border)',
                                         color: 'var(--text)'
                                     }}
-                                    placeholder="e.g. Vegetables, Meat, Dairy..."
+                                    placeholder={t("dashboard.manage.ingredient_categories.name_placeholder")}
                                 />
                             </div>
 
@@ -269,14 +330,14 @@ export default function IngredientCategorySettings() {
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none resize-none"
+                                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none resize-none"
                                     rows={3}
                                     style={{
                                         background: 'var(--bg-base)',
                                         borderColor: 'var(--border)',
                                         color: 'var(--text)'
                                     }}
-                                    placeholder="Brief description of this ingredient category"
+                                    placeholder={t("dashboard.manage.ingredient_categories.description_placeholder")}
                                 />
                             </div>
 
@@ -284,27 +345,37 @@ export default function IngredientCategorySettings() {
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
                                     {t("dashboard.manage.ingredient_categories.unit", { defaultValue: "Default Unit" })}
                                 </label>
-                                <select
-                                    value={formData.unit}
-                                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
-                                    style={{
-                                        background: 'var(--bg-base)',
-                                        borderColor: 'var(--border)',
-                                        color: 'var(--text)'
-                                    }}
-                                >
-                                    {unitOptions.map(unit => (
-                                        <option key={unit} value={unit}>{unit}</option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        value={formData.unit}
+                                        onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none appearance-none cursor-pointer"
+                                        style={{
+                                            background: 'var(--bg-base)',
+                                            borderColor: 'var(--border)',
+                                            color: 'var(--text)'
+                                        }}
+                                    >
+                                        {unitOptions.map(unit => (
+                                            <option key={unit} value={unit}>
+                                                {t(`dashboard.manage.ingredient_categories.units.${unit}`, { defaultValue: unit })}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none" style={{ color: 'var(--text-muted)' }}>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="p-6 pt-2 flex justify-end gap-3 rounded-b-2xl">
+                        {/* Footer */}
+                        <div className="p-6 pt-4 border-t bg-white/50 dark:bg-black/20 backdrop-blur-sm sticky bottom-0 z-10 flex justify-end gap-3" style={{ borderColor: 'var(--border)' }}>
                             <button
                                 onClick={handleCloseModal}
-                                className="px-5 py-2.5 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
+                                className="px-5 py-2.5 rounded-xl font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
                                 style={{ color: 'var(--text-muted)' }}
                             >
                                 {t("dashboard.settings.buttons.cancel", { defaultValue: "Cancel" })}
@@ -312,7 +383,7 @@ export default function IngredientCategorySettings() {
                             <button
                                 onClick={handleSave}
                                 disabled={!formData.name.trim()}
-                                className="px-6 py-2.5 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[#FF380B]/20 hover:shadow-[#FF380B]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ background: '#FF380B' }}
                             >
                                 {t("dashboard.settings.buttons.save_changes", { defaultValue: "Save" })}
