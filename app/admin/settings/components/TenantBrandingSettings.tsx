@@ -8,7 +8,7 @@ import { message } from "antd";
 
 export default function TenantBrandingSettings() {
     const { t } = useTranslation("common");
-    const { tenant, loading: tenantLoading } = useTenant();
+    const { tenant, loading: tenantLoading, refreshTenant } = useTenant();
     const [loading, setLoading] = useState(false);
 
     const logoInputRef = useRef<HTMLInputElement>(null);
@@ -100,34 +100,31 @@ export default function TenantBrandingSettings() {
 
         setLoading(true);
         try {
-            // TODO: In production, upload files to a storage service (S3, Azure Blob, etc.)
-            // and get back URLs. For now, we'll use base64 or existing URLs.
-
-            let newLogoUrl = formData.logoUrl;
-            let newBannerUrl = formData.backgroundUrl;
-
-            // If new files were uploaded, use the preview (base64) or upload to storage
-            if (formData.logoFile) {
-                // In a real app, you would upload to storage here:
-                // newLogoUrl = await uploadToStorage(formData.logoFile);
-                newLogoUrl = logoPreview; // Using base64 for demo
-            }
-
-            if (formData.bannerFile) {
-                // In a real app, you would upload to storage here:
-                // newBannerUrl = await uploadToStorage(formData.bannerFile);
-                newBannerUrl = bannerPreview; // Using base64 for demo
-            }
-
             // Prepare updated tenant object
+            // We pass the existing URLs or updated files to the service
             const updatedTenant: TenantConfig = {
                 ...tenant,
-                logoUrl: newLogoUrl,
-                backgroundUrl: newBannerUrl,
+                logoUrl: formData.logoUrl,
+                backgroundUrl: formData.backgroundUrl,
             };
 
-            await tenantService.upsertTenant(updatedTenant);
+            await tenantService.upsertTenant(updatedTenant, {
+                logo: formData.logoFile,
+                background: formData.bannerFile
+            });
             message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Branding updated successfully!" }));
+
+            // Clear file selections after successful save
+            setFormData(prev => ({
+                ...prev,
+                logoFile: null,
+                bannerFile: null,
+            }));
+
+            // Refresh tenant context to get updated URLs from server
+            if (refreshTenant) {
+                await refreshTenant();
+            }
 
         } catch (error) {
             console.error("Failed to update branding:", error);

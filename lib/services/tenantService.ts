@@ -76,8 +76,8 @@ const mapApiResponseToTenant = (apiTenant: TenantApiResponse): ITenant => {
 // Helper function to convert frontend create input to API format
 const mapCreateInputToApi = (input: TenantCreateInput) => {
   // Remove .restx.food suffix if accidentally included
-  const fullHostname = input.hostName && input.hostName.endsWith(".restx.food") 
-    ? input.hostName 
+  const fullHostname = input.hostName && input.hostName.endsWith(".restx.food")
+    ? input.hostName
     : `${input.hostName}.restx.food`;
 
   return {
@@ -94,6 +94,37 @@ const mapCreateInputToApi = (input: TenantCreateInput) => {
     status: true,
     // ownerEmail, ownerPassword and plan will need to be added to backend
   };
+};
+
+// Helper to convert object to FormData
+const toFormData = (data: any, files?: { logo?: File | null; background?: File | null; favicon?: File | null }): FormData => {
+  const formData = new FormData();
+
+  // Append simple fields
+  Object.keys(data).forEach((key) => {
+    const value = data[key];
+    if (value !== null && value !== undefined && key !== "tenantSettings") {
+      // Handle values properly
+      if (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+        // If nested object, JSON stringify? Or flatten?
+        // for now skip complex nested objects to avoid [object Object]
+      } else if (typeof value === 'boolean') {
+        // C# boolean binding works best with "true"/"false" strings
+        formData.append(key, value ? "true" : "false");
+      } else {
+        formData.append(key, value.toString());
+      }
+    }
+  });
+
+  // Append files
+  if (files) {
+    if (files.logo) formData.append("LogoFile", files.logo);
+    if (files.background) formData.append("BackgroundFile", files.background);
+    if (files.favicon) formData.append("FaviconFile", files.favicon);
+  }
+
+  return formData;
 };
 
 export const tenantService = {
@@ -145,7 +176,10 @@ export const tenantService = {
     input: TenantCreateInput,
   ): Promise<TenantApiResponse> => {
     const apiData = mapCreateInputToApi(input);
-    const response = await adminAxiosInstance.post("/tenants", apiData);
+    const formData = toFormData(apiData);
+    const response = await adminAxiosInstance.post("/tenants", formData, {
+      headers: { "Content-Type": undefined },
+    });
     return response.data;
   },
 
@@ -158,28 +192,69 @@ export const tenantService = {
     input: TenantCreateInput,
   ): Promise<TenantApiResponse> => {
     const apiData = mapCreateInputToApi(input);
-    
+
     // Merge ID into the payload as some backends require it in the body too
-    const payload = { 
-      ...apiData, 
+    const payload = {
+      ...apiData,
       id
     };
 
     console.log('[updateTenant] Tenant ID:', id);
     console.log('[updateTenant] Input data:', input);
     console.log('[updateTenant] API payload:', payload);
-    
-    const response = await adminAxiosInstance.put(`/tenants/${id}`, payload);
+
+    const formData = toFormData(payload);
+    const response = await adminAxiosInstance.put(`/tenants/${id}`, formData, {
+      headers: { "Content-Type": undefined },
+    });
     console.log('[updateTenant] Response:', response.data);
     return response.data;
   },
 
   /**
    * Create or update tenant
-   * Backend endpoint: POST /api/tenants
+   * Backend endpoint: POST /api/tenants OR PUT /api/tenants/{id}
    */
-  upsertTenant: async (tenant: TenantConfig) => {
-    return await adminAxiosInstance.post("/tenants", tenant);
+  upsertTenant: async (
+    tenant: TenantConfig,
+    files?: { logo?: File | null; background?: File | null; favicon?: File | null }
+  ) => {
+    // Helper to find ID deeply if needed (though it should be at top level)
+    const findId = (obj: any): string | undefined => {
+      if (!obj) return undefined;
+      if (obj.id) return obj.id;
+      if (obj.Id) return obj.Id;
+      // Check if there is a 'tenant' property inside?
+      if (obj.tenant && (obj.tenant.id || obj.tenant.Id)) return obj.tenant.id || obj.tenant.Id;
+      return undefined;
+    };
+
+    const tenantId = findId(tenant);
+
+    console.log('[tenantService] upsertTenant called for:', {
+      name: tenant.name || (tenant as any).Name,
+      resolvedId: tenantId,
+      topLevelKeys: Object.keys(tenant),
+      fullObject: JSON.stringify(tenant).substring(0, 200) + "..."
+    });
+
+    // If tenant has an ID, use PUT to update
+    if (tenantId) {
+      // We filter out tenantSettings and other non-primitive complex objects that backend might not expect
+      const formData = toFormData(tenant, files);
+
+      console.log(`[tenantService] Performing PUT update for ID: ${tenantId}`);
+      return await adminAxiosInstance.put(`/tenants/${tenantId}`, formData, {
+        headers: { "Content-Type": undefined },
+      });
+    } else {
+      // Create new
+      console.log('[tenantService] Performing POST create (no ID found)');
+      const formData = toFormData(tenant, files);
+      return await adminAxiosInstance.post("/tenants", formData, {
+        headers: { "Content-Type": undefined },
+      });
+    }
   },
 
   /**
