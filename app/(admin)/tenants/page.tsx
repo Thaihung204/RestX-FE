@@ -3,7 +3,6 @@
 import ThemeToggle from "@/app/components/ThemeToggle";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import { useLanguage } from "@/components/I18nProvider";
-import { useToast } from "@/lib/contexts/ToastContext";
 import {
   CheckCircleOutlined,
   MailOutlined,
@@ -24,6 +23,7 @@ import {
   DatePicker,
   Dropdown,
   Input,
+  message,
   Radio,
   Select,
   Spin,
@@ -101,7 +101,6 @@ const formatDate = (isoDate: string) => {
 // --- MAIN PAGE COMPONENT ---
 
 const TenantPage: React.FC = () => {
-  const { showToast } = useToast();
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const { language, changeLanguage } = useLanguage();
@@ -124,18 +123,10 @@ const TenantPage: React.FC = () => {
       setLoading(true);
       const data = await tenantService.getAllTenantsForAdmin();
       setTenants(data);
-      showToast(
-        "success",
-        t("tenants.toasts.fetch_success_title"),
-        t("tenants.toasts.fetch_success_message"),
-      );
+      message.success(t("tenants.toasts.fetch_success_message"));
     } catch (error) {
       console.error("Failed to fetch tenants:", error);
-      showToast(
-        "error",
-        t("tenants.toasts.fetch_error_title"),
-        t("tenants.toasts.fetch_error_message"),
-      );
+      message.error(t("tenants.toasts.fetch_error_message"));
       setTenants([]);
     } finally {
       setLoading(false);
@@ -153,7 +144,8 @@ const TenantPage: React.FC = () => {
         item.businessName.toLowerCase().includes(query) ||
         item.phoneNumber.includes(query) ||
         item.ownerEmail.toLowerCase().includes(query) ||
-        item.mailRestaurant.toLowerCase().includes(query);
+        item.mailRestaurant.toLowerCase().includes(query) ||
+        (item.networkIp && item.networkIp.toLowerCase().includes(query));
       return matchesStatus && matchesQuery;
     });
   }, [search, status, tenants]);
@@ -181,17 +173,9 @@ const TenantPage: React.FC = () => {
     if (key === "view") {
       router.push(`/tenants/${record.id}`);
     } else if (key === "domain") {
-      showToast(
-        "info",
-        t("tenants.toasts.feature_coming_title"),
-        t("tenants.toasts.feature_coming_message"),
-      );
+      message.info(t("tenants.toasts.feature_coming_message"));
     } else if (key === "suspend") {
-      showToast(
-        "info",
-        t("tenants.toasts.feature_coming_title"),
-        t("tenants.toasts.feature_coming_message"),
-      );
+      message.info(t("tenants.toasts.feature_coming_message"));
     }
   };
 
@@ -235,7 +219,7 @@ const TenantPage: React.FC = () => {
             <span
               className="text-xs font-mono"
               style={{ color: "var(--text-muted)" }}>
-              {record.hostName}.restx.food
+              {record.hostName.replace(/\.restx\.food$/, "")}.restx.food
             </span>
           </div>
         </div>
@@ -272,6 +256,20 @@ const TenantPage: React.FC = () => {
             {record.addressLine3}, {record.addressLine4}
           </span>
         </div>
+      ),
+    },
+    {
+      title: "Domain / IP",
+      dataIndex: "networkIp",
+      key: "networkIp",
+      width: 180,
+      render: (networkIp: string) => (
+        <span
+          className="text-[11px] font-mono truncate max-w-[160px] block"
+          style={{ color: networkIp ? "var(--text)" : "var(--text-muted)" }}
+          title={networkIp || "Not configured"}>
+          {networkIp || <span className="italic opacity-60">Not set</span>}
+        </span>
       ),
     },
     {
