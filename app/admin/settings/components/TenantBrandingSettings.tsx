@@ -100,26 +100,18 @@ export default function TenantBrandingSettings() {
 
         setLoading(true);
         try {
-            // Check if we have files to upload
-            const hasFilesToUpload = formData.logoFile || formData.bannerFile;
+            // Prepare updated tenant object
+            // We pass the existing URLs or updated files to the service
+            const updatedTenant: TenantConfig = {
+                ...tenant,
+                logoUrl: formData.logoUrl,
+                backgroundUrl: formData.backgroundUrl,
+            };
 
-            if (hasFilesToUpload) {
-                // Use FormData upload - BE will upload to Cloudinary and return URLs
-                console.log('[TenantBrandingSettings] Uploading files via FormData...');
-
-                const result = await tenantService.upsertTenantWithFiles(
-                    tenant,
-                    formData.logoFile,
-                    formData.bannerFile,
-                    null // faviconFile
-                );
-                console.log('[TenantBrandingSettings] Upload result:', result);
-            } else {
-                // No new files, just update tenant data
-                console.log('[TenantBrandingSettings] No files to upload, updating tenant data...');
-                await tenantService.upsertTenant(tenant);
-            }
-
+            await tenantService.upsertTenant(updatedTenant, {
+                logo: formData.logoFile,
+                background: formData.bannerFile
+            });
             message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Branding updated successfully!" }));
 
             // Clear file selections after successful save
