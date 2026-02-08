@@ -12,27 +12,55 @@ import RestaurantHero from './components/RestaurantHero';
 import { tenantService, TenantConfig } from '@/lib/services/tenantService';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { categoryService, Category } from '@/lib/services/categoryService';
-import dishService, { MenuCategory } from '@/lib/services/dishService';
+import dishService, { DishResponseDto } from '@/lib/services/dishService';
+import { MenuSectionCategory } from './components/MenuSection';
 
 export default function RestaurantPage() {
   const { tenant, loading: tenantLoading } = useTenant();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [menu, setMenu] = useState<MenuCategory[]>([]);
+  const [menu, setMenu] = useState<MenuSectionCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesData, menuData] = await Promise.all([
+        const [categoriesData, dishListData] = await Promise.all([
           categoryService.getCategories(),
-          dishService.getMenu()
+          dishService.getDishes(1, 1000)
         ]);
 
         console.log('[RestaurantPage] Categories from API:', categoriesData);
-        console.log('[RestaurantPage] Menu from API:', menuData);
+        console.log('[RestaurantPage] Dishes from API:', dishListData);
 
-        setCategories(categoriesData);
-        setMenu(menuData);
+        const allDishes = dishListData.items || dishListData.data || dishListData.dishes || [];
+
+        // Group dishes by category
+        const groupedMenu: MenuSectionCategory[] = categoriesData.map(cat => ({
+          categoryId: cat.id,
+          categoryName: cat.name,
+          items: allDishes.filter(d => d.categoryId === cat.id && d.isActive)
+        })).filter(group => group.items.length > 0);
+
+        // Enhance categories with images from dishes if missing
+        const categoriesWithImages = categoriesData.map(cat => {
+          if (!cat.imageUrl) {
+            const dishWithImage = allDishes.find(d =>
+              d.categoryId === cat.id &&
+              (d.mainImageUrl || d.imageUrl || (d.images && d.images.length > 0))
+            );
+
+            if (dishWithImage) {
+              return {
+                ...cat,
+                imageUrl: dishWithImage.mainImageUrl || dishWithImage.imageUrl || (dishWithImage.images && dishWithImage.images.length > 0 ? dishWithImage.images[0].imageUrl : undefined)
+              };
+            }
+          }
+          return cat;
+        });
+
+        setCategories(categoriesWithImages);
+        setMenu(groupedMenu);
       } catch (error) {
         console.error("Error fetching restaurant data:", error);
       } finally {

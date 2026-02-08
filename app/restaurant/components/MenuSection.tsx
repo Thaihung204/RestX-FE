@@ -8,11 +8,17 @@ import { useTranslation } from 'react-i18next';
 
 const { Title } = Typography;
 
-import { MenuCategory } from '@/lib/services/dishService';
+import { DishResponseDto } from '@/lib/services/dishService';
 import { Col, Row } from 'antd';
 
+export interface MenuSectionCategory {
+  categoryId: string;
+  categoryName: string;
+  items: DishResponseDto[];
+}
+
 interface MenuSectionProps {
-  menu: MenuCategory[];
+  menu: MenuSectionCategory[];
 }
 
 const MenuSection: React.FC<MenuSectionProps> = ({ menu = [] }) => {
@@ -122,7 +128,12 @@ const MenuSection: React.FC<MenuSectionProps> = ({ menu = [] }) => {
                           background: 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)'
                         }}>
                           <img
-                            src={dish.imageUrl || '/images/placeholder-food.png'}
+                            src={
+                              dish.mainImageUrl ||
+                              dish.imageUrl ||
+                              (dish.images && dish.images.length > 0 ? dish.images[0].imageUrl : null) ||
+                              '/images/logo/restx-removebg-preview.png'
+                            }
                             alt={dish.name}
                             style={{
                               width: '100%',
@@ -130,7 +141,10 @@ const MenuSection: React.FC<MenuSectionProps> = ({ menu = [] }) => {
                               objectFit: 'cover',
                               transition: 'transform 0.5s ease',
                             }}
-                            onError={(e) => { e.currentTarget.src = '/images/placeholder-food.png'; }}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = '/images/logo/restx-removebg-preview.png';
+                            }}
                             onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                           />
