@@ -381,7 +381,8 @@
       "tabs": {
         "categories": "Danh mục",
         "ingredient_categories": "Loại nguyên liệu",
-        "suppliers": "Nhà cung cấp"
+        "suppliers": "Nhà cung cấp",
+        "loyalty": "Hạng thành viên"
       },
       "ingredient_categories": {
         "title": "Loại nguyên liệu",
@@ -440,6 +441,7 @@
         "add": "Thêm nhà cung cấp",
         "edit": "Sửa nhà cung cấp",
         "name": "Tên nhà cung cấp",
+        "contact": "Thông tin liên hệ",
         "phone": "Số điện thoại",
         "email": "Email",
         "address": "Địa chỉ",
@@ -466,6 +468,41 @@
             "address": "456 Đường Cảng, Quận 2"
           }
         }
+      },
+      "loyalty": {
+        "title": "Hạng thành viên",
+        "desc": "Quản lý các hạng thành viên và ưu đãi",
+        "add_new": "Thêm hạng mới",
+        "edit": "Sửa hạng thành viên",
+        "create": "Tạo hạng thành viên",
+        "name": "Tên hạng",
+        "range": "Khoảng điểm",
+        "discount": "Giảm giá",
+        "benefits": "Ưu đãi",
+        "status": "Trạng thái",
+        "form": {
+          "name": "Tên hạng",
+          "logo": "Thứ hạng",
+          "range": "Khoảng điểm",
+          "max_tooltip": "Để trống nếu không giới hạn",
+          "discount": "Phần trăm giảm giá (%)",
+          "benefits": "Mô tả ưu đãi"
+        },
+        "badges": {
+          "bronze": "Đồng",
+          "silver": "Bạc",
+          "gold": "Vàng",
+          "platinum": "Bạch kim"
+        }
+      },
+      "notifications": {
+        "delete_success": "Xóa thành công",
+        "update_success": "Cập nhật thành công",
+        "create_success": "Tạo mới thành công"
+      },
+      "errors": {
+        "fetch_failed": "Không thể tải danh sách hạng thành viên",
+        "delete_failed": "Xóa thất bại"
       }
     },
     "header": {
@@ -909,6 +946,9 @@
       "days_ago": "{{count}} ngày trước"
     },
     "status": {
+      "label": "Trạng thái",
+      "active": "Hoạt động",
+      "inactive": "Ngừng hoạt động",
       "pending": "Chờ xử lý",
       "preparing": "Đang nấu",
       "ready": "Sẵn sàng",
@@ -916,6 +956,9 @@
       "cancelled": "Đã hủy"
     },
     "actions": {
+      "title": "Thao tác",
+      "yes": "Có",
+      "no": "Không",
       "create_order": "Tạo Order mới"
     },
     "language": "Ngôn ngữ",
