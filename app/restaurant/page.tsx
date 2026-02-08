@@ -28,6 +28,9 @@ export default function RestaurantPage() {
           dishService.getMenu()
         ]);
 
+        console.log('[RestaurantPage] Categories from API:', categoriesData);
+        console.log('[RestaurantPage] Menu from API:', menuData);
+
         setCategories(categoriesData);
         setMenu(menuData);
       } catch (error) {
@@ -47,7 +50,7 @@ export default function RestaurantPage() {
   return (
     <TenantGuard>
       <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
-        <RestaurantHeader tenant={tenant} />
+        <RestaurantHeader tenant={tenant} categories={categories} />
         <main>
           <RestaurantHero tenant={tenant} />
           <AboutSection tenant={tenant} />
