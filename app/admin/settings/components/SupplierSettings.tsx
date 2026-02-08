@@ -64,20 +64,20 @@ export default function SupplierSettings() {
         setSuppliers([
             {
                 id: generateId(),
-                name: "Fresh Veggies Co.",
+                name: t("dashboard.manage.suppliers.defaults.supplier1.name", { defaultValue: "Fresh Veggies Co." }),
                 email: "contact@freshveggies.com",
                 phone: "0123456789",
-                address: "123 Market Street, District 1",
+                address: t("dashboard.manage.suppliers.defaults.supplier1.address", { defaultValue: "123 Market Street, District 1" }),
                 isActive: true,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             },
             {
                 id: generateId(),
-                name: "Ocean Seafood Ltd.",
+                name: t("dashboard.manage.suppliers.defaults.supplier2.name", { defaultValue: "Ocean Seafood Ltd." }),
                 email: "contact@oceanseafood.com",
                 phone: "0987654321",
-                address: "456 Harbor Road, District 2",
+                address: t("dashboard.manage.suppliers.defaults.supplier2.address", { defaultValue: "456 Harbor Road, District 2" }),
                 isActive: true,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
@@ -111,11 +111,11 @@ export default function SupplierSettings() {
     const handleSave = () => {
         // Validation
         if (!formData.name.trim()) {
-            message.error('Please enter supplier name');
+            message.error(t("restaurant.messages.name_required"));
             return;
         }
         if (!formData.phone.trim()) {
-            message.error('Please enter phone number');
+            message.error(t("restaurant.messages.phone_required"));
             return;
         }
 
@@ -128,7 +128,7 @@ export default function SupplierSettings() {
                     ? { ...formData, id: s.id, updatedAt: now }
                     : s
             ));
-            message.success('Supplier updated successfully');
+            message.success(t("restaurant.messages.supplier_updated"));
         } else {
             // Add
             const newSupplier: Supplier = {
@@ -138,15 +138,15 @@ export default function SupplierSettings() {
                 updatedAt: now
             };
             setSuppliers([...suppliers, newSupplier]);
-            message.success('Supplier added successfully');
+            message.success(t("restaurant.messages.supplier_added"));
         }
         handleCloseModal();
     };
 
     const handleDelete = (id: string) => {
-        if (window.confirm("Are you sure you want to delete this supplier?")) {
+        if (window.confirm(t("dashboard.manage.suppliers.confirm_delete"))) {
             setSuppliers(suppliers.filter(s => s.id !== id));
-            message.success('Supplier deleted');
+            message.success(t("dashboard.manage.suppliers.deleted"));
         }
     };
 
@@ -161,10 +161,10 @@ export default function SupplierSettings() {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
-                        Supplier Management
+                        {t("dashboard.manage.suppliers.title")}
                     </h3>
                     <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-                        Manage your restaurant suppliers and vendors
+                        {t("dashboard.manage.suppliers.subtitle")}
                     </p>
                 </div>
                 <button
@@ -175,10 +175,11 @@ export default function SupplierSettings() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    Add Supplier
+                    {t("dashboard.manage.suppliers.add")}
                 </button>
             </div>
 
+            {/* Table Layout for Suppliers */}
             <div
                 className="rounded-xl overflow-hidden shadow-sm transition-all hover:shadow-md"
                 style={{
@@ -190,11 +191,10 @@ export default function SupplierSettings() {
                     <table className="w-full text-left border-collapse">
                         <thead style={{ background: 'var(--bg-base)' }}>
                             <tr>
-                                <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>Supplier</th>
-                                <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>Email</th>
-                                <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>Phone</th>
-                                <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>Status</th>
-                                <th className="p-5 font-semibold text-sm tracking-wide uppercase text-right" style={{ color: 'var(--text-muted)' }}>Actions</th>
+                                <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>{t("dashboard.manage.suppliers.name")}</th>
+                                <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>{t("dashboard.manage.suppliers.contact")}</th>
+                                <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>{t("dashboard.manage.suppliers.status")}</th>
+                                <th className="p-5 font-semibold text-sm tracking-wide uppercase text-right" style={{ color: 'var(--text-muted)' }}>{t("dashboard.manage.suppliers.actions")}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--border)]">
@@ -203,38 +203,49 @@ export default function SupplierSettings() {
                                     key={supplier.id}
                                     className="group transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                                 >
-                                    <td className="p-4">
+                                    <td className="p-4 align-top">
                                         <div>
-                                            <div className="font-semibold text-base" style={{ color: 'var(--text)' }}>
+                                            <div className="font-bold text-base mb-1" style={{ color: 'var(--text)' }}>
                                                 {supplier.name}
                                             </div>
-                                            <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                                                {supplier.address}
+                                            <div className="flex items-start gap-2 text-sm max-w-xs" style={{ color: 'var(--text-muted)' }}>
+                                                <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                <span className="line-clamp-2">{supplier.address}</span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="p-4">
-                                        <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                                            {supplier.email || '-'}
-                                        </span>
+                                    <td className="p-4 align-top">
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                </svg>
+                                                {supplier.phone}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                </svg>
+                                                {supplier.email || '-'}
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td className="p-4">
-                                        <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                                            {supplier.phone}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
+                                    <td className="p-4 align-top">
                                         <button
                                             onClick={() => toggleStatus(supplier.id)}
-                                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${supplier.isActive
-                                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-colors ${supplier.isActive
+                                                ? 'bg-green-500 text-white dark:bg-green-600'
+                                                : 'bg-gray-500 text-white dark:bg-gray-600'
                                                 }`}
                                         >
-                                            {supplier.isActive ? 'Active' : 'Inactive'}
+                                            <span className="w-1.5 h-1.5 rounded-full mr-2 bg-white"></span>
+                                            {supplier.isActive ? t("dashboard.manage.suppliers.active") : t("dashboard.manage.suppliers.inactive")}
                                         </button>
                                     </td>
-                                    <td className="p-4 text-right">
+                                    <td className="p-4 text-right align-top">
                                         <div className="flex justify-end gap-2">
                                             <button
                                                 onClick={() => handleOpenModal(supplier)}
@@ -260,8 +271,23 @@ export default function SupplierSettings() {
                             ))}
                             {suppliers.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="p-8 text-center text-gray-500">
-                                        No suppliers found. Click &quot;Add Supplier&quot; to create one.
+                                    <td colSpan={4} className="p-12 text-center">
+                                        <div className="flex flex-col items-center justify-center text-gray-400">
+                                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 dark:bg-zinc-800">
+                                                <svg className="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                </svg>
+                                            </div>
+                                            <p className="text-lg font-medium" style={{ color: 'var(--text)' }}>
+                                                {t("dashboard.manage.suppliers.empty_title", { defaultValue: "No Suppliers Found" })}
+                                            </p>
+                                            <button
+                                                onClick={() => handleOpenModal()}
+                                                className="mt-4 px-4 py-2 text-sm text-[#FF380B] font-medium hover:bg-[#FF380B]/10 rounded-lg transition-colors"
+                                            >
+                                                {t("dashboard.manage.suppliers.add")}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             )}
@@ -273,127 +299,167 @@ export default function SupplierSettings() {
             {/* Modal */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
                 <div
-                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in"
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
                     onClick={handleCloseModal}
                 >
                     <div
-                        className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden transform transition-all animate-scale-in"
+                        className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden transform transition-all animate-scale-in flex flex-col max-h-[90vh]"
                         style={{
                             background: 'var(--card)',
                             border: '1px solid var(--border)'
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
+                        {/* Header */}
+                        <div className="p-6 border-b flex justify-between items-center bg-white/50 dark:bg-black/20 backdrop-blur-sm sticky top-0 z-10" style={{ borderColor: 'var(--border)' }}>
                             <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
-                                {editingSupplier ? "Edit Supplier" : "Add New Supplier"}
+                                {editingSupplier ? t("dashboard.manage.suppliers.edit") : t("dashboard.manage.suppliers.add")}
                             </h3>
+                            <button
+                                onClick={handleCloseModal}
+                                className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                                style={{ color: 'var(--text-muted)' }}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
 
-                        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                        {/* Scrollable Content */}
+                        <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
                             <div>
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                    Supplier Name *
+                                    {t("dashboard.manage.suppliers.name")} <span className="text-[#FF380B]">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
+                                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
                                     style={{
                                         background: 'var(--bg-base)',
                                         borderColor: 'var(--border)',
                                         color: 'var(--text)'
                                     }}
-                                    placeholder="e.g. Fresh Veggies Co."
+                                    placeholder={t("dashboard.manage.suppliers.name_placeholder")}
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                        Phone *
+                                        {t("dashboard.manage.suppliers.phone")} <span className="text-[#FF380B]">*</span>
                                     </label>
-                                    <input
-                                        type="tel"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
-                                        style={{
-                                            background: 'var(--bg-base)',
-                                            borderColor: 'var(--border)',
-                                            color: 'var(--text)'
-                                        }}
-                                        placeholder="0123456789"
-                                    />
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                            </svg>
+                                        </div>
+                                        <input
+                                            type="tel"
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
+                                            style={{
+                                                background: 'var(--bg-base)',
+                                                borderColor: 'var(--border)',
+                                                color: 'var(--text)'
+                                            }}
+                                            placeholder={t("dashboard.manage.suppliers.phone_placeholder")}
+                                        />
+                                    </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                        Email
+                                        {t("dashboard.manage.suppliers.email")}
                                     </label>
-                                    <input
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
-                                        style={{
-                                            background: 'var(--bg-base)',
-                                            borderColor: 'var(--border)',
-                                            color: 'var(--text)'
-                                        }}
-                                        placeholder="contact@supplier.com"
-                                    />
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <input
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
+                                            style={{
+                                                background: 'var(--bg-base)',
+                                                borderColor: 'var(--border)',
+                                                color: 'var(--text)'
+                                            }}
+                                            placeholder={t("dashboard.manage.suppliers.email_placeholder")}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                    Address
+                                    {t("dashboard.manage.suppliers.address")}
                                 </label>
                                 <textarea
                                     value={formData.address}
                                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none resize-none"
+                                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none resize-none"
                                     rows={3}
                                     style={{
                                         background: 'var(--bg-base)',
                                         borderColor: 'var(--border)',
                                         color: 'var(--text)'
                                     }}
-                                    placeholder="Full address of the supplier"
+                                    placeholder={t("dashboard.manage.suppliers.address_placeholder")}
                                 />
                             </div>
 
                             <div>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.isActive}
-                                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                                        className="w-4 h-4 rounded border-gray-300 text-[#FF380B] focus:ring-[#FF380B]"
-                                    />
-                                    <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
-                                        Active
-                                    </span>
+                                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
+                                    {t("dashboard.manage.suppliers.status", { defaultValue: "Status" })}
                                 </label>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                                    className={`relative inline-flex items-center h-8 rounded-full px-1 transition-colors focus:outline-none ${formData.isActive ? 'bg-[#FF380B]' : 'bg-slate-200 dark:bg-zinc-700'
+                                        }`}
+                                    style={{ minWidth: '100px' }}
+                                >
+                                    {/* Text Label */}
+                                    <span className={`absolute left-3 text-xs font-bold text-white transition-opacity ${formData.isActive ? 'opacity-100' : 'opacity-0'}`}>
+                                        {t("common.status.active", { defaultValue: "Active" })}
+                                    </span>
+                                    <span className={`absolute right-3 text-xs font-bold text-gray-500 dark:text-gray-400 transition-opacity ${!formData.isActive ? 'opacity-100' : 'opacity-0'}`}>
+                                        {t("common.status.inactive", { defaultValue: "Inactive" })}
+                                    </span>
+
+                                    {/* The Toggle Circle */}
+                                    <span
+                                        className={`inline-block w-6 h-6 transform bg-white rounded-full shadow transition-transform duration-200 ease-in-out ${formData.isActive ? 'translate-x-[70px]' : 'translate-x-0'
+                                            }`}
+                                    />
+                                </button>
                             </div>
                         </div>
 
-                        <div className="p-6 pt-2 flex justify-end gap-3 rounded-b-2xl">
+                        {/* Footer */}
+                        <div className="p-6 pt-4 border-t bg-white/50 dark:bg-black/20 backdrop-blur-sm sticky bottom-0 z-10 flex justify-end gap-3" style={{ borderColor: 'var(--border)' }}>
                             <button
                                 onClick={handleCloseModal}
-                                className="px-5 py-2.5 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
+                                className="px-5 py-2.5 rounded-xl font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
                                 style={{ color: 'var(--text-muted)' }}
                             >
-                                Cancel
+                                {t("dashboard.settings.buttons.cancel")}
                             </button>
                             <button
                                 onClick={handleSave}
-                                className="px-6 py-2.5 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                                disabled={!formData.name.trim() || !formData.phone.trim()}
+                                className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[#FF380B]/20 hover:shadow-[#FF380B]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ background: '#FF380B' }}
                             >
-                                {editingSupplier ? "Update" : "Add"} Supplier
+                                {t("dashboard.settings.buttons.save_changes")}
                             </button>
                         </div>
                     </div>

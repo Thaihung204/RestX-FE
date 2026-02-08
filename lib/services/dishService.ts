@@ -55,16 +55,9 @@ export interface DishResponseDto {
 
 export interface MenuItem {
   id: string;
-  name: string;
-  description?: string;
-  price: number;
-  unit: string;
-  imageUrl?: string;
-  isVegetarian: boolean;
-  isSpicy: boolean;
-  isBestSeller: boolean;
   categoryId: string;
   categoryName: string;
+  imageUrl?: string;
 }
 
 export interface MenuCategory {

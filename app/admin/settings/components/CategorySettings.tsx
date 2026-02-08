@@ -47,25 +47,25 @@ export default function CategorySettings() {
                 id: 1,
                 name: t('restaurant.categories.appetizer'),
                 image: "/images/restaurant/cat-1.jpg",
-                desc: "Salads, soups, and starters",
+                desc: t('restaurant.descriptions.appetizer', { defaultValue: "Salads, soups, and starters" }),
             },
             {
                 id: 2,
                 name: t('restaurant.categories.main'),
                 image: "/images/restaurant/cat-2.jpg",
-                desc: "Steak, seafood, and pasta",
+                desc: t('restaurant.descriptions.main', { defaultValue: "Steak, seafood, and pasta" }),
             },
             {
                 id: 3,
                 name: t('restaurant.categories.dessert'),
                 image: "/images/restaurant/cat-3.jpg",
-                desc: "Cakes, ice cream, and fruits",
+                desc: t('restaurant.descriptions.dessert', { defaultValue: "Cakes, ice cream, and fruits" }),
             },
             {
                 id: 4,
                 name: t('restaurant.categories.drinks'),
                 image: "/images/restaurant/cat-4.jpg",
-                desc: "Cocktails, wine, and soft drinks",
+                desc: t('restaurant.descriptions.drinks', { defaultValue: "Cocktails, wine, and soft drinks" }),
             },
         ]);
     };
@@ -127,6 +127,7 @@ export default function CategorySettings() {
                 </button>
             </div>
 
+            {/* Table Layout for Categories */}
             <div
                 className="rounded-xl overflow-hidden shadow-sm transition-all hover:shadow-md"
                 style={{
@@ -151,7 +152,7 @@ export default function CategorySettings() {
                                     className="group transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                                 >
                                     <td className="p-4">
-                                        <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 relative shadow-sm group-hover:shadow-md transition-all">
+                                        <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 relative shadow-sm group-hover:shadow-md transition-all border border-gray-200 dark:border-gray-700">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
                                                 src={cat.image || "/images/placeholder.jpg"}
@@ -169,7 +170,7 @@ export default function CategorySettings() {
                                         </div>
                                     </td>
                                     <td className="p-4">
-                                        <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                                        <span className="text-sm line-clamp-2" style={{ color: 'var(--text-muted)' }}>
                                             {cat.desc}
                                         </span>
                                     </td>
@@ -199,8 +200,23 @@ export default function CategorySettings() {
                             ))}
                             {categories.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="p-8 text-center text-gray-500">
-                                        No categories found. Click &quot;Add Category&quot; to create one.
+                                    <td colSpan={4} className="p-12 text-center">
+                                        <div className="flex flex-col items-center justify-center text-gray-400">
+                                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 dark:bg-zinc-800">
+                                                <svg className="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                            <p className="text-lg font-medium" style={{ color: 'var(--text)' }}>
+                                                {t("dashboard.settings.categories.no_categories")}
+                                            </p>
+                                            <button
+                                                onClick={() => handleOpenModal()}
+                                                className="mt-4 px-4 py-2 text-sm text-[#FF380B] font-medium hover:bg-[#FF380B]/10 rounded-lg transition-colors"
+                                            >
+                                                {t("dashboard.settings.categories.add_category")}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             )}
@@ -212,39 +228,50 @@ export default function CategorySettings() {
             {/* Modal */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
                 <div
-                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in"
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
                     onClick={handleCloseModal}
                 >
                     <div
-                        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all animate-scale-in"
+                        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all animate-scale-in flex flex-col max-h-[90vh]"
                         style={{
                             background: 'var(--card)',
                             border: '1px solid var(--border)'
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
+                        {/* Header */}
+                        <div className="p-6 border-b flex justify-between items-center bg-white/50 dark:bg-black/20 backdrop-blur-sm sticky top-0 z-10" style={{ borderColor: 'var(--border)' }}>
                             <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
                                 {editingCategory ? t("dashboard.settings.categories.edit_category") : t("dashboard.settings.categories.add_category")}
                             </h3>
+                            <button
+                                onClick={handleCloseModal}
+                                className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                                style={{ color: 'var(--text-muted)' }}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        {/* Scrollable Content */}
+                        <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
                             <div>
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                    {t("dashboard.settings.categories.name")}
+                                    {t("dashboard.settings.categories.name")} <span className="text-[#FF380B]">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
+                                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
                                     style={{
                                         background: 'var(--bg-base)',
                                         borderColor: 'var(--border)',
                                         color: 'var(--text)'
                                     }}
-                                    placeholder="e.g. Appetizers"
+                                    placeholder={t("dashboard.settings.categories.name_placeholder")}
                                 />
                             </div>
 
@@ -255,14 +282,14 @@ export default function CategorySettings() {
                                 <textarea
                                     value={formData.desc}
                                     onChange={(e) => setFormData({ ...formData, desc: e.target.value })}
-                                    className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none resize-none"
+                                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none resize-none"
                                     rows={3}
                                     style={{
                                         background: 'var(--bg-base)',
                                         borderColor: 'var(--border)',
                                         color: 'var(--text)'
                                     }}
-                                    placeholder="Brief description of the category"
+                                    placeholder={t("dashboard.settings.categories.description_placeholder")}
                                 />
                             </div>
 
@@ -270,96 +297,102 @@ export default function CategorySettings() {
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
                                     {t("dashboard.settings.categories.image")}
                                 </label>
+
                                 <div className="space-y-3">
-                                    {/* Upload Button */}
-                                    <div className="flex gap-3">
-                                        <label
-                                            htmlFor="category-image-upload"
-                                            className="flex-1 px-4 py-2.5 rounded-lg border-2 border-dashed cursor-pointer hover:border-[#FF380B] transition-all text-center"
-                                            style={{
-                                                borderColor: 'var(--border)',
-                                                background: 'var(--bg-base)',
-                                            }}
-                                        >
-                                            <div className="flex items-center justify-center gap-2" style={{ color: 'var(--text-muted)' }}>
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                </svg>
-                                                <span className="text-sm font-medium">
-                                                    {formData.image ? 'Change Image' : 'Upload Image'}
-                                                </span>
-                                            </div>
-                                        </label>
+                                    <div className="relative group">
                                         <input
-                                            id="category-image-upload"
                                             type="file"
-                                            accept="image/*"
+                                            id="category-image"
                                             className="hidden"
+                                            accept="image/*"
                                             onChange={(e) => {
                                                 const file = e.target.files?.[0];
                                                 if (file) {
-                                                    // Validate file size (max 5MB)
                                                     if (file.size > 5 * 1024 * 1024) {
-                                                        alert('File size must be less than 5MB');
+                                                        alert(t("dashboard.settings.categories.file_size_error"));
                                                         return;
                                                     }
-
-                                                    // Convert to base64
                                                     const reader = new FileReader();
-                                                    reader.onloadend = () => {
-                                                        setFormData({ ...formData, image: reader.result as string });
-                                                    };
+                                                    reader.onloadend = () => setFormData({ ...formData, image: reader.result as string });
                                                     reader.readAsDataURL(file);
                                                 }
                                             }}
                                         />
+
+                                        <label
+                                            htmlFor="category-image"
+                                            className={`
+                                                relative w-full aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden
+                                                ${formData.image ? 'border-transparent' : 'border-[var(--border)] hover:border-[#FF380B] hover:bg-[#FF380B]/5'}
+                                            `}
+                                            style={{ background: formData.image ? 'black' : 'var(--bg-base)' }}
+                                        >
+                                            {formData.image ? (
+                                                <>
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img
+                                                        src={formData.image}
+                                                        alt="Preview"
+                                                        className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity"
+                                                    />
+                                                    <div className="z-10 bg-black/50 text-white px-4 py-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 duration-300">
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                                        </svg>
+                                                        {t("dashboard.settings.categories.change_image")}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="text-center p-6">
+                                                    <div className="w-12 h-12 rounded-full bg-[#FF380B]/10 text-[#FF380B] flex items-center justify-center mx-auto mb-3">
+                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </div>
+                                                    <p className="font-medium text-sm" style={{ color: 'var(--text)' }}>
+                                                        {t("dashboard.settings.categories.upload_image")}
+                                                    </p>
+                                                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                                                        PNG, JPG up to 5MB
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </label>
+
                                         {formData.image && (
                                             <button
                                                 type="button"
-                                                onClick={() => setFormData({ ...formData, image: '' })}
-                                                className="px-4 py-2.5 rounded-lg border transition-colors hover:bg-red-50 dark:hover:bg-red-900/10"
-                                                style={{
-                                                    borderColor: 'var(--border)',
-                                                    color: '#ef4444'
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setFormData({ ...formData, image: '' });
                                                 }}
+                                                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600 z-20"
+                                                title="Remove Image"
                                             >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
                                         )}
                                     </div>
-
-                                    {/* Image Preview */}
-                                    {formData.image && (
-                                        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2" style={{ borderColor: 'var(--border)' }}>
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={formData.image}
-                                                alt="Preview"
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    e.currentTarget.src = 'https://placehold.co/600x400?text=Invalid+Image';
-                                                }}
-                                            />
-                                        </div>
-                                    )}
                                 </div>
                             </div>
-
                         </div>
 
-                        <div className="p-6 pt-2 flex justify-end gap-3 rounded-b-2xl">
+                        {/* Footer */}
+                        <div className="p-6 pt-4 border-t bg-white/50 dark:bg-black/20 backdrop-blur-sm sticky bottom-0 z-10 flex justify-end gap-3" style={{ borderColor: 'var(--border)' }}>
                             <button
                                 onClick={handleCloseModal}
-                                className="px-5 py-2.5 rounded-lg font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
+                                className="px-5 py-2.5 rounded-xl font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
                                 style={{ color: 'var(--text-muted)' }}
                             >
                                 {t("dashboard.settings.buttons.cancel")}
                             </button>
                             <button
                                 onClick={handleSave}
-                                className="px-6 py-2.5 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                                disabled={!formData.name.trim()}
+                                className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[#FF380B]/20 hover:shadow-[#FF380B]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ background: '#FF380B' }}
                             >
                                 {t("dashboard.settings.buttons.save_changes")}
