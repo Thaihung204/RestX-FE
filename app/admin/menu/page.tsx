@@ -57,6 +57,7 @@ export default function MenuPage() {
             item.mainImageUrl ||
             item.imageUrl ||
             item.image ||
+            (item.images && item.images.length > 0 ? item.images[0].imageUrl : null) ||
             "/placeholder-dish.jpg",
           description: item.description || "",
           available:
