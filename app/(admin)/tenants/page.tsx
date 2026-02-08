@@ -24,6 +24,7 @@ import {
   Dropdown,
   Input,
   message,
+  Modal,
   Radio,
   Select,
   Spin,
@@ -175,7 +176,24 @@ const TenantPage: React.FC = () => {
     } else if (key === "domain") {
       message.info(t("tenants.toasts.feature_coming_message"));
     } else if (key === "suspend") {
-      message.info(t("tenants.toasts.feature_coming_message"));
+      Modal.confirm({
+        title: t("tenants.actions.delete_confirm_title"),
+        content: t("tenants.actions.delete_confirm_content", { name: record.name }),
+        okText: t("tenants.actions.delete_confirm_ok"),
+        okType: "danger",
+        cancelText: t("tenants.actions.delete_confirm_cancel"),
+        onOk: async () => {
+          try {
+            await tenantService.deleteTenant(record.id);
+            message.success(t("tenants.toasts.delete_success_message"));
+            await fetchTenants();
+          } catch (error: any) {
+            console.error("Failed to delete tenant:", error);
+            const errorMsg = error?.response?.data?.message || t("tenants.toasts.delete_error_message");
+            message.error(errorMsg);
+          }
+        },
+      });
     }
   };
 

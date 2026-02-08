@@ -472,7 +472,7 @@ const TenantFormPage: React.FC = () => {
                       ]}>
                       <Input
                         className="text-sm"
-                        placeholder="Enter restaurant display name (e.g., Nhà hàng BBQ)"
+                        placeholder={t("tenants.create.fields.name_placeholder")}
                         prefix={<ShopOutlined className="text-gray-400 mr-1" />}
                       />
                     </Form.Item>
@@ -492,7 +492,7 @@ const TenantFormPage: React.FC = () => {
                           className="text-[11px]"
                           style={{ color: "var(--text-muted)" }}>
                           {isEditMode
-                            ? "Hostname cannot be changed after creation"
+                            ? t("tenants.create.fields.hostname_disabled_text")
                             : `${t("tenants.create.fields.access_url")} hostname.restx.food`}
                         </span>
                       }>
@@ -572,7 +572,7 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder="Legal business name (e.g., Công ty TNHH ABC)"
+                          placeholder={t("tenants.create.fields.business_name_placeholder")}
                           prefix={
                             <ShopOutlined className="text-gray-400 mr-1" />
                           }
@@ -604,7 +604,7 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder="Primary contact number (e.g., 0912345678)"
+                          placeholder={t("tenants.create.fields.phone_placeholder")}
                           prefix={
                             <PhoneOutlined className="text-gray-400 mr-1" />
                           }
@@ -636,7 +636,7 @@ const TenantFormPage: React.FC = () => {
                       <Input
                         className="text-sm"
                         type="email"
-                        placeholder="Restaurant contact email (e.g., contact@restaurant.com)"
+                        placeholder={t("tenants.create.fields.mail_restaurant_placeholder")}
                         prefix={<MailOutlined className="text-gray-400 mr-1" />}
                       />
                     </Form.Item>
@@ -660,7 +660,7 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder="Street number and building (e.g., 123 Main St)"
+                          placeholder={t("tenants.create.fields.address_line1_placeholder")}
                         />
                       </Form.Item>
 
@@ -676,7 +676,7 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder="Ward/District (e.g., Hòa Thọ Đông)"
+                          placeholder={t("tenants.create.fields.address_line2_placeholder")}
                         />
                       </Form.Item>
 
@@ -692,7 +692,7 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder="City/Province (e.g., Đà Nẵng, Hà Nội)"
+                          placeholder={t("tenants.create.fields.address_line3_placeholder")}
                         />
                       </Form.Item>
 
@@ -708,7 +708,7 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder="Country (e.g., Việt Nam)"
+                          placeholder={t("tenants.create.fields.address_line4_placeholder")}
                         />
                       </Form.Item>
                     </div>
@@ -759,7 +759,7 @@ const TenantFormPage: React.FC = () => {
                         <Input
                           className="text-sm"
                           type="email"
-                          placeholder="Owner account email (e.g., owner@domain.com)"
+                          placeholder={t("tenants.create.fields.owner_email_placeholder")}
                           prefix={
                             <MailOutlined className="text-gray-400 mr-1" />
                           }
@@ -792,7 +792,7 @@ const TenantFormPage: React.FC = () => {
                           ]}>
                           <Input.Password
                             className="text-sm"
-                            placeholder="Minimum 6 characters password"
+                            placeholder={t("tenants.create.fields.password_placeholder")}
                           />
                         </Form.Item>
                       )}
@@ -825,7 +825,7 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Select
                           className="text-sm"
-                          placeholder="Choose subscription plan">
+                          placeholder={t("tenants.create.fields.plan_placeholder")}>
                           <Select.Option value="basic">
                             <span className="font-medium text-emerald-500 text-sm">
                               {t("tenants.create.plan_options.basic")}
@@ -859,6 +859,7 @@ const TenantFormPage: React.FC = () => {
                           type="primary"
                           htmlType="submit"
                           loading={loading}
+                          disabled={loading}
                           size="large"
                           block
                           className="shadow-orange-900/20 shadow-lg border-none h-12 text-base font-medium">
