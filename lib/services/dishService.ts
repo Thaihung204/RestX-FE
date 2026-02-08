@@ -17,6 +17,14 @@ export interface DishCreateDto {
 export interface DishUpdateDto extends DishCreateDto {
 }
 
+export interface DishImageDto {
+  id: string;
+  imageUrl: string;
+  imageType: number;
+  displayOrder: number;
+  isActive: boolean;
+}
+
 export interface DishResponseDto {
   id: string;
   name: string;
@@ -34,20 +42,14 @@ export interface DishResponseDto {
   mainImageUrl?: string;
   imageUrl?: string;
   image?: string;
+  images?: DishImageDto[];
 }
 
 export interface MenuItem {
   id: string;
-  name: string;
-  description?: string;
-  price: number;
-  unit: string;
-  imageUrl?: string;
-  isVegetarian: boolean;
-  isSpicy: boolean;
-  isBestSeller: boolean;
   categoryId: string;
   categoryName: string;
+  imageUrl?: string;
 }
 
 export interface MenuCategory {

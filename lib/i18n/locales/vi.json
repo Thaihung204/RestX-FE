@@ -379,7 +379,130 @@
       "title": "Quản lý",
       "subtitle": "Quản lý danh mục và cấu hình nhà hàng",
       "tabs": {
-        "categories": "Danh mục"
+        "categories": "Danh mục",
+        "ingredient_categories": "Loại nguyên liệu",
+        "suppliers": "Nhà cung cấp",
+        "loyalty": "Hạng thành viên"
+      },
+      "ingredient_categories": {
+        "title": "Loại nguyên liệu",
+        "subtitle": "Phân loại nguyên liệu để quản lý kho hiệu quả hơn",
+        "add": "Thêm loại",
+        "edit": "Sửa loại",
+        "name": "Tên",
+        "description": "Mô tả",
+        "unit": "Đơn vị mặc định",
+        "actions": "Thao tác",
+        "empty": "Chưa có loại nguyên liệu nào. Nhấn \"Thêm loại\" để tạo mới.",
+        "confirm_delete": "Bạn có chắc muốn xóa loại nguyên liệu này?",
+        "name_placeholder": "Ví dụ: Rau củ, Thịt, Sữa...",
+        "description_placeholder": "Mô tả ngắn gọn về loại nguyên liệu này",
+        "defaults": {
+          "vegetables": {
+            "name": "Rau củ",
+            "description": "Rau xanh và củ quả tươi"
+          },
+          "meat": {
+            "name": "Thịt",
+            "description": "Thịt bò, heo, gà, v.v."
+          },
+          "seafood": {
+            "name": "Hải sản",
+            "description": "Cá, tôm, cua, v.v."
+          },
+          "dairy": {
+            "name": "Sữa & Chế phẩm",
+            "description": "Sữa, phô mai, bơ, v.v."
+          },
+          "spices": {
+            "name": "Gia vị",
+            "description": "Muối, tiêu, thảo mộc, v.v."
+          },
+          "sauces": {
+            "name": "Sốt",
+            "description": "Nước tương, nước mắm, v.v."
+          }
+        },
+        "units": {
+          "kg": "kg",
+          "gram": "gram",
+          "liter": "lít",
+          "ml": "ml",
+          "piece": "cái",
+          "bottle": "chai",
+          "can": "lon",
+          "pack": "gói",
+          "box": "hộp"
+        }
+      },
+      "suppliers": {
+        "title": "Quản lý nhà cung cấp",
+        "subtitle": "Quản lý nhà cung cấp và đối tác của nhà hàng",
+        "add": "Thêm nhà cung cấp",
+        "edit": "Sửa nhà cung cấp",
+        "name": "Tên nhà cung cấp",
+        "contact": "Thông tin liên hệ",
+        "phone": "Số điện thoại",
+        "email": "Email",
+        "address": "Địa chỉ",
+        "status": "Trạng thái",
+        "actions": "Thao tác",
+        "active": "Hoạt động",
+        "inactive": "Ngừng hoạt động",
+        "empty": "Chưa có nhà cung cấp nào. Nhấn \"Thêm nhà cung cấp\" để tạo mới.",
+        "confirm_delete": "Bạn có chắc muốn xóa nhà cung cấp này?",
+        "created": "Đã thêm nhà cung cấp",
+        "updated": "Đã cập nhật nhà cung cấp",
+        "deleted": "Đã xóa nhà cung cấp",
+        "name_placeholder": "Ví dụ: Công ty Rau Sạch",
+        "phone_placeholder": "0123456789",
+        "email_placeholder": "lienhe@nhacungcap.com",
+        "address_placeholder": "Địa chỉ đầy đủ của nhà cung cấp",
+        "defaults": {
+          "supplier1": {
+            "name": "Công ty Rau Sạch",
+            "address": "123 Đường Chợ, Quận 1"
+          },
+          "supplier2": {
+            "name": "Thủy Hải Sản Đại Dương",
+            "address": "456 Đường Cảng, Quận 2"
+          }
+        }
+      },
+      "loyalty": {
+        "title": "Hạng thành viên",
+        "desc": "Quản lý các hạng thành viên và ưu đãi",
+        "add_new": "Thêm hạng mới",
+        "edit": "Sửa hạng thành viên",
+        "create": "Tạo hạng thành viên",
+        "name": "Tên hạng",
+        "range": "Khoảng điểm",
+        "discount": "Giảm giá",
+        "benefits": "Ưu đãi",
+        "status": "Trạng thái",
+        "form": {
+          "name": "Tên hạng",
+          "logo": "Thứ hạng",
+          "range": "Khoảng điểm",
+          "max_tooltip": "Để trống nếu không giới hạn",
+          "discount": "Phần trăm giảm giá (%)",
+          "benefits": "Mô tả ưu đãi"
+        },
+        "badges": {
+          "bronze": "Đồng",
+          "silver": "Bạc",
+          "gold": "Vàng",
+          "platinum": "Bạch kim"
+        }
+      },
+      "notifications": {
+        "delete_success": "Xóa thành công",
+        "update_success": "Cập nhật thành công",
+        "create_success": "Tạo mới thành công"
+      },
+      "errors": {
+        "fetch_failed": "Không thể tải danh sách hạng thành viên",
+        "delete_failed": "Xóa thất bại"
       }
     },
     "header": {
@@ -656,7 +779,13 @@
         "description": "Mô tả",
         "image": "Hình ảnh",
         "actions": "Hành động",
-        "confirm_delete": "Bạn có chắc chắn muốn xóa danh mục này?"
+        "confirm_delete": "Bạn có chắc chắn muốn xóa danh mục này?",
+        "change_image": "Đổi ảnh",
+        "upload_image": "Tải ảnh lên",
+        "file_size_error": "Kích thước tệp phải nhỏ hơn 5MB",
+        "name_placeholder": "ví dụ: Khai vị",
+        "description_placeholder": "Mô tả ngắn gọn về danh mục",
+        "no_categories": "Chưa có danh mục nào. Nhấn \"Thêm danh mục\" để tạo mới."
       },
       "general": {
         "restaurant_info": "Thông tin nhà hàng",
@@ -817,6 +946,9 @@
       "days_ago": "{{count}} ngày trước"
     },
     "status": {
+      "label": "Trạng thái",
+      "active": "Hoạt động",
+      "inactive": "Ngừng hoạt động",
       "pending": "Chờ xử lý",
       "preparing": "Đang nấu",
       "ready": "Sẵn sàng",
@@ -824,6 +956,9 @@
       "cancelled": "Đã hủy"
     },
     "actions": {
+      "title": "Thao tác",
+      "yes": "Có",
+      "no": "Không",
       "create_order": "Tạo Order mới"
     },
     "language": "Ngôn ngữ",
@@ -1079,6 +1214,18 @@
       "main": "Món chính",
       "dessert": "Tráng miệng",
       "drinks": "Đồ uống"
+    },
+    "descriptions": {
+      "appetizer": "Salad, súp và món khai vị",
+      "main": "Bít tết, hải sản và mỳ Ý",
+      "dessert": "Bánh ngọt, kem và trái cây",
+      "drinks": "Cocktail, rượu và nước ngọt"
+    },
+    "messages": {
+      "name_required": "Vui lòng nhập tên",
+      "phone_required": "Vui lòng nhập số điện thoại",
+      "supplier_added": "Thêm nhà cung cấp thành công",
+      "supplier_updated": "Cập nhật nhà cung cấp thành công"
     },
     "menu_section": {
       "title": "Thực đơn của chúng tôi",
