@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 const revenueData = [
   { day: "Mon", value: 3200 },
   { day: "Tue", value: 4100 },
@@ -11,6 +13,7 @@ const revenueData = [
 ];
 
 export default function RevenueChart() {
+  const { t } = useTranslation();
   const maxValue = Math.max(...revenueData.map((d) => d.value));
 
   return (
@@ -22,10 +25,10 @@ export default function RevenueChart() {
       }}>
       <div className="mb-6">
         <h3 className="text-xl font-bold mb-1" style={{ color: 'var(--text)' }}>
-          Revenue Trend
+          {t('charts.revenue.title')}
         </h3>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-          Last 7 days performance
+          {t('charts.revenue.subtitle')}
         </p>
       </div>
 

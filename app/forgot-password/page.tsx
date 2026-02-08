@@ -4,6 +4,7 @@ import LoginButton from "@/components/auth/LoginButton";
 import authService from "@/lib/services/authService";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { message } from "antd";
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation('auth');
@@ -84,10 +85,10 @@ export default function ForgotPasswordPage() {
     try {
       await authService.requestPasswordReset(email);
       setSuccess(true);
-      alert(t('forgot_password_page.alerts.success', { email }));
+      message.success(t('forgot_password_page.alerts.success', { email }));
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to send reset link. Please try again.';
-      alert(errorMessage);
+      message.error(errorMessage);
       console.error('Forgot password error:', error);
     } finally {
       setLoading(false);

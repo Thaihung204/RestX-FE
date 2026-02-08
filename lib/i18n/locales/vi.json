@@ -832,6 +832,76 @@
     "theme": {
       "switch_to_light": "Chuyển chế độ Sáng",
       "switch_to_dark": "Chuyển chế độ Tối"
+    },
+    "loading": "Đang tải...",
+    "loading_menu": "Đang tải thực đơn...",
+    "save_changes": "Lưu thay đổi",
+    "edit": "Sửa",
+    "delete": "Xóa",
+    "errors": {
+      "data_not_supported": "Cấu trúc dữ liệu không được hỗ trợ",
+      "api_error": "Lỗi API: {{status}} - {{message}}",
+      "network_error": "Lỗi mạng: {{message}}",
+      "unknown_error": "Đã xảy ra lỗi không mong muốn"
+    }
+  },
+  "charts": {
+    "revenue": {
+      "title": "Xu hướng doanh thu",
+      "subtitle": "Hiệu suất 7 ngày qua"
+    },
+    "orders": {
+      "title": "Tổng quan đơn hàng",
+      "subtitle": "Số lượng đơn hàng theo ngày",
+      "total_orders": "Tổng đơn hàng",
+      "orders_suffix": "đơn"
+    },
+    "area_distribution": {
+      "title": "Phân bố khu vực",
+      "subtitle": "Phân bổ bàn theo khu vực",
+      "tables": "Bàn",
+      "tables_suffix": "bàn"
+    }
+  },
+  "time_slots": {
+    "modal_title": "Quản lý khung giờ",
+    "add_new": "Thêm khung giờ mới",
+    "label": "Nhãn (Tự động tạo)",
+    "label_placeholder": "VD: 7h - 9h",
+    "time_range": "Khoảng thời gian",
+    "no_slots": "Chưa có khung giờ nào được cấu hình",
+    "messages": {
+      "added": "Đã thêm khung giờ",
+      "updated": "Đã cập nhật khung giờ",
+      "deleted": "Đã xóa khung giờ"
+    },
+    "delete_confirm": {
+      "title": "Xóa khung giờ này?",
+      "description": "Điều này sẽ ảnh hưởng đến lịch làm việc hiện có."
+    },
+    "validation": {
+      "label_required": "Vui lòng nhập nhãn",
+      "time_required": "Vui lòng chọn khoảng thời gian"
+    }
+  },
+  "customer_actions": {
+    "call_service": "Gọi phục vụ",
+    "request_bill": "Tính tiền",
+    "give_feedback": "Góp ý dịch vụ"
+  },
+  "menu_form": {
+    "errors": {
+      "load_failed": "Không thể tải thông tin món ăn",
+      "name_required": "Vui lòng nhập tên món",
+      "category_required": "Vui lòng chọn danh mục",
+      "price_invalid": "Giá phải lớn hơn 0"
+    }
+  },
+  "table_form": {
+    "errors": {
+      "number_min": "Số bàn phải từ 1 trở lên",
+      "capacity_min": "Sức chứa phải từ 1 trở lên",
+      "capacity_max": "Sức chứa không được vượt quá 20"
     }
   },
   "homepage": {
@@ -1017,6 +1087,7 @@
   },
   "customers": {
     "title": "Quản lý khách hàng",
+    "subtitle": "Xem và quản lý thông tin khách hàng của nhà hàng",
     "birthday_alert": {
       "title": "Sinh nhật hôm nay!",
       "message": "Có {{count}} khách hàng sinh nhật hôm nay. Hãy gửi lời chúc mừng!"
@@ -1035,6 +1106,7 @@
         "customer": "Khách hàng",
         "contact": "Liên hệ",
         "vip_tier": "Hạng VIP",
+        "rank": "Hạng",
         "orders": "Đơn hàng",
         "total_spent": "Tổng chi tiêu",
         "points": "Điểm tích lũy",
@@ -1042,7 +1114,8 @@
       },
       "status": {
         "birthday": "Sinh nhật",
-        "active": "Hoạt động"
+        "active": "Hoạt động",
+        "inactive": "Ngừng hoạt động"
       },
       "empty": "Không tìm thấy khách hàng nào"
     },
@@ -1074,6 +1147,10 @@
   },
   "menu_page": {
     "title": "Thực đơn hôm nay",
+    "loading": "Đang tải thực đơn...",
+    "retry": "Thử lại",
+    "error_load": "Không thể tải thực đơn. Vui lòng thử lại sau.",
+    "items": "món",
     "restx_menu": "RESTX MENU",
     "search_placeholder": "Tìm món...",
     "viewing_category": "Đang xem danh mục",
@@ -1126,6 +1203,7 @@
     "login_button": {
       "login_text": "ĐĂNG NHẬP",
       "create_account": "TẠO TÀI KHOẢN",
+      "register_text": "ĐĂNG KÝ",
       "loading": "Đang tải..."
     },
     "login_page": {
@@ -1138,6 +1216,7 @@
       "privacy_policy": "Chính sách bảo mật",
       "or_login_with": "Hoặc đăng nhập bằng",
       "email_password": "Email & Mật khẩu",
+      "welcome_back": "Chào mừng trở lại",
       "validation": {
         "phone_length": "Số điện thoại phải có đúng 10 chữ số",
         "phone_digits": "Số điện thoại chỉ được chứa chữ số",

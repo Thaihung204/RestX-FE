@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { message } from "antd";
 
 export default function LoginEmailPage() {
   const { t } = useTranslation('auth');
@@ -166,7 +167,7 @@ export default function LoginEmailPage() {
 
     } catch (error: any) {
       const errorMessage = error.message || 'Login failed. Please try again.';
-      alert(errorMessage);
+      message.error(errorMessage);
       console.error('Login error:', error);
     } finally {
       setLoading(false);

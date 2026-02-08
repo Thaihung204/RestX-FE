@@ -18,8 +18,30 @@ export default function CategorySettings() {
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [formData, setFormData] = useState<Category>({ id: 0, name: "", image: "", desc: "" });
 
-    // Initialize data with translations
+    // Load categories from localStorage on mount
     useEffect(() => {
+        const savedCategories = localStorage.getItem('restaurant-categories');
+        if (savedCategories) {
+            try {
+                setCategories(JSON.parse(savedCategories));
+            } catch (error) {
+                console.error('Failed to load categories from localStorage:', error);
+                // Fallback to default
+                loadDefaultCategories();
+            }
+        } else {
+            loadDefaultCategories();
+        }
+    }, [t]);
+
+    // Save categories to localStorage whenever they change
+    useEffect(() => {
+        if (categories.length > 0) {
+            localStorage.setItem('restaurant-categories', JSON.stringify(categories));
+        }
+    }, [categories]);
+
+    const loadDefaultCategories = () => {
         setCategories([
             {
                 id: 1,
@@ -46,7 +68,7 @@ export default function CategorySettings() {
                 desc: "Cocktails, wine, and soft drinks",
             },
         ]);
-    }, [t]);
+    };
 
     const handleOpenModal = (category?: Category) => {
         if (category) {
@@ -248,36 +270,81 @@ export default function CategorySettings() {
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
                                     {t("dashboard.settings.categories.image")}
                                 </label>
-                                <div className="flex gap-4 items-center">
-                                    <div className="flex-1">
-                                        <input
-                                            type="text"
-                                            value={formData.image}
-                                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                            className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[#FF380B] focus:border-transparent transition-all outline-none"
+                                <div className="space-y-3">
+                                    {/* Upload Button */}
+                                    <div className="flex gap-3">
+                                        <label
+                                            htmlFor="category-image-upload"
+                                            className="flex-1 px-4 py-2.5 rounded-lg border-2 border-dashed cursor-pointer hover:border-[#FF380B] transition-all text-center"
                                             style={{
-                                                background: 'var(--bg-base)',
                                                 borderColor: 'var(--border)',
-                                                color: 'var(--text)'
+                                                background: 'var(--bg-base)',
                                             }}
-                                            placeholder="Image URL (e.g. /images/cat-1.jpg)"
+                                        >
+                                            <div className="flex items-center justify-center gap-2" style={{ color: 'var(--text-muted)' }}>
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                </svg>
+                                                <span className="text-sm font-medium">
+                                                    {formData.image ? 'Change Image' : 'Upload Image'}
+                                                </span>
+                                            </div>
+                                        </label>
+                                        <input
+                                            id="category-image-upload"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    // Validate file size (max 5MB)
+                                                    if (file.size > 5 * 1024 * 1024) {
+                                                        alert('File size must be less than 5MB');
+                                                        return;
+                                                    }
+
+                                                    // Convert to base64
+                                                    const reader = new FileReader();
+                                                    reader.onloadend = () => {
+                                                        setFormData({ ...formData, image: reader.result as string });
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
                                         />
+                                        {formData.image && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, image: '' })}
+                                                className="px-4 py-2.5 rounded-lg border transition-colors hover:bg-red-50 dark:hover:bg-red-900/10"
+                                                style={{
+                                                    borderColor: 'var(--border)',
+                                                    color: '#ef4444'
+                                                }}
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        )}
                                     </div>
+
+                                    {/* Image Preview */}
+                                    {formData.image && (
+                                        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border-2" style={{ borderColor: 'var(--border)' }}>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={formData.image}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.src = 'https://placehold.co/600x400?text=Invalid+Image';
+                                                }}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
-                                {/* Image Preview */}
-                                {formData.image && (
-                                    <div className="mt-3 aspect-video rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                            src={formData.image}
-                                            alt="Preview"
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                e.currentTarget.src = 'https://placehold.co/600x400?text=Invalid+Image+URL';
-                                            }}
-                                        />
-                                    </div>
-                                )}
                             </div>
 
                         </div>

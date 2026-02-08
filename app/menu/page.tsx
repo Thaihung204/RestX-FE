@@ -1,95 +1,57 @@
 "use client";
 
 import NotificationSystem from "@/components/notifications/NotificationSystem";
+import menuService from "@/lib/services/menuService";
+import type {
+  CartItem,
+  Category,
+  CategoryWithDishes,
+  MenuItem,
+} from "@/lib/types/menu";
 import {
   ArrowLeftOutlined,
   CloseOutlined,
-  CoffeeOutlined,
   DeleteOutlined,
-  FilterOutlined,
+  DownOutlined,
   FireOutlined,
+  HeartFilled,
   MinusOutlined,
   PlusOutlined,
   SearchOutlined,
   ShoppingCartOutlined,
+  StarFilled,
 } from "@ant-design/icons";
 import {
   Affix,
   Button,
   Card,
   Col,
+  Collapse,
   ConfigProvider,
   Input,
   Modal,
   Row,
-  Select,
   Spin,
   Typography,
   message,
   theme,
 } from "antd";
-import axiosInstance from "@/lib/services/axiosInstance";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
 
-// --- Types ---
-type MenuItem = {
-  id: string;
-  name: string;
-  price: string;
-  tags?: string[];
-  note?: string;
-  description?: string;
-  image?: string;
-  categoryId?: string;
-  categoryName?: string;
-  isPopular?: boolean;
-  isBestSeller?: boolean;
-  isSpicy?: boolean;
-  isVegetarian?: boolean;
-};
-
-type CartItem = {
-  id: string;
-  name: string;
-  price: string;
-  quantity: number;
-  category: "food" | "drink";
-  image?: string;
-};
-
-type MenuSection = {
-  key: string;
-  title: string;
-  description: string;
-  items: MenuItem[];
-};
-
-type Category = {
-  id: string;
-  name: string;
-};
-
-// Hardcoded categories (temporary solution until API is ready)
-const STATIC_CATEGORIES: Category[] = [
-  { id: "600DCEDC-D5E1-43CE-B8C9-08A64937A66C", name: "Món chính" },
-  { id: "C7F1CA77-9B44-4418-B69A-8825BAD9FD6A", name: "Đồ uống" },
-];
-
 export default function MenuPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
 
   // State management
-  const [activeSectionKey, setActiveSectionKey] = useState<string>("all");
-  const [searchText, setSearchText] = useState("");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartModalOpen, setCartModalOpen] = useState(false);
   const [foodDetailModalOpen, setFoodDetailModalOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState<MenuItem | null>(null);
+  const [searchText, setSearchText] = useState("");
   const [messageApi, contextHolder] = message.useMessage();
 
   // API state
@@ -108,127 +70,89 @@ export default function MenuPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch dishes
-      const dishesResponse = await axiosInstance.get(`/dishes`, {
-        params: {
-          page: 1,
-          itemsPerPage: 100,
-        },
-      });
+      // Fetch menu data using service
+      const menuData = await menuService.getMenu();
 
-      const dishesData = dishesResponse.data;
-      const arrayData =
-        dishesData.dishes ||
-        dishesData.data ||
-        dishesData.items ||
-        (Array.isArray(dishesData) ? dishesData : []);
+      if (menuData && Array.isArray(menuData)) {
+        // Extract all dishes from all categories
+        const allDishes: MenuItem[] = [];
+        const extractedCategories: Category[] = [];
 
-      if (arrayData && Array.isArray(arrayData)) {
-        const mappedDishes: MenuItem[] = arrayData
-          .filter((item: any) => item.isActive !== false) // Only show active items
-          .map((item: any) => {
-            // Map categoryName to categoryId from STATIC_CATEGORIES
-            const matchedCategory = STATIC_CATEGORIES.find(
-              (cat) => cat.name === (item.categoryName || item.category),
-            );
+        menuData.forEach((categoryGroup) => {
+          // Add category to the list
+          if (categoryGroup.categoryId && categoryGroup.categoryName) {
+            extractedCategories.push({
+              id: categoryGroup.categoryId,
+              name: categoryGroup.categoryName,
+            });
+          }
 
-            return {
-              id: item.id?.toString() || item.dishId?.toString() || "",
-              name: item.name || "",
-              price: item.price?.toString() || "0",
-              description: item.description || t("menu_page.default_food_desc"),
-              image:
-                item.mainImageUrl ||
-                item.imageUrl ||
-                item.image ||
-                "/placeholder-dish.jpg",
-              categoryId: matchedCategory?.id || item.categoryId || "",
-              categoryName: item.categoryName || item.category || "",
-              isPopular: item.isPopular || false,
-              isBestSeller: item.isBestSeller || false,
-              isSpicy: item.isSpicy || false,
-              isVegetarian: item.isVegetarian || false,
-              tags: [
-                item.isSpicy && "spicy",
-                item.isVegetarian && "vegan",
-                item.isBestSeller && "best",
-              ].filter(Boolean) as string[],
-              note: item.isBestSeller ? t("menu_page.best_seller") : undefined,
-            };
-          });
+          // Map dishes from this category
+          if (categoryGroup.items && Array.isArray(categoryGroup.items)) {
+            categoryGroup.items.forEach((item) => {
+              allDishes.push({
+                id: item.id?.toString() || "",
+                name: item.name || "",
+                price: item.price?.toString() || "0",
+                description:
+                  item.description || t("menu_page.default_food_desc"),
+                image: item.imageUrl || "/placeholder-dish.jpg",
+                categoryId: item.categoryId || categoryGroup.categoryId || "",
+                categoryName:
+                  item.categoryName || categoryGroup.categoryName || "",
+                isPopular: item.isPopular || false,
+                isBestSeller: item.isBestSeller || false,
+                isSpicy: item.isSpicy || false,
+                isVegetarian: item.isVegetarian || false,
+                tags: [
+                  item.isSpicy && "spicy",
+                  item.isVegetarian && "vegan",
+                  item.isBestSeller && "best",
+                ].filter(Boolean) as string[],
+                note: item.isBestSeller
+                  ? t("menu_page.best_seller")
+                  : undefined,
+              });
+            });
+          }
+        });
 
-        setDishes(mappedDishes);
-
-        // Use static categories instead of extracting from dishes
-        setCategories(STATIC_CATEGORIES);
+        setDishes(allDishes);
+        setCategories(extractedCategories);
       }
     } catch (err) {
       console.error("Failed to fetch menu data:", err);
-      setError("Failed to load menu. Please try again later.");
+      setError(t("menu_page.error_load"));
     } finally {
       setLoading(false);
     }
   };
 
-  // Build sections from API data
-  const sections = useMemo<MenuSection[]>(() => {
-    if (loading || dishes.length === 0) return [];
+  // Group dishes by category for display
+  const categoriesWithDishes = useMemo<CategoryWithDishes[]>(() => {
+    let filteredDishes = dishes;
 
-    const categorySections: MenuSection[] = categories.map((cat) => ({
-      key: cat.id,
-      title: cat.name,
-      description: `${dishes.filter((d) => d.categoryId === cat.id).length} dishes`,
-      items: dishes.filter((d) => d.categoryId === cat.id),
-    }));
-
-    return [
-      {
-        key: "all",
-        title: "All Dishes",
-        description: `${dishes.length} dishes available`,
-        items: dishes,
-      },
-      ...categorySections,
-    ];
-  }, [dishes, categories, loading]);
-
-  // Filter logic:
-  // 1. Use the current section
-  // 2. If search text exists -> filter by name inside that section
-  const currentSection = useMemo(
-    () => sections.find((s) => s.key === activeSectionKey) || sections[0],
-    [activeSectionKey, sections],
-  );
-
-  const displayedItems = useMemo(() => {
-    if (!currentSection) return [];
-    let items = currentSection.items;
+    // Filter by search text
     if (searchText) {
       const lowerSearch = searchText.toLowerCase();
-      items = items.filter((i) => i.name.toLowerCase().includes(lowerSearch));
+      filteredDishes = dishes.filter((d) =>
+        d.name.toLowerCase().includes(lowerSearch),
+      );
     }
-    return items;
-  }, [currentSection, searchText]);
+
+    return categories
+      .map((cat) => ({
+        category: cat,
+        dishes: filteredDishes.filter((d) => d.categoryId === cat.id),
+      }))
+      .filter((group) => group.dishes.length > 0);
+  }, [dishes, categories, searchText]);
 
   const cartItemCount = useMemo(() => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   }, [cartItems]);
 
-  const getItemCategory = (item: MenuItem): "food" | "drink" => {
-    // Determine category based on categoryName or default to food
-    const categoryLower = item.categoryName?.toLowerCase() || "";
-    if (
-      categoryLower.includes("drink") ||
-      categoryLower.includes("đồ uống") ||
-      categoryLower.includes("boba")
-    ) {
-      return "drink";
-    }
-    return "food";
-  };
-
   const handleAddToCart = (item: MenuItem) => {
-    const category = getItemCategory(item);
     setCartItems((prev) => {
       const existingItem = prev.find((cartItem) => cartItem.id === item.id);
       if (existingItem) {
@@ -245,7 +169,8 @@ export default function MenuPage() {
             name: item.name,
             price: item.price,
             quantity: 1,
-            category,
+            category: "food",
+            categoryId: item.categoryId || "",
             image: item.image,
           },
         ];
@@ -287,14 +212,6 @@ export default function MenuPage() {
     return new Intl.NumberFormat("vi-VN").format(priceNum);
   };
 
-  const foodItems = useMemo(() => {
-    return cartItems.filter((item) => item.category === "food");
-  }, [cartItems]);
-
-  const drinkItems = useMemo(() => {
-    return cartItems.filter((item) => item.category === "drink");
-  }, [cartItems]);
-
   // Loading state
   if (loading) {
     return (
@@ -316,7 +233,7 @@ export default function MenuPage() {
             gap: 16,
           }}>
           <Spin size="large" />
-          <Text style={{ color: "#999" }}>Loading menu...</Text>
+          <Text style={{ color: "#999" }}>{t("menu_page.loading")}</Text>
         </div>
       </ConfigProvider>
     );
@@ -345,7 +262,7 @@ export default function MenuPage() {
           }}>
           <Text style={{ color: "#ff4d4f", fontSize: 18 }}>{error}</Text>
           <Button type="primary" onClick={fetchMenuData}>
-            Retry
+            {t("menu_page.retry")}
           </Button>
         </div>
       </ConfigProvider>
@@ -360,7 +277,8 @@ export default function MenuPage() {
           algorithm: theme.darkAlgorithm,
           token: {
             colorPrimary: "#FF380B",
-            fontFamily: "'Playfair Display', 'Inter', sans-serif",
+            fontFamily:
+              "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
             borderRadius: 12,
             controlHeight: 45, // Increase input/select height for easier tap
           },
@@ -368,6 +286,13 @@ export default function MenuPage() {
             Modal: {
               contentBg: "transparent",
               boxShadow: "none",
+            },
+            Collapse: {
+              headerBg: "transparent",
+              contentBg: "transparent",
+              headerPadding: "16px 20px",
+              colorBorder: "transparent",
+              contentPadding: "5px",
             },
             Select: {
               colorBgContainer: "rgba(255,255,255,0.08)",
@@ -452,7 +377,7 @@ export default function MenuPage() {
                   fontWeight: 700,
                   textTransform: "uppercase",
                 }}>
-                RestX Menu
+                {t("menu_page.logo_title")}
               </Text>
               <Title level={2} style={{ margin: "4px 0 0", color: "#fff" }}>
                 {t("menu_page.title")}
@@ -460,7 +385,7 @@ export default function MenuPage() {
             </div>
           </div>
 
-          {/* --- STICKY NAVIGATION BAR (Dropdown + Search) --- */}
+          {/* --- Search Bar --- */}
           <Affix offsetTop={0}>
             <div
               style={{
@@ -468,71 +393,23 @@ export default function MenuPage() {
                 backdropFilter: "blur(16px)",
                 borderBottom: "1px solid rgba(255,255,255,0.08)",
                 padding: "12px 16px",
-                zIndex: 100,
                 boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+                zIndex: 100,
               }}>
               <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-                <Row gutter={[12, 12]}>
-                  {/* Category Filter Dropdown */}
-                  <Col xs={14} md={8}>
-                    <Select
-                      style={{ width: "100%" }}
-                      value={activeSectionKey}
-                      onChange={setActiveSectionKey}
-                      suffixIcon={
-                        <FilterOutlined style={{ color: "#FF380B" }} />
-                      }
-                      showSearch={false}
-                      placeholder="Filter by category"
-                      options={[
-                        {
-                          label: (
-                            <span
-                              style={{
-                                fontWeight: 600,
-                                fontSize: 15,
-                                color: "#FF380B",
-                              }}>
-                              All Dishes
-                            </span>
-                          ),
-                          value: "all",
-                        },
-                        ...categories.map((cat) => ({
-                          label: (
-                            <span style={{ fontWeight: 500, fontSize: 15 }}>
-                              {cat.name}
-                            </span>
-                          ),
-                          value: cat.id,
-                        })),
-                      ]}
-                      styles={{
-                        popup: {
-                          root: {
-                            background: "#1f1f1f",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                            borderRadius: 12,
-                          },
-                        },
-                      }}
-                    />
-                  </Col>
-
-                  {/* Search Input */}
-                  <Col xs={10} md={16}>
-                    <div suppressHydrationWarning style={{ width: "100%" }}>
-                      <Input
-                        prefix={<SearchOutlined style={{ color: "#666" }} />}
-                        placeholder={t("menu_page.search_placeholder")}
-                        allowClear
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                        style={{ borderRadius: 8 }}
-                      />
-                    </div>
-                  </Col>
-                </Row>
+                <Input
+                  size="large"
+                  placeholder="Search items..."
+                  prefix={<SearchOutlined />}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  allowClear
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "#fff",
+                  }}
+                />
               </div>
             </div>
           </Affix>
@@ -540,188 +417,295 @@ export default function MenuPage() {
           {/* --- Main Content --- */}
           <div
             style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
-            {/* Section Description */}
-            <div style={{ marginBottom: 16, animation: "fadeIn 0.5s ease" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  marginBottom: 6,
-                }}>
-                <FilterOutlined style={{ color: "#FF380B" }} />
-                <Text
+            {/* Display categories with their dishes */}
+            <Collapse
+              defaultActiveKey={[]}
+              expandIconPlacement="start"
+              expandIcon={({ isActive }) => (
+                <DownOutlined
                   style={{
                     color: "#FF380B",
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    fontSize: 13,
-                  }}>
-                  {activeSectionKey === "all"
-                    ? "All Dishes"
-                    : currentSection.title}
-                </Text>
-              </div>
-              <Title level={3} style={{ color: "#fff", margin: 0 }}>
-                {activeSectionKey === "all"
-                  ? "All Dishes"
-                  : currentSection.title}
-              </Title>
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.5)",
-                  marginTop: 4,
-                  display: "block",
-                }}>
-                {currentSection.description}
-              </Text>
-            </div>
-
-            {/* Result Count */}
-            <div style={{ marginBottom: 12 }}>
-              <Text style={{ color: "#666", fontSize: 13 }}>
-                {t("menu_page.showing_items", { count: displayedItems.length })}
-              </Text>
-            </div>
-
-            {/* Product Grid - Horizontal Layout */}
-            <Row gutter={[0, 8]}>
-              {displayedItems.length > 0 ? (
-                displayedItems.map((item, index) => (
-                  <Col xs={24} key={`${item.name}-${index}`}>
-                    <Card
-                      hoverable
-                      variant="borderless"
-                      onClick={() => {
-                        setSelectedFood(item);
-                        setFoodDetailModalOpen(true);
-                      }}
+                    fontSize: 14,
+                    transform: isActive ? "rotate(0deg)" : "rotate(-90deg)",
+                    transition: "transform 0.3s ease",
+                  }}
+                />
+              )}
+              style={{
+                background: "transparent",
+                border: "none",
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+              items={categoriesWithDishes.map((categoryGroup) => ({
+                key: categoryGroup.category.id,
+                label: (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      width: "100%",
+                    }}>
+                    <div
                       style={{
-                        background: "#121212",
-                        borderRadius: 12,
-                        border: "1px solid rgba(255,255,255,0.06)",
-                        overflow: "hidden",
-                      }}
-                      styles={{
-                        body: { padding: 0 },
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
                       }}>
-                      <div
+                      <Title
+                        level={4}
                         style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          gap: 12,
-                          padding: 8,
-                          alignItems: "center",
+                          color: "#fff",
+                          margin: 0,
+                          fontSize: 18,
+                          fontWeight: 600,
+                          letterSpacing: "0.2px",
                         }}>
-                        {/* Image Section */}
-                        <div
-                          style={{
-                            flexShrink: 0,
-                            width: 80,
-                            height: 80,
-                            position: "relative",
-                          }}>
-                          {item.image ? (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                borderRadius: 8,
-                                border: "1px solid rgba(255,255,255,0.1)",
-                              }}
-                            />
-                          ) : (
+                        {categoryGroup.category.name}
+                      </Title>
+                    </div>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Text
+                        style={{
+                          color: "rgba(255,255,255,0.4)",
+                          fontSize: 11,
+                          fontWeight: 500,
+                        }}>
+                        {categoryGroup.dishes.length} {t("menu_page.items")}
+                      </Text>
+                    </div>
+                  </div>
+                ),
+                style: {
+                  background: "rgba(255, 255, 255, 0.03)",
+                  borderRadius: 16,
+                  border: "1px solid rgba(255, 255, 255, 0.04)",
+                  overflow: "hidden",
+                  backdropFilter: "blur(10px)",
+                  marginBottom: 0,
+                },
+                children: (
+                  <div style={{ padding: "0 4px 12px 4px" }}>
+                    <Row gutter={[10, 10]}>
+                      {categoryGroup.dishes.map((item, index) => (
+                        <Col xs={24} sm={12} key={`${item.id}-${index}`}>
+                          <Card
+                            hoverable
+                            variant="borderless"
+                            onClick={() => {
+                              setSelectedFood(item);
+                              setFoodDetailModalOpen(true);
+                            }}
+                            style={{
+                              background:
+                                "linear-gradient(135deg, rgba(30, 30, 30, 0.8) 0%, rgba(20, 20, 20, 0.9) 100%)",
+                              borderRadius: 12,
+                              border: "1px solid rgba(255,255,255,0.06)",
+                              overflow: "hidden",
+                              transition: "all 0.3s ease",
+                              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                            }}
+                            styles={{
+                              body: { padding: 0 },
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform =
+                                "translateY(-1px)";
+                              e.currentTarget.style.boxShadow =
+                                "0 6px 20px rgba(255, 56, 11, 0.1)";
+                              e.currentTarget.style.borderColor =
+                                "rgba(255, 56, 11, 0.3)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow =
+                                "0 2px 8px rgba(0, 0, 0, 0.2)";
+                              e.currentTarget.style.borderColor =
+                                "rgba(255,255,255,0.06)";
+                            }}>
                             <div
                               style={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: 8,
-                                background:
-                                  "linear-gradient(135deg, #1f1f1f 0%, #141414 100%)",
                                 display: "flex",
+                                flexDirection: "row",
+                                gap: 10,
+                                padding: 10,
                                 alignItems: "center",
-                                justifyContent: "center",
-                                color: "#444",
-                                border: "1px dashed rgba(255,255,255,0.1)",
-                                overflow: "hidden",
-                                position: "relative",
                               }}>
-                              <div style={{ textAlign: "center" }}></div>
-                            </div>
-                          )}
-                        </div>
+                              {/* Image Section */}
+                              <div
+                                style={{
+                                  flexShrink: 0,
+                                  width: 72,
+                                  height: 72,
+                                  position: "relative",
+                                }}>
+                                {item.image ? (
+                                  <img
+                                    src={item.image}
+                                    alt={item.name}
+                                    style={{
+                                      width: "100%",
+                                      height: "100%",
+                                      objectFit: "cover",
+                                      borderRadius: 8,
+                                      border:
+                                        "1px solid rgba(255,255,255,0.08)",
+                                      boxShadow: "0 2px 6px rgba(0, 0, 0, 0.3)",
+                                    }}
+                                  />
+                                ) : (
+                                  <div
+                                    style={{
+                                      width: "100%",
+                                      height: "100%",
+                                      borderRadius: 8,
+                                      background:
+                                        "linear-gradient(135deg, #1f1f1f 0%, #141414 100%)",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "#444",
+                                      border:
+                                        "1px dashed rgba(255,255,255,0.1)",
+                                      overflow: "hidden",
+                                      position: "relative",
+                                    }}>
+                                    <div style={{ textAlign: "center" }}></div>
+                                  </div>
+                                )}
+                              </div>
 
-                        {/* Content Section */}
-                        <div
-                          style={{
-                            flex: 1,
-                            display: "flex",
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            minWidth: 0,
-                            gap: 12,
-                          }}>
-                          <Text
-                            style={{
-                              fontSize: 15,
-                              fontWeight: 600,
-                              color: "#fff",
-                              flex: 1,
-                              minWidth: 0,
-                            }}>
-                            {item.name}
-                          </Text>
-                          <Text
-                            style={{
-                              color: "#FF380B",
-                              fontWeight: 700,
-                              fontSize: 15,
-                              flexShrink: 0,
-                            }}>
-                            {formatPrice(item.price)}đ
-                          </Text>
-                          <div suppressHydrationWarning>
-                            <Button
-                              type="primary"
-                              icon={<PlusOutlined />}
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddToCart(item);
-                              }}
-                              style={{
-                                background: "#FF380B",
-                                border: "none",
-                                width: 32,
-                                height: 32,
-                                minWidth: 32,
-                                padding: 0,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  </Col>
-                ))
-              ) : (
-                <Col
-                  span={24}
-                  style={{ textAlign: "center", padding: "40px 0" }}>
-                  <Text style={{ color: "#666" }}>
-                    {t("menu_page.no_items_found")}
-                  </Text>
-                </Col>
-              )}
-            </Row>
+                              {/* Content Section */}
+                              <div
+                                style={{
+                                  flex: 1,
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  minWidth: 0,
+                                  gap: 10,
+                                }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <Text
+                                    style={{
+                                      fontSize: 15,
+                                      fontWeight: 600,
+                                      color: "#fff",
+                                      display: "block",
+                                      marginBottom: 4,
+                                      lineHeight: 1.3,
+                                    }}>
+                                    {item.name}
+                                  </Text>
+                                  <Text
+                                    style={{
+                                      color: "#FF380B",
+                                      fontWeight: 700,
+                                      fontSize: 15,
+                                      display: "block",
+                                    }}>
+                                    {formatPrice(item.price)}đ
+                                  </Text>
+
+                                  {item.tags && item.tags.length > 0 && (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: 4,
+                                        flexWrap: "wrap",
+                                        marginTop: 4,
+                                      }}>
+                                      {item.tags.slice(0, 2).map((tag, idx) => {
+                                        let icon = <StarFilled />;
+                                        let color = "#FF380B";
+                                        let bg = "rgba(255, 56, 11, 0.1)";
+                                        let label = t(`menu_page.tags.${tag}`, {
+                                          defaultValue: tag,
+                                        });
+
+                                        if (tag === "spicy") {
+                                          icon = <FireOutlined />;
+                                          color = "#ff4d4f";
+                                          bg = "rgba(255, 77, 79, 0.1)";
+                                        } else if (tag === "vegan") {
+                                          icon = <HeartFilled />;
+                                          color = "#52c41a";
+                                          bg = "rgba(82, 196, 26, 0.1)";
+                                        } else if (tag === "best") {
+                                          icon = <StarFilled />;
+                                          color = "#faad14";
+                                          bg = "rgba(250, 173, 20, 0.1)";
+                                        }
+
+                                        return (
+                                          <span
+                                            key={idx}
+                                            style={{
+                                              fontSize: 9,
+                                              padding: "1px 6px",
+                                              borderRadius: 6,
+                                              background: bg,
+                                              color: color,
+                                              border: `1px solid ${color}`,
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: 3,
+                                              fontWeight: 600,
+                                            }}>
+                                            <span style={{ fontSize: 9 }}>
+                                              {icon}
+                                            </span>{" "}
+                                            {label}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div suppressHydrationWarning>
+                                  <Button
+                                    type="primary"
+                                    icon={
+                                      <PlusOutlined style={{ fontSize: 12 }} />
+                                    }
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAddToCart(item);
+                                    }}
+                                    style={{
+                                      background:
+                                        "linear-gradient(135deg, #FF380B 0%, #ff5722 100%)",
+                                      border: "none",
+                                      width: 32,
+                                      height: 32,
+                                      minWidth: 32,
+                                      padding: 0,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      flexShrink: 0,
+                                      borderRadius: 8,
+                                      boxShadow:
+                                        "0 4px 10px rgba(255, 56, 11, 0.3)",
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  </div>
+                ),
+              }))}
+            />
 
             {/* Floating Cart Button */}
             <div
@@ -924,320 +908,174 @@ export default function MenuPage() {
                     </div>
                   ) : (
                     <>
-                      {/* Đồ ăn Section */}
-                      {foodItems.length > 0 && (
-                        <div>
-                          <Text
-                            style={{
-                              color: "#FF380B",
-                              fontSize: 16,
-                              fontWeight: 700,
-                              display: "block",
-                              marginBottom: 10,
-                              textTransform: "uppercase",
-                              letterSpacing: 1,
-                            }}>
-                            {t("menu_page.cart.food_section")}
-                          </Text>
-                          {foodItems.map((item) => (
-                            <Card
-                              key={item.id}
+                      {categories.map((cat) => {
+                        const items = cartItems.filter(
+                          (item) => item.categoryId === cat.id,
+                        );
+                        if (items.length === 0) return null;
+                        return (
+                          <div key={cat.id}>
+                            <Text
                               style={{
-                                background:
-                                  "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
-                                border: "1px solid rgba(255,255,255,0.06)",
-                                borderRadius: 12,
-                                marginBottom: 8,
-                              }}
-                              styles={{ body: { padding: 10 } }}>
-                              <div
+                                color: "#FF380B",
+                                fontSize: 16,
+                                fontWeight: 700,
+                                display: "block",
+                                marginBottom: 10,
+                                textTransform: "uppercase",
+                                letterSpacing: 1,
+                                marginTop: 10,
+                              }}>
+                              {cat.name}
+                            </Text>
+                            {items.map((item) => (
+                              <Card
+                                key={item.id}
                                 style={{
-                                  display: "flex",
-                                  gap: 10,
-                                  marginBottom: 6,
-                                }}>
-                                {item.image && (
-                                  <img
-                                    src={item.image}
-                                    alt={item.name}
-                                    style={{
-                                      width: 56,
-                                      height: 56,
-                                      objectFit: "cover",
-                                      borderRadius: 8,
-                                      border: "1px solid rgba(255,255,255,0.1)",
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                )}
+                                  background:
+                                    "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
+                                  border: "1px solid rgba(255,255,255,0.06)",
+                                  borderRadius: 12,
+                                  marginBottom: 8,
+                                }}
+                                styles={{ body: { padding: 10 } }}>
                                 <div
                                   style={{
                                     display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "flex-start",
-                                    flex: 1,
+                                    gap: 10,
+                                    marginBottom: 6,
                                   }}>
-                                  <div style={{ flex: 1 }}>
+                                  {item.image && (
+                                    <img
+                                      src={item.image}
+                                      alt={item.name}
+                                      style={{
+                                        width: 56,
+                                        height: 56,
+                                        objectFit: "cover",
+                                        borderRadius: 8,
+                                        border:
+                                          "1px solid rgba(255,255,255,0.1)",
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                  )}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "flex-start",
+                                      flex: 1,
+                                    }}>
+                                    <div style={{ flex: 1 }}>
+                                      <Text
+                                        style={{
+                                          color: "#fff",
+                                          fontSize: 14,
+                                          fontWeight: 600,
+                                          display: "block",
+                                          marginBottom: 2,
+                                        }}>
+                                        {item.name}
+                                      </Text>
+                                      <Text
+                                        style={{
+                                          color: "#FF380B",
+                                          fontSize: 13,
+                                          fontWeight: 600,
+                                        }}>
+                                        {formatPrice(item.price)}đ
+                                      </Text>
+                                    </div>
+                                    <Button
+                                      type="text"
+                                      icon={<DeleteOutlined />}
+                                      onClick={() =>
+                                        handleRemoveFromCart(item.id)
+                                      }
+                                      style={{
+                                        color: "#ff4d4f",
+                                        flexShrink: 0,
+                                      }}
+                                      size="small"
+                                    />
+                                  </div>
+                                </div>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 10,
+                                    justifyContent: "space-between",
+                                  }}>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 6,
+                                    }}>
+                                    <Button
+                                      type="text"
+                                      icon={<MinusOutlined />}
+                                      onClick={() =>
+                                        handleUpdateQuantity(
+                                          item.id,
+                                          item.quantity - 1,
+                                        )
+                                      }
+                                      style={{
+                                        color: "#fff",
+                                        border:
+                                          "1px solid rgba(255,255,255,0.2)",
+                                      }}
+                                      size="small"
+                                    />
                                     <Text
                                       style={{
                                         color: "#fff",
                                         fontSize: 14,
                                         fontWeight: 600,
-                                        display: "block",
-                                        marginBottom: 2,
+                                        minWidth: 30,
+                                        textAlign: "center",
                                       }}>
-                                      {item.name}
+                                      {item.quantity}
                                     </Text>
-                                    <Text
-                                      style={{
-                                        color: "#FF380B",
-                                        fontSize: 13,
-                                        fontWeight: 600,
-                                      }}>
-                                      {formatPrice(item.price)}đ
-                                    </Text>
-                                  </div>
-                                  <Button
-                                    type="text"
-                                    icon={<DeleteOutlined />}
-                                    onClick={() =>
-                                      handleRemoveFromCart(item.id)
-                                    }
-                                    style={{ color: "#ff4d4f", flexShrink: 0 }}
-                                    size="small"
-                                  />
-                                </div>
-                              </div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 10,
-                                  justifyContent: "space-between",
-                                }}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                  }}>
-                                  <Button
-                                    type="text"
-                                    icon={<MinusOutlined />}
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.id,
-                                        item.quantity - 1,
-                                      )
-                                    }
-                                    style={{
-                                      color: "#fff",
-                                      border: "1px solid rgba(255,255,255,0.2)",
-                                    }}
-                                    size="small"
-                                  />
-                                  <Text
-                                    style={{
-                                      color: "#fff",
-                                      fontSize: 14,
-                                      fontWeight: 600,
-                                      minWidth: 30,
-                                      textAlign: "center",
-                                    }}>
-                                    {item.quantity}
-                                  </Text>
-                                  <Button
-                                    type="text"
-                                    icon={<PlusOutlined />}
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.id,
-                                        item.quantity + 1,
-                                      )
-                                    }
-                                    style={{
-                                      color: "#fff",
-                                      border: "1px solid rgba(255,255,255,0.2)",
-                                    }}
-                                    size="small"
-                                  />
-                                </div>
-                                <Text
-                                  style={{
-                                    color: "#fff",
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                  }}>
-                                  {formatPrice(
-                                    (
-                                      parseFloat(item.price) * item.quantity
-                                    ).toString(),
-                                  )}
-                                  đ
-                                </Text>
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Nước uống Section */}
-                      {drinkItems.length > 0 && (
-                        <div>
-                          <Text
-                            style={{
-                              color: "#FF380B",
-                              fontSize: 16,
-                              fontWeight: 700,
-                              display: "block",
-                              marginBottom: 10,
-                              textTransform: "uppercase",
-                              letterSpacing: 1,
-                            }}>
-                            <CoffeeOutlined className="mr-2" />{" "}
-                            {t("menu_page.cart.drink_section")}
-                          </Text>
-                          {drinkItems.map((item) => (
-                            <Card
-                              key={item.id}
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
-                                border: "1px solid rgba(255,255,255,0.06)",
-                                borderRadius: 12,
-                                marginBottom: 8,
-                              }}
-                              styles={{ body: { padding: 10 } }}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: 10,
-                                  marginBottom: 6,
-                                }}>
-                                {item.image && (
-                                  <img
-                                    src={item.image}
-                                    alt={item.name}
-                                    style={{
-                                      width: 56,
-                                      height: 56,
-                                      objectFit: "cover",
-                                      borderRadius: 8,
-                                      border: "1px solid rgba(255,255,255,0.1)",
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                )}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "flex-start",
-                                    flex: 1,
-                                  }}>
-                                  <div style={{ flex: 1 }}>
-                                    <Text
+                                    <Button
+                                      type="text"
+                                      icon={<PlusOutlined />}
+                                      onClick={() =>
+                                        handleUpdateQuantity(
+                                          item.id,
+                                          item.quantity + 1,
+                                        )
+                                      }
                                       style={{
                                         color: "#fff",
-                                        fontSize: 14,
-                                        fontWeight: 600,
-                                        display: "block",
-                                        marginBottom: 2,
-                                      }}>
-                                      {item.name}
-                                    </Text>
-                                    <Text
-                                      style={{
-                                        color: "#FF380B",
-                                        fontSize: 13,
-                                        fontWeight: 600,
-                                      }}>
-                                      {formatPrice(item.price)}đ
-                                    </Text>
+                                        border:
+                                          "1px solid rgba(255,255,255,0.2)",
+                                      }}
+                                      size="small"
+                                    />
                                   </div>
-                                  <Button
-                                    type="text"
-                                    icon={<DeleteOutlined />}
-                                    onClick={() =>
-                                      handleRemoveFromCart(item.id)
-                                    }
-                                    style={{ color: "#ff4d4f", flexShrink: 0 }}
-                                    size="small"
-                                  />
-                                </div>
-                              </div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 10,
-                                  justifyContent: "space-between",
-                                }}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                  }}>
-                                  <Button
-                                    type="text"
-                                    icon={<MinusOutlined />}
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.id,
-                                        item.quantity - 1,
-                                      )
-                                    }
-                                    style={{
-                                      color: "#fff",
-                                      border: "1px solid rgba(255,255,255,0.2)",
-                                    }}
-                                    size="small"
-                                  />
                                   <Text
                                     style={{
                                       color: "#fff",
                                       fontSize: 14,
                                       fontWeight: 600,
-                                      minWidth: 30,
-                                      textAlign: "center",
                                     }}>
-                                    {item.quantity}
+                                    {formatPrice(
+                                      (
+                                        parseFloat(item.price) * item.quantity
+                                      ).toString(),
+                                    )}
+                                    đ
                                   </Text>
-                                  <Button
-                                    type="text"
-                                    icon={<PlusOutlined />}
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.id,
-                                        item.quantity + 1,
-                                      )
-                                    }
-                                    style={{
-                                      color: "#fff",
-                                      border: "1px solid rgba(255,255,255,0.2)",
-                                    }}
-                                    size="small"
-                                  />
                                 </div>
-                                <Text
-                                  style={{
-                                    color: "#fff",
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                  }}>
-                                  {formatPrice(
-                                    (
-                                      parseFloat(item.price) * item.quantity
-                                    ).toString(),
-                                  )}
-                                  đ
-                                </Text>
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
+                              </Card>
+                            ))}
+                          </div>
+                        );
+                      })}
                     </>
                   )}
                 </div>
@@ -1464,24 +1302,49 @@ export default function MenuPage() {
                             gap: 6,
                             flexWrap: "wrap",
                           }}>
-                          {selectedFood.tags.map((tag, idx) => (
-                            <span
-                              key={idx}
-                              style={{
-                                background: "rgba(255, 56, 11, 0.1)",
-                                color: "#FF380B",
-                                padding: "4px 10px",
-                                borderRadius: 8,
-                                fontSize: 11,
-                                fontWeight: 500,
-                                border: "1px solid rgba(255, 56, 11, 0.2)",
-                                textTransform: "capitalize",
-                              }}>
-                              {t("menu_page.tags." + tag, {
-                                defaultValue: tag,
-                              })}
-                            </span>
-                          ))}
+                          {selectedFood.tags.map((tag, idx) => {
+                            let icon = <StarFilled />;
+                            let color = "#FF380B";
+                            let bg = "rgba(255, 56, 11, 0.1)";
+                            let label = t("menu_page.tags." + tag, {
+                              defaultValue: tag,
+                            });
+
+                            if (tag === "spicy") {
+                              icon = <FireOutlined />;
+                              color = "#ff4d4f";
+                              bg = "rgba(255, 77, 79, 0.1)";
+                            } else if (tag === "vegan") {
+                              icon = <HeartFilled />;
+                              color = "#52c41a";
+                              bg = "rgba(82, 196, 26, 0.1)";
+                            } else if (tag === "best") {
+                              icon = <StarFilled />;
+                              color = "#faad14";
+                              bg = "rgba(250, 173, 20, 0.1)";
+                            }
+
+                            return (
+                              <span
+                                key={idx}
+                                style={{
+                                  background: bg,
+                                  color: color,
+                                  padding: "4px 10px",
+                                  borderRadius: 8,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  border: `1px solid ${color}`,
+                                  textTransform: "capitalize",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 5,
+                                }}>
+                                {icon}
+                                {label}
+                              </span>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

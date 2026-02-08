@@ -6,6 +6,7 @@ import LoginHeader from "@/components/auth/LoginHeader";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { message } from "antd";
 
 export default function LoginPage() {
   const { t } = useTranslation('auth');
@@ -27,6 +28,10 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingPhone, setCheckingPhone] = useState(false);
+  const [phoneChecked, setPhoneChecked] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
+
   const [phoneError, setPhoneError] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [nameError, setNameError] = useState("");
@@ -60,13 +65,43 @@ export default function LoginPage() {
     return true;
   };
 
+  const checkPhoneNumber = async (phoneNumber: string) => {
+    setCheckingPhone(true);
+    try {
+      const authService = (await import('@/lib/services/authService')).default;
+      const result = await authService.checkPhone(phoneNumber);
+
+      setPhoneChecked(true);
+      setIsNewUser(!result.exists);
+
+      if (result.exists && result.name) {
+        setName(result.name);
+      } else {
+        setName("");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCheckingPhone(false);
+    }
+  };
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
     if (value.length <= 11) {
       setPhone(value);
+
+      // Reset check state if changed
+      if (phoneChecked) {
+        setPhoneChecked(false);
+        setIsNewUser(false);
+        setName("");
+      }
+
       // Clear error if phone becomes valid after submit attempt
       if (phoneTouched && value.length === 10) {
         setPhoneError("");
+        checkPhoneNumber(value);
       }
     }
   };
@@ -102,26 +137,12 @@ export default function LoginPage() {
   const handleNameBlur = () => {
     // Only mark as touched, validation happens on submit
   };
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Mark all fields as touched
     setPhoneTouched(true);
-    setNameTouched(true);
-
-    // Check if fields are empty
-    if (!phone || !phone.trim()) {
-      setPhoneError(t('login_page.validation.required_phone'));
-      if (!name || !name.trim()) {
-        setNameError(t('login_page.validation.required_name'));
-      }
-      return;
-    }
-
-    if (!name || !name.trim()) {
-      setNameError(t('login_page.validation.required_name'));
-      return;
-    }
 
     // Validate phone
     const isPhoneValid = validatePhone(phone);
@@ -129,25 +150,89 @@ export default function LoginPage() {
       return;
     }
 
-    // Validate name
-    const isNameValid = validateName(name);
-    if (!isNameValid) {
-      return;
-    }
-
     // Don't proceed if there are any errors
-    if (phoneError || nameError) {
+    if (phoneError) {
       return;
     }
 
-    // Simulate loading for demo
+    // Step 1: Check phone if not checked
+    if (!phoneChecked) {
+      await checkPhoneNumber(phone);
+      // If checking finished and user exists -> auto login? 
+      // Or wait for user to click "Login".
+      // Let's just return to let UI update (show Name or change button text)
+      // However, if the user clicked the button, they expect action.
+
+      // We need to re-evaluate after check.
+      // Since `checkPhoneNumber` is async and updates state, we can't rely on state immediately here without refs or re-render.
+      // But for simplicity, we return and let user click again OR we can duplicate logic inside `checkPhoneNumber`.
+      // Better UX: Button changes to "Checking..." then updates.
+      return;
+    }
+
+    // Step 2: Handle based on user status
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const authService = (await import('@/lib/services/authService')).default;
+      const axiosInstance = (await import('@/lib/services/axiosInstance')).default;
+
+      if (isNewUser) {
+        // Register flow
+        setNameTouched(true);
+        const isNameValid = validateName(name);
+
+        if (!isNameValid || nameError) {
+          setLoading(false);
+          return;
+        }
+
+        const result = await authService.register({
+          phoneNumber: phone,
+          fullName: name.trim()
+        });
+
+        if (result.user || !result.requireLogin) {
+          window.location.href = '/customer';
+        } else {
+          message.info(result.message || 'Registration successful. Please login.');
+        }
+
+      } else {
+        // Login flow - Call phone-login API
+        // Since authService.login() uses email/pass, we use axios manual call or add phoneLogin to authService
+        const response = await axiosInstance.post('/auth/customer/phone-login', {
+          phoneNumber: phone
+        });
+
+        if (response.data?.success && response.data?.data) {
+          const data = response.data.data;
+          // Save tokens
+          if (data.accessToken) localStorage.setItem('accessToken', data.accessToken);
+          if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+          if (data.user) localStorage.setItem('userInfo', JSON.stringify(data.user));
+
+
+          // Role-based redirection
+          const userRole = data.user?.role;
+          if (userRole === 'Staff' || userRole === 'Manager' || userRole === 'Chef' || userRole === 'Waiter' || userRole === 'Cashier') {
+            window.location.href = '/staff';
+          } else if (userRole === 'Admin' || userRole === 'Owner') {
+            window.location.href = '/admin';
+          } else {
+            window.location.href = '/customer';
+          }
+        } else {
+          throw new Error(response.data?.message || 'Login failed');
+        }
+      }
+
+    } catch (error: any) {
+      console.error('Auth error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Đăng nhập thất bại';
+      message.error(errorMessage);
+    } finally {
       setLoading(false);
-      alert(
-        t('login_page.alerts.submitted', { phone, name, remember })
-      );
-    }, 1000);
+    }
   };
 
   return (
@@ -168,20 +253,28 @@ export default function LoginPage() {
               >
                 {t('login_page.phone_label')}
               </label>
-              <input
-                id="phone"
-                type="tel"
-                value={phone}
-                onChange={handlePhoneChange}
-                onBlur={handlePhoneBlur}
-                placeholder={t('login_page.phone_placeholder')}
-                maxLength={10}
-                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                style={{
-                  borderColor:
-                    phoneTouched && phoneError ? "#ef4444" : undefined,
-                }}
-              />
+              <div className="relative">
+                <input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  onBlur={handlePhoneBlur}
+                  placeholder={t('login_page.phone_placeholder')}
+                  maxLength={10}
+                  className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
+                  style={{
+                    borderColor:
+                      phoneTouched && phoneError ? "#ef4444" : undefined,
+                  }}
+                  disabled={loading}
+                />
+                {checkingPhone && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-current" style={{ color: 'var(--primary-color, #FF380B)' }}></div>
+                  </div>
+                )}
+              </div>
               {phoneTouched && phoneError && (
                 <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
                   {phoneError}
@@ -207,6 +300,7 @@ export default function LoginPage() {
                 style={{
                   borderColor: nameTouched && nameError ? "#ef4444" : undefined,
                 }}
+                disabled={loading || (phoneChecked && !isNewUser)}
               />
               {nameTouched && nameError && (
                 <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
@@ -215,7 +309,22 @@ export default function LoginPage() {
               )}
             </div>
 
-            <LoginButton loading={loading} text={t('login_button.login_text')} />
+            {/* Welcome message for existing user */}
+            {phoneChecked && !isNewUser && name && (
+              <div className="animate-fade-in-down mb-4 text-center">
+                <p className="text-lg font-medium auth-text">
+                  {t('login_page.welcome_back', { defaultValue: 'Xin chào' })}, <span style={{ color: '#FF380B' }}>{name}</span>!
+                </p>
+              </div>
+            )}
+
+            <LoginButton
+              loading={loading}
+              text={
+                isNewUser ? t('login_button.register_text') :
+                  t('login_button.login_text')
+              }
+            />
 
             <div className="text-center text-sm mt-6 auth-text">
               {t('login_page.terms_text')}{" "}
@@ -239,7 +348,7 @@ export default function LoginPage() {
               </a>
             </div>
 
-            <div 
+            <div
               className="text-center text-sm mt-4 auth-text"
             >
               {t('login_page.or_login_with')}{" "}

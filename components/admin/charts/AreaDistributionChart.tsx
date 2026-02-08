@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const areaData = [
   { name: "VIP Area", value: 35, color: "#F97316" },
@@ -9,6 +10,7 @@ const areaData = [
 ];
 
 export default function AreaDistributionChart() {
+  const { t } = useTranslation();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const total = areaData.reduce((sum, item) => sum + item.value, 0);
 
@@ -23,10 +25,10 @@ export default function AreaDistributionChart() {
       }}>
       <div className="mb-6">
         <h3 className="text-xl font-bold mb-1" style={{ color: 'var(--text)' }}>
-          Area Distribution
+          {t('charts.area_distribution.title')}
         </h3>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-          Table allocation by zone
+          {t('charts.area_distribution.subtitle')}
         </p>
       </div>
 
@@ -86,7 +88,7 @@ export default function AreaDistributionChart() {
               {total}
             </p>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Tables
+              {t('charts.area_distribution.tables')}
             </p>
           </div>
         </div>
@@ -109,7 +111,7 @@ export default function AreaDistributionChart() {
                     {item.name}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    {item.value} tables ({percentage}%)
+                    {item.value} {t('charts.area_distribution.tables_suffix')} ({percentage}%)
                   </p>
                 </div>
               </div>

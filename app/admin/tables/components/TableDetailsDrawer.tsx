@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface Table {
     id: string;
@@ -41,6 +42,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
     onSave,
     onDelete,
 }) => {
+    const { t } = useTranslation();
     const [formData, setFormData] = React.useState({
         number: 0,
         capacity: 4,
@@ -64,9 +66,9 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
 
     const validate = () => {
         const newErrors: Record<string, string> = {};
-        if (formData.number < 1) newErrors.number = 'Table number must be at least 1';
-        if (formData.capacity < 1) newErrors.capacity = 'Capacity must be at least 1';
-        if (formData.capacity > 20) newErrors.capacity = 'Capacity cannot exceed 20';
+        if (formData.number < 1) newErrors.number = t('table_form.errors.number_min');
+        if (formData.capacity < 1) newErrors.capacity = t('table_form.errors.capacity_min');
+        if (formData.capacity > 20) newErrors.capacity = t('table_form.errors.capacity_max');
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };

@@ -8,7 +8,16 @@ import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
 
-const AboutSection: React.FC = () => {
+import { TenantConfig } from '@/lib/services/tenantService';
+import { useTenant } from '@/lib/contexts/TenantContext'; // Ensure this path is correct
+
+interface AboutSectionProps {
+  tenant: TenantConfig | null;
+}
+
+const AboutSection: React.FC<AboutSectionProps> = ({ tenant: propTenant }) => {
+  const { tenant: contextTenant } = useTenant();
+  const tenant = propTenant || contextTenant;
 
   const { t } = useTranslation();
   const foodImages = [
@@ -51,7 +60,7 @@ const AboutSection: React.FC = () => {
                 fontFamily: 'serif',
                 marginBottom: 24,
               }}>
-              {t('restaurant.about.restaurant_name')}
+              {tenant?.name || t('restaurant.about.restaurant_name')}
             </Title>
             <Paragraph
               style={{
@@ -60,7 +69,7 @@ const AboutSection: React.FC = () => {
                 lineHeight: 1.8,
                 marginBottom: 24,
               }}>
-              {t('restaurant.about.description')}
+              {tenant?.aboutUs || t('restaurant.about.description')}
             </Paragraph>
             <Button
               type="link"

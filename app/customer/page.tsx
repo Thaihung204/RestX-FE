@@ -4,59 +4,102 @@ import MenuCTA from "@/components/customer/MenuCTA";
 import RestaurantHeader from "@/components/customer/RestaurantHeader";
 import WelcomeCard from "@/components/customer/WelcomeCard";
 import NotificationSystem from "@/components/notifications/NotificationSystem";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import customerService, { CustomerResponseDto } from "@/lib/services/customerService";
 import {
   BellOutlined,
   CameraOutlined,
   CloseOutlined,
   DollarOutlined,
   EditOutlined,
+  LoadingOutlined,
   StarOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import {
   Button,
   ConfigProvider,
-  DatePicker,
+
   Input,
   Modal,
   Progress,
   Space,
+  Spin,
   Typography,
   message,
   theme,
 } from "antd";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const { Text, Title } = Typography;
 
 export default function CustomerHomePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [messageApi, contextHolder] = message.useMessage();
   const [tableNumber] = useState("C1");
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Customer info
-  const [customerName, setCustomerName] = useState("Nguyễn Văn A");
-  const [phoneNumber, setPhoneNumber] = useState("0901234567");
-  const [birthDate, setBirthDate] = useState<dayjs.Dayjs | null>(
-    dayjs("1995-03-15")
-  );
+  // Customer profile from API
+  const [customerProfile, setCustomerProfile] = useState<CustomerResponseDto | null>(null);
+  const [customerName, setCustomerName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Temp state for editing
   const [tempName, setTempName] = useState("");
   const [tempPhone, setTempPhone] = useState("");
-  const [tempBirthDate, setTempBirthDate] = useState<dayjs.Dayjs | null>(null);
+
   const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const currentPoints = 450;
-  const pointsToNextReward = 50;
+  // Load customer profile from API
+  const loadCustomerProfile = useCallback(async () => {
+    if (!user) return;
+
+
+    setIsLoading(true);
+    try {
+      let profile = null;
+
+      // Use customerId directly if available (from login response)
+      if (user.customerId) {
+        profile = await customerService.getCustomerProfile(user.customerId);
+      }
+      // Fallback to search by email if no customerId
+      else if (user.email) {
+        profile = await customerService.getCustomerByEmail(user.email);
+      }
+
+
+      if (profile) {
+        setCustomerProfile(profile);
+        setCustomerName(profile.fullName);
+        setPhoneNumber(profile.phoneNumber || "");
+        setAvatarUrl(`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.fullName)}&background=4F46E5&color=fff`);
+      }
+    } catch (error) {
+      console.error("Failed to load customer profile:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadCustomerProfile();
+  }, [loadCustomerProfile]);
+
+  // Computed values from profile
+  const currentPoints = customerProfile?.loyaltyPoints || 0;
   const totalPointsNeeded = 500;
-  const progress = (currentPoints / totalPointsNeeded) * 100;
+  const pointsToNextReward = Math.max(0, totalPointsNeeded - currentPoints);
+  const progress = Math.min((currentPoints / totalPointsNeeded) * 100, 100);
+  const membershipLevel = customerProfile?.membershipLevel?.toLowerCase() || "bronze";
 
   const handleRequestBill = () => {
     messageApi.success("Yêu cầu hóa đơn đã được gửi đến nhân viên!");
@@ -64,10 +107,6 @@ export default function CustomerHomePage() {
 
   const handleAskService = () => {
     messageApi.success("Nhân viên sẽ đến bàn của bạn ngay!");
-  };
-
-  const handleGiveFeedback = () => {
-    messageApi.info("Chức năng đánh giá đang được phát triển!");
   };
 
   const handleViewMenu = () => {
@@ -85,12 +124,12 @@ export default function CustomerHomePage() {
   const handleEditProfile = () => {
     setTempName(customerName);
     setTempPhone(phoneNumber);
-    setTempBirthDate(birthDate);
+
     setTempAvatarUrl(avatarUrl);
     setIsEditing(true);
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!tempName.trim()) {
       messageApi.error("Vui lòng nhập tên!");
       return;
@@ -99,24 +138,46 @@ export default function CustomerHomePage() {
       messageApi.error("Vui lòng nhập số điện thoại!");
       return;
     }
-    // Simple phone validation
     if (!/^[0-9]{10}$/.test(tempPhone.trim())) {
       messageApi.error("Số điện thoại không hợp lệ!");
       return;
     }
 
-    setCustomerName(tempName);
-    setPhoneNumber(tempPhone);
-    setBirthDate(tempBirthDate);
-    setAvatarUrl(tempAvatarUrl);
-    setIsEditing(false);
-    messageApi.success("Cập nhật thông tin thành công!");
+    if (!customerProfile?.id) {
+      messageApi.error("Không tìm thấy thông tin khách hàng!");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const updatedProfile = await customerService.updateCustomerProfile(customerProfile.id, {
+        fullName: tempName.trim(),
+        phoneNumber: tempPhone.trim(),
+      });
+
+      if (updatedProfile) {
+        setCustomerProfile(updatedProfile);
+        setCustomerName(updatedProfile.fullName);
+        setPhoneNumber(updatedProfile.phoneNumber || "");
+        setAvatarUrl(tempAvatarUrl);
+        setIsEditing(false);
+        messageApi.success("Cập nhật thông tin thành công!");
+      }
+    } catch (error: any) {
+      console.error("Failed to update profile:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Cập nhật thất bại";
+      console.error("Error details:", error.response?.data);
+      messageApi.error(errorMessage);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
     setTempAvatarUrl(null);
   };
+
 
   return (
     <ConfigProvider
@@ -380,7 +441,7 @@ export default function CustomerHomePage() {
                 zIndex: 0,
               }}
             />
-            
+
             {/* Close button */}
             <div
               onClick={() => setProfileModalOpen(false)}
@@ -558,7 +619,7 @@ export default function CustomerHomePage() {
                           textTransform: "uppercase",
                           letterSpacing: 1,
                         }}>
-                        Birthday
+                        Member Since
                       </Text>
                       <div
                         style={{
@@ -568,7 +629,7 @@ export default function CustomerHomePage() {
                           fontFamily: "monospace",
                           fontSize: 15,
                         }}>
-                        {birthDate ? birthDate.format("DD/MM/YYYY") : "--"}
+                        {customerProfile?.createdDate ? dayjs(customerProfile.createdDate).format("DD/MM/YYYY") : "--"}
                       </div>
                     </div>
                   </div>
@@ -613,7 +674,7 @@ export default function CustomerHomePage() {
                             letterSpacing: 1,
                             textTransform: "uppercase",
                           }}>
-                          Gold Member
+                          {membershipLevel.charAt(0).toUpperCase() + membershipLevel.slice(1)} Member
                         </Text>
                         <Title
                           level={2}
@@ -732,29 +793,7 @@ export default function CustomerHomePage() {
                     />
                   </div>
 
-                  <div>
-                    <Text
-                      style={{
-                        color: "rgba(255,255,255,0.5)",
-                        fontSize: 12,
-                        marginLeft: 4,
-                      }}>
-                      Ngày sinh
-                    </Text>
-                    <DatePicker
-                      value={tempBirthDate}
-                      onChange={(date) => setTempBirthDate(date)}
-                      format="DD/MM/YYYY"
-                      placeholder="Chọn ngày sinh"
-                      style={{
-                        width: "100%",
-                        height: 48,
-                        marginTop: 4,
-                        fontSize: 16,
-                      }}
-                      suffixIcon={<EditOutlined style={{ color: "#666" }} />}
-                    />
-                  </div>
+
 
                   <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
                     <Button
@@ -772,6 +811,8 @@ export default function CustomerHomePage() {
                     <Button
                       type="primary"
                       onClick={handleSaveProfile}
+                      loading={isSaving}
+                      disabled={isSaving}
                       style={{
                         flex: 1,
                         height: 48,
@@ -780,7 +821,7 @@ export default function CustomerHomePage() {
                         fontWeight: 600,
                         boxShadow: "0 4px 14px rgba(255, 56, 11, 0.4)",
                       }}>
-                      Lưu thay đổi
+                      {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
                     </Button>
                   </div>
                 </Space>

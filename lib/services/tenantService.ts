@@ -2,9 +2,16 @@ import { ITenant, TenantApiResponse, TenantCreateInput } from "../types/tenant";
 import adminAxiosInstance from "./adminAxiosInstance";
 
 export interface TenantConfig {
+<<<<<<< HEAD
   id: string;
   prefix: string;
   name: string;
+=======
+    id: string;
+    prefix: string;
+    name: string;
+    aboutUs?: string;
+>>>>>>> 44ffb5a5dc2173285f530cf4799fee4aed9dff3e
 
   // Branding & Assets
   logoUrl?: string;
