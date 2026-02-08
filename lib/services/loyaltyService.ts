@@ -7,7 +7,7 @@ export interface LoyaltyPointBand {
     max: number | null;
     discountPercentage: number;
     benefitDescription: string;
-    imageUrl?: string;
+    icon: string;
     isActive: boolean;
 }
 
@@ -17,7 +17,7 @@ export interface CreateLoyaltyPointBandDto {
     max: number | null;
     discountPercentage: number;
     benefitDescription: string;
-    imageUrl?: string;
+    icon: string;
     isActive: boolean;
 }
 
@@ -34,7 +34,7 @@ let mockBands: LoyaltyPointBand[] = [
         max: 100,
         discountPercentage: 5,
         benefitDescription: "5% discount on all orders",
-        imageUrl: "/images/placeholder-food.png",
+        icon: "bronze",
         isActive: true
     },
     {
@@ -44,7 +44,7 @@ let mockBands: LoyaltyPointBand[] = [
         max: 500,
         discountPercentage: 10,
         benefitDescription: "10% discount + Priority support",
-        imageUrl: "/images/placeholder-food.png",
+        icon: "silver",
         isActive: true
     },
     {
@@ -54,7 +54,7 @@ let mockBands: LoyaltyPointBand[] = [
         max: null,
         discountPercentage: 15,
         benefitDescription: "15% discount + Free delivery",
-        imageUrl: "/images/placeholder-food.png",
+        icon: "gold",
         isActive: true
     }
 ];

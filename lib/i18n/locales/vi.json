@@ -441,6 +441,7 @@
         "add": "Thêm nhà cung cấp",
         "edit": "Sửa nhà cung cấp",
         "name": "Tên nhà cung cấp",
+        "contact": "Thông tin liên hệ",
         "phone": "Số điện thoại",
         "email": "Email",
         "address": "Địa chỉ",
@@ -481,11 +482,17 @@
         "status": "Trạng thái",
         "form": {
           "name": "Tên hạng",
-          "logo": "Logo",
+          "logo": "Thứ hạng",
           "range": "Khoảng điểm",
           "max_tooltip": "Để trống nếu không giới hạn",
           "discount": "Phần trăm giảm giá (%)",
           "benefits": "Mô tả ưu đãi"
+        },
+        "badges": {
+          "bronze": "Đồng",
+          "silver": "Bạc",
+          "gold": "Vàng",
+          "platinum": "Bạch kim"
         }
       },
       "notifications": {

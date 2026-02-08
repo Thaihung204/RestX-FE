@@ -1,11 +1,32 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Table, Button, Modal, Form, Input, InputNumber, Switch, message, Popconfirm, Tooltip } from "antd";
-import { EditOutlined, DeleteOutlined, PlusOutlined, InfoCircleOutlined } from "@ant-design/icons";
-import loyaltyService, { LoyaltyPointBand, CreateLoyaltyPointBandDto, UpdateLoyaltyPointBandDto } from "@/lib/services/loyaltyService";
+import { Table, Button, Modal, Form, Input, InputNumber, Switch, message, Popconfirm, Radio } from "antd";
+import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { Diamond, EmojiEvents, Star, WorkspacePremium } from "@mui/icons-material";
+import loyaltyService, { LoyaltyPointBand } from "@/lib/services/loyaltyService";
+
+const StatusToggle = ({ value, onChange, t }: any) => (
+    <button
+        type="button"
+        onClick={() => onChange?.(!value)}
+        className={`relative inline-flex items-center h-8 rounded-full px-1 transition-colors focus:outline-none ${value ? 'bg-[#FF380B]' : 'bg-slate-200 dark:bg-zinc-700'
+            }`}
+        style={{ minWidth: '100px' }}
+    >
+        <span className={`absolute left-3 text-xs font-bold text-white transition-opacity ${value ? 'opacity-100' : 'opacity-0'}`}>
+            {t("common.status.active", { defaultValue: "Active" })}
+        </span>
+        <span className={`absolute right-3 text-xs font-bold text-gray-500 dark:text-gray-400 transition-opacity ${!value ? 'opacity-100' : 'opacity-0'}`}>
+            {t("common.status.inactive", { defaultValue: "Inactive" })}
+        </span>
+        <span
+            className={`inline-block w-6 h-6 transform bg-white rounded-full shadow transition-transform duration-200 ease-in-out ${value ? 'translate-x-[70px]' : 'translate-x-0'
+                }`}
+        />
+    </button>
+);
 
 export default function LoyaltyPointBandSettings() {
     const { t } = useTranslation("common");
@@ -13,8 +34,17 @@ export default function LoyaltyPointBandSettings() {
     const [loading, setLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [editingBand, setEditingBand] = useState<LoyaltyPointBand | null>(null);
-    const [imageUrl, setImageUrl] = useState<string>("");
     const [form] = Form.useForm();
+
+    // Default values for new bands
+    const defaultValues = {
+        isActive: true,
+        min: 0,
+        discountPercentage: 0,
+        icon: 'bronze',
+        name: '',
+        benefitDescription: ''
+    };
 
     const fetchBands = async () => {
         setLoading(true);
@@ -29,21 +59,29 @@ export default function LoyaltyPointBandSettings() {
         }
     };
 
+    // Prepare form when modal opens
+    useEffect(() => {
+        if (modalVisible) {
+            if (editingBand) {
+                form.setFieldsValue(editingBand);
+            } else {
+                form.resetFields();
+                form.setFieldsValue(defaultValues);
+            }
+        }
+    }, [modalVisible, editingBand, form]);
+
     useEffect(() => {
         fetchBands();
     }, []);
 
     const handleAdd = () => {
         setEditingBand(null);
-        setImageUrl("");
-        form.resetFields();
         setModalVisible(true);
     };
 
     const handleEdit = (band: LoyaltyPointBand) => {
         setEditingBand(band);
-        setImageUrl(band.imageUrl || "");
-        form.setFieldsValue(band);
         setModalVisible(true);
     };
 
@@ -61,13 +99,12 @@ export default function LoyaltyPointBandSettings() {
     const handleSave = async () => {
         try {
             const values = await form.validateFields();
-            const payload = { ...values, imageUrl };
 
             if (editingBand) {
-                await loyaltyService.updateBand(editingBand.id, { ...payload, id: editingBand.id });
+                await loyaltyService.updateBand(editingBand.id, { ...values, id: editingBand.id });
                 message.success(t("dashboard.manage.notifications.update_success", { defaultValue: "Updated successfully" }));
             } else {
-                await loyaltyService.createBand(payload);
+                await loyaltyService.createBand(values);
                 message.success(t("dashboard.manage.notifications.create_success", { defaultValue: "Created successfully" }));
             }
 
@@ -75,25 +112,48 @@ export default function LoyaltyPointBandSettings() {
             fetchBands();
         } catch (error) {
             console.error("Failed to save loyalty point band:", error);
-            // message.error is usually handled by form validation or catch block here if API fails
+        }
+    };
+
+    const handleToggleStatus = async (record: LoyaltyPointBand) => {
+        try {
+            const updatedBand = { ...record, isActive: !record.isActive };
+            await loyaltyService.updateBand(record.id, updatedBand);
+            message.success(t("dashboard.manage.notifications.update_success", { defaultValue: "Updated successfully" }));
+            fetchBands();
+        } catch (error) {
+            console.error("Failed to update status:", error);
+            message.error(t("dashboard.manage.errors.update_failed", { defaultValue: "Failed to update status" }));
+        }
+    };
+
+    const getVipTierColor = (tier: string) => {
+        switch (tier?.toLowerCase()) {
+            case 'platinum': return '#E5E7EB';
+            case 'gold': return '#FBBF24';
+            case 'silver': return '#9CA3AF';
+            case 'bronze': return '#CD7F32';
+            default: return '#6B7280';
         }
     };
 
     const columns = [
         {
-            title: t("dashboard.manage.loyalty.form.logo", { defaultValue: "Logo" }),
-            dataIndex: "imageUrl",
-            key: "imageUrl",
-            render: (url: string) => (
-                <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-gray-50">
-                    <img
-                        src={url || "/images/placeholder-food.png"}
-                        alt="Logo"
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.currentTarget.src = "/images/placeholder-food.png"; }}
-                    />
-                </div>
-            )
+            title: t("dashboard.manage.loyalty.form.logo", { defaultValue: "Rank" }),
+            key: "icon",
+            width: 100,
+            align: 'center' as const,
+            render: (_: any, record: LoyaltyPointBand) => {
+                const color = getVipTierColor(record.icon);
+                return (
+                    <div className="flex items-center justify-center">
+                        {record.icon === 'platinum' ? <Diamond sx={{ fontSize: 24, color }} /> :
+                            record.icon === 'gold' ? <EmojiEvents sx={{ fontSize: 24, color }} /> :
+                                record.icon === 'silver' ? <Star sx={{ fontSize: 24, color }} /> :
+                                    <WorkspacePremium sx={{ fontSize: 24, color }} />}
+                    </div>
+                );
+            }
         },
         {
             title: t("dashboard.manage.loyalty.name", { defaultValue: "Band Name" }),
@@ -126,15 +186,22 @@ export default function LoyaltyPointBandSettings() {
             title: t("dashboard.manage.loyalty.status", { defaultValue: "Status" }),
             dataIndex: "isActive",
             key: "isActive",
-            render: (isActive: boolean) => (
-                <span className={`px-2 py-1 rounded text-xs ${isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+            render: (isActive: boolean, record: LoyaltyPointBand) => (
+                <button
+                    onClick={() => handleToggleStatus(record)}
+                    className={`cursor-pointer inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-all hover:opacity-80 ${isActive
+                        ? "bg-green-500 text-white dark:bg-green-600"
+                        : "bg-gray-500 text-white dark:bg-gray-600"}`}
+                >
+                    <span className="w-1.5 h-1.5 rounded-full mr-2 bg-white"></span>
                     {isActive ? t("common.status.active", { defaultValue: "Active" }) : t("common.status.inactive", { defaultValue: "Inactive" })}
-                </span>
+                </button>
             )
         },
         {
             title: t("common.actions.title", { defaultValue: "Actions" }),
             key: "actions",
+            width: 120,
             render: (_: any, record: LoyaltyPointBand) => (
                 <div className="flex gap-2">
                     <Button
@@ -201,73 +268,34 @@ export default function LoyaltyPointBandSettings() {
                 <Form
                     form={form}
                     layout="vertical"
-                    initialValues={{ isActive: true, min: 0, discountPercentage: 0 }}
                 >
-                    <div className="mb-6 flex justify-center">
-                        <div className="relative group">
-                            <input
-                                type="file"
-                                id="band-logo"
-                                className="hidden"
-                                accept="image/*"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                        if (file.size > 2 * 1024 * 1024) {
-                                            message.error(t("dashboard.settings.categories.file_size_error", { defaultValue: "File size must be less than 2MB" }));
-                                            return;
-                                        }
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => setImageUrl(reader.result as string);
-                                        reader.readAsDataURL(file);
-                                    }
-                                }}
-                            />
-                            <label
-                                htmlFor="band-logo"
-                                className={`
-                                    relative w-24 h-24 rounded-full border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden
-                                    ${imageUrl ? 'border-transparent' : 'border-[var(--border)] hover:border-[#FF380B] hover:bg-[#FF380B]/5'}
-                                `}
-                                style={{ background: imageUrl ? 'black' : 'var(--bg-base)' }}
-                            >
-                                {imageUrl ? (
-                                    <>
-                                        <img
-                                            src={imageUrl}
-                                            alt="Preview"
-                                            className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity"
-                                        />
-                                        <div className="z-10 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm flex items-center justify-center">
-                                            <EditOutlined className="text-sm" />
+                    <Form.Item
+                        name="icon"
+                        label={t("dashboard.manage.loyalty.form.logo", { defaultValue: "Rank Icon" })}
+                        rules={[{ required: true }]}
+                    >
+                        <Radio.Group className="w-full">
+                            <div className="grid grid-cols-4 gap-2">
+                                {['bronze', 'silver', 'gold', 'platinum'].map((tier) => (
+                                    <Radio.Button
+                                        key={tier}
+                                        value={tier}
+                                        className="flex flex-col items-center justify-center h-20 !p-1"
+                                        style={{ height: 'auto', padding: '10px' }}
+                                    >
+                                        <div className="flex flex-col items-center gap-1">
+                                            {tier === 'platinum' ? <Diamond sx={{ color: getVipTierColor(tier) }} /> :
+                                                tier === 'gold' ? <EmojiEvents sx={{ color: getVipTierColor(tier) }} /> :
+                                                    tier === 'silver' ? <Star sx={{ color: getVipTierColor(tier) }} /> :
+                                                        <WorkspacePremium sx={{ color: getVipTierColor(tier) }} />}
+                                            <span className="text-xs capitalize">{t(`dashboard.manage.loyalty.badges.${tier}`)}</span>
                                         </div>
-                                    </>
-                                ) : (
-                                    <div className="text-center p-2">
-                                        <div className="text-[#FF380B] mb-1">
-                                            <PlusOutlined />
-                                        </div>
-                                        <span className="text-[10px] text-[var(--text-muted)]">
-                                            {t("dashboard.manage.loyalty.form.logo", { defaultValue: "Logo" })}
-                                        </span>
-                                    </div>
-                                )}
-                            </label>
-                            {imageUrl && (
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setImageUrl("");
-                                    }}
-                                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600 z-20"
-                                    title="Remove Image"
-                                >
-                                    <DeleteOutlined className="text-xs" />
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                                    </Radio.Button>
+                                ))}
+                            </div>
+                        </Radio.Group>
+                    </Form.Item>
+
                     <Form.Item
                         name="name"
                         label={t("dashboard.manage.loyalty.form.name", { defaultValue: "Band Name" })}
@@ -315,9 +343,8 @@ export default function LoyaltyPointBandSettings() {
                     <Form.Item
                         name="isActive"
                         label={t("common.status.label", { defaultValue: "Status" })}
-                        valuePropName="checked"
                     >
-                        <Switch checkedChildren={t("common.status.active")} unCheckedChildren={t("common.status.inactive")} />
+                        <StatusToggle t={t} />
                     </Form.Item>
                 </Form>
             </Modal>

@@ -236,12 +236,12 @@ export default function SupplierSettings() {
                                     <td className="p-4 align-top">
                                         <button
                                             onClick={() => toggleStatus(supplier.id)}
-                                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${supplier.isActive
-                                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-colors ${supplier.isActive
+                                                ? 'bg-green-500 text-white dark:bg-green-600'
+                                                : 'bg-gray-500 text-white dark:bg-gray-600'
                                                 }`}
                                         >
-                                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${supplier.isActive ? 'bg-green-500' : 'bg-gray-500'}`}></span>
+                                            <span className="w-1.5 h-1.5 rounded-full mr-2 bg-white"></span>
                                             {supplier.isActive ? t("dashboard.manage.suppliers.active") : t("dashboard.manage.suppliers.inactive")}
                                         </button>
                                     </td>
@@ -417,22 +417,30 @@ export default function SupplierSettings() {
                             </div>
 
                             <div>
-                                <label className="flex items-center gap-3 cursor-pointer group p-3 rounded-xl border border-transparent hover:border-[var(--border)] hover:bg-[var(--bg-base)] transition-all">
-                                    <div className="relative flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.isActive}
-                                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                                            className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 checked:bg-[#FF380B] checked:border-[#FF380B] transition-all"
-                                        />
-                                        <svg className="absolute w-3.5 h-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-sm font-medium group-hover:text-[#FF380B] transition-colors" style={{ color: 'var(--text)' }}>
-                                        {t("dashboard.manage.suppliers.active_status_label", { defaultValue: "Set as Active Supplier" })}
-                                    </span>
+                                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
+                                    {t("dashboard.manage.suppliers.status", { defaultValue: "Status" })}
                                 </label>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                                    className={`relative inline-flex items-center h-8 rounded-full px-1 transition-colors focus:outline-none ${formData.isActive ? 'bg-[#FF380B]' : 'bg-slate-200 dark:bg-zinc-700'
+                                        }`}
+                                    style={{ minWidth: '100px' }}
+                                >
+                                    {/* Text Label */}
+                                    <span className={`absolute left-3 text-xs font-bold text-white transition-opacity ${formData.isActive ? 'opacity-100' : 'opacity-0'}`}>
+                                        {t("common.status.active", { defaultValue: "Active" })}
+                                    </span>
+                                    <span className={`absolute right-3 text-xs font-bold text-gray-500 dark:text-gray-400 transition-opacity ${!formData.isActive ? 'opacity-100' : 'opacity-0'}`}>
+                                        {t("common.status.inactive", { defaultValue: "Inactive" })}
+                                    </span>
+
+                                    {/* The Toggle Circle */}
+                                    <span
+                                        className={`inline-block w-6 h-6 transform bg-white rounded-full shadow transition-transform duration-200 ease-in-out ${formData.isActive ? 'translate-x-[70px]' : 'translate-x-0'
+                                            }`}
+                                    />
+                                </button>
                             </div>
                         </div>
 

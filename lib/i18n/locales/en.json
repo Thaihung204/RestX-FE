@@ -441,6 +441,7 @@
         "add": "Add Supplier",
         "edit": "Edit Supplier",
         "name": "Supplier Name",
+        "contact": "Contact Info",
         "phone": "Phone",
         "email": "Email",
         "address": "Address",
@@ -481,11 +482,17 @@
         "status": "Status",
         "form": {
           "name": "Band Name",
-          "logo": "Logo",
+          "logo": "Rank",
           "range": "Points Range",
           "max_tooltip": "Leave empty for infinite range",
           "discount": "Discount Percentage (%)",
           "benefits": "Benefits Description"
+        },
+        "badges": {
+          "bronze": "Bronze",
+          "silver": "Silver",
+          "gold": "Gold",
+          "platinum": "Platinum"
         }
       },
       "notifications": {
