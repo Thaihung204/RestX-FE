@@ -1,7 +1,7 @@
 "use client";
 
-import { useToast } from "@/lib/contexts/ToastContext";
 import employeeService from "@/lib/services/employeeService";
+import { message } from "antd";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,7 +20,6 @@ interface Staff {
 
 export default function StaffPage() {
   const { t } = useTranslation(["common", "dashboard"]);
-  const { showToast } = useToast();
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,26 +77,18 @@ export default function StaffPage() {
       if (err.response) {
         const msg = `API Error: ${err.response?.status} - ${err.response?.data?.message || err.message}`;
         setError(msg);
-        showToast(
-          "error",
-          t("dashboard.toasts.staff.load_error_title"),
-          msg || t("dashboard.toasts.staff.load_error_message"),
-        );
+        message.error(msg || t("dashboard.toasts.staff.load_error_message"));
       } else if (err.request) {
         const msg = t("dashboard.toasts.staff.load_error_message");
         setError(msg);
-        showToast(
-          "error",
-          t("dashboard.toasts.staff.load_network_error_title"),
-          msg,
-        );
+        message.error(msg);
       } else {
         const msg =
           err instanceof Error
             ? err.message
             : t("dashboard.toasts.staff.load_error_message");
         setError(msg);
-        showToast("error", t("dashboard.toasts.staff.load_error_title"), msg);
+        message.error(msg);
       }
     } finally {
       setLoading(false);
@@ -127,22 +118,14 @@ export default function StaffPage() {
       });
 
       const action = newStatus ? "activated" : "deactivated";
-      showToast(
-        "success",
-        `Staff ${action}`,
-        `${itemToToggle.name} has been ${action} successfully`,
-      );
+      message.success(`${itemToToggle.name} has been ${action} successfully`);
       setShowStatusConfirm(false);
       setItemToToggle(null);
       await fetchStaffList();
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.message || err.message || "Unknown error";
-      showToast(
-        "error",
-        t("dashboard.toasts.staff.action_failed_title"),
-        errorMsg,
-      );
+      message.error(errorMsg);
       setShowStatusConfirm(false);
       setItemToToggle(null);
     }
