@@ -94,13 +94,8 @@ const TenantFormPage: React.FC = () => {
   const onFinish: FormProps<TenantCreateInput>["onFinish"] = async (values) => {
     // Prevent duplicate submissions
     if (loading) {
-      console.warn("Form submission already in progress");
       return;
     }
-
-    console.log('[onFinish] Form values:', values);
-    console.log('[onFinish] Is edit mode:', isEditMode);
-    console.log('[onFinish] Tenant ID:', tenantId);
 
     setLoading(true);
 
@@ -117,22 +112,16 @@ const TenantFormPage: React.FC = () => {
         networkIp: hostname,
       };
 
-      console.log('[onFinish] Request data with full hostname:', requestData);
 
       if (isEditMode) {
-        console.log('[onFinish] Calling updateTenant...');
         const result = await tenantService.updateTenant(tenantId, requestData);
-        console.log('[onFinish] Update successful, result:', result);
         message.success(t("tenants.toasts.update_success_message"));
       } else {
-        console.log('[onFinish] Calling createTenant...');
         const result = await tenantService.createTenant(requestData);
-        console.log('[onFinish] Create successful, result:', result);
         message.success(t("tenants.toasts.create_success_message"));
       }
       router.push("/tenants");
     } catch (error: any) {
-      console.error("Failed to save tenant:", error);
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||
