@@ -61,6 +61,7 @@ export interface CartItem {
   quantity: number;
   category: "food" | "drink";
   categoryId: string;
+  categoryName?: string;
   image?: string;
 }
 

@@ -1292,7 +1292,57 @@
     "mark_read": "Đánh dấu đã đọc",
     "empty": "Không có thông báo"
   },
+  "customer_page": {
+    "footer": {
+      "call_service": "Gọi phục vụ",
+      "service_called": "Nhân viên sẽ đến bàn của bạn ngay!",
+      "language_switched_vi": "Switched to Vietnamese",
+      "language_switched_en": "Chuyển sang tiếng Anh",
+      "theme_switched_light": "Chuyển sang chế độ sáng",
+      "theme_switched_dark": "Chuyển sang chế độ tối"
+    },
+    "profile": {
+      "title": "Hồ sơ của tôi",
+      "loyal_member": "Thành viên thân thiết",
+      "phone": "Sđt",
+      "member_since": "Tham gia",
+      "points": "Điểm tích lũy",
+      "membership_level": "Hạng thành viên",
+      "next_reward": "Thưởng tiếp theo",
+      "points_to_next": "*Tích thêm {points} điểm để nhận Voucher",
+      "edit_profile": "Chỉnh sửa hồ sơ",
+      "save_changes": "Lưu thay đổi",
+      "cancel": "Hủy",
+      "name_label": "Họ và tên",
+      "phone_label": "Số điện thoại",
+      "validation": {
+        "required_fields": "Vui lòng điền đầy đủ thông tin!",
+        "update_success": "Cập nhật thành công!",
+        "update_failed": "Cập nhật thất bại"
+      }
+    },
+    "cart_modal": {
+      "title": "Giỏ hàng",
+      "cart_tab": "Giỏ hàng",
+      "cart_tab_with_count": "Giỏ hàng ({{count}})",
+      "ordered_tab": "Món đã đặt",
+      "empty_cart": "Giỏ hàng trống",
+      "empty_ordered": "Chưa có món nào được đặt",
+      "status_preparing": "Đang làm",
+      "total": "Tổng cộng:",
+      "items_count": "{{count}} món",
+      "confirm_order": "Gửi yêu cầu gọi món",
+      "request_payment": "Xác nhận thanh toán"
+    },
+    "welcome_card": {
+      "greeting": "Xin chào quý khách",
+      "default_name": "Thượng đế",
+      "gold_member": "Thành viên Vàng",
+      "table_label": "Vị trí"
+    }
+  },
   "menu_page": {
+    "logo_title": "RESTX PREMIUM DINING",
     "title": "Thực đơn hôm nay",
     "loading": "Đang tải thực đơn...",
     "retry": "Thử lại",
