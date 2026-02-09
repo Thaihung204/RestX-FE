@@ -1292,7 +1292,57 @@
     "mark_read": "Mark as read",
     "empty": "No notifications"
   },
+  "customer_page": {
+    "footer": {
+      "call_service": "Call Service",
+      "service_called": "Staff will be at your table shortly!",
+      "language_switched_vi": "Switched to Vietnamese",
+      "language_switched_en": "Switched to English",
+      "theme_switched_light": "Switched to Light Mode",
+      "theme_switched_dark": "Switched to Dark Mode"
+    },
+    "profile": {
+      "title": "My Profile",
+      "loyal_member": "Loyal Member",
+      "phone": "Phone",
+      "member_since": "Member Since",
+      "points": "Loyalty Points",
+      "membership_level": "Membership Level",
+      "next_reward": "Next Reward",
+      "points_to_next": "*{points} more points to get Voucher",
+      "edit_profile": "Edit Profile",
+      "save_changes": "Save Changes",
+      "cancel": "Cancel",
+      "name_label": "Full Name",
+      "phone_label": "Phone Number",
+      "validation": {
+        "required_fields": "Please fill in all fields!",
+        "update_success": "Profile updated successfully!",
+        "update_failed": "Failed to update profile"
+      }
+    },
+    "cart_modal": {
+      "title": "Cart",
+      "cart_tab": "Cart",
+      "cart_tab_with_count": "Cart ({{count}})",
+      "ordered_tab": "Ordered Items",
+      "empty_cart": "Cart is empty",
+      "empty_ordered": "No items ordered yet",
+      "status_preparing": "Preparing",
+      "total": "Total:",
+      "items_count": "{{count}} items",
+      "confirm_order": "Send Order Request",
+      "request_payment": "Request Payment"
+    },
+    "welcome_card": {
+      "greeting": "Welcome",
+      "default_name": "Guest",
+      "gold_member": "Gold Member",
+      "table_label": "Table"
+    }
+  },
   "menu_page": {
+    "logo_title": "RESTX PREMIUM DINING",
     "title": "Today's Menu",
     "loading": "Loading menu...",
     "retry": "Retry",
