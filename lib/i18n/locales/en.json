@@ -70,6 +70,14 @@
         "other_items": "other items",
         "items_not_done": "not done"
       },
+      "status": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
       "modal": {
         "order_detail": "Order Details",
         "cart": "Cart",
@@ -1068,6 +1076,27 @@
         "recent_orders": "Recent Orders"
       },
       "trusted_by": "Trusted by top brands"
+    },
+    "about": {
+      "tag": "Our Story",
+      "title_prefix": "Revolutionizing the ",
+      "title_highlight": "Culinary World",
+      "description": "RestX was born from a simple mission: to empower restaurateurs with technology that feels as natural as their craft. We bridge the gap between traditional hospitality and modern efficiency, helping you focus on what matters most—great food and happy customers.",
+      "mission": {
+        "title": "Mission Driven",
+        "desc": "Dedicated to your growth"
+      },
+      "innovation": {
+        "title": "Innovation First",
+        "desc": "Always ahead of the curve"
+      },
+      "cta": "Join Our Journey",
+      "stats": {
+        "restaurants": "Restaurants Empowered",
+        "countries": "Countries Supported",
+        "chefs": "Happy Chefs",
+        "team": "Team Members"
+      }
     },
     "features": {
       "tag": "Features",
