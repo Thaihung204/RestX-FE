@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import CategorySettings from "../settings/components/CategorySettings";
-import SupplierSettings from "../settings/components/SupplierSettings";
 import IngredientCategorySettings from "../settings/components/IngredientCategorySettings";
 import LoyaltyPointBandSettings from "../settings/components/LoyaltyPointBandSettings";
+import OrderDetailStatusSettings from "../settings/components/OrderDetailStatusSettings";
+import SupplierSettings from "../settings/components/SupplierSettings";
 
 export default function ManagePage() {
     const { t } = useTranslation("common");
-    const [activeTab, setActiveTab] = useState<"categories" | "suppliers" | "ingredientCategories" | "loyalty">("categories");
+    const [activeTab, setActiveTab] = useState<"categories" | "suppliers" | "ingredientCategories" | "loyalty" | "orderStatus">("categories");
 
     return (
         <main className="p-6 lg:p-8">
@@ -26,9 +27,9 @@ export default function ManagePage() {
 
                 {/* Modern Pill Tabs */}
                 <div
-                    className="flex p-1 rounded-xl backdrop-blur w-fit"
+                    className="flex p-1.5 rounded-xl backdrop-blur w-fit overflow-x-auto touch-pan-x scrollbar-hide max-w-full gap-1"
                     style={{
-                        background: 'var(--card)',
+                        background: 'var(--bg-base)',
                         border: '1px solid var(--border)'
                     }}
                 >
@@ -53,16 +54,19 @@ export default function ManagePage() {
                             label: t("dashboard.manage.tabs.loyalty", { defaultValue: "Loyalty Bands" }),
                             icon: "M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7",
                         },
+                        {
+                            id: "orderStatus" as const,
+                            label: t("dashboard.manage.tabs.order_status", { defaultValue: "Order Status" }),
+                            icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
+                        },
                     ].map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className="relative px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center gap-2 hover:opacity-80"
+                            className={`relative px-4 sm:px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id ? 'shadow-sm' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
                             style={{
-                                background: activeTab === tab.id ? 'var(--bg-base)' : 'transparent',
+                                background: activeTab === tab.id ? 'var(--card)' : 'transparent',
                                 color: activeTab === tab.id ? '#FF380B' : 'var(--text-muted)',
-                                boxShadow: activeTab === tab.id ? '0 1px 2px 0 rgba(0, 0, 0, 0.05)' : 'none',
-                                border: activeTab === tab.id ? '1px solid var(--border)' : '1px solid transparent'
                             }}
                             suppressHydrationWarning
                         >
@@ -84,24 +88,31 @@ export default function ManagePage() {
                 </div>
 
                 {/* Categories Tab */}
-                {activeTab === "categories" && (
-                    <CategorySettings />
-                )}
+                <div className="animate-fade-in relative">
+                    {activeTab === "categories" && (
+                        <CategorySettings />
+                    )}
 
-                {/* Ingredient Categories Tab */}
-                {activeTab === "ingredientCategories" && (
-                    <IngredientCategorySettings />
-                )}
+                    {/* Ingredient Categories Tab */}
+                    {activeTab === "ingredientCategories" && (
+                        <IngredientCategorySettings />
+                    )}
 
-                {/* Suppliers Tab */}
-                {activeTab === "suppliers" && (
-                    <SupplierSettings />
-                )}
+                    {/* Suppliers Tab */}
+                    {activeTab === "suppliers" && (
+                        <SupplierSettings />
+                    )}
 
-                {/* Loyalty Bands Tab */}
-                {activeTab === "loyalty" && (
-                    <LoyaltyPointBandSettings />
-                )}
+                    {/* Loyalty Bands Tab */}
+                    {activeTab === "loyalty" && (
+                        <LoyaltyPointBandSettings />
+                    )}
+
+                    {/* Order Status Tab */}
+                    {activeTab === "orderStatus" && (
+                        <OrderDetailStatusSettings />
+                    )}
+                </div>
             </div>
         </main>
     );

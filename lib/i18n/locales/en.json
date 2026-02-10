@@ -382,7 +382,8 @@
         "categories": "Categories",
         "ingredient_categories": "Ingredient Categories",
         "suppliers": "Suppliers",
-        "loyalty": "Loyalty Bands"
+        "loyalty": "Loyalty Bands",
+        "order_status": "Order Status"
       },
       "ingredient_categories": {
         "title": "Ingredient Categories",
@@ -493,6 +494,41 @@
           "silver": "Silver",
           "gold": "Gold",
           "platinum": "Platinum"
+        }
+      },
+      "order_status": {
+        "title": "Order Detail Status Management",
+        "subtitle": "Manage order detail statuses, codes, and colors",
+        "add_status": "Add Status",
+        "edit_status": "Edit Order Detail Status",
+        "name": "Name",
+        "name_placeholder": "Enter status name",
+        "name_required": "Please enter status name",
+        "code": "Code",
+        "code_placeholder": "e.g., PENDING, PROCESSING",
+        "code_required": "Please enter status code",
+        "code_format": "Code must be uppercase letters and underscores only",
+        "color": "Color",
+        "color_required": "Please select a color",
+        "is_active": "Active Status",
+        "is_active_desc": "Enable or disable this status",
+        "is_default": "Set as Default",
+        "is_default_desc": "Set this as the default status for new orders",
+        "default_note": "Only one status can be set as default. This will replace the current default.",
+        "tooltip": {
+          "current_default": "Current Default",
+          "set_default": "Set as Default"
+        },
+        "modal_subtitle_edit": "Update status details",
+        "modal_subtitle_create": "Create a new status entry",
+        "empty_state_desc": "Create a new status to get started",
+        "table": {
+            "name": "Status Name",
+            "code": "Code",
+            "color": "Color",
+            "default": "Default",
+            "status": "Status",
+            "actions": "Actions"
         }
       },
       "notifications": {
