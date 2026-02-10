@@ -1694,6 +1694,9 @@
       "suspend_tenant": "Xóa nhà hàng",
       "delete_confirm_title": "Xóa nhà hàng",
       "delete_confirm_content": "Bạn có chắc chắn muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn tất cả dữ liệu liên quan đến nhà hàng này.",
+      "delete_warning": "Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn tất cả dữ liệu liên quan đến \"{{name}}\". Để xác nhận, vui lòng nhập tên nhà hàng bên dưới.",
+      "delete_type_name": "Nhập \"{{name}}\" để xác nhận xóa",
+      "delete_name_mismatch": "Tên nhà hàng không khớp. Vui lòng thử lại.",
       "delete_confirm_ok": "Xóa",
       "delete_confirm_cancel": "Hủy"
     },
