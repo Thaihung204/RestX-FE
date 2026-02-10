@@ -390,7 +390,8 @@
         "categories": "Danh mục",
         "ingredient_categories": "Loại nguyên liệu",
         "suppliers": "Nhà cung cấp",
-        "loyalty": "Hạng thành viên"
+        "loyalty": "Hạng thành viên",
+        "order_status": "Trạng thái đơn hàng"
       },
       "ingredient_categories": {
         "title": "Loại nguyên liệu",
@@ -501,6 +502,41 @@
           "silver": "Bạc",
           "gold": "Vàng",
           "platinum": "Bạch kim"
+        }
+      },
+      "order_status": {
+        "title": "Quản lý trạng thái đơn hàng",
+        "subtitle": "Quản lý các trạng thái đơn hàng, mã và màu sắc",
+        "add_status": "Thêm trạng thái",
+        "edit_status": "Chỉnh sửa trạng thái",
+        "name": "Tên trạng thái",
+        "name_placeholder": "Nhập tên trạng thái",
+        "name_required": "Vui lòng nhập tên trạng thái",
+        "code": "Mã",
+        "code_placeholder": "VD: PENDING, PROCESSING",
+        "code_required": "Vui lòng nhập mã trạng thái",
+        "code_format": "Mã chỉ được chứa chữ in hoa và dấu gạch dưới",
+        "color": "Màu sắc",
+        "color_required": "Vui lòng chọn màu sắc",
+        "is_active": "Kích hoạt",
+        "is_active_desc": "Bật hoặc tắt trạng thái này",
+        "is_default": "Mặc định",
+        "is_default_desc": "Đặt làm trạng thái mặc định cho đơn mới",
+        "default_note": "Chỉ một trạng thái được đặt làm mặc định. Việc này sẽ thay thế trạng thái mặc định hiện tại.",
+        "tooltip": {
+          "current_default": "Mặc định hiện tại",
+          "set_default": "Đặt làm mặc định"
+        },
+        "modal_subtitle_edit": "Cập nhật thông tin trạng thái",
+        "modal_subtitle_create": "Tạo mới trạng thái",
+        "empty_state_desc": "Tạo trạng thái mới để bắt đầu",
+        "table": {
+            "name": "Tên trạng thái",
+            "code": "Mã",
+            "color": "Màu sắc",
+            "default": "Mặc định",
+            "status": "Trạng thái",
+            "actions": "Thao tác"
         }
       },
       "notifications": {
