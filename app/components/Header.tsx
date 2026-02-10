@@ -20,6 +20,7 @@ const Header: React.FC = () => {
   const navItems = [
     { key: 'product', label: <a href="#product">{t('homepage.header.product')}</a> },
     { key: 'workflow', label: <a href="#workflow">{t('homepage.header.workflow')}</a> },
+    { key: 'about', label: <a href="#about-us">{t('homepage.header.about', 'About Us')}</a> },
     { key: 'testimonials', label: <a href="#testimonials">{t('homepage.header.testimonials')}</a> },
     { key: 'contact', label: <a href="#footer">{t('homepage.header.contact')}</a> },
   ];

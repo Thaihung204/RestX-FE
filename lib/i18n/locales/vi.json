@@ -70,6 +70,14 @@
         "other_items": "món khác",
         "items_not_done": "chưa xong"
       },
+      "status": {
+        "pending": "Chờ xử lý",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng",
+        "served": "Đã phục vụ",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
+      },
       "modal": {
         "order_detail": "Chi tiết Order",
         "cart": "Giỏ hàng",
@@ -1068,6 +1076,27 @@
         "recent_orders": "Đơn hàng gần đây"
       },
       "trusted_by": "Được tin dùng bởi các thương hiệu hàng đầu"
+    },
+    "about": {
+      "tag": "Câu chuyện của chúng tôi",
+      "title_prefix": "Cách mạng hóa ",
+      "title_highlight": "Ngành Ẩm thực",
+      "description": "RestX ra đời với sứ mệnh đơn giản: trao quyền cho các chủ nhà hàng bằng công nghệ cho cảm giác tự nhiên như tay nghề của họ. Chúng tôi thu hẹp khoảng cách giữa lòng hiếu khách truyền thống và hiệu quả hiện đại, giúp bạn tập trung vào điều quan trọng nhất—món ăn ngon và khách hàng hài lòng.",
+      "mission": {
+        "title": "Sứ mệnh Dẫn lối",
+        "desc": "Tận tâm vì sự phát triển của bạn"
+      },
+      "innovation": {
+        "title": "Đổi mới Đi đầu",
+        "desc": "Luôn đón đầu xu hướng"
+      },
+      "cta": "Tham gia cùng chúng tôi",
+      "stats": {
+        "restaurants": "Nhà hàng Tin dùng",
+        "countries": "Quốc gia Hỗ trợ",
+        "chefs": "Đầu bếp Hài lòng",
+        "team": "Thành viên Đội ngũ"
+      }
     },
     "features": {
       "tag": "Tính năng",
