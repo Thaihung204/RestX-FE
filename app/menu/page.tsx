@@ -40,7 +40,7 @@ import {
   theme,
 } from "antd";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
@@ -56,6 +56,9 @@ export default function MenuPage() {
     openCartModal,
     cartModalOpen,
   } = useCart();
+
+  // Ref to track if data has been fetched
+  const hasFetchedData = useRef(false);
 
   // State management
   const [foodDetailModalOpen, setFoodDetailModalOpen] = useState(false);
@@ -167,9 +170,20 @@ export default function MenuPage() {
 
   // Fetch data from API
   useEffect(() => {
-    fetchMenuData();
-    loadCustomerProfile();
-  }, [fetchMenuData, loadCustomerProfile]);
+    // Only fetch once on mount
+    if (!hasFetchedData.current) {
+      hasFetchedData.current = true;
+      fetchMenuData();
+      loadCustomerProfile();
+    }
+  }, []); // Empty dependency array - only run once on mount
+
+  // Re-fetch customer profile when user changes (login/logout)
+  useEffect(() => {
+    if (hasFetchedData.current && user) {
+      loadCustomerProfile();
+    }
+  }, [user?.customerId, user?.email]); // Only when user ID or email changes
 
   // Group dishes by category for display
   const categoriesWithDishes = useMemo<CategoryWithDishes[]>(() => {
