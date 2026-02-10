@@ -9,23 +9,38 @@ export interface Category {
   isActive?: boolean;
 }
 
+// Helper to normalie backend response (PascalCase -> camelCase)
+const normalizeCategory = (data: any): Category => {
+  if (!data) return data;
+  const normalized: any = { ...data };
+
+  if (!normalized.id && normalized.Id) normalized.id = normalized.Id;
+  if (!normalized.name && normalized.Name) normalized.name = normalized.Name;
+  if (!normalized.description && normalized.Description) normalized.description = normalized.Description;
+  if (!normalized.imageUrl && normalized.ImageUrl) normalized.imageUrl = normalized.ImageUrl;
+  if (normalized.parentId === undefined && normalized.ParentId !== undefined) normalized.parentId = normalized.ParentId;
+  if (normalized.isActive === undefined && normalized.IsActive !== undefined) normalized.isActive = normalized.IsActive;
+
+  return normalized as Category;
+};
+
 export const categoryService = {
   // GET /api/categories
   getCategories: async (): Promise<Category[]> => {
     const response = await axiosInstance.get('/categories');
-    return response.data;
+    return Array.isArray(response.data) ? response.data.map(normalizeCategory) : [];
   },
 
   // GET /api/categories/{id}
   getCategoryById: async (id: string): Promise<Category> => {
     const response = await axiosInstance.get(`/categories/${id}`);
-    return response.data;
+    return normalizeCategory(response.data);
   },
 
   // POST /api/categories
   createCategory: async (category: Omit<Category, 'id'>): Promise<Category> => {
     const response = await axiosInstance.post('/categories', category);
-    return response.data;
+    return normalizeCategory(response.data);
   },
 
   // PUT /api/categories/{id}
@@ -34,7 +49,7 @@ export const categoryService = {
     // Ensure ID is set in the body as well if required by backend model binding
     const payload = { ...category, id };
     const response = await axiosInstance.put(`/categories/${id}`, payload);
-    return response.data;
+    return normalizeCategory(response.data);
   },
 
   // DELETE /api/categories/{id}
@@ -95,3 +110,5 @@ export const categoryService = {
     }
   }
 };
+
+export default categoryService;
