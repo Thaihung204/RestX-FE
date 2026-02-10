@@ -1,6 +1,7 @@
 "use client";
 
 import dishService from "@/lib/services/dishService";
+import { message, Modal } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,11 +27,6 @@ export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
 
   const fetchMenuItems = async () => {
     try {
@@ -57,7 +53,9 @@ export default function MenuPage() {
             item.mainImageUrl ||
             item.imageUrl ||
             item.image ||
-            (item.images && item.images.length > 0 ? item.images[0].imageUrl : null) ||
+            (item.images && item.images.length > 0
+              ? (item.images.find((img: any) => img.imageType === 0) || item.images[0]).imageUrl
+              : null) ||
             "/placeholder-dish.jpg",
           description: item.description || "",
           available:
@@ -97,30 +95,30 @@ export default function MenuPage() {
   }, []);
 
   const handleDelete = async (id: string, name: string) => {
-    setItemToDelete({ id, name });
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
-
-    try {
-      await dishService.deleteDish(itemToDelete.id);
-      setShowDeleteConfirm(false);
-      setItemToDelete(null);
-      await fetchMenuItems();
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || err.message || "Unknown error";
-      alert(`Failed to delete item: ${errorMsg}`);
-      setShowDeleteConfirm(false);
-      setItemToDelete(null);
-    }
-  };
-
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
-    setItemToDelete(null);
+    Modal.confirm({
+      title: t("dashboard.menu.modal.delete_title"),
+      content: (
+        <>
+          {t("dashboard.menu.modal.delete_confirm")} <strong>&quot;{name}&quot;</strong>?
+          <br />
+          {t("dashboard.menu.modal.cannot_undo")}
+        </>
+      ),
+      okText: t("dashboard.menu.modal.delete"),
+      okType: "danger",
+      cancelText: t("dashboard.menu.modal.cancel"),
+      onOk: async () => {
+        try {
+          await dishService.deleteDish(id);
+          message.success(t("dashboard.menu.toasts.delete_success") || "Dish deleted successfully");
+          await fetchMenuItems();
+        } catch (err: any) {
+          const errorMsg =
+            err.response?.data?.message || err.message || "Unknown error";
+          message.error(t("dashboard.menu.toasts.delete_error") || `Failed to delete: ${errorMsg}`);
+        }
+      },
+    });
   };
 
   const categories = useMemo(() => {
@@ -576,83 +574,6 @@ export default function MenuPage() {
           </>
         )}
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0, 0, 0, 0.7)" }}
-          onClick={cancelDelete}>
-          <div
-            className="rounded-2xl shadow-2xl max-w-md w-full"
-            style={{
-              background: "var(--card)",
-              border: "1px solid var(--border)",
-            }}
-            onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              <div className="flex justify-center mb-4">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(239, 68, 68, 0.1)" }}>
-                  <svg
-                    className="w-8 h-8 text-red-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                </div>
-              </div>
-
-              <h3
-                className="text-xl font-bold text-center mb-2"
-                style={{ color: "var(--text)" }}>
-                {t("dashboard.menu.modal.delete_title")}
-              </h3>
-
-              <p
-                className="text-center mb-6"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.menu.modal.delete_confirm")}{" "}
-                <span
-                  className="font-semibold"
-                  style={{ color: "var(--text)" }}>
-                  &quot;{itemToDelete?.name}&quot;
-                </span>
-                ? {t("dashboard.menu.modal.cannot_undo")}
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={cancelDelete}
-                  className="flex-1 px-4 py-3 rounded-lg font-medium transition-all"
-                  style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    color: "var(--text)",
-                  }}>
-                  {t("dashboard.menu.modal.cancel")}
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="flex-1 px-4 py-3 rounded-lg font-medium transition-all text-white"
-                  style={{
-                    background: "linear-gradient(to right, #ef4444, #dc2626)",
-                    boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)",
-                  }}>
-                  {t("dashboard.menu.modal.delete")}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
