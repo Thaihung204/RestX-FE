@@ -1694,6 +1694,9 @@
       "suspend_tenant": "Delete Tenant",
       "delete_confirm_title": "Delete Tenant",
       "delete_confirm_content": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone and will permanently remove all data associated with this tenant.",
+      "delete_warning": "This action is irreversible and will permanently delete all data associated with \"{{name}}\". To confirm, please type the restaurant name below.",
+      "delete_type_name": "Type \"{{name}}\" to confirm deletion",
+      "delete_name_mismatch": "Restaurant name does not match. Please try again.",
       "delete_confirm_ok": "Delete",
       "delete_confirm_cancel": "Cancel"
     },
