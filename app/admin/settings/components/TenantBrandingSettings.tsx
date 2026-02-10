@@ -32,6 +32,11 @@ export default function TenantBrandingSettings() {
 
     useEffect(() => {
         if (tenant) {
+            console.log('[TenantBrandingSettings] Tenant from context:', tenant);
+            // Check both case styles
+            const tenantId = tenant.id || (tenant as any).Id;
+            console.log('[TenantBrandingSettings] Resolved Tenant ID:', tenantId);
+
             setFormData(prev => ({
                 ...prev,
                 logoUrl: tenant.logoUrl || "",
@@ -98,20 +103,37 @@ export default function TenantBrandingSettings() {
             return;
         }
 
+        // Resolve ID safely
+        const tenantId = tenant.id || (tenant as any).Id;
+
+        if (!tenantId) {
+            message.error(t("dashboard.settings.appearance.no_tenant_id", { defaultValue: "Tenant ID is missing" }));
+            console.error('[TenantBrandingSettings] No tenant ID found:', tenant);
+            return;
+        }
+
         setLoading(true);
         try {
-            // Prepare updated tenant object
-            // We pass the existing URLs or updated files to the service
+            // CRITICAL: Explicitly create updated tenant object with ID at top level
+            // This ensures upsertTenant can find the ID and perform PUT update instead of POST create
             const updatedTenant: TenantConfig = {
+                // Spread all existing tenant data first
                 ...tenant,
+                // IMPORTANT: Explicitly set id to ensure it's not lost
+                id: tenantId,
+                // Update only the branding URLs if files are provided
+                // The actual files will be uploaded via FormData in upsertTenant
                 logoUrl: formData.logoUrl,
                 backgroundUrl: formData.backgroundUrl,
             };
+
+            console.log('[TenantBrandingSettings] Saving tenant with ID:', updatedTenant.id);
 
             await tenantService.upsertTenant(updatedTenant, {
                 logo: formData.logoFile,
                 background: formData.bannerFile
             });
+
             message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Branding updated successfully!" }));
 
             // Clear file selections after successful save
