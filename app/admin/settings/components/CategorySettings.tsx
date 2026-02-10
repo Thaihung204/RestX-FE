@@ -3,80 +3,56 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-
-interface Category {
-    id: number;
-    name: string;
-    image: string;
-    desc: string;
-}
+import { categoryService, Category } from "@/lib/services/categoryService";
+import { message } from "antd";
 
 export default function CategorySettings() {
     const { t } = useTranslation("common");
     const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-    const [formData, setFormData] = useState<Category>({ id: 0, name: "", image: "", desc: "" });
 
-    // Load categories from localStorage on mount
-    useEffect(() => {
-        const savedCategories = localStorage.getItem('restaurant-categories');
-        if (savedCategories) {
-            try {
-                setCategories(JSON.parse(savedCategories));
-            } catch (error) {
-                console.error('Failed to load categories from localStorage:', error);
-                // Fallback to default
-                loadDefaultCategories();
-            }
-        } else {
-            loadDefaultCategories();
+    // Form state
+    const [formData, setFormData] = useState<Partial<Category>>({
+        name: "",
+        imageUrl: "",
+        description: ""
+    });
+
+    // Load categories from API on mount
+    const fetchCategories = async () => {
+        try {
+            setLoading(true);
+            const data = await categoryService.getCategories();
+            setCategories(data);
+        } catch (error) {
+            console.error('Failed to load categories:', error);
+            message.error(t("dashboard.settings.notifications.error_fetch", { defaultValue: "Failed to load categories" }));
+        } finally {
+            setLoading(false);
         }
-    }, [t]);
-
-    // Save categories to localStorage whenever they change
-    useEffect(() => {
-        if (categories.length > 0) {
-            localStorage.setItem('restaurant-categories', JSON.stringify(categories));
-        }
-    }, [categories]);
-
-    const loadDefaultCategories = () => {
-        setCategories([
-            {
-                id: 1,
-                name: t('restaurant.categories.appetizer'),
-                image: "/images/restaurant/cat-1.jpg",
-                desc: t('restaurant.descriptions.appetizer', { defaultValue: "Salads, soups, and starters" }),
-            },
-            {
-                id: 2,
-                name: t('restaurant.categories.main'),
-                image: "/images/restaurant/cat-2.jpg",
-                desc: t('restaurant.descriptions.main', { defaultValue: "Steak, seafood, and pasta" }),
-            },
-            {
-                id: 3,
-                name: t('restaurant.categories.dessert'),
-                image: "/images/restaurant/cat-3.jpg",
-                desc: t('restaurant.descriptions.dessert', { defaultValue: "Cakes, ice cream, and fruits" }),
-            },
-            {
-                id: 4,
-                name: t('restaurant.categories.drinks'),
-                image: "/images/restaurant/cat-4.jpg",
-                desc: t('restaurant.descriptions.drinks', { defaultValue: "Cocktails, wine, and soft drinks" }),
-            },
-        ]);
     };
+
+    useEffect(() => {
+        fetchCategories();
+    }, [t]);
 
     const handleOpenModal = (category?: Category) => {
         if (category) {
             setEditingCategory(category);
-            setFormData(category);
+            setFormData({
+                name: category.name,
+                imageUrl: category.imageUrl || "",
+                description: category.description || ""
+            });
         } else {
             setEditingCategory(null);
-            setFormData({ id: 0, name: "", image: "", desc: "" });
+            setFormData({
+                name: "",
+                imageUrl: "",
+                description: ""
+            });
         }
         setIsModalOpen(true);
     };
@@ -86,23 +62,56 @@ export default function CategorySettings() {
         setEditingCategory(null);
     };
 
-    const handleSave = () => {
-        if (editingCategory) {
-            // Edit
-            setCategories(categories.map(c => c.id === editingCategory.id ? { ...formData, id: c.id } : c));
-        } else {
-            // Add
-            const newId = Math.max(...categories.map(c => c.id), 0) + 1;
-            setCategories([...categories, { ...formData, id: newId }]);
+    const handleSave = async () => {
+        if (!formData.name) {
+            message.warning(t("dashboard.settings.categories.name_required", { defaultValue: "Category name is required" }));
+            return;
         }
-        handleCloseModal();
+
+        try {
+            if (editingCategory) {
+                // Edit
+                await categoryService.updateCategory(editingCategory.id, {
+                    ...editingCategory,
+                    name: formData.name,
+                    description: formData.description || "",
+                    imageUrl: formData.imageUrl
+                });
+                message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Category updated successfully" }));
+            } else {
+                // Add
+                await categoryService.createCategory({
+                    name: formData.name,
+                    description: formData.description || "",
+                    imageUrl: formData.imageUrl
+                });
+                message.success(t("dashboard.settings.notifications.success_create", { defaultValue: "Category created successfully" }));
+            }
+            await fetchCategories();
+            handleCloseModal();
+        } catch (error) {
+            console.error('Failed to save category:', error);
+            message.error(t("dashboard.settings.notifications.error_save", { defaultValue: "Failed to save category" }));
+        }
     };
 
-    const handleDelete = (id: number) => {
+    const handleDelete = async (id: string) => {
         if (window.confirm(t("dashboard.settings.categories.confirm_delete"))) {
-            setCategories(categories.filter(c => c.id !== id));
+            try {
+                await categoryService.deleteCategory(id);
+                message.success(t("dashboard.settings.notifications.success_delete", { defaultValue: "Category deleted successfully" }));
+                // Optimistic update or refetch
+                setCategories(categories.filter(c => c.id !== id));
+            } catch (error) {
+                console.error('Failed to delete category:', error);
+                message.error(t("dashboard.settings.notifications.error_delete", { defaultValue: "Failed to delete category" }));
+            }
         }
     };
+
+    if (loading && categories.length === 0) {
+        return <div className="p-12 text-center text-gray-500">Loading categories...</div>;
+    }
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -155,7 +164,7 @@ export default function CategorySettings() {
                                         <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 relative shadow-sm group-hover:shadow-md transition-all border border-gray-200 dark:border-gray-700">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
-                                                src={cat.image || "/images/placeholder.jpg"}
+                                                src={cat.imageUrl || "/images/placeholder.jpg"}
                                                 alt={cat.name}
                                                 className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
                                                 onError={(e) => {
@@ -171,7 +180,7 @@ export default function CategorySettings() {
                                     </td>
                                     <td className="p-4">
                                         <span className="text-sm line-clamp-2" style={{ color: 'var(--text-muted)' }}>
-                                            {cat.desc}
+                                            {cat.description}
                                         </span>
                                     </td>
                                     <td className="p-4 text-right">
@@ -198,7 +207,7 @@ export default function CategorySettings() {
                                     </td>
                                 </tr>
                             ))}
-                            {categories.length === 0 && (
+                            {categories.length === 0 && !loading && (
                                 <tr>
                                     <td colSpan={4} className="p-12 text-center">
                                         <div className="flex flex-col items-center justify-center text-gray-400">
@@ -263,7 +272,7 @@ export default function CategorySettings() {
                                 </label>
                                 <input
                                     type="text"
-                                    value={formData.name}
+                                    value={formData.name || ""}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
                                     style={{
@@ -280,8 +289,8 @@ export default function CategorySettings() {
                                     {t("dashboard.settings.categories.description")}
                                 </label>
                                 <textarea
-                                    value={formData.desc}
-                                    onChange={(e) => setFormData({ ...formData, desc: e.target.value })}
+                                    value={formData.description || ""}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none resize-none"
                                     rows={3}
                                     style={{
@@ -299,47 +308,69 @@ export default function CategorySettings() {
                                 </label>
 
                                 <div className="space-y-3">
-                                    <div className="relative group">
-                                        <input
-                                            type="file"
-                                            id="category-image"
-                                            className="hidden"
-                                            accept="image/*"
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) {
-                                                    if (file.size > 5 * 1024 * 1024) {
-                                                        alert(t("dashboard.settings.categories.file_size_error"));
-                                                        return;
-                                                    }
-                                                    const reader = new FileReader();
-                                                    reader.onloadend = () => setFormData({ ...formData, image: reader.result as string });
-                                                    reader.readAsDataURL(file);
-                                                }
-                                            }}
-                                        />
+                                    <input
+                                        type="file"
+                                        id="category-image-upload"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
 
+                                            if (file.size > 5 * 1024 * 1024) {
+                                                message.error(t("dashboard.settings.categories.file_size_error", { defaultValue: "File size be less than 5MB" }));
+                                                return;
+                                            }
+
+                                            try {
+                                                setLoading(true); // Re-use main loading or add specific uploading state
+                                                const url = await categoryService.uploadImage(file);
+                                                setFormData({ ...formData, imageUrl: url });
+                                                message.success("Image uploaded successfully");
+                                            } catch (error) {
+                                                console.error("Upload failed", error);
+                                                message.error("Failed to upload image. Please try again.");
+                                            } finally {
+                                                setLoading(false);
+                                                // Reset file input value to allow re-selecting same file if needed
+                                                e.target.value = '';
+                                            }
+                                        }}
+                                    />
+
+                                    <div className="relative group">
+                                        {/* Clickable area for upload */}
                                         <label
-                                            htmlFor="category-image"
+                                            htmlFor="category-image-upload"
                                             className={`
-                                                relative w-full aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden
-                                                ${formData.image ? 'border-transparent' : 'border-[var(--border)] hover:border-[#FF380B] hover:bg-[#FF380B]/5'}
+                                                relative w-full aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all
+                                                ${formData.imageUrl ? 'border-transparent' : 'border-[var(--border)] hover:border-[#FF380B] hover:bg-[#FF380B]/5'}
                                             `}
-                                            style={{ background: formData.image ? 'black' : 'var(--bg-base)' }}
+                                            style={{ background: formData.imageUrl ? 'black' : 'var(--bg-base)' }}
                                         >
-                                            {formData.image ? (
+                                            {loading ? (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                                                </div>
+                                            ) : null}
+
+                                            {formData.imageUrl ? (
                                                 <>
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                                     <img
-                                                        src={formData.image}
+                                                        src={formData.imageUrl}
                                                         alt="Preview"
                                                         className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = 'none';
+                                                            message.error("Invalid image URL");
+                                                        }}
                                                     />
                                                     <div className="z-10 bg-black/50 text-white px-4 py-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 duration-300">
                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                                         </svg>
-                                                        {t("dashboard.settings.categories.change_image")}
+                                                        {t("dashboard.settings.categories.change_image", { defaultValue: "Change Image" })}
                                                     </div>
                                                 </>
                                             ) : (
@@ -350,7 +381,7 @@ export default function CategorySettings() {
                                                         </svg>
                                                     </div>
                                                     <p className="font-medium text-sm" style={{ color: 'var(--text)' }}>
-                                                        {t("dashboard.settings.categories.upload_image")}
+                                                        {t("dashboard.settings.categories.upload_image", { defaultValue: "Click to upload image" })}
                                                     </p>
                                                     <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                                                         PNG, JPG up to 5MB
@@ -359,13 +390,13 @@ export default function CategorySettings() {
                                             )}
                                         </label>
 
-                                        {formData.image && (
+                                        {formData.imageUrl && !loading && (
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
-                                                    setFormData({ ...formData, image: '' });
+                                                    setFormData({ ...formData, imageUrl: '' });
                                                 }}
                                                 className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600 z-20"
                                                 title="Remove Image"
@@ -391,7 +422,7 @@ export default function CategorySettings() {
                             </button>
                             <button
                                 onClick={handleSave}
-                                disabled={!formData.name.trim()}
+                                disabled={!formData.name?.trim()}
                                 className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[#FF380B]/20 hover:shadow-[#FF380B]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ background: '#FF380B' }}
                             >

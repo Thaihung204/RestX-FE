@@ -141,7 +141,20 @@ export const tenantService = {
         return null;
       }
 
-      return response.data;
+      const data = response.data;
+
+      // Normalize keys: Ensure lowercase 'id' property exists
+      // Backend (C#) often returns PascalCase 'Id'
+      if (data && !data.id && data.Id) {
+        data.id = data.Id;
+      }
+
+      // Ensure other critical fields are available if casing is different
+      if (data && !data.name && data.Name) data.name = data.Name;
+      if (data && !data.logoUrl && data.LogoUrl) data.logoUrl = data.LogoUrl;
+      if (data && !data.backgroundUrl && data.BackgroundUrl) data.backgroundUrl = data.BackgroundUrl;
+
+      return data;
     } catch (error) {
       throw error;
     }
@@ -219,13 +232,21 @@ export const tenantService = {
     tenant: TenantConfig,
     files?: { logo?: File | null; background?: File | null; favicon?: File | null }
   ) => {
-    // Helper to find ID deeply if needed (though it should be at top level)
     const findId = (obj: any): string | undefined => {
       if (!obj) return undefined;
+
+      // Try lowercase id first (TypeScript interface)
       if (obj.id) return obj.id;
+
+      // Try uppercase Id (C# Entity - backend returns PascalCase by default)
       if (obj.Id) return obj.Id;
-      // Check if there is a 'tenant' property inside?
-      if (obj.tenant && (obj.tenant.id || obj.tenant.Id)) return obj.tenant.id || obj.tenant.Id;
+
+      // Check if there is a nested 'tenant' property
+      if (obj.tenant) {
+        if (obj.tenant.id) return obj.tenant.id;
+        if (obj.tenant.Id) return obj.tenant.Id;
+      }
+
       return undefined;
     };
 
@@ -235,6 +256,8 @@ export const tenantService = {
       name: tenant.name || (tenant as any).Name,
       resolvedId: tenantId,
       topLevelKeys: Object.keys(tenant),
+      hasLowercaseId: !!tenant.id,
+      hasUppercaseId: !!(tenant as any).Id,
       fullObject: JSON.stringify(tenant).substring(0, 200) + "..."
     });
 
