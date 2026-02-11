@@ -113,6 +113,15 @@ const TenantPage: React.FC = () => {
   >("month");
   const [tenants, setTenants] = useState<ITenant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState<{
+    visible: boolean;
+    tenant: ITenant | null;
+    confirmText: string;
+  }>({
+    visible: false,
+    tenant: null,
+    confirmText: "",
+  });
 
   // Fetch tenants from API
   useEffect(() => {
@@ -176,24 +185,33 @@ const TenantPage: React.FC = () => {
     } else if (key === "domain") {
       message.info(t("tenants.toasts.feature_coming_message"));
     } else if (key === "suspend") {
-      Modal.confirm({
-        title: t("tenants.actions.delete_confirm_title"),
-        content: t("tenants.actions.delete_confirm_content", { name: record.name }),
-        okText: t("tenants.actions.delete_confirm_ok"),
-        okType: "danger",
-        cancelText: t("tenants.actions.delete_confirm_cancel"),
-        onOk: async () => {
-          try {
-            await tenantService.deleteTenant(record.id);
-            message.success(t("tenants.toasts.delete_success_message"));
-            await fetchTenants();
-          } catch (error: any) {
-            console.error("Failed to delete tenant:", error);
-            const errorMsg = error?.response?.data?.message || t("tenants.toasts.delete_error_message");
-            message.error(errorMsg);
-          }
-        },
+      setDeleteModal({
+        visible: true,
+        tenant: record,
+        confirmText: "",
       });
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.tenant) return;
+
+    if (deleteModal.confirmText !== deleteModal.tenant.name) {
+      message.error(t("tenants.actions.delete_name_mismatch"));
+      return;
+    }
+
+    try {
+      await tenantService.deleteTenant(deleteModal.tenant.id);
+      message.success(t("tenants.toasts.delete_success_message"));
+      setDeleteModal({ visible: false, tenant: null, confirmText: "" });
+      await fetchTenants();
+    } catch (error: any) {
+      console.error("Failed to delete tenant:", error);
+      const errorMsg =
+        error?.response?.data?.message ||
+        t("tenants.toasts.delete_error_message");
+      message.error(errorMsg);
     }
   };
 
@@ -802,7 +820,55 @@ const TenantPage: React.FC = () => {
           />
         </div>
       </main>
-    </div>
+      {/* Delete Confirmation Modal */}
+      <Modal
+        open={deleteModal.visible}
+        title={
+          <span style={{ color: "var(--text)" }}>
+            {t("tenants.actions.delete_confirm_title")}
+          </span>
+        }
+        onCancel={() =>
+          setDeleteModal({ visible: false, tenant: null, confirmText: "" })
+        }
+        onOk={handleDeleteConfirm}
+        okText={t("tenants.actions.delete_confirm_ok")}
+        okType="danger"
+        cancelText={t("tenants.actions.delete_confirm_cancel")}
+        okButtonProps={{
+          disabled: deleteModal.confirmText !== deleteModal.tenant?.name,
+        }}>
+        <div className="space-y-4 py-2">
+          <p style={{ color: "var(--text)", marginBottom: "16px" }}>
+            {t("tenants.actions.delete_warning", {
+              name: deleteModal.tenant?.name,
+            })}
+          </p>
+          <div>
+            <label
+              className="block mb-2 text-sm font-medium"
+              style={{ color: "var(--text-muted)" }}>
+              {t("tenants.actions.delete_type_name", {
+                name: deleteModal.tenant?.name,
+              })}
+            </label>
+            <Input
+              placeholder={deleteModal.tenant?.name}
+              value={deleteModal.confirmText}
+              onChange={(e) =>
+                setDeleteModal({ ...deleteModal, confirmText: e.target.value })
+              }
+              status={
+                deleteModal.confirmText &&
+                deleteModal.confirmText !== deleteModal.tenant?.name
+                  ? "error"
+                  : ""
+              }
+              autoFocus
+            />
+          </div>
+        </div>
+      </Modal>    </div>
   );
 };
 

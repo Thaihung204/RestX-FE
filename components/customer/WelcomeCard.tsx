@@ -20,10 +20,10 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
     <Card
       variant="borderless"
       style={{
-        borderRadius: 24,
-        background: "linear-gradient(135deg, #1f1f1f 0%, #0a0a0a 100%)",
-        boxShadow: "0 20px 40px -10px rgba(0,0,0,0.5)",
-        border: "1px solid rgba(255,255,255,0.05)",
+        borderRadius: 20,
+        background: "var(--card)",
+        boxShadow: "var(--shadow-lg)",
+        border: "1px solid var(--border)",
         position: "relative",
         overflow: "hidden",
       }}
@@ -36,7 +36,7 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
           right: -50,
           width: 150,
           height: 150,
-          background: "rgba(255, 87, 34, 0.15)",
+          background: "var(--decoration-glow)",
           filter: "blur(60px)",
           borderRadius: "50%",
         }}
@@ -51,7 +51,7 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
         <div>
           <Text
             style={{
-              color: "#888",
+              color: "var(--text-muted)",
               fontSize: 13,
               letterSpacing: 1,
               textTransform: "uppercase",
@@ -61,7 +61,7 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
           <Title
             level={3}
             style={{
-              color: "#fff",
+              color: "var(--text)",
               margin: "4px 0 0",
               fontSize: 26,
               fontWeight: 700,
@@ -102,7 +102,7 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
             </Text>
             <Text
               style={{
-                color: "#fff",
+                color: "var(--text)",
                 fontSize: 24,
                 fontWeight: 800,
                 lineHeight: 1,
