@@ -3,8 +3,10 @@
 import MultiImageUpload from "@/components/MultiImageUpload";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
+import { message, Modal } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ImageItem {
   uid: string;
@@ -15,6 +17,7 @@ interface ImageItem {
 }
 
 export default function MenuItemFormPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -119,6 +122,7 @@ export default function MenuItemFormPage() {
       }
     } catch (err: any) {
       setError("Failed to load menu item");
+      message.error(t("dashboard.menu.toasts.detail_error_message"));
     } finally {
       setLoading(false);
     }
@@ -134,12 +138,14 @@ export default function MenuItemFormPage() {
       // Validation
       if (!formData.name.trim()) {
         setError("Name is required");
+        message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
       }
 
       if (!formData.categoryId) {
         setError("Please select a category");
+        message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
       }
@@ -148,32 +154,28 @@ export default function MenuItemFormPage() {
       const priceValue = parseFloat(formData.price.replace(/\./g, '').replace(/,/g, '.'));
       if (!formData.price || priceValue <= 0 || isNaN(priceValue)) {
         setError("Price must be greater than 0");
+        message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
       }
 
       // Prepare image data for submission
-      const imagesToSubmit: any[] = [];
-      
-      images.forEach((img, index) => {
-        if (img.file) {
-          // New uploaded image
-          imagesToSubmit.push({
-            file: img.file,
-            imageType: img.isMain ? 0 : 1,
-            displayOrder: index + 1,
-            isActive: true
-          });
-        } else if (img.uid !== 'legacy-image') {
-          // Existing image from database
-          imagesToSubmit.push({
-            id: img.uid,
-            imageType: img.isMain ? 0 : 1,
-            displayOrder: index + 1,
-            isActive: true
-          });
-        }
-      });
+      // 1. Find Main image (or default to first)
+      const mainImg = images.find(img => img.isMain) || images[0];
+      const otherImgs = images.filter(img => img !== mainImg);
+
+      // 2. Combine into new array with Main first
+      const finalSortedArray = [mainImg, ...otherImgs].filter(Boolean);
+
+      // 3. Map to backend format
+      const imagesToSubmit = finalSortedArray.map((img, index) => ({
+        // If it's a file, id is undefined. If it's existing (no file), use uid unless it's a legacy placeholder
+        id: img.file ? undefined : (img.uid.toString().includes('legacy') ? undefined : img.uid),
+        file: img.file,
+        imageType: index === 0 ? 0 : 1, // First image is always 0 (Main)
+        displayOrder: index + 1,        // First image is always 1
+        isActive: true
+      }));
 
       const submitData: any = {
         name: formData.name.trim(),
@@ -192,10 +194,10 @@ export default function MenuItemFormPage() {
 
       if (isNewItem) {
         const result = await dishService.createDish(submitData);
-        alert("Menu item created successfully!");
+        message.success(t("dashboard.menu.toasts.create_success_message"));
       } else {
         const result = await dishService.updateDish(id, submitData);
-        alert("Menu item updated successfully!");
+        message.success(t("dashboard.menu.toasts.update_success_message"));
       }
 
       router.push("/admin/menu");
@@ -244,10 +246,35 @@ export default function MenuItemFormPage() {
       }
 
       setError(errorMsg);
-      alert(`❌ ${errorMsg}`);
+      message.error(t("dashboard.menu.toasts.save_error_message"));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = () => {
+    Modal.confirm({
+      title: t("dashboard.menu.modal.delete_title"),
+      content: (
+        <>
+          {t("dashboard.menu.modal.delete_confirm")} <strong>&quot;{formData.name}&quot;</strong>?
+          <br />
+          {t("dashboard.menu.modal.cannot_undo")}
+        </>
+      ),
+      okText: t("dashboard.menu.modal.delete"),
+      okType: "danger",
+      cancelText: t("dashboard.menu.modal.cancel"),
+      onOk: async () => {
+        try {
+          await dishService.deleteDish(id);
+          message.success(t("dashboard.menu.toasts.delete_success_message"));
+          router.push("/admin/menu");
+        } catch (err: any) {
+          message.error(t("dashboard.menu.toasts.delete_error_message"));
+        }
+      },
+    });
   };
 
   const handleChange = (
@@ -764,6 +791,27 @@ export default function MenuItemFormPage() {
                 }}>
                 Cancel
               </button>
+              {!isNewItem && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-all shadow-lg"
+                  style={{
+                    background: "linear-gradient(to right, #EF4444, #DC2626)",
+                    boxShadow:
+                      "0 10px 15px -3px rgba(239, 68, 68, 0.2), 0 4px 6px -4px rgba(239, 68, 68, 0.2)",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background =
+                      "linear-gradient(to right, #DC2626, #B91C1C)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background =
+                      "linear-gradient(to right, #EF4444, #DC2626)")
+                  }>
+                  Delete Dish
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={loading}
