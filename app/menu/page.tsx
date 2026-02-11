@@ -42,12 +42,14 @@ import {
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useThemeTokens } from "@/lib/hooks/useThemeTokens";
 
 const { Title, Text } = Typography;
 
 export default function MenuPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
+  const themeTokens = useThemeTokens();
   const { user } = useAuth();
   const {
     cartItems,
@@ -219,15 +221,18 @@ export default function MenuPage() {
     return (
       <ConfigProvider
         theme={{
-          algorithm: theme.darkAlgorithm,
+          algorithm:
+            themeTokens.mode === "dark"
+              ? theme.darkAlgorithm
+              : theme.defaultAlgorithm,
           token: {
-            colorPrimary: "#FF380B",
+            colorPrimary: "var(--primary)",
           },
         }}>
         <div
           style={{
             minHeight: "100vh",
-            backgroundColor: "#050505",
+            backgroundColor: "var(--bg-base)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -235,7 +240,9 @@ export default function MenuPage() {
             gap: 16,
           }}>
           <Spin size="large" />
-          <Text style={{ color: "#999" }}>{t("menu_page.loading")}</Text>
+          <Text style={{ color: "var(--text-muted)" }}>
+            {t("menu_page.loading")}
+          </Text>
         </div>
       </ConfigProvider>
     );
@@ -246,15 +253,18 @@ export default function MenuPage() {
     return (
       <ConfigProvider
         theme={{
-          algorithm: theme.darkAlgorithm,
+          algorithm:
+            themeTokens.mode === "dark"
+              ? theme.darkAlgorithm
+              : theme.defaultAlgorithm,
           token: {
-            colorPrimary: "#FF380B",
+            colorPrimary: "var(--primary)",
           },
         }}>
         <div
           style={{
             minHeight: "100vh",
-            backgroundColor: "#050505",
+            backgroundColor: "var(--bg-base)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -262,7 +272,7 @@ export default function MenuPage() {
             gap: 16,
             padding: 24,
           }}>
-          <Text style={{ color: "#ff4d4f", fontSize: 18 }}>{error}</Text>
+          <Text style={{ color: "var(--danger)", fontSize: 18 }}>{error}</Text>
           <Button type="primary" onClick={fetchMenuData}>
             {t("menu_page.retry")}
           </Button>
@@ -276,9 +286,12 @@ export default function MenuPage() {
       {contextHolder}
       <ConfigProvider
         theme={{
-          algorithm: theme.darkAlgorithm,
+          algorithm:
+            themeTokens.mode === "dark"
+              ? theme.darkAlgorithm
+              : theme.defaultAlgorithm,
           token: {
-            colorPrimary: "#FF380B",
+            colorPrimary: "var(--primary)",
             fontFamily:
               "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
             borderRadius: 12,
@@ -297,16 +310,16 @@ export default function MenuPage() {
               contentPadding: "5px",
             },
             Select: {
-              colorBgContainer: "rgba(255,255,255,0.08)",
-              colorBorder: "transparent",
-              selectorBg: "rgba(255,255,255,0.08)",
-              optionSelectedBg: "rgba(255, 56, 11, 0.2)",
-              colorTextPlaceholder: "#a6a6a6",
+              colorBgContainer: "var(--surface)",
+              colorBorder: "var(--border)",
+              selectorBg: "var(--surface)",
+              optionSelectedBg: "var(--primary-soft)",
+              colorTextPlaceholder: "var(--text-muted)",
             },
             Input: {
-              colorBgContainer: "rgba(255,255,255,0.04)",
-              colorBorder: "transparent",
-              activeBorderColor: "#FF380B",
+              colorBgContainer: "var(--surface)",
+              colorBorder: "var(--border)",
+              activeBorderColor: "var(--primary)",
             },
           },
         }}>
@@ -315,8 +328,8 @@ export default function MenuPage() {
             minHeight: "100vh",
             background: "var(--bg-base)",
             backgroundImage: `
-            radial-gradient(circle at 0% 0%, rgba(255, 56, 11, 0.08), transparent 40%),
-            radial-gradient(circle at 100% 100%, rgba(255, 56, 11, 0.03), transparent 40%)
+            radial-gradient(circle at 0% 0%, var(--primary-soft), transparent 45%),
+            radial-gradient(circle at 100% 100%, var(--primary-faint), transparent 45%)
           `,
             paddingBottom: 80,
           }}>
@@ -328,7 +341,7 @@ export default function MenuPage() {
                 position: "absolute",
                 inset: 0,
                 background:
-                  "url('/images/menu/banner.png') center/cover, #1f1f1f",
+                  "url('/images/menu/banner.png') center/cover, var(--surface)",
               }}
             />
             <div
@@ -373,7 +386,7 @@ export default function MenuPage() {
               }}>
               <Text
                 style={{
-                  color: "#FF380B",
+                  color: "var(--primary)",
                   letterSpacing: 2,
                   fontSize: 12,
                   fontWeight: 700,
@@ -381,7 +394,9 @@ export default function MenuPage() {
                 }}>
                 {t("menu_page.logo_title")}
               </Text>
-              <Title level={2} style={{ margin: "4px 0 0", color: "#fff" }}>
+              <Title
+                level={2}
+                style={{ margin: "4px 0 0", color: "var(--text)" }}>
                 {t("menu_page.title")}
               </Title>
             </div>
@@ -433,7 +448,7 @@ export default function MenuPage() {
                       justifyContent: "space-between",
                       marginBottom: 16,
                       padding: "0 4px",
-                      borderLeft: "4px solid #FF380B",
+                      borderLeft: "4px solid var(--primary)",
                       paddingLeft: 12,
                     }}>
                     <Title
@@ -475,7 +490,7 @@ export default function MenuPage() {
                             border: "1px solid var(--border)",
                             overflow: "hidden",
                             transition: "all 0.3s ease",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                            boxShadow: "var(--shadow-sm)",
                           }}
                           styles={{ body: { padding: 0 } }}>
                           <div
@@ -498,7 +513,7 @@ export default function MenuPage() {
                                     height: "100%",
                                     objectFit: "cover",
                                     borderRadius: 12,
-                                    border: "1px solid rgba(255,255,255,0.08)",
+                                    border: "1px solid var(--stroke-subtle)",
                                   }}
                                 />
                               ) : (
@@ -507,13 +522,16 @@ export default function MenuPage() {
                                     width: "100%",
                                     height: "100%",
                                     borderRadius: 12,
-                                    background: "rgba(255,255,255,0.05)",
+                                    background: "var(--surface-subtle)",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                   }}>
                                   <FireOutlined
-                                    style={{ color: "#333", fontSize: 24 }}
+                                    style={{
+                                      color: "var(--text-muted)",
+                                      fontSize: 24,
+                                    }}
                                   />
                                 </div>
                               )}
@@ -536,7 +554,7 @@ export default function MenuPage() {
                               </Text>
                               <Text
                                 style={{
-                                  color: "#FF380B",
+                                  color: "var(--primary)",
                                   fontWeight: 700,
                                   fontSize: 16,
                                   display: "block",
@@ -553,17 +571,17 @@ export default function MenuPage() {
                                 }}>
                                 {item.isSpicy && (
                                   <FireOutlined
-                                    style={{ color: "#ff4d4f", fontSize: 12 }}
+                                    style={{ color: "var(--danger)", fontSize: 12 }}
                                   />
                                 )}
                                 {item.isVegetarian && (
                                   <HeartFilled
-                                    style={{ color: "#52c41a", fontSize: 12 }}
+                                    style={{ color: "var(--success)", fontSize: 12 }}
                                   />
                                 )}
                                 {item.isBestSeller && (
                                   <StarFilled
-                                    style={{ color: "#faad14", fontSize: 12 }}
+                                    style={{ color: "var(--warning)", fontSize: 12 }}
                                   />
                                 )}
                               </div>
@@ -579,9 +597,9 @@ export default function MenuPage() {
                                 handleAddToCart(item);
                               }}
                               style={{
-                                background: "#FF380B",
+                                background: "var(--primary)",
                                 border: "none",
-                                boxShadow: "0 4px 10px rgba(255, 56, 11, 0.3)",
+                                boxShadow: "0 4px 10px var(--primary-glow)",
                               }}
                             />
                           </div>
@@ -634,7 +652,7 @@ export default function MenuPage() {
                       right: -50,
                       width: 150,
                       height: 150,
-                      background: "rgba(255, 87, 34, 0.15)",
+                      background: "var(--decoration-glow)",
                       filter: "blur(60px)",
                       borderRadius: "50%",
                       pointerEvents: "none",
@@ -700,7 +718,7 @@ export default function MenuPage() {
                             justifyContent: "center",
                           }}>
                           <FireOutlined
-                            style={{ fontSize: 40, color: "#FF380B" }}
+                            style={{ fontSize: 40, color: "var(--primary)" }}
                           />
                         </div>
                       )}
@@ -712,8 +730,8 @@ export default function MenuPage() {
                             position: "absolute",
                             top: 10,
                             left: 10,
-                            background: "rgba(250, 173, 20, 0.95)",
-                            color: "#000",
+                            background: "var(--warning)",
+                            color: "var(--text-on-warning)",
                             padding: "6px 12px",
                             borderRadius: 20,
                             fontSize: 11,
@@ -755,13 +773,13 @@ export default function MenuPage() {
                         {selectedFood.isSpicy && (
                           <span
                             style={{
-                              background: "rgba(255, 77, 79, 0.15)",
-                              color: "#ff4d4f",
+                              background: "var(--danger-soft)",
+                              color: "var(--danger)",
                               padding: "6px 12px",
                               borderRadius: 8,
                               fontSize: 12,
                               fontWeight: 600,
-                              border: "1px solid rgba(255, 77, 79, 0.3)",
+                              border: "1px solid var(--danger-border)",
                               display: "flex",
                               alignItems: "center",
                               gap: 5,
@@ -773,13 +791,13 @@ export default function MenuPage() {
                         {selectedFood.isVegetarian && (
                           <span
                             style={{
-                              background: "rgba(82, 196, 26, 0.15)",
-                              color: "#52c41a",
+                              background: "var(--success-soft)",
+                              color: "var(--success)",
                               padding: "6px 12px",
                               borderRadius: 8,
                               fontSize: 12,
                               fontWeight: 600,
-                              border: "1px solid rgba(82, 196, 26, 0.3)",
+                              border: "1px solid var(--success-border)",
                               display: "flex",
                               alignItems: "center",
                               gap: 5,
@@ -800,24 +818,24 @@ export default function MenuPage() {
                           }}>
                           {selectedFood.tags.map((tag, idx) => {
                             let icon = <StarFilled />;
-                            let color = "#FF380B";
-                            let bg = "rgba(255, 56, 11, 0.1)";
+                            let color = "var(--primary)";
+                            let bg = "var(--primary-soft)";
                             let label = t("menu_page.tags." + tag, {
                               defaultValue: tag,
                             });
 
                             if (tag === "spicy") {
                               icon = <FireOutlined />;
-                              color = "#ff4d4f";
-                              bg = "rgba(255, 77, 79, 0.1)";
+                              color = "var(--danger)";
+                              bg = "var(--danger-soft)";
                             } else if (tag === "vegan") {
                               icon = <HeartFilled />;
-                              color = "#52c41a";
-                              bg = "rgba(82, 196, 26, 0.1)";
+                              color = "var(--success)";
+                              bg = "var(--success-soft)";
                             } else if (tag === "best") {
                               icon = <StarFilled />;
-                              color = "#faad14";
-                              bg = "rgba(250, 173, 20, 0.1)";
+                              color = "var(--warning)";
+                              bg = "var(--warning-soft)";
                             }
 
                             return (
@@ -896,7 +914,8 @@ export default function MenuPage() {
                             fontWeight: 700,
                           }}>
                           {selectedFood.price}{" "}
-                          <span style={{ fontSize: 14, color: "#FF380B" }}>
+                          <span
+                            style={{ fontSize: 14, color: "var(--primary)" }}>
                             đ
                           </span>
                         </Text>
@@ -940,7 +959,7 @@ export default function MenuPage() {
                               />
                               <Text
                                 style={{
-                                  color: "#FF380B",
+                                  color: "var(--primary)",
                                   fontSize: 16,
                                   fontWeight: 700,
                                   minWidth: 20,
@@ -958,13 +977,13 @@ export default function MenuPage() {
                                 }
                                 size="small"
                                 style={{
-                                  background: "#FF380B",
+                                  background: "var(--primary)",
                                   border: "none",
                                   color: "var(--text)",
                                   width: 28,
                                   height: 28,
                                   borderRadius: 8,
-                                  boxShadow: "0 4px 10px rgba(255,56,11,0.3)",
+                                  boxShadow: "0 4px 10px var(--primary-glow)",
                                 }}
                               />
                             </div>
@@ -976,14 +995,14 @@ export default function MenuPage() {
                               icon={<PlusOutlined />}
                               onClick={() => handleAddToCart(selectedFood)}
                               style={{
-                                background: "#FF380B",
+                                background: "var(--primary)",
                                 border: "none",
                                 height: 44,
                                 padding: "0 24px",
                                 borderRadius: 12,
                                 fontWeight: 600,
                                 fontSize: 14,
-                                boxShadow: "0 4px 12px rgba(255,56,11,0.3)",
+                                boxShadow: "0 4px 12px var(--primary-glow)",
                               }}>
                               {t("menu_page.detail_modal.add_to_cart")}
                             </Button>

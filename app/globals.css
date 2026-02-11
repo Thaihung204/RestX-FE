@@ -3,37 +3,118 @@
 @tailwind utilities;
 
 :root {
-  --bg-base: #F7F8FA;
-  --surface: #FFFFFF;
-  --card: #FFFFFF;
+  /* =========================================================
+   * Seed Tokens (Tenant Admin can override via API injection)
+   * - Injected as CSS variables on <html> (style attribute)
+   * - Only these need to change to rebrand the whole system
+   * ========================================================= */
+  --primary: #FFFF00; /* default if tenant does not configure */
+  --bg-light-base: #F7F8FA;
+  --bg-dark-base: #0E121A;
+
+  /* =========================================================
+   * Layering (Light Mode)
+   * - Derived from seed tokens for consistent depth
+   * ========================================================= */
+  --bg-base: var(--bg-light-base);
+
+  /* Text */
   --text: #111111;
-  --text-muted: #4F4F4F;
-  --border: #E5E7EB;
+  --text-muted: color-mix(in srgb, var(--text), transparent 55%);
+
+  /* Surfaces */
+  --surface: color-mix(in srgb, var(--bg-base), white 92%);
+  --card: color-mix(in srgb, var(--bg-base), white 96%);
+  --border: color-mix(in srgb, var(--text), transparent 88%);
+
+  /* Accessible “on color” tokens (can be auto-adjusted by JS) */
+  --text-inverse: #FFFFFF; /* default for text/icons on primary backgrounds */
+  --on-primary: var(--text-inverse);
+
+  /* =========================================================
+   * Functional Tokens (auto-calculated from --primary)
+   * - Must NOT be overridden by tenant
+   * ========================================================= */
+  --primary-soft: color-mix(in srgb, var(--primary), transparent 85%);
+  --primary-faint: color-mix(in srgb, var(--primary), transparent 94%);
+  --primary-glow: color-mix(in srgb, var(--primary), transparent 72%);
+  --primary-border: color-mix(in srgb, var(--primary), transparent 70%);
+  --primary-hover: color-mix(in srgb, var(--primary), black 10%);
+  --primary-tint: color-mix(in srgb, var(--primary), white 35%);
+
+  /* Neutrals derived from mode tokens */
+  --stroke-subtle: color-mix(in srgb, var(--text), transparent 88%);
+  --surface-subtle: color-mix(in srgb, var(--surface), var(--text) 4%);
+  --pattern-dot: color-mix(in srgb, var(--text), transparent 92%);
+
+  /* Semantic colors (centralized; components must use vars) */
+  --danger: #ff4d4f;
+  --danger-soft: color-mix(in srgb, var(--danger), transparent 85%);
+  --danger-border: color-mix(in srgb, var(--danger), transparent 65%);
+
+  --success: #52c41a;
+  --success-soft: color-mix(in srgb, var(--success), transparent 85%);
+  --success-border: color-mix(in srgb, var(--success), transparent 65%);
+
+  --warning: #faad14;
+  --warning-soft: color-mix(in srgb, var(--warning), transparent 85%);
+  --warning-border: color-mix(in srgb, var(--warning), transparent 65%);
+  --text-on-warning: #111111;
+
+  /* Premium / points accent */
+  --gold: #D4AF37;
+  --gold-bright: #FDD835;
+  --gold-glow: color-mix(in srgb, var(--gold), transparent 60%);
   
   /* Shadows & Overlays for Light Mode */
   --shadow-sm: 0 4px 12px rgba(0,0,0,0.08);
   --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
   --shadow-lg: 0 20px 40px rgba(0,0,0,0.15);
-  --modal-overlay: rgba(0,0,0,0.4);
-  --decoration-glow: rgba(255, 87, 34, 0.08);
-  --backdrop-blur: rgba(255,255,255,0.7);
+  --modal-overlay: color-mix(in srgb, black, transparent 60%);
+  --decoration-glow: color-mix(in srgb, var(--primary), transparent 92%);
+  --backdrop-blur: color-mix(in srgb, var(--surface), transparent 35%);
 }
 
 [data-theme="dark"] {
-  --bg-base: #0E121A;
-  --surface: #141927;
-  --card: #141927;
+  /* =========================================================
+   * Layering (Dark Mode)
+   * - Uses the same seed tokens, but swaps base background
+   * ========================================================= */
+  --bg-base: var(--bg-dark-base);
+
+  /* Text */
   --text: #ECECEC;
-  --text-muted: #C5C5C5;
-  --border: #1F2433;
+  --text-muted: color-mix(in srgb, var(--text), transparent 30%);
+
+  /* Surfaces */
+  --surface: color-mix(in srgb, var(--bg-base), white 8%);
+  --card: color-mix(in srgb, var(--bg-base), white 11%);
+  --border: color-mix(in srgb, var(--text), transparent 82%);
+
+  /* Accessible “on color” tokens (can be auto-adjusted by JS) */
+  --text-inverse: #FFFFFF;
+  --on-primary: var(--text-inverse);
+
+  /* Functional Tokens (auto-calculated from --primary) */
+  --primary-soft: color-mix(in srgb, var(--primary), transparent 82%);
+  --primary-faint: color-mix(in srgb, var(--primary), transparent 92%);
+  --primary-glow: color-mix(in srgb, var(--primary), transparent 68%);
+  --primary-border: color-mix(in srgb, var(--primary), transparent 65%);
+  --primary-hover: color-mix(in srgb, var(--primary), white 12%);
+  --primary-tint: color-mix(in srgb, var(--primary), white 28%);
+
+  /* Neutrals derived from mode tokens */
+  --stroke-subtle: color-mix(in srgb, var(--text), transparent 86%);
+  --surface-subtle: color-mix(in srgb, var(--surface), var(--text) 6%);
+  --pattern-dot: color-mix(in srgb, var(--text), transparent 90%);
   
   /* Shadows & Overlays for Dark Mode */
   --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
   --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
   --shadow-lg: 0 20px 40px rgba(0,0,0,0.5);
-  --modal-overlay: rgba(0,0,0,0.7);
-  --decoration-glow: rgba(255, 87, 34, 0.15);
-  --backdrop-blur: rgba(5,5,5,0.9);
+  --modal-overlay: color-mix(in srgb, black, transparent 30%);
+  --decoration-glow: color-mix(in srgb, var(--primary), transparent 88%);
+  --backdrop-blur: color-mix(in srgb, var(--surface), transparent 20%);
 }
 
 body {
@@ -49,57 +130,67 @@ body {
 
 /* Authentication pages theme-based styles using CSS variables */
 [data-theme="dark"] .auth-bg-gradient {
-  background: linear-gradient(135deg, #0E121A 0%, #141927 50%, #1a1a2e 100%);
+  background: linear-gradient(
+    135deg,
+    var(--bg-base) 0%,
+    var(--surface) 55%,
+    color-mix(in srgb, var(--surface), var(--primary) 12%) 100%
+  );
 }
 
 [data-theme="light"] .auth-bg-gradient {
-  background: linear-gradient(135deg, #1f2937 0%, #000000 50%, #7c2d12 100%);
+  background: linear-gradient(
+    135deg,
+    var(--bg-base) 0%,
+    var(--surface) 55%,
+    color-mix(in srgb, var(--surface), var(--primary) 10%) 100%
+  );
 }
 
 [data-theme="dark"] .auth-card {
-  background: rgba(20, 25, 39, 0.95);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--card), transparent 5%);
+  border-color: var(--stroke-subtle);
 }
 
 [data-theme="light"] .auth-card {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(255, 56, 11, 0.2);
+  background: color-mix(in srgb, var(--card), transparent 5%);
+  border-color: var(--primary-border);
 }
 
 [data-theme="dark"] .auth-input {
-  background: #141927;
-  color: #ECECEC;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
 }
 
 [data-theme="light"] .auth-input {
-  background: #fff;
-  color: #111827;
-  border-color: #e5e7eb;
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
 }
 
 [data-theme="dark"] .auth-label {
-  color: #ECECEC;
+  color: var(--text);
 }
 
 [data-theme="light"] .auth-label {
-  color: #374151;
+  color: var(--text);
 }
 
 [data-theme="dark"] .auth-text {
-  color: #C5C5C5;
+  color: var(--text-muted);
 }
 
 [data-theme="light"] .auth-text {
-  color: #4b5563;
+  color: var(--text-muted);
 }
 
 [data-theme="dark"] .auth-decorative {
-  background: #FF380B;
+  background: var(--primary);
 }
 
 [data-theme="light"] .auth-decorative {
-  background: #FF380B;
+  background: var(--primary);
 }
 
 /* PageTransition loading screen */
@@ -117,61 +208,65 @@ body {
 }
 
 [data-theme="dark"] .loading-screen-bg {
-  background: linear-gradient(135deg, #0E121A 0%, #141927 100%);
+  background: linear-gradient(135deg, var(--bg-base) 0%, var(--surface) 100%);
 }
 
 [data-theme="light"] .loading-screen-bg {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FFF8F3 100%);
+  background: linear-gradient(
+    135deg,
+    var(--surface) 0%,
+    color-mix(in srgb, var(--surface), var(--primary) 6%) 100%
+  );
 }
 
 [data-theme="dark"] .loading-screen-text {
-  color: #ECECEC;
+  color: var(--text);
 }
 
 [data-theme="light"] .loading-screen-text {
-  color: #111111;
+  color: var(--text);
 }
 
 [data-theme="dark"] .loading-screen-tagline {
-  color: #C5C5C5;
+  color: var(--text-muted);
 }
 
 [data-theme="light"] .loading-screen-tagline {
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 [data-theme="dark"] .auth-title {
-  color: #ECECEC;
+  color: var(--text);
 }
 
 [data-theme="light"] .auth-title {
-  color: #111827;
+  color: var(--text);
 }
 
 [data-theme="dark"] .auth-checkbox {
-  border-color: rgba(255, 255, 255, 0.3);
-  background: #141927;
+  border-color: var(--border);
+  background: var(--surface);
 }
 
 [data-theme="light"] .auth-checkbox {
-  border-color: #d1d5db;
-  background: #f9fafb;
+  border-color: var(--border);
+  background: var(--surface);
 }
 
 [data-theme="dark"] .auth-icon-button {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 [data-theme="light"] .auth-icon-button {
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 [data-theme="dark"] .auth-icon-button:hover {
-  color: #d1d5db;
+  color: var(--text);
 }
 
 [data-theme="light"] .auth-icon-button:hover {
-  color: #374151;
+  color: var(--text);
 }
 
 /* Scrollbar Styling - Webkit (Chrome, Safari, Edge) */
@@ -181,24 +276,24 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--card, #f0f0f0);
+  background: var(--card);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border, #d9d9d9);
+  background: var(--border);
   border-radius: 5px;
-  border: 2px solid var(--card, #f0f0f0);
+  border: 2px solid var(--card);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted, #999);
+  background: var(--text-muted);
 }
 
 /* Scrollbar Styling - Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--border, #d9d9d9) var(--card, #f0f0f0);
+  scrollbar-color: var(--border) var(--card);
 }
 
 /* Input Placeholder Styling */
@@ -227,7 +322,7 @@ textarea::placeholder {
 .ant-drawer-body,
 .ant-modal-body {
   scrollbar-width: thin !important;
-  scrollbar-color: var(--border, #d9d9d9) var(--card, #f0f0f0) !important;
+  scrollbar-color: var(--border) var(--card) !important;
 }
 
 .ant-drawer-body::-webkit-scrollbar,
@@ -238,19 +333,19 @@ textarea::placeholder {
 
 .ant-drawer-body::-webkit-scrollbar-track,
 .ant-modal-body::-webkit-scrollbar-track {
-  background: var(--card, #f0f0f0) !important;
+  background: var(--card) !important;
   border-radius: 4px !important;
 }
 
 .ant-drawer-body::-webkit-scrollbar-thumb,
 .ant-modal-body::-webkit-scrollbar-thumb {
-  background: var(--border, #d9d9d9) !important;
+  background: var(--border) !important;
   border-radius: 4px !important;
 }
 
 .ant-drawer-body::-webkit-scrollbar-thumb:hover,
 .ant-modal-body::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted, #999) !important;
+  background: var(--text-muted) !important;
 }
 
 /* Notification Sheet Animations */

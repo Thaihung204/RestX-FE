@@ -25,10 +25,10 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
                     padding: "4px 12px", 
                     borderRadius: 20, 
                     border: "none", 
-                    background: "linear-gradient(90deg, #D4AF37 0%, #FDD835 100%)",
-                    color: "#000",
+                    background: "linear-gradient(90deg, var(--gold) 0%, var(--gold-bright) 100%)",
+                    color: "var(--text-on-warning)",
                     fontWeight: "bold",
-                    boxShadow: "0 4px 10px rgba(212, 175, 55, 0.4)"
+                    boxShadow: "0 4px 10px var(--gold-glow)"
                 }}
             >
                 <StarFilled style={{ marginRight: 6 }} /> Michelin Selected
@@ -66,12 +66,12 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
             }}
         >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <PhoneFilled style={{ color: "#ff8f00" }} />
+            <PhoneFilled style={{ color: "var(--warning)" }} />
             <Text style={{ color: "var(--text-muted)", fontSize: 13, fontWeight: 500 }}>{phone}</Text>
             </div>
             <div style={{ width: 1, height: 16, background: "var(--border)" }} />
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <ClockCircleFilled style={{ color: "#ff8f00" }} />
+            <ClockCircleFilled style={{ color: "var(--warning)" }} />
             <Text style={{ color: "var(--text-muted)", fontSize: 13, fontWeight: 500 }}>{hours}</Text>
             </div>
         </div>

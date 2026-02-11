@@ -106,7 +106,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0, 0, 0, 0.6)',
+          background: 'var(--modal-overlay)',
           backdropFilter: 'blur(4px)',
           zIndex: 999,
           animation: 'fadeIn 0.2s ease-out',
@@ -121,8 +121,8 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
           right: 0,
           width: 'min(420px, 88vw)',
           height: '100vh',
-          background: 'var(--surface, #141927)',
-          boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.3)',
+          background: 'var(--surface)',
+          boxShadow: '-4px 0 24px var(--modal-overlay)',
           zIndex: 1000,
           display: 'flex',
           flexDirection: 'column',
@@ -134,7 +134,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
         <div
           style={{
             padding: '20px 16px',
-            borderBottom: '1px solid var(--border, #1F2433)',
+            borderBottom: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -145,7 +145,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
             strong
             style={{
               fontSize: 18,
-              color: 'var(--text, #ECECEC)',
+              color: 'var(--text)',
             }}
           >
             {t('notifications.title')}
@@ -157,7 +157,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                 icon={<CheckOutlined />}
                 onClick={markAllAsRead}
                 style={{
-                  color: 'var(--text-muted, #C5C5C5)',
+                  color: 'var(--text-muted)',
                   fontSize: 13,
                   padding: '4px 8px',
                   height: 'auto',
@@ -171,7 +171,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
               icon={<CloseOutlined />}
               onClick={onClose}
               style={{
-                color: 'var(--text-muted, #C5C5C5)',
+                color: 'var(--text-muted)',
                 fontSize: 16,
                 width: 32,
                 height: 32,
@@ -197,7 +197,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
               description={t('notifications.empty')}
               style={{
                 marginTop: 60,
-                color: 'var(--text-muted, #C5C5C5)',
+                color: 'var(--text-muted)',
               }}
             />
           ) : (
@@ -214,16 +214,18 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                   }}
                   style={{
                     padding: '16px',
-                    borderBottom: '1px solid var(--border, #1F2433)',
+                    borderBottom: '1px solid var(--border)',
                     cursor: 'pointer',
-                    background: item.unread ? 'rgba(255, 122, 0, 0.05)' : 'transparent',
+                    background: item.unread ? 'var(--primary-faint)' : 'transparent',
                     transition: 'background 0.2s',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = item.unread ? 'rgba(255, 122, 0, 0.1)' : 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.background = item.unread
+                      ? 'var(--primary-soft)'
+                      : 'var(--surface-subtle)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = item.unread ? 'rgba(255, 122, 0, 0.05)' : 'transparent';
+                    e.currentTarget.style.background = item.unread ? 'var(--primary-faint)' : 'transparent';
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -233,12 +235,12 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                               width: 40,
                               height: 40,
                               borderRadius: 8,
-                              background: 'rgba(255, 122, 0, 0.1)',
+                              background: 'var(--primary-soft)',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               flexShrink: 0,
-                              color: '#FF380B',
+                              color: 'var(--primary)',
                             }}
                           >
                             {item.icon}
@@ -250,7 +252,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                             style={{
                               display: 'block',
                               fontSize: 15,
-                              color: 'var(--text, #ECECEC)',
+                              color: 'var(--text)',
                               marginBottom: 4,
                             }}
                           >
@@ -260,7 +262,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                             style={{
                               display: 'block',
                               fontSize: 13,
-                              color: 'var(--text-muted, #C5C5C5)',
+                              color: 'var(--text-muted)',
                               lineHeight: 1.5,
                             }}
                           >
@@ -270,7 +272,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                             style={{
                               display: 'block',
                               fontSize: 11,
-                              color: 'var(--text-muted, #C5C5C5)',
+                              color: 'var(--text-muted)',
                               marginTop: 6,
                               opacity: 0.7,
                             }}
@@ -284,7 +286,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                               width: 8,
                               height: 8,
                               borderRadius: '50%',
-                              background: '#FF380B',
+                              background: 'var(--primary)',
                               flexShrink: 0,
                               marginTop: 6,
                             }}
@@ -309,7 +311,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
         styles={{
           mask: {
             backdropFilter: 'blur(12px)',
-            background: 'rgba(0,0,0,0.7)',
+            background: 'var(--modal-overlay)',
           },
           wrapper: {
             background: 'transparent',
@@ -325,11 +327,12 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
           <div
             style={{
               position: 'relative',
-              background: 'linear-gradient(160deg, #1f1f1f 0%, #0a0a0a 100%)',
+              background:
+                'linear-gradient(160deg, var(--card) 0%, color-mix(in srgb, var(--card), black 8%) 100%)',
               borderRadius: 24,
               padding: '18px 16px',
-              border: '1px solid rgba(255,255,255,0.08)',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)',
+              border: '1px solid var(--stroke-subtle)',
+              boxShadow: 'var(--shadow-lg)',
               overflow: 'hidden',
               maxHeight: '80vh',
               display: 'flex',
@@ -346,7 +349,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                 left: -50,
                 width: 150,
                 height: 150,
-                background: '#FF380B',
+                background: 'var(--primary)',
                 filter: 'blur(90px)',
                 opacity: 0.15,
                 pointerEvents: 'none',
@@ -362,17 +365,17 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                 width: 32,
                 height: 32,
                 borderRadius: '50%',
-                background: 'rgba(255,255,255,0.05)',
+                background: 'var(--surface-subtle)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
                 zIndex: 10,
                 backdropFilter: 'blur(4px)',
-                border: '1px solid rgba(255,255,255,0.05)',
+                border: '1px solid var(--stroke-subtle)',
               }}
             >
-              <div style={{ color: '#888', fontSize: 14 }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
                 <CloseOutlined />
               </div>
             </div>
@@ -390,25 +393,25 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                   width: 38,
                   height: 38,
                   borderRadius: 10,
-                  background: 'rgba(255,87,34,0.12)',
+                  background: 'var(--primary-soft)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '1px solid rgba(255,87,34,0.25)',
+                  border: '1px solid var(--primary-border)',
                 }}
               >
                 {selectedNotification.icon ? (
-                  <div style={{ color: '#FF380B', fontSize: 20 }}>
+                  <div style={{ color: 'var(--primary)', fontSize: 20 }}>
                     {selectedNotification.icon}
                   </div>
                 ) : (
-                  <InfoCircleOutlined style={{ color: '#FF380B', fontSize: 20 }} />
+                  <InfoCircleOutlined style={{ color: 'var(--primary)', fontSize: 20 }} />
                 )}
               </div>
               <div>
                 <Text
                   style={{
-                    color: '#FF380B',
+                    color: 'var(--primary)',
                     fontSize: 11,
                     textTransform: 'uppercase',
                     letterSpacing: 1,
@@ -419,7 +422,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
                 </Text>
                 <div
                   style={{
-                    color: '#fff',
+                    color: 'var(--text)',
                     fontSize: 16,
                     fontWeight: 700,
                     marginTop: -2,
@@ -444,7 +447,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
             >
               <div
                 style={{
-                  color: 'rgba(255,255,255,0.65)',
+                  color: 'var(--text-muted)',
                   fontSize: 12,
                   marginBottom: 4,
                 }}
@@ -453,7 +456,7 @@ export default function NotificationSheet({ open, onClose }: NotificationSheetPr
               </div>
               <div
                 style={{
-                  color: '#fff',
+                  color: 'var(--text)',
                   fontSize: 14,
                   lineHeight: 1.6,
                 }}

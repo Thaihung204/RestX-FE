@@ -113,7 +113,7 @@ export default function CartModal() {
             left: -50,
             width: 150,
             height: 150,
-            background: "#FF380B",
+            background: "var(--primary)",
             filter: "blur(90px)",
             opacity: 0.15,
             pointerEvents: "none",
@@ -157,18 +157,18 @@ export default function CartModal() {
               width: 38,
               height: 38,
               borderRadius: 10,
-              background: "rgba(255,56,11,0.12)",
+              background: "var(--primary-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              border: "1px solid rgba(255,56,11,0.25)",
+              border: "1px solid var(--primary-border)",
             }}>
-            <ShoppingCartOutlined style={{ color: "#FF380B", fontSize: 20 }} />
+            <ShoppingCartOutlined style={{ color: "var(--primary)", fontSize: 20 }} />
           </div>
           <div>
             <Text
               style={{
-                color: "#FF380B",
+                color: "var(--primary)",
                 fontSize: 11,
                 textTransform: "uppercase",
                 letterSpacing: 1,
@@ -219,7 +219,7 @@ export default function CartModal() {
                         style={{
                           textAlign: "center",
                           padding: "60px 20px",
-                          color: "#666",
+                          color: "var(--text-muted)",
                         }}>
                         <ShoppingCartOutlined
                           style={{
@@ -248,7 +248,7 @@ export default function CartModal() {
                             <div key={cat.id}>
                               <Text
                                 style={{
-                                  color: "#FF380B",
+                                  color: "var(--primary)",
                                   fontSize: 16,
                                   fontWeight: 700,
                                   display: "block",
@@ -285,7 +285,7 @@ export default function CartModal() {
                                           objectFit: "cover",
                                           borderRadius: 8,
                                           border:
-                                            "1px solid rgba(255,255,255,0.1)",
+                                            "1px solid var(--stroke-subtle)",
                                           flexShrink: 0,
                                         }}
                                       />
@@ -300,7 +300,7 @@ export default function CartModal() {
                                       <div style={{ flex: 1 }}>
                                         <Text
                                           style={{
-                                            color: "#fff",
+                                            color: "var(--text)",
                                             fontSize: 14,
                                             fontWeight: 600,
                                             display: "block",
@@ -310,7 +310,7 @@ export default function CartModal() {
                                         </Text>
                                         <Text
                                           style={{
-                                            color: "#FF380B",
+                                            color: "var(--primary)",
                                             fontSize: 13,
                                             fontWeight: 600,
                                           }}>
@@ -322,7 +322,7 @@ export default function CartModal() {
                                         icon={<DeleteOutlined />}
                                         onClick={() => removeFromCart(item.id)}
                                         style={{
-                                          color: "#ff4d4f",
+                                          color: "var(--danger)",
                                           flexShrink: 0,
                                         }}
                                         size="small"
@@ -414,13 +414,13 @@ export default function CartModal() {
                       size="large"
                       onClick={confirmOrder}
                       style={{
-                        background: "#FF380B",
+                        background: "var(--primary)",
                         border: "none",
                         height: 48,
                         fontWeight: 700,
                         fontSize: 16,
                         marginTop: 16,
-                        boxShadow: "0 10px 25px rgba(255,56,11,0.35)",
+                        boxShadow: "0 10px 25px var(--primary-glow)",
                       }}>
                       {t("customer_page.cart_modal.confirm_order")}
                     </Button>
@@ -450,7 +450,7 @@ export default function CartModal() {
                         style={{
                           textAlign: "center",
                           padding: "60px 20px",
-                          color: "#666",
+                          color: "var(--text-muted)",
                         }}>
                         <ShoppingCartOutlined
                           style={{
@@ -479,7 +479,7 @@ export default function CartModal() {
                             <div key={cat.id}>
                               <Text
                                 style={{
-                                  color: "#FF380B",
+                                  color: "var(--primary)",
                                   fontSize: 16,
                                   fontWeight: 700,
                                   display: "block",
@@ -515,7 +515,7 @@ export default function CartModal() {
                                           objectFit: "cover",
                                           borderRadius: 8,
                                           border:
-                                            "1px solid rgba(255,255,255,0.1)",
+                                            "1px solid var(--stroke-subtle)",
                                           flexShrink: 0,
                                         }}
                                       />
@@ -531,7 +531,7 @@ export default function CartModal() {
                                       <div style={{ flex: 1 }}>
                                         <Text
                                           style={{
-                                            color: "#fff",
+                                            color: "var(--text)",
                                             fontSize: 14,
                                             fontWeight: 600,
                                             display: "block",
@@ -541,7 +541,7 @@ export default function CartModal() {
                                         </Text>
                                         <Text
                                           style={{
-                                            color: "#FF380B",
+                                            color: "var(--primary)",
                                             fontSize: 13,
                                             fontWeight: 600,
                                           }}>
@@ -565,7 +565,7 @@ export default function CartModal() {
                                         </Tag>
                                         <Text
                                           style={{
-                                            color: "#fff",
+                                            color: "var(--text)",
                                             fontSize: 14,
                                             fontWeight: 600,
                                           }}>
@@ -613,7 +613,7 @@ export default function CartModal() {
                         </Text>
                         <div
                           style={{
-                            color: "#FF380B",
+                            color: "var(--primary)",
                             fontSize: 22,
                             fontWeight: 800,
                           }}>

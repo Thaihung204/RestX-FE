@@ -13,12 +13,14 @@ import customerService, {
 import { ConfigProvider, Space, Typography, message, theme } from "antd";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useThemeTokens } from "@/lib/hooks/useThemeTokens";
 
 const { Text, Title } = Typography;
 
 export default function CustomerHomePage() {
   const router = useRouter();
   const { user } = useAuth();
+  const themeTokens = useThemeTokens();
   const [messageApi, contextHolder] = message.useMessage();
   const [tableNumber] = useState("C1");
   const [isLoading, setIsLoading] = useState(false);
@@ -73,30 +75,33 @@ export default function CustomerHomePage() {
   return (
     <ConfigProvider
       theme={{
-        algorithm: theme.darkAlgorithm,
+        algorithm:
+          themeTokens.mode === "dark"
+            ? theme.darkAlgorithm
+            : theme.defaultAlgorithm,
         token: {
-          colorPrimary: "#FF380B",
+          colorPrimary: "var(--primary)",
           fontFamily: "'Playfair Display', 'Inter', sans-serif",
           borderRadius: 8,
         },
         components: {
           Message: {
-            contentBg: "#ffffff",
-            colorText: "#1f1f1f",
+            contentBg: "var(--surface)",
+            colorText: "var(--text)",
             borderRadiusLG: 12,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+            boxShadow: "var(--shadow-md)",
             fontSize: 13,
             contentPadding: "6px 12px",
           },
           Input: {
-            colorBgContainer: "rgba(255,255,255,0.03)",
-            colorBorder: "rgba(255,255,255,0.1)",
-            activeBorderColor: "#FF380B",
-            hoverBorderColor: "rgba(255, 56, 11, 0.5)",
+            colorBgContainer: "var(--surface)",
+            colorBorder: "var(--border)",
+            activeBorderColor: "var(--primary)",
+            hoverBorderColor: "var(--primary)",
           },
           DatePicker: {
-            colorBgContainer: "rgba(255,255,255,0.03)",
-            colorBorder: "rgba(255,255,255,0.1)",
+            colorBgContainer: "var(--surface)",
+            colorBorder: "var(--border)",
           },
           Modal: {
             contentBg: "transparent",
@@ -109,8 +114,8 @@ export default function CustomerHomePage() {
           minHeight: "100vh",
           background: "var(--bg-base)",
           backgroundImage: `
-            radial-gradient(circle at 0% 0%, rgba(255, 56, 11, 0.08), transparent 40%),
-            radial-gradient(circle at 100% 100%, rgba(255, 56, 11, 0.03), transparent 40%)
+            radial-gradient(circle at 0% 0%, var(--primary-soft), transparent 45%),
+            radial-gradient(circle at 100% 100%, var(--primary-faint), transparent 45%)
           `,
           paddingBottom: 100,
         }}>
