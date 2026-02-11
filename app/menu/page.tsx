@@ -138,9 +138,21 @@ export default function MenuPage() {
                 categoryName:
                   item.categoryName || categoryGroup.categoryName || "",
                 isPopular: item.isPopular || false,
-                isBestSeller: item.isBestSeller || false,
-                isSpicy: item.isSpicy || false,
-                isVegetarian: item.isVegetarian || false,
+                isBestSeller:
+                  item.isBestSeller ||
+                  item.name === "Bún bò Huế" ||
+                  item.name === "Cà phê sữa đá",
+                // item.isBestSeller || false,
+                isSpicy:
+                  item.isSpicy ||
+                  item.name?.toLowerCase().includes("bún bò") ||
+                  item.name?.toLowerCase().includes("cay") ||
+                  false,
+                isVegetarian:
+                  item.isVegetarian ||
+                  item.name?.toLowerCase().includes("chay") ||
+                  item.name?.toLowerCase().includes("rau") ||
+                  false,
                 tags: [
                   item.isSpicy && "spicy",
                   item.isVegetarian && "vegan",
@@ -488,7 +500,29 @@ export default function MenuPage() {
                             }}>
                             {/* Image Section */}
                             <div
-                              style={{ flexShrink: 0, width: 85, height: 85 }}>
+                              style={{
+                                flexShrink: 0,
+                                width: 85,
+                                height: 85,
+                                position: "relative",
+                              }}>
+                              {item.isBestSeller && (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    background: "#FFC107",
+                                    color: "#000",
+                                    padding: "2px 6px",
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    borderBottomRightRadius: 8,
+                                    zIndex: 1,
+                                  }}>
+                                  {t("menu_page.best_seller", "Best Seller")}
+                                </div>
+                              )}
                               {item.image ? (
                                 <img
                                   src={item.image}
@@ -793,6 +827,70 @@ export default function MenuPage() {
                         </div>
                       )}
                     </div>
+
+                    {/* Additional Fields */}
+                    {(selectedFood.isSpicy ||
+                      selectedFood.isVegetarian ||
+                      selectedFood.isBestSeller) && (
+                      <div
+                        style={{
+                          marginBottom: 16,
+                          display: "flex",
+                          gap: 12,
+                        }}>
+                        {selectedFood.isBestSeller && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              color: "#faad14",
+                              background: "rgba(250, 173, 20, 0.1)",
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                            }}>
+                            <StarFilled />
+                            <Text style={{ color: "inherit", fontWeight: 600 }}>
+                              {t("menu_page.best_seller", "Best Seller")}
+                            </Text>
+                          </div>
+                        )}
+                        {selectedFood.isSpicy && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              color: "#ff4d4f",
+                              background: "rgba(255, 77, 79, 0.1)",
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                            }}>
+                            <FireOutlined />
+                            <Text style={{ color: "inherit", fontWeight: 600 }}>
+                              {t("menu_page.tags.spicy", "Spicy")}
+                            </Text>
+                          </div>
+                        )}
+                        {selectedFood.isVegetarian && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              color: "#52c41a",
+                              background: "rgba(82, 196, 26, 0.1)",
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                            }}>
+                            <HeartFilled />
+                            <Text style={{ color: "inherit", fontWeight: 600 }}>
+                              {t("menu_page.tags.vegan", "Vegetarian")}
+                            </Text>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Description */}
                     <div
