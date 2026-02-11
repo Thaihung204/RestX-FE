@@ -1902,5 +1902,63 @@
         "cancel": "Cancel"
       }
     }
+  },
+  "landing": {
+    "hero": {
+      "subtitle": "Essence of Vietnamese Cuisine",
+      "title": "Exquisite Flavors",
+      "description": "Experience world-class dining with dishes crafted from the freshest ingredients in a luxurious and cozy atmosphere.",
+      "menu_btn": "Explore Menu",
+      "about_btn": "About Us"
+    },
+    "menu": {
+      "subtitle": "Signature Menu",
+      "title": "Taste of Excellence",
+      "view_all": "View Full Menu"
+    },
+    "reservation": {
+      "title": "Book a Table",
+      "description": "Secure the best spot for your dining experience. We are always ready to welcome you.",
+      "form": {
+        "name": "Full Name",
+        "name_placeholder": "John Doe",
+        "name_required": "Please enter your name",
+        "phone": "Phone Number",
+        "phone_placeholder": "090...",
+        "phone_required": "Please enter phone number",
+        "guests": "Guests",
+        "date": "Date",
+        "date_required": "Select date",
+        "submit": "Confirm Booking"
+      },
+      "guest_options": {
+        "2": "2 people",
+        "4": "4 people",
+        "6": "6 people",
+        "more": "6+ people"
+      }
+    },
+    "about": {
+      "subtitle": "Our Story",
+      "title": "Culinary Heritage from Passion",
+      "default_description": "At RestX Restaurant, we put customers first. With dedicated staff and unique recipes, we are committed to providing the best dining experience.",
+      "secondary_description": "Each dish is carefully prepared with the freshest ingredients, creating distinct flavors found nowhere else. We sincerely thank you for your support.",
+      "chef": "Executive Chef"
+    },
+    "news": {
+      "subtitle": "News & Events",
+      "title": "Latest updates from {{name}}",
+      "title_default": "our restaurant",
+      "description": "Don't miss out on special offers and culinary events.",
+      "tags": {
+        "event": "Event",
+        "cuisine": "Cuisine",
+        "discovery": "Discovery"
+      }
+    },
+    "overview": {
+      "subtitle": "Discover",
+      "title": "Overview"
+    }
   }
 }

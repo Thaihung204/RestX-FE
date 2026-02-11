@@ -10,6 +10,7 @@ export default function TenantBrandingSettings() {
     const { t } = useTranslation("common");
     const { tenant, loading: tenantLoading, refreshTenant } = useTenant();
     const [loading, setLoading] = useState(false);
+    const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(null);
 
     const logoInputRef = useRef<HTMLInputElement>(null);
     const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -33,9 +34,39 @@ export default function TenantBrandingSettings() {
     useEffect(() => {
         if (tenant) {
             console.log('[TenantBrandingSettings] Tenant from context:', tenant);
-            // Check both case styles
-            const tenantId = tenant.id || (tenant as any).Id;
+
+            // Robust ID resolution: Check standard, PascalCase, and nested structures
+            const tenantId =
+                tenant.id ||
+                (tenant as any).Id ||
+                (tenant as any).tenant?.id ||
+                (tenant as any).tenant?.Id;
+
             console.log('[TenantBrandingSettings] Resolved Tenant ID:', tenantId);
+
+            if (tenantId) {
+                setResolvedTenantId(tenantId);
+            } else if (tenant.hostname) {
+                // FALLBACK: If ID is missing (e.g. production API issue), fetch all tenants to find the ID
+                const fetchMissingId = async () => {
+                    try {
+                        console.log('[TenantBrandingSettings] ID missing, fetching tenant list to resolve...');
+                        const allTenants = await tenantService.getAllTenantsForAdmin();
+                        const match = allTenants.find(t => t.hostName === tenant.hostname);
+                        if (match) {
+                            console.log('[TenantBrandingSettings] Resolved missing ID via list:', match.id);
+                            setResolvedTenantId(match.id);
+                        } else {
+                            console.error('[TenantBrandingSettings] Could not find tenant with hostname:', tenant.hostname);
+                        }
+                    } catch (error) {
+                        console.error('[TenantBrandingSettings] Failed to fetch tenants list:', error);
+                    }
+                };
+                fetchMissingId();
+            } else {
+                console.warn('[TenantBrandingSettings] Tenant object exists but has no ID or hostname:', tenant);
+            }
 
             setFormData(prev => ({
                 ...prev,
@@ -103,8 +134,13 @@ export default function TenantBrandingSettings() {
             return;
         }
 
-        // Resolve ID safely
-        const tenantId = tenant.id || (tenant as any).Id;
+        // Resolve ID safely using state or context: Prioritize resolved ID, then direct props, then nested
+        const tenantId =
+            resolvedTenantId ||
+            tenant.id ||
+            (tenant as any).Id ||
+            (tenant as any).tenant?.id ||
+            (tenant as any).tenant?.Id;
 
         if (!tenantId) {
             message.error(t("dashboard.settings.appearance.no_tenant_id", { defaultValue: "Tenant ID is missing" }));

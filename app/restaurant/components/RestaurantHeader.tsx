@@ -57,7 +57,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
     };
   }, []);
 
-  const menuItems = [
+  const menuItems = React.useMemo(() => [
     {
       key: 'home',
       label: t('restaurant.header.home'),
@@ -67,6 +67,11 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
       key: 'about',
       label: t('restaurant.header.about'),
       href: '/restaurant#about'
+    },
+    {
+      key: 'featured',
+      label: t('restaurant.header.featured'),
+      href: '/restaurant#featured'
     },
     {
       key: 'menu',
@@ -90,21 +95,11 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
       href: '/restaurant#menu'
     },
     {
-      key: 'featured',
-      label: t('restaurant.header.featured'),
-      href: '/restaurant#featured'
-    },
-    {
-      key: 'daily',
-      label: t('restaurant.header.daily'),
-      href: '/restaurant#daily'
-    },
-    {
       key: 'news',
       label: t('restaurant.header.news'),
       href: '/restaurant#news'
     },
-  ];
+  ], [t, categories]);
 
   return (
     <header
@@ -185,6 +180,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
             <ShoppingCartOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
             <Button
               type="primary"
+              href="#reservation"
               style={{
                 background: 'linear-gradient(135deg, #FF6B3B 0%, #CC2D08 100%)',
                 border: 'none',

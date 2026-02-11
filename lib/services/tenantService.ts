@@ -28,6 +28,8 @@ export interface TenantConfig {
   // Business Info
   businessName: string;
   aboutUs?: string;
+  aboutUsType?: 'text' | 'html';
+  overview?: string;
   businessAddressLine1?: string;
   businessAddressLine2?: string;
   businessAddressLine3?: string;
