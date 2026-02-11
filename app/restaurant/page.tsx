@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import { TenantGuard } from '@/components/tenant';
 import Footer from '../components/Footer';
@@ -16,9 +16,7 @@ import FeaturedCategories from './components/FeaturedCategories';
 import OverviewSection from './components/OverviewSection';
 
 // Services & Context
-import { tenantService } from '@/lib/services/tenantService';
 import { useTenant } from '@/lib/contexts/TenantContext';
-import { categoryService, Category } from '@/lib/services/categoryService';
 import dishService from '@/lib/services/dishService';
 
 // Fonts
@@ -36,7 +34,6 @@ const jakarta = Plus_Jakarta_Sans({
 
 export default function RestaurantPage() {
   const { tenant, loading: tenantLoading } = useTenant();
-  const [categories, setCategories] = useState<Category[]>([]);
   const [menu, setMenu] = useState<MenuSectionCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,24 +44,18 @@ export default function RestaurantPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesData, dishListData] = await Promise.all([
-          categoryService.getCategories(),
-          dishService.getDishes(1, 1000)
-        ]);
+        // Use getMenu() which is public [AllowAnonymous] instead of getDishes() which requires auth
+        const menuData = await dishService.getMenu();
 
-        console.log('[RestaurantPage] Base Data:', { categoriesData, dishListData });
+        console.log('[RestaurantPage] Menu data:', menuData);
 
-        const allDishes = dishListData.items || dishListData.data || dishListData.dishes || [];
-
-        // Group dishes by category
-        const groupedMenu: MenuSectionCategory[] = categoriesData.map(cat => ({
-          categoryId: cat.id,
-          categoryName: cat.name,
-          items: allDishes.filter(d => d.categoryId === cat.id && d.isActive)
-        })).filter(group => group.items.length > 0);
-
-        setCategories(categoriesData);
-        setMenu(groupedMenu);
+        // Transform MenuCategory to MenuSectionCategory format
+        const transformedMenu: MenuSectionCategory[] = menuData.map(category => ({
+          categoryId: category.categoryId,
+          categoryName: category.categoryName,
+          items: category.items.filter(item => item.name !== undefined) as any // Filter out items with undefined name
+        }));
+        setMenu(transformedMenu);
       } catch (error) {
         console.error("Error fetching restaurant data:", error);
       } finally {
@@ -74,6 +65,15 @@ export default function RestaurantPage() {
 
     fetchData();
   }, []);
+
+  // Extract categories from menu for components
+  const categories = menu.map(cat => ({
+    id: cat.categoryId,
+    name: cat.categoryName,
+    description: '',
+    imageUrl: cat.items?.[0]?.imageUrl || undefined, // Get image from first item in category
+    isActive: true
+  }));
 
   if (loading || tenantLoading) {
     return (
