@@ -15,13 +15,10 @@ export interface RichTextRendererProps {
  * Uses DOMPurify to sanitize content before rendering to prevent XSS attacks.
  */
 const RichTextRenderer: React.FC<RichTextRendererProps> = ({ content, className }) => {
-    // If no content, return null to avoid rendering empty containers
-    if (!content) {
-        return null;
-    }
-
     // Memoize sanitized content to prevent re-sanitization on every render
     const sanitizedContent = useMemo(() => {
+        if (!content) return '';
+
         // Ensure we are in a browser environment before sanitizing
         if (typeof window === 'undefined') {
             return ''; // Or return a safe server-side fallback if needed, but usually empty until hydration
@@ -34,8 +31,8 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({ content, className 
         });
     }, [content]);
 
-    // If sanitation resulted in empty string (or server-side), don't render
-    if (!sanitizedContent && typeof window !== 'undefined') {
+    // If no content or sanitation resulted in empty string (or server-side), don't render
+    if (!content || (!sanitizedContent && typeof window !== 'undefined')) {
         return null;
     }
 
