@@ -159,21 +159,16 @@ export default function MenuItemFormPage() {
         return;
       }
 
-      // Prepare image data for submission
-      // 1. Find Main image (or default to first)
       const mainImg = images.find(img => img.isMain) || images[0];
       const otherImgs = images.filter(img => img !== mainImg);
 
-      // 2. Combine into new array with Main first
       const finalSortedArray = [mainImg, ...otherImgs].filter(Boolean);
 
-      // 3. Map to backend format
       const imagesToSubmit = finalSortedArray.map((img, index) => ({
-        // If it's a file, id is undefined. If it's existing (no file), use uid unless it's a legacy placeholder
         id: img.file ? undefined : (img.uid.toString().includes('legacy') ? undefined : img.uid),
         file: img.file,
-        imageType: index === 0 ? 0 : 1, // First image is always 0 (Main)
-        displayOrder: index + 1,        // First image is always 1
+        imageType: index === 0 ? 0 : 1, 
+        displayOrder: index + 1,        
         isActive: true
       }));
 
