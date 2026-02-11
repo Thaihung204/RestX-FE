@@ -80,7 +80,7 @@ export default function CartModal() {
       styles={{
         mask: {
           backdropFilter: "blur(12px)",
-          background: "rgba(0,0,0,0.7)",
+          background: "var(--modal-overlay)",
         },
         wrapper: {
           background: "transparent",
@@ -94,11 +94,11 @@ export default function CartModal() {
       <div
         style={{
           position: "relative",
-          background: "linear-gradient(160deg, #1f1f1f 0%, #0a0a0a 100%)",
-          borderRadius: 24,
+          background: "var(--card)",
+          borderRadius: 20,
           padding: "18px 16px",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.9)",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-lg)",
           overflow: "hidden",
           maxHeight: "80vh",
           display: "flex",
@@ -130,16 +130,16 @@ export default function CartModal() {
             width: 32,
             height: 32,
             borderRadius: "50%",
-            background: "rgba(255,255,255,0.05)",
+            background: "var(--surface)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
             zIndex: 10,
             backdropFilter: "blur(4px)",
-            border: "1px solid rgba(255,255,255,0.05)",
+            border: "1px solid var(--border)",
           }}>
-          <div style={{ color: "#888", fontSize: 14 }}>
+          <div style={{ color: "var(--text-muted)", fontSize: 14 }}>
             <CloseOutlined />
           </div>
         </div>
@@ -178,7 +178,7 @@ export default function CartModal() {
             </Text>
             <div
               style={{
-                color: "#fff",
+                color: "var(--text)",
                 fontSize: 16,
                 fontWeight: 700,
                 marginTop: -2,
@@ -230,7 +230,7 @@ export default function CartModal() {
                         />
                         <Text
                           style={{
-                            color: "#888",
+                            color: "var(--text-muted)",
                             fontSize: 14,
                             display: "block",
                           }}>
@@ -263,9 +263,8 @@ export default function CartModal() {
                                 <Card
                                   key={item.id}
                                   style={{
-                                    background:
-                                      "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
-                                    border: "1px solid rgba(255,255,255,0.06)",
+                                    background: "var(--surface)",
+                                    border: "1px solid var(--border)",
                                     borderRadius: 12,
                                     marginBottom: 8,
                                   }}
@@ -353,15 +352,15 @@ export default function CartModal() {
                                           )
                                         }
                                         style={{
-                                          color: "#fff",
+                                          color: "var(--text)",
                                           border:
-                                            "1px solid rgba(255,255,255,0.2)",
+                                            "1px solid var(--border)",
                                         }}
                                         size="small"
                                       />
                                       <Text
                                         style={{
-                                          color: "#fff",
+                                          color: "var(--text)",
                                           fontSize: 14,
                                           fontWeight: 600,
                                           minWidth: 30,
@@ -379,16 +378,16 @@ export default function CartModal() {
                                           )
                                         }
                                         style={{
-                                          color: "#fff",
+                                          color: "var(--text)",
                                           border:
-                                            "1px solid rgba(255,255,255,0.2)",
+                                            "1px solid var(--border)",
                                         }}
                                         size="small"
                                       />
                                     </div>
                                     <Text
                                       style={{
-                                        color: "#fff",
+                                        color: "var(--text)",
                                         fontSize: 14,
                                         fontWeight: 600,
                                       }}>
@@ -462,7 +461,7 @@ export default function CartModal() {
                         />
                         <Text
                           style={{
-                            color: "#888",
+                            color: "var(--text-muted)",
                             fontSize: 14,
                             display: "block",
                           }}>
@@ -495,9 +494,8 @@ export default function CartModal() {
                                 <Card
                                   key={item.id}
                                   style={{
-                                    background:
-                                      "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
-                                    border: "1px solid rgba(255,255,255,0.06)",
+                                    background: "var(--surface)",
+                                    border: "1px solid var(--border)",
                                     borderRadius: 12,
                                     marginBottom: 8,
                                   }}
@@ -593,7 +591,7 @@ export default function CartModal() {
                   {orderedItems.length > 0 && (
                     <div
                       style={{
-                        borderTop: "1px solid rgba(255,255,255,0.08)",
+                        borderTop: "1px solid var(--border)",
                         paddingTop: 16,
                         marginTop: 16,
                       }}>
@@ -606,7 +604,7 @@ export default function CartModal() {
                         }}>
                         <Text
                           style={{
-                            color: "#888",
+                            color: "var(--text-muted)",
                             fontSize: 12,
                             textTransform: "uppercase",
                             letterSpacing: 1,

@@ -153,27 +153,23 @@ export default function MenuItemFormPage() {
       }
 
       // Prepare image data for submission
-      const imagesToSubmit: any[] = [];
+      const validImages = images.filter(img => img.file || img.uid !== 'legacy-image');
       
-      images.forEach((img, index) => {
-        if (img.file) {
-          // New uploaded image
-          imagesToSubmit.push({
-            file: img.file,
-            imageType: img.isMain ? 0 : 1,
-            displayOrder: index + 1,
-            isActive: true
-          });
-        } else if (img.uid !== 'legacy-image') {
-          // Existing image from database
-          imagesToSubmit.push({
-            id: img.uid,
-            imageType: img.isMain ? 0 : 1,
-            displayOrder: index + 1,
-            isActive: true
-          });
-        }
-      });
+      // Separate main image and other images
+      const mainImage = validImages.find(img => img.isMain);
+      const otherImages = validImages.filter(img => !img.isMain);
+      
+      const orderedImages = mainImage 
+        ? [mainImage, ...otherImages]
+        : validImages; // Fallback if no main image (shouldn't happen with current UI logic)
+
+      const imagesToSubmit = orderedImages.map((img, index) => ({
+        id: img.file ? undefined : img.uid,
+        file: img.file,
+        imageType: index === 0 ? 0 : 1, // First is always Main
+        displayOrder: index + 1,
+        isActive: true
+      }));
 
       const submitData: any = {
         name: formData.name.trim(),

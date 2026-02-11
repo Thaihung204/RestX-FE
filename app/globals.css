@@ -9,6 +9,14 @@
   --text: #111111;
   --text-muted: #4F4F4F;
   --border: #E5E7EB;
+  
+  /* Shadows & Overlays for Light Mode */
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+  --shadow-lg: 0 20px 40px rgba(0,0,0,0.15);
+  --modal-overlay: rgba(0,0,0,0.4);
+  --decoration-glow: rgba(255, 87, 34, 0.08);
+  --backdrop-blur: rgba(255,255,255,0.7);
 }
 
 [data-theme="dark"] {
@@ -18,6 +26,14 @@
   --text: #ECECEC;
   --text-muted: #C5C5C5;
   --border: #1F2433;
+  
+  /* Shadows & Overlays for Dark Mode */
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+  --shadow-lg: 0 20px 40px rgba(0,0,0,0.5);
+  --modal-overlay: rgba(0,0,0,0.7);
+  --decoration-glow: rgba(255, 87, 34, 0.15);
+  --backdrop-blur: rgba(5,5,5,0.9);
 }
 
 body {
@@ -183,6 +199,28 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border, #d9d9d9) var(--card, #f0f0f0);
+}
+
+/* Input Placeholder Styling */
+.ant-input::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .ant-input::placeholder,
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+[data-theme="light"] .ant-input::placeholder,
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
 }
 
 /* Ant Design Drawer/Modal scrollbar */

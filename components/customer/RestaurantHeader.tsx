@@ -40,11 +40,11 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
             level={1}
             style={{
             margin: "0 0 12px",
-            color: "#fff",
+            color: "var(--text)",
             fontSize: "clamp(28px, 5vw, 42px)", // Responsive font size
             fontWeight: 800,
             letterSpacing: -1,
-            textShadow: "0 4px 12px rgba(0,0,0,0.5)",
+            textShadow: "0 2px 8px var(--modal-overlay)",
             fontFamily: "'Playfair Display', serif", // Suggest adding this font to layout
             }}
         >
@@ -57,22 +57,22 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
             display: "inline-flex",
             alignItems: "center",
             gap: 24,
-            background: "rgba(255, 255, 255, 0.1)",
+            background: "var(--surface)",
             backdropFilter: "blur(12px)",
             padding: "8px 24px",
             borderRadius: 50,
-            border: "1px solid rgba(255, 255, 255, 0.15)",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
+            border: "1px solid var(--border)",
+            boxShadow: "var(--shadow-sm)"
             }}
         >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <PhoneFilled style={{ color: "#ff8f00" }} />
-            <Text style={{ color: "#e0e0e0", fontSize: 13, fontWeight: 500 }}>{phone}</Text>
+            <Text style={{ color: "var(--text-muted)", fontSize: 13, fontWeight: 500 }}>{phone}</Text>
             </div>
-            <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)" }} />
+            <div style={{ width: 1, height: 16, background: "var(--border)" }} />
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <ClockCircleFilled style={{ color: "#ff8f00" }} />
-            <Text style={{ color: "#e0e0e0", fontSize: 13, fontWeight: 500 }}>{hours}</Text>
+            <Text style={{ color: "var(--text-muted)", fontSize: 13, fontWeight: 500 }}>{hours}</Text>
             </div>
         </div>
     </div>

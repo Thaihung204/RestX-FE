@@ -313,10 +313,10 @@ export default function MenuPage() {
         <div
           style={{
             minHeight: "100vh",
-            backgroundColor: "#050505",
+            background: "var(--bg-base)",
             backgroundImage: `
-            radial-gradient(circle at 0% 0%, rgba(255, 56, 11, 0.1), transparent 40%),
-            radial-gradient(circle at 100% 100%, rgba(255, 56, 11, 0.05), transparent 40%)
+            radial-gradient(circle at 0% 0%, rgba(255, 56, 11, 0.08), transparent 40%),
+            radial-gradient(circle at 100% 100%, rgba(255, 56, 11, 0.03), transparent 40%)
           `,
             paddingBottom: 80,
           }}>
@@ -336,7 +336,7 @@ export default function MenuPage() {
                 position: "absolute",
                 inset: 0,
                 background:
-                  "linear-gradient(to bottom, rgba(0,0,0,0.3), #050505)",
+                  "linear-gradient(to bottom, var(--modal-overlay), var(--bg-base))",
               }}
             />
 
@@ -348,10 +348,10 @@ export default function MenuPage() {
                 position: "absolute",
                 top: 16,
                 left: 16,
-                background: "rgba(0,0,0,0.5)",
+                background: "var(--modal-overlay)",
                 backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
                 height: 40,
                 width: 40,
                 borderRadius: 12,
@@ -391,11 +391,11 @@ export default function MenuPage() {
           <Affix offsetTop={0}>
             <div
               style={{
-                background: "rgba(5, 5, 5, 0.9)",
+                background: "var(--bg-base)",
                 backdropFilter: "blur(16px)",
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                borderBottom: "1px solid var(--border)",
                 padding: "12px 16px",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+                boxShadow: "var(--shadow-md)",
                 zIndex: 100,
               }}>
               <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -407,9 +407,9 @@ export default function MenuPage() {
                   onChange={(e) => setSearchText(e.target.value)}
                   allowClear
                   style={{
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    color: "#fff",
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text)",
                   }}
                 />
               </div>
@@ -439,7 +439,7 @@ export default function MenuPage() {
                     <Title
                       level={3}
                       style={{
-                        color: "#fff",
+                        color: "var(--text)",
                         margin: 0,
                         fontSize: 22,
                         fontWeight: 700,
@@ -448,7 +448,7 @@ export default function MenuPage() {
                       {categoryGroup.category.name}
                     </Title>
                     <Text
-                      style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+                      style={{ color: "var(--text-muted)", fontSize: 13 }}>
                       {categoryGroup.dishes.length} {t("menu_page.items")}
                     </Text>
                   </div>
@@ -470,12 +470,12 @@ export default function MenuPage() {
                             setFoodDetailModalOpen(true);
                           }}
                           style={{
-                            background:
-                              "linear-gradient(135deg, rgba(30, 30, 30, 0.8) 0%, rgba(20, 20, 20, 0.9) 100%)",
-                            borderRadius: 16,
-                            border: "1px solid rgba(255,255,255,0.06)",
+                            background: "var(--card)",
+                            borderRadius: 12,
+                            border: "1px solid var(--border)",
                             overflow: "hidden",
                             transition: "all 0.3s ease",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
                           }}
                           styles={{ body: { padding: 0 } }}>
                           <div
@@ -525,7 +525,7 @@ export default function MenuPage() {
                                 style={{
                                   fontSize: 16,
                                   fontWeight: 600,
-                                  color: "#fff",
+                                  color: "var(--text)",
                                   display: "block",
                                   marginBottom: 4,
                                   overflow: "hidden",
@@ -605,7 +605,7 @@ export default function MenuPage() {
               styles={{
                 mask: {
                   backdropFilter: "blur(12px)",
-                  background: "rgba(0,0,0,0.7)",
+                  background: "var(--modal-overlay)",
                 },
                 wrapper: {
                   background: "transparent",
@@ -619,23 +619,24 @@ export default function MenuPage() {
                 <div
                   style={{
                     position: "relative",
-                    background:
-                      "linear-gradient(160deg, #1f1f1f 0%, #0a0a0a 100%)",
-                    borderRadius: 24,
+                    background: "var(--card)",
+                    borderRadius: 20,
                     padding: "30px 24px",
                     overflow: "hidden",
+                    border: "1px solid var(--border)",
+                    boxShadow: "var(--shadow-lg)",
                   }}>
                   {/* Decoration Glow */}
                   <div
                     style={{
                       position: "absolute",
                       top: -50,
-                      left: -50,
+                      right: -50,
                       width: 150,
                       height: 150,
-                      background: "#FF380B",
-                      filter: "blur(80px)",
-                      opacity: 0.15,
+                      background: "rgba(255, 87, 34, 0.15)",
+                      filter: "blur(60px)",
+                      borderRadius: "50%",
                       pointerEvents: "none",
                     }}
                   />
@@ -650,16 +651,16 @@ export default function MenuPage() {
                       width: 32,
                       height: 32,
                       borderRadius: "50%",
-                      background: "rgba(255,255,255,0.05)",
+                      background: "var(--surface)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       cursor: "pointer",
                       zIndex: 10,
                       backdropFilter: "blur(4px)",
-                      border: "1px solid rgba(255,255,255,0.05)",
+                      border: "1px solid var(--border)",
                     }}>
-                    <div style={{ color: "#888", fontSize: 14 }}>
+                    <div style={{ color: "var(--text-muted)", fontSize: 14 }}>
                       <CloseOutlined />
                     </div>
                   </div>
@@ -674,8 +675,8 @@ export default function MenuPage() {
                         borderRadius: 16,
                         overflow: "hidden",
                         marginBottom: 20,
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        boxShadow: "0 8px 20px rgba(0,0,0,0.4)",
+                        border: "1px solid var(--border)",
+                        boxShadow: "var(--shadow-md)",
                         position: "relative",
                       }}>
                       {selectedFood.image ? (
@@ -693,7 +694,7 @@ export default function MenuPage() {
                           style={{
                             width: "100%",
                             height: "100%",
-                            background: "#141414",
+                            background: "var(--surface)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -704,23 +705,27 @@ export default function MenuPage() {
                         </div>
                       )}
 
-                      {/* Note Badge on Image (if exists) */}
-                      {selectedFood.note && (
+                      {/* Best Seller Badge on Image (if exists) */}
+                      {selectedFood.isBestSeller && (
                         <div
                           style={{
                             position: "absolute",
                             top: 10,
                             left: 10,
-                            background: "rgba(255, 193, 7, 0.9)",
+                            background: "rgba(250, 173, 20, 0.95)",
                             color: "#000",
-                            padding: "4px 10px",
+                            padding: "6px 12px",
                             borderRadius: 20,
                             fontSize: 11,
                             fontWeight: 700,
                             backdropFilter: "blur(4px)",
-                            boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+                            boxShadow: "var(--shadow-sm)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
                           }}>
-                          {selectedFood.note}
+                          <StarFilled style={{ fontSize: 10 }} />
+                          {t("menu_page.best_seller")}
                         </div>
                       )}
                     </div>
@@ -730,14 +735,60 @@ export default function MenuPage() {
                       <Title
                         level={3}
                         style={{
-                          color: "#fff",
-                          margin: "0 0 8px 0",
-                          fontSize: 22,
+                          color: "var(--text)",
+                          margin: "0 0 12px 0",
+                          fontSize: 24,
                           fontWeight: 700,
                           letterSpacing: 0.5,
                         }}>
                         {selectedFood.name}
                       </Title>
+
+                      {/* Additional Info Tags */}
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                          marginBottom: 8,
+                        }}>
+                        {selectedFood.isSpicy && (
+                          <span
+                            style={{
+                              background: "rgba(255, 77, 79, 0.15)",
+                              color: "#ff4d4f",
+                              padding: "6px 12px",
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              border: "1px solid rgba(255, 77, 79, 0.3)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 5,
+                            }}>
+                            <FireOutlined />
+                            {t("menu_page.tags.spicy", { defaultValue: "Spicy" })}
+                          </span>
+                        )}
+                        {selectedFood.isVegetarian && (
+                          <span
+                            style={{
+                              background: "rgba(82, 196, 26, 0.15)",
+                              color: "#52c41a",
+                              padding: "6px 12px",
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              border: "1px solid rgba(82, 196, 26, 0.3)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 5,
+                            }}>
+                            <HeartFilled />
+                            {t("menu_page.tags.vegan", { defaultValue: "Vegetarian" })}
+                          </span>
+                        )}
+                      </div>
 
                       {/* Tags */}
                       {selectedFood.tags && selectedFood.tags.length > 0 && (
@@ -798,15 +849,16 @@ export default function MenuPage() {
                     <div
                       style={{
                         marginBottom: 24,
-                        background: "rgba(255,255,255,0.02)",
-                        padding: 12,
+                        background: "var(--surface)",
+                        padding: 16,
                         borderRadius: 12,
+                        border: "1px solid var(--border)",
                       }}>
                       <Text
                         style={{
-                          color: "rgba(255,255,255,0.6)",
+                          color: "var(--text-muted)",
                           fontSize: 14,
-                          lineHeight: 1.6,
+                          lineHeight: 1.7,
                         }}>
                         {selectedFood.description ||
                           t("menu_page.default_food_desc")}
@@ -816,11 +868,11 @@ export default function MenuPage() {
                     {/* Action Bar (Price + Button) */}
                     <div
                       style={{
-                        background: "rgba(20,20,20,0.6)",
+                        background: "var(--surface)",
                         backdropFilter: "blur(10px)",
-                        borderRadius: 16,
-                        padding: "12px 16px",
-                        border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: 12,
+                        padding: "16px 20px",
+                        border: "1px solid var(--border)",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
@@ -828,7 +880,7 @@ export default function MenuPage() {
                       <div>
                         <Text
                           style={{
-                            color: "#888",
+                            color: "var(--text-muted)",
                             fontSize: 11,
                             textTransform: "uppercase",
                             letterSpacing: 1,
@@ -839,7 +891,7 @@ export default function MenuPage() {
                         </Text>
                         <Text
                           style={{
-                            color: "#fff",
+                            color: "var(--text)",
                             fontSize: 20,
                             fontWeight: 700,
                           }}>
@@ -862,10 +914,10 @@ export default function MenuPage() {
                                 display: "flex",
                                 alignItems: "center",
                                 gap: 12,
-                                background: "rgba(255,255,255,0.05)",
+                                background: "var(--surface)",
                                 padding: "4px 6px",
                                 borderRadius: 12,
-                                border: "1px solid rgba(255,255,255,0.1)",
+                                border: "1px solid var(--border)",
                               }}>
                               <Button
                                 icon={
@@ -881,7 +933,7 @@ export default function MenuPage() {
                                 style={{
                                   background: "transparent",
                                   border: "none",
-                                  color: "#fff",
+                                  color: "var(--text)",
                                   width: 28,
                                   height: 28,
                                 }}
@@ -908,7 +960,7 @@ export default function MenuPage() {
                                 style={{
                                   background: "#FF380B",
                                   border: "none",
-                                  color: "#fff",
+                                  color: "var(--text)",
                                   width: 28,
                                   height: 28,
                                   borderRadius: 8,
