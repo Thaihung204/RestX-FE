@@ -39,6 +39,7 @@ export const lightTheme = {
   customColors: {
     'bg-base': '#F7F8FA',
     'surface': '#FFFFFF',
+    'primary': '#FF380B',
     'card': '#FFFFFF',
     'text': '#111111',
     'text-muted': '#4F4F4F',
@@ -76,6 +77,7 @@ export const darkTheme = {
   customColors: {
     'bg-base': '#0E121A',
     'surface': '#141927',
+    'primary': '#FF380B',
     'card': '#141927',
     'text': '#ECECEC',
     'text-muted': '#C5C5C5',
