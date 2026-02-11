@@ -2,6 +2,7 @@ export interface ITenant {
   id: string;
   name: string;
   hostName: string;
+  networkIp?: string; // Domain/IP address
   businessName: string;
   phoneNumber: string;
   addressLine1: string;
@@ -17,7 +18,8 @@ export interface ITenant {
 
 export interface TenantCreateInput {
   name: string;
-  hostName: string;
+  hostName?: string; // Optional - can be undefined
+  networkIp?: string; // Optional - can be undefined
   businessName: string;
   phoneNumber: string;
   addressLine1: string;
@@ -25,7 +27,7 @@ export interface TenantCreateInput {
   addressLine3: string;
   addressLine4: string;
   ownerEmail: string;
-  ownerPassword: string;
+  ownerPassword?: string; // Optional for edit mode
   mailRestaurant: string;
   plan: "basic" | "pro" | "enterprise";
 }

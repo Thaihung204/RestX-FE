@@ -43,6 +43,12 @@ axiosInstance.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+    // When sending FormData, do not set Content-Type so the browser/axios can set
+    // multipart/form-data with the correct boundary. Otherwise server gets
+    // Content-Type: application/json and returns 400.
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
   (error) => Promise.reject(error)

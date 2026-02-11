@@ -70,6 +70,14 @@
         "other_items": "other items",
         "items_not_done": "not done"
       },
+      "status": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
       "modal": {
         "order_detail": "Order Details",
         "cart": "Cart",
@@ -379,7 +387,166 @@
       "title": "Manage",
       "subtitle": "Manage your restaurant categories and configurations",
       "tabs": {
-        "categories": "Categories"
+        "categories": "Categories",
+        "ingredient_categories": "Ingredient Categories",
+        "suppliers": "Suppliers",
+        "loyalty": "Loyalty Bands",
+        "order_status": "Order Status"
+      },
+      "ingredient_categories": {
+        "title": "Ingredient Categories",
+        "subtitle": "Organize your ingredients by category for better inventory management",
+        "add": "Add Category",
+        "edit": "Edit Category",
+        "name": "Name",
+        "description": "Description",
+        "unit": "Default Unit",
+        "actions": "Actions",
+        "empty": "No ingredient categories found. Click \"Add Category\" to create one.",
+        "confirm_delete": "Are you sure you want to delete this category?",
+        "name_placeholder": "e.g. Vegetables, Meat, Dairy...",
+        "description_placeholder": "Brief description of this ingredient category",
+        "defaults": {
+          "vegetables": {
+            "name": "Vegetables",
+            "description": "Fresh vegetables and greens"
+          },
+          "meat": {
+            "name": "Meat",
+            "description": "Beef, pork, chicken, etc."
+          },
+          "seafood": {
+            "name": "Seafood",
+            "description": "Fish, shrimp, crab, etc."
+          },
+          "dairy": {
+            "name": "Dairy products",
+            "description": "Milk, cheese, butter, etc."
+          },
+          "spices": {
+            "name": "Spices",
+            "description": "Salt, pepper, herbs, etc."
+          },
+          "sauces": {
+            "name": "Sauces",
+            "description": "Soy sauce, fish sauce, etc."
+          }
+        },
+        "units": {
+          "kg": "kg",
+          "gram": "gram",
+          "liter": "liter",
+          "ml": "ml",
+          "piece": "piece",
+          "bottle": "bottle",
+          "can": "can",
+          "pack": "pack",
+          "box": "box"
+        }
+      },
+      "suppliers": {
+        "title": "Supplier Management",
+        "subtitle": "Manage your restaurant suppliers and vendors",
+        "add": "Add Supplier",
+        "edit": "Edit Supplier",
+        "name": "Supplier Name",
+        "contact": "Contact Info",
+        "phone": "Phone",
+        "email": "Email",
+        "address": "Address",
+        "status": "Status",
+        "actions": "Actions",
+        "active": "Active",
+        "inactive": "Inactive",
+        "empty": "No suppliers found. Click \"Add Supplier\" to create one.",
+        "confirm_delete": "Are you sure you want to delete this supplier?",
+        "created": "Supplier created successfully",
+        "updated": "Supplier updated successfully",
+        "deleted": "Supplier deleted",
+        "name_placeholder": "e.g. Fresh Veggies Co.",
+        "phone_placeholder": "0123456789",
+        "email_placeholder": "contact@supplier.com",
+        "address_placeholder": "Full address of the supplier",
+        "defaults": {
+          "supplier1": {
+            "name": "Fresh Veggies Co.",
+            "address": "123 Market Street, District 1"
+          },
+          "supplier2": {
+            "name": "Ocean Seafood Ltd.",
+            "address": "456 Harbor Road, District 2"
+          }
+        }
+      },
+      "loyalty": {
+        "title": "Loyalty Point Bands",
+        "desc": "Manage loyalty tiers and benefits",
+        "add_new": "Add New Band",
+        "edit": "Edit Loyalty Band",
+        "create": "Create Loyalty Band",
+        "name": "Band Name",
+        "range": "Points Range",
+        "discount": "Discount",
+        "benefits": "Benefits",
+        "status": "Status",
+        "form": {
+          "name": "Band Name",
+          "logo": "Rank",
+          "range": "Points Range",
+          "max_tooltip": "Leave empty for infinite range",
+          "discount": "Discount Percentage (%)",
+          "benefits": "Benefits Description"
+        },
+        "badges": {
+          "bronze": "Bronze",
+          "silver": "Silver",
+          "gold": "Gold",
+          "platinum": "Platinum"
+        }
+      },
+      "order_status": {
+        "title": "Order Detail Status Management",
+        "subtitle": "Manage order detail statuses, codes, and colors",
+        "add_status": "Add Status",
+        "edit_status": "Edit Order Detail Status",
+        "name": "Name",
+        "name_placeholder": "Enter status name",
+        "name_required": "Please enter status name",
+        "code": "Code",
+        "code_placeholder": "e.g., PENDING, PROCESSING",
+        "code_required": "Please enter status code",
+        "code_format": "Code must be uppercase letters and underscores only",
+        "color": "Color",
+        "color_required": "Please select a color",
+        "is_active": "Active Status",
+        "is_active_desc": "Enable or disable this status",
+        "is_default": "Set as Default",
+        "is_default_desc": "Set this as the default status for new orders",
+        "default_note": "Only one status can be set as default. This will replace the current default.",
+        "tooltip": {
+          "current_default": "Current Default",
+          "set_default": "Set as Default"
+        },
+        "modal_subtitle_edit": "Update status details",
+        "modal_subtitle_create": "Create a new status entry",
+        "empty_state_desc": "Create a new status to get started",
+        "table": {
+            "name": "Status Name",
+            "code": "Code",
+            "color": "Color",
+            "default": "Default",
+            "status": "Status",
+            "actions": "Actions"
+        }
+      },
+      "notifications": {
+        "delete_success": "Deleted successfully",
+        "update_success": "Updated successfully",
+        "create_success": "Created successfully"
+      },
+      "errors": {
+        "fetch_failed": "Failed to fetch loyalty point bands",
+        "delete_failed": "Failed to delete"
       }
     },
     "header": {
@@ -656,7 +823,13 @@
         "description": "Description",
         "image": "Image",
         "actions": "Actions",
-        "confirm_delete": "Are you sure you want to delete this category?"
+        "confirm_delete": "Are you sure you want to delete this category?",
+        "change_image": "Change Image",
+        "upload_image": "Upload Image",
+        "file_size_error": "File size must be less than 5MB",
+        "name_placeholder": "e.g. Appetizers",
+        "description_placeholder": "Brief description of the category",
+        "no_categories": "No categories found. Click \"Add Category\" to create one."
       },
       "general": {
         "restaurant_info": "Restaurant Information",
@@ -817,6 +990,9 @@
       "days_ago": "{{count}} days ago"
     },
     "status": {
+      "label": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
       "pending": "Pending",
       "preparing": "Preparing",
       "ready": "Ready",
@@ -824,6 +1000,9 @@
       "cancelled": "Cancelled"
     },
     "actions": {
+      "title": "Actions",
+      "yes": "Yes",
+      "no": "No",
       "create_order": "Create New Order"
     },
     "language": "Language",
@@ -933,6 +1112,27 @@
         "recent_orders": "Recent Orders"
       },
       "trusted_by": "Trusted by top brands"
+    },
+    "about": {
+      "tag": "Our Story",
+      "title_prefix": "Revolutionizing the ",
+      "title_highlight": "Culinary World",
+      "description": "RestX was born from a simple mission: to empower restaurateurs with technology that feels as natural as their craft. We bridge the gap between traditional hospitality and modern efficiency, helping you focus on what matters most—great food and happy customers.",
+      "mission": {
+        "title": "Mission Driven",
+        "desc": "Dedicated to your growth"
+      },
+      "innovation": {
+        "title": "Innovation First",
+        "desc": "Always ahead of the curve"
+      },
+      "cta": "Join Our Journey",
+      "stats": {
+        "restaurants": "Restaurants Empowered",
+        "countries": "Countries Supported",
+        "chefs": "Happy Chefs",
+        "team": "Team Members"
+      }
     },
     "features": {
       "tag": "Features",
@@ -1080,6 +1280,18 @@
       "dessert": "Desserts",
       "drinks": "Drinks"
     },
+    "descriptions": {
+      "appetizer": "Salads, soups, and starters",
+      "main": "Steak, seafood, and pasta",
+      "dessert": "Cakes, ice cream, and fruits",
+      "drinks": "Cocktails, wine, and soft drinks"
+    },
+    "messages": {
+      "name_required": "Please enter name",
+      "phone_required": "Please enter phone number",
+      "supplier_added": "Supplier added successfully",
+      "supplier_updated": "Supplier updated successfully"
+    },
     "menu_section": {
       "title": "Our Menu",
       "not_updated": "Menu is being updated..."
@@ -1087,6 +1299,7 @@
   },
   "customers": {
     "title": "Customer Management",
+    "subtitle": "View and manage your restaurant's customer information",
     "birthday_alert": {
       "title": "Birthday Today!",
       "message": "There are {{count}} customers having birthday today. Send them best wishes!"
@@ -1105,6 +1318,7 @@
         "customer": "Customer",
         "contact": "Contact",
         "vip_tier": "VIP Tier",
+        "rank": "Rank",
         "orders": "Orders",
         "total_spent": "Total Spent",
         "points": "Points",
@@ -1112,7 +1326,8 @@
       },
       "status": {
         "birthday": "Birthday",
-        "active": "Active"
+        "active": "Active",
+        "inactive": "Inactive"
       },
       "empty": "No customers found"
     },
@@ -1142,8 +1357,62 @@
     "mark_read": "Mark as read",
     "empty": "No notifications"
   },
+  "customer_page": {
+    "footer": {
+      "call_service": "Call Service",
+      "service_called": "Staff will be at your table shortly!",
+      "language_switched_vi": "Switched to Vietnamese",
+      "language_switched_en": "Switched to English",
+      "theme_switched_light": "Switched to Light Mode",
+      "theme_switched_dark": "Switched to Dark Mode"
+    },
+    "profile": {
+      "title": "My Profile",
+      "loyal_member": "Loyal Member",
+      "phone": "Phone",
+      "member_since": "Member Since",
+      "points": "Loyalty Points",
+      "membership_level": "Membership Level",
+      "next_reward": "Next Reward",
+      "points_to_next": "*{points} more points to get Voucher",
+      "edit_profile": "Edit Profile",
+      "save_changes": "Save Changes",
+      "cancel": "Cancel",
+      "name_label": "Full Name",
+      "phone_label": "Phone Number",
+      "validation": {
+        "required_fields": "Please fill in all fields!",
+        "update_success": "Profile updated successfully!",
+        "update_failed": "Failed to update profile"
+      }
+    },
+    "cart_modal": {
+      "title": "Cart",
+      "cart_tab": "Cart",
+      "cart_tab_with_count": "Cart ({{count}})",
+      "ordered_tab": "Ordered Items",
+      "empty_cart": "Cart is empty",
+      "empty_ordered": "No items ordered yet",
+      "status_preparing": "Preparing",
+      "total": "Total:",
+      "items_count": "{{count}} items",
+      "confirm_order": "Send Order Request",
+      "request_payment": "Request Payment"
+    },
+    "welcome_card": {
+      "greeting": "Welcome",
+      "default_name": "Guest",
+      "gold_member": "Gold Member",
+      "table_label": "Table"
+    }
+  },
   "menu_page": {
+    "logo_title": "RESTX PREMIUM DINING",
     "title": "Today's Menu",
+    "loading": "Loading menu...",
+    "retry": "Retry",
+    "error_load": "Failed to load menu. Please try again later.",
+    "items": "items",
     "restx_menu": "RESTX MENU",
     "search_placeholder": "Search items...",
     "viewing_category": "Viewing Category",
@@ -1196,6 +1465,7 @@
     "login_button": {
       "login_text": "LOGIN",
       "create_account": "CREATE ACCOUNT",
+      "register_text": "REGISTER",
       "loading": "Loading..."
     },
     "login_page": {
@@ -1208,6 +1478,7 @@
       "privacy_policy": "Privacy Policy",
       "or_login_with": "Or login with",
       "email_password": "Email & Password",
+      "welcome_back": "Welcome back",
       "validation": {
         "phone_length": "Phone number must be exactly 10 digits",
         "phone_digits": "Phone number must contain only digits",
@@ -1485,7 +1756,14 @@
     "actions": {
       "view_details": "View Details",
       "configure_domain": "Configure Domain",
-      "suspend_tenant": "Suspend Tenant"
+      "suspend_tenant": "Delete Tenant",
+      "delete_confirm_title": "Delete Tenant",
+      "delete_confirm_content": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone and will permanently remove all data associated with this tenant.",
+      "delete_warning": "This action is irreversible and will permanently delete all data associated with \"{{name}}\". To confirm, please type the restaurant name below.",
+      "delete_type_name": "Type \"{{name}}\" to confirm deletion",
+      "delete_name_mismatch": "Restaurant name does not match. Please try again.",
+      "delete_confirm_ok": "Delete",
+      "delete_confirm_cancel": "Cancel"
     },
     "revenue": {
       "title": "Total System Revenue",
@@ -1505,6 +1783,10 @@
       "fetch_success_message": "Tenants loaded successfully",
       "fetch_error_title": "Load Failed",
       "fetch_error_message": "Failed to load tenants. Please try again.",
+      "delete_success_title": "Success",
+      "delete_success_message": "Tenant deleted successfully",
+      "delete_error_title": "Delete Failed",
+      "delete_error_message": "Failed to delete tenant. Please try again.",
       "detail_error_title": "Load Failed",
       "detail_error_message": "Failed to load tenant details. Redirecting...",
       "feature_coming_title": "Coming Soon",
@@ -1553,26 +1835,27 @@
       "subscription_plan": "Subscription Plan",
       "fields": {
         "name": "Name",
-        "name_placeholder": "e.g., ABC",
+        "name_placeholder": "Enter restaurant display name (e.g., Nhà hàng BBQ)",
         "host_name": "Host Name",
         "host_name_placeholder": "my-restaurant",
+        "hostname_disabled_text": "Hostname cannot be changed after creation",
         "access_url": "Access URL:",
         "business_name": "Business Name",
-        "business_name_placeholder": "ABC Restaurant",
+        "business_name_placeholder": "Legal business name (e.g., ABC Co., Ltd.)",
         "phone_number": "Phone Number",
-        "phone_placeholder": "0912...",
+        "phone_placeholder": "Primary contact number (e.g., 0912345678)",
         "mail_restaurant": "Mail Restaurant",
-        "mail_restaurant_placeholder": "restaurant@example.com",
+        "mail_restaurant_placeholder": "Restaurant contact email (e.g., contact@restaurant.com)",
         "address": "Restaurant Address",
-        "street_number": "Street number (e.g., 123)",
-        "street_name": "Street name (e.g., Nguyen Van Linh)",
-        "city": "City (e.g., Da Nang)",
-        "country": "Country (e.g., Vietnam)",
+        "address_line1_placeholder": "Street number and building (e.g., 123 Main St)",
+        "address_line2_placeholder": "Ward/District (e.g., District 1)",
+        "address_line3_placeholder": "City/Province (e.g., Ho Chi Minh City, Hanoi)",
+        "address_line4_placeholder": "Country (e.g., Vietnam)",
         "owner_email": "Owner Email",
-        "owner_email_placeholder": "owner@example.com",
+        "owner_email_placeholder": "Owner account email (e.g., owner@domain.com)",
         "owner_password": "Owner Password",
-        "password_placeholder": "Enter password",
-        "select_plan": "Select service plan"
+        "password_placeholder": "Minimum 6 characters password",
+        "plan_placeholder": "Choose subscription plan"
       },
       "plan_options": {
         "basic": "Basic Plan",
@@ -1618,36 +1901,6 @@
         "update": "Save Changes",
         "cancel": "Cancel"
       }
-    }
-  },
-  "menu_page": {
-    "title": "Menu",
-    "logo_title": "RestX Menu",
-    "loading": "Loading menu...",
-    "retry": "Retry",
-    "error_load": "Failed to load menu. Please try again later.",
-    "items": "items",
-    "default_food_desc": "No description available",
-    "best_seller": "Best Seller",
-    "tags": {
-      "spicy": "Spicy",
-      "vegan": "Vegan",
-      "best": "Best Seller"
-    },
-    "cart": {
-      "title": "Your Cart",
-      "items_count": "{{count}} items",
-      "empty": "Your cart is empty",
-      "food_section": "Food",
-      "drink_section": "Drinks",
-      "total": "Total",
-      "confirm": "Confirm Order",
-      "added_success": "Added {{name}} to cart",
-      "removed_success": "Removed from cart"
-    },
-    "detail_modal": {
-      "price": "Price",
-      "add_to_cart": "Add to Cart"
     }
   }
 }

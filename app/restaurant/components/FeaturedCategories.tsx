@@ -7,32 +7,16 @@ import { useTranslation } from "react-i18next";
 
 const { Title } = Typography;
 
-const FeaturedCategories: React.FC = () => {
+import { Category } from '@/lib/services/categoryService';
+
+interface FeaturedCategoriesProps {
+    categories: Category[];
+}
+
+const FeaturedCategories: React.FC<FeaturedCategoriesProps> = ({ categories = [] }) => {
     const { t } = useTranslation();
 
-
-    const categories = [
-        {
-            key: "appetizer",
-            image: "/images/restaurant/cat-1.jpg",
-            title: t("restaurant.categories.appetizer"),
-        },
-        {
-            key: "main",
-            image: "/images/restaurant/cat-2.jpg",
-            title: t("restaurant.categories.main"),
-        },
-        {
-            key: "dessert",
-            image: "/images/restaurant/cat-3.jpg",
-            title: t("restaurant.categories.dessert"),
-        },
-        {
-            key: "drinks",
-            image: "/images/restaurant/cat-4.jpg",
-            title: t("restaurant.categories.drinks"),
-        },
-    ];
+    const displayCategories = categories.length > 0 ? categories : [];
 
     return (
         <section id="featured" style={{ padding: "80px 24px", background: 'transparent' }}>
@@ -50,8 +34,8 @@ const FeaturedCategories: React.FC = () => {
                     {t("restaurant.categories.title")}
                 </Title>
                 <Row gutter={[24, 24]}>
-                    {categories.map((cat) => (
-                        <Col xs={12} md={6} key={cat.key}>
+                    {displayCategories.map((cat) => (
+                        <Col xs={12} md={6} key={cat.id}>
                             <div
                                 style={{
                                     position: "relative",
@@ -62,13 +46,17 @@ const FeaturedCategories: React.FC = () => {
                                 }}
                             >
                                 <img
-                                    src={cat.image}
-                                    alt={cat.title}
+                                    src={cat.imageUrl || '/images/logo/restx-removebg-preview.png'}
+                                    alt={cat.name}
                                     style={{
                                         width: "100%",
                                         height: "100%",
                                         objectFit: "cover",
                                         transition: "transform 0.5s ease",
+                                    }}
+                                    onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        e.currentTarget.src = '/images/logo/restx-removebg-preview.png';
                                     }}
                                     onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
                                     onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
@@ -84,7 +72,7 @@ const FeaturedCategories: React.FC = () => {
                                     }}
                                 >
                                     <h3 style={{ color: "white", margin: 0, textAlign: "center", fontSize: 18 }}>
-                                        {cat.title}
+                                        {cat.name}
                                     </h3>
                                 </div>
                             </div>

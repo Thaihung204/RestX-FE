@@ -18,9 +18,18 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Navbar from './Navbar';
 
-const RestaurantHeader: React.FC = () => {
+import { TenantConfig } from '@/lib/services/tenantService';
+import { Category } from '@/lib/services/categoryService';
+
+interface RestaurantHeaderProps {
+  tenant: TenantConfig | null;
+  categories?: Category[];
+}
+
+const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant, categories = [] }) => {
   const { t } = useTranslation();
-  const { tenant } = useTenant();
+  const { tenant: contextTenant } = useTenant();
+  const tenant = propTenant || contextTenant;
   const { mode } = useThemeMode();
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -66,10 +75,10 @@ const RestaurantHeader: React.FC = () => {
           menu={{
             items: [
               { key: 'all', label: t('restaurant.header.menu.all') },
-              { key: 'appetizer', label: t('restaurant.header.menu.appetizer') },
-              { key: 'main', label: t('restaurant.header.menu.main') },
-              { key: 'dessert', label: t('restaurant.header.menu.dessert') },
-              { key: 'drink', label: t('restaurant.header.menu.drink') },
+              ...categories.map(cat => ({
+                key: cat.id,
+                label: cat.name,
+              })),
             ],
           }}>
           <Space style={{ color: 'inherit' }}>

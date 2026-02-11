@@ -1,5 +1,6 @@
 import I18nProvider from "@/components/I18nProvider";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
+import { CartProvider } from "@/lib/contexts/CartContext";
 import { TenantProvider } from "@/lib/contexts/TenantContext";
 import { ToastProvider } from "@/lib/contexts/ToastContext";
 import type { Metadata } from "next";
@@ -7,7 +8,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import AutoDarkThemeProvider from "./theme/AutoDarkThemeProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
 export const metadata: Metadata = {
   title: "RestX - All-in-one Restaurant Operations Platform",
@@ -93,9 +94,11 @@ export default function RootLayout({
         <I18nProvider>
           <TenantProvider>
             <AuthProvider>
-              <ToastProvider>
-                <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
-              </ToastProvider>
+              <CartProvider>
+                <ToastProvider>
+                  <AutoDarkThemeProvider>{children}</AutoDarkThemeProvider>
+                </ToastProvider>
+              </CartProvider>
             </AuthProvider>
           </TenantProvider>
         </I18nProvider>

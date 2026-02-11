@@ -6,6 +6,7 @@ import authService from "@/lib/services/authService";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { message } from "antd";
 
 export default function RegisterPage() {
   const { t } = useTranslation('auth');
@@ -189,7 +190,7 @@ export default function RegisterPage() {
     }
 
     if (!acceptTerms) {
-      alert(t('register_page.alerts.accept_terms'));
+      message.warning(t('register_page.alerts.accept_terms'));
       return;
     }
 
@@ -203,11 +204,11 @@ export default function RegisterPage() {
 
       if (result.requireLogin) {
         // Registration successful but needs manual login
-        alert(result.message || 'Registration successful! Please login with your credentials.');
+        message.success(result.message || 'Registration successful! Please login with your credentials.');
         window.location.href = '/login-email';
       } else {
         // Auto-login successful
-        alert(
+        message.success(
           t('register_page.alerts.submitted', {
             firstName: formData.firstName,
             lastName: formData.lastName,
@@ -227,7 +228,7 @@ export default function RegisterPage() {
       } else if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('exists')) {
         setErrors(prev => ({ ...prev, email: errorMessage }));
       } else {
-        alert(errorMessage);
+        message.error(errorMessage);
       }
 
       console.warn('Registration error:', error);

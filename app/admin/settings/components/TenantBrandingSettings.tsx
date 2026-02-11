@@ -8,7 +8,7 @@ import { message } from "antd";
 
 export default function TenantBrandingSettings() {
     const { t } = useTranslation("common");
-    const { tenant, loading: tenantLoading } = useTenant();
+    const { tenant, loading: tenantLoading, refreshTenant } = useTenant();
     const [loading, setLoading] = useState(false);
 
     const logoInputRef = useRef<HTMLInputElement>(null);
@@ -32,6 +32,11 @@ export default function TenantBrandingSettings() {
 
     useEffect(() => {
         if (tenant) {
+            console.log('[TenantBrandingSettings] Tenant from context:', tenant);
+            // Check both case styles
+            const tenantId = tenant.id || (tenant as any).Id;
+            console.log('[TenantBrandingSettings] Resolved Tenant ID:', tenantId);
+
             setFormData(prev => ({
                 ...prev,
                 logoUrl: tenant.logoUrl || "",
@@ -98,36 +103,50 @@ export default function TenantBrandingSettings() {
             return;
         }
 
+        // Resolve ID safely
+        const tenantId = tenant.id || (tenant as any).Id;
+
+        if (!tenantId) {
+            message.error(t("dashboard.settings.appearance.no_tenant_id", { defaultValue: "Tenant ID is missing" }));
+            console.error('[TenantBrandingSettings] No tenant ID found:', tenant);
+            return;
+        }
+
         setLoading(true);
         try {
-            // TODO: In production, upload files to a storage service (S3, Azure Blob, etc.)
-            // and get back URLs. For now, we'll use base64 or existing URLs.
-
-            let newLogoUrl = formData.logoUrl;
-            let newBannerUrl = formData.backgroundUrl;
-
-            // If new files were uploaded, use the preview (base64) or upload to storage
-            if (formData.logoFile) {
-                // In a real app, you would upload to storage here:
-                // newLogoUrl = await uploadToStorage(formData.logoFile);
-                newLogoUrl = logoPreview; // Using base64 for demo
-            }
-
-            if (formData.bannerFile) {
-                // In a real app, you would upload to storage here:
-                // newBannerUrl = await uploadToStorage(formData.bannerFile);
-                newBannerUrl = bannerPreview; // Using base64 for demo
-            }
-
-            // Prepare updated tenant object
+            // CRITICAL: Explicitly create updated tenant object with ID at top level
+            // This ensures upsertTenant can find the ID and perform PUT update instead of POST create
             const updatedTenant: TenantConfig = {
+                // Spread all existing tenant data first
                 ...tenant,
-                logoUrl: newLogoUrl,
-                backgroundUrl: newBannerUrl,
+                // IMPORTANT: Explicitly set id to ensure it's not lost
+                id: tenantId,
+                // Update only the branding URLs if files are provided
+                // The actual files will be uploaded via FormData in upsertTenant
+                logoUrl: formData.logoUrl,
+                backgroundUrl: formData.backgroundUrl,
             };
 
-            await tenantService.upsertTenant(updatedTenant);
+            console.log('[TenantBrandingSettings] Saving tenant with ID:', updatedTenant.id);
+
+            await tenantService.upsertTenant(updatedTenant, {
+                logo: formData.logoFile,
+                background: formData.bannerFile
+            });
+
             message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Branding updated successfully!" }));
+
+            // Clear file selections after successful save
+            setFormData(prev => ({
+                ...prev,
+                logoFile: null,
+                bannerFile: null,
+            }));
+
+            // Refresh tenant context to get updated URLs from server
+            if (refreshTenant) {
+                await refreshTenant();
+            }
 
         } catch (error) {
             console.error("Failed to update branding:", error);

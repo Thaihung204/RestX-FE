@@ -7,9 +7,16 @@ import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 
-const RestaurantHero: React.FC = () => {
+import { TenantConfig } from '@/lib/services/tenantService';
+
+interface RestaurantHeroProps {
+  tenant: TenantConfig | null;
+}
+
+const RestaurantHero: React.FC<RestaurantHeroProps> = ({ tenant: propTenant }) => {
   const { t } = useTranslation();
-  const { tenant } = useTenant();
+  const { tenant: contextTenant } = useTenant();
+  const tenant = propTenant || contextTenant;
 
   return (
     <section
