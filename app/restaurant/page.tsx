@@ -40,6 +40,10 @@ export default function RestaurantPage() {
   const [menu, setMenu] = useState<MenuSectionCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
+  console.log('[RestaurantPage] tenant:', tenant);
+  console.log('[RestaurantPage] tenantLoading:', tenantLoading);
+  console.log('[RestaurantPage] tenant?.businessName:', tenant?.businessName);
+
   useEffect(() => {
     const fetchData = async () => {
       try {

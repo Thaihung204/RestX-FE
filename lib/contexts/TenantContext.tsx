@@ -38,14 +38,42 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
             return;
         }
 
-        // 3. Check for plain Development domains (Skip tenant fetch)
-        // Only skip for plain localhost, NOT for subdomains like demo.localhost
-        // Subdomains need to fetch tenant config (with hostname converted to production format)
+        // 3. Check for plain or subdomain localhost (Mock tenant for development)
         const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
-        const isPlainLocalhost = hostWithoutPort === "localhost" || hostWithoutPort === "127.0.0.1";
+        const isLocalhost = hostWithoutPort === "localhost" || hostWithoutPort === "127.0.0.1" || hostWithoutPort.endsWith(".localhost");
 
-        if (isPlainLocalhost) {
-            console.log('[TenantContext] Plain localhost detected, skipping tenant fetch');
+        if (isLocalhost) {
+            console.log('[TenantContext] Localhost detected, loading mock tenant for development');
+            // Mock tenant data for local development
+            const mockTenant: TenantConfig = {
+                id: "dev-mock-001",
+                prefix: "dev",
+                name: "demo",
+                businessName: "BBQ Restaurant",
+                logoUrl: "/images/logo/restx-removebg-preview.png",
+                backgroundUrl: "/images/restaurant/banner.png",
+                baseColor: "#FF380B",
+                primaryColor: "#FF380B",
+                secondaryColor: "#FFB800",
+                headerColor: "#1a1a1a",
+                footerColor: "#1a1a1a",
+                hostname: "demo.localhost",
+                status: true,
+                businessPrimaryPhone: "+84 (0) 888 888 888",
+                businessOpeningHours: "08:00 - 23:00",
+                businessEmailAddress: "hello@bbq.local",
+                overview: "Trải nghiệm ẩm thực đặc cấp với những món ăn tuyệt hảo",
+                aboutUs: "Nhà hàng BBQ số 1 tại thành phố",
+                createdDate: new Date().toISOString(),
+                modifiedDate: new Date().toISOString(),
+                createdBy: "system",
+                modifiedBy: "system",
+                tenantSettings: [],
+                networkIp: "",
+                connectionString: "",
+                expiredAt: "2099-12-31",
+            };
+            setTenant(mockTenant);
             setLoading(false);
             return;
         }
