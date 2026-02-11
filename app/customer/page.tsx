@@ -84,7 +84,7 @@ export default function CustomerHomePage() {
             contentBg: "#ffffff",
             colorText: "#1f1f1f",
             borderRadiusLG: 12,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
             fontSize: 13,
             contentPadding: "6px 12px",
           },
@@ -107,10 +107,10 @@ export default function CustomerHomePage() {
       <div
         style={{
           minHeight: "100vh",
-          backgroundColor: "#050505",
+          background: "var(--bg-base)",
           backgroundImage: `
-            radial-gradient(circle at 0% 0%, rgba(255, 56, 11, 0.15), transparent 40%),
-            radial-gradient(circle at 100% 100%, rgba(255, 56, 11, 0.05), transparent 40%)
+            radial-gradient(circle at 0% 0%, rgba(255, 56, 11, 0.08), transparent 40%),
+            radial-gradient(circle at 100% 100%, rgba(255, 56, 11, 0.03), transparent 40%)
           `,
           paddingBottom: 100,
         }}>
@@ -131,7 +131,7 @@ export default function CustomerHomePage() {
                 position: "absolute",
                 inset: 0,
                 background:
-                  "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, #050505 100%)",
+                  "linear-gradient(to bottom, var(--modal-overlay) 0%, var(--bg-base) 100%)",
               }}
             />
           </div>
@@ -176,7 +176,7 @@ export default function CustomerHomePage() {
           <div style={{ textAlign: "center", marginTop: 48, opacity: 0.5 }}>
             <Text
               style={{
-                color: "#888",
+                color: "var(--text-muted)",
                 fontSize: 12,
                 letterSpacing: 2,
                 textTransform: "uppercase",

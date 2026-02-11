@@ -24,12 +24,12 @@ const PointsCard: React.FC<PointsCardProps> = ({
       variant="borderless"
       style={{
         height: "100%",
-        borderRadius: 24,
-        background: "linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%)",
+        borderRadius: 20,
+        background: "var(--card)",
         position: "relative",
         overflow: "hidden",
-        border: "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+        border: "1px solid var(--border)",
+        boxShadow: "var(--shadow-md)",
       }}
       styles={{
         body: {
@@ -62,7 +62,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
         <div>
           <Text
             style={{
-              color: "rgba(255,255,255,0.5)",
+              color: "var(--text-muted)",
               fontSize: 12,
               letterSpacing: 1.5,
               textTransform: "uppercase",
@@ -72,7 +72,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
           <Title
             level={2}
             style={{
-              color: "#fff",
+              color: "var(--text)",
               margin: "8px 0",
               fontSize: 36,
               fontWeight: 700,
@@ -83,7 +83,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
               style={{
                 fontSize: 16,
                 fontWeight: 400,
-                color: "#888",
+                color: "var(--text-muted)",
                 marginLeft: 8,
               }}>
               {t('points_card.points')}
@@ -101,7 +101,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
             justifyContent: "center",
             boxShadow: "0 0 20px rgba(212, 175, 55, 0.4)",
           }}>
-          <SketchOutlined style={{ fontSize: 20, color: '#fff' }} />
+          <SketchOutlined style={{ fontSize: 20, color: 'var(--text)' }} />
         </div>
       </div>
 
@@ -112,7 +112,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
             justifyContent: "space-between",
             marginBottom: 8,
           }}>
-          <Text style={{ color: "#ccc", fontSize: 13 }}>{t('points_card.gold_progress')}</Text>
+          <Text style={{ color: "var(--text-muted)", fontSize: 13 }}>{t('points_card.gold_progress')}</Text>
           <Text style={{ color: "#FF380B", fontSize: 13 }}>
             {t('points_card.remaining_points', { count: pointsToNextReward })}
           </Text>
@@ -121,7 +121,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
           percent={progress}
           showInfo={false}
           strokeColor={{ "0%": "#D4AF37", "100%": "#ff5722" }}
-          railColor="rgba(255,255,255,0.1)"
+          railColor="var(--border)"
           strokeLinecap="square"
           size={6}
         />

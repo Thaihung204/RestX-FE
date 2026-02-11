@@ -14,14 +14,14 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
       hoverable
       onClick={onViewMenu}
       style={{
-        borderRadius: 24,
-        border: "none",
+        borderRadius: 20,
+        border: "1px solid var(--border)",
         overflow: "hidden",
         position: "relative",
-        background: "#000",
+        background: "var(--card)",
         cursor: "pointer",
         marginTop: 16,
-        boxShadow: "0 20px 50px -10px rgba(255, 87, 34, 0.25)",
+        boxShadow: "var(--shadow-lg)",
       }}
       styles={{ body: { padding: 0 } }}
     >
@@ -30,10 +30,11 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(90deg, #000 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.2) 100%), url('/images/customer/menu-bg.jpg')", // Giả định có ảnh món ăn ngon làm nền
+          background: "linear-gradient(90deg, var(--card) 0%, var(--surface) 50%, transparent 100%), url('/images/customer/menu-bg.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           transition: "transform 0.5s ease",
+          opacity: 0.95,
         }}
       />
       
@@ -50,10 +51,10 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
             }}>
                 <Text style={{ color: "#ff8a65", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Season 2024</Text>
             </div>
-            <Title level={2} style={{ color: "white", margin: 0, fontSize: 28, fontWeight: 700 }}>
+            <Title level={2} style={{ color: "var(--text)", margin: 0, fontSize: 28, fontWeight: 700 }}>
                 Khám phá Thực đơn
             </Title>
-            <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 8, display: "block", fontSize: 14 }}>
+            <Text style={{ color: "var(--text-muted)", marginTop: 8, display: "block", fontSize: 14 }}>
                 Hơn 100+ món ăn tinh hoa được chế biến bởi các đầu bếp hàng đầu.
             </Text>
         </div>
@@ -62,13 +63,13 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
             width: 56, 
             height: 56, 
             borderRadius: "50%", 
-            background: "#fff", 
+            background: "#FF380B", 
             display: "flex", 
             alignItems: "center", 
             justifyContent: "center",
-            boxShadow: "0 0 20px rgba(255,255,255,0.3)"
+            boxShadow: "var(--shadow-md)"
         }}>
-            <ArrowRightOutlined style={{ fontSize: 24, color: "#000" }} />
+            <ArrowRightOutlined style={{ fontSize: 24, color: "#fff" }} />
         </div>
       </div>
     </Card>

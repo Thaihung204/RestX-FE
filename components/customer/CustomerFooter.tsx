@@ -151,13 +151,12 @@ export default function CustomerFooter({
           bottom: 0,
           left: 0,
           right: 0,
-          background:
-            "linear-gradient(180deg, rgba(5,5,5,0.9) 0%, rgba(5,5,5,0.98) 100%)",
+          background: "var(--backdrop-blur)",
           backdropFilter: "blur(20px)",
           borderTop: "1px solid rgba(255,56,11,0.25)",
           padding: "10px 12px 24px 12px", // Thêm padding bottom cho mobile
           zIndex: 1000,
-          boxShadow: "0 -4px 20px rgba(0,0,0,0.6)",
+          boxShadow: "var(--shadow-md)",
         }}>
         <div
           style={{
@@ -194,9 +193,9 @@ export default function CustomerFooter({
               flex: 1,
               height: 44,
               borderRadius: 10,
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              color: "#fff",
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              color: "var(--text)",
               fontWeight: 600,
               fontSize: 13,
             }}>
@@ -226,17 +225,17 @@ export default function CustomerFooter({
               }}>
               <Text
                 style={{
-                  color: "rgba(255,255,255,0.8)",
+                  color: "rgba(255,255,255,0.7)",
                   fontSize: 10,
                   fontWeight: 600,
                 }}>
                 {cartItemCount} món
               </Text>
-              <Text style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>
+              <Text style={{ color: "var(--text)", fontSize: 13, fontWeight: 700 }}>
                 {formatVND(totalCartAmount)}
               </Text>
             </div>
-            <ShoppingCartOutlined style={{ color: "#fff", fontSize: 18 }} />
+            <ShoppingCartOutlined style={{ color: "var(--text)", fontSize: 18 }} />
           </div>
         </div>
       </div>
@@ -254,17 +253,17 @@ export default function CustomerFooter({
         width="100%"
         style={{ maxWidth: 360, padding: 0 }}
         styles={{
-          mask: { backdropFilter: "blur(12px)", background: "rgba(0,0,0,0.6)" },
+          mask: { backdropFilter: "blur(12px)", background: "var(--modal-overlay)" },
           body: { background: "transparent", padding: 0 },
         }}>
         <div
           style={{
             position: "relative",
-            background: "linear-gradient(160deg, #1f1f1f 0%, #0a0a0a 100%)",
-            borderRadius: 24,
+            background: "var(--card)",
+            borderRadius: 20,
             padding: "30px 24px",
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.9)",
+            border: "1px solid var(--border)",
+            boxShadow: "var(--shadow-lg)",
             overflow: "hidden",
           }}>
           {/* Decoration blob */}
@@ -275,10 +274,9 @@ export default function CustomerFooter({
               left: -50,
               width: 150,
               height: 150,
-              background: "#FF380B",
+              background: "var(--decoration-glow)",
               borderRadius: "50%",
               filter: "blur(80px)",
-              opacity: 0.15,
               zIndex: 0,
             }}
           />
@@ -300,21 +298,21 @@ export default function CustomerFooter({
                 width: 32,
                 height: 32,
                 borderRadius: "50%",
-                background: "rgba(255,255,255,0.05)",
+                background: "var(--surface)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                border: "1px solid rgba(255,255,255,0.1)",
+                border: "1px solid var(--border)",
                 transition: "all 0.2s",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(255,56,11,0.15)";
+                e.currentTarget.style.background = "rgba(255,56,11,0.12)";
                 e.currentTarget.style.borderColor = "rgba(255,56,11,0.3)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                e.currentTarget.style.background = "var(--surface)";
+                e.currentTarget.style.borderColor = "var(--border)";
               }}>
               <GlobalOutlined style={{ color: "#FF380B", fontSize: 14 }} />
             </div>
@@ -326,12 +324,12 @@ export default function CustomerFooter({
                 width: 32,
                 height: 32,
                 borderRadius: "50%",
-                background: "rgba(255,255,255,0.05)",
+                background: "var(--surface)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                border: "1px solid rgba(255,255,255,0.1)",
+                border: "1px solid var(--border)",
                 transition: "all 0.2s",
               }}
               onMouseEnter={(e) => {
@@ -339,13 +337,13 @@ export default function CustomerFooter({
                 e.currentTarget.style.borderColor = "rgba(255,215,0,0.3)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                e.currentTarget.style.background = "var(--surface)";
+                e.currentTarget.style.borderColor = "var(--border)";
               }}>
               {mode === "dark" ? (
                 <BulbOutlined style={{ color: "#FFD700", fontSize: 14 }} />
               ) : (
-                <MoonOutlined style={{ color: "#888", fontSize: 14 }} />
+                <MoonOutlined style={{ color: "var(--text-muted)", fontSize: 14 }} />
               )}
             </div>
           </div>
@@ -360,14 +358,14 @@ export default function CustomerFooter({
               width: 32,
               height: 32,
               borderRadius: "50%",
-              background: "rgba(255,255,255,0.05)",
+              background: "var(--surface)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
               zIndex: 10,
             }}>
-            <CloseOutlined style={{ color: "#666", fontSize: 14 }} />
+            <CloseOutlined style={{ color: "var(--text-muted)", fontSize: 14 }} />
           </div>
 
           <div
@@ -401,16 +399,16 @@ export default function CustomerFooter({
                   height: "100%",
                   borderRadius: "50%",
                   padding: 3,
-                  background: "linear-gradient(135deg, #FF380B 0%, #333 100%)",
+                  background: "linear-gradient(135deg, #FF380B 0%, #FF8A65 100%)",
                   cursor: isEditing ? "pointer" : "default",
-                  boxShadow: "0 10px 25px rgba(255, 56, 11, 0.25)",
+                  boxShadow: "var(--shadow-md)",
                 }}>
                 <div
                   style={{
                     width: "100%",
                     height: "100%",
                     borderRadius: "50%",
-                    background: "#141414",
+                    background: "var(--surface)",
                     overflow: "hidden",
                     position: "relative",
                     display: "flex",
@@ -431,25 +429,31 @@ export default function CustomerFooter({
                       }}
                     />
                   ) : (
-                    <UserOutlined style={{ fontSize: 40, color: "#555" }} />
-                  )}
-
-                  {isEditing && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        background: "rgba(0,0,0,0.6)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backdropFilter: "blur(2px)",
-                      }}>
-                      <CameraOutlined style={{ color: "#fff", fontSize: 24 }} />
-                    </div>
+                    <UserOutlined style={{ fontSize: 40, color: "var(--text-muted)" }} />
                   )}
                 </div>
               </div>
+              
+              {/* Camera badge when editing */}
+              {isEditing && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 2,
+                    right: 2,
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    background: "#FF380B",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid var(--card)",
+                    boxShadow: "var(--shadow-sm)",
+                  }}>
+                  <CameraOutlined style={{ color: "#fff", fontSize: 14 }} />
+                </div>
+              )}
             </div>
 
             {!isEditing && (
@@ -457,7 +461,7 @@ export default function CustomerFooter({
                 <Title
                   level={3}
                   style={{
-                    color: "#fff",
+                    color: "var(--text)",
                     margin: 0,
                     fontSize: 22,
                     fontWeight: 700,
@@ -467,7 +471,7 @@ export default function CustomerFooter({
                 </Title>
                 <Text
                   style={{
-                    color: "rgba(255,255,255,0.4)",
+                    color: "var(--text-muted)",
                     fontSize: 13,
                     marginTop: 4,
                     display: "block",
@@ -485,15 +489,15 @@ export default function CustomerFooter({
                   style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 1px 1fr",
-                    background: "rgba(255,255,255,0.03)",
+                    background: "var(--surface)",
                     borderRadius: 12,
                     padding: "16px 0",
-                    border: "1px solid rgba(255,255,255,0.05)",
+                    border: "1px solid var(--border)",
                   }}>
                   <div style={{ textAlign: "center" }}>
                     <Text
                       style={{
-                        color: "#666",
+                        color: "var(--text-muted)",
                         fontSize: 11,
                         textTransform: "uppercase",
                         letterSpacing: 1,
@@ -502,7 +506,7 @@ export default function CustomerFooter({
                     </Text>
                     <div
                       style={{
-                        color: "#ddd",
+                        color: "var(--text)",
                         fontWeight: 600,
                         marginTop: 4,
                         fontFamily: "monospace",
@@ -511,11 +515,11 @@ export default function CustomerFooter({
                       {phoneNumber.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3")}
                     </div>
                   </div>
-                  <div style={{ background: "rgba(255,255,255,0.1)" }}></div>
+                  <div style={{ background: "var(--border)" }}></div>
                   <div style={{ textAlign: "center" }}>
                     <Text
                       style={{
-                        color: "#666",
+                        color: "var(--text-muted)",
                         fontSize: 11,
                         textTransform: "uppercase",
                         letterSpacing: 1,
@@ -524,7 +528,7 @@ export default function CustomerFooter({
                     </Text>
                     <div
                       style={{
-                        color: "#ddd",
+                        color: "var(--text)",
                         fontWeight: 600,
                         marginTop: 4,
                         fontFamily: "monospace",
@@ -541,13 +545,12 @@ export default function CustomerFooter({
 
                 <div
                   style={{
-                    background:
-                      "linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%)",
+                    background: "var(--surface)",
                     borderRadius: 16,
                     padding: 20,
                     position: "relative",
                     overflow: "hidden",
-                    border: "1px solid rgba(255,215,0,0.15)",
+                    border: "1px solid rgba(255,215,0,0.3)",
                   }}>
                   <div
                     style={{
@@ -586,7 +589,7 @@ export default function CustomerFooter({
                       <Title
                         level={2}
                         style={{
-                          color: "#fff",
+                          color: "var(--text)",
                           margin: "4px 0 0",
                           fontSize: 28,
                         }}>
@@ -595,7 +598,7 @@ export default function CustomerFooter({
                           style={{
                             fontSize: 14,
                             fontWeight: 400,
-                            color: "rgba(255,255,255,0.5)",
+                            color: "var(--text-muted)",
                           }}>
                           pts
                         </span>
@@ -615,29 +618,30 @@ export default function CustomerFooter({
                       }}>
                       <Text
                         style={{
-                          color: "rgba(255,255,255,0.4)",
+                          color: "var(--text-muted)",
                           fontSize: 11,
                         }}>
                         {t("customer_page.profile.next_reward")}
                       </Text>
-                      <Text style={{ color: "#fff", fontSize: 11 }}>
+                      <Text style={{ color: "var(--text)", fontSize: 11 }}>
                         {progress.toFixed(0)}%
                       </Text>
                     </div>
                     <Progress
                       percent={progress}
                       strokeColor={{ "0%": "#ffd700", "100%": "#FF380B" }}
-                      railColor="rgba(255,255,255,0.1)"
+                      railColor="var(--border)"
                       showInfo={false}
                       size="small"
                     />
                     <Text
                       style={{
-                        color: "rgba(255,255,255,0.3)",
+                        color: "var(--text-muted)",
                         fontSize: 10,
                         marginTop: 8,
                         display: "block",
                         fontStyle: "italic",
+                        opacity: 0.7,
                       }}>
                       {t("customer_page.profile.points_to_next", {
                         points: Math.max(0, 500 - currentPoints),
@@ -653,10 +657,11 @@ export default function CustomerFooter({
                   style={{
                     height: 46,
                     borderRadius: 12,
-                    background: "rgba(255,255,255,0.1)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "#FF380B",
+                    border: "none",
                     fontSize: 14,
-                    fontWeight: 500,
+                    fontWeight: 600,
+                    color: "#fff",
                   }}>
                   {t("customer_page.profile.edit_profile")}
                 </Button>
@@ -666,7 +671,7 @@ export default function CustomerFooter({
                 <div>
                   <Text
                     style={{
-                      color: "rgba(255,255,255,0.5)",
+                      color: "var(--text-muted)",
                       fontSize: 12,
                       marginLeft: 4,
                     }}>
@@ -676,14 +681,27 @@ export default function CustomerFooter({
                     value={tempName}
                     onChange={(e) => setTempName(e.target.value)}
                     placeholder="Nhập tên của bạn"
-                    style={{ height: 48, marginTop: 4, fontSize: 16 }}
+                    style={{
+                      height: 48,
+                      marginTop: 4,
+                      fontSize: 16,
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                    styles={{
+                      input: {
+                        background: "var(--surface)",
+                        color: "var(--text)",
+                      },
+                    }}
                   />
                 </div>
 
                 <div>
                   <Text
                     style={{
-                      color: "rgba(255,255,255,0.5)",
+                      color: "var(--text-muted)",
                       fontSize: 12,
                       marginLeft: 4,
                     }}>
@@ -698,6 +716,16 @@ export default function CustomerFooter({
                       marginTop: 4,
                       fontSize: 16,
                       fontFamily: "monospace",
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                    styles={{
+                      input: {
+                        background: "var(--surface)",
+                        color: "var(--text)",
+                        fontFamily: "monospace",
+                      },
                     }}
                   />
                 </div>
@@ -709,9 +737,9 @@ export default function CustomerFooter({
                       flex: 1,
                       height: 48,
                       borderRadius: 12,
-                      background: "transparent",
-                      border: "1px solid #444",
-                      color: "#888",
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text-muted)",
                     }}>
                     {t("customer_page.profile.cancel")}
                   </Button>
@@ -726,7 +754,9 @@ export default function CustomerFooter({
                       borderRadius: 12,
                       background: "#FF380B",
                       fontWeight: 600,
-                      boxShadow: "0 4px 14px rgba(255, 56, 11, 0.4)",
+                      border: "none",
+                      color: "#fff",
+                      boxShadow: "var(--shadow-md)",
                     }}>
                     {t("customer_page.profile.save_changes")}
                   </Button>
