@@ -34,6 +34,7 @@ export default function MenuPage() {
       setError(null);
 
       const data = await dishService.getDishes(1, 100);
+      message.success(t("dashboard.menu.toasts.fetch_success_message"));
       const arrayData =
         data.dishes ||
         data.data ||
@@ -85,6 +86,7 @@ export default function MenuPage() {
           err instanceof Error ? err.message : "Failed to load menu items",
         );
       }
+      message.error(t("dashboard.menu.toasts.fetch_error_message"));
     } finally {
       setLoading(false);
     }
@@ -110,12 +112,12 @@ export default function MenuPage() {
       onOk: async () => {
         try {
           await dishService.deleteDish(id);
-          message.success(t("dashboard.menu.toasts.delete_success") || "Dish deleted successfully");
+          message.success(t("dashboard.menu.toasts.delete_success_message"));
           await fetchMenuItems();
         } catch (err: any) {
           const errorMsg =
             err.response?.data?.message || err.message || "Unknown error";
-          message.error(t("dashboard.menu.toasts.delete_error") || `Failed to delete: ${errorMsg}`);
+          message.error(t("dashboard.menu.toasts.delete_error_message"));
         }
       },
     });
