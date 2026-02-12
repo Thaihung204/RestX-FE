@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Admin API base URL configuration
 // - Server-side: uses INTERNAL_ADMIN_API_URL for internal Docker network
-// - Client-side (dev): uses relative path /api/admin - Next.js rewrites handle proxy
+// - Client-side (dev): uses NEXT_PUBLIC_ADMIN_API_URL from .env.local
 // - Client-side (prod): constructs admin URL from current domain dynamically
 const getAdminBaseUrl = (): string => {
     if (typeof window === 'undefined') {
@@ -13,18 +13,15 @@ const getAdminBaseUrl = (): string => {
     const host = window.location.host;
     const hostWithoutPort = host.includes(':') ? host.split(':')[0] : host;
 
-    // Development mode: use relative path for ALL localhost variants
-    // This avoids CORS issues between demo.localhost:3000 and localhost:3000
-    // Next.js rewrites will proxy /api/admin/* to admin backend
+    // Development mode: use environment variable from .env.local
+    // This allows testing with live backend or localhost backend
     if (hostWithoutPort === 'localhost' ||
         hostWithoutPort === '127.0.0.1' ||
         hostWithoutPort.endsWith('.localhost')) {
-        return '/api/admin';
+        return process.env.NEXT_PUBLIC_ADMIN_API_URL || '/api';
     }
 
     // Production: construct admin URL dynamically from current domain
-    // e.g., demo.restx.food → admin.restx.food/api
-    // e.g., abc.myrestaurant.com → admin.myrestaurant.com/api
     const parts = hostWithoutPort.split('.');
     if (parts.length >= 2) {
         // Replace first part (subdomain) with 'admin'
@@ -33,8 +30,8 @@ const getAdminBaseUrl = (): string => {
         return `${window.location.protocol}//${adminHost}/api`;
     }
 
-    // Fallback: use relative path and let reverse proxy handle it
-    return '/api/admin';
+    // Fallback: use relative path
+    return '/api';
 };
 
 const adminAxiosInstance = axios.create({
