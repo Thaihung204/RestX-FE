@@ -62,9 +62,9 @@ export default function MenuItemFormPage() {
     try {
       setLoadingCategories(true);
       const data = await categoryService.getCategories();
-      setCategories(data.filter(cat => cat.isActive));
+      setCategories(data.filter((cat) => cat.isActive));
     } catch (err) {
-      console.error('Failed to load categories:', err);
+      console.error("Failed to load categories:", err);
     } finally {
       setLoadingCategories(false);
     }
@@ -113,12 +113,14 @@ export default function MenuItemFormPage() {
         }));
         setImages(loadedImages);
       } else if (item.image || item.mainImageUrl) {
-        const imageUrl = item.image || item.mainImageUrl || '';
-        setImages([{
-          uid: 'legacy-image',
-          url: imageUrl,
-          isMain: true,
-        }]);
+        const imageUrl = item.image || item.mainImageUrl || "";
+        setImages([
+          {
+            uid: "legacy-image",
+            url: imageUrl,
+            isMain: true,
+          },
+        ]);
       }
     } catch (err: any) {
       setError("Failed to load menu item");
@@ -149,9 +151,11 @@ export default function MenuItemFormPage() {
         setLoading(false);
         return;
       }
-      
+
       // Parse price to number (supports decimals)
-      const priceValue = parseFloat(formData.price.replace(/\./g, '').replace(/,/g, '.'));
+      const priceValue = parseFloat(
+        formData.price.replace(/\./g, "").replace(/,/g, "."),
+      );
       if (!formData.price || priceValue <= 0 || isNaN(priceValue)) {
         setError("Price must be greater than 0");
         message.error(t("dashboard.menu.toasts.validation_error_message"));
@@ -159,17 +163,29 @@ export default function MenuItemFormPage() {
         return;
       }
 
-      const mainImg = images.find(img => img.isMain) || images[0];
-      const otherImgs = images.filter(img => img !== mainImg);
+      // Prepare image data for submission
+      const validImages = images.filter(
+        (img) => img.file || img.uid !== "legacy-image",
+      );
 
-      const finalSortedArray = [mainImg, ...otherImgs].filter(Boolean);
+      // Separate main image and other images - ensure main image is always first with displayOrder = 1
+      const mainImage = validImages.find((img) => img.isMain);
+      const otherImages = validImages.filter((img) => !img.isMain);
 
-      const imagesToSubmit = finalSortedArray.map((img, index) => ({
-        id: img.file ? undefined : (img.uid.toString().includes('legacy') ? undefined : img.uid),
+      const orderedImages = mainImage
+        ? [mainImage, ...otherImages]
+        : validImages; // Fallback if no main image (shouldn't happen with current UI logic)
+
+      const imagesToSubmit = orderedImages.map((img, index) => ({
+        id: img.file
+          ? undefined
+          : img.uid === "legacy-image"
+            ? undefined
+            : img.uid,
         file: img.file,
-        imageType: index === 0 ? 0 : 1, 
-        displayOrder: index + 1,        
-        isActive: true
+        imageType: index === 0 ? 0 : 1, // First is always Main (imageType 0)
+        displayOrder: index + 1, // Main image gets displayOrder = 1
+        isActive: true,
       }));
 
       const submitData: any = {
@@ -184,7 +200,7 @@ export default function MenuItemFormPage() {
         isSpicy: formData.isSpicy,
         isBestSeller: formData.isBestSeller,
         autoDisableByStock: formData.autoDisableByStock,
-        images: imagesToSubmit
+        images: imagesToSubmit,
       };
 
       if (isNewItem) {
@@ -197,7 +213,6 @@ export default function MenuItemFormPage() {
 
       router.push("/admin/menu");
     } catch (err: any) {
-      
       let errorMsg = "Failed to save menu item";
 
       if (err.response) {
@@ -209,8 +224,11 @@ export default function MenuItemFormPage() {
           // Try to extract validation errors
           if (data?.errors) {
             const validationErrors = Object.entries(data.errors)
-              .map(([field, messages]: [string, any]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
-              .join('\n');
+              .map(
+                ([field, messages]: [string, any]) =>
+                  `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`,
+              )
+              .join("\n");
             errorMsg = `Validation errors:\n${validationErrors}`;
           } else {
             errorMsg =
@@ -227,7 +245,7 @@ export default function MenuItemFormPage() {
         } else if (status === 404) {
           errorMsg = "Menu item not found.";
         } else if (status === 500) {
-          errorMsg = `Server error: ${data?.message || data?.title || 'Please try again later.'}`;
+          errorMsg = `Server error: ${data?.message || data?.title || "Please try again later."}`;
         } else {
           errorMsg =
             data?.message || data?.title || data?.error || `Error ${status}`;
@@ -252,7 +270,8 @@ export default function MenuItemFormPage() {
       title: t("dashboard.menu.modal.delete_title"),
       content: (
         <>
-          {t("dashboard.menu.modal.delete_confirm")} <strong>&quot;{formData.name}&quot;</strong>?
+          {t("dashboard.menu.modal.delete_confirm")}{" "}
+          <strong>&quot;{formData.name}&quot;</strong>?
           <br />
           {t("dashboard.menu.modal.cannot_undo")}
         </>
@@ -764,7 +783,7 @@ export default function MenuItemFormPage() {
                     style={{ color: "var(--text)" }}>
                     Item Images
                   </h3>
-                  
+
                   <MultiImageUpload
                     value={images}
                     onChange={setImages}

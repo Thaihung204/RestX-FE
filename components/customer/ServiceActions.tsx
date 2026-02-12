@@ -35,13 +35,13 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       style={{
         background: isActive
           ? "linear-gradient(135deg, #ff5722 0%, #d84315 100%)"
-          : "rgba(255, 255, 255, 0.05)",
+          : "var(--surface)",
         borderRadius: 20,
         padding: "24px 16px",
         cursor: "pointer",
         textAlign: "center",
         transition: "all 0.3s ease",
-        border: isActive ? "none" : "1px solid rgba(255, 255, 255, 0.08)",
+        border: isActive ? "none" : "1px solid var(--border)",
         height: "100%",
         display: "flex",
         flexDirection: "column",
@@ -54,13 +54,13 @@ const ActionButton: React.FC<ActionButtonProps> = ({
     >
       <div style={{
         fontSize: 28,
-        color: isActive ? "#fff" : "#FF380B",
-        filter: isActive ? "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" : "none"
+        color: isActive ? "var(--text)" : "#FF380B",
+        filter: isActive ? "drop-shadow(0 2px 4px var(--modal-overlay))" : "none"
       }}>
         {icon}
       </div>
       <Text style={{
-        color: isActive ? "#fff" : "#ccc",
+        color: isActive ? "var(--text)" : "var(--text-muted)",
         fontSize: 13,
         fontWeight: 600,
         lineHeight: 1.4
@@ -99,8 +99,8 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({
           <div
             onClick={onGiveFeedback}
             style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px dashed rgba(255,255,255,0.2)",
+              background: "var(--surface)",
+              border: "1px dashed var(--border)",
               borderRadius: 16,
               padding: "16px",
               display: "flex",
@@ -111,8 +111,8 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({
               height: "100%"
             }}
           >
-            <SmileOutlined style={{ color: "#888", fontSize: 20 }} />
-            <Text style={{ color: "#888", fontSize: 13 }}>{t('customer_actions.give_feedback')}</Text>
+            <SmileOutlined style={{ color: "var(--text-muted)", fontSize: 20 }} />
+            <Text style={{ color: "var(--text-muted)", fontSize: 13 }}>{t('customer_actions.give_feedback')}</Text>
           </div>
         </Col>
       </Row>

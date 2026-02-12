@@ -1,66 +1,61 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Footer from '../components/Footer';
+import { Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import { TenantGuard } from '@/components/tenant';
+import Footer from '../components/Footer';
 
-import AboutSection from './components/AboutSection';
-import FeaturedCategories from './components/FeaturedCategories';
-import MenuSection from './components/MenuSection';
+// New/Refactored Components
 import RestaurantHeader from './components/RestaurantHeader';
-import RestaurantHero from './components/RestaurantHero';
-import { tenantService, TenantConfig } from '@/lib/services/tenantService';
+import RestaurantLandingHero from './components/RestaurantLandingHero';
+import AboutSection from './components/AboutSection';
+import MenuSection, { MenuSectionCategory } from './components/MenuSection';
+import ReservationSection from './components/ReservationSection';
+import NewsSection from './components/NewsSection';
+import FeaturedCategories from './components/FeaturedCategories';
+import OverviewSection from './components/OverviewSection';
+
+// Services & Context
 import { useTenant } from '@/lib/contexts/TenantContext';
-import { categoryService, Category } from '@/lib/services/categoryService';
-import dishService, { DishResponseDto } from '@/lib/services/dishService';
-import { MenuSectionCategory } from './components/MenuSection';
+import dishService from '@/lib/services/dishService';
+
+// Fonts
+const playfair = Playfair_Display({
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-playfair',
+  display: 'swap',
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-jakarta',
+  display: 'swap',
+});
 
 export default function RestaurantPage() {
   const { tenant, loading: tenantLoading } = useTenant();
-  const [categories, setCategories] = useState<Category[]>([]);
   const [menu, setMenu] = useState<MenuSectionCategory[]>([]);
   const [loading, setLoading] = useState(true);
+
+  console.log('[RestaurantPage] tenant:', tenant);
+  console.log('[RestaurantPage] tenantLoading:', tenantLoading);
+  console.log('[RestaurantPage] tenant?.businessName:', tenant?.businessName);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesData, dishListData] = await Promise.all([
-          categoryService.getCategories(),
-          dishService.getDishes(1, 1000)
-        ]);
+        // Use getMenu() which is public [AllowAnonymous] instead of getDishes() which requires auth
+        const menuData = await dishService.getMenu();
 
-        console.log('[RestaurantPage] Categories from API:', categoriesData);
-        console.log('[RestaurantPage] Dishes from API:', dishListData);
+        console.log('[RestaurantPage] Menu data:', menuData);
 
-        const allDishes = dishListData.items || dishListData.data || dishListData.dishes || [];
-
-        // Group dishes by category
-        const groupedMenu: MenuSectionCategory[] = categoriesData.map(cat => ({
-          categoryId: cat.id,
-          categoryName: cat.name,
-          items: allDishes.filter(d => d.categoryId === cat.id && d.isActive)
-        })).filter(group => group.items.length > 0);
-
-        // Enhance categories with images from dishes if missing
-        const categoriesWithImages = categoriesData.map(cat => {
-          if (!cat.imageUrl) {
-            const dishWithImage = allDishes.find(d =>
-              d.categoryId === cat.id &&
-              (d.mainImageUrl || d.imageUrl || (d.images && d.images.length > 0))
-            );
-
-            if (dishWithImage) {
-              return {
-                ...cat,
-                imageUrl: dishWithImage.mainImageUrl || dishWithImage.imageUrl || (dishWithImage.images && dishWithImage.images.length > 0 ? dishWithImage.images[0].imageUrl : undefined)
-              };
-            }
-          }
-          return cat;
-        });
-
-        setCategories(categoriesWithImages);
-        setMenu(groupedMenu);
+        // Transform MenuCategory to MenuSectionCategory format
+        const transformedMenu: MenuSectionCategory[] = menuData.map(category => ({
+          categoryId: category.categoryId,
+          categoryName: category.categoryName,
+          items: category.items.filter(item => item.name !== undefined) as any // Filter out items with undefined name
+        }));
+        setMenu(transformedMenu);
       } catch (error) {
         console.error("Error fetching restaurant data:", error);
       } finally {
@@ -71,36 +66,61 @@ export default function RestaurantPage() {
     fetchData();
   }, []);
 
+  // Extract categories from menu for components
+  const categories = menu.map(cat => ({
+    id: cat.categoryId,
+    name: cat.categoryName,
+    description: '',
+    imageUrl: cat.items?.[0]?.imageUrl || undefined, // Get image from first item in category
+    isActive: true
+  }));
+
   if (loading || tenantLoading) {
-    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)' }}>
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
   }
 
   return (
     <TenantGuard>
-      <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
+      <div className={`${playfair.variable} ${jakarta.variable}`} style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
+        {/* Inject Font Variables locally only if we can, or rely on the classNames which set the --font-playfair variable */}
+        <style jsx global>{`
+            :root {
+                --font-display: var(--font-playfair), "Playfair Display", serif;
+                --font-body: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+            }
+            /* Override Ant Design Typography for this page if needed, or use specific styles in components */
+            h1, h2, h3, h4, h5, h6, .ant-typography {
+                 font-family: var(--font-display) !important;
+            }
+            body, .ant-btn, .ant-input, .ant-select {
+                 font-family: var(--font-body) !important;
+            }
+        `}</style>
+
         <RestaurantHeader tenant={tenant} categories={categories} />
+
         <main>
-          <RestaurantHero tenant={tenant} />
+          <RestaurantLandingHero tenant={tenant} />
+
+          <OverviewSection overview={tenant?.overview} />
+
           <AboutSection tenant={tenant} />
+
           <FeaturedCategories categories={categories} />
+
           <MenuSection menu={menu} />
 
-          {/* Daily Specials Section Example */}
-          <section id="daily" style={{ padding: '80px 24px', maxWidth: 1400, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 36, fontFamily: 'serif', color: 'var(--text)', textAlign: 'center' }}>Daily Specials</h2>
-            <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Check out our fresh picks for today.</p>
-          </section>
+          <NewsSection tenant={tenant} />
 
-          {/* News Section Example */}
-          <section id="news" style={{ padding: '80px 24px', maxWidth: 1400, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 36, fontFamily: 'serif', color: 'var(--text)', textAlign: 'center' }}>News & Events</h2>
-            <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Stay updated with our latest activities.</p>
-          </section>
+          <ReservationSection tenant={tenant} />
         </main>
+
         <Footer />
       </div>
     </TenantGuard>
   );
 }
-
-
