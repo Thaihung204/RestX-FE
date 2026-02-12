@@ -38,7 +38,7 @@ export interface User {
   email: string;
   name?: string;  // Frontend format
   fullName?: string;  // Backend format
-  role?: 'user' | 'admin' | 'shop';  // Frontend format (single role)
+  role?: string;  // Primary role from backend (e.g., 'Admin', 'Waiter', 'Kitchen Staff', 'Customer', 'System Admin')
   roles?: string[];  // Backend format (array of roles)
   phoneNumber?: string;  // Backend format
   avatar?: string;
@@ -162,8 +162,8 @@ const authService = {
         customerId: user.customerId,  // Preserve customerId from backend
         name: user.name || user.fullName || user.email.split('@')[0],
         fullName: user.fullName || user.name || user.email.split('@')[0],
-        role: user.role || (user.roles && user.roles[0]?.toLowerCase() as 'user' | 'admin' | 'shop') || 'user',
-        roles: user.roles || (user.role ? [user.role] : ['user']),
+        role: user.role || (user.roles && user.roles[0]) || 'Customer',
+        roles: user.roles || (user.role ? [user.role] : ['Customer']),
       };
 
       // Lưu thông tin vào localStorage
@@ -293,8 +293,8 @@ const authService = {
         ...user,
         name: user.name || user.fullName || user.email.split('@')[0],
         fullName: user.fullName || user.name || user.email.split('@')[0],
-        role: user.role || (user.roles && user.roles[0]?.toLowerCase() as 'user' | 'admin' | 'shop') || 'user',
-        roles: user.roles || (user.role ? [user.role] : ['user']),
+        role: user.role || (user.roles && user.roles[0]) || 'Customer',
+        roles: user.roles || (user.role ? [user.role] : ['Customer']),
       };
 
       // Lưu thông tin vào localStorage (nếu có tokens)
