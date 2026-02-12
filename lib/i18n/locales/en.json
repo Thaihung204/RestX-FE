@@ -590,6 +590,17 @@
         "cannot_undo": "This action cannot be undone.",
         "cancel": "Cancel",
         "delete": "Delete"
+      },
+      "toasts": {
+        "fetch_success_message": "Menu loaded successfully",
+        "fetch_error_message": "Failed to load menu. Please try again.",
+        "delete_success_message": "Dish deleted successfully",
+        "delete_error_message": "Failed to delete dish. Please try again.",
+        "create_success_message": "Dish created successfully",
+        "update_success_message": "Dish updated successfully",
+        "save_error_message": "Failed to save dish. Please try again.",
+        "detail_error_message": "Failed to load dish details.",
+        "validation_error_message": "Invalid data. Please check your input."
       }
     },
     "orders": {

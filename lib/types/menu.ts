@@ -12,10 +12,19 @@ export interface DishItem {
   isVegetarian: boolean;
   isSpicy: boolean;
   isBestSeller: boolean;
+  images: DishImage[];
   imageUrl: string | null;
   categoryId: string;
   categoryName: string;
   isPopular?: boolean;
+}
+
+export interface DishImage {
+  id: string;
+  imageUrl: string;
+  imageType: number;
+  displayOrder: number;
+  isActive: boolean;
 }
 
 export interface MenuCategory {
