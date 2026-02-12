@@ -1259,7 +1259,7 @@
       "featured": "Nổi bật",
       "daily": "Món trong ngày",
       "news": "Tin tức",
-      "title": "RestX",
+      "title": "Nhà hàng",
       "book_table": "Đặt bàn"
     },
     "hero": {
@@ -1460,7 +1460,8 @@
     },
     "login_header": {
       "default_title": "Đăng nhập",
-      "subtitle": "Chào mừng đến với Nhà hàng"
+      "subtitle": "Chào mừng đến với Nhà hàng",
+      "welcome_to": "Chào mừng đến với"
     },
     "login_button": {
       "login_text": "ĐĂNG NHẬP",

@@ -1259,7 +1259,7 @@
       "featured": "Featured",
       "daily": "Daily Specials",
       "news": "News",
-      "title": "RestX",
+      "title": "Restaurant",
       "book_table": "Book a Table"
     },
     "hero": {
@@ -1460,7 +1460,8 @@
     },
     "login_header": {
       "default_title": "Login",
-      "subtitle": "Welcome to Restaurant"
+      "subtitle": "Welcome to Restaurant",
+      "welcome_to": "Welcome to"
     },
     "login_button": {
       "login_text": "LOGIN",

@@ -32,6 +32,11 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
   const tenant = propTenant || contextTenant;
   const { mode } = useThemeMode();
   const [scrolled, setScrolled] = useState(false);
+  
+  // Debug
+  console.log('[RestaurantHeader] tenant:', tenant);
+  console.log('[RestaurantHeader] businessName:', tenant?.businessName);
+  console.log('[RestaurantHeader] name:', tenant?.name);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [activeItem, setActiveItem] = useState('home');
@@ -156,7 +161,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
               color: headerContentColor,
               fontFamily: 'serif',
             }}>
-            {tenant?.name || t('restaurant.header.title')}
+            {tenant?.businessName || tenant?.name || t('restaurant.header.title')}
           </span>
         </Link>
 

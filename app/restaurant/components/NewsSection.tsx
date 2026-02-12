@@ -61,7 +61,7 @@ const NewsSection: React.FC<NewsSectionProps> = ({ tenant: propTenant }) => {
                         {t('landing.news.subtitle')}
                     </span>
                     <Title level={2} style={{ fontFamily: 'var(--font-display), serif', fontSize: 36, marginBottom: 16 }}>
-                        {t('landing.news.title', { name: tenant?.name || t('landing.news.title_default') })}
+                        {t('landing.news.title', { name: tenant?.businessName || tenant?.name || t('landing.news.title_default') })}
                     </Title>
                     <Paragraph type="secondary" style={{ fontSize: 16 }}>
                         {t('landing.news.description')}

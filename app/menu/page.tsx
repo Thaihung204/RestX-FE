@@ -5,6 +5,7 @@ import CustomerFooter from "@/components/customer/CustomerFooter";
 import NotificationSystem from "@/components/notifications/NotificationSystem";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
+import { useTenant } from "@/lib/contexts/TenantContext";
 import customerService, {
   CustomerResponseDto,
 } from "@/lib/services/customerService";
@@ -48,6 +49,7 @@ const { Title, Text } = Typography;
 export default function MenuPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
+  const { tenant } = useTenant();
   const { user } = useAuth();
   const {
     cartItems,
@@ -382,7 +384,7 @@ export default function MenuPage() {
                 {t("menu_page.logo_title")}
               </Text>
               <Title level={2} style={{ margin: "4px 0 0", color: "#fff" }}>
-                {t("menu_page.title")}
+                {tenant?.businessName || tenant?.name || t("menu_page.title")}
               </Title>
             </div>
           </div>
