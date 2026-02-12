@@ -1259,7 +1259,7 @@
       "featured": "Nổi bật",
       "daily": "Món trong ngày",
       "news": "Tin tức",
-      "title": "RestX",
+      "title": "Nhà hàng",
       "book_table": "Đặt bàn"
     },
     "hero": {
@@ -1460,7 +1460,8 @@
     },
     "login_header": {
       "default_title": "Đăng nhập",
-      "subtitle": "Chào mừng đến với Nhà hàng"
+      "subtitle": "Chào mừng đến với Nhà hàng",
+      "welcome_to": "Chào mừng đến với"
     },
     "login_button": {
       "login_text": "ĐĂNG NHẬP",
@@ -1901,6 +1902,64 @@
         "update": "Lưu thay đổi",
         "cancel": "Hủy"
       }
+    }
+  },
+  "landing": {
+    "hero": {
+      "subtitle": "Tinh hoa ẩm thực Việt",
+      "title": "Hương vị Tinh tế",
+      "description": "Trải nghiệm ẩm thực đẳng cấp với những món ăn được chế biến công phu từ những nguyên liệu tươi ngon nhất, trong một không gian sang trọng và ấm cúng.",
+      "menu_btn": "Khám phá thực đơn",
+      "about_btn": "Về chúng tôi"
+    },
+    "menu": {
+      "subtitle": "Thực đơn đặc sắc",
+      "title": "Tinh hoa vị giác",
+      "view_all": "Xem toàn bộ thực đơn"
+    },
+    "reservation": {
+      "title": "Đặt bàn ngay",
+      "description": "Đảm bảo vị trí đẹp nhất cho bữa tiệc của bạn. Chúng tôi luôn sẵn sàng chào đón quý khách.",
+      "form": {
+        "name": "Họ tên",
+        "name_placeholder": "Nguyễn Văn A",
+        "name_required": "Vui lòng nhập họ tên",
+        "phone": "Số điện thoại",
+        "phone_placeholder": "090...",
+        "phone_required": "Vui lòng nhập số điện thoại",
+        "guests": "Số khách",
+        "date": "Ngày đặt",
+        "date_required": "Chọn ngày",
+        "submit": "Xác nhận đặt bàn"
+      },
+      "guest_options": {
+        "2": "2 người",
+        "4": "4 người",
+        "6": "6 người",
+        "more": "Trên 6 người"
+      }
+    },
+    "about": {
+      "subtitle": "Câu chuyện của chúng tôi",
+      "title": "Di sản ẩm thực kết tinh từ đam mê",
+      "default_description": "Tại RestX Restaurant, chúng tôi đặt khách hàng lên hàng đầu. Với đội ngũ nhân viên tận tâm và những công thức nấu ăn độc đáo, chúng tôi cam kết mang đến trải nghiệm ẩm thực tuyệt vời nhất.",
+      "secondary_description": "Mỗi món ăn được chế biến cẩn thận với nguyên liệu tươi ngon nhất, tạo nên hương vị đặc biệt không thể tìm thấy ở đâu khác. Chúng tôi xin chân thành cảm ơn sự ủng hộ của quý khách.",
+      "chef": "Bếp trưởng điều hành"
+    },
+    "news": {
+      "subtitle": "Tin tức & Sự kiện",
+      "title": "Cập nhật mới nhất từ {{name}}",
+      "title_default": "nhà hàng",
+      "description": "Đừng bỏ lỡ những chương trình ưu đãi và sự kiện ẩm thực đặc biệt.",
+      "tags": {
+        "event": "Sự kiện",
+        "cuisine": "Ẩm thực",
+        "discovery": "Khám phá"
+      }
+    },
+    "overview": {
+      "subtitle": "Khám phá",
+      "title": "Tổng quan"
     }
   }
 }

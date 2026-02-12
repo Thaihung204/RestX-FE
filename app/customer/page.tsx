@@ -13,6 +13,7 @@ import customerService, {
 } from "@/lib/services/customerService";
 import { ConfigProvider, Space, Typography, message, theme } from "antd";
 import { useRouter } from "next/navigation";
+import { useTenant } from "@/lib/contexts/TenantContext";
 import { useCallback, useEffect, useState } from "react";
 
 const { Text, Title } = Typography;
@@ -152,9 +153,9 @@ export default function CustomerHomePage() {
               right: 0,
             }}>
             <RestaurantHeader
-              restaurantName="RestX Premium Dining"
-              phone="1900 6868"
-              hours="08:00 - 23:00"
+              restaurantName={tenant?.businessName || tenant?.name || "Restaurant"}
+              phone={tenant?.businessPrimaryPhone || "1900 6868"}
+              hours={tenant?.businessOpeningHours || "08:00 - 23:00"}
             />
           </div>
         </section>

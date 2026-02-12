@@ -41,8 +41,6 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 3. Check for plain Development domains (Skip tenant fetch)
-    // Only skip for plain localhost, NOT for subdomains like demo.localhost
-    // Subdomains need to fetch tenant config (with hostname converted to production format)
     const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
     const isPlainLocalhost =
       hostWithoutPort === "localhost" || hostWithoutPort === "127.0.0.1";

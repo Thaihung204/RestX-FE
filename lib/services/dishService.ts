@@ -53,11 +53,17 @@ export interface DishResponseDto {
   image?: string;
 }
 
-export interface MenuItem {
+export interface MenuItem extends Partial<DishResponseDto> {
   id: string;
   categoryId: string;
   categoryName: string;
   imageUrl?: string;
+  name?: string;
+  price?: number;
+  description?: string;
+  unit?: string;
+  quantity?: number;
+  isActive?: boolean;
 }
 
 export interface MenuCategory {

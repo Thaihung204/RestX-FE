@@ -2,14 +2,16 @@
 
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
-import { message } from "antd";
+import { App } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function TenantBrandingSettings() {
   const { t } = useTranslation("common");
   const { tenant, loading: tenantLoading, refreshTenant } = useTenant();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
+  const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(null);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -20,20 +22,12 @@ export default function TenantBrandingSettings() {
     logoFile: File | null;
     bannerFile: File | null;
     primaryColor: string;
-    baseColor: string;
-    secondaryColor: string;
-    headerColor: string;
-    footerColor: string;
   }>({
     logoUrl: "",
     backgroundUrl: "",
     logoFile: null,
     bannerFile: null,
     primaryColor: "#FF380B",
-    baseColor: "#FF380B",
-    secondaryColor: "#111111",
-    headerColor: "#FF380B",
-    footerColor: "#111111",
   });
 
   // Preview URLs for uploaded files
@@ -43,19 +37,45 @@ export default function TenantBrandingSettings() {
   useEffect(() => {
     if (tenant) {
       console.log("[TenantBrandingSettings] Tenant from context:", tenant);
-      // Check both case styles
-      const tenantId = tenant.id || (tenant as any).Id;
+
+      // Robust ID resolution: Check standard, PascalCase, and nested structures
+      const tenantId =
+        tenant.id ||
+        (tenant as any).Id ||
+        (tenant as any).tenant?.id ||
+        (tenant as any).tenant?.Id;
+
       console.log("[TenantBrandingSettings] Resolved Tenant ID:", tenantId);
+
+      if (tenantId) {
+        setResolvedTenantId(tenantId);
+      } else if (tenant.hostname) {
+        // FALLBACK: If ID is missing (e.g. production API issue), fetch all tenants to find the ID
+        const fetchMissingId = async () => {
+          try {
+            console.log("[TenantBrandingSettings] ID missing, fetching tenant list to resolve...");
+            const allTenants = await tenantService.getAllTenantsForAdmin();
+            const match = allTenants.find((t) => t.hostName === tenant.hostname);
+            if (match) {
+              console.log("[TenantBrandingSettings] Resolved missing ID via list:", match.id);
+              setResolvedTenantId(match.id);
+            } else {
+              console.error("[TenantBrandingSettings] Could not find tenant with hostname:", tenant.hostname);
+            }
+          } catch (error) {
+            console.error("[TenantBrandingSettings] Failed to fetch tenants list:", error);
+          }
+        };
+        fetchMissingId();
+      } else {
+        console.warn("[TenantBrandingSettings] Tenant object exists but has no ID or hostname:", tenant);
+      }
 
       setFormData((prev) => ({
         ...prev,
         logoUrl: tenant.logoUrl || "",
         backgroundUrl: tenant.backgroundUrl || "",
         primaryColor: tenant.primaryColor || "#FF380B",
-        baseColor: tenant.baseColor || "#FF380B",
-        secondaryColor: tenant.secondaryColor || "#111111",
-        headerColor: tenant.headerColor || "#FF380B",
-        footerColor: tenant.footerColor || "#111111",
       }));
       setLogoPreview(tenant.logoUrl || "");
       setBannerPreview(tenant.backgroundUrl || "");
@@ -138,8 +158,13 @@ export default function TenantBrandingSettings() {
       return;
     }
 
-    // Resolve ID safely
-    const tenantId = tenant.id || (tenant as any).Id;
+    // Resolve ID safely using state or context: Prioritize resolved ID, then direct props, then nested
+    const tenantId =
+      resolvedTenantId ||
+      tenant.id ||
+      (tenant as any).Id ||
+      (tenant as any).tenant?.id ||
+      (tenant as any).tenant?.Id;
 
     if (!tenantId) {
       message.error(
@@ -160,14 +185,10 @@ export default function TenantBrandingSettings() {
         ...tenant,
         // IMPORTANT: Explicitly set id to ensure it's not lost
         id: tenantId,
-        // Update branding URLs and theme colors
+        // Update branding URLs and ONLY primaryColor (other colors use globals.css)
         logoUrl: formData.logoUrl,
         backgroundUrl: formData.backgroundUrl,
         primaryColor: formData.primaryColor,
-        baseColor: formData.baseColor,
-        secondaryColor: formData.secondaryColor,
-        headerColor: formData.headerColor,
-        footerColor: formData.footerColor,
       };
 
       console.log(
@@ -399,7 +420,7 @@ export default function TenantBrandingSettings() {
             })}
           </h4>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
             {/* Primary Color */}
             <div>
               <label
@@ -417,7 +438,6 @@ export default function TenantBrandingSettings() {
                     setFormData((prev) => ({
                       ...prev,
                       primaryColor: e.target.value,
-                      baseColor: e.target.value,
                     }))
                   }
                   className="w-16 h-10 rounded border cursor-pointer"
@@ -430,7 +450,6 @@ export default function TenantBrandingSettings() {
                     setFormData((prev) => ({
                       ...prev,
                       primaryColor: e.target.value,
-                      baseColor: e.target.value,
                     }))
                   }
                   placeholder="#FF380B"
@@ -447,135 +466,33 @@ export default function TenantBrandingSettings() {
                 style={{ color: "var(--text-muted)" }}>
                 {t("dashboard.settings.appearance.primary_color_help", {
                   defaultValue:
-                    "Main brand color used for buttons, links, and accents",
+                    "Main brand color used for buttons, links, and accents. Other colors (backgrounds, surfaces, cards) are controlled by the global theme.",
                 })}
               </p>
             </div>
 
-            {/* Secondary Color */}
-            <div>
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.settings.appearance.secondary_color", {
-                  defaultValue: "Secondary Color",
+            {/* Info about other colors */}
+            <div
+              className="p-4 rounded-lg"
+              style={{
+                background: "var(--surface)",
+                border: "1px dashed var(--border)",
+              }}>
+              <p
+                className="text-xs font-medium mb-1"
+                style={{ color: "var(--text)" }}>
+                ℹ️ {t("dashboard.settings.appearance.other_colors_title", {
+                  defaultValue: "Other Colors",
                 })}
-              </label>
-              <div className="flex gap-3 items-center">
-                <input
-                  type="color"
-                  value={formData.secondaryColor}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      secondaryColor: e.target.value,
-                    }))
-                  }
-                  className="w-16 h-10 rounded border cursor-pointer"
-                  style={{ borderColor: "var(--border)" }}
-                />
-                <input
-                  type="text"
-                  value={formData.secondaryColor}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      secondaryColor: e.target.value,
-                    }))
-                  }
-                  placeholder="#111111"
-                  className="flex-1 px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--primary)] font-mono text-sm"
-                  style={{
-                    borderColor: "var(--border)",
-                    background: "var(--surface)",
-                    color: "var(--text)",
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Header Color */}
-            <div>
-              <label
-                className="block text-sm font-medium mb-2"
+              </p>
+              <p
+                className="text-xs"
                 style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.settings.appearance.header_color", {
-                  defaultValue: "Header Color",
+                {t("dashboard.settings.appearance.other_colors_info", {
+                  defaultValue:
+                    "Background, surface, card, and text colors are controlled by the global theme system (light/dark mode) for consistency.",
                 })}
-              </label>
-              <div className="flex gap-3 items-center">
-                <input
-                  type="color"
-                  value={formData.headerColor}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      headerColor: e.target.value,
-                    }))
-                  }
-                  className="w-16 h-10 rounded border cursor-pointer"
-                  style={{ borderColor: "var(--border)" }}
-                />
-                <input
-                  type="text"
-                  value={formData.headerColor}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      headerColor: e.target.value,
-                    }))
-                  }
-                  placeholder="#FF380B"
-                  className="flex-1 px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--primary)] font-mono text-sm"
-                  style={{
-                    borderColor: "var(--border)",
-                    background: "var(--surface)",
-                    color: "var(--text)",
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Footer Color */}
-            <div>
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.settings.appearance.footer_color", {
-                  defaultValue: "Footer Color",
-                })}
-              </label>
-              <div className="flex gap-3 items-center">
-                <input
-                  type="color"
-                  value={formData.footerColor}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      footerColor: e.target.value,
-                    }))
-                  }
-                  className="w-16 h-10 rounded border cursor-pointer"
-                  style={{ borderColor: "var(--border)" }}
-                />
-                <input
-                  type="text"
-                  value={formData.footerColor}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      footerColor: e.target.value,
-                    }))
-                  }
-                  placeholder="#111111"
-                  className="flex-1 px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--primary)] font-mono text-sm"
-                  style={{
-                    borderColor: "var(--border)",
-                    background: "var(--surface)",
-                    color: "var(--text)",
-                  }}
-                />
-              </div>
+              </p>
             </div>
           </div>
 
@@ -608,9 +525,13 @@ export default function TenantBrandingSettings() {
                 Outlined Button
               </div>
               <div
-                className="h-10 w-full rounded max-w-xs"
-                style={{ background: formData.headerColor }}
-              />
+                className="px-4 py-2 rounded-lg font-medium"
+                style={{
+                  background: `${formData.primaryColor}15`,
+                  color: formData.primaryColor,
+                }}>
+                Soft Button
+              </div>
             </div>
           </div>
         </div>
