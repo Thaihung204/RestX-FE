@@ -54,7 +54,10 @@ export default function MenuPage() {
             item.imageUrl ||
             item.image ||
             (item.images && item.images.length > 0
-              ? (item.images.find((img: any) => img.imageType === 0) || item.images[0]).imageUrl
+              ? (
+                  item.images.find((img: any) => img.imageType === 0) ||
+                  item.images[0]
+                ).imageUrl
               : null) ||
             "/placeholder-dish.jpg",
           description: item.description || "",
@@ -99,7 +102,8 @@ export default function MenuPage() {
       title: t("dashboard.menu.modal.delete_title"),
       content: (
         <>
-          {t("dashboard.menu.modal.delete_confirm")} <strong>&quot;{name}&quot;</strong>?
+          {t("dashboard.menu.modal.delete_confirm")}{" "}
+          <strong>&quot;{name}&quot;</strong>?
           <br />
           {t("dashboard.menu.modal.cannot_undo")}
         </>
@@ -110,12 +114,18 @@ export default function MenuPage() {
       onOk: async () => {
         try {
           await dishService.deleteDish(id);
-          message.success(t("dashboard.menu.toasts.delete_success") || "Dish deleted successfully");
+          message.success(
+            t("dashboard.menu.toasts.delete_success") ||
+              "Dish deleted successfully",
+          );
           await fetchMenuItems();
         } catch (err: any) {
           const errorMsg =
             err.response?.data?.message || err.message || "Unknown error";
-          message.error(t("dashboard.menu.toasts.delete_error") || `Failed to delete: ${errorMsg}`);
+          message.error(
+            t("dashboard.menu.toasts.delete_error") ||
+              `Failed to delete: ${errorMsg}`,
+          );
         }
       },
     });
@@ -154,15 +164,16 @@ export default function MenuPage() {
             <button
               className="px-4 py-2 text-white rounded-lg font-medium transition-all"
               style={{
-                background: "linear-gradient(to right, #FF380B, #CC2D08)",
+                background:
+                  "linear-gradient(to right, var(--primary), var(--primary-hover))",
               }}
               onMouseEnter={(e) =>
-              (e.currentTarget.style.background =
-                "linear-gradient(to right, #CC2D08, #B32607)")
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, var(--primary-hover), var(--primary-hover))")
               }
               onMouseLeave={(e) =>
-              (e.currentTarget.style.background =
-                "linear-gradient(to right, #FF380B, #CC2D08)")
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, var(--primary), var(--primary-hover))")
               }
               suppressHydrationWarning>
               <svg
@@ -263,16 +274,16 @@ export default function MenuPage() {
                 </p>
                 <p
                   className="text-3xl font-bold mt-1"
-                  style={{ color: "#FF380B" }}>
+                  style={{ color: "var(--primary)" }}>
                   {menuItems.filter((i) => i.isBestSeller).length}
                 </p>
               </div>
               <div
                 className="w-12 h-12 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "rgba(255,56,11,0.1)" }}>
+                style={{ backgroundColor: "var(--primary-soft)" }}>
                 <svg
                   className="w-6 h-6"
-                  style={{ color: "#FF380B" }}
+                  style={{ color: "var(--primary)" }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24">
@@ -325,7 +336,7 @@ export default function MenuPage() {
           <div className="flex items-center justify-center py-12">
             <div
               className="animate-spin rounded-full h-12 w-12 border-b-2"
-              style={{ borderColor: "#FF380B" }}></div>
+              style={{ borderColor: "var(--primary)" }}></div>
             <p className="ml-4" style={{ color: "var(--text-muted)" }}>
               {t("dashboard.menu.loading")}
             </p>
@@ -355,18 +366,20 @@ export default function MenuPage() {
                   style={
                     selectedCategory === category
                       ? {
-                        background:
-                          "linear-gradient(to right, #FF380B, #CC2D08)",
-                        color: "white",
-                      }
+                          background:
+                            "linear-gradient(to right, var(--primary), var(--primary-hover))",
+                          color: "white",
+                        }
                       : {
-                        background: "var(--surface)",
-                        color: "var(--text-muted)",
-                        border: "1px solid var(--border)",
-                      }
+                          background: "var(--surface)",
+                          color: "var(--text-muted)",
+                          border: "1px solid var(--border)",
+                        }
                   }
                   suppressHydrationWarning>
-                  {category === "All" ? t("dashboard.menu.categories.all") : category}
+                  {category === "All"
+                    ? t("dashboard.menu.categories.all")
+                    : category}
                 </button>
               ))}
             </div>
@@ -397,7 +410,9 @@ export default function MenuPage() {
                   style={{ color: "var(--text-muted)" }}>
                   {selectedCategory === "All"
                     ? t("dashboard.menu.add_first_item")
-                    : t("dashboard.menu.empty_category", { category: selectedCategory })}
+                    : t("dashboard.menu.empty_category", {
+                        category: selectedCategory,
+                      })}
                 </p>
               </div>
             ) : (
@@ -412,8 +427,8 @@ export default function MenuPage() {
                       border: "1px solid var(--border)",
                     }}
                     onMouseEnter={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      "rgba(255,56,11,0.5)")
+                      (e.currentTarget.style.borderColor =
+                        "rgba(255,56,11,0.5)")
                     }
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.borderColor = "var(--border)")
@@ -454,7 +469,7 @@ export default function MenuPage() {
                       {item.isBestSeller && (
                         <div
                           className="absolute top-3 right-3 px-3 py-1 rounded-full text-white text-xs font-bold flex items-center gap-1"
-                          style={{ backgroundColor: "#FF380B" }}>
+                          style={{ backgroundColor: "var(--primary)" }}>
                           <svg
                             className="w-3 h-3"
                             fill="currentColor"
@@ -485,7 +500,8 @@ export default function MenuPage() {
                           <p
                             className="text-xs line-clamp-2"
                             style={{ color: "var(--text-muted)" }}>
-                            {item.description || t("dashboard.menu.no_description")}
+                            {item.description ||
+                              t("dashboard.menu.no_description")}
                           </p>
                         </div>
                       </div>
@@ -499,7 +515,7 @@ export default function MenuPage() {
                           </p>
                           <p
                             className="text-sm sm:text-base md:text-lg lg:text-xl font-bold truncate"
-                            style={{ color: "#FF380B" }}>
+                            style={{ color: "var(--primary)" }}>
                             {formatPrice(item.price)}đ
                           </p>
                         </div>
@@ -516,16 +532,16 @@ export default function MenuPage() {
                           <button
                             className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
                             style={{
-                              backgroundColor: "rgba(255,56,11,0.1)",
-                              color: "#FF380B",
+                              backgroundColor: "var(--primary-soft)",
+                              color: "var(--primary)",
                             }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "rgba(255,56,11,0.2)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--primary-glow)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "rgba(255,56,11,0.1)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--primary-soft)")
                             }
                             suppressHydrationWarning>
                             {t("dashboard.menu.edit")}

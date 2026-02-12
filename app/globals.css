@@ -3,38 +3,33 @@
 @tailwind utilities;
 
 :root {
-  /* =========================================================
-   * Seed Tokens (Tenant Admin can override via API injection)
-   * - Injected as CSS variables on <html> (style attribute)
-   * - Only these need to change to rebrand the whole system
-   * ========================================================= */
-  --primary: #FFFF00; /* default if tenant does not configure */
-  --bg-light-base: #F7F8FA;
-  --bg-dark-base: #0E121A;
+  --primary: #FF380B;
+  --bg-light-base: #FFFFFF;
+  --bg-dark-base: #0A0E14;
+  
+  --light-surface: #F9FAFB;
+  --light-card: #FFFFFF;
+  --dark-surface: #1A1F2E;
+  --dark-card: #151A24;
 
   /* =========================================================
-   * Layering (Light Mode)
-   * - Derived from seed tokens for consistent depth
+   * Layering (Light Mode) - Use light surface/card by default
    * ========================================================= */
   --bg-base: var(--bg-light-base);
 
   /* Text */
   --text: #111111;
-  --text-muted: color-mix(in srgb, var(--text), transparent 55%);
+  --text-muted: #737373;
 
-  /* Surfaces */
-  --surface: color-mix(in srgb, var(--bg-base), white 92%);
-  --card: color-mix(in srgb, var(--bg-base), white 96%);
-  --border: color-mix(in srgb, var(--text), transparent 88%);
+  /* Surfaces - use light mode values */
+  --surface: var(--light-surface);
+  --card: var(--light-card);
+  --border: #E5E7EB;
 
   /* Accessible “on color” tokens (can be auto-adjusted by JS) */
-  --text-inverse: #FFFFFF; /* default for text/icons on primary backgrounds */
+  --text-inverse: #FFFFFF;
   --on-primary: var(--text-inverse);
 
-  /* =========================================================
-   * Functional Tokens (auto-calculated from --primary)
-   * - Must NOT be overridden by tenant
-   * ========================================================= */
   --primary-soft: color-mix(in srgb, var(--primary), transparent 85%);
   --primary-faint: color-mix(in srgb, var(--primary), transparent 94%);
   --primary-glow: color-mix(in srgb, var(--primary), transparent 72%);
@@ -77,19 +72,18 @@
 
 [data-theme="dark"] {
   /* =========================================================
-   * Layering (Dark Mode)
-   * - Uses the same seed tokens, but swaps base background
+   * Layering (Dark Mode) - Use dark surface/card
    * ========================================================= */
   --bg-base: var(--bg-dark-base);
 
   /* Text */
   --text: #ECECEC;
-  --text-muted: color-mix(in srgb, var(--text), transparent 30%);
+  --text-muted: #A3A3A3;
 
-  /* Surfaces */
-  --surface: color-mix(in srgb, var(--bg-base), white 8%);
-  --card: color-mix(in srgb, var(--bg-base), white 11%);
-  --border: color-mix(in srgb, var(--text), transparent 82%);
+  /* Surfaces - use dark mode values */
+  --surface: var(--dark-surface);
+  --card: var(--dark-card);
+  --border: #2A3040;
 
   /* Accessible “on color” tokens (can be auto-adjusted by JS) */
   --text-inverse: #FFFFFF;
@@ -125,6 +119,118 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Performance-optimized utility classes */
+  .gpu-accelerate {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  .smooth-transition {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .primary-bg {
+    background: var(--primary);
+  }
+
+  .primary-text {
+    color: var(--primary);
+  }
+
+  .primary-border {
+    border-color: var(--primary);
+  }
+
+  .primary-gradient {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  }
+
+  .primary-soft-bg {
+    background: var(--primary-soft);
+  }
+
+  .primary-glow {
+    box-shadow: 0 4px 16px var(--primary-glow);
+  }
+
+  /* Override Tailwind opacity utilities to use CSS variables */
+  .bg-white\/50 {
+    background: var(--backdrop-blur) !important;
+  }
+
+  .bg-black\/50 {
+    background: var(--modal-overlay) !important;
+  }
+
+  .bg-black\/60 {
+    background: var(--modal-overlay) !important;
+  }
+
+  .bg-black\/70 {
+    background: var(--modal-overlay) !important;
+  }
+
+  .dark\:bg-black\/20:is([data-theme="dark"] *) {
+    background: var(--surface) !important;
+  }
+
+  .dark\:bg-white\/5:is([data-theme="dark"] *) {
+    background: color-mix(in srgb, var(--surface), var(--text) 5%) !important;
+  }
+
+  .dark\:bg-white\/10:is([data-theme="dark"] *) {
+    background: color-mix(in srgb, var(--surface), var(--text) 10%) !important;
+  }
+
+  .hover\:bg-black\/5:hover {
+    background: color-mix(in srgb, var(--surface), var(--text) 5%) !important;
+  }
+
+  .dark\:hover\:bg-white\/5:is([data-theme="dark"] *):hover {
+    background: color-mix(in srgb, var(--surface), var(--text) 8%) !important;
+  }
+
+  .dark\:hover\:bg-white\/10:is([data-theme="dark"] *):hover {
+    background: color-mix(in srgb, var(--surface), var(--text) 12%) !important;
+  }
+
+  .hover\:bg-white\/10:hover {
+    background: color-mix(in srgb, var(--surface), var(--text-inverse) 10%) !important;
+  }
+
+  /* Override gray backgrounds for toggles and buttons */
+  .bg-gray-100 {
+    background: var(--surface) !important;
+  }
+
+  .bg-gray-600 {
+    background: var(--border) !important;
+  }
+
+  .bg-gray-700 {
+    background: var(--border) !important;
+  }
+
+  .dark\:bg-gray-800:is([data-theme="dark"] *) {
+    background: var(--surface) !important;
+  }
+
+  .dark\:bg-zinc-800:is([data-theme="dark"] *) {
+    background: var(--surface) !important;
+  }
+
+  .dark\:bg-zinc-900\/50:is([data-theme="dark"] *) {
+    background: var(--surface) !important;
+  }
+
+  .hover\:bg-gray-100:hover {
+    background: var(--surface-subtle) !important;
+  }
+
+  .dark\:hover\:bg-gray-800:is([data-theme="dark"] *):hover {
+    background: var(--surface-subtle) !important;
   }
 }
 
@@ -404,4 +510,85 @@ textarea::placeholder {
 
 [data-theme="light"] .app-logo-img {
   filter: none;
+}
+/* Enable hardware acceleration for smooth animations */
+* {
+  will-change: auto;
+}
+
+/* Reduce paint/layout thrashing for theme-dependent elements */
+[data-theme] {
+  /* Optimize CSS variable reads with contain */
+  contain: layout style;
+}
+
+/* Use content-visibility for off-screen content (lazy rendering) */
+.card,
+.table-row,
+.list-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100px;
+}
+
+/* Optimize expensive gradients with GPU acceleration */
+.gradient-bg,
+.primary-gradient,
+[style*="linear-gradient"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Prevent layout shifts during image load */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Reduce repaint for fixed/sticky elements */
+.fixed,
+.sticky,
+[class*="fixed"],
+[class*="sticky"] {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Font loading optimization - prevent FOIT */
+@font-face {
+  font-display: swap;
+}
+
+/* Smooth scrolling with GPU acceleration */
+* {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Admin Tenants Table - Override Ant Design dark mode defaults */
+.admin-tenants-table .ant-table-thead > tr > th {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-weight: 600 !important;
+}
+
+.admin-tenants-table .ant-table-tbody > tr {
+  background: var(--card) !important;
+}
+
+.admin-tenants-table .ant-table-tbody > tr:hover > td {
+  background: var(--surface-subtle) !important;
+}
+
+.admin-tenants-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.admin-tenants-table .ant-table {
+  background: var(--card) !important;
+}
+
+.admin-tenants-table .ant-table-container {
+  background: var(--card) !important;
 }

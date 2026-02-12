@@ -35,7 +35,7 @@ import {
 } from 'antd';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import { useThemeMode } from '../../theme/AntdProvider';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;

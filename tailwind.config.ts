@@ -8,6 +8,24 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        // Override Tailwind's default colors to use CSS variables
+        white: "var(--card)",
+        black: "var(--bg-base)",
+        gray: {
+          50: "var(--surface)",
+          100: "var(--surface)",
+          200: "var(--surface)",
+          300: "var(--border)",
+          400: "var(--text-muted)",
+          500: "var(--text-muted)",
+          600: "var(--border)",
+          700: "var(--surface)",
+          800: "var(--surface)",
+          900: "var(--card)",
+          950: "var(--card)",
+        },
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":

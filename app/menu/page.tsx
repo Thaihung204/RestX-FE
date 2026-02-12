@@ -5,51 +5,51 @@ import CustomerFooter from "@/components/customer/CustomerFooter";
 import NotificationSystem from "@/components/notifications/NotificationSystem";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
+import { useTheme } from "@/lib/hooks/useTheme";
 import customerService, {
-  CustomerResponseDto,
+    CustomerResponseDto,
 } from "@/lib/services/customerService";
 import menuService from "@/lib/services/menuService";
 import type {
-  CartItem,
-  Category,
-  CategoryWithDishes,
-  MenuItem,
+    CartItem,
+    Category,
+    CategoryWithDishes,
+    MenuItem,
 } from "@/lib/types/menu";
 import {
-  ArrowLeftOutlined,
-  CloseOutlined,
-  FireOutlined,
-  HeartFilled,
-  MinusOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  StarFilled,
+    ArrowLeftOutlined,
+    CloseOutlined,
+    FireOutlined,
+    HeartFilled,
+    MinusOutlined,
+    PlusOutlined,
+    SearchOutlined,
+    StarFilled,
 } from "@ant-design/icons";
 import {
-  Affix,
-  Button,
-  Card,
-  Col,
-  ConfigProvider,
-  Input,
-  Modal,
-  Row,
-  Spin,
-  Typography,
-  message,
-  theme,
+    Affix,
+    Button,
+    Card,
+    Col,
+    ConfigProvider,
+    Input,
+    Modal,
+    Row,
+    Spin,
+    Typography,
+    message,
+    theme,
 } from "antd";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useThemeTokens } from "@/lib/hooks/useThemeTokens";
 
 const { Title, Text } = Typography;
 
 export default function MenuPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
-  const themeTokens = useThemeTokens();
+  const { mode: themeMode } = useTheme();
   const { user } = useAuth();
   const {
     cartItems,
@@ -222,7 +222,7 @@ export default function MenuPage() {
       <ConfigProvider
         theme={{
           algorithm:
-            themeTokens.mode === "dark"
+            themeMode === "dark"
               ? theme.darkAlgorithm
               : theme.defaultAlgorithm,
           token: {
@@ -254,7 +254,7 @@ export default function MenuPage() {
       <ConfigProvider
         theme={{
           algorithm:
-            themeTokens.mode === "dark"
+            themeMode === "dark"
               ? theme.darkAlgorithm
               : theme.defaultAlgorithm,
           token: {
@@ -287,7 +287,7 @@ export default function MenuPage() {
       <ConfigProvider
         theme={{
           algorithm:
-            themeTokens.mode === "dark"
+            themeMode === "dark"
               ? theme.darkAlgorithm
               : theme.defaultAlgorithm,
           token: {

@@ -4,7 +4,7 @@ import LoginButton from "@/components/auth/LoginButton";
 import authService from "@/lib/services/authService";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useThemeMode } from "../theme/AntdProvider";
 import { useSearchParams } from 'next/navigation';
 import { message } from "antd";
 

@@ -7,20 +7,20 @@ import RestaurantHeader from "@/components/customer/RestaurantHeader";
 import WelcomeCard from "@/components/customer/WelcomeCard";
 import NotificationSystem from "@/components/notifications/NotificationSystem";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useTheme } from "@/lib/hooks/useTheme";
 import customerService, {
-  CustomerResponseDto,
+    CustomerResponseDto,
 } from "@/lib/services/customerService";
 import { ConfigProvider, Space, Typography, message, theme } from "antd";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { useThemeTokens } from "@/lib/hooks/useThemeTokens";
 
 const { Text, Title } = Typography;
 
 export default function CustomerHomePage() {
   const router = useRouter();
   const { user } = useAuth();
-  const themeTokens = useThemeTokens();
+  const { mode: themeMode } = useTheme();
   const [messageApi, contextHolder] = message.useMessage();
   const [tableNumber] = useState("C1");
   const [isLoading, setIsLoading] = useState(false);
@@ -76,7 +76,7 @@ export default function CustomerHomePage() {
     <ConfigProvider
       theme={{
         algorithm:
-          themeTokens.mode === "dark"
+          themeMode === "dark"
             ? theme.darkAlgorithm
             : theme.defaultAlgorithm,
         token: {

@@ -11,12 +11,12 @@ interface Order {
   items: number;
   total: number;
   status:
-  | "pending"
-  | "preparing"
-  | "ready"
-  | "served"
-  | "completed"
-  | "cancelled";
+    | "pending"
+    | "preparing"
+    | "ready"
+    | "served"
+    | "completed"
+    | "cancelled";
   time: string;
   paymentStatus: "unpaid" | "paid";
 }
@@ -98,10 +98,10 @@ export default function OrdersPage() {
       badge: "bg-purple-500/10 text-purple-500 border-purple-500/20",
     },
     served: {
-      color: "bg-[#FF380B]",
+      color: "bg-[var(--primary)]",
       text: t("dashboard.orders.status.served"),
-      badge: "text-[#FF380B] border-[rgba(255,56,11,0.2)]",
-      bgStyle: { backgroundColor: 'rgba(255,56,11,0.1)' },
+      badge: "text-[var(--primary)] border-[var(--primary-border)]",
+      bgStyle: { backgroundColor: "var(--primary-soft)" },
     },
     completed: {
       color: "bg-green-500",
@@ -121,18 +121,24 @@ export default function OrdersPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
+            <h2
+              className="text-3xl font-bold mb-2"
+              style={{ color: "var(--text)" }}>
               {t("dashboard.orders.title")}
             </h2>
-            <p style={{ color: 'var(--text-muted)' }}>
+            <p style={{ color: "var(--text-muted)" }}>
               {t("dashboard.orders.subtitle")}
             </p>
           </div>
           <button
             className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-            style={{ background: 'linear-gradient(to right, #FF380B, #CC2D08)' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #CC2D08, #B32607)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #FF380B, #CC2D08)'}
+            style={{ background: "var(--primary)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "var(--primary-hover)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "var(--primary)")
+            }
             suppressHydrationWarning>
             <svg
               className="w-5 h-5 inline-block mr-2"
@@ -155,12 +161,12 @@ export default function OrdersPage() {
           <div
             className="rounded-xl p-4"
             style={{
-              background: 'var(--card)',
-              border: '1px solid rgba(234, 179, 8, 0.2)',
+              background: "var(--card)",
+              border: "1px solid rgba(234, 179, 8, 0.2)",
             }}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.orders.stats.pending")}
                 </p>
                 <p className="text-3xl font-bold text-yellow-500 mt-1">
@@ -187,12 +193,12 @@ export default function OrdersPage() {
           <div
             className="rounded-xl p-4"
             style={{
-              background: 'var(--card)',
-              border: '1px solid rgba(59, 130, 246, 0.2)',
+              background: "var(--card)",
+              border: "1px solid rgba(59, 130, 246, 0.2)",
             }}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.orders.stats.preparing")}
                 </p>
                 <p className="text-3xl font-bold text-blue-500 mt-1">
@@ -219,12 +225,12 @@ export default function OrdersPage() {
           <div
             className="rounded-xl p-4"
             style={{
-              background: 'var(--card)',
-              border: '1px solid rgba(168, 85, 247, 0.2)',
+              background: "var(--card)",
+              border: "1px solid rgba(168, 85, 247, 0.2)",
             }}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.orders.stats.ready")}
                 </p>
                 <p className="text-3xl font-bold text-purple-500 mt-1">
@@ -251,22 +257,26 @@ export default function OrdersPage() {
           <div
             className="rounded-xl p-4"
             style={{
-              background: 'var(--card)',
-              border: '1px solid rgba(255, 56, 11, 0.2)',
+              background: "var(--card)",
+              border: "1px solid rgba(255, 56, 11, 0.2)",
             }}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.orders.stats.served")}
                 </p>
-                <p className="text-3xl font-bold mt-1" style={{ color: '#FF380B' }}>
+                <p
+                  className="text-3xl font-bold mt-1"
+                  style={{ color: "var(--primary)" }}>
                   {orders.filter((o) => o.status === "served").length}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(255,56,11,0.1)' }}>
+              <div
+                className="w-12 h-12 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: "var(--primary-soft)" }}>
                 <svg
                   className="w-6 h-6"
-                  style={{ color: '#FF380B' }}
+                  style={{ color: "var(--primary)" }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24">
@@ -284,12 +294,12 @@ export default function OrdersPage() {
           <div
             className="rounded-xl p-4"
             style={{
-              background: 'var(--card)',
-              border: '1px solid rgba(34, 197, 94, 0.2)',
+              background: "var(--card)",
+              border: "1px solid rgba(34, 197, 94, 0.2)",
             }}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.orders.stats.completed")}
                 </p>
                 <p className="text-3xl font-bold text-green-500 mt-1">
@@ -318,95 +328,100 @@ export default function OrdersPage() {
         <div
           className="rounded-xl overflow-hidden"
           style={{
-            background: 'var(--card)',
-            border: '1px solid var(--border)',
+            background: "var(--card)",
+            border: "1px solid var(--border)",
           }}>
           <div
             className="p-6"
-            style={{ borderBottom: '1px solid var(--border)' }}>
-            <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
+            style={{ borderBottom: "1px solid var(--border)" }}>
+            <h3 className="text-xl font-bold" style={{ color: "var(--text)" }}>
               {t("dashboard.orders.title")}
             </h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead style={{ background: 'var(--surface)' }}>
+              <thead style={{ background: "var(--surface)" }}>
                 <tr>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: 'var(--text-muted)' }}>
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.order")}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: 'var(--text-muted)' }}>
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.customer")}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: 'var(--text-muted)' }}>
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.table")}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: 'var(--text-muted)' }}>
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.items")}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: 'var(--text-muted)' }}>
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.total")}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: 'var(--text-muted)' }}>
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.status")}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: 'var(--text-muted)' }}>
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.payment")}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: 'var(--text-muted)' }}>
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.time")}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: 'var(--text-muted)' }}>
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.actions")}
                   </th>
                 </tr>
               </thead>
-              <tbody style={{ borderColor: 'var(--border)' }}>
+              <tbody style={{ borderColor: "var(--border)" }}>
                 {orders.map((order) => (
                   <tr
                     key={order.id}
                     className="transition-colors"
-                    style={{ borderBottom: '1px solid var(--border)' }}>
+                    style={{ borderBottom: "1px solid var(--border)" }}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span style={{ color: '#FF380B', fontWeight: 600 }}>
+                      <span
+                        style={{ color: "var(--primary)", fontWeight: 600 }}>
                         {order.orderNumber}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)' }}>
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                          style={{ background: "var(--primary)" }}>
                           {order.customerName.charAt(0)}
                         </div>
-                        <span className="font-medium" style={{ color: 'var(--text)' }}>
+                        <span
+                          className="font-medium"
+                          style={{ color: "var(--text)" }}>
                           {order.customerName}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span style={{ color: 'var(--text-muted)' }}>
+                      <span style={{ color: "var(--text-muted)" }}>
                         Table {order.tableNumber}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span style={{ color: 'var(--text-muted)' }}>
+                      <span style={{ color: "var(--text-muted)" }}>
                         {order.items} items
                       </span>
                     </td>
@@ -417,30 +432,45 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[order.status].badge
-                          }`}>
+                        className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                          statusConfig[order.status].badge
+                        }`}>
                         {statusConfig[order.status].text}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${order.paymentStatus === "paid"
-                          ? "bg-green-500/10 text-green-500 border border-green-500/20"
-                          : "bg-red-500/10 text-red-500 border border-red-500/20"
-                          }`}>
-                        {order.paymentStatus === "paid" ? t("dashboard.orders.payment_status.paid") : t("dashboard.orders.payment_status.unpaid")}
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          order.paymentStatus === "paid"
+                            ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                            : "bg-red-500/10 text-red-500 border border-red-500/20"
+                        }`}>
+                        {order.paymentStatus === "paid"
+                          ? t("dashboard.orders.payment_status.paid")
+                          : t("dashboard.orders.payment_status.unpaid")}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm"
+                      style={{ color: "var(--text-muted)" }}>
                       {order.time}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-2">
                         <button
                           className="p-2 rounded-lg transition-all"
-                          style={{ backgroundColor: 'rgba(255,56,11,0.1)', color: '#FF380B' }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,56,11,0.2)'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,56,11,0.1)'}
+                          style={{
+                            backgroundColor: "var(--primary-soft)",
+                            color: "var(--primary)",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "rgba(255,56,11,0.2)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "rgba(255,56,11,0.1)")
+                          }
                           suppressHydrationWarning
                           title="View Details">
                           <svg

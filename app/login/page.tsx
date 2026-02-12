@@ -5,7 +5,7 @@ import LoginHeader from "@/components/auth/LoginHeader";
 
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useThemeMode } from "../theme/AntdProvider";
 import { message } from "antd";
 
 export default function LoginPage() {

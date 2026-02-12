@@ -1,6 +1,6 @@
-"use client";
-
-import { useThemeMode } from "@/app/theme/AutoDarkThemeProvider";
+ "use client";
+ 
+import { useThemeMode } from "@/app/theme/AntdProvider";
 import { useCart } from "@/lib/contexts/CartContext";
 import customerService, {
   CustomerResponseDto,

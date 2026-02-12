@@ -20,7 +20,7 @@ import {
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import ThemeToggle from '../components/ThemeToggle';
-import { useThemeMode } from '../theme/AutoDarkThemeProvider';
+import { useThemeMode } from '../theme/AntdProvider';
 import Link from 'next/link';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
@@ -351,7 +351,7 @@ export default function StaffLayout({
             width={260}
             collapsedWidth={80}
             style={{
-              background: mode === 'dark' ? '#001529' : '#FFFFFF',
+              background: 'var(--card)',
               boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
               borderRight: mode === 'dark' ? 'none' : '1px solid var(--border)',
               position: 'fixed',

@@ -35,7 +35,7 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import type { Dayjs } from 'dayjs';
-import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import { useThemeMode } from '../../theme/AntdProvider';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../../components/I18nProvider';
 

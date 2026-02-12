@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useThemeMode } from "../theme/AntdProvider";
 import { message } from "antd";
 
 export default function LoginEmailPage() {
