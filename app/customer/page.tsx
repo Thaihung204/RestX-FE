@@ -21,6 +21,7 @@ const { Text, Title } = Typography;
 export default function CustomerHomePage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { tenant } = useTenant();
   const { mode: themeMode } = useTheme();
   const [messageApi, contextHolder] = message.useMessage();
   const [tableNumber] = useState("C1");

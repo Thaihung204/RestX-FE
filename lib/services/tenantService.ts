@@ -9,20 +9,22 @@ export interface TenantConfig {
   // Branding & Assets
   logoUrl?: string;
   faviconUrl?: string;
-  backgroundUrl?: string; // Banner/Hero image
+  backgroundUrl?: string;
 
-  // Theme Colors
-  baseColor: string; // Legacy - map to bgLightBase
-  primaryColor: string; // Brand color
-  secondaryColor: string; // Legacy - map to bgDarkBase
-  headerColor: string; // Header background
-  footerColor: string; // Legacy - map to lightSurface
+  // Theme Colors (synced with globals.css variables)
+  primaryColor: string;
+  lightBaseColor?: string;
+  lightSurfaceColor?: string;
+  lightCardColor?: string;
+  darkBaseColor?: string;
+  darkSurfaceColor?: string;
+  darkCardColor?: string;
 
-  // ✅ New theme color fields (optional, for future API updates)
-  bgLightBase?: string; // Light mode background
-  bgDarkBase?: string; // Dark mode background
-  lightSurface?: string; // Light mode surface/card
-  darkSurface?: string; // Dark mode surface/card
+  // Legacy color fields (API compatibility)
+  baseColor: string;
+  secondaryColor: string;
+  headerColor: string;
+  footerColor: string;
 
   // Network & Config
   networkIp?: string;
@@ -34,7 +36,7 @@ export interface TenantConfig {
   // Business Info
   businessName: string;
   aboutUs?: string;
-  aboutUsType?: 'text' | 'html';
+  aboutUsType?: "text" | "html";
   overview?: string;
   businessAddressLine1?: string;
   businessAddressLine2?: string;
@@ -70,9 +72,9 @@ const mapApiResponseToTenant = (apiTenant: TenantApiResponse): ITenant => {
     addressLine2: apiTenant.businessAddressLine2 || "",
     addressLine3: apiTenant.businessAddressLine3 || "",
     addressLine4: apiTenant.businessAddressLine4 || "",
-    ownerEmail: "", // Backend doesn't have this field yet
+    ownerEmail: "",
     mailRestaurant: apiTenant.businessEmailAddress || "",
-    plan: "basic", // Backend doesn't have this field yet
+    plan: "basic",
     status: apiTenant.status ? "active" : "inactive",
     lastActive:
       apiTenant.modifiedDate ||
@@ -92,7 +94,7 @@ const mapCreateInputToApi = (input: TenantCreateInput) => {
   return {
     name: input.name,
     hostname: fullHostname,
-    networkIp: fullHostname, // Save to networkIp as well
+    networkIp: fullHostname,
     businessName: input.businessName,
     businessAddressLine1: input.addressLine1,
     businessAddressLine2: input.addressLine2,
@@ -105,7 +107,6 @@ const mapCreateInputToApi = (input: TenantCreateInput) => {
   };
 };
 
-// Helper to convert object to FormData
 const toFormData = (
   data: any,
   files?: {
@@ -120,16 +121,12 @@ const toFormData = (
   Object.keys(data).forEach((key) => {
     const value = data[key];
     if (value !== null && value !== undefined && key !== "tenantSettings") {
-      // Handle values properly
       if (
         typeof value === "object" &&
         !Array.isArray(value) &&
         !(value instanceof Date)
       ) {
-        // If nested object, JSON stringify? Or flatten?
-        // for now skip complex nested objects to avoid [object Object]
       } else if (typeof value === "boolean") {
-        // C# boolean binding works best with "true"/"false" strings
         formData.append(key, value ? "true" : "false");
       } else {
         formData.append(key, value.toString());

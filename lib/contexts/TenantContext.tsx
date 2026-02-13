@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  THEME_COLOR_FIELDS,
+  type ThemeColorField,
+} from "@/lib/constants/themeDefaults";
 import { injectTenantBranding } from "@/lib/hooks/useThemeTokens";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -76,13 +80,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       console.log("[TenantContext] Tenant config response:", data);
 
       if (data) {
-        // Tenant found - axios already uses relative /api path
-        // Reverse proxy routes requests based on Host header
         setTenant(data);
         console.log("[TenantContext] Tenant loaded successfully:", data.name);
       } else {
-        // Tenant not found (204 or null response)
-        // DO NOT REDIRECT - show error state instead
         console.warn(
           "[TenantContext] Tenant not found for hostname:",
           hostname,
@@ -90,11 +90,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         setError("Tenant not found");
       }
     } catch (err: any) {
-      // API error (401, 403, 500, network error, etc.)
-      // DO NOT REDIRECT - show error state instead
       console.error("[TenantContext] Failed to load tenant config:", err);
 
-      // Provide meaningful error messages
       if (err.response?.status === 401 || err.response?.status === 403) {
         setError("Unable to load tenant configuration");
       } else if (err.response?.status === 404) {
@@ -123,13 +120,10 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
   // Apply tenant branding (theme colors) when tenant is loaded
   useEffect(() => {
-    if (tenant && tenant.primaryColor) {
-      injectTenantBranding({
-        // Only inject primary brand color, other colors use defaults from globals.css
-        baseColor: tenant.primaryColor,
-        logoUrl: tenant.logoUrl,
-      });
-    }
+    if (!tenant) return;
+    const config: Record<string, string | undefined> = { logoUrl: tenant.logoUrl };
+    for (const f of THEME_COLOR_FIELDS) config[f] = (tenant as any)[f];
+    injectTenantBranding(config);
   }, [tenant]);
 
   return (

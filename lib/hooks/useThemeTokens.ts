@@ -1,114 +1,89 @@
 "use client";
 
+import {
+  THEME_COLOR_FIELDS,
+  THEME_COLOR_MAP,
+  type ThemeColorField,
+} from "@/lib/constants/themeDefaults";
+
 /**
- * Tenant Branding Utilities
+ * Tenant Branding Injection
  *
- * This module provides utilities for injecting tenant-specific branding
- * (colors, logos) as CSS variables. Used by TenantContext to apply
- * dynamic per-tenant theming.
- *
- * For general theme access, use: import { useTheme } from '@/lib/hooks/useTheme'
+ * Overrides CSS variables only when DB has non-empty values.
+ * Empty fields → CSS variable removed → globals.css defaults apply naturally.
  */
 
-export type TenantBrandConfig = {
-  baseColor?: string; // Primary brand color (maps to --primary)
-  logoUrl?: string; // Logo URL
-
-  // Note: Background/surface colors are NOT customizable per tenant
-  // They use fixed defaults from globals.css to ensure consistent UX
-  // Only primary brand color can be customized
+export type TenantBrandConfig = Partial<Record<ThemeColorField, string>> & {
+  logoUrl?: string;
 };
 
-/**
- * Convert hex color to RGB object
- */
+// ── Color utilities (WCAG contrast) ──────────────────────────────
+
 function hexToRgb(hex: string) {
-  const value = hex.replace("#", "").trim();
-  if (![3, 4, 6, 8].includes(value.length)) return null;
-
-  const expand = (s: string) =>
-    s
-      .split("")
-      .map((c) => c + c)
-      .join("");
-  const normalized =
-    value.length === 3 || value.length === 4 ? expand(value) : value;
-
-  const r = parseInt(normalized.slice(0, 2), 16);
-  const g = parseInt(normalized.slice(2, 4), 16);
-  const b = parseInt(normalized.slice(4, 6), 16);
-  if ([r, g, b].some((n) => Number.isNaN(n))) return null;
-  return { r, g, b };
+  const v = hex.replace("#", "").trim();
+  if (![3, 4, 6, 8].includes(v.length)) return null;
+  const n = v.length <= 4 ? v.split("").map((c) => c + c).join("") : v;
+  const [r, g, b] = [n.slice(0, 2), n.slice(2, 4), n.slice(4, 6)].map((s) =>
+    parseInt(s, 16),
+  );
+  return [r, g, b].some(Number.isNaN) ? null : { r, g, b };
 }
 
-/**
- * Convert sRGB color component to linear RGB
- */
-function srgbToLinear(c: number) {
-  const v = c / 255;
-  return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+function luminance({ r, g, b }: { r: number; g: number; b: number }) {
+  const f = (c: number) => {
+    const v = c / 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
 }
 
-/**
- * Calculate relative luminance of RGB color
- */
-function relativeLuminance(rgb: { r: number; g: number; b: number }) {
-  const r = srgbToLinear(rgb.r);
-  const g = srgbToLinear(rgb.g);
-  const b = srgbToLinear(rgb.b);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-/**
- * Pick readable text color (black or white) based on background luminance
- * Uses WCAG contrast ratio algorithm
- */
-function pickOnColor(primaryHex: string) {
-  const rgb = hexToRgb(primaryHex);
+/** Returns black or white for readable text on the given background */
+function pickOnColor(hex: string): string {
+  const rgb = hexToRgb(hex);
   if (!rgb) return "#FFFFFF";
-  const L = relativeLuminance(rgb);
-  // Simple, reliable heuristic: bright colors -> dark text, otherwise white text
-  return L > 0.55 ? "#111111" : "#FFFFFF";
+  return luminance(rgb) > 0.55 ? "#111111" : "#FFFFFF";
 }
 
+// ── Main injection ───────────────────────────────────────────────
+
 /**
- * Inject tenant branding tokens onto <html> as CSS variables.
- * - Only primary color is customizable per tenant
- * - Background/surface colors use fixed defaults from globals.css for consistent UX
- * - Auto-calculates readable text color for primary backgrounds
- * - Caches to localStorage for instant preload on next visit (prevents FOUC)
- *
- * ⚠️ Performance: This is optimized to run only when tenant config changes.
- * MutationObserver in useThemeTokens is debounced to prevent excessive re-renders.
+ * Apply tenant brand colors as CSS custom properties on <html>.
+ * - Non-empty DB value → override CSS variable
+ * - Empty/missing → remove override → globals.css default applies
+ * - Auto-calculates readable text-on-primary color
+ * - Caches to localStorage for FOUC prevention
  */
 export function injectTenantBranding(config: TenantBrandConfig) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
 
-  // ✅ Primary brand color (only customizable field)
-  const primary = (config.baseColor || "").trim() || "#FF380B";
-  root.style.setProperty("--primary", primary);
+  // Apply each theme color: set if present, remove if empty
+  for (const field of THEME_COLOR_FIELDS) {
+    const value = (config[field] || "").trim();
+    if (value) {
+      root.style.setProperty(THEME_COLOR_MAP[field].cssVar, value);
+    } else {
+      root.style.removeProperty(THEME_COLOR_MAP[field].cssVar);
+    }
+  }
 
-  // ✅ Logo URL
-  if (config.logoUrl && config.logoUrl.trim()) {
+  // Logo URL
+  if (config.logoUrl?.trim()) {
     root.style.setProperty("--brand-logo-url", config.logoUrl.trim());
   }
 
-  // ✅ Auto-calculate readable text color for primary backgrounds
-  const onPrimary = pickOnColor(primary);
-  root.style.setProperty("--text-inverse", onPrimary);
-  root.style.setProperty("--on-primary", onPrimary);
+  // Auto-calculate readable text color for primary backgrounds
+  const primary = (config.primaryColor || "").trim();
+  if (primary) {
+    const onPrimary = pickOnColor(primary);
+    root.style.setProperty("--text-inverse", onPrimary);
+    root.style.setProperty("--on-primary", onPrimary);
+  }
 
-  // ✅ Cache to localStorage for instant preload on next visit (prevents FOUC)
+  // Cache to localStorage for FOUC prevention
   try {
-    localStorage.setItem(
-      "restx-tenant-colors",
-      JSON.stringify({
-        primary,
-        onPrimary,
-      }),
-    );
-  } catch (e) {
-    // localStorage may be disabled, ignore silently
+    localStorage.setItem("restx-tenant-colors", JSON.stringify(config));
+  } catch {
+    // localStorage may be unavailable
   }
 }

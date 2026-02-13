@@ -1,10 +1,75 @@
 "use client";
 
+import {
+  THEME_COLOR_FIELDS,
+  THEME_COLOR_MAP,
+  type ThemeColorField,
+  getThemeDefaults,
+} from "@/lib/constants/themeDefaults";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { App } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+/** Convert camelCase to snake_case for i18n key lookup */
+function camelToSnake(s: string): string {
+  return s.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+}
+
+/** Reusable color picker with hex text input */
+function ColorPickerField({
+  label,
+  value,
+  fallback,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  fallback: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="mb-4">
+      <label
+        className="block text-sm font-medium mb-2"
+        style={{ color: "var(--text-muted)" }}>
+        {label}
+      </label>
+      <div className="flex gap-3 items-center">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-16 h-10 rounded border cursor-pointer"
+          style={{ borderColor: "var(--border)" }}
+        />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={fallback}
+          className="flex-1 px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--primary)] font-mono text-sm"
+          style={{
+            borderColor: "var(--border)",
+            background: "var(--surface)",
+            color: "var(--text)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/** Resolve tenant ID from various API response shapes */
+function resolveTenantId(tenant: TenantConfig): string | undefined {
+  return (
+    tenant.id ||
+    (tenant as any).Id ||
+    (tenant as any).tenant?.id ||
+    (tenant as any).tenant?.Id
+  );
+}
 
 export default function TenantBrandingSettings() {
   const { t } = useTranslation("common");
@@ -16,19 +81,42 @@ export default function TenantBrandingSettings() {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState<{
-    logoUrl: string;
-    backgroundUrl: string;
-    logoFile: File | null;
-    bannerFile: File | null;
-    primaryColor: string;
-  }>({
+  const [formData, setFormData] = useState({
     logoUrl: "",
     backgroundUrl: "",
-    logoFile: null,
-    bannerFile: null,
-    primaryColor: "#FF380B",
+    logoFile: null as File | null,
+    bannerFile: null as File | null,
   });
+
+  const [colors, setColors] = useState<Record<ThemeColorField, string>>(
+    getThemeDefaults(),
+  );
+
+  const updateColor = (field: ThemeColorField, value: string) =>
+    setColors((prev) => ({ ...prev, [field]: value }));
+
+  /** Validate and set an image file with preview */
+  const handleImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: "logoFile" | "bannerFile",
+    setPreview: (url: string) => void,
+    maxMB: number,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      message.error(t("dashboard.settings.appearance.invalid_image", { defaultValue: "Please select a valid image file" }));
+      return;
+    }
+    if (file.size > maxMB * 1024 * 1024) {
+      message.error(t("dashboard.settings.appearance.file_too_large", { defaultValue: `File size must be less than ${maxMB}MB` }));
+      return;
+    }
+    setFormData((prev) => ({ ...prev, [field]: file }));
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   // Preview URLs for uploaded files
   const [logoPreview, setLogoPreview] = useState<string>("");
@@ -36,195 +124,68 @@ export default function TenantBrandingSettings() {
 
   useEffect(() => {
     if (tenant) {
-      console.log("[TenantBrandingSettings] Tenant from context:", tenant);
-
-      // Robust ID resolution: Check standard, PascalCase, and nested structures
-      const tenantId =
-        tenant.id ||
-        (tenant as any).Id ||
-        (tenant as any).tenant?.id ||
-        (tenant as any).tenant?.Id;
-
-      console.log("[TenantBrandingSettings] Resolved Tenant ID:", tenantId);
-
+      const tenantId = resolveTenantId(tenant);
       if (tenantId) {
         setResolvedTenantId(tenantId);
       } else if (tenant.hostname) {
-        // FALLBACK: If ID is missing (e.g. production API issue), fetch all tenants to find the ID
-        const fetchMissingId = async () => {
-          try {
-            console.log("[TenantBrandingSettings] ID missing, fetching tenant list to resolve...");
-            const allTenants = await tenantService.getAllTenantsForAdmin();
-            const match = allTenants.find((t) => t.hostName === tenant.hostname);
-            if (match) {
-              console.log("[TenantBrandingSettings] Resolved missing ID via list:", match.id);
-              setResolvedTenantId(match.id);
-            } else {
-              console.error("[TenantBrandingSettings] Could not find tenant with hostname:", tenant.hostname);
-            }
-          } catch (error) {
-            console.error("[TenantBrandingSettings] Failed to fetch tenants list:", error);
-          }
-        };
-        fetchMissingId();
-      } else {
-        console.warn("[TenantBrandingSettings] Tenant object exists but has no ID or hostname:", tenant);
+        tenantService.getAllTenantsForAdmin().then((all) => {
+          const match = all.find((t) => t.hostName === tenant.hostname);
+          if (match) setResolvedTenantId(match.id);
+        }).catch(() => {});
       }
 
       setFormData((prev) => ({
         ...prev,
         logoUrl: tenant.logoUrl || "",
         backgroundUrl: tenant.backgroundUrl || "",
-        primaryColor: tenant.primaryColor || "#FF380B",
       }));
+
+      // Use DB colors, fallback to globals.css defaults for empty fields
+      const defaults = getThemeDefaults();
+      const tenantColors = { ...defaults };
+      for (const field of THEME_COLOR_FIELDS) {
+        const dbVal = (tenant as any)[field] as string;
+        if (dbVal?.trim()) tenantColors[field] = dbVal;
+      }
+      setColors(tenantColors);
       setLogoPreview(tenant.logoUrl || "");
       setBannerPreview(tenant.backgroundUrl || "");
     }
   }, [tenant]);
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        message.error(
-          t("dashboard.settings.appearance.invalid_image", {
-            defaultValue: "Please select a valid image file",
-          }),
-        );
-        return;
-      }
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        message.error(
-          t("dashboard.settings.appearance.file_too_large", {
-            defaultValue: "File size must be less than 5MB",
-          }),
-        );
-        return;
-      }
-
-      setFormData((prev) => ({ ...prev, logoFile: file }));
-
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        message.error(
-          t("dashboard.settings.appearance.invalid_image", {
-            defaultValue: "Please select a valid image file",
-          }),
-        );
-        return;
-      }
-      // Validate file size (max 10MB for banner)
-      if (file.size > 10 * 1024 * 1024) {
-        message.error(
-          t("dashboard.settings.appearance.file_too_large", {
-            defaultValue: "File size must be less than 10MB",
-          }),
-        );
-        return;
-      }
-
-      setFormData((prev) => ({ ...prev, bannerFile: file }));
-
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setBannerPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSave = async () => {
     if (!tenant) {
-      message.warning(
-        t("dashboard.settings.appearance.no_tenant", {
-          defaultValue: "No tenant configuration available",
-        }),
-      );
+      message.warning(t("dashboard.settings.appearance.no_tenant", { defaultValue: "No tenant configuration available" }));
       return;
     }
 
-    // Resolve ID safely using state or context: Prioritize resolved ID, then direct props, then nested
-    const tenantId =
-      resolvedTenantId ||
-      tenant.id ||
-      (tenant as any).Id ||
-      (tenant as any).tenant?.id ||
-      (tenant as any).tenant?.Id;
-
+    const tenantId = resolvedTenantId || resolveTenantId(tenant);
     if (!tenantId) {
-      message.error(
-        t("dashboard.settings.appearance.no_tenant_id", {
-          defaultValue: "Tenant ID is missing",
-        }),
-      );
-      console.error("[TenantBrandingSettings] No tenant ID found:", tenant);
+      message.error(t("dashboard.settings.appearance.no_tenant_id", { defaultValue: "Tenant ID is missing" }));
       return;
     }
 
     setLoading(true);
     try {
-      // CRITICAL: Explicitly create updated tenant object with ID at top level
-      // This ensures upsertTenant can find the ID and perform PUT update instead of POST create
       const updatedTenant: TenantConfig = {
-        // Spread all existing tenant data first
         ...tenant,
-        // IMPORTANT: Explicitly set id to ensure it's not lost
         id: tenantId,
-        // Update branding URLs and ONLY primaryColor (other colors use globals.css)
         logoUrl: formData.logoUrl,
         backgroundUrl: formData.backgroundUrl,
-        primaryColor: formData.primaryColor,
+        ...colors,
       };
-
-      console.log(
-        "[TenantBrandingSettings] Saving tenant with ID:",
-        updatedTenant.id,
-      );
 
       await tenantService.upsertTenant(updatedTenant, {
         logo: formData.logoFile,
         background: formData.bannerFile,
       });
 
-      message.success(
-        t("dashboard.settings.notifications.success_update", {
-          defaultValue: "Branding updated successfully!",
-        }),
-      );
-
-      // Clear file selections after successful save
-      setFormData((prev) => ({
-        ...prev,
-        logoFile: null,
-        bannerFile: null,
-      }));
-
-      // Refresh tenant context to get updated URLs from server
-      if (refreshTenant) {
-        await refreshTenant();
-      }
+      message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Branding updated successfully!" }));
+      setFormData((prev) => ({ ...prev, logoFile: null, bannerFile: null }));
+      await refreshTenant?.();
     } catch (error) {
       console.error("Failed to update branding:", error);
-      message.error(
-        t("dashboard.settings.notifications.error_update", {
-          defaultValue: "Failed to update branding",
-        }),
-      );
+      message.error(t("dashboard.settings.notifications.error_update", { defaultValue: "Failed to update branding" }));
     } finally {
       setLoading(false);
     }
@@ -303,7 +264,7 @@ export default function TenantBrandingSettings() {
               ref={logoInputRef}
               type="file"
               accept="image/*"
-              onChange={handleLogoChange}
+              onChange={(e) => handleImageChange(e, "logoFile", setLogoPreview, 5)}
               className="hidden"
             />
 
@@ -390,7 +351,7 @@ export default function TenantBrandingSettings() {
               ref={bannerInputRef}
               type="file"
               accept="image/*"
-              onChange={handleBannerChange}
+              onChange={(e) => handleImageChange(e, "bannerFile", setBannerPreview, 10)}
               className="hidden"
             />
 
@@ -422,75 +383,79 @@ export default function TenantBrandingSettings() {
 
           <div className="space-y-4">
             {/* Primary Color */}
-            <div>
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.settings.appearance.primary_color", {
-                  defaultValue: "Primary Color",
-                })}
-              </label>
-              <div className="flex gap-3 items-center">
-                <input
-                  type="color"
-                  value={formData.primaryColor}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      primaryColor: e.target.value,
-                    }))
-                  }
-                  className="w-16 h-10 rounded border cursor-pointer"
-                  style={{ borderColor: "var(--border)" }}
-                />
-                <input
-                  type="text"
-                  value={formData.primaryColor}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      primaryColor: e.target.value,
-                    }))
-                  }
-                  placeholder="#FF380B"
-                  className="flex-1 px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--primary)] font-mono text-sm"
-                  style={{
-                    borderColor: "var(--border)",
-                    background: "var(--surface)",
-                    color: "var(--text)",
-                  }}
-                />
-              </div>
-              <p
-                className="text-xs mt-1"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.settings.appearance.primary_color_help", {
-                  defaultValue:
-                    "Main brand color used for buttons, links, and accents. Other colors (backgrounds, surfaces, cards) are controlled by the global theme.",
-                })}
-              </p>
-            </div>
+            <ColorPickerField
+              label={t("dashboard.settings.appearance.primary_color", {
+                defaultValue: "Primary Color",
+              })}
+              value={colors.primaryColor}
+              fallback={THEME_COLOR_MAP.primaryColor.fallback}
+              onChange={(v) => updateColor("primaryColor", v)}
+            />
+            <p
+              className="text-xs -mt-3 mb-4"
+              style={{ color: "var(--text-muted)" }}>
+              {t("dashboard.settings.appearance.primary_color_help", {
+                defaultValue:
+                  "Main brand color for buttons, links, and accents.",
+              })}
+            </p>
 
-            {/* Info about other colors */}
+            {/* Light & Dark Mode Color Groups */}
+            {([
+              {
+                titleKey: "light_mode_colors",
+                defaultTitle: "Light Mode Colors",
+                fields: [
+                  "lightBaseColor",
+                  "lightSurfaceColor",
+                  "lightCardColor",
+                ] as ThemeColorField[],
+              },
+              {
+                titleKey: "dark_mode_colors",
+                defaultTitle: "Dark Mode Colors",
+                fields: [
+                  "darkBaseColor",
+                  "darkSurfaceColor",
+                  "darkCardColor",
+                ] as ThemeColorField[],
+              },
+            ] as const).map(({ titleKey, defaultTitle, fields }) => (
+              <div key={titleKey} className="mt-6">
+                <h5
+                  className="text-sm font-semibold mb-3"
+                  style={{ color: "var(--text)" }}>
+                  {t(`dashboard.settings.appearance.${titleKey}`, {
+                    defaultValue: defaultTitle,
+                  })}
+                </h5>
+                {fields.map((field) => (
+                  <ColorPickerField
+                    key={field}
+                    label={t(
+                      `dashboard.settings.appearance.${camelToSnake(field)}`,
+                      { defaultValue: THEME_COLOR_MAP[field].label },
+                    )}
+                    value={colors[field]}
+                    fallback={THEME_COLOR_MAP[field].fallback}
+                    onChange={(v) => updateColor(field, v)}
+                  />
+                ))}
+              </div>
+            ))}
+
+            {/* Info */}
             <div
-              className="p-4 rounded-lg"
+              className="p-4 rounded-lg mt-4"
               style={{
                 background: "var(--surface)",
                 border: "1px dashed var(--border)",
               }}>
-              <p
-                className="text-xs font-medium mb-1"
-                style={{ color: "var(--text)" }}>
-                ℹ️ {t("dashboard.settings.appearance.other_colors_title", {
-                  defaultValue: "Other Colors",
-                })}
-              </p>
-              <p
-                className="text-xs"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.settings.appearance.other_colors_info", {
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                ℹ️{" "}
+                {t("dashboard.settings.appearance.color_customization_info", {
                   defaultValue:
-                    "Background, surface, card, and text colors are controlled by the global theme system (light/dark mode) for consistency.",
+                    "Colors are synced from database. Empty fields use defaults from the global theme.",
                 })}
               </p>
             </div>
@@ -513,22 +478,22 @@ export default function TenantBrandingSettings() {
             <div className="flex gap-3 flex-wrap">
               <div
                 className="px-4 py-2 rounded-lg font-medium text-white"
-                style={{ background: formData.primaryColor }}>
+                style={{ background: colors.primaryColor }}>
                 Primary Button
               </div>
               <div
                 className="px-4 py-2 rounded-lg border-2 font-medium"
                 style={{
-                  borderColor: formData.primaryColor,
-                  color: formData.primaryColor,
+                  borderColor: colors.primaryColor,
+                  color: colors.primaryColor,
                 }}>
                 Outlined Button
               </div>
               <div
                 className="px-4 py-2 rounded-lg font-medium"
                 style={{
-                  background: `${formData.primaryColor}15`,
-                  color: formData.primaryColor,
+                  background: `${colors.primaryColor}15`,
+                  color: colors.primaryColor,
                 }}>
                 Soft Button
               </div>
