@@ -33,7 +33,7 @@ export default function StaffPage() {
     currentStatus: "active" | "inactive";
   } | null>(null);
 
-  const roles = ["Manager", "Waiter", "Chef", "Cashier"];
+  const roles = ["Kitchen Staff", "Waiter"];
 
   const fetchStaffList = async () => {
     try {
@@ -59,7 +59,7 @@ export default function StaffPage() {
           name: item.fullName || "",
           code: item.code || "",
           email: item.email || "",
-          role: item.position || "Staff",
+          role: item.position || item.roles?.[0] || "Waiter",
           position: item.position || "",
           status: (item.isActive ? "active" : "inactive") as
             | "active"
@@ -412,15 +412,12 @@ export default function StaffPage() {
                           {member.name}
                         </h3>
                         <span
-                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${
-                            member.role === "Manager"
-                              ? "bg-purple-500/10 text-purple-500"
-                              : member.role === "Chef"
-                                ? "bg-orange-500/10 text-orange-500"
-                                : member.role === "Waiter"
-                                  ? "bg-blue-500/10 text-blue-500"
-                                  : "bg-gray-500/10 text-gray-500"
-                          }`}>
+                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${member.role === "Kitchen Staff"
+                            ? "bg-orange-500/10 text-orange-500"
+                            : member.role === "Waiter"
+                              ? "bg-blue-500/10 text-blue-500"
+                              : "bg-gray-500/10 text-gray-500"
+                            }`}>
                           {t(
                             `dashboard.staff.roles.${member.role.toLowerCase()}`,
                           )}
@@ -432,11 +429,10 @@ export default function StaffPage() {
                       </div>
                     </div>
                     <span
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                        member.status === "active"
-                          ? "bg-green-500/10 text-green-500"
-                          : "bg-gray-500/10 text-gray-500"
-                      }`}>
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${member.status === "active"
+                        ? "bg-green-500/10 text-green-500"
+                        : "bg-gray-500/10 text-gray-500"
+                        }`}>
                       {member.status === "active" ? t("dashboard.staff.status.active") : t("dashboard.staff.status.inactive")}
                     </span>
                   </div>

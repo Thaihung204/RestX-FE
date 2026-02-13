@@ -38,49 +38,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
             return;
         }
 
-        // 3. Check for plain or subdomain localhost (Mock tenant for development)
+        // 3. Get hostname for tenant lookup
         const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
-        const isLocalhost = hostWithoutPort === "localhost" || hostWithoutPort === "127.0.0.1" || hostWithoutPort.endsWith(".localhost");
-
-        if (isLocalhost) {
-            console.log('[TenantContext] Localhost detected, loading mock tenant for development');
-            // Mock tenant data for local development
-            const mockTenant: TenantConfig = {
-                id: "dev-mock-001",
-                prefix: "dev",
-                name: "demo",
-                businessName: "BBQ Restaurant",
-                logoUrl: "/images/logo/restx-removebg-preview.png",
-                backgroundUrl: "/images/restaurant/banner.png",
-                baseColor: "#FF380B",
-                primaryColor: "#FF380B",
-                secondaryColor: "#FFB800",
-                headerColor: "#1a1a1a",
-                footerColor: "#1a1a1a",
-                hostname: "demo.localhost",
-                status: true,
-                businessPrimaryPhone: "+84 (0) 888 888 888",
-                businessOpeningHours: "08:00 - 23:00",
-                businessEmailAddress: "hello@bbq.local",
-                overview: "Trải nghiệm ẩm thực đặc cấp với những món ăn tuyệt hảo",
-                aboutUs: "Nhà hàng BBQ số 1 tại thành phố",
-                createdDate: new Date().toISOString(),
-                modifiedDate: new Date().toISOString(),
-                createdBy: "system",
-                modifiedBy: "system",
-                tenantSettings: [],
-                networkIp: "",
-                connectionString: "",
-                expiredAt: "2099-12-31",
-            };
-            setTenant(mockTenant);
-            setLoading(false);
-            return;
-        }
-
-        // 4. Get hostname for tenant lookup
-        // Pass full hostname to API: demo.restx.food (not just "demo")
-        // For localhost development, construct equivalent hostname
         let hostname = hostWithoutPort;
 
         // For *.localhost in development, convert to equivalent production hostname
@@ -88,6 +47,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         if (hostname.endsWith(".localhost")) {
             const subdomain = hostname.replace(".localhost", "");
             hostname = `${subdomain}.restx.food`;
+        } else if (hostname === "localhost" || hostname === "127.0.0.1") {
+            // Plain localhost without subdomain - default to demo.restx.food
+            hostname = "demo.restx.food";
         }
 
         console.log('[TenantContext] Fetching tenant config for hostname:', hostname);

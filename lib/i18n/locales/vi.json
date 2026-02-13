@@ -531,12 +531,12 @@
         "modal_subtitle_create": "Tạo mới trạng thái",
         "empty_state_desc": "Tạo trạng thái mới để bắt đầu",
         "table": {
-            "name": "Tên trạng thái",
-            "code": "Mã",
-            "color": "Màu sắc",
-            "default": "Mặc định",
-            "status": "Trạng thái",
-            "actions": "Thao tác"
+          "name": "Tên trạng thái",
+          "code": "Mã",
+          "color": "Màu sắc",
+          "default": "Mặc định",
+          "status": "Trạng thái",
+          "actions": "Thao tác"
         }
       },
       "notifications": {
@@ -753,11 +753,8 @@
         "view_profile": "Xem hồ sơ"
       },
       "roles": {
-        "manager": "Quản lý",
-        "chef": "Đầu bếp",
-        "waiter": "Phục vụ",
-        "cashier": "Thu ngân",
-        "cleaner": "Lao công"
+        "kitchen staff": "Nhân viên bếp",
+        "waiter": "Phục vụ"
       },
       "status": {
         "active": "Hoạt động",
@@ -1481,6 +1478,7 @@
       "loading": "Đang tải..."
     },
     "login_page": {
+      "title": "Đăng nhập bằng Số điện thoại",
       "phone_label": "Số điện thoại",
       "phone_placeholder": "0123456789",
       "name_label": "Tên",

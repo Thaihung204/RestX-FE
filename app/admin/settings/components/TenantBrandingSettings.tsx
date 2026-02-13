@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useTenant } from "@/lib/contexts/TenantContext";
-import { tenantService, TenantConfig } from "@/lib/services/tenantService";
 import { message } from "antd";
 
 export default function TenantBrandingSettings() {
@@ -34,38 +33,12 @@ export default function TenantBrandingSettings() {
     useEffect(() => {
         if (tenant) {
             console.log('[TenantBrandingSettings] Tenant from context:', tenant);
+            console.log('[TenantBrandingSettings] Tenant ID:', tenant.id);
 
-            // Robust ID resolution: Check standard, PascalCase, and nested structures
-            const tenantId =
-                tenant.id ||
-                (tenant as any).Id ||
-                (tenant as any).tenant?.id ||
-                (tenant as any).tenant?.Id;
-
-            console.log('[TenantBrandingSettings] Resolved Tenant ID:', tenantId);
-
-            if (tenantId) {
-                setResolvedTenantId(tenantId);
-            } else if (tenant.hostname) {
-                // FALLBACK: If ID is missing (e.g. production API issue), fetch all tenants to find the ID
-                const fetchMissingId = async () => {
-                    try {
-                        console.log('[TenantBrandingSettings] ID missing, fetching tenant list to resolve...');
-                        const allTenants = await tenantService.getAllTenantsForAdmin();
-                        const match = allTenants.find(t => t.hostName === tenant.hostname);
-                        if (match) {
-                            console.log('[TenantBrandingSettings] Resolved missing ID via list:', match.id);
-                            setResolvedTenantId(match.id);
-                        } else {
-                            console.error('[TenantBrandingSettings] Could not find tenant with hostname:', tenant.hostname);
-                        }
-                    } catch (error) {
-                        console.error('[TenantBrandingSettings] Failed to fetch tenants list:', error);
-                    }
-                };
-                fetchMissingId();
+            if (tenant.id) {
+                setResolvedTenantId(tenant.id);
             } else {
-                console.warn('[TenantBrandingSettings] Tenant object exists but has no ID or hostname:', tenant);
+                console.warn('[TenantBrandingSettings] Tenant object has no ID:', tenant);
             }
 
             setFormData(prev => ({
@@ -134,13 +107,8 @@ export default function TenantBrandingSettings() {
             return;
         }
 
-        // Resolve ID safely using state or context: Prioritize resolved ID, then direct props, then nested
-        const tenantId =
-            resolvedTenantId ||
-            tenant.id ||
-            (tenant as any).Id ||
-            (tenant as any).tenant?.id ||
-            (tenant as any).tenant?.Id;
+        // Resolve ID: prefer the fallback-resolved ID, then direct from context
+        const tenantId = resolvedTenantId || tenant.id;
 
         if (!tenantId) {
             message.error(t("dashboard.settings.appearance.no_tenant_id", { defaultValue: "Tenant ID is missing" }));
@@ -150,24 +118,62 @@ export default function TenantBrandingSettings() {
 
         setLoading(true);
         try {
-            // CRITICAL: Explicitly create updated tenant object with ID at top level
-            // This ensures upsertTenant can find the ID and perform PUT update instead of POST create
-            const updatedTenant: TenantConfig = {
-                // Spread all existing tenant data first
-                ...tenant,
-                // IMPORTANT: Explicitly set id to ensure it's not lost
-                id: tenantId,
-                // Update only the branding URLs if files are provided
-                // The actual files will be uploaded via FormData in upsertTenant
-                logoUrl: formData.logoUrl,
-                backgroundUrl: formData.backgroundUrl,
-            };
+            // Build FormData with ONLY the fields TenantItem expects
+            // This avoids sending invalid data (like blob URLs) that causes 400 errors
+            const fd = new FormData();
 
-            console.log('[TenantBrandingSettings] Saving tenant with ID:', updatedTenant.id);
+            // Required fields from TenantItem
+            fd.append("Name", tenant.name || "");
+            fd.append("Status", tenant.status ? "true" : "false");
+            fd.append("Hostname", tenant.hostname || "");
+            fd.append("BusinessName", tenant.businessName || "");
+            fd.append("BusinessAddressLine1", tenant.businessAddressLine1 || "");
+            fd.append("BusinessAddressLine2", tenant.businessAddressLine2 || "");
+            fd.append("BusinessAddressLine3", tenant.businessAddressLine3 || "");
+            fd.append("BusinessAddressLine4", tenant.businessAddressLine4 || "");
+            fd.append("BusinessPrimaryPhone", tenant.businessPrimaryPhone || "");
+            fd.append("BusinessEmailAddress", tenant.businessEmailAddress || "");
 
-            await tenantService.upsertTenant(updatedTenant, {
-                logo: formData.logoFile,
-                background: formData.bannerFile
+            // Optional fields
+            if (tenant.prefix) fd.append("Prefix", tenant.prefix);
+            if (tenant.baseColor) fd.append("BaseColor", tenant.baseColor);
+            if (tenant.primaryColor) fd.append("PrimaryColor", tenant.primaryColor);
+            if (tenant.secondaryColor) fd.append("SecondaryColor", tenant.secondaryColor);
+            if (tenant.headerColor) fd.append("HeaderColor", tenant.headerColor);
+            if (tenant.footerColor) fd.append("FooterColor", tenant.footerColor);
+            if (tenant.networkIp) fd.append("NetworkIp", tenant.networkIp);
+            if (tenant.businessCounty) fd.append("BusinessCounty", tenant.businessCounty);
+            if (tenant.businessPostCode) fd.append("BusinessPostCode", tenant.businessPostCode);
+            if (tenant.businessCountry) fd.append("BusinessCountry", tenant.businessCountry);
+            if (tenant.businessSecondaryPhone) fd.append("BusinessSecondaryPhone", tenant.businessSecondaryPhone);
+            if (tenant.businessCompanyNumber) fd.append("BusinessCompanyNumber", tenant.businessCompanyNumber);
+            if (tenant.businessOpeningHours) fd.append("BusinessOpeningHours", tenant.businessOpeningHours);
+            if (tenant.aboutUs) fd.append("AboutUs", tenant.aboutUs);
+
+            // Required dark/light theme fields (added to production backend)
+            // Use tenant values if available, otherwise derive from existing colors
+            fd.append("LightBaseColor", (tenant as any).lightBaseColor || (tenant as any).LightBaseColor || "#ffffff");
+            fd.append("DarkBaseColor", (tenant as any).darkBaseColor || (tenant as any).DarkBaseColor || "#1a1a2e");
+            fd.append("LightSurfaceColor", (tenant as any).lightSurfaceColor || (tenant as any).LightSurfaceColor || "#f5f5f5");
+            fd.append("DarkSurfaceColor", (tenant as any).darkSurfaceColor || (tenant as any).DarkSurfaceColor || "#16213e");
+            fd.append("LightCardColor", (tenant as any).lightCardColor || (tenant as any).LightCardColor || "#ffffff");
+            fd.append("DarkCardColor", (tenant as any).darkCardColor || (tenant as any).DarkCardColor || "#0f3460");
+
+            // Don't send existing logoUrl/backgroundUrl as strings - only send files
+            // The backend keeps existing URLs if no new file is uploaded
+            if (formData.logoFile) fd.append("LogoFile", formData.logoFile);
+            if (formData.bannerFile) fd.append("BackgroundFile", formData.bannerFile);
+
+            // Debug: log FormData entries
+            console.log('[TenantBrandingSettings] FormData entries:');
+            for (const [key, value] of fd.entries()) {
+                console.log(`  ${key}:`, value instanceof File ? `[File: ${value.name}]` : value);
+            }
+            console.log('[TenantBrandingSettings] Saving tenant with ID:', tenantId);
+
+            const { default: adminAxiosInstance } = await import("@/lib/services/adminAxiosInstance");
+            await adminAxiosInstance.put(`/tenants/${tenantId}`, fd, {
+                headers: { "Content-Type": undefined },
             });
 
             message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Branding updated successfully!" }));
@@ -184,8 +190,13 @@ export default function TenantBrandingSettings() {
                 await refreshTenant();
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to update branding:", error);
+            if (error.response) {
+                console.error('[TenantBrandingSettings] Response status:', error.response.status);
+                console.error('[TenantBrandingSettings] Response data:', JSON.stringify(error.response.data, null, 2));
+                console.error('[TenantBrandingSettings] Response headers:', error.response.headers);
+            }
             message.error(t("dashboard.settings.notifications.error_update", { defaultValue: "Failed to update branding" }));
         } finally {
             setLoading(false);

@@ -1,5 +1,6 @@
 'use client';
 
+import StaffAuthGuard from '@/components/auth/StaffAuthGuard';
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Badge, Typography, Space, Button, Drawer } from 'antd';
 import {
@@ -276,7 +277,7 @@ export default function StaffLayout({
   );
 
   return (
-    <>
+    <StaffAuthGuard>
       <Layout style={{ minHeight: '100vh' }}>
         {/* Mobile Bottom Navigation */}
         {isDrawerDevice && (
@@ -626,7 +627,7 @@ export default function StaffLayout({
           background: var(--text-muted) !important;
         }
       `}</style>
-    </>
+    </StaffAuthGuard>
   );
 }
 
