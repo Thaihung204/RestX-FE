@@ -33,7 +33,7 @@ export default function StaffPage() {
     currentStatus: "active" | "inactive";
   } | null>(null);
 
-  const roles = ["Kitchen Staff", "Waiter"];
+  const roles = ["Manager", "Waiter", "Chef", "Cashier"];
 
   const fetchStaffList = async () => {
     try {
@@ -59,7 +59,7 @@ export default function StaffPage() {
           name: item.fullName || "",
           code: item.code || "",
           email: item.email || "",
-          role: item.position || item.roles?.[0] || "Waiter",
+          role: item.position || "Staff",
           position: item.position || "",
           status: (item.isActive ? "active" : "inactive") as
             | "active"
@@ -166,12 +166,12 @@ export default function StaffPage() {
             <Link
               href="/admin/staff/new"
               className="px-6 py-2.5 text-white rounded-lg font-medium transition-all shadow-lg flex items-center gap-2"
-              style={{ background: "#FF380B" }}
+              style={{ background: "var(--primary)" }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "#CC2D08")
+                (e.currentTarget.style.background = "var(--primary-hover)")
               }
               onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "#FF380B")
+                (e.currentTarget.style.background = "var(--primary)")
               }>
               <svg
                 className="w-5 h-5"
@@ -326,16 +326,16 @@ export default function StaffPage() {
                   </p>
                   <p
                     className="text-3xl font-bold mt-1"
-                    style={{ color: "#FF380B" }}>
+                    style={{ color: "var(--primary)" }}>
                     {staffList.filter((s) => s.status === "inactive").length}
                   </p>
                 </div>
                 <div
                   className="w-12 h-12 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "rgba(255, 56, 11, 0.1)" }}>
+                  style={{ backgroundColor: "var(--primary-soft)" }}>
                   <svg
                     className="w-6 h-6"
-                    style={{ color: "#FF380B" }}
+                    style={{ color: "var(--primary)" }}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24">
@@ -394,7 +394,7 @@ export default function StaffPage() {
                 className="rounded-xl overflow-hidden transition-all group"
                 style={{
                   background: "var(--card)",
-                  border: "1px solid rgba(255, 56, 11, 0.3)",
+                  border: "1px solid var(--primary-border)",
                 }}>
                 <div className="p-6">
                   {/* Profile Header */}
@@ -402,7 +402,7 @@ export default function StaffPage() {
                     <div className="flex items-center gap-3">
                       <div
                         className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
-                        style={{ background: "#FF380B" }}>
+                        style={{ background: "var(--primary)" }}>
                         {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -412,12 +412,15 @@ export default function StaffPage() {
                           {member.name}
                         </h3>
                         <span
-                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${member.role === "Kitchen Staff"
-                            ? "bg-orange-500/10 text-orange-500"
-                            : member.role === "Waiter"
-                              ? "bg-blue-500/10 text-blue-500"
-                              : "bg-gray-500/10 text-gray-500"
-                            }`}>
+                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${
+                            member.role === "Manager"
+                              ? "bg-purple-500/10 text-purple-500"
+                              : member.role === "Chef"
+                                ? "bg-orange-500/10 text-orange-500"
+                                : member.role === "Waiter"
+                                  ? "bg-blue-500/10 text-blue-500"
+                                  : "bg-gray-500/10 text-gray-500"
+                          }`}>
                           {t(
                             `dashboard.staff.roles.${member.role.toLowerCase()}`,
                           )}
@@ -429,11 +432,14 @@ export default function StaffPage() {
                       </div>
                     </div>
                     <span
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${member.status === "active"
-                        ? "bg-green-500/10 text-green-500"
-                        : "bg-gray-500/10 text-gray-500"
-                        }`}>
-                      {member.status === "active" ? t("dashboard.staff.status.active") : t("dashboard.staff.status.inactive")}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                        member.status === "active"
+                          ? "bg-green-500/10 text-green-500"
+                          : "bg-gray-500/10 text-gray-500"
+                      }`}>
+                      {member.status === "active"
+                        ? t("dashboard.staff.status.active")
+                        : t("dashboard.staff.status.inactive")}
                     </span>
                   </div>
 
@@ -496,17 +502,18 @@ export default function StaffPage() {
                       href={`/admin/staff/${member.id}`}
                       className="flex-1 py-2.5 rounded-lg transition-all font-medium text-sm text-center flex items-center justify-center gap-2"
                       style={{
-                        backgroundColor: "rgba(255, 56, 11, 0.1)",
-                        color: "#FF380B",
+                        backgroundColor: "var(--primary-soft)",
+                        color: "var(--primary)",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#FF380B";
+                        e.currentTarget.style.backgroundColor =
+                          "var(--primary)";
                         e.currentTarget.style.color = "white";
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor =
-                          "rgba(255, 56, 11, 0.1)";
-                        e.currentTarget.style.color = "#FF380B";
+                          "var(--primary-soft)";
+                        e.currentTarget.style.color = "var(--primary)";
                       }}>
                       {t("dashboard.staff.view_profile")}
                       <svg
@@ -563,7 +570,9 @@ export default function StaffPage() {
                         }
                       }}
                       title={
-                        member.status === "active" ? t("dashboard.staff.deactivate") : t("dashboard.staff.activate")
+                        member.status === "active"
+                          ? t("dashboard.staff.deactivate")
+                          : t("dashboard.staff.activate")
                       }>
                       <svg
                         className="w-4 h-4"
@@ -666,8 +675,12 @@ export default function StaffPage() {
                 </h3>
                 <p style={{ color: "var(--text-muted)" }}>
                   {itemToToggle.currentStatus === "active"
-                    ? t("dashboard.staff.modal.deactivate_message", { name: itemToToggle.name })
-                    : t("dashboard.staff.modal.activate_message", { name: itemToToggle.name })}
+                    ? t("dashboard.staff.modal.deactivate_message", {
+                        name: itemToToggle.name,
+                      })
+                    : t("dashboard.staff.modal.activate_message", {
+                        name: itemToToggle.name,
+                      })}
                   .
                 </p>
               </div>

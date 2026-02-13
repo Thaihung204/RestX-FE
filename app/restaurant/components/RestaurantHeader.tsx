@@ -1,7 +1,7 @@
 'use client';
 
 import ThemeToggle from '@/app/components/ThemeToggle';
-import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
+import { useThemeMode } from '@/app/theme/AntdProvider';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useTenant } from "@/lib/contexts/TenantContext";
 import {

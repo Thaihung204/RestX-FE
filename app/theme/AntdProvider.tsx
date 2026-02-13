@@ -1,10 +1,17 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { ConfigProvider, App as AntdApp } from 'antd';
-import { lightTheme, darkTheme, ThemeMode } from './themeConfig';
+import { App as AntdApp, ConfigProvider, theme } from "antd";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { darkTheme, lightTheme, ThemeMode } from "./themeConfig";
 
-const STORAGE_KEY = 'restx-theme-mode';
+const { darkAlgorithm, defaultAlgorithm } = theme;
+const STORAGE_KEY = "restx-theme-mode";
 
 type ThemeContextValue = {
   mode: ThemeMode;
@@ -13,7 +20,7 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue>({
-  mode: 'light',
+  mode: "light",
   toggleTheme: () => {},
   setTheme: () => {},
 });
@@ -25,21 +32,24 @@ export default function AntdProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [mode, setMode] = useState<ThemeMode>('light');
+  const [mode, setMode] = useState<ThemeMode>("light");
 
   // read initial
   useEffect(() => {
-    const stored = typeof window !== 'undefined' ? (localStorage.getItem(STORAGE_KEY) as ThemeMode | null) : null;
-    if (stored === 'dark' || stored === 'light') {
+    const stored =
+      typeof window !== "undefined"
+        ? (localStorage.getItem(STORAGE_KEY) as ThemeMode | null)
+        : null;
+    if (stored === "dark" || stored === "light") {
       setMode(stored);
     }
   }, []);
 
   // apply CSS variables and persist
   useEffect(() => {
-    const theme = mode === 'dark' ? darkTheme : lightTheme;
+    const theme = mode === "dark" ? darkTheme : lightTheme;
     const root = document.documentElement;
-    root.setAttribute('data-theme', mode);
+    root.setAttribute("data-theme", mode);
     const vars = theme.customColors;
     Object.entries(vars).forEach(([key, value]) => {
       root.style.setProperty(`--${key}`, value);
@@ -47,78 +57,187 @@ export default function AntdProvider({
     localStorage.setItem(STORAGE_KEY, mode);
   }, [mode]);
 
-  const toggleTheme = () => setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+  const toggleTheme = () =>
+    setMode((prev) => (prev === "light" ? "dark" : "light"));
   const setTheme = (m: ThemeMode) => setMode(m);
 
-  const themeTokens = useMemo(() => (mode === 'dark' ? darkTheme.tokens : lightTheme.tokens), [mode]);
+  // Ant Design theme configuration
+  const antdTheme = useMemo(() => {
+    const themeTokens = mode === "dark" ? darkTheme.tokens : lightTheme.tokens;
+    return {
+      algorithm: mode === "dark" ? darkAlgorithm : defaultAlgorithm,
+      token: {
+        ...themeTokens.token,
+        // Override with CSS variables for dynamic tenant branding
+        colorPrimary: "var(--primary)",
+        colorLink: "var(--primary)",
+        colorLinkHover: "var(--primary-hover)",
+        borderRadius: 12,
+        fontFamily:
+          "Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      },
+      components: {
+        ...themeTokens.components,
+        // Additional global component overrides
+        Button: {
+          ...themeTokens.components?.Button,
+          borderRadius: 8,
+          controlHeight: 44,
+          fontWeight: 600,
+        },
+        Input: {
+          colorBgContainer: "var(--surface)",
+          colorBorder: "var(--border)",
+          activeBorderColor: "var(--primary)",
+          hoverBorderColor: "var(--primary)",
+        },
+        Select: {
+          colorBgContainer: "var(--surface)",
+          colorBorder: "var(--border)",
+          selectorBg: "var(--surface)",
+          optionSelectedBg: "var(--primary-soft)",
+          colorTextPlaceholder: "var(--text-muted)",
+        },
+        Modal: {
+          contentBg: "var(--card)",
+          headerBg: "var(--card)",
+          titleColor: "var(--text)",
+        },
+        Card: {
+          colorBgContainer: "var(--card)",
+          colorBorderSecondary: "var(--border)",
+        },
+        Layout: {
+          colorBgBody: "var(--bg-base)",
+          colorBgHeader: "var(--card)",
+        },
+        Message: {
+          contentBg: "#FFFFFF",
+          contentPadding: "12px 16px",
+          colorText: "#000000",
+          colorSuccess: "#52c41a",
+          colorError: "#ff4d4f",
+          colorWarning: "#faad14",
+          colorInfo: "#1890ff",
+        },
+        Notification: {
+          colorBgElevated: "#FFFFFF",
+          colorText: "#000000",
+          colorTextHeading: "#000000",
+          colorSuccess: "#52c41a",
+          colorError: "#ff4d4f",
+          colorWarning: "#faad14",
+          colorInfo: "#1890ff",
+        },
+      },
+    };
+  }, [mode]);
 
   return (
     <ThemeContext.Provider value={{ mode, toggleTheme, setTheme }}>
-      <ConfigProvider theme={themeTokens}>
+      <ConfigProvider theme={antdTheme}>
         <AntdApp>{children}</AntdApp>
-    </ConfigProvider>
+      </ConfigProvider>
       <style jsx global>{`
+        /* Body & Layout Base */
         body {
           background: var(--bg-base);
           color: var(--text);
-          transition: background 0.2s ease, color 0.2s ease;
+          transition:
+            background 0.2s ease,
+            color 0.2s ease;
         }
         .ant-layout,
         .ant-layout-content {
           background: var(--bg-base);
         }
-        
-        /* Scrollbar Styling - Webkit (Chrome, Safari, Edge) */
-        ::-webkit-scrollbar {
-          width: 10px;
-          height: 10px;
+
+        /* Override hardcoded colors with CSS variables */
+        .ant-btn-primary {
+          background: var(--primary) !important;
+          border-color: var(--primary) !important;
         }
-        ::-webkit-scrollbar-track {
-          background: var(--card);
-          border-radius: 5px;
+        .ant-btn-primary:hover {
+          background: var(--primary-hover) !important;
+          border-color: var(--primary-hover) !important;
         }
-        ::-webkit-scrollbar-thumb {
-          background: var(--border);
-          border-radius: 5px;
-          border: 2px solid var(--card);
+        .ant-typography strong,
+        .ant-typography-danger {
+          color: var(--primary);
         }
-        ::-webkit-scrollbar-thumb:hover {
-          background: var(--text-muted);
+
+        /* Links */
+        a {
+          color: var(--primary);
         }
-        
-        /* Scrollbar Styling - Firefox */
-        * {
-          scrollbar-width: thin;
-          scrollbar-color: var(--border) var(--card);
+        a:hover {
+          color: var(--primary-hover);
         }
-        
-        /* Ant Design Drawer/Modal scrollbar */
-        .ant-drawer-body,
-        .ant-modal-body {
-          scrollbar-width: thin;
-          scrollbar-color: var(--border) var(--card);
+
+        /* Toast/Message - Always white background, black text */
+        .ant-message-notice-content {
+          background: #ffffff !important;
+          color: #000000 !important;
+          box-shadow:
+            0 6px 16px 0 rgba(0, 0, 0, 0.08),
+            0 3px 6px -4px rgba(0, 0, 0, 0.12),
+            0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
         }
-        .ant-drawer-body::-webkit-scrollbar,
-        .ant-modal-body::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
+
+        .ant-message .anticon {
+          color: inherit !important;
         }
-        .ant-drawer-body::-webkit-scrollbar-track,
-        .ant-modal-body::-webkit-scrollbar-track {
-          background: var(--card);
-          border-radius: 4px;
+
+        .ant-message-success .anticon {
+          color: #52c41a !important;
         }
-        .ant-drawer-body::-webkit-scrollbar-thumb,
-        .ant-modal-body::-webkit-scrollbar-thumb {
-          background: var(--border);
-          border-radius: 4px;
+
+        .ant-message-error .anticon {
+          color: #ff4d4f !important;
         }
-        .ant-drawer-body::-webkit-scrollbar-thumb:hover,
-        .ant-modal-body::-webkit-scrollbar-thumb:hover {
-          background: var(--text-muted);
+
+        .ant-message-warning .anticon {
+          color: #faad14 !important;
+        }
+
+        .ant-message-info .anticon {
+          color: #1890ff !important;
+        }
+
+        /* Notification - Always white background, black text */
+        .ant-notification-notice {
+          background: #ffffff !important;
+          color: #000000 !important;
+          box-shadow:
+            0 6px 16px 0 rgba(0, 0, 0, 0.08),
+            0 3px 6px -4px rgba(0, 0, 0, 0.12),
+            0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .ant-notification-notice-message {
+          color: #000000 !important;
+        }
+
+        .ant-notification-notice-description {
+          color: #000000 !important;
+        }
+
+        .ant-notification-notice-icon-success {
+          color: #52c41a !important;
+        }
+
+        .ant-notification-notice-icon-error {
+          color: #ff4d4f !important;
+        }
+
+        .ant-notification-notice-icon-warning {
+          color: #faad14 !important;
+        }
+
+        .ant-notification-notice-icon-info {
+          color: #1890ff !important;
         }
       `}</style>
     </ThemeContext.Provider>
   );
 }
-

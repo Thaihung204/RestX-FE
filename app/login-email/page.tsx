@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useThemeMode } from "../theme/AntdProvider";
 import { message } from "antd";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { HeroSection } from "@/components/auth/HeroSection";

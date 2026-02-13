@@ -44,7 +44,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: "radial-gradient(#ffffff 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(var(--pattern-dot) 1px, transparent 1px)",
           backgroundSize: "30px 30px",
           opacity: 0.03,
         }}
@@ -95,11 +95,11 @@ const PointsCard: React.FC<PointsCardProps> = ({
             width: 48,
             height: 48,
             borderRadius: "50%",
-            background: "linear-gradient(135deg, #D4AF37 0%, #FDD835 100%)",
+            background: "linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 0 20px rgba(212, 175, 55, 0.4)",
+            boxShadow: "0 0 20px var(--gold-glow)",
           }}>
           <SketchOutlined style={{ fontSize: 20, color: 'var(--text)' }} />
         </div>
@@ -113,14 +113,14 @@ const PointsCard: React.FC<PointsCardProps> = ({
             marginBottom: 8,
           }}>
           <Text style={{ color: "var(--text-muted)", fontSize: 13 }}>{t('points_card.gold_progress')}</Text>
-          <Text style={{ color: "#FF380B", fontSize: 13 }}>
+          <Text style={{ color: "var(--primary)", fontSize: 13 }}>
             {t('points_card.remaining_points', { count: pointsToNextReward })}
           </Text>
         </div>
         <Progress
           percent={progress}
           showInfo={false}
-          strokeColor={{ "0%": "#D4AF37", "100%": "#ff5722" }}
+          strokeColor={{ "0%": "var(--gold)", "100%": "var(--primary)" }}
           railColor="var(--border)"
           strokeLinecap="square"
           size={6}
@@ -131,7 +131,7 @@ const PointsCard: React.FC<PointsCardProps> = ({
           style={{
             marginTop: 20,
             padding: 0,
-            color: "#D4AF37",
+            color: "var(--gold)",
             fontSize: 14,
             display: "flex",
             alignItems: "center",

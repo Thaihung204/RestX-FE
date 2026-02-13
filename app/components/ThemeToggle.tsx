@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Tooltip } from 'antd';
 import { SunOutlined, MoonOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useThemeMode } from '../theme/AutoDarkThemeProvider';
+import { useThemeMode } from '../theme/AntdProvider';
 
 interface ThemeToggleProps {
   style?: React.CSSProperties;

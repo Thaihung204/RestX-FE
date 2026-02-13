@@ -75,8 +75,8 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
               alignItems: "center",
               gap: 8,
             }}>
-            <CrownFilled style={{ color: "#D4AF37" }} />
-            <Text style={{ color: "#D4AF37", fontSize: 13 }}>
+            <CrownFilled style={{ color: "var(--gold)" }} />
+            <Text style={{ color: "var(--gold)", fontSize: 13 }}>
               {t("customer_page.welcome_card.gold_member")}
             </Text>
           </div>
@@ -85,8 +85,8 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
         <div style={{ textAlign: "right" }}>
           <div
             style={{
-              background: "rgba(255, 87, 34, 0.1)",
-              border: "1px solid rgba(255, 87, 34, 0.3)",
+              background: "var(--primary-soft)",
+              border: "1px solid var(--primary-border)",
               borderRadius: 16,
               padding: "10px 20px",
               backdropFilter: "blur(4px)",
@@ -94,7 +94,7 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
             <Text
               style={{
                 display: "block",
-                color: "#FF380B",
+                color: "var(--primary)",
                 fontSize: 12,
                 marginBottom: 2,
               }}>

@@ -44,12 +44,12 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
             <div style={{ 
                 display: "inline-block", 
                 padding: "4px 12px", 
-                background: "rgba(255, 87, 34, 0.2)", 
-                border: "1px solid rgba(255, 87, 34, 0.4)",
+                background: "var(--primary-soft)", 
+                border: "1px solid var(--primary-border)",
                 borderRadius: 20, 
                 marginBottom: 12 
             }}>
-                <Text style={{ color: "#ff8a65", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Season 2024</Text>
+                <Text style={{ color: "var(--primary)", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Season 2024</Text>
             </div>
             <Title level={2} style={{ color: "var(--text)", margin: 0, fontSize: 28, fontWeight: 700 }}>
                 Khám phá Thực đơn
@@ -63,13 +63,13 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
             width: 56, 
             height: 56, 
             borderRadius: "50%", 
-            background: "#FF380B", 
+            background: "var(--primary)", 
             display: "flex", 
             alignItems: "center", 
             justifyContent: "center",
             boxShadow: "var(--shadow-md)"
         }}>
-            <ArrowRightOutlined style={{ fontSize: 24, color: "#fff" }} />
+            <ArrowRightOutlined style={{ fontSize: 24, color: "var(--text-inverse)" }} />
         </div>
       </div>
     </Card>

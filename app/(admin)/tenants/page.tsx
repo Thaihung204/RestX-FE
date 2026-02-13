@@ -16,6 +16,7 @@ import {
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import {
+  App,
   Avatar,
   Breadcrumb,
   Button,
@@ -23,7 +24,6 @@ import {
   DatePicker,
   Dropdown,
   Input,
-  message,
   Modal,
   Radio,
   Select,
@@ -105,6 +105,7 @@ const TenantPage: React.FC = () => {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const { language, changeLanguage } = useLanguage();
+  const { message } = App.useApp();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
@@ -741,6 +742,14 @@ const TenantPage: React.FC = () => {
                         rowKey="id"
                         columns={columns}
                         dataSource={filteredData}
+                        className="admin-tenants-table"
+                        style={
+                          {
+                            "--table-header-bg": "var(--surface)",
+                            "--table-header-text": "var(--text)",
+                            "--table-row-hover-bg": "var(--surface-subtle)",
+                          } as React.CSSProperties
+                        }
                         pagination={{
                           pageSize: 8,
                           showTotal: (total) => (
@@ -868,7 +877,8 @@ const TenantPage: React.FC = () => {
             />
           </div>
         </div>
-      </Modal>    </div>
+      </Modal>{" "}
+    </div>
   );
 };
 

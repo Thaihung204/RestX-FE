@@ -1,16 +1,18 @@
-'use client';
+"use client";
 
-export type ThemeMode = 'light' | 'dark';
+export type ThemeMode = "light" | "dark";
 
 const common = {
   token: {
-    colorPrimary: '#FF380B',
-    colorPrimaryHover: '#CC2D08',
-    colorPrimaryActive: '#CC2D08',
-    colorLink: '#FF380B',
-    colorLinkHover: '#CC2D08',
+    // Delegate brand colors to CSS variables so Tenant Admin can override them
+    colorPrimary: "var(--primary)",
+    colorPrimaryHover: "var(--primary-hover)",
+    colorPrimaryActive: "var(--primary-hover)",
+    colorLink: "var(--primary)",
+    colorLinkHover: "var(--primary-hover)",
     borderRadius: 14,
-    fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+    fontFamily:
+      "Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
     fontSize: 16,
   },
   components: {
@@ -28,25 +30,20 @@ export const lightTheme = {
     ...common,
     token: {
       ...common.token,
-      colorText: '#111111',
-      colorTextSecondary: '#4F4F4F',
-      colorBgBase: '#F7F8FA',
-      colorBgContainer: '#FFFFFF',
-      colorBorder: '#E5E7EB',
-      colorBorderSecondary: '#F3F4F6',
+      colorText: "var(--text)",
+      colorTextSecondary: "var(--text-muted)",
+      colorBgBase: "var(--bg-base)",
+      colorBgContainer: "var(--surface)",
+      colorBorder: "var(--border)",
+      colorBorderSecondary: "var(--border)",
     },
   },
   customColors: {
-    'bg-base': '#F7F8FA',
-    'surface': '#FFFFFF',
-    'primary': '#FF380B',
-    'card': '#FFFFFF',
-    'text': '#111111',
-    'text-muted': '#4F4F4F',
-    'border': '#E5E7EB',
-    'sidebar-bg': 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
-    'sidebar-text': '#FFFFFF',
-    'sidebar-muted': 'rgba(255,255,255,0.6)',
+    // Sidebar colors (derived from primary; rest comes from globals.css)
+    "sidebar-bg":
+      "linear-gradient(180deg, color-mix(in srgb, var(--primary), black 32%) 0%, color-mix(in srgb, var(--primary), black 52%) 100%)",
+    "sidebar-text": "var(--text-inverse)",
+    "sidebar-muted": "color-mix(in srgb, var(--text-inverse), transparent 40%)",
   },
 };
 
@@ -55,37 +52,30 @@ export const darkTheme = {
     ...common,
     token: {
       ...common.token,
-      colorText: '#ECECEC',
-      colorTextSecondary: '#C5C5C5',
-      colorBgBase: '#0E121A',
-      colorBgContainer: '#141927',
-      colorBorder: '#1F2433',
-      colorBorderSecondary: '#222837',
+      colorText: "var(--text)",
+      colorTextSecondary: "var(--text-muted)",
+      colorBgBase: "var(--bg-base)",
+      colorBgContainer: "var(--surface)",
+      colorBorder: "var(--border)",
+      colorBorderSecondary: "var(--border)",
     },
     components: {
       ...common.components,
       Modal: {
-        contentBg: '#0A0E14',
-        headerBg: '#0A0E14',
-        titleColor: '#ECECEC',
+        contentBg: "var(--card)",
+        headerBg: "var(--card)",
+        titleColor: "var(--text)",
       },
       Card: {
-        actionsBg: '#0A0E14',
+        actionsBg: "var(--card)",
       },
     },
   },
   customColors: {
-    'bg-base': '#0E121A',
-    'surface': '#141927',
-    'primary': '#FF380B',
-    'card': '#141927',
-    'text': '#ECECEC',
-    'text-muted': '#C5C5C5',
-    'border': '#1F2433',
-    'sidebar-bg': 'linear-gradient(180deg, #0f172a 0%, #0b1222 100%)',
-    'sidebar-text': '#FFFFFF',
-    'sidebar-muted': 'rgba(255,255,255,0.6)',
+    // Sidebar colors (derived from primary; rest comes from globals.css)
+    "sidebar-bg":
+      "linear-gradient(180deg, color-mix(in srgb, var(--primary), black 45%) 0%, color-mix(in srgb, var(--primary), black 65%) 100%)",
+    "sidebar-text": "var(--text-inverse)",
+    "sidebar-muted": "color-mix(in srgb, var(--text-inverse), transparent 40%)",
   },
 };
-
-

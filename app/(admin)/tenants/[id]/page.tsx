@@ -13,13 +13,13 @@ import {
 } from "@ant-design/icons";
 import type { FormProps } from "antd";
 import {
+  App,
   Breadcrumb,
   Button,
   Card,
   Col,
   Form,
   Input,
-  message,
   Row,
   Select,
   Space,
@@ -38,6 +38,7 @@ const TenantFormPage: React.FC = () => {
   const params = useParams();
   const { t } = useTranslation();
   const { language, changeLanguage } = useLanguage();
+  const { message } = App.useApp();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [form] = Form.useForm<TenantCreateInput>();
   const [formData, setFormData] = useState<Partial<TenantCreateInput>>({
@@ -104,14 +105,15 @@ const TenantFormPage: React.FC = () => {
       // In edit mode, use formData.hostName (from disabled field)
       // In create mode, use values.hostName (from form input)
       const hostnameValue = isEditMode ? formData.hostName : values.hostName;
-      const hostname = hostnameValue ? `${hostnameValue}.restx.food` : undefined;
-      
+      const hostname = hostnameValue
+        ? `${hostnameValue}.restx.food`
+        : undefined;
+
       const requestData = {
         ...values,
         hostName: hostname,
         networkIp: hostname,
       };
-
 
       if (isEditMode) {
         const result = await tenantService.updateTenant(tenantId, requestData);
@@ -142,12 +144,12 @@ const TenantFormPage: React.FC = () => {
     if (isEditMode) {
       return Promise.resolve();
     }
-    
+
     // In create mode, hostname is optional
     if (!value) {
       return Promise.resolve();
     }
-    
+
     // If provided, must follow slug format
     if (!/^[a-z0-9-]+$/.test(value)) {
       return Promise.reject(
@@ -461,7 +463,9 @@ const TenantFormPage: React.FC = () => {
                       ]}>
                       <Input
                         className="text-sm"
-                        placeholder={t("tenants.create.fields.name_placeholder")}
+                        placeholder={t(
+                          "tenants.create.fields.name_placeholder",
+                        )}
                         prefix={<ShopOutlined className="text-gray-400 mr-1" />}
                       />
                     </Form.Item>
@@ -561,7 +565,9 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder={t("tenants.create.fields.business_name_placeholder")}
+                          placeholder={t(
+                            "tenants.create.fields.business_name_placeholder",
+                          )}
                           prefix={
                             <ShopOutlined className="text-gray-400 mr-1" />
                           }
@@ -593,7 +599,9 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder={t("tenants.create.fields.phone_placeholder")}
+                          placeholder={t(
+                            "tenants.create.fields.phone_placeholder",
+                          )}
                           prefix={
                             <PhoneOutlined className="text-gray-400 mr-1" />
                           }
@@ -625,7 +633,9 @@ const TenantFormPage: React.FC = () => {
                       <Input
                         className="text-sm"
                         type="email"
-                        placeholder={t("tenants.create.fields.mail_restaurant_placeholder")}
+                        placeholder={t(
+                          "tenants.create.fields.mail_restaurant_placeholder",
+                        )}
                         prefix={<MailOutlined className="text-gray-400 mr-1" />}
                       />
                     </Form.Item>
@@ -649,7 +659,9 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder={t("tenants.create.fields.address_line1_placeholder")}
+                          placeholder={t(
+                            "tenants.create.fields.address_line1_placeholder",
+                          )}
                         />
                       </Form.Item>
 
@@ -665,7 +677,9 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder={t("tenants.create.fields.address_line2_placeholder")}
+                          placeholder={t(
+                            "tenants.create.fields.address_line2_placeholder",
+                          )}
                         />
                       </Form.Item>
 
@@ -681,7 +695,9 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder={t("tenants.create.fields.address_line3_placeholder")}
+                          placeholder={t(
+                            "tenants.create.fields.address_line3_placeholder",
+                          )}
                         />
                       </Form.Item>
 
@@ -697,7 +713,9 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Input
                           className="text-sm"
-                          placeholder={t("tenants.create.fields.address_line4_placeholder")}
+                          placeholder={t(
+                            "tenants.create.fields.address_line4_placeholder",
+                          )}
                         />
                       </Form.Item>
                     </div>
@@ -748,7 +766,9 @@ const TenantFormPage: React.FC = () => {
                         <Input
                           className="text-sm"
                           type="email"
-                          placeholder={t("tenants.create.fields.owner_email_placeholder")}
+                          placeholder={t(
+                            "tenants.create.fields.owner_email_placeholder",
+                          )}
                           prefix={
                             <MailOutlined className="text-gray-400 mr-1" />
                           }
@@ -781,7 +801,9 @@ const TenantFormPage: React.FC = () => {
                           ]}>
                           <Input.Password
                             className="text-sm"
-                            placeholder={t("tenants.create.fields.password_placeholder")}
+                            placeholder={t(
+                              "tenants.create.fields.password_placeholder",
+                            )}
                           />
                         </Form.Item>
                       )}
@@ -814,7 +836,9 @@ const TenantFormPage: React.FC = () => {
                         ]}>
                         <Select
                           className="text-sm"
-                          placeholder={t("tenants.create.fields.plan_placeholder")}>
+                          placeholder={t(
+                            "tenants.create.fields.plan_placeholder",
+                          )}>
                           <Select.Option value="basic">
                             <span className="font-medium text-emerald-500 text-sm">
                               {t("tenants.create.plan_options.basic")}

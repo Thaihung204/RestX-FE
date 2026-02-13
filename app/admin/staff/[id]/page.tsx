@@ -67,7 +67,9 @@ export default function StaffFormPage() {
 
       // Validation
       if (!formData.fullName.trim()) {
-        message.error(t("dashboard.toasts.staff.validation_full_name_required"));
+        message.error(
+          t("dashboard.toasts.staff.validation_full_name_required"),
+        );
         setLoading(false);
         return;
       }
@@ -208,7 +210,9 @@ export default function StaffFormPage() {
             <h2
               className="text-3xl font-bold mb-2"
               style={{ color: "var(--text)" }}>
-              {isNewStaff ? t("dashboard.staff.add_new_staff") : t("dashboard.staff.edit_staff")}
+              {isNewStaff
+                ? t("dashboard.staff.add_new_staff")
+                : t("dashboard.staff.edit_staff")}
             </h2>
             <p style={{ color: "var(--text-muted)" }}>
               {isNewStaff
@@ -420,7 +424,7 @@ export default function StaffFormPage() {
                     onChange={handleChange}
                     className="w-5 h-5 rounded border-2 border-gray-300 focus:ring-2 focus:ring-orange-500 cursor-pointer"
                     style={{
-                      accentColor: "#FF380B",
+                      accentColor: "var(--primary)",
                     }}
                   />
                   <span style={{ color: "var(--text)" }}>
@@ -448,13 +452,17 @@ export default function StaffFormPage() {
                 disabled={loading}
                 className="flex-1 px-6 py-3 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: loading ? "#CC2D08" : "#FF380B",
+                  background: loading
+                    ? "var(--primary-hover)"
+                    : "var(--primary)",
                 }}
                 onMouseEnter={(e) => {
-                  if (!loading) e.currentTarget.style.background = "#CC2D08";
+                  if (!loading)
+                    e.currentTarget.style.background = "var(--primary-hover)";
                 }}
                 onMouseLeave={(e) => {
-                  if (!loading) e.currentTarget.style.background = "#FF380B";
+                  if (!loading)
+                    e.currentTarget.style.background = "var(--primary)";
                 }}>
                 {loading
                   ? t("common.saving")
