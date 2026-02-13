@@ -1,77 +1,72 @@
 "use client";
 
-import LoginButton from "@/components/auth/LoginButton";
-import authService from "@/lib/services/authService";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { message } from "antd";
 import { useSearchParams } from 'next/navigation';
+import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import authService from "@/lib/services/authService";
+import { HeroSection } from "@/components/auth/HeroSection";
+import { GlassInput } from "@/components/ui/GlassInput";
+import { LockOutlined, EyeInvisibleOutlined, EyeOutlined, CheckCircleOutlined, KeyOutlined } from "@ant-design/icons";
+
+const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation('auth');
   const { mode } = useThemeMode();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('restx-theme-mode');
-      return stored === 'dark' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-    return false;
-  });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    setIsDark(mode === 'dark');
-
-    // Get email and token from URL params
     const emailParam = searchParams.get('email') || '';
     const tokenParam = searchParams.get('token') || '';
     setEmail(emailParam);
     setToken(tokenParam);
-  }, [mode, searchParams]);
+  }, [searchParams]);
 
   const validatePassword = (password: string) => {
     if (!password) {
       setPasswordError(t('reset_password_page.validation.required_password'));
       return false;
     }
-
     if (password.length < 8) {
       setPasswordError(t('reset_password_page.validation.password_min'));
       return false;
     }
-
     if (!/(?=.*[a-z])/.test(password)) {
       setPasswordError(t('reset_password_page.validation.password_lowercase'));
       return false;
     }
-
     if (!/(?=.*[A-Z])/.test(password)) {
       setPasswordError(t('reset_password_page.validation.password_uppercase'));
       return false;
     }
-
     if (!/(?=.*\d)/.test(password)) {
       setPasswordError(t('reset_password_page.validation.password_number'));
       return false;
     }
-
     if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(password)) {
       setPasswordError(t('reset_password_page.validation.password_special'));
       return false;
     }
-
     setPasswordError("");
     return true;
   };
@@ -81,12 +76,10 @@ export default function ResetPasswordPage() {
       setConfirmPasswordError(t('reset_password_page.validation.required_confirm'));
       return false;
     }
-
     if (confirmPassword !== password) {
       setConfirmPasswordError(t('reset_password_page.validation.password_mismatch'));
       return false;
     }
-
     setConfirmPasswordError("");
     return true;
   };
@@ -97,9 +90,12 @@ export default function ResetPasswordPage() {
     if (passwordTouched) {
       validatePassword(value);
     }
-    // Re-validate confirm password if it's already filled
     if (confirmPassword && confirmPasswordTouched) {
-      validateConfirmPassword(confirmPassword);
+      if (confirmPassword !== value) {
+        setConfirmPasswordError(t('reset_password_page.validation.password_mismatch'));
+      } else {
+        setConfirmPasswordError("");
+      }
     }
   };
 
@@ -111,32 +107,11 @@ export default function ResetPasswordPage() {
     }
   };
 
-  const handlePasswordBlur = () => {
-    setPasswordTouched(true);
-    if (!password) {
-      setPasswordError(t('reset_password_page.validation.required_password'));
-    } else {
-      validatePassword(password);
-    }
-  };
-
-  const handleConfirmPasswordBlur = () => {
-    setConfirmPasswordTouched(true);
-    if (!confirmPassword) {
-      setConfirmPasswordError(t('reset_password_page.validation.required_confirm'));
-    } else {
-      validateConfirmPassword(confirmPassword);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Mark all fields as touched
     setPasswordTouched(true);
     setConfirmPasswordTouched(true);
 
-    // Check if fields are empty
     if (!password || !password.trim()) {
       setPasswordError(t('reset_password_page.validation.required_password'));
       if (!confirmPassword || !confirmPassword.trim()) {
@@ -150,29 +125,15 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // Validate password
-    const isPasswordValid = validatePassword(password);
-    if (!isPasswordValid) {
-      return;
-    }
-
-    // Validate confirm password
-    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
-    if (!isConfirmPasswordValid) {
-      return;
-    }
-
-    // Don't proceed if there are any errors
-    if (passwordError || confirmPasswordError) {
-      return;
-    }
+    if (!validatePassword(password)) return;
+    if (!validateConfirmPassword(confirmPassword)) return;
+    if (passwordError || confirmPasswordError) return;
 
     if (!email || !token) {
-      alert(t('reset_password_page.alerts.invalid_link'));
+      message.error(t('reset_password_page.alerts.invalid_link'));
       return;
     }
 
-    // Call API to reset password
     setLoading(true);
     try {
       await authService.resetPassword({
@@ -182,116 +143,148 @@ export default function ResetPasswordPage() {
         confirmNewPassword: confirmPassword,
       });
 
-      alert(t('reset_password_page.alerts.success'));
-      // Redirect to login page
+      message.success(t('reset_password_page.alerts.success'));
       window.location.href = '/login-email';
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to reset password. Please try again.';
-      alert(errorMessage);
+      message.error(errorMessage);
       console.error('Reset password error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div
-      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient"
-    >
-      {/* Decorative elements */}
-      <div
-        className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"
-      ></div>
-      <div
-        className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"
-      ></div>
+  const isDark = mode === 'dark';
 
-      <div className="max-w-[420px] w-full space-y-8 relative z-10">
-        <div
-          className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
-        >
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl" style={{ background: '#FF380B' }}>
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                />
-              </svg>
+  return (
+    <div className={`min-h-screen flex flex-col md:flex-row relative transition-colors duration-300 ${isDark ? 'bg-[#0E121A]' : 'bg-[#F7F8FA]'}`}>
+      {/* Mobile Background: Image with Overlay */}
+      <div className="absolute inset-0 z-0 md:hidden">
+        <img
+          src={HERO_IMAGE_URL}
+          alt="Background"
+          className="w-full h-full object-cover"
+        />
+        {/* Dark overlay for mobile legibility */}
+        <div className={`absolute inset-0 backdrop-blur-[2px] ${isDark ? 'bg-[#0E121A]/80' : 'bg-black/40'}`}></div>
+      </div>
+
+      <HeroSection />
+
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-12 lg:p-20 relative overflow-hidden min-h-screen z-10">
+
+        {/* Desktop Orbs */}
+        <div className="hidden md:block absolute top-0 right-0 w-96 h-96 bg-[#FF380B] rounded-full filter blur-[100px] opacity-[0.05] pointer-events-none"></div>
+        <div className="hidden md:block absolute bottom-0 left-0 w-64 h-64 bg-[#FF6B3B] rounded-full filter blur-[80px] opacity-[0.05] pointer-events-none"></div>
+
+        {/* Form Container */}
+        <div className="w-full max-w-md backdrop-blur-xl bg-white/80 dark:bg-white/5 rounded-2xl p-8 lg:p-10 relative z-20 shadow-xl dark:shadow-2xl border border-gray-200 dark:border-white/10 transition-colors duration-300">
+
+          <div className="md:hidden w-full flex flex-col items-center mb-8">
+            <div className="w-20 h-20 bg-[#FF380B]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[#FF380B]/20 p-4">
+              <img
+                src="/images/logo/restx-removebg-preview.png"
+                alt="RestX Logo"
+                className="w-full h-full object-contain dark:invert dark:hue-rotate-180 dark:brightness-110"
+              />
             </div>
-            <h2
-              className="text-3xl font-bold mb-2 auth-title"
-            >
-              {t('reset_password_page.title')}
-            </h2>
-            <p className="auth-text">
-              {t('reset_password_page.subtitle')}
-            </p>
+            <span className="font-bold uppercase tracking-[0.2em] text-gray-900 dark:text-white text-2xl drop-shadow-md">RestX</span>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium mb-2 auth-label"
-              >
-                {t('reset_password_page.new_password_label')}
-              </label>
-              <input
+          <div className="text-center md:text-left mb-8">
+            <h1 className={`text-3xl font-bold tracking-tight drop-shadow-sm transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {t('reset_password_page.title')}
+            </h1>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+
+            <div className="relative">
+              <GlassInput
                 id="password"
-                type="password"
+                label={t('reset_password_page.new_password_label')}
+                icon={<LockOutlined />}
+                type={showPassword ? "text" : "password"}
+                placeholder={t('reset_password_page.new_password_placeholder')}
                 value={password}
                 onChange={handlePasswordChange}
-                onBlur={handlePasswordBlur}
-                placeholder={t('reset_password_page.new_password_placeholder')}
-                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                style={{
-                  borderColor: passwordTouched && passwordError ? '#ef4444' : undefined,
-                }}
+                onBlur={() => setPasswordTouched(true)}
+                disabled={loading}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-9 text-gray-400 hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeInvisibleOutlined className="text-lg" /> : <EyeOutlined className="text-lg" />}
+              </button>
               {passwordTouched && passwordError && (
-                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{passwordError}</p>
+                <div className="text-red-400 text-xs mt-1 ml-1 font-medium">{passwordError}</div>
               )}
               {passwordTouched && !passwordError && password && (
-                <p className="mt-1 text-sm" style={{ color: '#22c55e' }}>{t('reset_password_page.password_strong')}</p>
+                <div className="text-green-400 text-xs mt-1 ml-1 font-medium flex items-center">
+                  <CheckCircleOutlined className="mr-1" />
+                  {t('reset_password_page.password_strong')}
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <GlassInput
+                id="confirmPassword"
+                label={t('reset_password_page.confirm_password_label')}
+                icon={<LockOutlined />}
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder={t('reset_password_page.confirm_password_placeholder')}
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+                onBlur={() => setConfirmPasswordTouched(true)}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-9 text-gray-400 hover:text-white transition-colors"
+              >
+                {showConfirmPassword ? <EyeInvisibleOutlined className="text-lg" /> : <EyeOutlined className="text-lg" />}
+              </button>
+              {confirmPasswordTouched && confirmPasswordError && (
+                <div className="text-red-400 text-xs mt-1 ml-1 font-medium">{confirmPasswordError}</div>
+              )}
+              {confirmPasswordTouched && !confirmPasswordError && confirmPassword && (
+                <div className="text-green-400 text-xs mt-1 ml-1 font-medium flex items-center">
+                  <CheckCircleOutlined className="mr-1" />
+                  {t('reset_password_page.passwords_match')}
+                </div>
               )}
             </div>
 
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium mb-2 auth-label"
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[#FF380B] hover:bg-[#ff5722] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a100e] focus:ring-[#FF380B] transition-all duration-300 shadow-[0_4px_14px_0_rgba(255,56,11,0.39)] hover:shadow-[0_6px_20px_rgba(255,56,11,0.23)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
               >
-                {t('reset_password_page.confirm_password_label')}
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={handleConfirmPasswordChange}
-                onBlur={handleConfirmPasswordBlur}
-                placeholder={t('reset_password_page.confirm_password_placeholder')}
-                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                style={{
-                  borderColor: confirmPasswordTouched && confirmPasswordError ? '#ef4444' : undefined,
-                }}
-              />
-              {confirmPasswordTouched && confirmPasswordError && (
-                <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{confirmPasswordError}</p>
-              )}
-              {confirmPasswordTouched && !confirmPasswordError && confirmPassword && (
-                <p className="mt-1 text-sm" style={{ color: '#22c55e' }}>{t('reset_password_page.passwords_match')}</p>
-              )}
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-white ml-1"></div>
+                  ) : (
+                    <span className="material-icons text-white/50 group-hover:text-white transition-colors text-lg">
+                      <KeyOutlined />
+                    </span>
+                  )}
+                </span>
+                {loading ? t('login_button.loading') : t('reset_password_page.reset_btn')}
+              </button>
             </div>
-
-            <LoginButton loading={loading} text={t('reset_password_page.reset_btn')} />
           </form>
+        </div>
+
+        {/* Footer */}
+        <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none mix-blend-plus-lighter">
+          <p className={`text-xs ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
+            © {new Date().getFullYear()} RestX. All rights reserved.
+          </p>
         </div>
       </div>
     </div>

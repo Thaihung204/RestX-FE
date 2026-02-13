@@ -14,6 +14,11 @@ export function middleware(req: NextRequest) {
   // Development domains - no routing logic
   const DEVELOPMENT_DOMAINS = new Set(["localhost", "127.0.0.1"]);
 
+  // Custom tenant domains (mapped in DB)
+  const CUSTOM_TENANT_DOMAINS = new Set([
+    "lebon.io.vn",
+  ]);
+
   // Public routes accessible on any domain
   const PUBLIC_ROUTES = new Set([
     "/login",
@@ -86,8 +91,15 @@ export function middleware(req: NextRequest) {
   // - Production: *.restx.food (excluding www, admin, and root)
   // - Development: *.localhost (e.g., demo.localhost:3000, excluding admin.localhost)
   const isTenantDomain =
-    (host.endsWith('.restx.food') && !LANDING_DOMAINS.has(host) && host !== ADMIN_DOMAIN) ||
-    (host.includes('.localhost') && hostWithoutPort !== 'admin.localhost');
+  CUSTOM_TENANT_DOMAINS.has(hostWithoutPort) ||
+
+    (host.endsWith('.restx.food') &&
+      !LANDING_DOMAINS.has(host) &&
+      host !== ADMIN_DOMAIN) ||
+
+    (host.includes('.localhost') &&
+      hostWithoutPort !== 'admin.localhost');
+
 
   if (isTenantDomain) {
     // Root path → restaurant page (for customers)

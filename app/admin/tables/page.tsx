@@ -3,13 +3,13 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { TableMap2D } from "./components/TableMap2D";
+import { AddAreaModal } from "./components/AddAreaModal";
+import { AddTableModal } from "./components/AddTableModal";
+import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
-import { AddTableModal } from "./components/AddTableModal";
-import { AddAreaModal } from "./components/AddAreaModal";
-import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
-import { tableService } from "@/lib/services/tableService";
+import { TableMap2D } from "./components/TableMap2D";
+import { tableService, TableStatus } from "@/lib/services/tableService";
 
 interface Table {
   id: string;
@@ -19,6 +19,14 @@ interface Table {
   area: "VIP" | "Indoor" | "Outdoor";
   currentOrder?: string;
   reservationTime?: string;
+  // Backend fields to preserve
+  shape: string;
+  positionX: number;
+  positionY: number;
+  width: number;
+  height: number;
+  rotation: number;
+  isActive: boolean;
 }
 
 type ViewMode = "grid" | "map";
@@ -39,9 +47,10 @@ export default function TablesPage() {
       badge: "bg-green-500/10 text-green-500 border-green-500/20",
     },
     occupied: {
-      color: "bg-[#FF380B]",
+      color: "bg-[var(--primary)]",
       text: t("dashboard.tables.status.occupied"),
-      badge: "bg-[#FF380B]/10 text-[#FF380B] border-[#FF380B]/20",
+      badge:
+        "bg-[var(--primary-soft)] text-[var(--primary)] border-[var(--primary-border)]",
     },
     reserved: {
       color: "bg-blue-500",
@@ -56,7 +65,11 @@ export default function TablesPage() {
   };
 
   /* State for Map Layout - Added availableAreas */
-  const [availableAreas, setAvailableAreas] = useState<string[]>(["VIP", "Indoor", "Outdoor"]);
+  const [availableAreas, setAvailableAreas] = useState<string[]>([
+    "VIP",
+    "Indoor",
+    "Outdoor",
+  ]);
   /* Add Area Modal State */
   const [addAreaModalOpen, setAddAreaModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
@@ -66,21 +79,38 @@ export default function TablesPage() {
   const fetchTables = async () => {
     try {
       setLoading(true);
-      // Dynamic import to avoid SSR issues if any, though explicit import is better usually. 
-      // Using explicit import at top is preferred, but I'll add it to top later or just use global if available.
-      // I'll assume proper import was added. 
-      const items = await tableService.getAll();
+      const items = await tableService.getAllTables();
 
-      const mappedTables: Table[] = items.map(item => ({
-        id: item.id,
-        number: parseInt(item.code) || 0,
-        capacity: item.seatingCapacity,
-        status: (item.tableStatusName?.toLowerCase() as any) || 'available',
-        area: (item.type as any) || 'Indoor',
-        // Optional fields could be mapped if backend supports them later
-        // currentOrder: ???
-      }));
+      const mappedTables: Table[] = items.map(item => {
+        let status: Table['status'] = 'available';
+        if (item.tableStatusId === TableStatus.Reserved) status = 'reserved';
+        if (item.tableStatusId === TableStatus.Occupied) status = 'occupied';
+        // Handle cleaning if statusName provided or extended enum in future
+        if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
+
+        return {
+          id: item.id,
+          number: parseInt(item.code) || 0,
+          capacity: item.seatingCapacity,
+          status: status,
+          area: (item.type as any) || 'Indoor',
+          shape: item.shape || 'Square',
+          positionX: item.positionX || 0,
+          positionY: item.positionY || 0,
+          width: item.width || 100,
+          height: item.height || 100,
+          rotation: item.rotation || 0,
+          isActive: item.isActive,
+        };
+      });
       setTables(mappedTables);
+
+      // Update available areas
+      const areas = Array.from(new Set(mappedTables.map(t => t.area)));
+      const defaultAreas = ["VIP", "Indoor", "Outdoor"];
+      const uniqueAreas = Array.from(new Set([...defaultAreas, ...areas]));
+      setAvailableAreas(uniqueAreas);
+
     } catch (error) {
       console.error("Failed to fetch tables:", error);
     } finally {
@@ -95,9 +125,19 @@ export default function TablesPage() {
   // Convert tables to Map2D format
   // Calculate map layout (positions and markers) with useMemo
   const { map2DTables, mapMarkers, mapHeight, zones } = useMemo(() => {
-    const markers: { id: string; label: string; position: { x: number; y: number }; style?: React.CSSProperties }[] = [];
+    const markers: {
+      id: string;
+      label: string;
+      position: { x: number; y: number };
+      style?: React.CSSProperties;
+    }[] = [];
     const mappedTables: Map2DTableData[] = [];
-    const calculatedZones: { id: string; label: string; y: number; height: number }[] = [];
+    const calculatedZones: {
+      id: string;
+      label: string;
+      y: number;
+      height: number;
+    }[] = [];
 
     // Use availableAreas for order and completeness
     const areas = availableAreas;
@@ -107,9 +147,9 @@ export default function TablesPage() {
     const itemWidth = 130;
     const itemHeight = 130;
 
-    areas.forEach(area => {
+    areas.forEach((area) => {
       // Find all tables in this area
-      const areaTables = tables.filter(t => t.area === area);
+      const areaTables = tables.filter((t) => t.area === area);
 
       const rows = Math.max(1, Math.ceil(areaTables.length / itemsPerRow));
       const sectionHeight = rows * itemHeight + 60; // 60px padding/header
@@ -117,9 +157,11 @@ export default function TablesPage() {
       // Add Zone Boundary
       calculatedZones.push({
         id: area,
-        label: t(`dashboard.table_status.areas.${area.toLowerCase()}`, { defaultValue: area }),
+        label: t(`dashboard.table_status.areas.${area.toLowerCase()}`, {
+          defaultValue: area,
+        }),
         y: currentY - 20, // Start slightly above text
-        height: sectionHeight + 20
+        height: sectionHeight + 20,
       });
 
       // Position tables for this area
@@ -132,16 +174,21 @@ export default function TablesPage() {
 
         mappedTables.push({
           id: table.id,
-          tenantId: 'tenant-1',
+          tenantId: "tenant-1",
           name: t("dashboard.tables.card.table_name", { number: table.number }),
           seats: table.capacity,
-          status: table.status === 'available' ? 'AVAILABLE' :
-            table.status === 'occupied' ? 'OCCUPIED' :
-              table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
+          status:
+            table.status === "available"
+              ? "AVAILABLE"
+              : table.status === "occupied"
+                ? "OCCUPIED"
+                : table.status === "reserved"
+                  ? "RESERVED"
+                  : "DISABLED",
           area: table.area,
           position: {
             x: 40 + (index % itemsPerRow) * itemWidth,
-            y: currentY + 40 + Math.floor(index / itemsPerRow) * itemHeight
+            y: currentY + 40 + Math.floor(index / itemsPerRow) * itemHeight,
           },
         });
       });
@@ -154,16 +201,14 @@ export default function TablesPage() {
       map2DTables: mappedTables,
       mapMarkers: markers,
       mapHeight: Math.max(600, currentY + 50),
-      zones: calculatedZones
+      zones: calculatedZones,
     };
   }, [tables, t, availableAreas]);
-
-
 
   // Map2D handlers
   const handleMap2DTableClick = (table: Map2DTableData) => {
     // Find the corresponding table from the tables array
-    const foundTable = tables.find(t => t.id === table.id);
+    const foundTable = tables.find((t) => t.id === table.id);
     if (foundTable) {
       setSelectedTable(foundTable);
       setDrawerOpen(true);
@@ -175,10 +220,12 @@ export default function TablesPage() {
     const yCenter = position.y + 50;
 
     // Check if dropped into a different zone using center point
-    const droppedZone = zones.find(z => yCenter >= z.y && yCenter <= z.y + z.height);
+    const droppedZone = zones.find(
+      (z) => yCenter >= z.y && yCenter <= z.y + z.height,
+    );
 
     if (droppedZone) {
-      const table = tables.find(t => t.id === tableId);
+      const table = tables.find((t) => t.id === tableId);
       if (table && table.area !== droppedZone.id) {
         // Optimistic update
         const originalTables = [...tables];
@@ -188,7 +235,7 @@ export default function TablesPage() {
 
         // API Call
         try {
-          await tableService.update(tableId, { type: droppedZone.id });
+          await tableService.updateTable(tableId, { type: droppedZone.id });
         } catch (err) {
           console.error("Failed to move table:", err);
           setTables(originalTables); // Revert
@@ -208,7 +255,7 @@ export default function TablesPage() {
     if (oldName === newName) return;
 
     // Update availableAreas
-    setAvailableAreas(prev => prev.map(a => a === oldName ? newName : a));
+    setAvailableAreas((prev) => prev.map((a) => (a === oldName ? newName : a)));
 
     // Update tables in that area
     // TODO: Need batch update API or loop update?
@@ -220,7 +267,7 @@ export default function TablesPage() {
     // API Call loop (not efficient but functional for MVP)
     const tablesToUpdate = tables.filter(t => t.area === oldName);
     tablesToUpdate.forEach(t => {
-      tableService.update(t.id, { type: newName }).catch(e => console.error(e));
+      tableService.updateTable(t.id, { type: newName }).catch(e => console.error(e));
     });
 
     setTables(prev => prev.map(t =>
@@ -245,9 +292,9 @@ export default function TablesPage() {
 
     try {
       // Update target
-      await tableService.update(targetTableId, { seatingCapacity: newCapacity });
+      await tableService.updateTable(targetTableId, { seatingCapacity: newCapacity });
       // Delete source
-      await tableService.delete(sourceTableId);
+      await tableService.deleteTable(sourceTableId);
     } catch (err) {
       console.error("Merge failed:", err);
       fetchTables(); // Revert/Refresh
@@ -265,7 +312,7 @@ export default function TablesPage() {
   const confirmDeleteZone = async () => {
     if (zoneToDelete) {
       // Remove area
-      setAvailableAreas(prev => prev.filter(area => area !== zoneToDelete));
+      setAvailableAreas((prev) => prev.filter((area) => area !== zoneToDelete));
 
       // Move tables to the first available area (or default 'Indoor')
       const fallbackArea = availableAreas.find(a => a !== zoneToDelete) || 'Indoor';
@@ -274,7 +321,7 @@ export default function TablesPage() {
       const tablesToMove = tables.filter(t => t.area === zoneToDelete);
       for (const t of tablesToMove) {
         try {
-          await tableService.update(t.id, { type: fallbackArea });
+          await tableService.updateTable(t.id, { type: fallbackArea });
         } catch (e) {
           console.error(e);
         }
@@ -311,10 +358,18 @@ export default function TablesPage() {
         code: (formData.get('number') as string),
         seatingCapacity: parseInt(formData.get('capacity') as string),
         type: formData.get('area') as string,
-        tableStatusName: 'available'
+        tableStatusId: TableStatus.Available,
+        isActive: true,
+        // Default values for required fields
+        shape: 'Square',
+        positionX: 0,
+        positionY: 0,
+        width: 100,
+        height: 100,
+        rotation: 0
       };
 
-      await tableService.create(newTableData);
+      await tableService.createTable(newTableData);
       await fetchTables(); // Refresh to get ID
       setAddModalOpen(false);
     } catch (err) {
@@ -331,24 +386,43 @@ export default function TablesPage() {
       ));
 
       try {
-        const apiData: any = {};
+        const apiData: any = {
+          id: selectedTable.id,
+          code: selectedTable.number.toString(),
+          seatingCapacity: selectedTable.capacity,
+          type: selectedTable.area,
+          shape: selectedTable.shape,
+          positionX: selectedTable.positionX,
+          positionY: selectedTable.positionY,
+          width: selectedTable.width,
+          height: selectedTable.height,
+          rotation: selectedTable.rotation,
+          isActive: selectedTable.isActive,
+          tableStatusId: TableStatus.Available // Default, overwritten below
+        };
+
+        // Map current status to ID
+        if (selectedTable.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
+        else if (selectedTable.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
+
+        // Apply overrides from values
         if (values.number !== undefined) apiData.code = values.number.toString();
         if (values.capacity !== undefined) apiData.seatingCapacity = values.capacity;
         if (values.area !== undefined) apiData.type = values.area;
         if (values.status !== undefined) {
-          apiData.tableStatusName = values.status;
-          // We might need tableStatusId too, but let's hope backend handles Name lookup or we need to fetch statuses. 
-          // Ideally we should send ID. But 'available' etc are names.
-          // If backend requires ID, this will fail. TablesController Upsert calls UpsertTable... 
+          if (values.status === 'available') apiData.tableStatusId = TableStatus.Available;
+          else if (values.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
+          else if (values.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
+          else apiData.tableStatusId = TableStatus.Available;
         }
 
-        await tableService.update(selectedTable.id, apiData);
+        await tableService.updateTable(selectedTable.id, apiData);
       } catch (err) {
         console.error("Update failed", err);
         fetchTables();
       }
-
       setDrawerOpen(false);
+      setSelectedTable(null);
     }
   };
 
@@ -361,14 +435,15 @@ export default function TablesPage() {
   const confirmDelete = async () => {
     if (selectedTable) {
       try {
-        await tableService.delete(selectedTable.id);
+        await tableService.deleteTable(selectedTable.id);
         setTables(tables.filter(t => t.id !== selectedTable.id));
+        setDrawerOpen(false);
+        setSelectedTable(null);
       } catch (err) {
         console.error("Delete failed", err);
+        alert("Failed to delete table");
       }
       setDeleteConfirmOpen(false);
-      setDrawerOpen(false);
-      setSelectedTable(null);
     }
   };
 
@@ -378,10 +453,12 @@ export default function TablesPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
+              <h2
+                className="text-3xl font-bold mb-2"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.tables.title")}
               </h2>
-              <p style={{ color: 'var(--text-muted)' }}>
+              <p style={{ color: "var(--text-muted)" }}>
                 {t("dashboard.tables.subtitle")}
               </p>
             </div>
@@ -392,10 +469,18 @@ export default function TablesPage() {
                   className={`p-2 rounded-md transition-all ${viewMode === "grid"
                     ? "bg-[var(--bg-base)] shadow-sm text-[var(--text)]"
                     : "text-[var(--text-muted)] hover:text-[var(--text)]"
-                    }`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    }`}>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                    />
                   </svg>
                 </button>
                 <button
@@ -403,23 +488,30 @@ export default function TablesPage() {
                   className={`p-2 rounded-md transition-all ${viewMode === "map"
                     ? "bg-[var(--bg-base)] shadow-sm text-[var(--text)]"
                     : "text-[var(--text-muted)] hover:text-[var(--text)]"
-                    }`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    }`}>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                    />
                   </svg>
                 </button>
               </div>
               <button
                 onClick={() => setAddAreaModalOpen(true)}
-                className="px-4 py-2 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium transition-all hover:bg-[var(--bg-base)]"
-              >
+                className="px-4 py-2 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium transition-all hover:bg-[var(--bg-base)]">
                 + {t("dashboard.tables.add_area")}
               </button>
               <button
                 onClick={() => setAddModalOpen(true)}
                 className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-                style={{ background: '#FF380B' }}
+                style={{ background: "var(--primary)" }}
                 suppressHydrationWarning>
                 <svg
                   className="w-5 h-5 inline-block mr-2"
@@ -443,15 +535,19 @@ export default function TablesPage() {
             <div
               className="rounded-xl p-4"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                  <p
+                    className="text-sm mt-1"
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.tables.stats.total_tables")}
                   </p>
-                  <p className="text-3xl font-bold mt-1" style={{ color: 'var(--text)' }}>
+                  <p
+                    className="text-3xl font-bold mt-1"
+                    style={{ color: "var(--text)" }}>
                     {tables.length}
                   </p>
                 </div>
@@ -475,12 +571,12 @@ export default function TablesPage() {
             <div
               className="rounded-xl p-4"
               style={{
-                background: 'var(--card)',
-                border: '1px solid rgba(34, 197, 94, 0.2)',
+                background: "var(--card)",
+                border: "1px solid rgba(34, 197, 94, 0.2)",
               }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.tables.stats.available")}
                   </p>
                   <p className="text-3xl font-bold text-green-500 mt-1">
@@ -507,22 +603,26 @@ export default function TablesPage() {
             <div
               className="rounded-xl p-4"
               style={{
-                background: 'var(--card)',
-                border: '1px solid rgba(255, 56, 11, 0.2)',
+                background: "var(--card)",
+                border: "1px solid rgba(255, 56, 11, 0.2)",
               }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.tables.stats.occupied")}
                   </p>
-                  <p className="text-3xl font-bold mt-1" style={{ color: '#FF380B' }}>
+                  <p
+                    className="text-3xl font-bold mt-1"
+                    style={{ color: "var(--primary)" }}>
                     {tables.filter((t) => t.status === "occupied").length}
                   </p>
                 </div>
-                <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(255, 56, 11, 0.1)' }}>
+                <div
+                  className="w-12 h-12 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: "var(--primary-soft)" }}>
                   <svg
                     className="w-6 h-6"
-                    style={{ color: '#FF380B' }}
+                    style={{ color: "var(--primary)" }}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24">
@@ -540,12 +640,12 @@ export default function TablesPage() {
             <div
               className="rounded-xl p-4"
               style={{
-                background: 'var(--card)',
-                border: '1px solid rgba(59, 130, 246, 0.2)',
+                background: "var(--card)",
+                border: "1px solid rgba(59, 130, 246, 0.2)",
               }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.tables.stats.reserved")}
                   </p>
                   <p className="text-3xl font-bold text-blue-500 mt-1">
@@ -588,28 +688,30 @@ export default function TablesPage() {
                 onZoneDelete={handleZoneDelete}
                 filter={{
                   floor: undefined,
-                  status: 'all'
+                  status: "all",
                 }}
                 renderTableContent={(table) => {
-                  const hasOrder = table.status === 'OCCUPIED' || table.status === 'RESERVED';
+                  const hasOrder =
+                    table.status === "OCCUPIED" || table.status === "RESERVED";
                   return (
                     hasOrder && (
-                      <div style={{
-                        position: 'absolute',
-                        top: -8,
-                        right: -8,
-                        background: '#FF380B',
-                        color: 'white',
-                        borderRadius: '50%',
-                        width: 20,
-                        height: 20,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 10,
-                        fontWeight: 'bold',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                      }}>
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: -8,
+                          right: -8,
+                          background: "var(--primary)",
+                          color: "white",
+                          borderRadius: "50%",
+                          width: 20,
+                          height: 20,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 10,
+                          fontWeight: "bold",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        }}>
                         !
                       </div>
                     )
@@ -624,10 +726,12 @@ export default function TablesPage() {
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
-              <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text)' }}>
+              <h3
+                className="text-xl font-bold mb-6"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.tables.title")}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -637,16 +741,22 @@ export default function TablesPage() {
                     onClick={() => handleTableClick(table)}
                     className="rounded-xl p-4 transition-all"
                     style={{
-                      background: 'var(--surface)',
-                      border: '1px solid var(--border)',
-                      cursor: 'pointer',
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      cursor: "pointer",
                     }}>
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h4 className="text-lg font-bold" style={{ color: 'var(--text)' }}>
-                          {t("dashboard.tables.card.table_name", { number: table.number })}
+                        <h4
+                          className="text-lg font-bold"
+                          style={{ color: "var(--text)" }}>
+                          {t("dashboard.tables.card.table_name", {
+                            number: table.number,
+                          })}
                         </h4>
-                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                        <p
+                          className="text-sm"
+                          style={{ color: "var(--text-muted)" }}>
                           {table.area} {t("dashboard.tables.card.area")}
                         </p>
                       </div>
@@ -658,7 +768,9 @@ export default function TablesPage() {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                      <div
+                        className="flex items-center gap-2 text-sm"
+                        style={{ color: "var(--text-muted)" }}>
                         <svg
                           className="w-4 h-4"
                           fill="none"
@@ -671,10 +783,16 @@ export default function TablesPage() {
                             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                           />
                         </svg>
-                        <span>{t("dashboard.tables.card.capacity", { count: table.capacity })}</span>
+                        <span>
+                          {t("dashboard.tables.card.capacity", {
+                            count: table.capacity,
+                          })}
+                        </span>
                       </div>
                       {table.currentOrder && (
-                        <div className="flex items-center gap-2 text-sm" style={{ color: '#FF380B' }}>
+                        <div
+                          className="flex items-center gap-2 text-sm"
+                          style={{ color: "var(--primary)" }}>
                           <svg
                             className="w-4 h-4"
                             fill="none"
@@ -687,7 +805,10 @@ export default function TablesPage() {
                               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                             />
                           </svg>
-                          <span>{t("dashboard.tables.card.order")}: {table.currentOrder}</span>
+                          <span>
+                            {t("dashboard.tables.card.order")}:{" "}
+                            {table.currentOrder}
+                          </span>
                         </div>
                       )}
                       {table.reservationTime && (
@@ -704,7 +825,10 @@ export default function TablesPage() {
                               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <span>{t("dashboard.tables.card.reserved_at")} {table.reservationTime}</span>
+                          <span>
+                            {t("dashboard.tables.card.reserved_at")}{" "}
+                            {table.reservationTime}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -712,18 +836,27 @@ export default function TablesPage() {
                     <div className="flex gap-2">
                       <button
                         className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                        style={{ backgroundColor: 'rgba(255, 56, 11, 0.1)', color: '#FF380B' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 56, 11, 0.2)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 56, 11, 0.1)'; }}
+                        style={{
+                          backgroundColor: "var(--primary-soft)",
+                          color: "var(--primary)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 56, 11, 0.2)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 56, 11, 0.1)";
+                        }}
                         suppressHydrationWarning>
                         {t("dashboard.tables.card.view_details")}
                       </button>
                       <button
                         className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                         style={{
-                          background: 'var(--surface)',
-                          color: 'var(--text-muted)',
-                          border: '1px solid var(--border)',
+                          background: "var(--surface)",
+                          color: "var(--text-muted)",
+                          border: "1px solid var(--border)",
                         }}
                         suppressHydrationWarning>
                         <svg
@@ -774,8 +907,6 @@ export default function TablesPage() {
         onAdd={handleAddArea}
       />
 
-
-
       {/* Delete Confirmation Modal for Table */}
       <DeleteConfirmModal
         open={deleteConfirmOpen}
@@ -788,7 +919,7 @@ export default function TablesPage() {
       {/* Delete Confirmation Modal for Zone */}
       <DeleteConfirmModal
         open={!!zoneToDelete}
-        itemName={zoneToDelete || ''}
+        itemName={zoneToDelete || ""}
         itemType="Area"
         onClose={() => setZoneToDelete(null)}
         onConfirm={confirmDeleteZone}

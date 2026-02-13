@@ -1,7 +1,7 @@
 "use client";
 
-import { useToast } from "@/lib/contexts/ToastContext";
 import employeeService from "@/lib/services/employeeService";
+import { message } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,6 @@ export default function StaffFormPage() {
   const params = useParams();
   const id = params.id as string;
   const isNewStaff = id === "new";
-  const { showToast } = useToast();
   const { t } = useTranslation(["common"]);
 
   const [formData, setFormData] = useState({
@@ -23,7 +22,7 @@ export default function StaffFormPage() {
     address: "",
     position: "",
     hireDate: new Date().toISOString().split("T")[0],
-    role: "Staff",
+    role: "Kitchen Staff",
     isActive: true,
   });
 
@@ -50,7 +49,7 @@ export default function StaffFormPage() {
         hireDate: employee.hireDate
           ? new Date(employee.hireDate).toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0],
-        role: employee.roles?.[0] || "Staff",
+        role: employee.roles?.[0] || "Kitchen Staff",
         isActive: employee.isActive !== undefined ? employee.isActive : true,
       });
     } catch (err: any) {
@@ -68,9 +67,7 @@ export default function StaffFormPage() {
 
       // Validation
       if (!formData.fullName.trim()) {
-        showToast(
-          "error",
-          t("dashboard.toasts.staff.validation_error_title"),
+        message.error(
           t("dashboard.toasts.staff.validation_full_name_required"),
         );
         setLoading(false);
@@ -78,21 +75,13 @@ export default function StaffFormPage() {
       }
 
       if (!formData.email.trim()) {
-        showToast(
-          "error",
-          t("dashboard.toasts.staff.validation_error_title"),
-          t("dashboard.toasts.staff.validation_email_required"),
-        );
+        message.error(t("dashboard.toasts.staff.validation_email_required"));
         setLoading(false);
         return;
       }
 
       if (!formData.position.trim()) {
-        showToast(
-          "error",
-          t("dashboard.toasts.staff.validation_error_title"),
-          t("dashboard.toasts.staff.validation_position_required"),
-        );
+        message.error(t("dashboard.toasts.staff.validation_position_required"));
         setLoading(false);
         return;
       }
@@ -110,11 +99,7 @@ export default function StaffFormPage() {
         };
 
         await employeeService.createEmployee(submitData);
-        showToast(
-          "success",
-          t("dashboard.toasts.staff.created_title"),
-          t("dashboard.toasts.staff.created_message"),
-        );
+        message.success(t("dashboard.toasts.staff.created_message"));
         setTimeout(() => router.push("/admin/staff"), 1500);
         return;
       } else {
@@ -129,11 +114,7 @@ export default function StaffFormPage() {
         };
 
         await employeeService.updateEmployee(id, submitData);
-        showToast(
-          "success",
-          t("dashboard.toasts.staff.updated_title"),
-          t("dashboard.toasts.staff.updated_message"),
-        );
+        message.success(t("dashboard.toasts.staff.updated_message"));
         setTimeout(() => router.push("/admin/staff"), 1500);
         return;
       }
@@ -169,11 +150,7 @@ export default function StaffFormPage() {
       }
 
       console.error("Error saving staff:", errorMsg);
-      showToast(
-        "error",
-        t("dashboard.toasts.staff.save_failed_title"),
-        errorMsg,
-      );
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -233,7 +210,9 @@ export default function StaffFormPage() {
             <h2
               className="text-3xl font-bold mb-2"
               style={{ color: "var(--text)" }}>
-              {isNewStaff ? t("dashboard.staff.add_new_staff") : t("dashboard.staff.edit_staff")}
+              {isNewStaff
+                ? t("dashboard.staff.add_new_staff")
+                : t("dashboard.staff.edit_staff")}
             </h2>
             <p style={{ color: "var(--text-muted)" }}>
               {isNewStaff
@@ -445,7 +424,7 @@ export default function StaffFormPage() {
                     onChange={handleChange}
                     className="w-5 h-5 rounded border-2 border-gray-300 focus:ring-2 focus:ring-orange-500 cursor-pointer"
                     style={{
-                      accentColor: "#FF380B",
+                      accentColor: "var(--primary)",
                     }}
                   />
                   <span style={{ color: "var(--text)" }}>
@@ -473,13 +452,17 @@ export default function StaffFormPage() {
                 disabled={loading}
                 className="flex-1 px-6 py-3 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: loading ? "#CC2D08" : "#FF380B",
+                  background: loading
+                    ? "var(--primary-hover)"
+                    : "var(--primary)",
                 }}
                 onMouseEnter={(e) => {
-                  if (!loading) e.currentTarget.style.background = "#CC2D08";
+                  if (!loading)
+                    e.currentTarget.style.background = "var(--primary-hover)";
                 }}
                 onMouseLeave={(e) => {
-                  if (!loading) e.currentTarget.style.background = "#FF380B";
+                  if (!loading)
+                    e.currentTarget.style.background = "var(--primary)";
                 }}>
                 {loading
                   ? t("common.saving")

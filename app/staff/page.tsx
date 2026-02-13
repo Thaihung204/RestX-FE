@@ -19,8 +19,9 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { tableService, TableStatus } from '@/lib/services/tableService';
 import PageTransition from '../components/PageTransition';
-import { useThemeMode } from '../theme/AutoDarkThemeProvider';
+import { useThemeMode } from '../theme/AntdProvider';
 
 const { Title, Text } = Typography;
 
@@ -137,20 +138,38 @@ export default function StaffDashboard() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+
+  // ... (top of file)
+
+  const [tables, setTables] = useState<any[]>([]);
+
   // Update time every minute
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
-  const { t } = useTranslation();
+  // Fetch tables
+  useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        const data = await tableService.getAllTables();
+        setTables(data);
+      } catch (error) {
+        console.error('Failed to fetch tables:', error);
+      }
+    };
+    fetchTables();
+  }, []);
+
+  const { t, i18n } = useTranslation();
   const { mode } = useThemeMode();
 
   const statsData = [
     {
       title: t('staff.dashboard.stats.serving_tables'), // 'Bàn đang phục vụ'
-      value: 12,
-      total: 20,
+      value: tables.filter(t => t.tableStatusId === TableStatus.Occupied).length,
+      total: tables.length,
       icon: <TableOutlined />,
       color: '#FF380B',
       bgColor: 'rgba(255, 56, 11, 0.1)',
@@ -234,11 +253,32 @@ export default function StaffDashboard() {
     },
   ];
 
-  const tableStatus = [
-    { zone: t('staff.tables.zones.zone_a'), available: 4, occupied: 6, total: 10 },
-    { zone: t('staff.tables.zones.zone_b'), available: 2, occupied: 4, total: 6 },
-    { zone: t('staff.tables.zones.zone_vip'), available: 1, occupied: 3, total: 4 },
-  ];
+  const tableStatus = React.useMemo(() => {
+    const zones = Array.from(new Set(tables.map(t => t.type || 'Other')));
+    const defaultZones = ['A', 'B', 'VIP']; // Default zones if empty to match UI expectation or just generic
+    // Actually better to just use what dynamic data we have.
+    // But to match the previous UI style, let's map them.
+
+    // Group tables by zone
+    const statusByZone: Record<string, { total: number, occupied: number, available: number, name: string }> = {};
+
+    tables.forEach(t => {
+      const zoneName = t.type || 'Other';
+      if (!statusByZone[zoneName]) {
+        statusByZone[zoneName] = {
+          total: 0, occupied: 0, available: 0,
+          name: i18n.exists('staff.tables.zones.zone_' + zoneName.toLowerCase())
+            ? t('staff.tables.zones.zone_' + zoneName.toLowerCase())
+            : zoneName
+        };
+      }
+      statusByZone[zoneName].total++;
+      if (t.tableStatusId === TableStatus.Occupied) statusByZone[zoneName].occupied++;
+      else if (t.tableStatusId === TableStatus.Available) statusByZone[zoneName].available++;
+    });
+
+    return Object.values(statusByZone);
+  }, [tables, t]);
 
   const orderColumns = [
     {
@@ -676,7 +716,7 @@ export default function StaffDashboard() {
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <Text strong>{zone.zone}</Text>
+                      <Text strong>{zone.name}</Text>
                       <Text type="secondary">
                         <motion.span
                           key={zone.available}

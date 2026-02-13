@@ -1,7 +1,7 @@
 'use client';
 
 import ThemeToggle from '@/app/components/ThemeToggle';
-import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
+import { useThemeMode } from '@/app/theme/AntdProvider';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useTenant } from "@/lib/contexts/TenantContext";
 import {
@@ -19,17 +19,24 @@ import { useTranslation } from 'react-i18next';
 import Navbar from './Navbar';
 
 import { TenantConfig } from '@/lib/services/tenantService';
+import { Category } from '@/lib/services/categoryService';
 
 interface RestaurantHeaderProps {
   tenant: TenantConfig | null;
+  categories?: Category[];
 }
 
-const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant }) => {
+const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant, categories = [] }) => {
   const { t } = useTranslation();
   const { tenant: contextTenant } = useTenant();
   const tenant = propTenant || contextTenant;
   const { mode } = useThemeMode();
   const [scrolled, setScrolled] = useState(false);
+  
+  // Debug
+  console.log('[RestaurantHeader] tenant:', tenant);
+  console.log('[RestaurantHeader] businessName:', tenant?.businessName);
+  console.log('[RestaurantHeader] name:', tenant?.name);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [activeItem, setActiveItem] = useState('home');
@@ -55,7 +62,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
     };
   }, []);
 
-  const menuItems = [
+  const menuItems = React.useMemo(() => [
     {
       key: 'home',
       label: t('restaurant.header.home'),
@@ -67,16 +74,21 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
       href: '/restaurant#about'
     },
     {
+      key: 'featured',
+      label: t('restaurant.header.featured'),
+      href: '/restaurant#featured'
+    },
+    {
       key: 'menu',
       label: (
         <Dropdown
           menu={{
             items: [
               { key: 'all', label: t('restaurant.header.menu.all') },
-              { key: 'appetizer', label: t('restaurant.header.menu.appetizer') },
-              { key: 'main', label: t('restaurant.header.menu.main') },
-              { key: 'dessert', label: t('restaurant.header.menu.dessert') },
-              { key: 'drink', label: t('restaurant.header.menu.drink') },
+              ...categories.map(cat => ({
+                key: cat.id,
+                label: cat.name,
+              })),
             ],
           }}>
           <Space style={{ color: 'inherit' }}>
@@ -88,21 +100,11 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
       href: '/restaurant#menu'
     },
     {
-      key: 'featured',
-      label: t('restaurant.header.featured'),
-      href: '/restaurant#featured'
-    },
-    {
-      key: 'daily',
-      label: t('restaurant.header.daily'),
-      href: '/restaurant#daily'
-    },
-    {
       key: 'news',
       label: t('restaurant.header.news'),
       href: '/restaurant#news'
     },
-  ];
+  ], [t, categories]);
 
   return (
     <header
@@ -159,7 +161,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
               color: headerContentColor,
               fontFamily: 'serif',
             }}>
-            {tenant?.name || t('restaurant.header.title')}
+            {tenant?.businessName || tenant?.name || t('restaurant.header.title')}
           </span>
         </Link>
 
@@ -183,6 +185,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
             <ShoppingCartOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
             <Button
               type="primary"
+              href="#reservation"
               style={{
                 background: 'linear-gradient(135deg, #FF6B3B 0%, #CC2D08 100%)',
                 border: 'none',

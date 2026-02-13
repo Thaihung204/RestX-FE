@@ -3,7 +3,6 @@
 import ThemeToggle from "@/app/components/ThemeToggle";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import { useLanguage } from "@/components/I18nProvider";
-import { useToast } from "@/lib/contexts/ToastContext";
 import {
   CheckCircleOutlined,
   MailOutlined,
@@ -17,6 +16,7 @@ import {
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import {
+  App,
   Avatar,
   Breadcrumb,
   Button,
@@ -24,6 +24,7 @@ import {
   DatePicker,
   Dropdown,
   Input,
+  Modal,
   Radio,
   Select,
   Spin,
@@ -101,10 +102,10 @@ const formatDate = (isoDate: string) => {
 // --- MAIN PAGE COMPONENT ---
 
 const TenantPage: React.FC = () => {
-  const { showToast } = useToast();
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const { language, changeLanguage } = useLanguage();
+  const { message } = App.useApp();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
@@ -113,6 +114,15 @@ const TenantPage: React.FC = () => {
   >("month");
   const [tenants, setTenants] = useState<ITenant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState<{
+    visible: boolean;
+    tenant: ITenant | null;
+    confirmText: string;
+  }>({
+    visible: false,
+    tenant: null,
+    confirmText: "",
+  });
 
   // Fetch tenants from API
   useEffect(() => {
@@ -124,18 +134,10 @@ const TenantPage: React.FC = () => {
       setLoading(true);
       const data = await tenantService.getAllTenantsForAdmin();
       setTenants(data);
-      showToast(
-        "success",
-        t("tenants.toasts.fetch_success_title"),
-        t("tenants.toasts.fetch_success_message"),
-      );
+      message.success(t("tenants.toasts.fetch_success_message"));
     } catch (error) {
       console.error("Failed to fetch tenants:", error);
-      showToast(
-        "error",
-        t("tenants.toasts.fetch_error_title"),
-        t("tenants.toasts.fetch_error_message"),
-      );
+      message.error(t("tenants.toasts.fetch_error_message"));
       setTenants([]);
     } finally {
       setLoading(false);
@@ -153,7 +155,8 @@ const TenantPage: React.FC = () => {
         item.businessName.toLowerCase().includes(query) ||
         item.phoneNumber.includes(query) ||
         item.ownerEmail.toLowerCase().includes(query) ||
-        item.mailRestaurant.toLowerCase().includes(query);
+        item.mailRestaurant.toLowerCase().includes(query) ||
+        (item.networkIp && item.networkIp.toLowerCase().includes(query));
       return matchesStatus && matchesQuery;
     });
   }, [search, status, tenants]);
@@ -181,17 +184,35 @@ const TenantPage: React.FC = () => {
     if (key === "view") {
       router.push(`/tenants/${record.id}`);
     } else if (key === "domain") {
-      showToast(
-        "info",
-        t("tenants.toasts.feature_coming_title"),
-        t("tenants.toasts.feature_coming_message"),
-      );
+      message.info(t("tenants.toasts.feature_coming_message"));
     } else if (key === "suspend") {
-      showToast(
-        "info",
-        t("tenants.toasts.feature_coming_title"),
-        t("tenants.toasts.feature_coming_message"),
-      );
+      setDeleteModal({
+        visible: true,
+        tenant: record,
+        confirmText: "",
+      });
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.tenant) return;
+
+    if (deleteModal.confirmText !== deleteModal.tenant.name) {
+      message.error(t("tenants.actions.delete_name_mismatch"));
+      return;
+    }
+
+    try {
+      await tenantService.deleteTenant(deleteModal.tenant.id);
+      message.success(t("tenants.toasts.delete_success_message"));
+      setDeleteModal({ visible: false, tenant: null, confirmText: "" });
+      await fetchTenants();
+    } catch (error: any) {
+      console.error("Failed to delete tenant:", error);
+      const errorMsg =
+        error?.response?.data?.message ||
+        t("tenants.toasts.delete_error_message");
+      message.error(errorMsg);
     }
   };
 
@@ -235,7 +256,7 @@ const TenantPage: React.FC = () => {
             <span
               className="text-xs font-mono"
               style={{ color: "var(--text-muted)" }}>
-              {record.hostName}.restx.food
+              {record.hostName.replace(/\.restx\.food$/, "")}.restx.food
             </span>
           </div>
         </div>
@@ -244,14 +265,17 @@ const TenantPage: React.FC = () => {
     {
       title: t("tenants.table.contact"),
       key: "contact",
-      width: 200,
+      width: 220,
       render: (_, record) => (
         <div className="flex flex-col gap-1">
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-            <PhoneOutlined /> {record.phoneNumber}
+          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+            <PhoneOutlined className="mr-1" /> {record.phoneNumber}
           </span>
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-            <MailOutlined /> {record.mailRestaurant}
+          <span
+            className="text-[11px] truncate max-w-[200px]"
+            style={{ color: "var(--text-muted)" }}
+            title={record.mailRestaurant}>
+            <MailOutlined className="mr-1" /> {record.mailRestaurant}
           </span>
         </div>
       ),
@@ -259,16 +283,30 @@ const TenantPage: React.FC = () => {
     {
       title: t("tenants.table.address"),
       key: "address",
-      width: 220,
+      width: 240,
       render: (_, record) => (
         <div className="flex flex-col">
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
             {record.addressLine1} {record.addressLine2}
           </span>
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
             {record.addressLine3}, {record.addressLine4}
           </span>
         </div>
+      ),
+    },
+    {
+      title: "Domain / IP",
+      dataIndex: "networkIp",
+      key: "networkIp",
+      width: 180,
+      render: (networkIp: string) => (
+        <span
+          className="text-[11px] font-mono truncate max-w-[160px] block"
+          style={{ color: networkIp ? "var(--text)" : "var(--text-muted)" }}
+          title={networkIp || "Not configured"}>
+          {networkIp || <span className="italic opacity-60">Not set</span>}
+        </span>
       ),
     },
     {
@@ -282,16 +320,19 @@ const TenantPage: React.FC = () => {
       title: t("tenants.table.status"),
       dataIndex: "status",
       key: "status",
-      width: 120,
+      width: 140,
       render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
     },
     {
       title: t("tenants.table.owner"),
       dataIndex: "ownerEmail",
       key: "ownerEmail",
-      width: 180,
+      width: 200,
       render: (email) => (
-        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+        <span
+          className="text-[11px] truncate max-w-[180px] block"
+          style={{ color: "var(--text-muted)" }}
+          title={email}>
           {email}
         </span>
       ),
@@ -300,10 +341,10 @@ const TenantPage: React.FC = () => {
       title: t("tenants.table.last_active"),
       dataIndex: "lastActive",
       key: "lastActive",
-      width: 110,
+      width: 120,
       render: (value: string) => (
         <span
-          className="text-xs font-variant-numeric tabular-nums"
+          className="text-[11px] font-variant-numeric tabular-nums whitespace-nowrap"
           style={{ color: "var(--text-muted)" }}>
           {formatDate(value)}
         </span>
@@ -701,6 +742,14 @@ const TenantPage: React.FC = () => {
                         rowKey="id"
                         columns={columns}
                         dataSource={filteredData}
+                        className="admin-tenants-table"
+                        style={
+                          {
+                            "--table-header-bg": "var(--surface)",
+                            "--table-header-text": "var(--text)",
+                            "--table-row-hover-bg": "var(--surface-subtle)",
+                          } as React.CSSProperties
+                        }
                         pagination={{
                           pageSize: 8,
                           showTotal: (total) => (
@@ -780,6 +829,55 @@ const TenantPage: React.FC = () => {
           />
         </div>
       </main>
+      {/* Delete Confirmation Modal */}
+      <Modal
+        open={deleteModal.visible}
+        title={
+          <span style={{ color: "var(--text)" }}>
+            {t("tenants.actions.delete_confirm_title")}
+          </span>
+        }
+        onCancel={() =>
+          setDeleteModal({ visible: false, tenant: null, confirmText: "" })
+        }
+        onOk={handleDeleteConfirm}
+        okText={t("tenants.actions.delete_confirm_ok")}
+        okType="danger"
+        cancelText={t("tenants.actions.delete_confirm_cancel")}
+        okButtonProps={{
+          disabled: deleteModal.confirmText !== deleteModal.tenant?.name,
+        }}>
+        <div className="space-y-4 py-2">
+          <p style={{ color: "var(--text)", marginBottom: "16px" }}>
+            {t("tenants.actions.delete_warning", {
+              name: deleteModal.tenant?.name,
+            })}
+          </p>
+          <div>
+            <label
+              className="block mb-2 text-sm font-medium"
+              style={{ color: "var(--text-muted)" }}>
+              {t("tenants.actions.delete_type_name", {
+                name: deleteModal.tenant?.name,
+              })}
+            </label>
+            <Input
+              placeholder={deleteModal.tenant?.name}
+              value={deleteModal.confirmText}
+              onChange={(e) =>
+                setDeleteModal({ ...deleteModal, confirmText: e.target.value })
+              }
+              status={
+                deleteModal.confirmText &&
+                deleteModal.confirmText !== deleteModal.tenant?.name
+                  ? "error"
+                  : ""
+              }
+              autoFocus
+            />
+          </div>
+        </div>
+      </Modal>{" "}
     </div>
   );
 };

@@ -70,6 +70,14 @@
         "other_items": "món khác",
         "items_not_done": "chưa xong"
       },
+      "status": {
+        "pending": "Chờ xử lý",
+        "preparing": "Đang nấu",
+        "ready": "Sẵn sàng",
+        "served": "Đã phục vụ",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
+      },
       "modal": {
         "order_detail": "Chi tiết Order",
         "cart": "Giỏ hàng",
@@ -379,7 +387,166 @@
       "title": "Quản lý",
       "subtitle": "Quản lý danh mục và cấu hình nhà hàng",
       "tabs": {
-        "categories": "Danh mục"
+        "categories": "Danh mục",
+        "ingredient_categories": "Loại nguyên liệu",
+        "suppliers": "Nhà cung cấp",
+        "loyalty": "Hạng thành viên",
+        "order_status": "Trạng thái đơn hàng"
+      },
+      "ingredient_categories": {
+        "title": "Loại nguyên liệu",
+        "subtitle": "Phân loại nguyên liệu để quản lý kho hiệu quả hơn",
+        "add": "Thêm loại",
+        "edit": "Sửa loại",
+        "name": "Tên",
+        "description": "Mô tả",
+        "unit": "Đơn vị mặc định",
+        "actions": "Thao tác",
+        "empty": "Chưa có loại nguyên liệu nào. Nhấn \"Thêm loại\" để tạo mới.",
+        "confirm_delete": "Bạn có chắc muốn xóa loại nguyên liệu này?",
+        "name_placeholder": "Ví dụ: Rau củ, Thịt, Sữa...",
+        "description_placeholder": "Mô tả ngắn gọn về loại nguyên liệu này",
+        "defaults": {
+          "vegetables": {
+            "name": "Rau củ",
+            "description": "Rau xanh và củ quả tươi"
+          },
+          "meat": {
+            "name": "Thịt",
+            "description": "Thịt bò, heo, gà, v.v."
+          },
+          "seafood": {
+            "name": "Hải sản",
+            "description": "Cá, tôm, cua, v.v."
+          },
+          "dairy": {
+            "name": "Sữa & Chế phẩm",
+            "description": "Sữa, phô mai, bơ, v.v."
+          },
+          "spices": {
+            "name": "Gia vị",
+            "description": "Muối, tiêu, thảo mộc, v.v."
+          },
+          "sauces": {
+            "name": "Sốt",
+            "description": "Nước tương, nước mắm, v.v."
+          }
+        },
+        "units": {
+          "kg": "kg",
+          "gram": "gram",
+          "liter": "lít",
+          "ml": "ml",
+          "piece": "cái",
+          "bottle": "chai",
+          "can": "lon",
+          "pack": "gói",
+          "box": "hộp"
+        }
+      },
+      "suppliers": {
+        "title": "Quản lý nhà cung cấp",
+        "subtitle": "Quản lý nhà cung cấp và đối tác của nhà hàng",
+        "add": "Thêm nhà cung cấp",
+        "edit": "Sửa nhà cung cấp",
+        "name": "Tên nhà cung cấp",
+        "contact": "Thông tin liên hệ",
+        "phone": "Số điện thoại",
+        "email": "Email",
+        "address": "Địa chỉ",
+        "status": "Trạng thái",
+        "actions": "Thao tác",
+        "active": "Hoạt động",
+        "inactive": "Ngừng hoạt động",
+        "empty": "Chưa có nhà cung cấp nào. Nhấn \"Thêm nhà cung cấp\" để tạo mới.",
+        "confirm_delete": "Bạn có chắc muốn xóa nhà cung cấp này?",
+        "created": "Đã thêm nhà cung cấp",
+        "updated": "Đã cập nhật nhà cung cấp",
+        "deleted": "Đã xóa nhà cung cấp",
+        "name_placeholder": "Ví dụ: Công ty Rau Sạch",
+        "phone_placeholder": "0123456789",
+        "email_placeholder": "lienhe@nhacungcap.com",
+        "address_placeholder": "Địa chỉ đầy đủ của nhà cung cấp",
+        "defaults": {
+          "supplier1": {
+            "name": "Công ty Rau Sạch",
+            "address": "123 Đường Chợ, Quận 1"
+          },
+          "supplier2": {
+            "name": "Thủy Hải Sản Đại Dương",
+            "address": "456 Đường Cảng, Quận 2"
+          }
+        }
+      },
+      "loyalty": {
+        "title": "Hạng thành viên",
+        "desc": "Quản lý các hạng thành viên và ưu đãi",
+        "add_new": "Thêm hạng mới",
+        "edit": "Sửa hạng thành viên",
+        "create": "Tạo hạng thành viên",
+        "name": "Tên hạng",
+        "range": "Khoảng điểm",
+        "discount": "Giảm giá",
+        "benefits": "Ưu đãi",
+        "status": "Trạng thái",
+        "form": {
+          "name": "Tên hạng",
+          "logo": "Thứ hạng",
+          "range": "Khoảng điểm",
+          "max_tooltip": "Để trống nếu không giới hạn",
+          "discount": "Phần trăm giảm giá (%)",
+          "benefits": "Mô tả ưu đãi"
+        },
+        "badges": {
+          "bronze": "Đồng",
+          "silver": "Bạc",
+          "gold": "Vàng",
+          "platinum": "Bạch kim"
+        }
+      },
+      "order_status": {
+        "title": "Quản lý trạng thái đơn hàng",
+        "subtitle": "Quản lý các trạng thái đơn hàng, mã và màu sắc",
+        "add_status": "Thêm trạng thái",
+        "edit_status": "Chỉnh sửa trạng thái",
+        "name": "Tên trạng thái",
+        "name_placeholder": "Nhập tên trạng thái",
+        "name_required": "Vui lòng nhập tên trạng thái",
+        "code": "Mã",
+        "code_placeholder": "VD: PENDING, PROCESSING",
+        "code_required": "Vui lòng nhập mã trạng thái",
+        "code_format": "Mã chỉ được chứa chữ in hoa và dấu gạch dưới",
+        "color": "Màu sắc",
+        "color_required": "Vui lòng chọn màu sắc",
+        "is_active": "Kích hoạt",
+        "is_active_desc": "Bật hoặc tắt trạng thái này",
+        "is_default": "Mặc định",
+        "is_default_desc": "Đặt làm trạng thái mặc định cho đơn mới",
+        "default_note": "Chỉ một trạng thái được đặt làm mặc định. Việc này sẽ thay thế trạng thái mặc định hiện tại.",
+        "tooltip": {
+          "current_default": "Mặc định hiện tại",
+          "set_default": "Đặt làm mặc định"
+        },
+        "modal_subtitle_edit": "Cập nhật thông tin trạng thái",
+        "modal_subtitle_create": "Tạo mới trạng thái",
+        "empty_state_desc": "Tạo trạng thái mới để bắt đầu",
+        "table": {
+          "name": "Tên trạng thái",
+          "code": "Mã",
+          "color": "Màu sắc",
+          "default": "Mặc định",
+          "status": "Trạng thái",
+          "actions": "Thao tác"
+        }
+      },
+      "notifications": {
+        "delete_success": "Xóa thành công",
+        "update_success": "Cập nhật thành công",
+        "create_success": "Tạo mới thành công"
+      },
+      "errors": {
+        "fetch_failed": "Không thể tải danh sách hạng thành viên",
+        "delete_failed": "Xóa thất bại"
       }
     },
     "header": {
@@ -423,6 +590,17 @@
         "cannot_undo": "Hành động này không thể hoàn tác.",
         "cancel": "Hủy",
         "delete": "Xóa"
+      },
+      "toasts": {
+        "fetch_success_message": "Tải thực đơn thành công",
+        "fetch_error_message": "Không thể tải thực đơn. Vui lòng thử lại.",
+        "delete_success_message": "Xóa món ăn thành công",
+        "delete_error_message": "Không thể xóa món ăn. Vui lòng thử lại.",
+        "create_success_message": "Tạo món ăn thành công",
+        "update_success_message": "Cập nhật món ăn thành công",
+        "save_error_message": "Không thể lưu món ăn. Vui lòng thử lại.",
+        "detail_error_message": "Không thể tải thông tin món ăn.",
+        "validation_error_message": "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại."
       }
     },
     "orders": {
@@ -575,11 +753,8 @@
         "view_profile": "Xem hồ sơ"
       },
       "roles": {
-        "manager": "Quản lý",
-        "chef": "Đầu bếp",
-        "waiter": "Phục vụ",
-        "cashier": "Thu ngân",
-        "cleaner": "Lao công"
+        "kitchen staff": "Nhân viên bếp",
+        "waiter": "Phục vụ"
       },
       "status": {
         "active": "Hoạt động",
@@ -656,7 +831,13 @@
         "description": "Mô tả",
         "image": "Hình ảnh",
         "actions": "Hành động",
-        "confirm_delete": "Bạn có chắc chắn muốn xóa danh mục này?"
+        "confirm_delete": "Bạn có chắc chắn muốn xóa danh mục này?",
+        "change_image": "Đổi ảnh",
+        "upload_image": "Tải ảnh lên",
+        "file_size_error": "Kích thước tệp phải nhỏ hơn 5MB",
+        "name_placeholder": "ví dụ: Khai vị",
+        "description_placeholder": "Mô tả ngắn gọn về danh mục",
+        "no_categories": "Chưa có danh mục nào. Nhấn \"Thêm danh mục\" để tạo mới."
       },
       "general": {
         "restaurant_info": "Thông tin nhà hàng",
@@ -817,6 +998,9 @@
       "days_ago": "{{count}} ngày trước"
     },
     "status": {
+      "label": "Trạng thái",
+      "active": "Hoạt động",
+      "inactive": "Ngừng hoạt động",
       "pending": "Chờ xử lý",
       "preparing": "Đang nấu",
       "ready": "Sẵn sàng",
@@ -824,6 +1008,9 @@
       "cancelled": "Đã hủy"
     },
     "actions": {
+      "title": "Thao tác",
+      "yes": "Có",
+      "no": "Không",
       "create_order": "Tạo Order mới"
     },
     "language": "Ngôn ngữ",
@@ -933,6 +1120,27 @@
         "recent_orders": "Đơn hàng gần đây"
       },
       "trusted_by": "Được tin dùng bởi các thương hiệu hàng đầu"
+    },
+    "about": {
+      "tag": "Câu chuyện của chúng tôi",
+      "title_prefix": "Cách mạng hóa ",
+      "title_highlight": "Ngành Ẩm thực",
+      "description": "RestX ra đời với sứ mệnh đơn giản: trao quyền cho các chủ nhà hàng bằng công nghệ cho cảm giác tự nhiên như tay nghề của họ. Chúng tôi thu hẹp khoảng cách giữa lòng hiếu khách truyền thống và hiệu quả hiện đại, giúp bạn tập trung vào điều quan trọng nhất—món ăn ngon và khách hàng hài lòng.",
+      "mission": {
+        "title": "Sứ mệnh Dẫn lối",
+        "desc": "Tận tâm vì sự phát triển của bạn"
+      },
+      "innovation": {
+        "title": "Đổi mới Đi đầu",
+        "desc": "Luôn đón đầu xu hướng"
+      },
+      "cta": "Tham gia cùng chúng tôi",
+      "stats": {
+        "restaurants": "Nhà hàng Tin dùng",
+        "countries": "Quốc gia Hỗ trợ",
+        "chefs": "Đầu bếp Hài lòng",
+        "team": "Thành viên Đội ngũ"
+      }
     },
     "features": {
       "tag": "Tính năng",
@@ -1059,7 +1267,7 @@
       "featured": "Nổi bật",
       "daily": "Món trong ngày",
       "news": "Tin tức",
-      "title": "RestX",
+      "title": "Nhà hàng",
       "book_table": "Đặt bàn"
     },
     "hero": {
@@ -1080,6 +1288,18 @@
       "dessert": "Tráng miệng",
       "drinks": "Đồ uống"
     },
+    "descriptions": {
+      "appetizer": "Salad, súp và món khai vị",
+      "main": "Bít tết, hải sản và mỳ Ý",
+      "dessert": "Bánh ngọt, kem và trái cây",
+      "drinks": "Cocktail, rượu và nước ngọt"
+    },
+    "messages": {
+      "name_required": "Vui lòng nhập tên",
+      "phone_required": "Vui lòng nhập số điện thoại",
+      "supplier_added": "Thêm nhà cung cấp thành công",
+      "supplier_updated": "Cập nhật nhà cung cấp thành công"
+    },
     "menu_section": {
       "title": "Thực đơn của chúng tôi",
       "not_updated": "Thực đơn đang được cập nhật..."
@@ -1087,6 +1307,7 @@
   },
   "customers": {
     "title": "Quản lý khách hàng",
+    "subtitle": "Xem và quản lý thông tin khách hàng của nhà hàng",
     "birthday_alert": {
       "title": "Sinh nhật hôm nay!",
       "message": "Có {{count}} khách hàng sinh nhật hôm nay. Hãy gửi lời chúc mừng!"
@@ -1105,6 +1326,7 @@
         "customer": "Khách hàng",
         "contact": "Liên hệ",
         "vip_tier": "Hạng VIP",
+        "rank": "Hạng",
         "orders": "Đơn hàng",
         "total_spent": "Tổng chi tiêu",
         "points": "Điểm tích lũy",
@@ -1112,7 +1334,8 @@
       },
       "status": {
         "birthday": "Sinh nhật",
-        "active": "Hoạt động"
+        "active": "Hoạt động",
+        "inactive": "Ngừng hoạt động"
       },
       "empty": "Không tìm thấy khách hàng nào"
     },
@@ -1142,8 +1365,62 @@
     "mark_read": "Đánh dấu đã đọc",
     "empty": "Không có thông báo"
   },
+  "customer_page": {
+    "footer": {
+      "call_service": "Gọi phục vụ",
+      "service_called": "Nhân viên sẽ đến bàn của bạn ngay!",
+      "language_switched_vi": "Switched to Vietnamese",
+      "language_switched_en": "Chuyển sang tiếng Anh",
+      "theme_switched_light": "Chuyển sang chế độ sáng",
+      "theme_switched_dark": "Chuyển sang chế độ tối"
+    },
+    "profile": {
+      "title": "Hồ sơ của tôi",
+      "loyal_member": "Thành viên thân thiết",
+      "phone": "Sđt",
+      "member_since": "Tham gia",
+      "points": "Điểm tích lũy",
+      "membership_level": "Hạng thành viên",
+      "next_reward": "Thưởng tiếp theo",
+      "points_to_next": "*Tích thêm {points} điểm để nhận Voucher",
+      "edit_profile": "Chỉnh sửa hồ sơ",
+      "save_changes": "Lưu thay đổi",
+      "cancel": "Hủy",
+      "name_label": "Họ và tên",
+      "phone_label": "Số điện thoại",
+      "validation": {
+        "required_fields": "Vui lòng điền đầy đủ thông tin!",
+        "update_success": "Cập nhật thành công!",
+        "update_failed": "Cập nhật thất bại"
+      }
+    },
+    "cart_modal": {
+      "title": "Giỏ hàng",
+      "cart_tab": "Giỏ hàng",
+      "cart_tab_with_count": "Giỏ hàng ({{count}})",
+      "ordered_tab": "Món đã đặt",
+      "empty_cart": "Giỏ hàng trống",
+      "empty_ordered": "Chưa có món nào được đặt",
+      "status_preparing": "Đang làm",
+      "total": "Tổng cộng:",
+      "items_count": "{{count}} món",
+      "confirm_order": "Gửi yêu cầu gọi món",
+      "request_payment": "Xác nhận thanh toán"
+    },
+    "welcome_card": {
+      "greeting": "Xin chào quý khách",
+      "default_name": "Thượng đế",
+      "gold_member": "Thành viên Vàng",
+      "table_label": "Vị trí"
+    }
+  },
   "menu_page": {
+    "logo_title": "RESTX PREMIUM DINING",
     "title": "Thực đơn hôm nay",
+    "loading": "Đang tải thực đơn...",
+    "retry": "Thử lại",
+    "error_load": "Không thể tải thực đơn. Vui lòng thử lại sau.",
+    "items": "món",
     "restx_menu": "RESTX MENU",
     "search_placeholder": "Tìm món...",
     "viewing_category": "Đang xem danh mục",
@@ -1164,7 +1441,7 @@
       "add_to_cart": "Thêm vào giỏ",
       "price": "Giá"
     },
-    "best_seller": "Bán chạy nhất",
+    "best_seller": "Bán chạy",
     "default_food_desc": "Món ăn tuyệt vời từ nguyên liệu tươi ngon nhất.",
     "tags": {
       "spicy": "Cay",
@@ -1191,14 +1468,17 @@
     },
     "login_header": {
       "default_title": "Đăng nhập",
-      "subtitle": "Chào mừng đến với Nhà hàng"
+      "subtitle": "Chào mừng đến với Nhà hàng",
+      "welcome_to": "Chào mừng đến với"
     },
     "login_button": {
       "login_text": "ĐĂNG NHẬP",
       "create_account": "TẠO TÀI KHOẢN",
+      "register_text": "ĐĂNG KÝ",
       "loading": "Đang tải..."
     },
     "login_page": {
+      "title": "Đăng nhập bằng Số điện thoại",
       "phone_label": "Số điện thoại",
       "phone_placeholder": "0123456789",
       "name_label": "Tên",
@@ -1208,6 +1488,7 @@
       "privacy_policy": "Chính sách bảo mật",
       "or_login_with": "Hoặc đăng nhập bằng",
       "email_password": "Email & Mật khẩu",
+      "welcome_back": "Chào mừng trở lại",
       "validation": {
         "phone_length": "Số điện thoại phải có đúng 10 chữ số",
         "phone_digits": "Số điện thoại chỉ được chứa chữ số",
@@ -1485,7 +1766,14 @@
     "actions": {
       "view_details": "Xem chi tiết",
       "configure_domain": "Cấu hình tên miền",
-      "suspend_tenant": "Tạm ngừng nhà hàng"
+      "suspend_tenant": "Xóa nhà hàng",
+      "delete_confirm_title": "Xóa nhà hàng",
+      "delete_confirm_content": "Bạn có chắc chắn muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn tất cả dữ liệu liên quan đến nhà hàng này.",
+      "delete_warning": "Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn tất cả dữ liệu liên quan đến \"{{name}}\". Để xác nhận, vui lòng nhập tên nhà hàng bên dưới.",
+      "delete_type_name": "Nhập \"{{name}}\" để xác nhận xóa",
+      "delete_name_mismatch": "Tên nhà hàng không khớp. Vui lòng thử lại.",
+      "delete_confirm_ok": "Xóa",
+      "delete_confirm_cancel": "Hủy"
     },
     "revenue": {
       "title": "Tổng doanh thu hệ thống",
@@ -1505,6 +1793,10 @@
       "fetch_success_message": "Tải danh sách nhà hàng thành công",
       "fetch_error_title": "Tải thất bại",
       "fetch_error_message": "Không thể tải danh sách nhà hàng. Vui lòng thử lại.",
+      "delete_success_title": "Thành công",
+      "delete_success_message": "Xóa nhà hàng thành công",
+      "delete_error_title": "Xóa thất bại",
+      "delete_error_message": "Không thể xóa nhà hàng. Vui lòng thử lại.",
       "detail_error_title": "Tải thất bại",
       "detail_error_message": "Không thể tải thông tin nhà hàng. Đang chuyển hướng...",
       "feature_coming_title": "Sắp ra mắt",
@@ -1553,26 +1845,27 @@
       "subscription_plan": "Gói đăng ký",
       "fields": {
         "name": "Tên",
-        "name_placeholder": "VD: ABC",
+        "name_placeholder": "Nhập tên hiển thị nhà hàng (VD: Nhà hàng BBQ)",
         "host_name": "Tên miền phụ",
         "host_name_placeholder": "nha-hang-cua-toi",
+        "hostname_disabled_text": "Tên miền không thể thay đổi sau khi tạo",
         "access_url": "URL truy cập:",
         "business_name": "Tên doanh nghiệp",
-        "business_name_placeholder": "Nhà hàng ABC",
+        "business_name_placeholder": "Tên pháp lý doanh nghiệp (VD: Công ty TNHH ABC)",
         "phone_number": "Số điện thoại",
-        "phone_placeholder": "0912...",
+        "phone_placeholder": "Số điện thoại liên hệ chính (VD: 0912345678)",
         "mail_restaurant": "Email nhà hàng",
-        "mail_restaurant_placeholder": "restaurant@example.com",
+        "mail_restaurant_placeholder": "Email liên hệ nhà hàng (VD: contact@restaurant.com)",
         "address": "Địa chỉ nhà hàng",
-        "street_number": "Số nhà (VD: 123)",
-        "street_name": "Tên đường (VD: Nguyễn Văn Linh)",
-        "city": "Thành phố (VD: Đà Nẵng)",
-        "country": "Quốc gia (VD: Việt Nam)",
+        "address_line1_placeholder": "Số nhà và tòa nhà (VD: 123 đường Nguyễn Văn Linh)",
+        "address_line2_placeholder": "Phường/Quận (VD: Hòa Thọ Đông)",
+        "address_line3_placeholder": "Thành phố/Tỉnh (VD: Đà Nẵng, Hà Nội)",
+        "address_line4_placeholder": "Quốc gia (VD: Việt Nam)",
         "owner_email": "Email chủ sở hữu",
-        "owner_email_placeholder": "owner@example.com",
+        "owner_email_placeholder": "Email tài khoản chủ sở hữu (VD: owner@domain.com)",
         "owner_password": "Mật khẩu chủ sở hữu",
-        "password_placeholder": "Nhập mật khẩu",
-        "select_plan": "Chọn gói dịch vụ"
+        "password_placeholder": "Mật khẩu tối thiểu 6 ký tự",
+        "plan_placeholder": "Chọn gói đăng ký"
       },
       "plan_options": {
         "basic": "Gói cơ bản",
@@ -1618,6 +1911,64 @@
         "update": "Lưu thay đổi",
         "cancel": "Hủy"
       }
+    }
+  },
+  "landing": {
+    "hero": {
+      "subtitle": "Tinh hoa ẩm thực Việt",
+      "title": "Hương vị Tinh tế",
+      "description": "Trải nghiệm ẩm thực đẳng cấp với những món ăn được chế biến công phu từ những nguyên liệu tươi ngon nhất, trong một không gian sang trọng và ấm cúng.",
+      "menu_btn": "Khám phá thực đơn",
+      "about_btn": "Về chúng tôi"
+    },
+    "menu": {
+      "subtitle": "Thực đơn đặc sắc",
+      "title": "Tinh hoa vị giác",
+      "view_all": "Xem toàn bộ thực đơn"
+    },
+    "reservation": {
+      "title": "Đặt bàn ngay",
+      "description": "Đảm bảo vị trí đẹp nhất cho bữa tiệc của bạn. Chúng tôi luôn sẵn sàng chào đón quý khách.",
+      "form": {
+        "name": "Họ tên",
+        "name_placeholder": "Nguyễn Văn A",
+        "name_required": "Vui lòng nhập họ tên",
+        "phone": "Số điện thoại",
+        "phone_placeholder": "090...",
+        "phone_required": "Vui lòng nhập số điện thoại",
+        "guests": "Số khách",
+        "date": "Ngày đặt",
+        "date_required": "Chọn ngày",
+        "submit": "Xác nhận đặt bàn"
+      },
+      "guest_options": {
+        "2": "2 người",
+        "4": "4 người",
+        "6": "6 người",
+        "more": "Trên 6 người"
+      }
+    },
+    "about": {
+      "subtitle": "Câu chuyện của chúng tôi",
+      "title": "Di sản ẩm thực kết tinh từ đam mê",
+      "default_description": "Tại RestX Restaurant, chúng tôi đặt khách hàng lên hàng đầu. Với đội ngũ nhân viên tận tâm và những công thức nấu ăn độc đáo, chúng tôi cam kết mang đến trải nghiệm ẩm thực tuyệt vời nhất.",
+      "secondary_description": "Mỗi món ăn được chế biến cẩn thận với nguyên liệu tươi ngon nhất, tạo nên hương vị đặc biệt không thể tìm thấy ở đâu khác. Chúng tôi xin chân thành cảm ơn sự ủng hộ của quý khách.",
+      "chef": "Bếp trưởng điều hành"
+    },
+    "news": {
+      "subtitle": "Tin tức & Sự kiện",
+      "title": "Cập nhật mới nhất từ {{name}}",
+      "title_default": "nhà hàng",
+      "description": "Đừng bỏ lỡ những chương trình ưu đãi và sự kiện ẩm thực đặc biệt.",
+      "tags": {
+        "event": "Sự kiện",
+        "cuisine": "Ẩm thực",
+        "discovery": "Khám phá"
+      }
+    },
+    "overview": {
+      "subtitle": "Khám phá",
+      "title": "Tổng quan"
     }
   }
 }

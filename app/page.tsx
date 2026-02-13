@@ -5,6 +5,7 @@ import Header from './components/Header';
 import HeroSection from './components/HeroSection';
 import FeatureSection from './components/FeatureSection';
 import WorkflowSection from './components/WorkflowSection';
+import AboutUsSection from './components/AboutUsSection';
 import TestimonialsSection from './components/TestimonialsSection';
 import Footer from './components/Footer';
 import PageTransition from './components/PageTransition';
@@ -23,6 +24,9 @@ export default function Home() {
           </section>
           <section id="workflow" style={{ scrollMarginTop: 120 }}>
             <WorkflowSection />
+          </section>
+          <section id="about-us" style={{ scrollMarginTop: 120 }}>
+            <AboutUsSection />
           </section>
           <section id="testimonials" style={{ scrollMarginTop: 120 }}>
             <TestimonialsSection />

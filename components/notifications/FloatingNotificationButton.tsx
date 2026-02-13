@@ -219,11 +219,11 @@ export default function FloatingNotificationButton({ onOpen }: FloatingNotificat
           width: BUTTON_SIZE,
           height: BUTTON_SIZE,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+          background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 8px 30px rgba(255, 122, 0, 0.5)',
+          boxShadow: '0 8px 30px var(--primary-glow)',
           zIndex: 98,
           opacity: 0,
         }}
@@ -246,12 +246,12 @@ export default function FloatingNotificationButton({ onOpen }: FloatingNotificat
         width: BUTTON_SIZE,
         height: BUTTON_SIZE,
         borderRadius: '50%',
-        background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+        background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         cursor: isDragging ? 'grabbing' : 'grab',
-        boxShadow: '0 8px 30px rgba(255, 56, 11, 0.5)',
+        boxShadow: '0 8px 30px var(--primary-glow)',
         zIndex: 98,
         transition: isDragging ? 'none' : 'transform 0.2s ease-out, box-shadow 0.2s ease-out',
         transform: `translate3d(0, 0, 0) ${isDragging ? 'scale(1.1)' : 'scale(1)'}`,
@@ -261,30 +261,30 @@ export default function FloatingNotificationButton({ onOpen }: FloatingNotificat
       onMouseEnter={(e) => {
         if (!isDragging) {
           e.currentTarget.style.transform = 'translate3d(0, 0, 0) scale(1.1)';
-          e.currentTarget.style.boxShadow = '0 12px 40px rgba(255, 122, 0, 0.6)';
+          e.currentTarget.style.boxShadow = '0 12px 40px var(--primary-glow)';
         }
       }}
       onMouseLeave={(e) => {
         if (!isDragging) {
           e.currentTarget.style.transform = 'translate3d(0, 0, 0) scale(1)';
-          e.currentTarget.style.boxShadow = '0 8px 30px rgba(255, 122, 0, 0.5)';
+          e.currentTarget.style.boxShadow = '0 8px 30px var(--primary-glow)';
         }
       }}
     >
-      <BellOutlined style={{ color: '#fff', fontSize: 24 }} />
+      <BellOutlined style={{ color: 'var(--on-primary)', fontSize: 24 }} />
       {badgeText && (
         <div
           style={{
             position: 'absolute',
             top: 0,
             right: 0,
-            background: '#ff4d4f',
-            color: '#fff',
+            background: 'var(--danger)',
+            color: 'var(--text-inverse)',
             fontSize: 11,
             fontWeight: 'bold',
             padding: badgeText.length === 1 ? '2px 6px' : '2px 5px',
             borderRadius: 10,
-            border: '2px solid #fff',
+            border: '2px solid var(--card)',
             minWidth: 18,
             textAlign: 'center',
             lineHeight: 1.2,

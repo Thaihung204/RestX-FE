@@ -2,7 +2,6 @@
 
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { useLanguage } from "@/components/I18nProvider";
-import { useToast } from "@/lib/contexts/ToastContext";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantCreateInput } from "@/lib/types/tenant";
 import {
@@ -11,10 +10,10 @@ import {
   MailOutlined,
   PhoneOutlined,
   ShopOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 import type { FormProps } from "antd";
 import {
+  App,
   Breadcrumb,
   Button,
   Card,
@@ -35,13 +34,16 @@ const { TextArea } = Input;
 const { Title, Paragraph, Text } = Typography;
 
 const TenantFormPage: React.FC = () => {
-  const { showToast } = useToast();
   const router = useRouter();
   const params = useParams();
   const { t } = useTranslation();
   const { language, changeLanguage } = useLanguage();
+  const { message } = App.useApp();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [form] = Form.useForm<TenantCreateInput>();
+  const [formData, setFormData] = useState<Partial<TenantCreateInput>>({
+    plan: "basic",
+  });
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -60,11 +62,13 @@ const TenantFormPage: React.FC = () => {
     try {
       setInitialLoading(true);
       const data = await tenantService.getTenantById(tenantId);
-      
-      // Populate form with tenant data
-      form.setFieldsValue({
+
+      const displayValue = data.networkIp || data.hostName;
+      const cleanHostname = displayValue.replace(/\.restx\.food$/i, "");
+
+      const formValues = {
         name: data.name,
-        hostName: data.hostName,
+        hostName: cleanHostname,
         businessName: data.businessName,
         phoneNumber: data.phoneNumber,
         mailRestaurant: data.mailRestaurant,
@@ -73,15 +77,15 @@ const TenantFormPage: React.FC = () => {
         addressLine3: data.addressLine3,
         addressLine4: data.addressLine4,
         ownerEmail: data.ownerEmail,
-        plan: data.plan,
-      });
+        plan: data.plan || "basic",
+      };
+
+      // Set both form and state to ensure controlled input works correctly
+      form.setFieldsValue(formValues);
+      setFormData(formValues);
     } catch (error) {
       console.error("Failed to fetch tenant details:", error);
-      showToast(
-        "error",
-        t("tenants.toasts.detail_error_title"),
-        t("tenants.toasts.detail_error_message")
-      );
+      message.error(t("tenants.toasts.detail_error_message"));
       router.push("/tenants");
     } finally {
       setInitialLoading(false);
@@ -89,29 +93,42 @@ const TenantFormPage: React.FC = () => {
   };
 
   const onFinish: FormProps<TenantCreateInput>["onFinish"] = async (values) => {
+    // Prevent duplicate submissions
+    if (loading) {
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Prepare the full hostname with .restx.food suffix
+      // In edit mode, use formData.hostName (from disabled field)
+      // In create mode, use values.hostName (from form input)
+      const hostnameValue = isEditMode ? formData.hostName : values.hostName;
+      const hostname = hostnameValue
+        ? `${hostnameValue}.restx.food`
+        : undefined;
+
+      const requestData = {
+        ...values,
+        hostName: hostname,
+        networkIp: hostname,
+      };
+
       if (isEditMode) {
-        await tenantService.updateTenant(tenantId, values);
-        showToast(
-          "success",
-          t("tenants.toasts.update_success_title"),
-          t("tenants.toasts.update_success_message")
-        );
+        const result = await tenantService.updateTenant(tenantId, requestData);
+        message.success(t("tenants.toasts.update_success_message"));
       } else {
-        await tenantService.createTenant(values);
-        showToast(
-          "success",
-          t("tenants.toasts.create_success_title"),
-          t("tenants.toasts.create_success_message")
-        );
+        const result = await tenantService.createTenant(requestData);
+        message.success(t("tenants.toasts.create_success_message"));
       }
       router.push("/tenants");
     } catch (error: any) {
-      console.error("Failed to save tenant:", error);
-      const errorMessage = error?.response?.data?.message || error?.message || t("tenants.toasts.save_error_message");
-      showToast("error", t("tenants.toasts.save_error_title"), errorMessage);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        t("tenants.toasts.save_error_message");
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -123,26 +140,24 @@ const TenantFormPage: React.FC = () => {
 
   // Slug validation: only lowercase letters, numbers, and hyphens
   const validateSlug = (_: unknown, value: string) => {
-    if (!value) {
-      return Promise.reject(new Error(t("tenants.create.validation.slug_required")));
+    // Skip validation in edit mode (field is disabled)
+    if (isEditMode) {
+      return Promise.resolve();
     }
+
+    // In create mode, hostname is optional
+    if (!value) {
+      return Promise.resolve();
+    }
+
+    // If provided, must follow slug format
     if (!/^[a-z0-9-]+$/.test(value)) {
       return Promise.reject(
-        new Error(t("tenants.create.validation.slug_invalid"))
+        new Error(t("tenants.create.validation.slug_invalid")),
       );
     }
     return Promise.resolve();
   };
-
-  if (initialLoading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--bg-base)" }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
 
   return (
     <div
@@ -165,10 +180,10 @@ const TenantFormPage: React.FC = () => {
                       </a>
                     ),
                   },
-                  { 
-                    title: isEditMode 
-                      ? t("tenants.edit.breadcrumb_edit") 
-                      : t("tenants.create.breadcrumb_create") 
+                  {
+                    title: isEditMode
+                      ? t("tenants.edit.breadcrumb_edit")
+                      : t("tenants.create.breadcrumb_create"),
                   },
                 ]}
                 className="text-xs font-medium mb-1"
@@ -182,7 +197,9 @@ const TenantFormPage: React.FC = () => {
                   color: "var(--text)",
                 }}>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
-                  {isEditMode ? t("tenants.edit.title") : t("tenants.create.title")}
+                  {isEditMode
+                    ? t("tenants.edit.title")
+                    : t("tenants.create.title")}
                 </span>
               </Title>
               <Paragraph
@@ -191,7 +208,9 @@ const TenantFormPage: React.FC = () => {
                   marginBottom: 0,
                   color: "var(--text-muted)",
                 }}>
-                {isEditMode ? t("tenants.edit.subtitle") : t("tenants.create.subtitle")}
+                {isEditMode
+                  ? t("tenants.edit.subtitle")
+                  : t("tenants.create.subtitle")}
               </Paragraph>
             </div>
 
@@ -402,278 +421,480 @@ const TenantFormPage: React.FC = () => {
           </div>
 
           {/* --- Main Form --- */}
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            initialValues={{
-              plan: "basic",
-            }}
-            requiredMark="optional">
-            <Row gutter={[24, 24]}>
-              {/* Left Column: Restaurant Info */}
-              <Col xs={24} lg={14}>
-                <Card
-                  variant="borderless"
-                  className="shadow-md h-full"
-                  style={{
-                    background: "var(--card)",
-                    borderColor: "var(--border)",
-                  }}
-                  title={
-                    <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
-                      {t("tenants.create.restaurant_info")}
-                    </Title>
-                  }>
-                  <Form.Item
-                    label={<span style={{ color: "var(--text-muted)" }}>{t("tenants.create.fields.name")}</span>}
-                    name="name"
-                    rules={[{ required: true, message: t("tenants.create.validation.name_required") }]}>
-                    <Input
-                      size="large"
-                      placeholder={t("tenants.create.fields.name_placeholder")}
-                      prefix={<ShopOutlined className="text-gray-400 mr-1" />}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    label={<span style={{ color: "var(--text-muted)" }}>{t("tenants.create.fields.host_name")}</span>}
-                    name="hostName"
-                    rules={[{ validator: validateSlug }]}
-                    extra={
-                      <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                        {t("tenants.create.fields.access_url")} <Text code>hostname.restx.food</Text>
-                      </span>
+          <Spin spinning={initialLoading} size="large">
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={onFinish}
+              initialValues={formData}
+              requiredMark="optional"
+              style={{ opacity: initialLoading ? 0 : 1 }}>
+              <Row gutter={[24, 24]}>
+                {/* Left Column: Restaurant Info */}
+                <Col xs={24} lg={14}>
+                  <Card
+                    variant="borderless"
+                    className="shadow-md h-full"
+                    style={{
+                      background: "var(--card)",
+                      borderColor: "var(--border)",
+                    }}
+                    title={
+                      <Title
+                        level={5}
+                        style={{ margin: 0, color: "var(--text)" }}>
+                        {t("tenants.create.restaurant_info")}
+                      </Title>
                     }>
-                    <Space.Compact className="w-full">
-                      <Input
-                        size="large"
-                        disabled
-                        value="https://"
-                        className="w-24 text-center"
-                        style={{
-                          background: "var(--bg-base)",
-                          color: "var(--text-muted)",
-                          cursor: "default"
-                        }}
-                      />
-                      <Input
-                        size="large"
-                        placeholder={t("tenants.create.fields.host_name_placeholder")}
-                        prefix={<GlobalOutlined className="text-gray-400 mr-1" />}
-                        disabled={isEditMode}
-                        onChange={(e) => {
-                          const value = e.target.value
-                            .toLowerCase()
-                            .replace(/\s+/g, "-")
-                            .replace(/[^a-z0-9-]/g, "");
-                          form.setFieldValue("hostName", value);
-                        }}
-                      />
-                      <Input
-                        size="large"
-                        disabled
-                        value=".restx.food"
-                        className="w-32 text-center"
-                        style={{
-                          background: "var(--bg-base)",
-                          color: "var(--text-muted)",
-                          cursor: "default"
-                        }}
-                      />
-                    </Space.Compact>
-                  </Form.Item>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Form.Item
-                      label={<span style={{ color: "var(--text-muted)" }}>{t("tenants.create.fields.business_name")}</span>}
-                      name="businessName"
-                      rules={[{ required: true, message: t("tenants.create.validation.business_name_required") }]}>
+                      label={
+                        <span
+                          className="text-sm"
+                          style={{ color: "var(--text-muted)" }}>
+                          {t("tenants.create.fields.name")}
+                        </span>
+                      }
+                      name="name"
+                      rules={[
+                        {
+                          required: true,
+                          message: t("tenants.create.validation.name_required"),
+                        },
+                      ]}>
                       <Input
-                        size="large"
-                        placeholder={t("tenants.create.fields.business_name_placeholder")}
+                        className="text-sm"
+                        placeholder={t(
+                          "tenants.create.fields.name_placeholder",
+                        )}
                         prefix={<ShopOutlined className="text-gray-400 mr-1" />}
                       />
                     </Form.Item>
 
                     <Form.Item
-                      label={<span style={{ color: "var(--text-muted)" }}>{t("tenants.create.fields.phone_number")}</span>}
-                      name="phoneNumber"
+                      label={
+                        <span
+                          className="text-sm"
+                          style={{ color: "var(--text-muted)" }}>
+                          {t("tenants.create.fields.host_name")} (optional)
+                        </span>
+                      }
+                      name="hostName"
+                      rules={[{ validator: validateSlug }]}
+                      extra={
+                        <span
+                          className="text-[11px]"
+                          style={{ color: "var(--text-muted)" }}>
+                          {isEditMode
+                            ? t("tenants.create.fields.hostname_disabled_text")
+                            : `${t("tenants.create.fields.access_url")} hostname.restx.food`}
+                        </span>
+                      }>
+                      <Space.Compact className="w-full" size="large">
+                        <Input
+                          disabled
+                          value="https://"
+                          className="text-center flex-none"
+                          style={{
+                            background: "var(--bg-base)",
+                            color: "var(--text-muted)",
+                            cursor: "default",
+                            width: "90px",
+                            fontSize: "14px",
+                            fontWeight: 500,
+                          }}
+                        />
+                        <Input
+                          placeholder={t(
+                            "tenants.create.fields.host_name_placeholder",
+                          )}
+                          prefix={
+                            <GlobalOutlined className="text-gray-400 mr-1" />
+                          }
+                          value={formData.hostName || ""}
+                          disabled={isEditMode}
+                          style={{
+                            fontSize: "14px",
+                            ...(isEditMode && {
+                              color: "var(--text)",
+                              cursor: "not-allowed",
+                              opacity: 1,
+                            }),
+                          }}
+                          onChange={(e) => {
+                            const value = e.target.value
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")
+                              .replace(/[^a-z0-9-]/g, "");
+                            form.setFieldValue("hostName", value);
+                            setFormData({ ...formData, hostName: value });
+                          }}
+                        />
+                        <Input
+                          disabled
+                          value=".restx.food"
+                          className="text-center flex-none"
+                          style={{
+                            background: "var(--bg-base)",
+                            color: "var(--text-muted)",
+                            cursor: "default",
+                            width: "120px",
+                            fontSize: "14px",
+                            fontWeight: 500,
+                          }}
+                        />
+                      </Space.Compact>
+                    </Form.Item>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.create.fields.business_name")}
+                          </span>
+                        }
+                        name="businessName"
+                        rules={[
+                          {
+                            required: true,
+                            message: t(
+                              "tenants.create.validation.business_name_required",
+                            ),
+                          },
+                        ]}>
+                        <Input
+                          className="text-sm"
+                          placeholder={t(
+                            "tenants.create.fields.business_name_placeholder",
+                          )}
+                          prefix={
+                            <ShopOutlined className="text-gray-400 mr-1" />
+                          }
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.create.fields.phone_number")}
+                          </span>
+                        }
+                        name="phoneNumber"
+                        rules={[
+                          {
+                            required: true,
+                            message: t(
+                              "tenants.create.validation.phone_required",
+                            ),
+                          },
+                          {
+                            pattern: /^[0-9]{10,11}$/,
+                            message: t(
+                              "tenants.create.validation.phone_invalid",
+                            ),
+                          },
+                        ]}>
+                        <Input
+                          className="text-sm"
+                          placeholder={t(
+                            "tenants.create.fields.phone_placeholder",
+                          )}
+                          prefix={
+                            <PhoneOutlined className="text-gray-400 mr-1" />
+                          }
+                        />
+                      </Form.Item>
+                    </div>
+
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm"
+                          style={{ color: "var(--text-muted)" }}>
+                          {t("tenants.create.fields.mail_restaurant")}
+                        </span>
+                      }
+                      name="mailRestaurant"
                       rules={[
-                        { required: true, message: t("tenants.create.validation.phone_required") },
-                        { pattern: /^[0-9]{10,11}$/, message: t("tenants.create.validation.phone_invalid") },
+                        {
+                          required: true,
+                          message: t(
+                            "tenants.create.validation.restaurant_email_required",
+                          ),
+                        },
+                        {
+                          type: "email",
+                          message: t("tenants.create.validation.email_invalid"),
+                        },
                       ]}>
                       <Input
-                        size="large"
-                        placeholder={t("tenants.create.fields.phone_placeholder")}
-                        prefix={<PhoneOutlined className="text-gray-400 mr-1" />}
-                      />
-                    </Form.Item>
-                  </div>
-
-                  <Form.Item
-                    label={<span style={{ color: "var(--text-muted)" }}>{t("tenants.create.fields.mail_restaurant")}</span>}
-                    name="mailRestaurant"
-                    rules={[
-                      { required: true, message: t("tenants.create.validation.restaurant_email_required") },
-                      { type: "email", message: t("tenants.create.validation.email_invalid") },
-                    ]}>
-                    <Input
-                      size="large"
-                      type="email"
-                      placeholder={t("tenants.create.fields.mail_restaurant_placeholder")}
-                      prefix={<MailOutlined className="text-gray-400 mr-1" />}
-                    />
-                  </Form.Item>
-
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                      {t("tenants.create.fields.address")}
-                    </label>
-
-                    <Form.Item
-                      name="addressLine1"
-                      rules={[{ required: true, message: t("tenants.create.validation.street_number_required") }]}>
-                      <Input
-                        size="large"
-                        placeholder={t("tenants.create.fields.street_number")}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="addressLine2"
-                      rules={[{ required: true, message: t("tenants.create.validation.street_name_required") }]}>
-                      <Input
-                        size="large"
-                        placeholder={t("tenants.create.fields.street_name")}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="addressLine3"
-                      rules={[{ required: true, message: t("tenants.create.validation.city_required") }]}>
-                      <Input
-                        size="large"
-                        placeholder={t("tenants.create.fields.city")}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="addressLine4"
-                      rules={[{ required: true, message: t("tenants.create.validation.country_required") }]}>
-                      <Input
-                        size="large"
-                        placeholder={t("tenants.create.fields.country")}
-                      />
-                    </Form.Item>
-                  </div>
-                </Card>
-              </Col>
-
-              {/* Right Column: Owner & Plan */}
-              <Col xs={24} lg={10}>
-                <div className="flex flex-col gap-6 h-full">
-                  {/* Owner Info Card */}
-                  <Card
-                    variant="borderless"
-                    className="shadow-md"
-                    style={{
-                      background: "var(--card)",
-                      borderColor: "var(--border)",
-                    }}
-                    title={
-                      <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
-                        {t("tenants.create.owner_info")}
-                      </Title>
-                    }>
-                    <Form.Item
-                      label={<span style={{ color: "var(--text-muted)" }}>{t("tenants.create.fields.owner_email")}</span>}
-                      name="ownerEmail"
-                      rules={[
-                        { required: !isEditMode, message: t("tenants.create.validation.email_required") },
-                        { type: "email", message: t("tenants.create.validation.email_invalid") },
-                      ]}>
-                      <Input
-                        size="large"
+                        className="text-sm"
                         type="email"
-                        placeholder={t("tenants.create.fields.owner_email_placeholder")}
+                        placeholder={t(
+                          "tenants.create.fields.mail_restaurant_placeholder",
+                        )}
                         prefix={<MailOutlined className="text-gray-400 mr-1" />}
                       />
                     </Form.Item>
 
-                    {!isEditMode && (
+                    <div className="space-y-3">
+                      <label
+                        className="text-sm font-medium"
+                        style={{ color: "var(--text-muted)" }}>
+                        {t("tenants.create.fields.address")}
+                      </label>
+
                       <Form.Item
-                        label={<span style={{ color: "var(--text-muted)" }}>{t("tenants.create.fields.owner_password")}</span>}
-                        name="ownerPassword"
+                        name="addressLine1"
                         rules={[
-                          { required: true, message: t("tenants.create.validation.password_required") },
-                          { min: 6, message: t("tenants.create.validation.password_min") },
+                          {
+                            required: true,
+                            message: t(
+                              "tenants.create.validation.street_number_required",
+                            ),
+                          },
                         ]}>
-                        <Input.Password
-                          size="large"
-                          placeholder={t("tenants.create.fields.password_placeholder")}
+                        <Input
+                          className="text-sm"
+                          placeholder={t(
+                            "tenants.create.fields.address_line1_placeholder",
+                          )}
                         />
                       </Form.Item>
-                    )}
-                  </Card>
 
-                  {/* Plan Selection Card */}
-                  <Card
-                    variant="borderless"
-                    className="shadow-md flex-1"
-                    style={{
-                      background: "var(--card)",
-                      borderColor: "var(--border)",
-                    }}
-                    title={
-                      <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
-                        {t("tenants.create.subscription_plan")}
-                      </Title>
-                    }>
-                    <Form.Item
-                      name="plan"
-                      rules={[{ required: true, message: t("tenants.create.validation.plan_required") }]}>
-                      <Select size="large" placeholder={t("tenants.create.fields.select_plan")}>
-                        <Select.Option value="basic">
-                          <span className="font-medium text-emerald-500">{t("tenants.create.plan_options.basic")}</span>
-                          <span className="text-gray-400 text-xs ml-2">{t("tenants.create.plan_options.basic_desc")}</span>
-                        </Select.Option>
-                        <Select.Option value="pro">
-                          <span className="font-medium text-blue-500">{t("tenants.create.plan_options.pro")}</span>
-                          <span className="text-gray-400 text-xs ml-2">{t("tenants.create.plan_options.pro_desc")}</span>
-                        </Select.Option>
-                        <Select.Option value="enterprise">
-                          <span className="font-medium text-purple-500">{t("tenants.create.plan_options.enterprise")}</span>
-                          <span className="text-gray-400 text-xs ml-2">{t("tenants.create.plan_options.enterprise_desc")}</span>
-                        </Select.Option>
-                      </Select>
-                    </Form.Item>
+                      <Form.Item
+                        name="addressLine2"
+                        rules={[
+                          {
+                            required: true,
+                            message: t(
+                              "tenants.create.validation.street_name_required",
+                            ),
+                          },
+                        ]}>
+                        <Input
+                          className="text-sm"
+                          placeholder={t(
+                            "tenants.create.fields.address_line2_placeholder",
+                          )}
+                        />
+                      </Form.Item>
 
-                    {/* Action Buttons */}
-                    <div className="pt-4 mt-auto border-t border-dashed border-gray-200 dark:border-gray-700">
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        loading={loading}
-                        size="large"
-                        block
-                        className="shadow-orange-900/20 shadow-lg border-none h-12 text-base font-medium">
-                        {isEditMode ? t("tenants.edit.buttons.update") : t("tenants.create.buttons.create")}
-                      </Button>
-                      <Button
-                        onClick={handleCancel}
-                        size="large"
-                        block
-                        type="text"
-                        className="mt-2 text-gray-500">
-                        {t("tenants.create.buttons.cancel")}
-                      </Button>
+                      <Form.Item
+                        name="addressLine3"
+                        rules={[
+                          {
+                            required: true,
+                            message: t(
+                              "tenants.create.validation.city_required",
+                            ),
+                          },
+                        ]}>
+                        <Input
+                          className="text-sm"
+                          placeholder={t(
+                            "tenants.create.fields.address_line3_placeholder",
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        name="addressLine4"
+                        rules={[
+                          {
+                            required: true,
+                            message: t(
+                              "tenants.create.validation.country_required",
+                            ),
+                          },
+                        ]}>
+                        <Input
+                          className="text-sm"
+                          placeholder={t(
+                            "tenants.create.fields.address_line4_placeholder",
+                          )}
+                        />
+                      </Form.Item>
                     </div>
                   </Card>
-                </div>
-              </Col>
-            </Row>
-          </Form>
+                </Col>
+
+                {/* Right Column: Owner & Plan */}
+                <Col xs={24} lg={10}>
+                  <div className="flex flex-col gap-6 h-full">
+                    {/* Owner Info Card */}
+                    <Card
+                      variant="borderless"
+                      className="shadow-md"
+                      style={{
+                        background: "var(--card)",
+                        borderColor: "var(--border)",
+                      }}
+                      title={
+                        <Title
+                          level={5}
+                          style={{ margin: 0, color: "var(--text)" }}>
+                          {t("tenants.create.owner_info")}
+                        </Title>
+                      }>
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.create.fields.owner_email")}
+                          </span>
+                        }
+                        name="ownerEmail"
+                        rules={[
+                          {
+                            required: !isEditMode,
+                            message: t(
+                              "tenants.create.validation.email_required",
+                            ),
+                          },
+                          {
+                            type: "email",
+                            message: t(
+                              "tenants.create.validation.email_invalid",
+                            ),
+                          },
+                        ]}>
+                        <Input
+                          className="text-sm"
+                          type="email"
+                          placeholder={t(
+                            "tenants.create.fields.owner_email_placeholder",
+                          )}
+                          prefix={
+                            <MailOutlined className="text-gray-400 mr-1" />
+                          }
+                        />
+                      </Form.Item>
+
+                      {!isEditMode && (
+                        <Form.Item
+                          label={
+                            <span
+                              className="text-sm"
+                              style={{ color: "var(--text-muted)" }}>
+                              {t("tenants.create.fields.owner_password")}
+                            </span>
+                          }
+                          name="ownerPassword"
+                          rules={[
+                            {
+                              required: true,
+                              message: t(
+                                "tenants.create.validation.password_required",
+                              ),
+                            },
+                            {
+                              min: 6,
+                              message: t(
+                                "tenants.create.validation.password_min",
+                              ),
+                            },
+                          ]}>
+                          <Input.Password
+                            className="text-sm"
+                            placeholder={t(
+                              "tenants.create.fields.password_placeholder",
+                            )}
+                          />
+                        </Form.Item>
+                      )}
+                    </Card>
+
+                    {/* Plan Selection Card */}
+                    <Card
+                      variant="borderless"
+                      className="shadow-md flex-1"
+                      style={{
+                        background: "var(--card)",
+                        borderColor: "var(--border)",
+                      }}
+                      title={
+                        <Title
+                          level={5}
+                          style={{ margin: 0, color: "var(--text)" }}>
+                          {t("tenants.create.subscription_plan")}
+                        </Title>
+                      }>
+                      <Form.Item
+                        name="plan"
+                        rules={[
+                          {
+                            required: true,
+                            message: t(
+                              "tenants.create.validation.plan_required",
+                            ),
+                          },
+                        ]}>
+                        <Select
+                          className="text-sm"
+                          placeholder={t(
+                            "tenants.create.fields.plan_placeholder",
+                          )}>
+                          <Select.Option value="basic">
+                            <span className="font-medium text-emerald-500 text-sm">
+                              {t("tenants.create.plan_options.basic")}
+                            </span>
+                            <span className="text-gray-400 text-[11px] ml-2">
+                              {t("tenants.create.plan_options.basic_desc")}
+                            </span>
+                          </Select.Option>
+                          <Select.Option value="pro">
+                            <span className="font-medium text-blue-500 text-sm">
+                              {t("tenants.create.plan_options.pro")}
+                            </span>
+                            <span className="text-gray-400 text-[11px] ml-2">
+                              {t("tenants.create.plan_options.pro_desc")}
+                            </span>
+                          </Select.Option>
+                          <Select.Option value="enterprise">
+                            <span className="font-medium text-purple-500 text-sm">
+                              {t("tenants.create.plan_options.enterprise")}
+                            </span>
+                            <span className="text-gray-400 text-[11px] ml-2">
+                              {t("tenants.create.plan_options.enterprise_desc")}
+                            </span>
+                          </Select.Option>
+                        </Select>
+                      </Form.Item>
+
+                      {/* Action Buttons */}
+                      <div className="pt-4 mt-auto border-t border-dashed border-gray-200 dark:border-gray-700">
+                        <Button
+                          type="primary"
+                          htmlType="submit"
+                          loading={loading}
+                          disabled={loading}
+                          size="large"
+                          block
+                          className="shadow-orange-900/20 shadow-lg border-none h-12 text-base font-medium">
+                          {isEditMode
+                            ? t("tenants.edit.buttons.update")
+                            : t("tenants.create.buttons.create")}
+                        </Button>
+                        <Button
+                          onClick={handleCancel}
+                          size="large"
+                          block
+                          type="text"
+                          className="mt-2 text-gray-500">
+                          {t("tenants.create.buttons.cancel")}
+                        </Button>
+                      </div>
+                    </Card>
+                  </div>
+                </Col>
+              </Row>
+            </Form>
+          </Spin>
         </div>
       </main>
     </div>

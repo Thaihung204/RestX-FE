@@ -1,95 +1,71 @@
 "use client";
 
+import CartModal from "@/components/customer/CartModal";
+import CustomerFooter from "@/components/customer/CustomerFooter";
 import NotificationSystem from "@/components/notifications/NotificationSystem";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { useCart } from "@/lib/contexts/CartContext";
+import { useTheme } from "@/lib/hooks/useTheme";
+import customerService, {
+    CustomerResponseDto,
+} from "@/lib/services/customerService";
+import menuService from "@/lib/services/menuService";
+import type {
+    CartItem,
+    Category,
+    CategoryWithDishes,
+    MenuItem,
+} from "@/lib/types/menu";
 import {
-  ArrowLeftOutlined,
-  CloseOutlined,
-  CoffeeOutlined,
-  DeleteOutlined,
-  FilterOutlined,
-  FireOutlined,
-  MinusOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  ShoppingCartOutlined,
+    ArrowLeftOutlined,
+    CloseOutlined,
+    FireOutlined,
+    HeartFilled,
+    MinusOutlined,
+    PlusOutlined,
+    SearchOutlined,
+    StarFilled,
 } from "@ant-design/icons";
 import {
-  Affix,
-  Button,
-  Card,
-  Col,
-  ConfigProvider,
-  Input,
-  Modal,
-  Row,
-  Select,
-  Spin,
-  Typography,
-  message,
-  theme,
+    Affix,
+    Button,
+    Card,
+    Col,
+    ConfigProvider,
+    Input,
+    Modal,
+    Row,
+    Spin,
+    Typography,
+    message,
+    theme,
 } from "antd";
-import axiosInstance from "@/lib/services/axiosInstance";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
 
-// --- Types ---
-type MenuItem = {
-  id: string;
-  name: string;
-  price: string;
-  tags?: string[];
-  note?: string;
-  description?: string;
-  image?: string;
-  categoryId?: string;
-  categoryName?: string;
-  isPopular?: boolean;
-  isBestSeller?: boolean;
-  isSpicy?: boolean;
-  isVegetarian?: boolean;
-};
-
-type CartItem = {
-  id: string;
-  name: string;
-  price: string;
-  quantity: number;
-  category: "food" | "drink";
-  image?: string;
-};
-
-type MenuSection = {
-  key: string;
-  title: string;
-  description: string;
-  items: MenuItem[];
-};
-
-type Category = {
-  id: string;
-  name: string;
-};
-
-// Hardcoded categories (temporary solution until API is ready)
-const STATIC_CATEGORIES: Category[] = [
-  { id: "600DCEDC-D5E1-43CE-B8C9-08A64937A66C", name: "Món chính" },
-  { id: "C7F1CA77-9B44-4418-B69A-8825BAD9FD6A", name: "Đồ uống" },
-];
-
 export default function MenuPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
+  const { mode: themeMode } = useTheme();
+  const { user } = useAuth();
+  const {
+    cartItems,
+    addToCart: addToCartContext,
+    updateQuantity,
+    openCartModal,
+    cartModalOpen,
+  } = useCart();
+
+  // Ref to track if data has been fetched
+  const hasFetchedData = useRef(false);
 
   // State management
-  const [activeSectionKey, setActiveSectionKey] = useState<string>("all");
-  const [searchText, setSearchText] = useState("");
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [cartModalOpen, setCartModalOpen] = useState(false);
   const [foodDetailModalOpen, setFoodDetailModalOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState<MenuItem | null>(null);
+  const [searchText, setSearchText] = useState("");
   const [messageApi, contextHolder] = message.useMessage();
 
   // API state
@@ -98,184 +74,163 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data from API
-  useEffect(() => {
-    fetchMenuData();
-  }, []);
+  // Customer profile state
+  const [customerProfile, setCustomerProfile] =
+    useState<CustomerResponseDto | null>(null);
+  const [customerName, setCustomerName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  const fetchMenuData = async () => {
+  // Load customer profile
+  const loadCustomerProfile = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      let profile = null;
+
+      if (user.customerId) {
+        profile = await customerService.getCustomerProfile(user.customerId);
+      } else if (user.email) {
+        profile = await customerService.getCustomerByEmail(user.email);
+      }
+
+      if (profile) {
+        setCustomerProfile(profile);
+        setCustomerName(profile.fullName);
+        setPhoneNumber(profile.phoneNumber || "");
+        setAvatarUrl(
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.fullName)}&background=4F46E5&color=fff`,
+        );
+      }
+    } catch (error) {
+      console.error("Failed to load customer profile:", error);
+    }
+  }, [user]);
+
+  const fetchMenuData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch dishes
-      const dishesResponse = await axiosInstance.get(`/dishes`, {
-        params: {
-          page: 1,
-          itemsPerPage: 100,
-        },
-      });
+      // Fetch menu data using service
+      const menuData = await menuService.getMenu();
 
-      const dishesData = dishesResponse.data;
-      const arrayData =
-        dishesData.dishes ||
-        dishesData.data ||
-        dishesData.items ||
-        (Array.isArray(dishesData) ? dishesData : []);
+      if (menuData && Array.isArray(menuData)) {
+        // Extract all dishes from all categories
+        const allDishes: MenuItem[] = [];
+        const extractedCategories: Category[] = [];
 
-      if (arrayData && Array.isArray(arrayData)) {
-        const mappedDishes: MenuItem[] = arrayData
-          .filter((item: any) => item.isActive !== false) // Only show active items
-          .map((item: any) => {
-            // Map categoryName to categoryId from STATIC_CATEGORIES
-            const matchedCategory = STATIC_CATEGORIES.find(
-              (cat) => cat.name === (item.categoryName || item.category),
-            );
+        menuData.forEach((categoryGroup) => {
+          // Add category to the list
+          if (categoryGroup.categoryId && categoryGroup.categoryName) {
+            extractedCategories.push({
+              id: categoryGroup.categoryId,
+              name: categoryGroup.categoryName,
+            });
+          }
 
-            return {
-              id: item.id?.toString() || item.dishId?.toString() || "",
-              name: item.name || "",
-              price: item.price?.toString() || "0",
-              description: item.description || t("menu_page.default_food_desc"),
-              image:
-                item.mainImageUrl ||
-                item.imageUrl ||
-                item.image ||
-                "/placeholder-dish.jpg",
-              categoryId: matchedCategory?.id || item.categoryId || "",
-              categoryName: item.categoryName || item.category || "",
-              isPopular: item.isPopular || false,
-              isBestSeller: item.isBestSeller || false,
-              isSpicy: item.isSpicy || false,
-              isVegetarian: item.isVegetarian || false,
-              tags: [
-                item.isSpicy && "spicy",
-                item.isVegetarian && "vegan",
-                item.isBestSeller && "best",
-              ].filter(Boolean) as string[],
-              note: item.isBestSeller ? t("menu_page.best_seller") : undefined,
-            };
-          });
+          // Map dishes from this category
+          if (categoryGroup.items && Array.isArray(categoryGroup.items)) {
+            categoryGroup.items.forEach((item) => {
+              allDishes.push({
+                id: item.id?.toString() || "",
+                name: item.name || "",
+                price: item.price?.toString() || "0",
+                description:
+                  item.description || t("menu_page.default_food_desc"),
+                image: item.imageUrl ?? undefined,
+                categoryId: item.categoryId || categoryGroup.categoryId || "",
+                categoryName:
+                  item.categoryName || categoryGroup.categoryName || "",
+                isPopular: item.isPopular || false,
+                isBestSeller:
+                  item.isBestSeller ||
+                  item.name === "Bún bò Huế" ||
+                  item.name === "Cà phê sữa đá",
+                // item.isBestSeller || false,
+                isSpicy:
+                  item.isSpicy ||
+                  item.name?.toLowerCase().includes("bún bò") ||
+                  item.name?.toLowerCase().includes("cay") ||
+                  false,
+                isVegetarian:
+                  item.isVegetarian ||
+                  item.name?.toLowerCase().includes("chay") ||
+                  item.name?.toLowerCase().includes("rau") ||
+                  false,
+                tags: [
+                  item.isSpicy && "spicy",
+                  item.isVegetarian && "vegan",
+                  item.isBestSeller && "best",
+                ].filter(Boolean) as string[],
+                note: item.isBestSeller
+                  ? t("menu_page.best_seller")
+                  : undefined,
+              });
+            });
+          }
+        });
 
-        setDishes(mappedDishes);
-
-        // Use static categories instead of extracting from dishes
-        setCategories(STATIC_CATEGORIES);
+        setDishes(allDishes);
+        setCategories(extractedCategories);
       }
     } catch (err) {
       console.error("Failed to fetch menu data:", err);
-      setError("Failed to load menu. Please try again later.");
+      setError(t("menu_page.error_load"));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  // Build sections from API data
-  const sections = useMemo<MenuSection[]>(() => {
-    if (loading || dishes.length === 0) return [];
+  // Fetch data from API
+  useEffect(() => {
+    // Only fetch once on mount
+    if (!hasFetchedData.current) {
+      hasFetchedData.current = true;
+      fetchMenuData();
+      loadCustomerProfile();
+    }
+  }, []); // Empty dependency array - only run once on mount
 
-    const categorySections: MenuSection[] = categories.map((cat) => ({
-      key: cat.id,
-      title: cat.name,
-      description: `${dishes.filter((d) => d.categoryId === cat.id).length} dishes`,
-      items: dishes.filter((d) => d.categoryId === cat.id),
-    }));
+  // Re-fetch customer profile when user changes (login/logout)
+  useEffect(() => {
+    if (hasFetchedData.current && user) {
+      loadCustomerProfile();
+    }
+  }, [user?.customerId, user?.email]); // Only when user ID or email changes
 
-    return [
-      {
-        key: "all",
-        title: "All Dishes",
-        description: `${dishes.length} dishes available`,
-        items: dishes,
-      },
-      ...categorySections,
-    ];
-  }, [dishes, categories, loading]);
+  // Group dishes by category for display
+  const categoriesWithDishes = useMemo<CategoryWithDishes[]>(() => {
+    let filteredDishes = dishes;
 
-  // Filter logic:
-  // 1. Use the current section
-  // 2. If search text exists -> filter by name inside that section
-  const currentSection = useMemo(
-    () => sections.find((s) => s.key === activeSectionKey) || sections[0],
-    [activeSectionKey, sections],
-  );
-
-  const displayedItems = useMemo(() => {
-    if (!currentSection) return [];
-    let items = currentSection.items;
+    // Filter by search text
     if (searchText) {
       const lowerSearch = searchText.toLowerCase();
-      items = items.filter((i) => i.name.toLowerCase().includes(lowerSearch));
+      filteredDishes = dishes.filter((d) =>
+        d.name.toLowerCase().includes(lowerSearch),
+      );
     }
-    return items;
-  }, [currentSection, searchText]);
 
-  const cartItemCount = useMemo(() => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
-  }, [cartItems]);
-
-  const getItemCategory = (item: MenuItem): "food" | "drink" => {
-    // Determine category based on categoryName or default to food
-    const categoryLower = item.categoryName?.toLowerCase() || "";
-    if (
-      categoryLower.includes("drink") ||
-      categoryLower.includes("đồ uống") ||
-      categoryLower.includes("boba")
-    ) {
-      return "drink";
-    }
-    return "food";
-  };
+    return categories
+      .map((cat) => ({
+        category: cat,
+        dishes: filteredDishes.filter((d) => d.categoryId === cat.id),
+      }))
+      .filter((group) => group.dishes.length > 0);
+  }, [dishes, categories, searchText]);
 
   const handleAddToCart = (item: MenuItem) => {
-    const category = getItemCategory(item);
-    setCartItems((prev) => {
-      const existingItem = prev.find((cartItem) => cartItem.id === item.id);
-      if (existingItem) {
-        return prev.map((cartItem) =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem,
-        );
-      } else {
-        return [
-          ...prev,
-          {
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: 1,
-            category,
-            image: item.image,
-          },
-        ];
-      }
-    });
-    messageApi.success(t("menu_page.cart.added_success", { name: item.name }));
-  };
-
-  const handleRemoveFromCart = (itemId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== itemId));
-    messageApi.success(t("menu_page.cart.removed_success"));
-  };
-
-  const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      handleRemoveFromCart(itemId);
-      return;
-    }
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item,
-      ),
-    );
-  };
-
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => {
-      const price = parseFloat(item.price.replace(/[.,]/g, ""));
-      return total + price * item.quantity;
-    }, 0);
+    const cartItem: CartItem = {
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+      category: "food",
+      categoryId: item.categoryId || "",
+      categoryName: item.categoryName,
+      image: item.image,
+    };
+    addToCartContext(cartItem);
   };
 
   const formatVND = (amount: number) => {
@@ -287,28 +242,23 @@ export default function MenuPage() {
     return new Intl.NumberFormat("vi-VN").format(priceNum);
   };
 
-  const foodItems = useMemo(() => {
-    return cartItems.filter((item) => item.category === "food");
-  }, [cartItems]);
-
-  const drinkItems = useMemo(() => {
-    return cartItems.filter((item) => item.category === "drink");
-  }, [cartItems]);
-
   // Loading state
   if (loading) {
     return (
       <ConfigProvider
         theme={{
-          algorithm: theme.darkAlgorithm,
+          algorithm:
+            themeMode === "dark"
+              ? theme.darkAlgorithm
+              : theme.defaultAlgorithm,
           token: {
-            colorPrimary: "#FF380B",
+            colorPrimary: "var(--primary)",
           },
         }}>
         <div
           style={{
             minHeight: "100vh",
-            backgroundColor: "#050505",
+            backgroundColor: "var(--bg-base)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -316,7 +266,9 @@ export default function MenuPage() {
             gap: 16,
           }}>
           <Spin size="large" />
-          <Text style={{ color: "#999" }}>{t('common.loading_menu')}</Text>
+          <Text style={{ color: "var(--text-muted)" }}>
+            {t("menu_page.loading")}
+          </Text>
         </div>
       </ConfigProvider>
     );
@@ -327,15 +279,18 @@ export default function MenuPage() {
     return (
       <ConfigProvider
         theme={{
-          algorithm: theme.darkAlgorithm,
+          algorithm:
+            themeMode === "dark"
+              ? theme.darkAlgorithm
+              : theme.defaultAlgorithm,
           token: {
-            colorPrimary: "#FF380B",
+            colorPrimary: "var(--primary)",
           },
         }}>
         <div
           style={{
             minHeight: "100vh",
-            backgroundColor: "#050505",
+            backgroundColor: "var(--bg-base)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -343,9 +298,9 @@ export default function MenuPage() {
             gap: 16,
             padding: 24,
           }}>
-          <Text style={{ color: "#ff4d4f", fontSize: 18 }}>{error}</Text>
+          <Text style={{ color: "var(--danger)", fontSize: 18 }}>{error}</Text>
           <Button type="primary" onClick={fetchMenuData}>
-            Retry
+            {t("menu_page.retry")}
           </Button>
         </div>
       </ConfigProvider>
@@ -357,10 +312,14 @@ export default function MenuPage() {
       {contextHolder}
       <ConfigProvider
         theme={{
-          algorithm: theme.darkAlgorithm,
+          algorithm:
+            themeMode === "dark"
+              ? theme.darkAlgorithm
+              : theme.defaultAlgorithm,
           token: {
-            colorPrimary: "#FF380B",
-            fontFamily: "'Playfair Display', 'Inter', sans-serif",
+            colorPrimary: "var(--primary)",
+            fontFamily:
+              "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
             borderRadius: 12,
             controlHeight: 45, // Increase input/select height for easier tap
           },
@@ -369,27 +328,34 @@ export default function MenuPage() {
               contentBg: "transparent",
               boxShadow: "none",
             },
-            Select: {
-              colorBgContainer: "rgba(255,255,255,0.08)",
+            Collapse: {
+              headerBg: "transparent",
+              contentBg: "transparent",
+              headerPadding: "16px 20px",
               colorBorder: "transparent",
-              selectorBg: "rgba(255,255,255,0.08)",
-              optionSelectedBg: "rgba(255, 56, 11, 0.2)",
-              colorTextPlaceholder: "#a6a6a6",
+              contentPadding: "5px",
+            },
+            Select: {
+              colorBgContainer: "var(--surface)",
+              colorBorder: "var(--border)",
+              selectorBg: "var(--surface)",
+              optionSelectedBg: "var(--primary-soft)",
+              colorTextPlaceholder: "var(--text-muted)",
             },
             Input: {
-              colorBgContainer: "rgba(255,255,255,0.04)",
-              colorBorder: "transparent",
-              activeBorderColor: "#FF380B",
+              colorBgContainer: "var(--surface)",
+              colorBorder: "var(--border)",
+              activeBorderColor: "var(--primary)",
             },
           },
         }}>
         <div
           style={{
             minHeight: "100vh",
-            backgroundColor: "#050505",
+            background: "var(--bg-base)",
             backgroundImage: `
-            radial-gradient(circle at 0% 0%, rgba(255, 56, 11, 0.1), transparent 40%),
-            radial-gradient(circle at 100% 100%, rgba(255, 56, 11, 0.05), transparent 40%)
+            radial-gradient(circle at 0% 0%, var(--primary-soft), transparent 45%),
+            radial-gradient(circle at 100% 100%, var(--primary-faint), transparent 45%)
           `,
             paddingBottom: 80,
           }}>
@@ -401,7 +367,7 @@ export default function MenuPage() {
                 position: "absolute",
                 inset: 0,
                 background:
-                  "url('/images/menu/banner.png') center/cover, #1f1f1f",
+                  "url('/images/menu/banner.png') center/cover, var(--surface)",
               }}
             />
             <div
@@ -409,7 +375,7 @@ export default function MenuPage() {
                 position: "absolute",
                 inset: 0,
                 background:
-                  "linear-gradient(to bottom, rgba(0,0,0,0.3), #050505)",
+                  "linear-gradient(to bottom, var(--modal-overlay), var(--bg-base))",
               }}
             />
 
@@ -421,10 +387,10 @@ export default function MenuPage() {
                 position: "absolute",
                 top: 16,
                 left: 16,
-                background: "rgba(0,0,0,0.5)",
+                background: "var(--modal-overlay)",
                 backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
                 height: 40,
                 width: 40,
                 borderRadius: 12,
@@ -446,93 +412,47 @@ export default function MenuPage() {
               }}>
               <Text
                 style={{
-                  color: "#FF380B",
+                  color: "var(--primary)",
                   letterSpacing: 2,
                   fontSize: 12,
                   fontWeight: 700,
                   textTransform: "uppercase",
                 }}>
-                RestX Menu
+                {t("menu_page.logo_title")}
               </Text>
-              <Title level={2} style={{ margin: "4px 0 0", color: "#fff" }}>
+              <Title
+                level={2}
+                style={{ margin: "4px 0 0", color: "var(--text)" }}>
                 {t("menu_page.title")}
               </Title>
             </div>
           </div>
 
-          {/* --- STICKY NAVIGATION BAR (Dropdown + Search) --- */}
+          {/* --- Search Bar --- */}
           <Affix offsetTop={0}>
             <div
               style={{
-                background: "rgba(5, 5, 5, 0.9)",
+                background: "var(--bg-base)",
                 backdropFilter: "blur(16px)",
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                borderBottom: "1px solid var(--border)",
                 padding: "12px 16px",
+                boxShadow: "var(--shadow-md)",
                 zIndex: 100,
-                boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
               }}>
               <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-                <Row gutter={[12, 12]}>
-                  {/* Category Filter Dropdown */}
-                  <Col xs={14} md={8}>
-                    <Select
-                      style={{ width: "100%" }}
-                      value={activeSectionKey}
-                      onChange={setActiveSectionKey}
-                      suffixIcon={
-                        <FilterOutlined style={{ color: "#FF380B" }} />
-                      }
-                      showSearch={false}
-                      placeholder="Filter by category"
-                      options={[
-                        {
-                          label: (
-                            <span
-                              style={{
-                                fontWeight: 600,
-                                fontSize: 15,
-                                color: "#FF380B",
-                              }}>
-                              All Dishes
-                            </span>
-                          ),
-                          value: "all",
-                        },
-                        ...categories.map((cat) => ({
-                          label: (
-                            <span style={{ fontWeight: 500, fontSize: 15 }}>
-                              {cat.name}
-                            </span>
-                          ),
-                          value: cat.id,
-                        })),
-                      ]}
-                      styles={{
-                        popup: {
-                          root: {
-                            background: "#1f1f1f",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                            borderRadius: 12,
-                          },
-                        },
-                      }}
-                    />
-                  </Col>
-
-                  {/* Search Input */}
-                  <Col xs={10} md={16}>
-                    <div suppressHydrationWarning style={{ width: "100%" }}>
-                      <Input
-                        prefix={<SearchOutlined style={{ color: "#666" }} />}
-                        placeholder={t("menu_page.search_placeholder")}
-                        allowClear
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                        style={{ borderRadius: 8 }}
-                      />
-                    </div>
-                  </Col>
-                </Row>
+                <Input
+                  size="large"
+                  placeholder="Search items..."
+                  prefix={<SearchOutlined />}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  allowClear
+                  style={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text)",
+                  }}
+                />
               </div>
             </div>
           </Affix>
@@ -540,775 +460,204 @@ export default function MenuPage() {
           {/* --- Main Content --- */}
           <div
             style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
-            {/* Section Description */}
-            <div style={{ marginBottom: 16, animation: "fadeIn 0.5s ease" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  marginBottom: 6,
-                }}>
-                <FilterOutlined style={{ color: "#FF380B" }} />
-                <Text
-                  style={{
-                    color: "#FF380B",
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    fontSize: 13,
-                  }}>
-                  {activeSectionKey === "all"
-                    ? "All Dishes"
-                    : currentSection.title}
-                </Text>
-              </div>
-              <Title level={3} style={{ color: "#fff", margin: 0 }}>
-                {activeSectionKey === "all"
-                  ? "All Dishes"
-                  : currentSection.title}
-              </Title>
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.5)",
-                  marginTop: 4,
-                  display: "block",
-                }}>
-                {currentSection.description}
-              </Text>
-            </div>
-
-            {/* Result Count */}
-            <div style={{ marginBottom: 12 }}>
-              <Text style={{ color: "#666", fontSize: 13 }}>
-                {t("menu_page.showing_items", { count: displayedItems.length })}
-              </Text>
-            </div>
-
-            {/* Product Grid - Horizontal Layout */}
-            <Row gutter={[0, 8]}>
-              {displayedItems.length > 0 ? (
-                displayedItems.map((item, index) => (
-                  <Col xs={24} key={`${item.name}-${index}`}>
-                    <Card
-                      hoverable
-                      variant="borderless"
-                      onClick={() => {
-                        setSelectedFood(item);
-                        setFoodDetailModalOpen(true);
-                      }}
+            {/* Hiển thị phẳng các category và dishes */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+              {categoriesWithDishes.map((categoryGroup) => (
+                <div
+                  key={categoryGroup.category.id}
+                  id={categoryGroup.category.id}>
+                  {/* Tiêu đề Category */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: 16,
+                      padding: "0 4px",
+                      borderLeft: "4px solid var(--primary)",
+                      paddingLeft: 12,
+                    }}>
+                    <Title
+                      level={3}
                       style={{
-                        background: "#121212",
-                        borderRadius: 12,
-                        border: "1px solid rgba(255,255,255,0.06)",
-                        overflow: "hidden",
-                      }}
-                      styles={{
-                        body: { padding: 0 },
+                        color: "var(--text)",
+                        margin: 0,
+                        fontSize: 22,
+                        fontWeight: 700,
+                        letterSpacing: "0.5px",
                       }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          gap: 12,
-                          padding: 8,
-                          alignItems: "center",
-                        }}>
-                        {/* Image Section */}
-                        <div
+                      {categoryGroup.category.name}
+                    </Title>
+                    <Text
+                      style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                      {categoryGroup.dishes.length} {t("menu_page.items")}
+                    </Text>
+                  </div>
+
+                  {/* Danh sách món ăn thuộc Category */}
+                  <Row gutter={[16, 16]}>
+                    {categoryGroup.dishes.map((item, index) => (
+                      <Col
+                        xs={24}
+                        sm={12}
+                        md={12}
+                        lg={8}
+                        key={`${item.id}-${index}`}>
+                        <Card
+                          hoverable
+                          variant="borderless"
+                          onClick={() => {
+                            setSelectedFood(item);
+                            setFoodDetailModalOpen(true);
+                          }}
                           style={{
-                            flexShrink: 0,
-                            width: 80,
-                            height: 80,
-                            position: "relative",
-                          }}>
-                          {item.image ? (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                borderRadius: 8,
-                                border: "1px solid rgba(255,255,255,0.1)",
-                              }}
-                            />
-                          ) : (
+                            background: "var(--card)",
+                            borderRadius: 12,
+                            border: "1px solid var(--border)",
+                            overflow: "hidden",
+                            transition: "all 0.3s ease",
+                            boxShadow: "var(--shadow-sm)",
+                          }}
+                          styles={{ body: { padding: 0 } }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "row",
+                              gap: 12,
+                              padding: 12,
+                              alignItems: "center",
+                            }}>
+                            {/* Image Section */}
                             <div
                               style={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: 8,
-                                background:
-                                  "linear-gradient(135deg, #1f1f1f 0%, #141414 100%)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "#444",
-                                border: "1px dashed rgba(255,255,255,0.1)",
-                                overflow: "hidden",
+                                flexShrink: 0,
+                                width: 85,
+                                height: 85,
                                 position: "relative",
                               }}>
-                              <div style={{ textAlign: "center" }}></div>
+                              {item.isBestSeller && (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    background: "#FFC107",
+                                    color: "#000",
+                                    padding: "2px 6px",
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    borderBottomRightRadius: 8,
+                                    zIndex: 1,
+                                  }}>
+                                  {t("menu_page.best_seller", "Best Seller")}
+                                </div>
+                              )}
+                              {item.image ? (
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    borderRadius: 12,
+                                    border: "1px solid var(--stroke-subtle)",
+                                  }}
+                                />
+                              ) : (
+                                <div
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    borderRadius: 12,
+                                    background: "var(--surface-subtle)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}>
+                                  <FireOutlined
+                                    style={{
+                                      color: "var(--text-muted)",
+                                      fontSize: 24,
+                                    }}
+                                  />
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
 
-                        {/* Content Section */}
-                        <div
-                          style={{
-                            flex: 1,
-                            display: "flex",
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            minWidth: 0,
-                            gap: 12,
-                          }}>
-                          <Text
-                            style={{
-                              fontSize: 15,
-                              fontWeight: 600,
-                              color: "#fff",
-                              flex: 1,
-                              minWidth: 0,
-                            }}>
-                            {item.name}
-                          </Text>
-                          <Text
-                            style={{
-                              color: "#FF380B",
-                              fontWeight: 700,
-                              fontSize: 15,
-                              flexShrink: 0,
-                            }}>
-                            {formatPrice(item.price)}đ
-                          </Text>
-                          <div suppressHydrationWarning>
+                            {/* Content Section */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <Text
+                                style={{
+                                  fontSize: 16,
+                                  fontWeight: 600,
+                                  color: "var(--text)",
+                                  display: "block",
+                                  marginBottom: 4,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}>
+                                {item.name}
+                              </Text>
+                              <Text
+                                style={{
+                                  color: "var(--primary)",
+                                  fontWeight: 700,
+                                  fontSize: 16,
+                                  display: "block",
+                                }}>
+                                {formatPrice(item.price)}đ
+                              </Text>
+
+                              {/* Tags mini */}
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: 4,
+                                  marginTop: 6,
+                                }}>
+                                {item.isSpicy && (
+                                  <FireOutlined
+                                    style={{ color: "var(--danger)", fontSize: 12 }}
+                                  />
+                                )}
+                                {item.isVegetarian && (
+                                  <HeartFilled
+                                    style={{ color: "var(--success)", fontSize: 12 }}
+                                  />
+                                )}
+                                {item.isBestSeller && (
+                                  <StarFilled
+                                    style={{ color: "var(--warning)", fontSize: 12 }}
+                                  />
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Quick Add Button */}
                             <Button
                               type="primary"
+                              shape="circle"
                               icon={<PlusOutlined />}
-                              size="small"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleAddToCart(item);
                               }}
                               style={{
-                                background: "#FF380B",
+                                background: "var(--primary)",
                                 border: "none",
-                                width: 32,
-                                height: 32,
-                                minWidth: 32,
-                                padding: 0,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
+                                boxShadow: "0 4px 10px var(--primary-glow)",
                               }}
                             />
                           </div>
-                        </div>
-                      </div>
-                    </Card>
-                  </Col>
-                ))
-              ) : (
-                <Col
-                  span={24}
-                  style={{ textAlign: "center", padding: "40px 0" }}>
-                  <Text style={{ color: "#666" }}>
-                    {t("menu_page.no_items_found")}
-                  </Text>
-                </Col>
-              )}
-            </Row>
-
-            {/* Floating Cart Button */}
-            <div
-              onClick={() => setCartModalOpen(true)}
-              style={{
-                position: "fixed",
-                bottom: 24,
-                right: 24,
-                zIndex: 99,
-                background: "#FF380B",
-                width: 56,
-                height: 56,
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 8px 30px rgba(255, 56, 11, 0.5)",
-                cursor: "pointer",
-                transition: "transform 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-              }}>
-              <ShoppingCartOutlined style={{ color: "#fff", fontSize: 24 }} />
-              {cartItemCount > 0 && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    background: "white",
-                    color: "#FF380B",
-                    fontSize: 12,
-                    fontWeight: "bold",
-                    padding: "2px 6px",
-                    borderRadius: 10,
-                    border: "2px solid #FF380B",
-                    minWidth: 20,
-                    textAlign: "center",
-                  }}>
-                  {cartItemCount}
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
                 </div>
-              )}
+              ))}
             </div>
-
-            {/* Cart Modal */}
-            <Modal
-              open={cartModalOpen}
-              onCancel={() => setCartModalOpen(false)}
-              footer={null}
-              closeIcon={null}
-              centered
-              width="100%"
-              style={{ maxWidth: 500, padding: 0 }}
-              styles={{
-                mask: {
-                  backdropFilter: "blur(12px)",
-                  background: "rgba(0,0,0,0.7)",
-                },
-                wrapper: {
-                  background: "transparent",
-                },
-                body: {
-                  background: "transparent",
-                  padding: 0,
-                },
-              }}
-              wrapClassName="cart-modal-wrapper">
-              <div
-                style={{
-                  position: "relative",
-                  background:
-                    "linear-gradient(160deg, #1f1f1f 0%, #0a0a0a 100%)",
-                  borderRadius: 24,
-                  padding: "18px 16px",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.9)",
-                  overflow: "hidden",
-                  maxHeight: "80vh",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                }}>
-                <div
-                  style={{
-                    position: "absolute",
-                    top: -50,
-                    left: -50,
-                    width: 150,
-                    height: 150,
-                    background: "#FF380B",
-                    filter: "blur(90px)",
-                    opacity: 0.15,
-                    pointerEvents: "none",
-                  }}
-                />
-
-                <div
-                  onClick={() => setCartModalOpen(false)}
-                  style={{
-                    position: "absolute",
-                    top: 16,
-                    right: 16,
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    background: "rgba(255,255,255,0.05)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    zIndex: 10,
-                    backdropFilter: "blur(4px)",
-                    border: "1px solid rgba(255,255,255,0.05)",
-                  }}>
-                  <div style={{ color: "#888", fontSize: 14 }}>
-                    <CloseOutlined />
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    marginBottom: 12,
-                  }}>
-                  <div
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 10,
-                      background: "rgba(255,56,11,0.12)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      border: "1px solid rgba(255,56,11,0.25)",
-                    }}>
-                    <ShoppingCartOutlined
-                      style={{ color: "#FF380B", fontSize: 20 }}
-                    />
-                  </div>
-                  <div>
-                    <Text
-                      style={{
-                        color: "#FF380B",
-                        fontSize: 11,
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                        fontWeight: 700,
-                      }}>
-                      {t("menu_page.cart.title")}
-                    </Text>
-                    <div
-                      style={{
-                        color: "#fff",
-                        fontSize: 16,
-                        fontWeight: 700,
-                        marginTop: -2,
-                      }}>
-                      {t("menu_page.cart.items_count", {
-                        count: cartItemCount,
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 10,
-                    flex: 1,
-                    minHeight: 0,
-                    overflowY: "auto",
-                    paddingRight: 2,
-                    paddingBottom: 6,
-                  }}>
-                  {cartItems.length === 0 ? (
-                    <div
-                      style={{
-                        textAlign: "center",
-                        padding: "60px 20px",
-                        color: "#666",
-                      }}>
-                      <ShoppingCartOutlined
-                        style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}
-                      />
-                      <Text
-                        style={{
-                          color: "#888",
-                          fontSize: 14,
-                          display: "block",
-                        }}>
-                        {t("menu_page.cart.empty")}
-                      </Text>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Đồ ăn Section */}
-                      {foodItems.length > 0 && (
-                        <div>
-                          <Text
-                            style={{
-                              color: "#FF380B",
-                              fontSize: 16,
-                              fontWeight: 700,
-                              display: "block",
-                              marginBottom: 10,
-                              textTransform: "uppercase",
-                              letterSpacing: 1,
-                            }}>
-                            {t("menu_page.cart.food_section")}
-                          </Text>
-                          {foodItems.map((item) => (
-                            <Card
-                              key={item.id}
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
-                                border: "1px solid rgba(255,255,255,0.06)",
-                                borderRadius: 12,
-                                marginBottom: 8,
-                              }}
-                              styles={{ body: { padding: 10 } }}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: 10,
-                                  marginBottom: 6,
-                                }}>
-                                {item.image && (
-                                  <img
-                                    src={item.image}
-                                    alt={item.name}
-                                    style={{
-                                      width: 56,
-                                      height: 56,
-                                      objectFit: "cover",
-                                      borderRadius: 8,
-                                      border: "1px solid rgba(255,255,255,0.1)",
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                )}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "flex-start",
-                                    flex: 1,
-                                  }}>
-                                  <div style={{ flex: 1 }}>
-                                    <Text
-                                      style={{
-                                        color: "#fff",
-                                        fontSize: 14,
-                                        fontWeight: 600,
-                                        display: "block",
-                                        marginBottom: 2,
-                                      }}>
-                                      {item.name}
-                                    </Text>
-                                    <Text
-                                      style={{
-                                        color: "#FF380B",
-                                        fontSize: 13,
-                                        fontWeight: 600,
-                                      }}>
-                                      {formatPrice(item.price)}đ
-                                    </Text>
-                                  </div>
-                                  <Button
-                                    type="text"
-                                    icon={<DeleteOutlined />}
-                                    onClick={() =>
-                                      handleRemoveFromCart(item.id)
-                                    }
-                                    style={{ color: "#ff4d4f", flexShrink: 0 }}
-                                    size="small"
-                                  />
-                                </div>
-                              </div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 10,
-                                  justifyContent: "space-between",
-                                }}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                  }}>
-                                  <Button
-                                    type="text"
-                                    icon={<MinusOutlined />}
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.id,
-                                        item.quantity - 1,
-                                      )
-                                    }
-                                    style={{
-                                      color: "#fff",
-                                      border: "1px solid rgba(255,255,255,0.2)",
-                                    }}
-                                    size="small"
-                                  />
-                                  <Text
-                                    style={{
-                                      color: "#fff",
-                                      fontSize: 14,
-                                      fontWeight: 600,
-                                      minWidth: 30,
-                                      textAlign: "center",
-                                    }}>
-                                    {item.quantity}
-                                  </Text>
-                                  <Button
-                                    type="text"
-                                    icon={<PlusOutlined />}
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.id,
-                                        item.quantity + 1,
-                                      )
-                                    }
-                                    style={{
-                                      color: "#fff",
-                                      border: "1px solid rgba(255,255,255,0.2)",
-                                    }}
-                                    size="small"
-                                  />
-                                </div>
-                                <Text
-                                  style={{
-                                    color: "#fff",
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                  }}>
-                                  {formatPrice(
-                                    (
-                                      parseFloat(item.price) * item.quantity
-                                    ).toString(),
-                                  )}
-                                  đ
-                                </Text>
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Nước uống Section */}
-                      {drinkItems.length > 0 && (
-                        <div>
-                          <Text
-                            style={{
-                              color: "#FF380B",
-                              fontSize: 16,
-                              fontWeight: 700,
-                              display: "block",
-                              marginBottom: 10,
-                              textTransform: "uppercase",
-                              letterSpacing: 1,
-                            }}>
-                            <CoffeeOutlined className="mr-2" />{" "}
-                            {t("menu_page.cart.drink_section")}
-                          </Text>
-                          {drinkItems.map((item) => (
-                            <Card
-                              key={item.id}
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
-                                border: "1px solid rgba(255,255,255,0.06)",
-                                borderRadius: 12,
-                                marginBottom: 8,
-                              }}
-                              styles={{ body: { padding: 10 } }}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: 10,
-                                  marginBottom: 6,
-                                }}>
-                                {item.image && (
-                                  <img
-                                    src={item.image}
-                                    alt={item.name}
-                                    style={{
-                                      width: 56,
-                                      height: 56,
-                                      objectFit: "cover",
-                                      borderRadius: 8,
-                                      border: "1px solid rgba(255,255,255,0.1)",
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                )}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "flex-start",
-                                    flex: 1,
-                                  }}>
-                                  <div style={{ flex: 1 }}>
-                                    <Text
-                                      style={{
-                                        color: "#fff",
-                                        fontSize: 14,
-                                        fontWeight: 600,
-                                        display: "block",
-                                        marginBottom: 2,
-                                      }}>
-                                      {item.name}
-                                    </Text>
-                                    <Text
-                                      style={{
-                                        color: "#FF380B",
-                                        fontSize: 13,
-                                        fontWeight: 600,
-                                      }}>
-                                      {formatPrice(item.price)}đ
-                                    </Text>
-                                  </div>
-                                  <Button
-                                    type="text"
-                                    icon={<DeleteOutlined />}
-                                    onClick={() =>
-                                      handleRemoveFromCart(item.id)
-                                    }
-                                    style={{ color: "#ff4d4f", flexShrink: 0 }}
-                                    size="small"
-                                  />
-                                </div>
-                              </div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 10,
-                                  justifyContent: "space-between",
-                                }}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                  }}>
-                                  <Button
-                                    type="text"
-                                    icon={<MinusOutlined />}
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.id,
-                                        item.quantity - 1,
-                                      )
-                                    }
-                                    style={{
-                                      color: "#fff",
-                                      border: "1px solid rgba(255,255,255,0.2)",
-                                    }}
-                                    size="small"
-                                  />
-                                  <Text
-                                    style={{
-                                      color: "#fff",
-                                      fontSize: 14,
-                                      fontWeight: 600,
-                                      minWidth: 30,
-                                      textAlign: "center",
-                                    }}>
-                                    {item.quantity}
-                                  </Text>
-                                  <Button
-                                    type="text"
-                                    icon={<PlusOutlined />}
-                                    onClick={() =>
-                                      handleUpdateQuantity(
-                                        item.id,
-                                        item.quantity + 1,
-                                      )
-                                    }
-                                    style={{
-                                      color: "#fff",
-                                      border: "1px solid rgba(255,255,255,0.2)",
-                                    }}
-                                    size="small"
-                                  />
-                                </div>
-                                <Text
-                                  style={{
-                                    color: "#fff",
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                  }}>
-                                  {formatPrice(
-                                    (
-                                      parseFloat(item.price) * item.quantity
-                                    ).toString(),
-                                  )}
-                                  đ
-                                </Text>
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {cartItems.length > 0 && (
-                  <div
-                    style={{
-                      borderTop: "1px solid rgba(255,255,255,0.08)",
-                      paddingTop: 16,
-                      background:
-                        "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.25) 100%)",
-                      borderRadius: 16,
-                      padding: 16,
-                      marginTop: 14,
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-                    }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 12,
-                      }}>
-                      <div>
-                        <Text
-                          style={{
-                            color: "#888",
-                            fontSize: 12,
-                            textTransform: "uppercase",
-                            letterSpacing: 1,
-                          }}>
-                          {t("menu_page.cart.total")}
-                        </Text>
-                        <div
-                          style={{
-                            color: "#FF380B",
-                            fontSize: 22,
-                            fontWeight: 800,
-                            marginTop: -2,
-                          }}>
-                          {formatVND(calculateTotal())}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          color: "rgba(255,255,255,0.5)",
-                          fontSize: 12,
-                        }}>
-                        {t("menu_page.cart.items_count", {
-                          count: cartItemCount,
-                        })}
-                      </div>
-                    </div>
-                    <Button
-                      type="primary"
-                      block
-                      size="large"
-                      style={{
-                        background: "#FF380B",
-                        border: "none",
-                        height: 48,
-                        fontWeight: 700,
-                        fontSize: 16,
-                        boxShadow: "0 10px 25px rgba(255,56,11,0.35)",
-                      }}>
-                      {t("menu_page.cart.confirm")}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </Modal>
 
             {/* Food Detail Modal */}
             <Modal
@@ -1322,7 +671,7 @@ export default function MenuPage() {
               styles={{
                 mask: {
                   backdropFilter: "blur(12px)",
-                  background: "rgba(0,0,0,0.7)",
+                  background: "var(--modal-overlay)",
                 },
                 wrapper: {
                   background: "transparent",
@@ -1336,23 +685,24 @@ export default function MenuPage() {
                 <div
                   style={{
                     position: "relative",
-                    background:
-                      "linear-gradient(160deg, #1f1f1f 0%, #0a0a0a 100%)",
-                    borderRadius: 24,
+                    background: "var(--card)",
+                    borderRadius: 20,
                     padding: "30px 24px",
                     overflow: "hidden",
+                    border: "1px solid var(--border)",
+                    boxShadow: "var(--shadow-lg)",
                   }}>
                   {/* Decoration Glow */}
                   <div
                     style={{
                       position: "absolute",
                       top: -50,
-                      left: -50,
+                      right: -50,
                       width: 150,
                       height: 150,
-                      background: "#FF380B",
-                      filter: "blur(80px)",
-                      opacity: 0.15,
+                      background: "var(--decoration-glow)",
+                      filter: "blur(60px)",
+                      borderRadius: "50%",
                       pointerEvents: "none",
                     }}
                   />
@@ -1367,16 +717,16 @@ export default function MenuPage() {
                       width: 32,
                       height: 32,
                       borderRadius: "50%",
-                      background: "rgba(255,255,255,0.05)",
+                      background: "var(--surface)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       cursor: "pointer",
                       zIndex: 10,
                       backdropFilter: "blur(4px)",
-                      border: "1px solid rgba(255,255,255,0.05)",
+                      border: "1px solid var(--border)",
                     }}>
-                    <div style={{ color: "#888", fontSize: 14 }}>
+                    <div style={{ color: "var(--text-muted)", fontSize: 14 }}>
                       <CloseOutlined />
                     </div>
                   </div>
@@ -1391,8 +741,8 @@ export default function MenuPage() {
                         borderRadius: 16,
                         overflow: "hidden",
                         marginBottom: 20,
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        boxShadow: "0 8px 20px rgba(0,0,0,0.4)",
+                        border: "1px solid var(--border)",
+                        boxShadow: "var(--shadow-md)",
                         position: "relative",
                       }}>
                       {selectedFood.image ? (
@@ -1410,34 +760,38 @@ export default function MenuPage() {
                           style={{
                             width: "100%",
                             height: "100%",
-                            background: "#141414",
+                            background: "var(--surface)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                           }}>
                           <FireOutlined
-                            style={{ fontSize: 40, color: "#FF380B" }}
+                            style={{ fontSize: 40, color: "var(--primary)" }}
                           />
                         </div>
                       )}
 
-                      {/* Note Badge on Image (if exists) */}
-                      {selectedFood.note && (
+                      {/* Best Seller Badge on Image (if exists) */}
+                      {selectedFood.isBestSeller && (
                         <div
                           style={{
                             position: "absolute",
                             top: 10,
                             left: 10,
-                            background: "rgba(255, 193, 7, 0.9)",
-                            color: "#000",
-                            padding: "4px 10px",
+                            background: "var(--warning)",
+                            color: "var(--text-on-warning)",
+                            padding: "6px 12px",
                             borderRadius: 20,
                             fontSize: 11,
                             fontWeight: 700,
                             backdropFilter: "blur(4px)",
-                            boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+                            boxShadow: "var(--shadow-sm)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
                           }}>
-                          {selectedFood.note}
+                          <StarFilled style={{ fontSize: 10 }} />
+                          {t("menu_page.best_seller")}
                         </div>
                       )}
                     </div>
@@ -1447,14 +801,60 @@ export default function MenuPage() {
                       <Title
                         level={3}
                         style={{
-                          color: "#fff",
-                          margin: "0 0 8px 0",
-                          fontSize: 22,
+                          color: "var(--text)",
+                          margin: "0 0 12px 0",
+                          fontSize: 24,
                           fontWeight: 700,
                           letterSpacing: 0.5,
                         }}>
                         {selectedFood.name}
                       </Title>
+
+                      {/* Additional Info Tags */}
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                          marginBottom: 8,
+                        }}>
+                        {selectedFood.isSpicy && (
+                          <span
+                            style={{
+                              background: "var(--danger-soft)",
+                              color: "var(--danger)",
+                              padding: "6px 12px",
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              border: "1px solid var(--danger-border)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 5,
+                            }}>
+                            <FireOutlined />
+                            {t("menu_page.tags.spicy", { defaultValue: "Spicy" })}
+                          </span>
+                        )}
+                        {selectedFood.isVegetarian && (
+                          <span
+                            style={{
+                              background: "var(--success-soft)",
+                              color: "var(--success)",
+                              padding: "6px 12px",
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              border: "1px solid var(--success-border)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 5,
+                            }}>
+                            <HeartFilled />
+                            {t("menu_page.tags.vegan", { defaultValue: "Vegetarian" })}
+                          </span>
+                        )}
+                      </div>
 
                       {/* Tags */}
                       {selectedFood.tags && selectedFood.tags.length > 0 && (
@@ -1464,41 +864,131 @@ export default function MenuPage() {
                             gap: 6,
                             flexWrap: "wrap",
                           }}>
-                          {selectedFood.tags.map((tag, idx) => (
-                            <span
-                              key={idx}
-                              style={{
-                                background: "rgba(255, 56, 11, 0.1)",
-                                color: "#FF380B",
-                                padding: "4px 10px",
-                                borderRadius: 8,
-                                fontSize: 11,
-                                fontWeight: 500,
-                                border: "1px solid rgba(255, 56, 11, 0.2)",
-                                textTransform: "capitalize",
-                              }}>
-                              {t("menu_page.tags." + tag, {
-                                defaultValue: tag,
-                              })}
-                            </span>
-                          ))}
+                          {selectedFood.tags.map((tag, idx) => {
+                            let icon = <StarFilled />;
+                            let color = "var(--primary)";
+                            let bg = "var(--primary-soft)";
+                            let label = t("menu_page.tags." + tag, {
+                              defaultValue: tag,
+                            });
+
+                            if (tag === "spicy") {
+                              icon = <FireOutlined />;
+                              color = "var(--danger)";
+                              bg = "var(--danger-soft)";
+                            } else if (tag === "vegan") {
+                              icon = <HeartFilled />;
+                              color = "var(--success)";
+                              bg = "var(--success-soft)";
+                            } else if (tag === "best") {
+                              icon = <StarFilled />;
+                              color = "var(--warning)";
+                              bg = "var(--warning-soft)";
+                            }
+
+                            return (
+                              <span
+                                key={idx}
+                                style={{
+                                  background: bg,
+                                  color: color,
+                                  padding: "4px 10px",
+                                  borderRadius: 8,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  border: `1px solid ${color}`,
+                                  textTransform: "capitalize",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 5,
+                                }}>
+                                {icon}
+                                {label}
+                              </span>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
+
+                    {/* Additional Fields */}
+                    {(selectedFood.isSpicy ||
+                      selectedFood.isVegetarian ||
+                      selectedFood.isBestSeller) && (
+                      <div
+                        style={{
+                          marginBottom: 16,
+                          display: "flex",
+                          gap: 12,
+                        }}>
+                        {selectedFood.isBestSeller && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              color: "#faad14",
+                              background: "rgba(250, 173, 20, 0.1)",
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                            }}>
+                            <StarFilled />
+                            <Text style={{ color: "inherit", fontWeight: 600 }}>
+                              {t("menu_page.best_seller", "Best Seller")}
+                            </Text>
+                          </div>
+                        )}
+                        {selectedFood.isSpicy && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              color: "#ff4d4f",
+                              background: "rgba(255, 77, 79, 0.1)",
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                            }}>
+                            <FireOutlined />
+                            <Text style={{ color: "inherit", fontWeight: 600 }}>
+                              {t("menu_page.tags.spicy", "Spicy")}
+                            </Text>
+                          </div>
+                        )}
+                        {selectedFood.isVegetarian && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              color: "#52c41a",
+                              background: "rgba(82, 196, 26, 0.1)",
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                            }}>
+                            <HeartFilled />
+                            <Text style={{ color: "inherit", fontWeight: 600 }}>
+                              {t("menu_page.tags.vegan", "Vegetarian")}
+                            </Text>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Description */}
                     <div
                       style={{
                         marginBottom: 24,
-                        background: "rgba(255,255,255,0.02)",
-                        padding: 12,
+                        background: "var(--surface)",
+                        padding: 16,
                         borderRadius: 12,
+                        border: "1px solid var(--border)",
                       }}>
                       <Text
                         style={{
-                          color: "rgba(255,255,255,0.6)",
+                          color: "var(--text-muted)",
                           fontSize: 14,
-                          lineHeight: 1.6,
+                          lineHeight: 1.7,
                         }}>
                         {selectedFood.description ||
                           t("menu_page.default_food_desc")}
@@ -1508,11 +998,11 @@ export default function MenuPage() {
                     {/* Action Bar (Price + Button) */}
                     <div
                       style={{
-                        background: "rgba(20,20,20,0.6)",
+                        background: "var(--surface)",
                         backdropFilter: "blur(10px)",
-                        borderRadius: 16,
-                        padding: "12px 16px",
-                        border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: 12,
+                        padding: "16px 20px",
+                        border: "1px solid var(--border)",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
@@ -1520,7 +1010,7 @@ export default function MenuPage() {
                       <div>
                         <Text
                           style={{
-                            color: "#888",
+                            color: "var(--text-muted)",
                             fontSize: 11,
                             textTransform: "uppercase",
                             letterSpacing: 1,
@@ -1531,12 +1021,13 @@ export default function MenuPage() {
                         </Text>
                         <Text
                           style={{
-                            color: "#fff",
+                            color: "var(--text)",
                             fontSize: 20,
                             fontWeight: 700,
                           }}>
                           {selectedFood.price}{" "}
-                          <span style={{ fontSize: 14, color: "#FF380B" }}>
+                          <span
+                            style={{ fontSize: 14, color: "var(--primary)" }}>
                             đ
                           </span>
                         </Text>
@@ -1545,7 +1036,7 @@ export default function MenuPage() {
                       {/* Add/Update Quantity Logic */}
                       {(() => {
                         const cartItem = cartItems.find(
-                          (item) => item.name === selectedFood.name,
+                          (item) => item.id === selectedFood.id,
                         );
                         if (cartItem) {
                           return (
@@ -1554,18 +1045,18 @@ export default function MenuPage() {
                                 display: "flex",
                                 alignItems: "center",
                                 gap: 12,
-                                background: "rgba(255,255,255,0.05)",
+                                background: "var(--surface)",
                                 padding: "4px 6px",
                                 borderRadius: 12,
-                                border: "1px solid rgba(255,255,255,0.1)",
+                                border: "1px solid var(--border)",
                               }}>
                               <Button
                                 icon={
                                   <MinusOutlined style={{ fontSize: 12 }} />
                                 }
                                 onClick={() =>
-                                  handleUpdateQuantity(
-                                    selectedFood.name,
+                                  updateQuantity(
+                                    selectedFood.id,
                                     cartItem.quantity - 1,
                                   )
                                 }
@@ -1573,14 +1064,14 @@ export default function MenuPage() {
                                 style={{
                                   background: "transparent",
                                   border: "none",
-                                  color: "#fff",
+                                  color: "var(--text)",
                                   width: 28,
                                   height: 28,
                                 }}
                               />
                               <Text
                                 style={{
-                                  color: "#FF380B",
+                                  color: "var(--primary)",
                                   fontSize: 16,
                                   fontWeight: 700,
                                   minWidth: 20,
@@ -1591,20 +1082,20 @@ export default function MenuPage() {
                               <Button
                                 icon={<PlusOutlined style={{ fontSize: 12 }} />}
                                 onClick={() =>
-                                  handleUpdateQuantity(
-                                    selectedFood.name,
+                                  updateQuantity(
+                                    selectedFood.id,
                                     cartItem.quantity + 1,
                                   )
                                 }
                                 size="small"
                                 style={{
-                                  background: "#FF380B",
+                                  background: "var(--primary)",
                                   border: "none",
-                                  color: "#fff",
+                                  color: "var(--text)",
                                   width: 28,
                                   height: 28,
                                   borderRadius: 8,
-                                  boxShadow: "0 4px 10px rgba(255,56,11,0.3)",
+                                  boxShadow: "0 4px 10px var(--primary-glow)",
                                 }}
                               />
                             </div>
@@ -1616,14 +1107,14 @@ export default function MenuPage() {
                               icon={<PlusOutlined />}
                               onClick={() => handleAddToCart(selectedFood)}
                               style={{
-                                background: "#FF380B",
+                                background: "var(--primary)",
                                 border: "none",
                                 height: 44,
                                 padding: "0 24px",
                                 borderRadius: 12,
                                 fontWeight: 600,
                                 fontSize: 14,
-                                boxShadow: "0 4px 12px rgba(255,56,11,0.3)",
+                                boxShadow: "0 4px 12px var(--primary-glow)",
                               }}>
                               {t("menu_page.detail_modal.add_to_cart")}
                             </Button>
@@ -1637,6 +1128,16 @@ export default function MenuPage() {
             </Modal>
           </div>
         </div>
+
+        <CartModal />
+
+        <CustomerFooter
+          customerProfile={customerProfile}
+          customerName={customerName}
+          phoneNumber={phoneNumber}
+          avatarUrl={avatarUrl}
+          onProfileUpdate={loadCustomerProfile}
+        />
       </ConfigProvider>
       <NotificationSystem />
     </>

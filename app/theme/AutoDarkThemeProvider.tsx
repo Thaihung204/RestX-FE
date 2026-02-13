@@ -22,8 +22,8 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue>({
   mode: "light",
-  toggleTheme: () => {},
-  setTheme: () => {},
+  toggleTheme: () => { },
+  setTheme: () => { },
 });
 
 export const useThemeMode = () => useContext(ThemeContext);
@@ -65,6 +65,11 @@ const AutoDarkThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
     const themeObj = mode === "dark" ? darkTheme : lightTheme;
     const root = document.documentElement;
     root.setAttribute("data-theme", mode);
+    if (mode === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
     Object.entries(themeObj.customColors).forEach(([key, val]) => {
       root.style.setProperty(`--${key}`, val);
     });
