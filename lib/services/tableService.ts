@@ -1,51 +1,67 @@
 import axiosInstance from './axiosInstance';
 
+export enum TableStatus {
+    Available = 0,
+    Reserved = 1,
+    Occupied = 2
+}
+
 export interface TableItem {
     id: string;
-    code: string;
-    type: string;
+    code: string; // Used for Table Number
+    type: string; // Used for Area (VIP, Indoor, Outdoor)
     seatingCapacity: number;
-    shape: string;
+    shape: string; // Circle, Square, Rectangle
     positionX: number;
     positionY: number;
     width: number;
     height: number;
     rotation: number;
-    tableStatusId: string;
-    tableStatusName?: string;
     isActive: boolean;
+    tableStatusId: TableStatus;
+    // Optional fields from backend
+    has3DView?: boolean;
+    viewDescription?: string;
+    defaultViewUrl?: string;
+    tableStatusName?: string;
+    qrCodeUrl?: string;
 }
 
 export const tableService = {
-    getAll: async () => {
+    getAllTables: async (): Promise<TableItem[]> => {
         const response = await axiosInstance.get<TableItem[]>('/tables');
         return response.data;
     },
 
-    getById: async (id: string) => {
+    getTableById: async (id: string): Promise<TableItem> => {
         const response = await axiosInstance.get<TableItem>(`/tables/${id}`);
         return response.data;
     },
 
-    create: async (data: Partial<TableItem>) => {
-        // Backend expects valid DTO.
-        // If TableStatusId is required, we must fetch it or backend handles it.
-        // Let's assume backend might assign default if ID is empty/default.
-        const payload = {
-            ...data,
-            isActive: true,
-            shape: data.shape || 'Rectangle',
-        };
-        const response = await axiosInstance.post<TableItem>('/tables', payload);
+    createTable: async (table: Partial<TableItem>): Promise<TableItem> => {
+        const response = await axiosInstance.post<TableItem>('/tables', table);
         return response.data;
     },
 
-    update: async (id: string, data: Partial<TableItem>) => {
-        const response = await axiosInstance.put<TableItem>(`/tables/${id}`, data);
+    updateTable: async (id: string, table: Partial<TableItem>): Promise<TableItem> => {
+        const response = await axiosInstance.put<TableItem>(`/tables/${id}`, table);
         return response.data;
     },
 
-    delete: async (id: string) => {
+    deleteTable: async (id: string): Promise<void> => {
         await axiosInstance.delete(`/tables/${id}`);
+    },
+
+    updateStatus: async (id: string, status: TableStatus): Promise<TableItem> => {
+        // Backend expects [FromBody] TableStatus status
+        // We send it as a JSON number
+        const response = await axiosInstance.put<TableItem>(
+            `/tables/${id}/status`,
+            status,
+            { headers: { 'Content-Type': 'application/json' } }
+        );
+        return response.data;
     }
 };
+
+export default tableService;
