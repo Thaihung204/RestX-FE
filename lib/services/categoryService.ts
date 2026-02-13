@@ -24,6 +24,29 @@ const normalizeCategory = (data: any): Category => {
   return normalized as Category;
 };
 
+// Helper to convert frontend model to backend DTO (camelCase -> PascalCase)
+const toBackendDto = (data: Partial<Category>): any => {
+  return {
+    Name: data.name,
+    Description: data.description,
+    ImageUrl: data.imageUrl || null, // Handle empty string as null
+    ParentId: data.parentId || null,
+    IsActive: data.isActive ?? true
+  };
+};
+
+// Helper to convert object to FormData
+const toFormData = (data: any): FormData => {
+  const formData = new FormData();
+  Object.keys(data).forEach(key => {
+    const value = data[key];
+    if (value !== undefined && value !== null) {
+      formData.append(key, value.toString());
+    }
+  });
+  return formData;
+};
+
 export const categoryService = {
   // GET /api/categories
   getCategories: async (): Promise<Category[]> => {
@@ -39,17 +62,32 @@ export const categoryService = {
 
   // POST /api/categories
   createCategory: async (category: Omit<Category, 'id'>): Promise<Category> => {
-    const response = await axiosInstance.post('/categories', category);
-    return normalizeCategory(response.data);
+    const dto = toBackendDto(category);
+    const formData = toFormData(dto);
+
+    // Backend returns the created ID (Guid)
+    const response = await axiosInstance.post('/categories', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    // Since backend only returns ID, we return the input category with the new ID
+    return { ...category, id: response.data } as Category;
   },
 
   // PUT /api/categories/{id}
   updateCategory: async (id: string, category: Partial<Category>): Promise<Category> => {
-    // Backend expects the full object or at least the relevant fields
-    // Ensure ID is set in the body as well if required by backend model binding
-    const payload = { ...category, id };
-    const response = await axiosInstance.put(`/categories/${id}`, payload);
-    return normalizeCategory(response.data);
+    const dto = toBackendDto(category);
+    // Ensure Id is present in DTO for model binding if needed
+    if (!dto.Id) dto.Id = id;
+
+    const formData = toFormData(dto);
+
+    // Backend returns the updated ID (Guid)
+    const response = await axiosInstance.put(`/categories/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    return { ...category, id: response.data } as Category;
   },
 
   // DELETE /api/categories/{id}
@@ -76,9 +114,9 @@ export const categoryService = {
 
     try {
       // 1. Create temp employee to upload file
-      const response = await axiosInstance.post('/employees', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      // NOTE: Do NOT set Content-Type header for FormData!
+      // Let browser/axios set it automatically with correct boundary
+      const response = await axiosInstance.post('/employees', formData);
 
       const employeeData = response.data.data;
       const avatarUrl = employeeData?.avatarUrl || employeeData?.AvatarUrl;
@@ -112,3 +150,4 @@ export const categoryService = {
 };
 
 export default categoryService;
+

@@ -14,6 +14,7 @@ import ReservationSection from './components/ReservationSection';
 import NewsSection from './components/NewsSection';
 import FeaturedCategories from './components/FeaturedCategories';
 import OverviewSection from './components/OverviewSection';
+import categoryService, { Category } from '@/lib/services/categoryService';
 
 // Services & Context
 import { useTenant } from '@/lib/contexts/TenantContext';
@@ -35,27 +36,41 @@ const jakarta = Plus_Jakarta_Sans({
 export default function RestaurantPage() {
   const { tenant, loading: tenantLoading } = useTenant();
   const [menu, setMenu] = useState<MenuSectionCategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  console.log('[RestaurantPage] tenant:', tenant);
-  console.log('[RestaurantPage] tenantLoading:', tenantLoading);
-  console.log('[RestaurantPage] tenant?.businessName:', tenant?.businessName);
+  // Debug logs
+  useEffect(() => {
+    if (tenant) {
+      console.log('[RestaurantPage] tenant loaded:', tenant.businessName);
+    }
+  }, [tenant]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Use getMenu() which is public [AllowAnonymous] instead of getDishes() which requires auth
-        const menuData = await dishService.getMenu();
+        setLoading(true);
+        // Fetch menu and categories in parallel
+        const [menuData, categoriesData] = await Promise.all([
+          dishService.getMenu(),
+          categoryService.getCategories()
+        ]);
 
         console.log('[RestaurantPage] Menu data:', menuData);
+        console.log('[RestaurantPage] Categories data:', categoriesData);
 
         // Transform MenuCategory to MenuSectionCategory format
         const transformedMenu: MenuSectionCategory[] = menuData.map(category => ({
           categoryId: category.categoryId,
           categoryName: category.categoryName,
-          items: category.items.filter(item => item.name !== undefined) as any // Filter out items with undefined name
+          items: category.items.filter(item => item.name !== undefined) as any
         }));
+
         setMenu(transformedMenu);
+
+        // Filter only active categories for display
+        setCategories(categoriesData.filter(c => c.isActive));
+
       } catch (error) {
         console.error("Error fetching restaurant data:", error);
       } finally {
@@ -66,14 +81,8 @@ export default function RestaurantPage() {
     fetchData();
   }, []);
 
-  // Extract categories from menu for components
-  const categories = menu.map(cat => ({
-    id: cat.categoryId,
-    name: cat.categoryName,
-    description: '',
-    imageUrl: cat.items?.[0]?.imageUrl || undefined, // Get image from first item in category
-    isActive: true
-  }));
+  // We now use the fetched categories state directly
+  // const categories = ... (removed derived logic)
 
   if (loading || tenantLoading) {
     return (
