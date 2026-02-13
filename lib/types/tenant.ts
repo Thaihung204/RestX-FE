@@ -18,8 +18,8 @@ export interface ITenant {
 
 export interface TenantCreateInput {
   name: string;
-  hostName?: string; // Optional - can be undefined
-  networkIp?: string; // Optional - can be undefined
+  hostName?: string;
+  networkIp?: string;
   businessName: string;
   phoneNumber: string;
   addressLine1: string;
@@ -27,7 +27,7 @@ export interface TenantCreateInput {
   addressLine3: string;
   addressLine4: string;
   ownerEmail: string;
-  ownerPassword?: string; // Optional for edit mode
+  ownerPassword?: string;
   mailRestaurant: string;
   plan: "basic" | "pro" | "enterprise";
 }
@@ -46,6 +46,12 @@ export interface TenantApiResponse {
   secondaryColor?: string;
   headerColor?: string;
   footerColor?: string;
+  lightBaseColor?: string;
+  lightSurfaceColor?: string;
+  lightCardColor?: string;
+  darkBaseColor?: string;
+  darkSurfaceColor?: string;
+  darkCardColor?: string;
   networkIp?: string;
   connectionString?: string;
   status: boolean;

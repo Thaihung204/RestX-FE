@@ -41,14 +41,14 @@ export default function OrderDetailStatusSettings() {
   const defaultValues = {
     name: "",
     code: "",
-    color: "#FF380B",
+    color: "var(--primary)",
     isActive: true,
     isDefault: false,
   };
 
   // Predefined colors for ColorPicker
   const presettedColors = [
-    "#FF380B",
+    "var(--primary)",
     "#FFA500",
     "#1890FF",
     "#52C41A",
@@ -413,7 +413,7 @@ export default function OrderDetailStatusSettings() {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-[#FF380B] to-[#ff5e3a] bg-clip-text text-transparent">
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] bg-clip-text text-transparent">
             {t("dashboard.manage.order_status.title", {
               defaultValue: "Order Detail Status Management",
             })}
@@ -429,7 +429,7 @@ export default function OrderDetailStatusSettings() {
           onClick={handleAdd}
           icon={<PlusOutlined />}
           size="large"
-          className="bg-gradient-to-r from-[#FF380B] to-[#ff5e3a] border-none hover:shadow-lg hover:scale-105 active:scale-95 transition-all rounded-xl h-11 px-6 font-medium">
+          className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] border-none hover:shadow-lg hover:scale-105 active:scale-95 transition-all rounded-xl h-11 px-6 font-medium">
           {t("dashboard.manage.order_status.add_status", {
             defaultValue: "Add Status",
           })}
@@ -479,7 +479,7 @@ export default function OrderDetailStatusSettings() {
         title={
           <div className="flex items-center gap-3">
             <div
-              className={`w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF380B] to-[#ff5e3a] flex items-center justify-center text-white shadow-lg`}>
+              className={`w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)] flex items-center justify-center text-white shadow-lg`}>
               {editingStatus ? (
                 <EditOutlined className="text-lg" />
               ) : (
@@ -515,7 +515,7 @@ export default function OrderDetailStatusSettings() {
         cancelText={t("common.cancel", { defaultValue: "Cancel" })}
         okButtonProps={{
           className:
-            "bg-gradient-to-r from-[#FF380B] to-[#ff5e3a] border-none text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all",
+            "bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] border-none text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all",
           size: "large",
           shape: "round",
         }}

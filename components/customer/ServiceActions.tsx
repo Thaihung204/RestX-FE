@@ -34,7 +34,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       className="action-btn"
       style={{
         background: isActive
-          ? "linear-gradient(135deg, #ff5722 0%, #d84315 100%)"
+          ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)"
           : "var(--surface)",
         borderRadius: 20,
         padding: "24px 16px",
@@ -54,7 +54,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
     >
       <div style={{
         fontSize: 28,
-        color: isActive ? "var(--text)" : "#FF380B",
+        color: isActive ? "var(--text-inverse)" : "var(--primary)",
         filter: isActive ? "drop-shadow(0 2px 4px var(--modal-overlay))" : "none"
       }}>
         {icon}

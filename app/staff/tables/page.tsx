@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import { useThemeMode } from '../../theme/AntdProvider';
 import { TableMap2D } from '../../admin/tables/components/TableMap2D';
 import { TableData as Map2DTableData } from '../../admin/tables/components/DraggableTable';
 

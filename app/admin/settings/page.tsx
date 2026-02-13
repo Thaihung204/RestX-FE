@@ -16,16 +16,20 @@ export default function SettingsPage() {
       <div className="space-y-6 max-w-5xl">
         {/* Header */}
         <div>
-          <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text)' }}>
+          <h2
+            className="text-3xl font-bold mb-2"
+            style={{ color: "var(--text)" }}>
             {t("dashboard.settings.title")}
           </h2>
-          <p style={{ color: 'var(--text-muted)' }}>
+          <p style={{ color: "var(--text-muted)" }}>
             {t("dashboard.settings.subtitle")}
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div
+          className="flex gap-2"
+          style={{ borderBottom: "1px solid var(--border)" }}>
           {[
             {
               id: "general" as const,
@@ -47,15 +51,16 @@ export default function SettingsPage() {
               label: t("dashboard.settings.tabs.security"),
               icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
             },
-
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className="px-4 py-3 font-medium transition-all flex items-center gap-2"
               style={{
-                color: activeTab === tab.id ? '#FF380B' : 'var(--text-muted)',
-                borderBottom: activeTab === tab.id ? '2px solid #FF380B' : 'none',
+                color:
+                  activeTab === tab.id ? "var(--primary)" : "var(--text-muted)",
+                borderBottom:
+                  activeTab === tab.id ? "2px solid var(--primary)" : "none",
               }}
               suppressHydrationWarning>
               <svg
@@ -81,15 +86,19 @@ export default function SettingsPage() {
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
-              <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.general.restaurant_info")}
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.settings.general.restaurant_name")}
                   </label>
                   <input
@@ -97,18 +106,24 @@ export default function SettingsPage() {
                     defaultValue="RestX Premium Restaurant"
                     className="w-full px-4 py-2 rounded-lg focus:outline-none"
                     style={{
-                      background: 'var(--surface)',
-                      border: '1px solid var(--border)',
-                      color: 'var(--text)',
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
                     }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                    onFocus={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--primary)")
+                    }
+                    onBlur={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--border)")
+                    }
                     suppressHydrationWarning
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.email")}
                     </label>
                     <input
@@ -116,15 +131,23 @@ export default function SettingsPage() {
                       defaultValue="contact@restx.com"
                       className="w-full px-4 py-2 rounded-lg focus:outline-none"
                       style={{
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        color: 'var(--text)',
-                      }} onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'} suppressHydrationWarning
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
+                      }}
+                      onFocus={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--primary)")
+                      }
+                      onBlur={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--border)")
+                      }
+                      suppressHydrationWarning
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.phone")}
                     </label>
                     <input
@@ -132,16 +155,24 @@ export default function SettingsPage() {
                       defaultValue="+1 (555) 123-4567"
                       className="w-full px-4 py-2 rounded-lg focus:outline-none"
                       style={{
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        color: 'var(--text)',
-                      }} onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'} suppressHydrationWarning
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
+                      }}
+                      onFocus={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--primary)")
+                      }
+                      onBlur={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--border)")
+                      }
+                      suppressHydrationWarning
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.settings.general.address")}
                   </label>
                   <input
@@ -149,16 +180,24 @@ export default function SettingsPage() {
                     defaultValue="123 Main Street, Downtown, City 12345"
                     className="w-full px-4 py-2 rounded-lg focus:outline-none"
                     style={{
-                      background: 'var(--surface)',
-                      border: '1px solid var(--border)',
-                      color: 'var(--text)',
-                    }} onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'} suppressHydrationWarning
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                    onFocus={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--primary)")
+                    }
+                    onBlur={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--border)")
+                    }
+                    suppressHydrationWarning
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.opening_time")}
                     </label>
                     <input
@@ -166,15 +205,23 @@ export default function SettingsPage() {
                       defaultValue="09:00"
                       className="w-full px-4 py-2 rounded-lg focus:outline-none"
                       style={{
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        color: 'var(--text)',
-                      }} onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'} suppressHydrationWarning
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
+                      }}
+                      onFocus={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--primary)")
+                      }
+                      onBlur={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--border)")
+                      }
+                      suppressHydrationWarning
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.closing_time")}
                     </label>
                     <input
@@ -182,9 +229,9 @@ export default function SettingsPage() {
                       defaultValue="23:00"
                       className="w-full px-4 py-2 rounded-lg focus:outline-none"
                       style={{
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        color: 'var(--text)',
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
                       }}
                       suppressHydrationWarning
                     />
@@ -196,27 +243,35 @@ export default function SettingsPage() {
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
-              <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.general.business_settings")}
               </h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.currency")}
                     </label>
                     <select
                       className="w-full px-4 py-2 rounded-lg focus:outline-none"
                       style={{
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        color: 'var(--text)',
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
                       }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                      onFocus={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--primary)")
+                      }
+                      onBlur={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--border)")
+                      }
                       suppressHydrationWarning>
                       <option>USD ($)</option>
                       <option>EUR (€)</option>
@@ -225,7 +280,9 @@ export default function SettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.tax_rate")}
                     </label>
                     <input
@@ -233,30 +290,40 @@ export default function SettingsPage() {
                       defaultValue="10"
                       className="w-full px-4 py-2 rounded-lg focus:outline-none"
                       style={{
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        color: 'var(--text)',
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
                       }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                      onFocus={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--primary)")
+                      }
+                      onBlur={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--border)")
+                      }
                       suppressHydrationWarning
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.timezone")}
                     </label>
                     <select
                       className="w-full px-4 py-2 rounded-lg focus:outline-none"
                       style={{
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        color: 'var(--text)',
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
                       }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                      onFocus={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--primary)")
+                      }
+                      onBlur={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--border)")
+                      }
                       suppressHydrationWarning>
                       <option>UTC-5 (EST)</option>
                       <option>UTC-8 (PST)</option>
@@ -265,18 +332,24 @@ export default function SettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.date_format")}
                     </label>
                     <select
                       className="w-full px-4 py-2 rounded-lg focus:outline-none"
                       style={{
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        color: 'var(--text)',
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
                       }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                      onFocus={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--primary)")
+                      }
+                      onBlur={(e) =>
+                        (e.currentTarget.style.borderColor = "var(--border)")
+                      }
                       suppressHydrationWarning>
                       <option>MM/DD/YYYY</option>
                       <option>DD/MM/YYYY</option>
@@ -297,10 +370,12 @@ export default function SettingsPage() {
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
-              <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.appearance.theme")}
               </h3>
               <div className="grid grid-cols-3 gap-4">
@@ -314,21 +389,31 @@ export default function SettingsPage() {
                 ].map((theme) => (
                   <button
                     key={theme.name}
-                    className={`p-4 bg-gradient-to-br ${theme.color
-                      } border-2 rounded-xl transition-all`}
+                    className={`p-4 bg-gradient-to-br ${
+                      theme.color
+                    } border-2 rounded-xl transition-all`}
                     style={{
-                      borderColor: theme.name === "Dark" ? '#FF380B' : '#374151'
+                      borderColor:
+                        theme.name === "Dark" ? "var(--primary)" : "#374151",
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                    onMouseLeave={(e) => e.currentTarget.style.borderColor = theme.name === "Dark" ? '#FF380B' : '#374151'}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--primary)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.borderColor =
+                        theme.name === "Dark" ? "var(--primary)" : "#374151")
+                    }
                     suppressHydrationWarning>
                     <div className="text-center">
                       <p
-                        className={`font-bold ${theme.name === "Light"
-                          ? "text-gray-900"
-                          : "text-white"
-                          }`}>
-                        {t(`dashboard.settings.appearance.themes.${theme.name.toLowerCase()}`)}
+                        className={`font-bold ${
+                          theme.name === "Light"
+                            ? "text-gray-900"
+                            : "text-white"
+                        }`}>
+                        {t(
+                          `dashboard.settings.appearance.themes.${theme.name.toLowerCase()}`,
+                        )}
                       </p>
                     </div>
                   </button>
@@ -339,10 +424,12 @@ export default function SettingsPage() {
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
-              <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.appearance.accent_color")}
               </h3>
               <div className="grid grid-cols-6 gap-4">
@@ -350,13 +437,14 @@ export default function SettingsPage() {
                   (color) => (
                     <button
                       key={color}
-                      className={`h-12 bg-${color}-500 rounded-lg hover:scale-110 transition-transform ${color === "orange"
-                        ? "ring-2 ring-white ring-offset-2 ring-offset-gray-900"
-                        : ""
-                        }`}
+                      className={`h-12 bg-${color}-500 rounded-lg hover:scale-110 transition-transform ${
+                        color === "orange"
+                          ? "ring-2 ring-white ring-offset-2 ring-offset-gray-900"
+                          : ""
+                      }`}
                       suppressHydrationWarning
                     />
-                  )
+                  ),
                 )}
               </div>
             </div>
@@ -364,19 +452,23 @@ export default function SettingsPage() {
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
-              <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.appearance.display_options")}
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium" style={{ color: 'var(--text)' }}>
+                    <p className="font-medium" style={{ color: "var(--text)" }}>
                       {t("dashboard.settings.appearance.compact_mode")}
                     </p>
-                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <p
+                      className="text-sm"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.appearance.compact_mode_desc")}
                     </p>
                   </div>
@@ -391,10 +483,12 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium" style={{ color: 'var(--text)' }}>
+                    <p className="font-medium" style={{ color: "var(--text)" }}>
                       {t("dashboard.settings.appearance.show_animations")}
                     </p>
-                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <p
+                      className="text-sm"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.appearance.show_animations_desc")}
                     </p>
                   </div>
@@ -405,17 +499,24 @@ export default function SettingsPage() {
                       className="sr-only peer"
                       suppressHydrationWarning
                     />
-                    <div className="w-11 h-6 peer-focus:outline-none peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" style={{ backgroundColor: 'rgb(55, 65, 81)', '--tw-ring-color': '#FF380B' } as any}></div>
+                    <div
+                      className="w-11 h-6 peer-focus:outline-none peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                      style={
+                        {
+                          backgroundColor: "var(--border)",
+                          "--tw-ring-color": "var(--primary)",
+                        } as any
+                      }></div>
                     <style jsx>{`
-                          .peer:checked ~ div {
-                            background-color: #FF380B !important;
-                          }
-                        `}</style>
+                      .peer:checked ~ div {
+                        background-color: var(--primary) !important;
+                      }
+                    `}</style>
                     <style jsx>{`
-                          .peer:checked + div {
-                            background-color: #FF380B;
-                          }
-                        `}</style>
+                      .peer:checked + div {
+                        background-color: var(--primary);
+                      }
+                    `}</style>
                   </label>
                 </div>
               </div>
@@ -429,35 +530,53 @@ export default function SettingsPage() {
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
-              <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.notifications.order_notifications")}
               </h3>
               <div className="space-y-4">
                 {[
                   {
-                    title: t("dashboard.settings.notifications.items.new_orders"),
-                    desc: t("dashboard.settings.notifications.items.new_orders_desc"),
+                    title: t(
+                      "dashboard.settings.notifications.items.new_orders",
+                    ),
+                    desc: t(
+                      "dashboard.settings.notifications.items.new_orders_desc",
+                    ),
                   },
                   {
-                    title: t("dashboard.settings.notifications.items.order_updates"),
-                    desc: t("dashboard.settings.notifications.items.order_updates_desc"),
+                    title: t(
+                      "dashboard.settings.notifications.items.order_updates",
+                    ),
+                    desc: t(
+                      "dashboard.settings.notifications.items.order_updates_desc",
+                    ),
                   },
                   {
-                    title: t("dashboard.settings.notifications.items.order_completion"),
-                    desc: t("dashboard.settings.notifications.items.order_completion_desc"),
+                    title: t(
+                      "dashboard.settings.notifications.items.order_completion",
+                    ),
+                    desc: t(
+                      "dashboard.settings.notifications.items.order_completion_desc",
+                    ),
                   },
                 ].map((item) => (
                   <div
                     key={item.title}
                     className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium" style={{ color: 'var(--text)' }}>
+                      <p
+                        className="font-medium"
+                        style={{ color: "var(--text)" }}>
                         {item.title}
                       </p>
-                      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      <p
+                        className="text-sm"
+                        style={{ color: "var(--text-muted)" }}>
                         {item.desc}
                       </p>
                     </div>
@@ -478,32 +597,53 @@ export default function SettingsPage() {
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
-              <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.notifications.system_notifications")}
               </h3>
               <div className="space-y-4">
                 {[
                   {
-                    title: t("dashboard.settings.notifications.items.table_updates"),
-                    desc: t("dashboard.settings.notifications.items.table_updates_desc"),
+                    title: t(
+                      "dashboard.settings.notifications.items.table_updates",
+                    ),
+                    desc: t(
+                      "dashboard.settings.notifications.items.table_updates_desc",
+                    ),
                   },
                   {
-                    title: t("dashboard.settings.notifications.items.staff_alerts"),
-                    desc: t("dashboard.settings.notifications.items.staff_alerts_desc"),
+                    title: t(
+                      "dashboard.settings.notifications.items.staff_alerts",
+                    ),
+                    desc: t(
+                      "dashboard.settings.notifications.items.staff_alerts_desc",
+                    ),
                   },
-                  { title: t("dashboard.settings.notifications.items.inventory_alerts"), desc: t("dashboard.settings.notifications.items.inventory_alerts_desc") },
+                  {
+                    title: t(
+                      "dashboard.settings.notifications.items.inventory_alerts",
+                    ),
+                    desc: t(
+                      "dashboard.settings.notifications.items.inventory_alerts_desc",
+                    ),
+                  },
                 ].map((item) => (
                   <div
                     key={item.title}
                     className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium" style={{ color: 'var(--text)' }}>
+                      <p
+                        className="font-medium"
+                        style={{ color: "var(--text)" }}>
                         {item.title}
                       </p>
-                      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      <p
+                        className="text-sm"
+                        style={{ color: "var(--text-muted)" }}>
                         {item.desc}
                       </p>
                     </div>
@@ -529,69 +669,98 @@ export default function SettingsPage() {
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
-              <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.security.change_password")}
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.settings.security.current_password")}
                   </label>
                   <input
                     type="password"
                     className="w-full px-4 py-2 rounded-lg focus:outline-none"
                     style={{
-                      background: 'var(--surface)',
-                      border: '1px solid var(--border)',
-                      color: 'var(--text)',
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
                     }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                    onFocus={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--primary)")
+                    }
+                    onBlur={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--border)")
+                    }
                     suppressHydrationWarning
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.settings.security.new_password")}
                   </label>
                   <input
                     type="password"
                     className="w-full px-4 py-2 rounded-lg focus:outline-none"
                     style={{
-                      background: 'var(--surface)',
-                      border: '1px solid var(--border)',
-                      color: 'var(--text)',
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
                     }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                    onFocus={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--primary)")
+                    }
+                    onBlur={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--border)")
+                    }
                     suppressHydrationWarning
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.settings.security.confirm_new_password")}
                   </label>
                   <input
                     type="password"
                     className="w-full px-4 py-2 rounded-lg focus:outline-none"
                     style={{
-                      background: 'var(--surface)',
-                      border: '1px solid var(--border)',
-                      color: 'var(--text)',
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
                     }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                    onFocus={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--primary)")
+                    }
+                    onBlur={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--border)")
+                    }
                     suppressHydrationWarning
                   />
                 </div>
                 <button
                   className="px-6 py-2 text-white rounded-lg font-medium transition-all"
-                  style={{ background: 'linear-gradient(to right, #FF380B, #CC2D08)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #CC2D08, #B32607)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #FF380B, #CC2D08)'}
+                  style={{
+                    background:
+                      "linear-gradient(to right, var(--primary), var(--primary-hover))",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background =
+                      "linear-gradient(to right, var(--primary-hover), var(--primary-border))")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background =
+                      "linear-gradient(to right, var(--primary), var(--primary-hover))")
+                  }
                   suppressHydrationWarning>
                   {t("dashboard.settings.security.update_password")}
                 </button>
@@ -601,19 +770,23 @@ export default function SettingsPage() {
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: "var(--card)",
+                border: "1px solid var(--border)",
               }}>
-              <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text)' }}>
+              <h3
+                className="text-xl font-bold mb-4"
+                style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.security.two_factor")}
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium" style={{ color: 'var(--text)' }}>
+                    <p className="font-medium" style={{ color: "var(--text)" }}>
                       {t("dashboard.settings.security.enable_2fa")}
                     </p>
-                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <p
+                      className="text-sm"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.security.enable_2fa_desc")}
                     </p>
                   </div>
@@ -623,22 +796,29 @@ export default function SettingsPage() {
                       className="sr-only peer"
                       suppressHydrationWarning
                     />
-                    <div className="w-11 h-6 peer-focus:outline-none peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" style={{ backgroundColor: 'rgb(55, 65, 81)', '--tw-ring-color': '#FF380B' } as any}></div>
+                    <div
+                      className="w-11 h-6 peer-focus:outline-none peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                      style={
+                        {
+                          backgroundColor: "var(--border)",
+                          "--tw-ring-color": "var(--primary)",
+                        } as any
+                      }></div>
                   </label>
                 </div>
               </div>
             </div>
             <style jsx>{`
-                  .peer:checked ~ div {
-                    background-color: #FF380B !important;
-                  }
-                `}</style>
+              .peer:checked ~ div {
+                background-color: var(--primary) !important;
+              }
+            `}</style>
 
             <div
               className="rounded-xl p-6"
               style={{
-                background: 'var(--card)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
+                background: "var(--card)",
+                border: "1px solid rgba(239, 68, 68, 0.2)",
               }}>
               <h3 className="text-xl font-bold text-red-500 mb-4">
                 {t("dashboard.settings.security.danger_zone")}
@@ -654,32 +834,38 @@ export default function SettingsPage() {
           </div>
         )}
 
-
         {/* Save Button */}
         <div className="flex justify-end gap-3 pt-6">
           <button
             className="px-6 py-2 rounded-lg transition-all"
             style={{
-              background: 'var(--surface)',
-              color: 'var(--text)',
-              border: '1px solid var(--border)',
+              background: "var(--surface)",
+              color: "var(--text)",
+              border: "1px solid var(--border)",
             }}
             suppressHydrationWarning>
             {t("dashboard.settings.buttons.cancel")}
           </button>
           <button
             style={{
-              background: 'linear-gradient(to right, #FF380B, #FF380B)',
-              color: 'white',
-              padding: '8px 24px',
-              borderRadius: '8px',
-              fontWeight: '500',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
+              background:
+                "linear-gradient(to right, var(--primary), var(--primary))",
+              color: "white",
+              padding: "8px 24px",
+              borderRadius: "8px",
+              fontWeight: "500",
+              border: "none",
+              cursor: "pointer",
+              transition: "all 0.3s",
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #CC2D08, #CC2D08)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #FF380B, #FF380B)'}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background =
+                "linear-gradient(to right, var(--primary-hover), var(--primary-hover))")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background =
+                "linear-gradient(to right, var(--primary), var(--primary))")
+            }
             suppressHydrationWarning>
             {t("dashboard.settings.buttons.save_changes")}
           </button>

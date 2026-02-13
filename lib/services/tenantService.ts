@@ -9,11 +9,19 @@ export interface TenantConfig {
   // Branding & Assets
   logoUrl?: string;
   faviconUrl?: string;
-  backgroundUrl?: string; // Banner/Hero image
+  backgroundUrl?: string;
 
-  // Theme Colors
-  baseColor: string;
+  // Theme Colors (synced with globals.css variables)
   primaryColor: string;
+  lightBaseColor?: string;
+  lightSurfaceColor?: string;
+  lightCardColor?: string;
+  darkBaseColor?: string;
+  darkSurfaceColor?: string;
+  darkCardColor?: string;
+
+  // Legacy color fields (API compatibility)
+  baseColor: string;
   secondaryColor: string;
   headerColor: string;
   footerColor: string;
@@ -28,7 +36,7 @@ export interface TenantConfig {
   // Business Info
   businessName: string;
   aboutUs?: string;
-  aboutUsType?: 'text' | 'html';
+  aboutUsType?: "text" | "html";
   overview?: string;
   businessAddressLine1?: string;
   businessAddressLine2?: string;
@@ -64,9 +72,9 @@ const mapApiResponseToTenant = (apiTenant: TenantApiResponse): ITenant => {
     addressLine2: apiTenant.businessAddressLine2 || "",
     addressLine3: apiTenant.businessAddressLine3 || "",
     addressLine4: apiTenant.businessAddressLine4 || "",
-    ownerEmail: "", // Backend doesn't have this field yet
+    ownerEmail: "",
     mailRestaurant: apiTenant.businessEmailAddress || "",
-    plan: "basic", // Backend doesn't have this field yet
+    plan: "basic",
     status: apiTenant.status ? "active" : "inactive",
     lastActive:
       apiTenant.modifiedDate ||
@@ -78,14 +86,15 @@ const mapApiResponseToTenant = (apiTenant: TenantApiResponse): ITenant => {
 // Helper function to convert frontend create input to API format
 const mapCreateInputToApi = (input: TenantCreateInput) => {
   // Remove .restx.food suffix if accidentally included
-  const fullHostname = input.hostName && input.hostName.endsWith(".restx.food")
-    ? input.hostName
-    : `${input.hostName}.restx.food`;
+  const fullHostname =
+    input.hostName && input.hostName.endsWith(".restx.food")
+      ? input.hostName
+      : `${input.hostName}.restx.food`;
 
   return {
     name: input.name,
     hostname: fullHostname,
-    networkIp: fullHostname, // Save to networkIp as well
+    networkIp: fullHostname,
     businessName: input.businessName,
     businessAddressLine1: input.addressLine1,
     businessAddressLine2: input.addressLine2,
@@ -98,20 +107,26 @@ const mapCreateInputToApi = (input: TenantCreateInput) => {
   };
 };
 
-// Helper to convert object to FormData
-const toFormData = (data: any, files?: { logo?: File | null; background?: File | null; favicon?: File | null }): FormData => {
+const toFormData = (
+  data: any,
+  files?: {
+    logo?: File | null;
+    background?: File | null;
+    favicon?: File | null;
+  },
+): FormData => {
   const formData = new FormData();
 
   // Append simple fields
   Object.keys(data).forEach((key) => {
     const value = data[key];
     if (value !== null && value !== undefined && key !== "tenantSettings") {
-      // Handle values properly
-      if (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
-        // If nested object, JSON stringify? Or flatten?
-        // for now skip complex nested objects to avoid [object Object]
-      } else if (typeof value === 'boolean') {
-        // C# boolean binding works best with "true"/"false" strings
+      if (
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        !(value instanceof Date)
+      ) {
+      } else if (typeof value === "boolean") {
         formData.append(key, value ? "true" : "false");
       } else {
         formData.append(key, value.toString());
@@ -167,6 +182,12 @@ export const tenantService = {
           SecondaryColor: 'secondaryColor',
           HeaderColor: 'headerColor',
           FooterColor: 'footerColor',
+          LightBaseColor: 'lightBaseColor',
+          LightSurfaceColor: 'lightSurfaceColor',
+          LightCardColor: 'lightCardColor',
+          DarkBaseColor: 'darkBaseColor',
+          DarkSurfaceColor: 'darkSurfaceColor',
+          DarkCardColor: 'darkCardColor',
           NetworkIp: 'networkIp',
           ConnectionString: 'connectionString',
           ExpiredAt: 'expiredAt',
@@ -278,18 +299,18 @@ export const tenantService = {
     // Merge ID into the payload as some backends require it in the body too
     const payload = {
       ...apiData,
-      id
+      id,
     };
 
-    console.log('[updateTenant] Tenant ID:', id);
-    console.log('[updateTenant] Input data:', input);
-    console.log('[updateTenant] API payload:', payload);
+    console.log("[updateTenant] Tenant ID:", id);
+    console.log("[updateTenant] Input data:", input);
+    console.log("[updateTenant] API payload:", payload);
 
     const formData = toFormData(payload);
     const response = await adminAxiosInstance.put(`/tenants/${id}`, formData, {
       headers: { "Content-Type": undefined },
     });
-    console.log('[updateTenant] Response:', response.data);
+    console.log("[updateTenant] Response:", response.data);
     return response.data;
   },
 
@@ -299,7 +320,11 @@ export const tenantService = {
    */
   upsertTenant: async (
     tenant: TenantConfig,
-    files?: { logo?: File | null; background?: File | null; favicon?: File | null }
+    files?: {
+      logo?: File | null;
+      background?: File | null;
+      favicon?: File | null;
+    },
   ) => {
     const findId = (obj: any): string | undefined => {
       if (!obj) return undefined;
@@ -321,13 +346,13 @@ export const tenantService = {
 
     const tenantId = findId(tenant);
 
-    console.log('[tenantService] upsertTenant called for:', {
+    console.log("[tenantService] upsertTenant called for:", {
       name: tenant.name || (tenant as any).Name,
       resolvedId: tenantId,
       topLevelKeys: Object.keys(tenant),
       hasLowercaseId: !!tenant.id,
       hasUppercaseId: !!(tenant as any).Id,
-      fullObject: JSON.stringify(tenant).substring(0, 200) + "..."
+      fullObject: JSON.stringify(tenant).substring(0, 200) + "...",
     });
 
     // If tenant has an ID, use PUT to update
@@ -341,7 +366,7 @@ export const tenantService = {
       });
     } else {
       // Create new
-      console.log('[tenantService] Performing POST create (no ID found)');
+      console.log("[tenantService] Performing POST create (no ID found)");
       const formData = toFormData(tenant, files);
       return await adminAxiosInstance.post("/tenants", formData, {
         headers: { "Content-Type": undefined },

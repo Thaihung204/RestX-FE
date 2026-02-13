@@ -5,7 +5,7 @@ import LoginButton from "@/components/auth/LoginButton";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useThemeMode } from "../theme/AntdProvider";
 
 export default function AdminLoginPage() {
   const { t } = useTranslation('auth');

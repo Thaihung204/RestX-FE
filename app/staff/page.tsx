@@ -20,7 +20,7 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import PageTransition from '../components/PageTransition';
-import { useThemeMode } from '../theme/AutoDarkThemeProvider';
+import { useThemeMode } from '../theme/AntdProvider';
 
 const { Title, Text } = Typography;
 

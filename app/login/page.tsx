@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useThemeMode } from "../theme/AntdProvider";
 import { message } from "antd";
 import { HeroSection } from "@/components/auth/HeroSection";
 import { GlassInput } from "@/components/ui/GlassInput";
