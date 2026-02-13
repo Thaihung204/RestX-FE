@@ -36,4 +36,3 @@ adminAxiosInstance.interceptors.response.use(
 
 export default adminAxiosInstance;
 
-
