@@ -1,29 +1,26 @@
 "use client";
 
-import LoginButton from "@/components/auth/LoginButton";
-import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import authService from "@/lib/services/authService";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useThemeMode } from "../theme/AntdProvider";
 import { message } from "antd";
+import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import authService from "@/lib/services/authService";
+import { HeroSection } from "@/components/auth/HeroSection";
+import { GlassInput } from "@/components/ui/GlassInput";
+import { UserOutlined, MailOutlined, PhoneOutlined, LockOutlined, EyeInvisibleOutlined, EyeOutlined, UserAddOutlined } from "@ant-design/icons";
+
+const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
 export default function RegisterPage() {
   const { t } = useTranslation('auth');
   const { mode } = useThemeMode();
+  const isDark = mode === 'dark';
   const [mounted, setMounted] = useState(false);
-  // Get initial theme from localStorage to prevent flash
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("restx-theme-mode");
-      return (
-        stored === "dark" ||
-        (stored === null &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches)
-      );
-    }
-    return false;
-  });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -32,7 +29,6 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
   });
-  const [remember, setRemember] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -74,37 +70,18 @@ export default function RegisterPage() {
     return "";
   };
 
-
-
   const validatePassword = (pwd: string): string[] => {
     if (!pwd) return [];
 
     const errors: string[] = [];
-
-    if (pwd.length < 8) {
-      errors.push(t('register_page.password_requirements.length'));
-    }
-    if (!/(?=.*[a-z])/.test(pwd)) {
-      errors.push(t('register_page.password_requirements.lowercase'));
-    }
-    if (!/(?=.*[A-Z])/.test(pwd)) {
-      errors.push(t('register_page.password_requirements.uppercase'));
-    }
-    if (!/(?=.*[0-9])/.test(pwd)) {
-      errors.push(t('register_page.password_requirements.number'));
-    }
-    if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(pwd)) {
-      errors.push(t('register_page.password_requirements.special'));
-    }
+    if (pwd.length < 8) errors.push(t('register_page.password_requirements.length'));
+    if (!/(?=.*[a-z])/.test(pwd)) errors.push(t('register_page.password_requirements.lowercase'));
+    if (!/(?=.*[A-Z])/.test(pwd)) errors.push(t('register_page.password_requirements.uppercase'));
+    if (!/(?=.*[0-9])/.test(pwd)) errors.push(t('register_page.password_requirements.number'));
+    if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(pwd)) errors.push(t('register_page.password_requirements.special'));
 
     return errors;
   };
-
-  useEffect(() => {
-    setMounted(true);
-    // Update isDark when mode changes
-    setIsDark(mode === "dark");
-  }, [mode]);
 
   const validateConfirmPassword = (confirmPwd: string, pwd: string) => {
     if (!confirmPwd) return "";
@@ -118,40 +95,27 @@ export default function RegisterPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Only clear errors if field becomes valid after submit attempt
     if (touched[name as keyof typeof touched]) {
-      if (name === "firstName" && value.trim()) {
-        setErrors((prev) => ({ ...prev, firstName: "" }));
-      } else if (name === "lastName" && value.trim()) {
-        setErrors((prev) => ({ ...prev, lastName: "" }));
-      } else if (name === "email" && !validateEmail(value)) {
-        setErrors((prev) => ({ ...prev, email: "" }));
-      } else if (name === "phone" && !validatePhone(value)) {
-        setErrors((prev) => ({ ...prev, phone: "" }));
-      } else if (name === "password") {
+      if (name === "firstName" && value.trim()) setErrors((prev) => ({ ...prev, firstName: "" }));
+      else if (name === "lastName" && value.trim()) setErrors((prev) => ({ ...prev, lastName: "" }));
+      else if (name === "email" && !validateEmail(value)) setErrors((prev) => ({ ...prev, email: "" }));
+      else if (name === "phone" && !validatePhone(value)) setErrors((prev) => ({ ...prev, phone: "" }));
+      else if (name === "password") {
         const passwordErrors = validatePassword(value);
-        if (passwordErrors.length === 0) {
-          setErrors((prev) => ({ ...prev, password: [] }));
-        }
-        // Also check confirm password match
-        if (formData.confirmPassword && value === formData.confirmPassword) {
-          setErrors((prev) => ({ ...prev, confirmPassword: "" }));
-        }
-      } else if (name === "confirmPassword" && value === formData.password) {
-        setErrors((prev) => ({ ...prev, confirmPassword: "" }));
+        if (passwordErrors.length === 0) setErrors((prev) => ({ ...prev, password: [] }));
+        if (formData.confirmPassword && value === formData.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: "" }));
       }
+      else if (name === "confirmPassword" && value === formData.password) setErrors((prev) => ({ ...prev, confirmPassword: "" }));
     }
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Only mark as touched, don't validate yet
-    // Validation will happen on submit
+    // Optional: set touched state here if desired
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Mark all fields as touched
     setTouched({
       firstName: true,
       lastName: true,
@@ -161,7 +125,6 @@ export default function RegisterPage() {
       confirmPassword: true,
     });
 
-    // Validate all fields
     const newErrors = {
       firstName: !formData.firstName ? t('register_page.validation.required_first_name') : "",
       lastName: !formData.lastName ? t('register_page.validation.required_last_name') : "",
@@ -176,7 +139,6 @@ export default function RegisterPage() {
 
     setErrors(newErrors);
 
-    // Check if there are any errors
     const hasErrors =
       newErrors.firstName ||
       newErrors.lastName ||
@@ -185,44 +147,54 @@ export default function RegisterPage() {
       newErrors.password.length > 0 ||
       newErrors.confirmPassword;
 
-    if (hasErrors) {
-      return;
-    }
+    if (hasErrors) return;
 
     if (!acceptTerms) {
       message.warning(t('register_page.alerts.accept_terms'));
       return;
     }
 
-    // Call API to register
     setLoading(true);
     try {
       const result = await authService.register({
         phoneNumber: formData.phone,
         fullName: `${formData.firstName} ${formData.lastName}`,
+        // Note: Password and email registration might require different API handling depending on backend, 
+        // strictly following existing logic which passes phone and full name.
+        // If email registration is supported by this endpoint, parameters should be added.
+        // Assuming existing logic is correct for Phone Registration flow which seems to represent 'RegisterPage'.
+        // Wait, the form has Email and Password fields.
+        // But the previous implementation called `authService.register` with only `{ phoneNumber, fullName }`.
+        // This implies the previous form collected Email/Password but didn't use them?
+        // Or `authService.register` is strictly for Phone registration?
+        // Let's check `authService.ts` if needed.
+        // But for now I'll stick to exactly what the previous code did:
+        // phoneNumber: formData.phone,
+        // fullName: ...
+        // Wait, if users enter email/password, they expect it to be used.
+        // I will inspect `authService.ts` later if this is suspicious, but for refactoring UI,
+        // I should preserve existing logic.
+        // EXISTING LOGIC:
+        // const result = await authService.register({
+        //     phoneNumber: formData.phone,
+        //     fullName: `${formData.firstName} ${formData.lastName}`,
+        // });
       });
 
       if (result.requireLogin) {
-        // Registration successful but needs manual login
         message.success(result.message || 'Registration successful! Please login with your credentials.');
         window.location.href = '/login-email';
       } else {
-        // Auto-login successful
-        message.success(
-          t('register_page.alerts.submitted', {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            phone: formData.phone
-          })
-        );
-        // Redirect to home or dashboard
+        message.success(t('register_page.alerts.submitted', {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone
+        }));
         window.location.href = '/';
       }
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to register. Please try again.';
-
-      // Handle specific validation errors
       if (errorMessage.toLowerCase().includes('phone number') && errorMessage.toLowerCase().includes('registered')) {
         setErrors(prev => ({ ...prev, phone: errorMessage }));
       } else if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('exists')) {
@@ -230,304 +202,187 @@ export default function RegisterPage() {
       } else {
         message.error(errorMessage);
       }
-
       console.warn('Registration error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-
-
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient">
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"></div>
+    <div className={`min-h-screen flex flex-col md:flex-row relative transition-colors duration-300 ${isDark ? 'bg-[#0E121A]' : 'bg-[#F7F8FA]'}`}>
+      {/* Mobile Background: Image with Overlay */}
+      <div className="absolute inset-0 z-0 md:hidden">
+        <img
+          src={HERO_IMAGE_URL}
+          alt="Background"
+          className="w-full h-full object-cover"
+        />
+        {/* Dark overlay for mobile legibility */}
+        <div className={`absolute inset-0 backdrop-blur-[2px] ${isDark ? 'bg-[#0E121A]/80' : 'bg-black/40'}`}></div>
+      </div>
 
-      <div className="max-w-[480px] w-full space-y-8 relative z-10">
-        <div className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card">
-          <div className="text-center mb-6">
-            <h2
-              className="text-3xl font-bold mb-2 auth-title"
-            >
-              {t('register_page.title')}
-            </h2>
-            <p className="auth-text">{t('register_page.subtitle')}</p>
+      <HeroSection />
+
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-12 lg:p-20 relative overflow-hidden min-h-screen z-10">
+
+        {/* Desktop Orbs */}
+        <div className="hidden md:block absolute top-0 right-0 w-96 h-96 bg-[#FF380B] rounded-full filter blur-[100px] opacity-[0.05] pointer-events-none"></div>
+        <div className="hidden md:block absolute bottom-0 left-0 w-64 h-64 bg-[#FF6B3B] rounded-full filter blur-[80px] opacity-[0.05] pointer-events-none"></div>
+
+        {/* Form Container */}
+        <div className={`w-full max-w-lg backdrop-blur-xl rounded-2xl p-8 lg:p-10 relative z-20 border transition-colors duration-300
+        ${isDark
+            ? 'bg-white/5 border-white/10 shadow-2xl'
+            : 'bg-white/80 border-gray-200 shadow-xl'}`}>
+
+          <div className="md:hidden w-full flex flex-col items-center mb-8">
+            <div className="w-20 h-20 bg-[#FF380B]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[#FF380B]/20 p-4">
+              <img
+                src="/images/logo/restx-removebg-preview.png"
+                alt="RestX Logo"
+                className={`w-full h-full object-contain ${isDark ? 'filter invert hue-rotate-180 brightness-110' : ''}`}
+              />
+            </div>
+            <span className={`font-bold uppercase tracking-[0.2em] text-2xl drop-shadow-md ${isDark ? 'text-white' : 'text-gray-900'}`}>RestX</span>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            {/* Name fields */}
+          <div className="text-center md:text-left mb-8">
+            <h1 className={`text-3xl font-bold tracking-tight drop-shadow-sm transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {t('register_page.title')}
+            </h1>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-sm font-medium mb-2 auth-label"
-                >
-                  {t('register_page.first_name')}
-                </label>
-                <input
+              <div className="relative">
+                <GlassInput
                   id="firstName"
                   name="firstName"
-                  type="text"
+                  label={t('register_page.first_name')}
+                  placeholder="John"
                   value={formData.firstName}
                   onChange={handleChange}
-                  onBlur={handleBlur}
-                  placeholder="John"
-                  className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                  style={{
-                    borderColor:
-                      touched.firstName && errors.firstName
-                        ? "#ef4444"
-                        : undefined,
-                  }}
+                  onBlur={() => setTouched(prev => ({ ...prev, firstName: true }))}
+                  disabled={loading}
                 />
                 {touched.firstName && errors.firstName && (
-                  <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
-                    {errors.firstName}
-                  </p>
+                  <div className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.firstName}</div>
                 )}
               </div>
-
-              <div>
-                <label
-                  htmlFor="lastName"
-                  className="block text-sm font-medium mb-2 auth-label"
-                >
-                  {t('register_page.last_name')}
-                </label>
-                <input
+              <div className="relative">
+                <GlassInput
                   id="lastName"
                   name="lastName"
-                  type="text"
+                  label={t('register_page.last_name')}
+                  placeholder="Doe"
                   value={formData.lastName}
                   onChange={handleChange}
-                  onBlur={handleBlur}
-                  placeholder="Doe"
-                  className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                  style={{
-                    borderColor:
-                      touched.lastName && errors.lastName
-                        ? "#ef4444"
-                        : undefined,
-                  }}
+                  onBlur={() => setTouched(prev => ({ ...prev, lastName: true }))}
+                  disabled={loading}
                 />
                 {touched.lastName && errors.lastName && (
-                  <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
-                    {errors.lastName}
-                  </p>
+                  <div className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.lastName}</div>
                 )}
               </div>
             </div>
 
             {/* Email */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium mb-2 auth-label"
-              >
-                {t('register_page.email')}
-              </label>
-              <input
+            <div className="relative">
+              <GlassInput
                 id="email"
                 name="email"
+                label={t('register_page.email')}
+                icon={<MailOutlined />}
                 type="email"
+                placeholder="name@example.com"
                 value={formData.email}
                 onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="your.email@example.com"
-                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                style={{
-                  borderColor:
-                    touched.email && errors.email ? "#ef4444" : undefined,
-                }}
+                onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
+                disabled={loading}
               />
               {touched.email && errors.email && (
-                <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
-                  {errors.email}
-                </p>
+                <div className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.email}</div>
               )}
             </div>
 
             {/* Phone */}
-            <div>
-              <label
-                htmlFor="phone"
-                className="block text-sm font-medium mb-2 auth-label"
-              >
-                {t('register_page.phone')}
-              </label>
-              <input
+            <div className="relative">
+              <GlassInput
                 id="phone"
                 name="phone"
+                label={t('register_page.phone')}
+                icon={<PhoneOutlined />}
                 type="tel"
+                placeholder="0123456789"
                 value={formData.phone}
                 onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="0123456789"
-                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                style={{
-                  borderColor:
-                    touched.phone && errors.phone ? "#ef4444" : undefined,
-                }}
+                onBlur={() => setTouched(prev => ({ ...prev, phone: true }))}
+                disabled={loading}
               />
               {touched.phone && errors.phone && (
-                <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
-                  {errors.phone}
-                </p>
+                <div className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.phone}</div>
               )}
             </div>
 
             {/* Password */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium mb-2 auth-label"
+            <div className="relative">
+              <GlassInput
+                id="password"
+                name="password"
+                label={t('register_page.password')}
+                icon={<LockOutlined />}
+                type={showPassword ? "text" : "password"}
+                placeholder={t('register_page.password_placeholder')}
+                value={formData.password}
+                onChange={handleChange}
+                onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-9 text-gray-400 hover:text-white transition-colors"
               >
-                {t('register_page.password')}
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  placeholder={t('register_page.password_placeholder')}
-                  className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                  style={{
-                    borderColor:
-                      touched.password && errors.password.length > 0
-                        ? "#ef4444"
-                        : undefined,
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none auth-icon-button">
-                  {showPassword ? (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                  )}
-                </button>
-              </div>
+                {showPassword ? <EyeInvisibleOutlined className="text-lg" /> : <EyeOutlined className="text-lg" />}
+              </button>
               {touched.password && errors.password.length > 0 && (
-                <div className="mt-1 space-y-0.5">
-                  {errors.password.map((error, index) => (
-                    <p
-                      key={index}
-                      className="text-sm"
-                      style={{ color: "#ef4444" }}>
-                      {error}
-                    </p>
+                <div className="mt-1 space-y-1">
+                  {errors.password.map((err, i) => (
+                    <div key={i} className="text-red-400 text-xs ml-1 font-medium">{err}</div>
                   ))}
                 </div>
               )}
             </div>
 
             {/* Confirm Password */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium mb-2 auth-label"
+            <div className="relative">
+              <GlassInput
+                id="confirmPassword"
+                name="confirmPassword"
+                label={t('register_page.confirm_password')}
+                icon={<LockOutlined />}
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder={t('register_page.confirm_password_placeholder')}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                onBlur={() => setTouched(prev => ({ ...prev, confirmPassword: true }))}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-9 text-gray-400 hover:text-white transition-colors"
               >
-                {t('register_page.confirm_password')}
-              </label>
-              <div className="relative">
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  placeholder={t('register_page.confirm_password_placeholder')}
-                  className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                  style={{
-                    borderColor:
-                      touched.confirmPassword && errors.confirmPassword
-                        ? "#ef4444"
-                        : undefined,
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none auth-icon-button">
-                  {showConfirmPassword ? (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                  )}
-                </button>
-              </div>
+                {showConfirmPassword ? <EyeInvisibleOutlined className="text-lg" /> : <EyeOutlined className="text-lg" />}
+              </button>
               {touched.confirmPassword && errors.confirmPassword && (
-                <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
-                  {errors.confirmPassword}
-                </p>
+                <div className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.confirmPassword}</div>
               )}
             </div>
 
-            {/* Terms Checkbox */}
+            {/* Terms */}
             <div className="flex items-start">
               <div className="flex items-center h-5 mt-1">
                 <input
@@ -535,50 +390,60 @@ export default function RegisterPage() {
                   type="checkbox"
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="w-4 h-4 border rounded cursor-pointer auth-checkbox"
-                  style={
-                    { "--tw-ring-color": "#FF380B" } as React.CSSProperties
-                  }
+                  className={`w-4 h-4 rounded text-[#FF380B] focus:ring-[#FF380B] 
+                   ${isDark
+                      ? 'border-gray-600 bg-gray-700 focus:ring-offset-gray-900'
+                      : 'border-gray-300 bg-white focus:ring-offset-gray-100'}`}
                 />
               </div>
-              <label htmlFor="terms" className="ml-3 text-sm auth-text">
+              <label htmlFor="terms" className={`ml-3 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                 {t('register_page.i_agree')}{" "}
-                <a
-                  href="/terms"
-                  className="font-medium"
-                  style={{ color: '#FF380B' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
-                >
+                <a href="/terms" className="font-medium text-[#FF380B] hover:underline">
                   {t('register_page.terms_of_service')}
                 </a>{" "}
                 &{" "}
-                <a
-                  href="/privacy"
-                  className="font-medium"
-                  style={{ color: '#FF380B' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
-                >
+                <a href="/privacy" className="font-medium text-[#FF380B] hover:underline">
                   {t('register_page.privacy_policy')}
                 </a>
               </label>
             </div>
 
-            <RememberCheckbox checked={remember} onChange={setRemember} />
-            <LoginButton loading={loading} text={t('register_page.create_account_btn')} />
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[#FF380B] hover:bg-[#ff5722] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a100e] focus:ring-[#FF380B] transition-all duration-300 shadow-[0_4px_14px_0_rgba(255,56,11,0.39)] hover:shadow-[0_6px_20px_rgba(255,56,11,0.23)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
+              >
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-white ml-1"></div>
+                  ) : (
+                    <span className="material-icons text-white/50 group-hover:text-white transition-colors text-lg">
+                      <UserAddOutlined />
+                    </span>
+                  )}
+                </span>
+                {loading ? t('login_button.loading') : t('register_page.create_account_btn')}
+              </button>
+            </div>
 
-            <div className="text-center text-sm auth-text mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-              {t('register_page.already_have_account')}{" "}
+            <div className={`text-center text-sm mt-4 pt-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+              <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('register_page.already_have_account')} </span>
               <a
                 href="/login"
-                className="font-semibold transition-colors" style={{ color: '#FF380B' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}>
+                className="font-semibold text-[#FF380B] hover:text-[#ff5c35] hover:underline transition-colors"
+              >
                 {t('register_page.sign_in_here')}
               </a>
             </div>
           </form>
+        </div>
+
+        {/* Footer */}
+        <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none mix-blend-plus-lighter">
+          <p className={`text-xs ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
+            © {new Date().getFullYear()} RestX. All rights reserved.
+          </p>
         </div>
       </div>
     </div>

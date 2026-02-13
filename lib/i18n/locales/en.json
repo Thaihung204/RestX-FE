@@ -531,12 +531,12 @@
         "modal_subtitle_create": "Create a new status entry",
         "empty_state_desc": "Create a new status to get started",
         "table": {
-            "name": "Status Name",
-            "code": "Code",
-            "color": "Color",
-            "default": "Default",
-            "status": "Status",
-            "actions": "Actions"
+          "name": "Status Name",
+          "code": "Code",
+          "color": "Color",
+          "default": "Default",
+          "status": "Status",
+          "actions": "Actions"
         }
       },
       "notifications": {
@@ -590,6 +590,17 @@
         "cannot_undo": "This action cannot be undone.",
         "cancel": "Cancel",
         "delete": "Delete"
+      },
+      "toasts": {
+        "fetch_success_message": "Menu loaded successfully",
+        "fetch_error_message": "Failed to load menu. Please try again.",
+        "delete_success_message": "Dish deleted successfully",
+        "delete_error_message": "Failed to delete dish. Please try again.",
+        "create_success_message": "Dish created successfully",
+        "update_success_message": "Dish updated successfully",
+        "save_error_message": "Failed to save dish. Please try again.",
+        "detail_error_message": "Failed to load dish details.",
+        "validation_error_message": "Invalid data. Please check your input."
       }
     },
     "orders": {
@@ -742,11 +753,8 @@
         "view_profile": "View Profile"
       },
       "roles": {
-        "manager": "Manager",
-        "chef": "Chef",
-        "waiter": "Waiter",
-        "cashier": "Cashier",
-        "cleaner": "Cleaner"
+        "kitchen staff": "Kitchen Staff",
+        "waiter": "Waiter"
       },
       "status": {
         "active": "Active",
@@ -1470,6 +1478,7 @@
       "loading": "Loading..."
     },
     "login_page": {
+      "title": "Login with Phone",
       "phone_label": "Phone Number",
       "phone_placeholder": "0123456789",
       "name_label": "Name",

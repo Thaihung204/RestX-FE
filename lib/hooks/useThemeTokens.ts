@@ -22,7 +22,13 @@ export type TenantBrandConfig = Partial<Record<ThemeColorField, string>> & {
 function hexToRgb(hex: string) {
   const v = hex.replace("#", "").trim();
   if (![3, 4, 6, 8].includes(v.length)) return null;
-  const n = v.length <= 4 ? v.split("").map((c) => c + c).join("") : v;
+  const n =
+    v.length <= 4
+      ? v
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : v;
   const [r, g, b] = [n.slice(0, 2), n.slice(2, 4), n.slice(4, 6)].map((s) =>
     parseInt(s, 16),
   );

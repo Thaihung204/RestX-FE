@@ -27,17 +27,47 @@ interface ThemeColorDef {
 }
 
 export const THEME_COLOR_MAP: Record<ThemeColorField, ThemeColorDef> = {
-  primaryColor:      { cssVar: "--primary",       fallback: "#FF380B", label: "Primary Color" },
-  lightBaseColor:    { cssVar: "--bg-light-base",  fallback: "#FFFFFF", label: "Base Background" },
-  lightSurfaceColor: { cssVar: "--light-surface",  fallback: "#F9FAFB", label: "Surface Color" },
-  lightCardColor:    { cssVar: "--light-card",     fallback: "#FFFFFF", label: "Card Color" },
-  darkBaseColor:     { cssVar: "--bg-dark-base",   fallback: "#0A0E14", label: "Base Background" },
-  darkSurfaceColor:  { cssVar: "--dark-surface",   fallback: "#1A1F2E", label: "Surface Color" },
-  darkCardColor:     { cssVar: "--dark-card",      fallback: "#151A24", label: "Card Color" },
+  primaryColor: {
+    cssVar: "--primary",
+    fallback: "#FF380B",
+    label: "Primary Color",
+  },
+  lightBaseColor: {
+    cssVar: "--bg-light-base",
+    fallback: "#FFFFFF",
+    label: "Base Background",
+  },
+  lightSurfaceColor: {
+    cssVar: "--light-surface",
+    fallback: "#F9FAFB",
+    label: "Surface Color",
+  },
+  lightCardColor: {
+    cssVar: "--light-card",
+    fallback: "#FFFFFF",
+    label: "Card Color",
+  },
+  darkBaseColor: {
+    cssVar: "--bg-dark-base",
+    fallback: "#0A0E14",
+    label: "Base Background",
+  },
+  darkSurfaceColor: {
+    cssVar: "--dark-surface",
+    fallback: "#1A1F2E",
+    label: "Surface Color",
+  },
+  darkCardColor: {
+    cssVar: "--dark-card",
+    fallback: "#151A24",
+    label: "Card Color",
+  },
 };
 
 /** All theme color field names */
-export const THEME_COLOR_FIELDS = Object.keys(THEME_COLOR_MAP) as ThemeColorField[];
+export const THEME_COLOR_FIELDS = Object.keys(
+  THEME_COLOR_MAP,
+) as ThemeColorField[];
 
 /** Get all fallback values as a flat object (for form initialization) */
 export function getThemeDefaults(): Record<ThemeColorField, string> {

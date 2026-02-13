@@ -531,12 +531,12 @@
         "modal_subtitle_create": "Tạo mới trạng thái",
         "empty_state_desc": "Tạo trạng thái mới để bắt đầu",
         "table": {
-            "name": "Tên trạng thái",
-            "code": "Mã",
-            "color": "Màu sắc",
-            "default": "Mặc định",
-            "status": "Trạng thái",
-            "actions": "Thao tác"
+          "name": "Tên trạng thái",
+          "code": "Mã",
+          "color": "Màu sắc",
+          "default": "Mặc định",
+          "status": "Trạng thái",
+          "actions": "Thao tác"
         }
       },
       "notifications": {
@@ -590,6 +590,17 @@
         "cannot_undo": "Hành động này không thể hoàn tác.",
         "cancel": "Hủy",
         "delete": "Xóa"
+      },
+      "toasts": {
+        "fetch_success_message": "Tải thực đơn thành công",
+        "fetch_error_message": "Không thể tải thực đơn. Vui lòng thử lại.",
+        "delete_success_message": "Xóa món ăn thành công",
+        "delete_error_message": "Không thể xóa món ăn. Vui lòng thử lại.",
+        "create_success_message": "Tạo món ăn thành công",
+        "update_success_message": "Cập nhật món ăn thành công",
+        "save_error_message": "Không thể lưu món ăn. Vui lòng thử lại.",
+        "detail_error_message": "Không thể tải thông tin món ăn.",
+        "validation_error_message": "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại."
       }
     },
     "orders": {
@@ -742,11 +753,8 @@
         "view_profile": "Xem hồ sơ"
       },
       "roles": {
-        "manager": "Quản lý",
-        "chef": "Đầu bếp",
-        "waiter": "Phục vụ",
-        "cashier": "Thu ngân",
-        "cleaner": "Lao công"
+        "kitchen staff": "Nhân viên bếp",
+        "waiter": "Phục vụ"
       },
       "status": {
         "active": "Hoạt động",
@@ -1470,6 +1478,7 @@
       "loading": "Đang tải..."
     },
     "login_page": {
+      "title": "Đăng nhập bằng Số điện thoại",
       "phone_label": "Số điện thoại",
       "phone_placeholder": "0123456789",
       "name_label": "Tên",

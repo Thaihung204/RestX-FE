@@ -160,17 +160,89 @@ export const tenantService = {
 
       const data = response.data;
 
-      // Normalize keys: Ensure lowercase 'id' property exists
-      // Backend (C#) often returns PascalCase 'Id'
-      if (data && !data.id && data.Id) {
-        data.id = data.Id;
-      }
+      if (data) {
+        console.log('[getTenantConfig] Raw API response keys:', Object.keys(data));
+        console.log('[getTenantConfig] id:', data.id, '| Id:', data.Id);
 
-      // Ensure other critical fields are available if casing is different
-      if (data && !data.name && data.Name) data.name = data.Name;
-      if (data && !data.logoUrl && data.LogoUrl) data.logoUrl = data.LogoUrl;
-      if (data && !data.backgroundUrl && data.BackgroundUrl)
-        data.backgroundUrl = data.BackgroundUrl;
+        // Comprehensive PascalCase -> camelCase normalization
+        // Backend (C#) returns PascalCase by default, frontend uses camelCase
+        const pascalToCamelMap: Record<string, string> = {
+          Id: 'id',
+          Name: 'name',
+          Prefix: 'prefix',
+          Hostname: 'hostname',
+          HostName: 'hostname',
+          Status: 'status',
+          BusinessName: 'businessName',
+          LogoUrl: 'logoUrl',
+          FaviconUrl: 'faviconUrl',
+          BackgroundUrl: 'backgroundUrl',
+          BaseColor: 'baseColor',
+          PrimaryColor: 'primaryColor',
+          SecondaryColor: 'secondaryColor',
+          HeaderColor: 'headerColor',
+          FooterColor: 'footerColor',
+          LightBaseColor: 'lightBaseColor',
+          LightSurfaceColor: 'lightSurfaceColor',
+          LightCardColor: 'lightCardColor',
+          DarkBaseColor: 'darkBaseColor',
+          DarkSurfaceColor: 'darkSurfaceColor',
+          DarkCardColor: 'darkCardColor',
+          NetworkIp: 'networkIp',
+          ConnectionString: 'connectionString',
+          ExpiredAt: 'expiredAt',
+          AboutUs: 'aboutUs',
+          AboutUsType: 'aboutUsType',
+          Overview: 'overview',
+          BusinessAddressLine1: 'businessAddressLine1',
+          BusinessAddressLine2: 'businessAddressLine2',
+          BusinessAddressLine3: 'businessAddressLine3',
+          BusinessAddressLine4: 'businessAddressLine4',
+          BusinessCounty: 'businessCounty',
+          BusinessPostCode: 'businessPostCode',
+          BusinessCountry: 'businessCountry',
+          BusinessPrimaryPhone: 'businessPrimaryPhone',
+          BusinessSecondaryPhone: 'businessSecondaryPhone',
+          BusinessEmailAddress: 'businessEmailAddress',
+          BusinessCompanyNumber: 'businessCompanyNumber',
+          BusinessOpeningHours: 'businessOpeningHours',
+          CreatedDate: 'createdDate',
+          ModifiedDate: 'modifiedDate',
+          CreatedBy: 'createdBy',
+          ModifiedBy: 'modifiedBy',
+          TenantSettings: 'tenantSettings',
+        };
+
+        for (const [pascalKey, camelKey] of Object.entries(pascalToCamelMap)) {
+          if (data[pascalKey] !== undefined && !data[camelKey]) {
+            data[camelKey] = data[pascalKey];
+          }
+        }
+
+        console.log('[getTenantConfig] Normalized id:', data.id);
+
+        // Backend's TenantOverview DTO does NOT include Id field.
+        // If id is still missing, resolve it by fetching the full tenant list
+        // (GET /api/tenants returns full Tenant entities which include Id)
+        if (!data.id && data.hostname) {
+          try {
+            console.log('[getTenantConfig] ID missing from response, resolving via tenant list...');
+            const listResponse = await adminAxiosInstance.get('/tenants');
+            const allTenants = listResponse.data;
+            const match = allTenants.find((t: any) =>
+              (t.hostname || t.Hostname) === data.hostname
+            );
+            if (match) {
+              data.id = match.id || match.Id;
+              console.log('[getTenantConfig] Resolved ID from tenant list:', data.id);
+            } else {
+              console.warn('[getTenantConfig] Could not find matching tenant for hostname:', data.hostname);
+            }
+          } catch (listError) {
+            console.error('[getTenantConfig] Failed to resolve tenant ID:', listError);
+          }
+        }
+      }
 
       return data;
     } catch (error) {

@@ -44,22 +44,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // 3. Check for plain Development domains (Skip tenant fetch)
+    // 3. Get hostname for tenant lookup
     const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
-    const isPlainLocalhost =
-      hostWithoutPort === "localhost" || hostWithoutPort === "127.0.0.1";
-
-    if (isPlainLocalhost) {
-      console.log(
-        "[TenantContext] Plain localhost detected, skipping tenant fetch",
-      );
-      setLoading(false);
-      return;
-    }
-
-    // 4. Get hostname for tenant lookup
-    // Pass full hostname to API: demo.restx.food (not just "demo")
-    // For localhost development, construct equivalent hostname
     let hostname = hostWithoutPort;
 
     // For *.localhost in development, convert to equivalent production hostname
@@ -67,6 +53,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     if (hostname.endsWith(".localhost")) {
       const subdomain = hostname.replace(".localhost", "");
       hostname = `${subdomain}.restx.food`;
+    } else if (hostname === "localhost" || hostname === "127.0.0.1") {
+      // Plain localhost without subdomain - default to demo.restx.food
+      hostname = "demo.restx.food";
     }
 
     console.log(

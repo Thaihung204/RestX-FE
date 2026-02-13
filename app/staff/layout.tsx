@@ -1,5 +1,6 @@
 "use client";
 
+import StaffAuthGuard from '@/components/auth/StaffAuthGuard';
 import {
   BellOutlined,
   ClockCircleOutlined,
@@ -30,7 +31,7 @@ import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../components/I18nProvider";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import ThemeToggle from "../components/ThemeToggle";
-import { useThemeMode } from "../theme/AntdProvider";
+import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
 const { Sider, Content, Header } = Layout;
 const { Text } = Typography;
@@ -308,7 +309,7 @@ export default function StaffLayout({
   );
 
   return (
-    <>
+    <StaffAuthGuard>
       <Layout style={{ minHeight: "100vh" }}>
         {/* Mobile Bottom Navigation */}
         {isDrawerDevice && (
@@ -713,6 +714,6 @@ export default function StaffLayout({
           background: var(--text-muted) !important;
         }
       `}</style>
-    </>
+    </StaffAuthGuard>
   );
 }

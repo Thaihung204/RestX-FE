@@ -69,7 +69,7 @@ export const categoryService = {
     formData.append('Email', `temp-upload-${uniqueId}@restx.food`);
     formData.append('FullName', `Temp Uploader ${uniqueId}`);
     formData.append('Position', 'Temp');
-    formData.append('Role', 'Staff');
+    formData.append('Role', 'Waiter');
     formData.append('PhoneNumber', '0123456789'); // Dummy phone number
     formData.append('HireDate', new Date().toISOString());
     formData.append('Address', 'Temp Address');

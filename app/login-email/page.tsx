@@ -1,14 +1,17 @@
 "use client";
 
-import LoginButton from "@/components/auth/LoginButton";
-import LoginHeader from "@/components/auth/LoginHeader";
-import RememberCheckbox from "@/components/auth/RememberCheckbox";
-import { useAuth } from "@/lib/contexts/AuthContext";
-import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AntdProvider";
 import { message } from "antd";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { HeroSection } from "@/components/auth/HeroSection";
+import { GlassInput } from "@/components/ui/GlassInput";
+import { MailOutlined, LockOutlined, PhoneOutlined, EyeInvisibleOutlined, EyeOutlined, LoginOutlined } from "@ant-design/icons";
+import RememberCheckbox from "@/components/auth/RememberCheckbox";
+
+const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
 export default function LoginEmailPage() {
   const { t } = useTranslation('auth');
@@ -16,18 +19,8 @@ export default function LoginEmailPage() {
   const { login } = useAuth();
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
-  // Get initial theme from localStorage to prevent flash
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("restx-theme-mode");
-      return (
-        stored === "dark" ||
-        (stored === null &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches)
-      );
-    }
-    return false;
-  });
+
+  // State
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -40,24 +33,33 @@ export default function LoginEmailPage() {
 
   useEffect(() => {
     setMounted(true);
-    // Update isDark when mode changes
-    setIsDark(mode === "dark");
-  }, [mode]);
+  }, []);
 
+  // Validation Logic
   const validateEmail = (email: string) => {
     if (!email) {
       setEmailError("");
       return false;
     }
-
-    // Improved email regex validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       setEmailError(t('login_email_page.validation.invalid_email'));
       return false;
     }
-
     setEmailError("");
+    return true;
+  };
+
+  const validatePassword = (pwd: string) => {
+    if (!pwd) {
+      setPasswordError("");
+      return false;
+    }
+    if (pwd.length < 6) {
+      setPasswordError(t('login_email_page.validation.password_min'));
+      return false;
+    }
+    setPasswordError("");
     return true;
   };
 
@@ -69,30 +71,6 @@ export default function LoginEmailPage() {
     }
   };
 
-  const handleEmailBlur = () => {
-    setEmailTouched(true);
-    if (!email) {
-      setEmailError(t('login_email_page.validation.required_email'));
-    } else {
-      validateEmail(email);
-    }
-  };
-
-  const validatePassword = (pwd: string) => {
-    if (!pwd) {
-      setPasswordError("");
-      return false;
-    }
-
-    if (pwd.length < 6) {
-      setPasswordError(t('login_email_page.validation.password_min'));
-      return false;
-    }
-
-    setPasswordError("");
-    return true;
-  };
-
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPassword(value);
@@ -101,23 +79,11 @@ export default function LoginEmailPage() {
     }
   };
 
-  const handlePasswordBlur = () => {
-    setPasswordTouched(true);
-    if (!password) {
-      setPasswordError(t('login_email_page.validation.required_password'));
-    } else {
-      validatePassword(password);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Mark all fields as touched
     setEmailTouched(true);
     setPasswordTouched(true);
 
-    // Check if fields are empty
     if (!email || !email.trim()) {
       setEmailError(t('login_email_page.validation.required_email'));
       if (!password || !password.trim()) {
@@ -131,35 +97,21 @@ export default function LoginEmailPage() {
       return;
     }
 
-    // Validate email format
-    const isEmailValid = validateEmail(email);
-    if (!isEmailValid) {
+    if (!validateEmail(email) || !validatePassword(password) || emailError || passwordError) {
       return;
     }
 
-    // Validate password
-    const isPasswordValid = validatePassword(password);
-    if (!isPasswordValid) {
-      return;
-    }
-
-    // Don't proceed if there are any errors
-    if (emailError || passwordError) {
-      return;
-    }
-
-    // Call API login
     setLoading(true);
     try {
       const user = await login({ email, password, rememberMe: remember });
 
-      // Redirect sau khi login thành công
-      console.log('Logged in user:', user);
+      // Check roles for redirection
+      const userRoles: string[] = user.roles || (user.role ? [user.role] : []);
+      const hasRole = (role: string) => userRoles.some(r => r.toLowerCase() === role.toLowerCase());
 
-      // Redirect to dashboard or home page based on user role
-      if (user.role === 'admin') {
+      if (hasRole('Admin') || hasRole('System Admin')) {
         router.push('/admin');
-      } else if (user.role === 'shop') {
+      } else if (hasRole('Waiter') || hasRole('Kitchen Staff')) {
         router.push('/staff');
       } else {
         router.push('/customer');
@@ -174,173 +126,175 @@ export default function LoginEmailPage() {
     }
   };
 
+  const isDark = mode === 'dark';
+
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient">
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"></div>
+    <div className={`min-h-screen flex flex-col md:flex-row relative transition-colors duration-300 ${isDark ? 'bg-[#0E121A]' : 'bg-[#F7F8FA]'}`}>
+      {/* Mobile Background: Image with Overlay */}
+      <div className="absolute inset-0 z-0 md:hidden">
+        <img
+          src={HERO_IMAGE_URL}
+          alt="Background"
+          className="w-full h-full object-cover"
+        />
+        {/* Dark overlay for mobile legibility */}
+        <div className={`absolute inset-0 backdrop-blur-[2px] ${isDark ? 'bg-[#0E121A]/80' : 'bg-black/40'}`}></div>
+      </div>
 
-      <div className="max-w-[420px] w-full space-y-8 relative z-10">
-        <div className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card">
-          <LoginHeader title={t('login_email_page.title')} />
+      {/* Left Side: Hero Image & Branding (Desktop Only) */}
+      <HeroSection />
 
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium mb-2 auth-label">
-                {t('login_email_page.email_label')}
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={handleEmailChange}
-                onBlur={handleEmailBlur}
-                placeholder={t('login_email_page.email_placeholder')}
-                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                style={{
-                  borderColor:
-                    emailTouched && emailError ? "#ef4444" : undefined,
-                }}
+      {/* Right Side: Login Form */}
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-12 lg:p-20 relative overflow-hidden min-h-screen z-10">
+
+        {/* Desktop Ambient Orbs */}
+        <div className="hidden md:block absolute top-0 right-0 w-96 h-96 bg-[#FF380B] rounded-full filter blur-[100px] opacity-[0.05] pointer-events-none"></div>
+        <div className="hidden md:block absolute bottom-0 left-0 w-64 h-64 bg-[#FF6B3B] rounded-full filter blur-[80px] opacity-[0.05] pointer-events-none"></div>
+
+        {/* Login Form Container */}
+        <div className={`w-full max-w-md backdrop-blur-xl rounded-2xl p-8 lg:p-10 relative z-20 border transition-colors duration-300
+        ${isDark
+            ? 'bg-white/5 border-white/10 shadow-2xl'
+            : 'bg-white/80 border-gray-200 shadow-xl'}`}>
+
+          <div className="md:hidden w-full flex flex-col items-center mb-8">
+            <div className="w-20 h-20 bg-[#FF380B]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[#FF380B]/20 p-4">
+              <img
+                src="/images/logo/restx-removebg-preview.png"
+                alt="RestX Logo"
+                className={`w-full h-full object-contain ${isDark ? 'filter invert hue-rotate-180 brightness-110' : ''}`}
               />
-              {emailTouched && emailError && (
-                <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
-                  {emailError}
-                </p>
-              )}
             </div>
+            <span className={`font-bold uppercase tracking-[0.2em] text-2xl drop-shadow-md ${isDark ? 'text-white' : 'text-gray-900'}`}>RestX</span>
+          </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium auth-label">
-                  {t('login_email_page.password_label')}
-                </label>
-                <a
-                  href="/forgot-password"
-                  className="text-sm font-medium transition-colors"
-                  style={{ color: "#FF380B" }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = "#CC2D08")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = "#FF380B")
-                  }>
-                  {t('login_email_page.forgot_password')}
-                </a>
-              </div>
+          <div className="text-center md:text-left mb-8">
+            <h1 className={`text-3xl font-bold tracking-tight drop-shadow-sm transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {t('login_email_page.title')}
+            </h1>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
               <div className="relative">
-                <input
+                <GlassInput
+                  id="email"
+                  label={t('login_email_page.email_label')}
+                  icon={<MailOutlined />}
+                  type="email"
+                  placeholder={t('login_email_page.email_placeholder')}
+                  required
+                  value={email}
+                  onChange={handleEmailChange}
+                  onBlur={() => setEmailTouched(true)}
+                  disabled={loading}
+                />
+                {(emailTouched && emailError) && (
+                  <div className="text-red-400 text-xs mt-1 ml-1 font-medium">{emailError}</div>
+                )}
+              </div>
+
+              <div className="relative">
+                <GlassInput
                   id="password"
+                  label={t('login_email_page.password_label')}
+                  icon={<LockOutlined />}
                   type={showPassword ? "text" : "password"}
+                  placeholder={t('login_email_page.password_placeholder')}
+                  required
                   value={password}
                   onChange={handlePasswordChange}
-                  onBlur={handlePasswordBlur}
-                  placeholder={t('login_email_page.password_placeholder')}
-                  className="w-full px-4 py-3 pr-12 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                  style={{
-                    borderColor:
-                      passwordTouched && passwordError ? "#ef4444" : undefined,
-                  }}
+                  onBlur={() => setPasswordTouched(true)}
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none auth-icon-button">
-                  {showPassword ? (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                  )}
+                  className="absolute right-3 top-9 text-gray-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeInvisibleOutlined className="text-lg" /> : <EyeOutlined className="text-lg" />}
                 </button>
+                {(passwordTouched && passwordError) && (
+                  <div className="text-red-400 text-xs mt-1 ml-1 font-medium">{passwordError}</div>
+                )}
+                <div className="text-right mt-1">
+                  <a
+                    href="/forgot-password"
+                    className="text-xs text-[#FF380B] hover:text-[#ff5c35] hover:underline"
+                  >
+                    {t('login_email_page.forgot_password')}
+                  </a>
+                </div>
               </div>
-              {passwordTouched && passwordError && (
-                <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
-                  {passwordError}
-                </p>
-              )}
             </div>
 
-            <RememberCheckbox checked={remember} onChange={setRemember} />
-            <LoginButton loading={loading} text={t('login_email_page.login_btn')} />
-
-            <div className="text-center text-sm mt-6 auth-text">
-              {t('login_email_page.terms_text')}{" "}
-              <a
-                href="/terms"
-                className="font-medium"
-                style={{ color: "#FF380B" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                {t('login_email_page.terms_of_service')}
-              </a>{" "}
-              {t('login_email_page.and')}{" "}
-              <a
-                href="/privacy"
-                className="font-medium"
-                style={{ color: "#FF380B" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                {t('login_email_page.privacy_policy')}
-              </a>
+            <div className="flex items-center">
+              <RememberCheckbox checked={remember} onChange={setRemember} />
             </div>
 
-            <div
-              className="text-center text-sm mt-4 pt-4 border-t auth-text"
-              style={{ borderColor: "var(--border)" }}>
-              {t('login_email_page.no_account')}{" "}
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[#FF380B] hover:bg-[#ff5722] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a100e] focus:ring-[#FF380B] transition-all duration-300 shadow-[0_4px_14px_0_rgba(255,56,11,0.39)] hover:shadow-[0_6px_20px_rgba(255,56,11,0.23)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
+              >
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-white ml-1"></div>
+                  ) : (
+                    <span className="material-icons text-white/50 group-hover:text-white transition-colors text-lg">
+                      <LoginOutlined />
+                    </span>
+                  )}
+                </span>
+                {loading ? t('login_button.loading') : t('login_button.login_text')}
+              </button>
+            </div>
+
+
+
+            <div className={`text-center text-sm mt-6 pt-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+              <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('login_email_page.no_account')} </span>
               <a
                 href="/register"
-                className="font-semibold transition-colors"
-                style={{ color: "#FF380B" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
+                className="font-semibold text-[#FF380B] hover:text-[#ff5c35] hover:underline transition-colors"
+              >
                 {t('login_email_page.sign_up_here')}
               </a>
             </div>
-
-            <div className="text-center text-sm mt-2 auth-text">
-              {t('login_email_page.or_login_with')}{" "}
-              <a
-                href="/login"
-                className="font-semibold transition-colors"
-                style={{ color: "#FF380B" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                {t('login_email_page.phone_number')}
-              </a>
-            </div>
           </form>
+
+          <div className="relative mt-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className={`w-full border-t ${isDark ? 'border-white/20' : 'border-gray-200'}`}></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className={`px-3 bg-transparent backdrop-blur-xl rounded-full border md:border-none ${isDark ? 'text-gray-400 border-white/10 md:bg-[#0E121A]' : 'text-gray-500 border-gray-200 md:bg-[#F7F8FA]'}`}>
+                {t('login_email_page.or_login_with')}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 mt-6">
+            <button
+              type="button"
+              onClick={() => router.push('/login')}
+              className={`w-full inline-flex justify-center items-center py-3 px-4 border rounded-xl shadow-sm backdrop-blur-md text-sm font-medium transition-all duration-200 group
+              ${isDark
+                  ? 'border-white/20 bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white hover:border-white/30'
+                  : 'border-gray-200 bg-white/50 hover:bg-white/80 text-gray-700 hover:text-gray-900 hover:border-gray-300'}`}
+            >
+              <PhoneOutlined className={`text-xl mr-3 group-hover:text-inherit ${isDark ? 'text-gray-300' : 'text-gray-500'}`} />
+              <span>{t('login_email_page.phone_number')}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none mix-blend-plus-lighter">
+          <p className={`text-xs ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
+            © {new Date().getFullYear()} RestX. All rights reserved.
+          </p>
         </div>
       </div>
     </div>
