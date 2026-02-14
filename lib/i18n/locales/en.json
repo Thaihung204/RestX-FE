@@ -1411,7 +1411,11 @@
       "greeting": "Welcome",
       "default_name": "Guest",
       "gold_member": "Gold Member",
-      "table_label": "Table"
+      "table_label": "Table",
+      "rank_gold": "Gold Member",
+      "rank_silver": "Silver Member",
+      "rank_bronze": "Bronze Member",
+      "rank_platinum": "Platinum Member"
     }
   },
   "menu_page": {

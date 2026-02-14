@@ -156,12 +156,23 @@ const customerService = {
     return null;
   },
 
+  _profileCache: new Map<string, { data: CustomerResponseDto; timestamp: number }>(),
+
   async getCustomerProfile(id: string): Promise<CustomerResponseDto | null> {
+    const cached = this._profileCache.get(id);
+    if (cached && Date.now() - cached.timestamp < 60000) { // 1 minute cache
+      return cached.data;
+    }
+
     const response = await axiosInstance.get<ApiResponse<CustomerResponseDto>>(
       `/customers/${id}`
     );
 
     if (response.data.success) {
+      this._profileCache.set(id, {
+        data: response.data.data,
+        timestamp: Date.now(),
+      });
       return response.data.data;
     }
 
@@ -175,6 +186,10 @@ const customerService = {
     );
 
     if (response.data.success) {
+      this._profileCache.set(id, {
+        data: response.data.data,
+        timestamp: Date.now(),
+      });
       return response.data.data;
     }
 

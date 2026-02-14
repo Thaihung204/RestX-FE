@@ -23,7 +23,7 @@ const getAdminBaseUrl = (): string => {
 
     // Production: construct admin URL dynamically from current domain
     const parts = hostWithoutPort.split('.');
-    if (parts.length >= 2) {    
+    if (parts.length >= 2) {
         // Replace first part (subdomain) with 'admin'
         parts[0] = 'admin';
         const adminHost = parts.join('.');
