@@ -344,6 +344,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   const [showGrid, setShowGrid] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
+  const floorRef = useRef<HTMLDivElement>(null);
 
   const activeFloor = layout.floors.find((f) => f.id === layout.activeFloorId);
 
@@ -493,7 +494,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
     onLayoutChange({ ...layout, floors: updatedFloors });
   };
 
-  const floorRef = useRef<HTMLDivElement>(null);
+
 
   return (
     <div className="flex flex-col gap-4 h-full">
