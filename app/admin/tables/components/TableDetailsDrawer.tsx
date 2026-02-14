@@ -12,6 +12,10 @@ interface Table {
   area: "VIP" | "Indoor" | "Outdoor";
   currentOrder?: string;
   reservationTime?: string;
+  shape?: "Square" | "Circle" | "Rectangle" | "Oval";
+  width?: number;
+  height?: number;
+  rotation?: number;
 }
 
 interface TableDetailsDrawerProps {
@@ -56,6 +60,13 @@ const AREA_OPTIONS = [
   { label: "Outdoor Terrace", value: "Outdoor" },
 ];
 
+const SHAPE_OPTIONS = [
+  { label: "Square", value: "Square" },
+  { label: "Circle", value: "Circle" },
+  { label: "Rectangle", value: "Rectangle" },
+  { label: "Oval", value: "Oval" },
+];
+
 export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
   open,
   table,
@@ -69,6 +80,10 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
     capacity: 4,
     area: "Indoor" as "VIP" | "Indoor" | "Outdoor",
     status: "available" as "available" | "occupied" | "reserved" | "cleaning",
+    shape: "Square" as "Square" | "Circle" | "Rectangle" | "Oval",
+    width: 80,
+    height: 80,
+    rotation: 0,
   });
 
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -80,6 +95,10 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
         capacity: table.capacity,
         area: table.area,
         status: table.status,
+        shape: table.shape || "Square",
+        width: table.width || 80,
+        height: table.height || 80,
+        rotation: table.rotation || 0,
       });
       setErrors({});
     }
@@ -93,6 +112,8 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
       newErrors.capacity = t("table_form.errors.capacity_min");
     if (formData.capacity > 20)
       newErrors.capacity = t("table_form.errors.capacity_max");
+    if (formData.width < 20) newErrors.width = "Width too small";
+    if (formData.height < 20) newErrors.height = "Height too small";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -255,26 +276,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                   </motion.button>
                 </div>
 
-                {/* Table ID Badge */}
-                {table && (
-                  <div
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      background: "rgba(255, 255, 255, 0.2)",
-                      backdropFilter: "blur(10px)",
-                      padding: "8px 16px",
-                      borderRadius: 8,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      letterSpacing: "0.5px",
-                    }}>
-                    <span style={{ opacity: 0.75 }}>ID</span>
-                    <span style={{ opacity: 0.3 }}>•</span>
-                    <span>{table.id}</span>
-                  </div>
-                )}
+
               </div>
             </div>
 
@@ -330,133 +332,160 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                       gap: 24,
                     }}>
                     {/* Table Number */}
-                    <motion.div
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.15 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: "var(--text)",
-                          marginBottom: 8,
-                          letterSpacing: "-0.01em",
-                        }}>
-                        Table Number
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={formData.number}
-                        onChange={(e) => {
-                          setFormData({
-                            ...formData,
-                            number: parseInt(e.target.value) || 0,
-                          });
-                          if (errors.number)
-                            setErrors({ ...errors, number: "" });
-                        }}
-                        style={{
-                          width: "100%",
-                          padding: "14px 16px",
-                          borderRadius: 10,
-                          border: errors.number
-                            ? "2px solid #ff4d4f"
-                            : "2px solid var(--border)",
-                          background: "var(--surface)",
-                          color: "var(--text)",
-                          fontSize: 15,
-                          fontWeight: 500,
-                          transition: "all 0.2s",
-                          outline: "none",
-                        }}
-                        onFocus={(e) =>
-                          (e.target.style.borderColor = "var(--primary)")
-                        }
-                        onBlur={(e) =>
-                          (e.target.style.borderColor = errors.number
-                            ? "#ff4d4f"
-                            : "var(--border)")
-                        }
-                      />
-                      {errors.number && (
-                        <p
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                      <div>
+                        <label
                           style={{
-                            margin: "6px 0 0 0",
-                            fontSize: 12,
-                            color: "#ff4d4f",
-                            fontWeight: 500,
+                            display: "block",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: "var(--text)",
+                            marginBottom: 8,
                           }}>
-                          {errors.number}
-                        </p>
-                      )}
-                    </motion.div>
+                          Table Number
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={formData.number}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              number: parseInt(e.target.value) || 0,
+                            });
+                          }}
+                          style={{
+                            width: "100%",
+                            padding: "14px 16px",
+                            borderRadius: 10,
+                            border: "2px solid var(--border)",
+                            background: "var(--surface)",
+                            color: "var(--text)",
+                            outline: "none",
+                          }}
+                        />
+                      </div>
 
-                    {/* Capacity */}
-                    <motion.div
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.2 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: "var(--text)",
-                          marginBottom: 8,
-                          letterSpacing: "-0.01em",
-                        }}>
-                        Seating Capacity
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        value={formData.capacity}
-                        onChange={(e) => {
-                          setFormData({
-                            ...formData,
-                            capacity: parseInt(e.target.value) || 0,
-                          });
-                          if (errors.capacity)
-                            setErrors({ ...errors, capacity: "" });
-                        }}
-                        style={{
-                          width: "100%",
-                          padding: "14px 16px",
-                          borderRadius: 10,
-                          border: errors.capacity
-                            ? "2px solid #ff4d4f"
-                            : "2px solid var(--border)",
-                          background: "var(--surface)",
-                          color: "var(--text)",
-                          fontSize: 15,
-                          fontWeight: 500,
-                          transition: "all 0.2s",
-                          outline: "none",
-                        }}
-                        onFocus={(e) =>
-                          (e.target.style.borderColor = "var(--primary)")
-                        }
-                        onBlur={(e) =>
-                          (e.target.style.borderColor = errors.capacity
-                            ? "#ff4d4f"
-                            : "var(--border)")
-                        }
-                      />
-                      {errors.capacity && (
-                        <p
+                      <div>
+                        <label
                           style={{
-                            margin: "6px 0 0 0",
-                            fontSize: 12,
-                            color: "#ff4d4f",
-                            fontWeight: 500,
+                            display: "block",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: "var(--text)",
+                            marginBottom: 8,
                           }}>
-                          {errors.capacity}
-                        </p>
-                      )}
-                    </motion.div>
+                          Seating Capacity
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={formData.capacity}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              capacity: parseInt(e.target.value) || 0,
+                            });
+                          }}
+                          style={{
+                            width: "100%",
+                            padding: "14px 16px",
+                            borderRadius: 10,
+                            border: "2px solid var(--border)",
+                            background: "var(--surface)",
+                            color: "var(--text)",
+                            outline: "none",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Shape and Rotation */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
+                          Shape
+                        </label>
+                        <select
+                          value={formData.shape}
+                          onChange={(e) => setFormData({ ...formData, shape: e.target.value as any })}
+                          style={{
+                            width: "100%",
+                            padding: "14px 16px",
+                            borderRadius: 10,
+                            border: "2px solid var(--border)",
+                            background: "var(--surface)",
+                            color: "var(--text)",
+                            outline: "none",
+                          }}
+                        >
+                          {SHAPE_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
+                          Rotation (degrees)
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.rotation}
+                          onChange={(e) => setFormData({ ...formData, rotation: parseInt(e.target.value) || 0 })}
+                          style={{
+                            width: "100%",
+                            padding: "14px 16px",
+                            borderRadius: 10,
+                            border: "2px solid var(--border)",
+                            background: "var(--surface)",
+                            color: "var(--text)",
+                            outline: "none",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dimensions */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
+                          Width (px)
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.width}
+                          onChange={(e) => setFormData({ ...formData, width: parseInt(e.target.value) || 0 })}
+                          style={{
+                            width: "100%",
+                            padding: "14px 16px",
+                            borderRadius: 10,
+                            border: "2px solid var(--border)",
+                            background: "var(--surface)",
+                            color: "var(--text)",
+                            outline: "none",
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
+                          Height (px)
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.height}
+                          onChange={(e) => setFormData({ ...formData, height: parseInt(e.target.value) || 0 })}
+                          style={{
+                            width: "100%",
+                            padding: "14px 16px",
+                            borderRadius: 10,
+                            border: "2px solid var(--border)",
+                            background: "var(--surface)",
+                            color: "var(--text)",
+                            outline: "none",
+                          }}
+                        />
+                      </div>
+                    </div>
 
                     {/* Area */}
                     <motion.div

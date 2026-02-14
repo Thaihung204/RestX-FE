@@ -449,40 +449,56 @@ export default function TableManagement() {
             ))}
           </Row>
         ) : (
-          <TableMap2D
-            tables={map2DTables}
-            onTableClick={handleMap2DTableClick}
-            onTablePositionChange={() => { }}
-            readOnly={true}
-            height={mapHeight}
-            showGrid={true}
-            mapMarkers={mapMarkers}
-            renderTableContent={(table) => {
-              const hasOrder = table.status === 'OCCUPIED' || table.status === 'RESERVED';
-              return (
-                hasOrder && (
-                  <div style={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    background: '#FF380B',
-                    color: 'white',
-                    borderRadius: '50%',
-                    width: 20,
-                    height: 20,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 10,
-                    fontWeight: 'bold',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                  }}>
-                    !
-                  </div>
-                )
-              );
-            }}
-          />
+          (() => {
+            // Build a proper Layout object from the computed map data
+            const staffLayout = {
+              id: 'staff-layout',
+              name: 'Staff View',
+              activeFloorId: 'main',
+              floors: [{
+                id: 'main',
+                name: 'Main Floor',
+                width: 800,
+                height: mapHeight,
+                zones: [],
+                tables: map2DTables,
+              }],
+            };
+            return (
+              <TableMap2D
+                layout={staffLayout}
+                onLayoutChange={() => { }}
+                onTableClick={handleMap2DTableClick}
+                onTablePositionChange={() => { }}
+                readOnly={true}
+                renderTableContent={(table) => {
+                  const hasOrder = table.status === 'OCCUPIED' || table.status === 'RESERVED';
+                  return (
+                    hasOrder && (
+                      <div style={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        background: '#FF380B',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: 20,
+                        height: 20,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}>
+                        !
+                      </div>
+                    )
+                  );
+                }}
+              />
+            );
+          })()
         )}
       </Card>
       {/* Table Detail Modal */}
