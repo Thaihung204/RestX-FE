@@ -8,11 +8,13 @@ const { Title, Text } = Typography;
 interface WelcomeCardProps {
   customerName?: string;
   tableNumber: string;
+  rank?: string;
 }
 
 const WelcomeCard: React.FC<WelcomeCardProps> = ({
   customerName,
   tableNumber,
+  rank,
 }) => {
   const { t } = useTranslation();
 
@@ -66,7 +68,7 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
               fontSize: 26,
               fontWeight: 700,
             }}>
-            {customerName || t("customer_page.welcome_card.default_name")}
+            {customerName}
           </Title>
           <div
             style={{
@@ -77,7 +79,12 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
             }}>
             <CrownFilled style={{ color: "var(--gold)" }} />
             <Text style={{ color: "var(--gold)", fontSize: 13 }}>
-              {t("customer_page.welcome_card.gold_member")}
+              {rank
+                ? t(
+                  `customer_page.welcome_card.rank_${rank.toLowerCase()}`,
+                  rank,
+                )
+                : t("customer_page.welcome_card.gold_member")}
             </Text>
           </div>
         </div>

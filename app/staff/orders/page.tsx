@@ -33,7 +33,7 @@ import {
   Tag,
   Typography
 } from 'antd';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useThemeMode } from '../../theme/AntdProvider';
 
@@ -126,11 +126,28 @@ const initialOrders: Order[] = [
 
 // Status configs will be created inside the component to use translations
 
+import { tableService } from '@/lib/services/tableService';
+
+
+
 export default function OrderManagement() {
   const { message } = App.useApp();
   const { mode } = useThemeMode();
   const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [tables, setTables] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        const data = await tableService.getAllTables();
+        setTables(data.map(t => ({ id: t.id, name: t.code })));
+      } catch (error) {
+        console.error('Failed to fetch tables:', error);
+      }
+    };
+    fetchTables();
+  }, []);
 
   const menuCategories = [
     {
@@ -900,12 +917,10 @@ export default function OrderManagement() {
                 style={{ width: '100%' }}
                 value={selectedTable || undefined}
                 onChange={setSelectedTable}
-                options={[
-                  { value: 'A01', label: `${t('staff.orders.order.table')} A01` },
-                  { value: 'A05', label: `${t('staff.orders.order.table')} A05` },
-                  { value: 'B02', label: `${t('staff.orders.order.table')} B02` },
-                  { value: 'VIP02', label: `${t('staff.orders.order.table')} VIP02` },
-                ]}
+                options={tables.map(table => ({
+                  value: table.id,
+                  label: `${t('staff.orders.order.table')} ${table.name}`
+                }))}
               />
             </div>
 

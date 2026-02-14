@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { AddAreaModal } from "./components/AddAreaModal";
 import { AddTableModal } from "./components/AddTableModal";
@@ -8,6 +9,7 @@ import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D } from "./components/TableMap2D";
+import { tableService, TableStatus } from "@/lib/services/tableService";
 
 interface Table {
   id: string;
@@ -17,6 +19,14 @@ interface Table {
   area: "VIP" | "Indoor" | "Outdoor";
   currentOrder?: string;
   reservationTime?: string;
+  // Backend fields to preserve
+  shape: string;
+  positionX: number;
+  positionY: number;
+  width: number;
+  height: number;
+  rotation: number;
+  isActive: boolean;
 }
 
 type ViewMode = "grid" | "map";
@@ -28,52 +38,7 @@ export default function TablesPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [tables, setTables] = useState<Table[]>([
-    {
-      id: "1",
-      number: 1,
-      capacity: 4,
-      status: "occupied",
-      area: "VIP",
-      currentOrder: "#ORD-001",
-    },
-    {
-      id: "2",
-      number: 2,
-      capacity: 6,
-      status: "reserved",
-      area: "VIP",
-      reservationTime: "19:00",
-    },
-    { id: "3", number: 3, capacity: 4, status: "available", area: "VIP" },
-    {
-      id: "4",
-      number: 4,
-      capacity: 2,
-      status: "occupied",
-      area: "Indoor",
-      currentOrder: "#ORD-002",
-    },
-    { id: "5", number: 5, capacity: 4, status: "available", area: "Indoor" },
-    { id: "6", number: 6, capacity: 4, status: "cleaning", area: "Indoor" },
-    {
-      id: "7",
-      number: 7,
-      capacity: 6,
-      status: "reserved",
-      area: "Indoor",
-      reservationTime: "20:00",
-    },
-    { id: "8", number: 8, capacity: 4, status: "available", area: "Outdoor" },
-    {
-      id: "9",
-      number: 9,
-      capacity: 2,
-      status: "occupied",
-      area: "Outdoor",
-      currentOrder: "#ORD-003",
-    },
-  ]);
+  const [tables, setTables] = useState<Table[]>([]);
 
   const statusConfig = {
     available: {
@@ -108,6 +73,54 @@ export default function TablesPage() {
   /* Add Area Modal State */
   const [addAreaModalOpen, setAddAreaModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch tables from API
+  const fetchTables = async () => {
+    try {
+      setLoading(true);
+      const items = await tableService.getAllTables();
+
+      const mappedTables: Table[] = items.map(item => {
+        let status: Table['status'] = 'available';
+        if (item.tableStatusId === TableStatus.Reserved) status = 'reserved';
+        if (item.tableStatusId === TableStatus.Occupied) status = 'occupied';
+        // Handle cleaning if statusName provided or extended enum in future
+        if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
+
+        return {
+          id: item.id,
+          number: parseInt(item.code) || 0,
+          capacity: item.seatingCapacity,
+          status: status,
+          area: (item.type as any) || 'Indoor',
+          shape: item.shape || 'Square',
+          positionX: item.positionX || 0,
+          positionY: item.positionY || 0,
+          width: item.width || 100,
+          height: item.height || 100,
+          rotation: item.rotation || 0,
+          isActive: item.isActive,
+        };
+      });
+      setTables(mappedTables);
+
+      // Update available areas
+      const areas = Array.from(new Set(mappedTables.map(t => t.area)));
+      const defaultAreas = ["VIP", "Indoor", "Outdoor"];
+      const uniqueAreas = Array.from(new Set([...defaultAreas, ...areas]));
+      setAvailableAreas(uniqueAreas);
+
+    } catch (error) {
+      console.error("Failed to fetch tables:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTables();
+  }, []);
 
   // Convert tables to Map2D format
   // Calculate map layout (positions and markers) with useMemo
@@ -153,6 +166,12 @@ export default function TablesPage() {
 
       // Position tables for this area
       areaTables.forEach((table, index) => {
+        // Here we could use backend position if available, but current logic auto-layouts.
+        // For now, let's keep auto-layout. If we want drag-and-drop persistence, we need to use table.positionX/Y.
+        // But the current component calculates positions.
+        // If we want to Support backend positions, we need to update the Map2D logic completely.
+        // Given complexity, I will stick to usage of `tables` state which drives layout.
+
         mappedTables.push({
           id: table.id,
           tenantId: "tenant-1",
@@ -196,10 +215,7 @@ export default function TablesPage() {
     }
   };
 
-  const handleMap2DTablePositionChange = (
-    tableId: string,
-    position: { x: number; y: number },
-  ) => {
+  const handleMap2DTablePositionChange = async (tableId: string, position: { x: number; y: number }) => {
     // Calculate center of the table (assuming ~100px height)
     const yCenter = position.y + 50;
 
@@ -211,13 +227,19 @@ export default function TablesPage() {
     if (droppedZone) {
       const table = tables.find((t) => t.id === tableId);
       if (table && table.area !== droppedZone.id) {
-        // Update table area
-        setTables((prev) =>
-          prev.map((t) =>
-            t.id === tableId ? { ...t, area: droppedZone.id as any } : t,
-          ),
-        );
-        console.log(`Moved table ${tableId} to ${droppedZone.id}`);
+        // Optimistic update
+        const originalTables = [...tables];
+        setTables(prev => prev.map(t =>
+          t.id === tableId ? { ...t, area: droppedZone.id as any } : t
+        ));
+
+        // API Call
+        try {
+          await tableService.updateTable(tableId, { type: droppedZone.id });
+        } catch (err) {
+          console.error("Failed to move table:", err);
+          setTables(originalTables); // Revert
+        }
       }
     }
   };
@@ -236,30 +258,47 @@ export default function TablesPage() {
     setAvailableAreas((prev) => prev.map((a) => (a === oldName ? newName : a)));
 
     // Update tables in that area
-    setTables((prev) =>
-      prev.map((t) =>
-        t.area === oldName ? { ...t, area: newName as any } : t,
-      ),
-    );
+    // TODO: Need batch update API or loop update?
+    // For now, optimistic update local state only for UI flow? 
+    // Or we should update each table.
+    // Let's rely on local state for "Area Names" as they might not be persisted in backend as Area entities yet (we use Type string).
+    // Updating Type string on all tables:
+
+    // API Call loop (not efficient but functional for MVP)
+    const tablesToUpdate = tables.filter(t => t.area === oldName);
+    tablesToUpdate.forEach(t => {
+      tableService.updateTable(t.id, { type: newName }).catch(e => console.error(e));
+    });
+
+    setTables(prev => prev.map(t =>
+      t.area === oldName ? { ...t, area: newName as any } : t
+    ));
   };
 
-  const handleTableMerge = (sourceTableId: string, targetTableId: string) => {
-    setTables((prev) => {
-      const sourceTable = prev.find((t) => t.id === sourceTableId);
-      const targetTable = prev.find((t) => t.id === targetTableId);
+  const handleTableMerge = async (sourceTableId: string, targetTableId: string) => {
+    const sourceTable = tables.find(t => t.id === sourceTableId);
+    const targetTable = tables.find(t => t.id === targetTableId);
 
-      if (!sourceTable || !targetTable) return prev;
+    if (!sourceTable || !targetTable) return;
 
-      // Create merged table
-      const newCapacity = sourceTable.capacity + targetTable.capacity;
+    // Create merged table
+    const newCapacity = sourceTable.capacity + targetTable.capacity;
 
-      // Remove source table and update target table
-      return prev
-        .filter((t) => t.id !== sourceTableId)
-        .map((t) =>
-          t.id === targetTableId ? { ...t, capacity: newCapacity } : t,
-        );
-    });
+    // Optimistic
+    setTables(prev =>
+      prev.filter(t => t.id !== sourceTableId)
+        .map(t => t.id === targetTableId ? { ...t, capacity: newCapacity } : t)
+    );
+
+    try {
+      // Update target
+      await tableService.updateTable(targetTableId, { seatingCapacity: newCapacity });
+      // Delete source
+      await tableService.deleteTable(sourceTableId);
+    } catch (err) {
+      console.error("Merge failed:", err);
+      fetchTables(); // Revert/Refresh
+    }
   };
 
   const handleZoneDelete = (zoneId: string) => {
@@ -270,19 +309,27 @@ export default function TablesPage() {
     setZoneToDelete(zoneId);
   };
 
-  const confirmDeleteZone = () => {
+  const confirmDeleteZone = async () => {
     if (zoneToDelete) {
       // Remove area
       setAvailableAreas((prev) => prev.filter((area) => area !== zoneToDelete));
 
       // Move tables to the first available area (or default 'Indoor')
-      const fallbackArea =
-        availableAreas.find((a) => a !== zoneToDelete) || "Indoor";
-      setTables((prev) =>
-        prev.map((t) =>
-          t.area === zoneToDelete ? { ...t, area: fallbackArea as any } : t,
-        ),
-      );
+      const fallbackArea = availableAreas.find(a => a !== zoneToDelete) || 'Indoor';
+
+      // API Update tables
+      const tablesToMove = tables.filter(t => t.area === zoneToDelete);
+      for (const t of tablesToMove) {
+        try {
+          await tableService.updateTable(t.id, { type: fallbackArea });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      setTables(prev => prev.map(t =>
+        t.area === zoneToDelete ? { ...t, area: fallbackArea as any } : t
+      ));
 
       setZoneToDelete(null);
     }
@@ -301,28 +348,81 @@ export default function TablesPage() {
     setDrawerOpen(true);
   };
 
-  const handleAddTable = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddTable = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const newTable: Table = {
-      id: `${Date.now()}`,
-      number: parseInt(formData.get("number") as string),
-      capacity: parseInt(formData.get("capacity") as string),
-      area: formData.get("area") as "VIP" | "Indoor" | "Outdoor",
-      status: "available",
-    };
-    setTables([...tables, newTable]);
-    setAddModalOpen(false);
+
+    // Optimistic or Wait? Wait is safer for ID generation.
+    try {
+      const newTableData = {
+        code: (formData.get('number') as string),
+        seatingCapacity: parseInt(formData.get('capacity') as string),
+        type: formData.get('area') as string,
+        tableStatusId: TableStatus.Available,
+        isActive: true,
+        // Default values for required fields
+        shape: 'Square',
+        positionX: 0,
+        positionY: 0,
+        width: 100,
+        height: 100,
+        rotation: 0
+      };
+
+      await tableService.createTable(newTableData);
+      await fetchTables(); // Refresh to get ID
+      setAddModalOpen(false);
+    } catch (err) {
+      console.error("Failed to add table:", err);
+      alert(t("dashboard.tables.errors.add_failed"));
+    }
   };
 
-  const handleUpdateTable = (values: Partial<Table>) => {
+  const handleUpdateTable = async (values: Partial<Table>) => {
     if (selectedTable) {
-      setTables(
-        tables.map((t) =>
-          t.id === selectedTable.id ? { ...t, ...values } : t,
-        ),
-      );
+      // Optimistic
+      setTables(tables.map(t =>
+        t.id === selectedTable.id ? { ...t, ...values } : t
+      ));
+
+      try {
+        const apiData: any = {
+          id: selectedTable.id,
+          code: selectedTable.number.toString(),
+          seatingCapacity: selectedTable.capacity,
+          type: selectedTable.area,
+          shape: selectedTable.shape,
+          positionX: selectedTable.positionX,
+          positionY: selectedTable.positionY,
+          width: selectedTable.width,
+          height: selectedTable.height,
+          rotation: selectedTable.rotation,
+          isActive: selectedTable.isActive,
+          tableStatusId: TableStatus.Available // Default, overwritten below
+        };
+
+        // Map current status to ID
+        if (selectedTable.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
+        else if (selectedTable.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
+
+        // Apply overrides from values
+        if (values.number !== undefined) apiData.code = values.number.toString();
+        if (values.capacity !== undefined) apiData.seatingCapacity = values.capacity;
+        if (values.area !== undefined) apiData.type = values.area;
+        if (values.status !== undefined) {
+          if (values.status === 'available') apiData.tableStatusId = TableStatus.Available;
+          else if (values.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
+          else if (values.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
+          else apiData.tableStatusId = TableStatus.Available;
+        }
+
+        await tableService.updateTable(selectedTable.id, apiData);
+      } catch (err) {
+        console.error("Update failed", err);
+        fetchTables();
+      }
       setDrawerOpen(false);
+      setSelectedTable(null);
     }
   };
 
@@ -332,12 +432,18 @@ export default function TablesPage() {
     }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (selectedTable) {
-      setTables(tables.filter((t) => t.id !== selectedTable.id));
+      try {
+        await tableService.deleteTable(selectedTable.id);
+        setTables(tables.filter(t => t.id !== selectedTable.id));
+        setDrawerOpen(false);
+        setSelectedTable(null);
+      } catch (err) {
+        console.error("Delete failed", err);
+        alert("Failed to delete table");
+      }
       setDeleteConfirmOpen(false);
-      setDrawerOpen(false);
-      setSelectedTable(null);
     }
   };
 
@@ -360,11 +466,10 @@ export default function TablesPage() {
               <div className="flex items-center bg-[var(--card)] p-1 rounded-lg border border-[var(--border)]">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-md transition-all ${
-                    viewMode === "grid"
-                      ? "bg-[var(--bg-base)] shadow-sm text-[var(--text)]"
-                      : "text-[var(--text-muted)] hover:text-[var(--text)]"
-                  }`}>
+                  className={`p-2 rounded-md transition-all ${viewMode === "grid"
+                    ? "bg-[var(--bg-base)] shadow-sm text-[var(--text)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                    }`}>
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -380,11 +485,10 @@ export default function TablesPage() {
                 </button>
                 <button
                   onClick={() => setViewMode("map")}
-                  className={`p-2 rounded-md transition-all ${
-                    viewMode === "map"
-                      ? "bg-[var(--bg-base)] shadow-sm text-[var(--text)]"
-                      : "text-[var(--text-muted)] hover:text-[var(--text)]"
-                  }`}>
+                  className={`p-2 rounded-md transition-all ${viewMode === "map"
+                    ? "bg-[var(--bg-base)] shadow-sm text-[var(--text)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                    }`}>
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -657,9 +761,8 @@ export default function TablesPage() {
                         </p>
                       </div>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                          statusConfig[table.status].badge
-                        }`}>
+                        className={`px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[table.status].badge
+                          }`}>
                         {statusConfig[table.status].text}
                       </span>
                     </div>

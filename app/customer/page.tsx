@@ -9,7 +9,7 @@ import NotificationSystem from "@/components/notifications/NotificationSystem";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTheme } from "@/lib/hooks/useTheme";
 import customerService, {
-    CustomerResponseDto,
+  CustomerResponseDto,
 } from "@/lib/services/customerService";
 import { ConfigProvider, Space, Typography, message, theme } from "antd";
 import { useRouter } from "next/navigation";
@@ -174,6 +174,7 @@ export default function CustomerHomePage() {
             <WelcomeCard
               customerName={customerName}
               tableNumber={tableNumber}
+              rank={customerProfile?.membershipLevel}
             />
 
             <MenuCTA onViewMenu={handleViewMenu} />
