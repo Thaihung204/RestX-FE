@@ -1,6 +1,6 @@
 "use client";
 
-import { message } from "antd";
+import { message, Popconfirm } from "antd";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -157,10 +157,8 @@ export default function SupplierSettings() {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm(t("dashboard.manage.suppliers.confirm_delete"))) {
-      setSuppliers(suppliers.filter((s) => s.id !== id));
-      message.success(t("dashboard.manage.suppliers.deleted"));
-    }
+    setSuppliers(suppliers.filter((s) => s.id !== id));
+    message.success(t("dashboard.manage.suppliers.deleted"));
   };
 
   const toggleStatus = (id: string) => {
@@ -318,11 +316,10 @@ export default function SupplierSettings() {
                   <td className="p-4 align-top">
                     <button
                       onClick={() => toggleStatus(supplier.id)}
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-colors ${
-                        supplier.isActive
-                          ? "bg-green-500 text-white dark:bg-green-600"
-                          : "bg-gray-500 text-white dark:bg-gray-600"
-                      }`}>
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-colors ${supplier.isActive
+                        ? "bg-green-500 text-white dark:bg-green-600"
+                        : "bg-gray-500 text-white dark:bg-gray-600"
+                        }`}>
                       <span className="w-1.5 h-1.5 rounded-full mr-2 bg-white"></span>
                       {supplier.isActive
                         ? t("dashboard.manage.suppliers.active")
@@ -348,23 +345,31 @@ export default function SupplierSettings() {
                           />
                         </svg>
                       </button>
-                      <button
-                        onClick={() => handleDelete(supplier.id)}
-                        className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-red-500 hover:text-red-600"
-                        title="Delete Supplier">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
+                      <Popconfirm
+                        title={t("dashboard.manage.suppliers.confirm_delete", {
+                          defaultValue: "Are you sure you want to delete this supplier?",
+                        })}
+                        onConfirm={() => handleDelete(supplier.id)}
+                        okText={t("common.yes", { defaultValue: "Yes" })}
+                        cancelText={t("common.no", { defaultValue: "No" })}
+                        okButtonProps={{ danger: true }}>
+                        <button
+                          className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-red-500 hover:text-red-600"
+                          title="Delete Supplier">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </Popconfirm>
                     </div>
                   </td>
                 </tr>
@@ -594,38 +599,47 @@ export default function SupplierSettings() {
                       defaultValue: "Status",
                     })}
                   </label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({ ...formData, isActive: !formData.isActive })
-                    }
-                    className={`relative inline-flex items-center h-8 rounded-full px-1 transition-colors focus:outline-none ${
-                      formData.isActive
-                        ? "bg-[var(--primary)]"
-                        : "bg-slate-200 dark:bg-zinc-700"
-                    }`}
-                    style={{ minWidth: "100px" }}>
-                    {/* Text Label */}
+                  <div className="flex items-center gap-3">
+                    <div
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          isActive: !formData.isActive,
+                        })
+                      }
+                      className={`
+                        relative w-14 h-8 rounded-full cursor-pointer transition-colors duration-200 ease-in-out
+                        ${formData.isActive
+                          ? "bg-[var(--primary)]"
+                          : "bg-gray-200 dark:bg-zinc-700"
+                        }
+                      `}
+                      role="switch"
+                      aria-checked={formData.isActive}>
+                      <span
+                        className={`
+                          absolute top-1 left-1 bg-white w-6 h-6 rounded-full shadow-sm transform transition-transform duration-200 ease-in-out
+                          ${formData.isActive
+                            ? "translate-x-6"
+                            : "translate-x-0"
+                          }
+                        `}
+                      />
+                    </div>
                     <span
-                      className={`absolute left-3 text-xs font-bold text-white transition-opacity ${formData.isActive ? "opacity-100" : "opacity-0"}`}>
-                      {t("common.status.active", { defaultValue: "Active" })}
+                      className={`font-medium text-sm ${formData.isActive
+                        ? "text-[var(--primary)]"
+                        : "text-gray-500"
+                        }`}>
+                      {formData.isActive
+                        ? t("dashboard.manage.suppliers.active", {
+                          defaultValue: "Active",
+                        })
+                        : t("dashboard.manage.suppliers.inactive", {
+                          defaultValue: "Inactive",
+                        })}
                     </span>
-                    <span
-                      className={`absolute right-3 text-xs font-bold text-gray-500 dark:text-gray-400 transition-opacity ${!formData.isActive ? "opacity-100" : "opacity-0"}`}>
-                      {t("common.status.inactive", {
-                        defaultValue: "Inactive",
-                      })}
-                    </span>
-
-                    {/* The Toggle Circle */}
-                    <span
-                      className={`inline-block w-6 h-6 transform bg-white rounded-full shadow transition-transform duration-200 ease-in-out ${
-                        formData.isActive
-                          ? "translate-x-[70px]"
-                          : "translate-x-0"
-                      }`}
-                    />
-                  </button>
+                  </div>
                 </div>
               </div>
 

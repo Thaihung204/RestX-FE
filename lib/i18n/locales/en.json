@@ -643,6 +643,7 @@
       "subtitle": "Manage restaurant tables and reservations",
       "add_table": "Add Table",
       "add_area": "Add Area",
+      "add_zone": "Draw Zone",
       "add_area_modal": {
         "title": "Add New Area",
         "name_label": "Area Name",
@@ -693,6 +694,13 @@
         "occupied": "Occupied",
         "reserved": "Reserved",
         "cleaning": "Cleaning"
+      },
+      "map": {
+        "upload_floorplan": "Upload Floorplan",
+        "show_grid": "Show Grid",
+        "floor_dimensions": "Floor Dimensions",
+        "zones": "zones",
+        "tables_on_floor": "tables on this floor"
       }
     },
     "staff": {
@@ -1411,7 +1419,11 @@
       "greeting": "Welcome",
       "default_name": "Guest",
       "gold_member": "Gold Member",
-      "table_label": "Table"
+      "table_label": "Table",
+      "rank_gold": "Gold Member",
+      "rank_silver": "Silver Member",
+      "rank_bronze": "Bronze Member",
+      "rank_platinum": "Platinum Member"
     }
   },
   "menu_page": {

@@ -25,27 +25,26 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const StatusToggle = ({ value, onChange, t }: any) => (
-  <button
-    type="button"
-    onClick={() => onChange?.(!value)}
-    className={`relative inline-flex items-center h-8 rounded-full px-1 transition-colors focus:outline-none ${
-      value ? "bg-[var(--primary)]" : "bg-slate-200 dark:bg-zinc-700"
-    }`}
-    style={{ minWidth: "100px" }}>
+  <div className="flex items-center gap-3">
+    <div
+      onClick={() => onChange?.(!value)}
+      className={`relative w-14 h-8 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${value ? "bg-[var(--primary)]" : "bg-gray-200 dark:bg-zinc-700"
+        }`}
+      role="switch"
+      aria-checked={value}>
+      <span
+        className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full shadow-sm transform transition-transform duration-200 ease-in-out ${value ? "translate-x-6" : "translate-x-0"
+          }`}
+      />
+    </div>
     <span
-      className={`absolute left-3 text-xs font-bold text-white transition-opacity ${value ? "opacity-100" : "opacity-0"}`}>
-      {t("common.status.active", { defaultValue: "Active" })}
+      className={`font-medium text-sm ${value ? "text-[var(--primary)]" : "text-gray-500"
+        }`}>
+      {value
+        ? t("common.status.active", { defaultValue: "Active" })
+        : t("common.status.inactive", { defaultValue: "Inactive" })}
     </span>
-    <span
-      className={`absolute right-3 text-xs font-bold text-gray-500 dark:text-gray-400 transition-opacity ${!value ? "opacity-100" : "opacity-0"}`}>
-      {t("common.status.inactive", { defaultValue: "Inactive" })}
-    </span>
-    <span
-      className={`inline-block w-6 h-6 transform bg-white rounded-full shadow transition-transform duration-200 ease-in-out ${
-        value ? "translate-x-[70px]" : "translate-x-0"
-      }`}
-    />
-  </button>
+  </div>
 );
 
 export default function LoyaltyPointBandSettings() {
@@ -256,11 +255,10 @@ export default function LoyaltyPointBandSettings() {
       render: (isActive: boolean, record: LoyaltyPointBand) => (
         <button
           onClick={() => handleToggleStatus(record)}
-          className={`cursor-pointer inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-all hover:opacity-80 ${
-            isActive
+          className={`cursor-pointer inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-all hover:opacity-80 ${isActive
               ? "bg-green-500 text-white dark:bg-green-600"
               : "bg-gray-500 text-white dark:bg-gray-600"
-          }`}>
+            }`}>
           <span className="w-1.5 h-1.5 rounded-full mr-2 bg-white"></span>
           {isActive
             ? t("common.status.active", { defaultValue: "Active" })
@@ -344,11 +342,11 @@ export default function LoyaltyPointBandSettings() {
         title={
           editingBand
             ? t("dashboard.manage.loyalty.edit", {
-                defaultValue: "Edit Loyalty Band",
-              })
+              defaultValue: "Edit Loyalty Band",
+            })
             : t("dashboard.manage.loyalty.create", {
-                defaultValue: "Create Loyalty Band",
-              })
+              defaultValue: "Create Loyalty Band",
+            })
         }
         open={modalVisible}
         onOk={handleSave}

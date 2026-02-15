@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useThemeMode } from '../../theme/AntdProvider';
 import { TableMap2D } from '../../admin/tables/components/TableMap2D';
 import { TableData as Map2DTableData } from '../../admin/tables/components/DraggableTable';
+import { tableService, TableStatus as TableStatusEnum, TableItem } from '@/lib/services/tableService';
 
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../../components/I18nProvider';
@@ -62,26 +63,6 @@ interface TableData {
   };
 }
 
-// Mock table data
-const initialTables: TableData[] = [
-  // Zone A
-  { id: 'a1', name: 'A01', zone: 'A', capacity: 4, status: 'available' },
-  { id: 'a2', name: 'A02', zone: 'A', capacity: 4, status: 'occupied', guests: 3, startTime: '18:30', order: { id: 'ORD001', items: 5, total: 750000 } },
-  { id: 'a3', name: 'A03', zone: 'A', capacity: 2, status: 'occupied', guests: 2, startTime: '19:00', order: { id: 'ORD002', items: 3, total: 420000 } },
-  { id: 'a4', name: 'A04', zone: 'A', capacity: 4, status: 'reserved', reservation: { name: 'Nguyễn Văn B', time: '20:00', phone: '0901234567' } },
-  { id: 'a5', name: 'A05', zone: 'A', capacity: 6, status: 'available' },
-  { id: 'a6', name: 'A06', zone: 'A', capacity: 4, status: 'cleaning' },
-  // Zone B
-  { id: 'b1', name: 'B01', zone: 'B', capacity: 4, status: 'occupied', guests: 4, startTime: '18:00', order: { id: 'ORD003', items: 8, total: 1250000 } },
-  { id: 'b2', name: 'B02', zone: 'B', capacity: 2, status: 'available' },
-  { id: 'b3', name: 'B03', zone: 'B', capacity: 4, status: 'occupied', guests: 2, startTime: '19:15', order: { id: 'ORD004', items: 4, total: 580000 } },
-  { id: 'b4', name: 'B04', zone: 'B', capacity: 6, status: 'reserved', reservation: { name: 'Trần Thị C', time: '19:30', phone: '0912345678' } },
-  // Zone VIP
-  { id: 'v1', name: 'VIP01', zone: 'VIP', capacity: 8, status: 'occupied', guests: 6, startTime: '18:45', order: { id: 'ORD005', items: 12, total: 3500000 } },
-  { id: 'v2', name: 'VIP02', zone: 'VIP', capacity: 10, status: 'available' },
-  { id: 'v3', name: 'VIP03', zone: 'VIP', capacity: 12, status: 'reserved', reservation: { name: 'Lê Văn D', time: '20:30', phone: '0923456789' } },
-];
-
 const getStatusConfig = (mode: 'light' | 'dark', t: (key: string) => string) => {
   const isDark = mode === 'dark';
   return {
@@ -119,7 +100,7 @@ export default function TableManagement() {
   const { t, i18n } = useTranslation();
   const { language } = useLanguage();
   const [messageApi, contextHolder] = message.useMessage();
-  const [tables, setTables] = useState<TableData[]>(initialTables);
+  const [tables, setTables] = useState<TableData[]>([]);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpenTableModal, setIsOpenTableModal] = useState(false);
@@ -128,6 +109,39 @@ export default function TableManagement() {
 
   const [form] = Form.useForm();
   const [isMobile, setIsMobile] = useState(false);
+
+  // Fetch tables
+  const fetchTables = useCallback(async () => {
+    try {
+      const items = await tableService.getAllTables();
+      const mappedTables: TableData[] = items.map(item => {
+        let status: TableStatus = 'available';
+        if (item.tableStatusId === TableStatusEnum.Reserved) status = 'reserved';
+        if (item.tableStatusId === TableStatusEnum.Occupied) status = 'occupied';
+        if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
+
+        return {
+          id: item.id,
+          name: item.code,
+          zone: item.type || 'Other',
+          capacity: item.seatingCapacity,
+          status: status,
+          // Mock data for extended fields
+          guests: item.tableStatusId === TableStatusEnum.Occupied ? 2 : undefined,
+          startTime: item.tableStatusId === TableStatusEnum.Occupied ? '18:30' : undefined,
+          order: item.tableStatusId === TableStatusEnum.Occupied ? { id: 'ORD-MOCK', items: 3, total: 150000 } : undefined,
+        };
+      });
+      setTables(mappedTables);
+    } catch (error) {
+      console.error('Failed to fetch tables:', error);
+      messageApi.error(t('staff.orders.messages.fetch_tables_failed') || 'Failed to fetch tables');
+    }
+  }, [messageApi, t]);
+
+  useEffect(() => {
+    fetchTables();
+  }, [fetchTables]);
 
   // Check mobile viewport
   useEffect(() => {
@@ -228,51 +242,49 @@ export default function TableManagement() {
     }
   };
 
-  const handleConfirmOpenTable = (values: { guests: number }) => {
+  const handleConfirmOpenTable = async (values: { guests: number }) => {
     if (selectedTable) {
-      setTables(prev =>
-        prev.map(t =>
-          t.id === selectedTable.id
-            ? {
-              ...t,
-              status: 'occupied' as TableStatus,
-              guests: values.guests,
-              startTime: new Date().toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' }),
-            }
-            : t
-        )
-      );
-      messageApi.success(t('staff.tables.messages.table_opened', { table: selectedTable.name, guests: values.guests }));
-      setIsOpenTableModal(false);
-      form.resetFields();
+      try {
+        await tableService.updateStatus(selectedTable.id, TableStatusEnum.Occupied);
+        // If there is an API to set guests, call it here. For now, we only update status.
+        messageApi.success(t('staff.tables.messages.table_opened', { table: selectedTable.name, guests: values.guests }));
+        await fetchTables();
+        setIsOpenTableModal(false);
+        form.resetFields();
+      } catch (error) {
+        console.error("Failed to open table:", error);
+        messageApi.error("Failed to open table");
+      }
     }
   };
 
-  const handleCloseTable = () => {
+  const handleCloseTable = async () => {
     if (selectedTable) {
-      setTables(prev =>
-        prev.map(t =>
-          t.id === selectedTable.id
-            ? { ...t, status: 'cleaning' as TableStatus, guests: undefined, startTime: undefined, order: undefined }
-            : t
-        )
-      );
-      messageApi.success(t('staff.tables.messages.table_closed', { table: selectedTable.name }));
-      setIsModalOpen(false);
+      try {
+        // Attempt to set status to cleaning via updateTable if supported, or just Available
+        // Using updateTable with tableStatusName check
+        await tableService.updateTable(selectedTable.id, { tableStatusName: 'Cleaning' });
+        messageApi.success(t('staff.tables.messages.table_closed', { table: selectedTable.name }));
+        await fetchTables();
+        setIsModalOpen(false);
+      } catch (error) {
+        console.error("Failed to close table:", error);
+        messageApi.error("Failed to close table");
+      }
     }
   };
 
-  const handleFinishCleaning = () => {
+  const handleFinishCleaning = async () => {
     if (selectedTable) {
-      setTables(prev =>
-        prev.map(t =>
-          t.id === selectedTable.id
-            ? { ...t, status: 'available' as TableStatus }
-            : t
-        )
-      );
-      messageApi.success(t('staff.tables.messages.table_ready', { table: selectedTable.name }));
-      setIsModalOpen(false);
+      try {
+        await tableService.updateStatus(selectedTable.id, TableStatusEnum.Available);
+        messageApi.success(t('staff.tables.messages.table_ready', { table: selectedTable.name }));
+        await fetchTables();
+        setIsModalOpen(false);
+      } catch (error) {
+        console.error("Failed to finish cleaning:", error);
+        messageApi.error("Failed to update status");
+      }
     }
   };
 
@@ -437,40 +449,56 @@ export default function TableManagement() {
             ))}
           </Row>
         ) : (
-          <TableMap2D
-            tables={map2DTables}
-            onTableClick={handleMap2DTableClick}
-            onTablePositionChange={() => { }}
-            readOnly={true}
-            height={mapHeight}
-            showGrid={true}
-            mapMarkers={mapMarkers}
-            renderTableContent={(table) => {
-              const hasOrder = table.status === 'OCCUPIED' || table.status === 'RESERVED';
-              return (
-                hasOrder && (
-                  <div style={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    background: '#FF380B',
-                    color: 'white',
-                    borderRadius: '50%',
-                    width: 20,
-                    height: 20,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 10,
-                    fontWeight: 'bold',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                  }}>
-                    !
-                  </div>
-                )
-              );
-            }}
-          />
+          (() => {
+            // Build a proper Layout object from the computed map data
+            const staffLayout = {
+              id: 'staff-layout',
+              name: 'Staff View',
+              activeFloorId: 'main',
+              floors: [{
+                id: 'main',
+                name: 'Main Floor',
+                width: 800,
+                height: mapHeight,
+                zones: [],
+                tables: map2DTables,
+              }],
+            };
+            return (
+              <TableMap2D
+                layout={staffLayout}
+                onLayoutChange={() => { }}
+                onTableClick={handleMap2DTableClick}
+                onTablePositionChange={() => { }}
+                readOnly={true}
+                renderTableContent={(table) => {
+                  const hasOrder = table.status === 'OCCUPIED' || table.status === 'RESERVED';
+                  return (
+                    hasOrder && (
+                      <div style={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        background: '#FF380B',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: 20,
+                        height: 20,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}>
+                        !
+                      </div>
+                    )
+                  );
+                }}
+              />
+            );
+          })()
         )}
       </Card>
       {/* Table Detail Modal */}

@@ -643,6 +643,7 @@
       "subtitle": "Quản lý bàn và đặt bàn",
       "add_table": "Thêm bàn",
       "add_area": "Thêm khu vực",
+      "add_zone": "Vẽ vùng",
       "add_area_modal": {
         "title": "Thêm khu vực mới",
         "name_label": "Tên khu vực",
@@ -693,6 +694,13 @@
         "occupied": "Đang dùng",
         "reserved": "Đã đặt",
         "cleaning": "Đang dọn"
+      },
+      "map": {
+        "upload_floorplan": "Tải sơ đồ",
+        "show_grid": "Hiện lưới",
+        "floor_dimensions": "Kích thước tầng",
+        "zones": "vùng",
+        "tables_on_floor": "bàn trên tầng này"
       }
     },
     "staff": {
@@ -1411,7 +1419,11 @@
       "greeting": "Xin chào quý khách",
       "default_name": "Thượng đế",
       "gold_member": "Thành viên Vàng",
-      "table_label": "Vị trí"
+      "table_label": "Vị trí",
+      "rank_gold": "Thành viên Vàng",
+      "rank_silver": "Thành viên Bạc",
+      "rank_bronze": "Thành viên Đồng",
+      "rank_platinum": "Thành viên Bạch kim"
     }
   },
   "menu_page": {
