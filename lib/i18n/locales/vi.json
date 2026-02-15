@@ -643,6 +643,7 @@
       "subtitle": "Quản lý bàn và đặt bàn",
       "add_table": "Thêm bàn",
       "add_area": "Thêm khu vực",
+      "add_zone": "Vẽ vùng",
       "add_area_modal": {
         "title": "Thêm khu vực mới",
         "name_label": "Tên khu vực",
@@ -693,6 +694,13 @@
         "occupied": "Đang dùng",
         "reserved": "Đã đặt",
         "cleaning": "Đang dọn"
+      },
+      "map": {
+        "upload_floorplan": "Tải sơ đồ",
+        "show_grid": "Hiện lưới",
+        "floor_dimensions": "Kích thước tầng",
+        "zones": "vùng",
+        "tables_on_floor": "bàn trên tầng này"
       }
     },
     "staff": {

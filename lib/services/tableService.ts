@@ -19,7 +19,7 @@ export interface TableItem {
     rotation: number;
     isActive: boolean;
     tableStatusId: TableStatus;
-    // Optional fields from backend
+    // Backend optional fields — preserved during updates
     has3DView?: boolean;
     viewDescription?: string;
     defaultViewUrl?: string;
