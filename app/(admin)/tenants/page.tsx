@@ -40,6 +40,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TenantPlanTag from "../../../components/(admin)/tenants/TenantPlanTag";
 import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
+import TenantRequestList from "../../../components/(admin)/tenants/TenantRequestList";
 import { tenantService } from "../../../lib/services/tenantService";
 import { ITenant } from "../../../lib/types/tenant";
 
@@ -683,7 +684,7 @@ const TenantPage: React.FC = () => {
             </Card>
           </div>
 
-          {/* Tabs: Tenant list & System revenue */}
+          {/* Tabs: Tenant list, Tenant Requests & System revenue */}
           <Tabs
             defaultActiveKey="tenants"
             items={[
@@ -763,6 +764,11 @@ const TenantPage: React.FC = () => {
                     </Spin>
                   </Card>
                 ),
+              },
+              {
+                key: "requests",
+                label: t("tenants.tabs.tenant_requests"),
+                children: <TenantRequestList />,
               },
               {
                 key: "revenue",

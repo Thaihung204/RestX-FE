@@ -74,3 +74,23 @@ export interface TenantApiResponse {
   createdBy?: string;
   modifiedBy?: string;
 }
+
+// Tenant Request types
+export type TenantRequestStatus = "pending" | "approved" | "rejected";
+
+export interface ITenantRequest {
+  id: string;
+  businessName: string;
+  contactPersonName: string;
+  businessEmail: string;
+  businessPhone: string;
+  businessAddress: string;
+  requestedPlan: "basic" | "pro" | "enterprise";
+  status: TenantRequestStatus;
+  rejectionReason?: string;
+  submittedAt: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  createdTenantId?: string;
+  notes?: string;
+}
