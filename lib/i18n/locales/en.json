@@ -1919,9 +1919,47 @@
       "title": "Edit Restaurant",
       "subtitle": "Update tenant (restaurant) information in the RestX system.",
       "back": "Back",
+      "extended_business_info": "Extended Business Information",
+      "about_overview": "About & Overview",
+      "fields": {
+        "county": "County / Province",
+        "county_placeholder": "Enter county or province",
+        "post_code": "Post Code",
+        "post_code_placeholder": "Enter post code",
+        "country": "Country",
+        "country_placeholder": "Enter country",
+        "company_number": "Company Number",
+        "company_number_placeholder": "Enter company registration number",
+        "secondary_phone": "Secondary Phone",
+        "secondary_phone_placeholder": "Enter secondary phone number",
+        "opening_hours": "Opening Hours",
+        "opening_hours_placeholder": "e.g., Mon-Fri 9:00-18:00",
+        "about_us": "About Us",
+        "about_us_placeholder": "Enter restaurant description or about us content",
+        "overview": "Overview",
+        "overview_placeholder": "Enter brief overview or tagline"
+      },
       "buttons": {
         "update": "Save Changes",
+        "delete": "Delete Tenant",
         "cancel": "Cancel"
+      },
+      "delete_modal": {
+        "title": "Delete Tenant",
+        "warning_title": "⚠️ Warning: This action cannot be undone!",
+        "warning_description": "Deleting this tenant will permanently remove:",
+        "warning_items": {
+          "data": "All restaurant data and settings",
+          "users": "All user accounts associated with this tenant",
+          "transactions": "All menus, orders, and transaction history",
+          "assets": "All uploaded images and assets"
+        },
+        "confirm_instruction": "To confirm deletion, please type the tenant name:",
+        "input_placeholder": "Type tenant name to confirm",
+        "name_mismatch": "✗ Tenant name does not match",
+        "name_match": "✓ Ready to delete",
+        "button_cancel": "Cancel",
+        "button_delete": "Delete Permanently"
       }
     }
   },
