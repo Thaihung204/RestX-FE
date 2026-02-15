@@ -330,33 +330,6 @@ const TenantPage: React.FC = () => {
       render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
     },
     {
-      title: t("tenants.table.owner"),
-      dataIndex: "ownerEmail",
-      key: "ownerEmail",
-      width: 200,
-      render: (email) => (
-        <span
-          className="text-[11px] truncate max-w-[180px] block"
-          style={{ color: "var(--text-muted)" }}
-          title={email}>
-          {email}
-        </span>
-      ),
-    },
-    {
-      title: t("tenants.table.last_active"),
-      dataIndex: "lastActive",
-      key: "lastActive",
-      width: 120,
-      render: (value: string) => (
-        <span
-          className="text-[11px] font-variant-numeric tabular-nums whitespace-nowrap"
-          style={{ color: "var(--text-muted)" }}>
-          {formatDate(value)}
-        </span>
-      ),
-    },
-    {
       title: "",
       key: "actions",
       width: 50,
