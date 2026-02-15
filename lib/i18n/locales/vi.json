@@ -1919,9 +1919,47 @@
       "title": "Chỉnh sửa nhà hàng",
       "subtitle": "Cập nhật thông tin nhà hàng trong hệ thống RestX.",
       "back": "Quay lại",
+      "extended_business_info": "Thông tin doanh nghiệp mở rộng",
+      "about_overview": "Giới thiệu & Tổng quan",
+      "fields": {
+        "county": "Quận / Tỉnh",
+        "county_placeholder": "Nhập quận hoặc tỉnh",
+        "post_code": "Mã bưu điện",
+        "post_code_placeholder": "Nhập mã bưu điện",
+        "country": "Quốc gia",
+        "country_placeholder": "Nhập quốc gia",
+        "company_number": "Mã số doanh nghiệp",
+        "company_number_placeholder": "Nhập mã số đăng ký doanh nghiệp",
+        "secondary_phone": "Số điện thoại phụ",
+        "secondary_phone_placeholder": "Nhập số điện thoại phụ",
+        "opening_hours": "Giờ mở cửa",
+        "opening_hours_placeholder": "VD: Thứ 2-6: 9:00-18:00",
+        "about_us": "Giới thiệu",
+        "about_us_placeholder": "Nhập nội dung giới thiệu về nhà hàng",
+        "overview": "Tổng quan",
+        "overview_placeholder": "Nhập tổng quan hoặc slogan ngắn gọn"
+      },
       "buttons": {
         "update": "Lưu thay đổi",
+        "delete": "Xóa nhà hàng",
         "cancel": "Hủy"
+      },
+      "delete_modal": {
+        "title": "Xóa nhà hàng",
+        "warning_title": "⚠️ Cảnh báo: Hành động này không thể hoàn tác!",
+        "warning_description": "Xóa nhà hàng này sẽ xóa vĩnh viễn:",
+        "warning_items": {
+          "data": "Tất cả dữ liệu và cài đặt nhà hàng",
+          "users": "Tất cả tài khoản người dùng liên quan",
+          "transactions": "Tất cả thực đơn, đơn hàng và lịch sử giao dịch",
+          "assets": "Tất cả hình ảnh và tài nguyên đã tải lên"
+        },
+        "confirm_instruction": "Để xác nhận xóa, vui lòng nhập tên nhà hàng:",
+        "input_placeholder": "Nhập tên nhà hàng để xác nhận",
+        "name_mismatch": "✗ Tên nhà hàng không khớp",
+        "name_match": "✓ Sẵn sàng xóa",
+        "button_cancel": "Hủy",
+        "button_delete": "Xóa vĩnh viễn"
       }
     }
   },
