@@ -9,6 +9,7 @@ import {
   PhoneOutlined,
   SearchOutlined,
   ShopOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import {
   App,
@@ -23,116 +24,16 @@ import {
   Modal,
   Descriptions,
   Card,
+  Avatar,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ITenantRequest, TenantRequestStatus } from "@/lib/types/tenant";
+import { ITenant } from "@/lib/types/tenant";
+import { tenantService } from "@/lib/services/tenantService";
 import TenantPlanTag from "./TenantPlanTag";
 
 const { Text } = Typography;
-
-// Mock data - sẽ thay thế bằng API call sau
-const MOCK_REQUESTS: ITenantRequest[] = [
-  {
-    id: "req-001",
-    businessName: "Phở Hà Nội 24",
-    contactPersonName: "Nguyễn Văn A",
-    businessEmail: "contact@phohanoi24.com",
-    businessPhone: "+84 901 234 567",
-    businessAddress: "123 Phố Huế, Hai Bà Trưng, Hà Nội",
-    requestedPlan: "pro",
-    status: "pending",
-    submittedAt: "2026-02-10T14:30:00Z",
-    notes: "Cần tư vấn về gói Enterprise",
-  },
-  {
-    id: "req-002",
-    businessName: "Bún Chả Obama",
-    contactPersonName: "Trần Thị B",
-    businessEmail: "admin@bunchaobama.vn",
-    businessPhone: "+84 912 345 678",
-    businessAddress: "456 Lê Văn Hưu, Hai Bà Trưng, Hà Nội",
-    requestedPlan: "basic",
-    status: "approved",
-    submittedAt: "2026-02-08T10:15:00Z",
-    approvedAt: "2026-02-09T09:00:00Z",
-    approvedBy: "Admin User",
-    createdTenantId: "tenant-123",
-  },
-  {
-    id: "req-003",
-    businessName: "Cơm Tấm Sài Gòn",
-    contactPersonName: "Lê Văn C",
-    businessEmail: "info@comtamsaigon.com",
-    businessPhone: "+84 923 456 789",
-    businessAddress: "789 Nguyễn Trãi, Quận 1, TP.HCM",
-    requestedPlan: "enterprise",
-    status: "rejected",
-    submittedAt: "2026-02-05T16:45:00Z",
-    approvedAt: "2026-02-06T11:20:00Z",
-    approvedBy: "Admin User",
-    rejectionReason: "Thông tin doanh nghiệp chưa đầy đủ",
-  },
-  {
-    id: "req-004",
-    businessName: "Bánh Mì Phượng",
-    contactPersonName: "Phạm Thị D",
-    businessEmail: "contact@banhmiphuong.vn",
-    businessPhone: "+84 934 567 890",
-    businessAddress: "321 Đường Số 1, Quận 2, TP.HCM",
-    requestedPlan: "pro",
-    status: "pending",
-    submittedAt: "2026-02-12T08:20:00Z",
-  },
-  {
-    id: "req-005",
-    businessName: "Lẩu Thái Bà Rịa",
-    contactPersonName: "Hoàng Văn E",
-    businessEmail: "admin@lauthaibaira.com",
-    businessPhone: "+84 945 678 901",
-    businessAddress: "654 Lê Lợi, Bà Rịa, Vũng Tàu",
-    requestedPlan: "basic",
-    status: "pending",
-    submittedAt: "2026-02-13T13:10:00Z",
-    notes: "Muốn mở chuỗi 3 chi nhánh",
-  },
-];
-
-const STATUS_OPTIONS = [
-  { label: "All Status", value: "all" },
-  { label: "Pending", value: "pending" },
-  { label: "Approved", value: "approved" },
-  { label: "Rejected", value: "rejected" },
-];
-
-const TenantRequestStatusTag = ({ status, t }: { status: TenantRequestStatus; t: any }) => {
-  const config = {
-    pending: {
-      color: "warning",
-      icon: <ClockCircleOutlined />,
-      text: t('tenant_requests.list.status_pending'),
-    },
-    approved: {
-      color: "success",
-      icon: <CheckCircleOutlined />,
-      text: t('tenant_requests.list.status_approved'),
-    },
-    rejected: {
-      color: "error",
-      icon: <CloseCircleOutlined />,
-      text: t('tenant_requests.list.status_rejected'),
-    },
-  };
-
-  const { color, icon, text } = config[status];
-
-  return (
-    <Tag color={color} icon={icon}>
-      {text}
-    </Tag>
-  );
-};
 
 const formatDate = (isoDate: string) => {
   return new Intl.DateTimeFormat("en-GB", {
@@ -145,184 +46,226 @@ const formatDate = (isoDate: string) => {
 };
 
 interface TenantRequestListProps {
-  onApprove?: (requestId: string) => void;
-  onReject?: (requestId: string, reason: string) => void;
+  onRequestUpdated?: () => void;
 }
 
 export const TenantRequestList: React.FC<TenantRequestListProps> = ({
-  onApprove,
-  onReject,
+  onRequestUpdated,
 }) => {
   const { t } = useTranslation();
   const { message, modal } = App.useApp();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [requests, setRequests] = useState<ITenant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [detailModal, setDetailModal] = useState<{
     visible: boolean;
-    request: ITenantRequest | null;
+    request: ITenant | null;
   }>({
     visible: false,
     request: null,
   });
 
-  const STATUS_OPTIONS_TRANSLATED = useMemo(() => [
-    { label: t('tenant_requests.list.filter_all'), value: "all" },
-    { label: t('tenant_requests.list.filter_pending'), value: "pending" },
-    { label: t('tenant_requests.list.filter_approved'), value: "approved" },
-    { label: t('tenant_requests.list.filter_rejected'), value: "rejected" },
-  ], [t]);
+  useEffect(() => {
+    fetchPendingRequests();
+  }, []);
+
+  const fetchPendingRequests = async () => {
+    try {
+      setLoading(true);
+      const data = await tenantService.getPendingTenantRequests();
+      setRequests(data);
+    } catch (error) {
+      console.error("Failed to fetch pending requests:", error);
+      message.error("Failed to load tenant requests");
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredData = useMemo(() => {
     const query = search.toLowerCase().trim();
-    return MOCK_REQUESTS.filter((item) => {
-      const matchesStatus =
-        statusFilter === "all" || item.status === statusFilter;
+    return requests.filter((item) => {
       const matchesSearch =
         !query ||
+        item.name.toLowerCase().includes(query) ||
         item.businessName.toLowerCase().includes(query) ||
-        item.contactPersonName.toLowerCase().includes(query) ||
-        item.businessEmail.toLowerCase().includes(query) ||
-        item.businessPhone.includes(query);
-      return matchesStatus && matchesSearch;
+        item.ownerEmail.toLowerCase().includes(query) ||
+        item.phoneNumber.includes(query) ||
+        item.hostName.toLowerCase().includes(query);
+      return matchesSearch;
     });
-  }, [search, statusFilter]);
+  }, [search, requests]);
 
-  const handleViewDetails = (request: ITenantRequest) => {
+  const handleViewDetails = (request: ITenant) => {
     setDetailModal({ visible: true, request });
   };
 
-  const handleApprove = (request: ITenantRequest) => {
+  const handleApprove = async (request: ITenant) => {
     modal.confirm({
-      title: t('tenant_requests.list.approve_confirm_title'),
-      content: t('tenant_requests.list.approve_confirm_message'),
-      okText: t('tenant_requests.list.approve_confirm_ok'),
+      title: "Approve Tenant Request",
+      content: `Are you sure you want to approve "${request.name}"? This will activate their restaurant portal at ${request.hostName}`,
+      okText: "Approve",
       okType: "primary",
-      cancelText: t('tenant_requests.list.approve_confirm_cancel'),
-      onOk: () => {
-        message.success(t('tenant_requests.list.approve_success'));
-        // onApprove?.(request.id);
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          setActionLoading(request.id);
+          await tenantService.approveTenantRequest(request.id);
+          message.success(`Tenant "${request.name}" has been approved!`);
+          await fetchPendingRequests();
+          onRequestUpdated?.();
+        } catch (error: any) {
+          console.error("Failed to approve tenant:", error);
+          message.error(error?.response?.data?.message || "Failed to approve tenant");
+        } finally {
+          setActionLoading(null);
+        }
       },
     });
   };
 
-  const handleReject = (request: ITenantRequest) => {
-    let rejectionReason = "";
+  const handleReject = async (request: ITenant) => {
     modal.confirm({
-      title: t('tenant_requests.list.reject_confirm_title'),
-      content: (
-        <div>
-          <p style={{ marginBottom: 8 }}>
-            {t('tenant_requests.list.reject_confirm_message')}
-          </p>
-          <Input.TextArea
-            rows={3}
-            placeholder={t('tenant_requests.list.detail_rejection_reason')}
-            onChange={(e) => (rejectionReason = e.target.value)}
-          />
-        </div>
-      ),
-      okText: t('tenant_requests.list.reject_confirm_ok'),
+      title: "Reject Tenant Request",
+      content: `Are you sure you want to reject "${request.name}"? This will permanently delete the request.`,
+      okText: "Reject",
       okType: "danger",
-      cancelText: t('tenant_requests.list.reject_confirm_cancel'),
-      onOk: () => {
-        message.warning(t('tenant_requests.list.reject_success'));
-        // onReject?.(request.id, rejectionReason);
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          setActionLoading(request.id);
+          await tenantService.rejectTenantRequest(request.id);
+          message.warning(`Tenant request "${request.name}" has been rejected and deleted`);
+          await fetchPendingRequests();
+          onRequestUpdated?.();
+        } catch (error: any) {
+          console.error("Failed to reject tenant:", error);
+          message.error(error?.response?.data?.message || "Failed to reject tenant");
+        } finally {
+          setActionLoading(null);
+        }
       },
     });
   };
 
-  const columns: ColumnsType<ITenantRequest> = [
+  const columns: ColumnsType<ITenant> = [
     {
-      title: t('tenant_requests.list.column_business_name'),
-      dataIndex: "businessName",
-      key: "businessName",
-      width: 200,
-      render: (text, record) => (
-        <div>
-          <div className="font-medium text-sm" style={{ color: "var(--text)" }}>
-            {text}
+      title: "Restaurant",
+      dataIndex: "name",
+      key: "name",
+      width: 220,
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <Avatar
+            shape="square"
+            size="large"
+            className="bg-[#FF380B] text-white"
+          >
+            {record.name.charAt(0)}
+          </Avatar>
+          <div className="flex flex-col">
+            <div className="font-medium text-sm" style={{ color: "var(--text)" }}>
+              {record.name}
+            </div>
+            <Text type="secondary" className="text-xs">
+              {record.hostName}
+            </Text>
           </div>
-          <Text type="secondary" className="text-xs">
-            {record.contactPersonName}
-          </Text>
         </div>
       ),
-      sorter: (a, b) => a.businessName.localeCompare(b.businessName),
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: t('tenant_requests.list.column_contact_info'),
+      title: "Business Name",
+      dataIndex: "businessName",
+      key: "businessName",
+      width: 180,
+      render: (text) => (
+        <Text type="secondary" className="text-sm">
+          {text}
+        </Text>
+      ),
+    },
+    {
+      title: "Contact",
       key: "contact",
+      width: 220,
       responsive: ["lg"] as any,
       render: (_, record) => (
         <div className="space-y-1">
           <div className="flex items-center gap-1">
             <MailOutlined className="text-xs" style={{ color: "var(--text-muted)" }} />
             <Text type="secondary" className="text-xs">
-              {record.businessEmail}
+              {record.ownerEmail}
             </Text>
           </div>
           <div className="flex items-center gap-1">
             <PhoneOutlined className="text-xs" style={{ color: "var(--text-muted)" }} />
             <Text type="secondary" className="text-xs">
-              {record.businessPhone}
+              {record.phoneNumber}
             </Text>
           </div>
         </div>
       ),
     },
     {
-      title: t('tenant_requests.list.column_address'),
-      dataIndex: "businessAddress",
-      key: "businessAddress",
-      render: (text) => (
-        <Text type="secondary" className="text-xs">
-          {text}
-        </Text>
+      title: "Address",
+      key: "address",
+      width: 200,
+      responsive: ["md"] as any,
+      render: (_, record) => (
+        <div className="text-xs">
+          <div>{record.addressLine1}</div>
+          {record.addressLine2 && <div className="opacity-60">{record.addressLine2}</div>}
+          {record.addressLine3 && <div className="opacity-60">{record.addressLine3}</div>}
+        </div>
       ),
       ellipsis: true,
-      responsive: ["md"] as any,
     },
     {
-      title: t('tenant_requests.list.column_plan'),
-      dataIndex: "requestedPlan",
-      key: "requestedPlan",
+      title: "Plan",
+      dataIndex: "plan",
+      key: "plan",
+      width: 100,
       render: (plan) => <TenantPlanTag plan={plan} />,
       filters: [
         { text: "Basic", value: "basic" },
         { text: "Pro", value: "pro" },
         { text: "Enterprise", value: "enterprise" },
       ],
-      onFilter: (value, record) => record.requestedPlan === value,
+      onFilter: (value, record) => record.plan === value,
     },
     {
-      title: t('tenant_requests.list.column_status'),
-      dataIndex: "status",
+      title: "Status",
       key: "status",
-      render: (status) => <TenantRequestStatusTag status={status} t={t} />,
-      filters: STATUS_OPTIONS.slice(1).map((opt) => ({
-        text: opt.label,
-        value: opt.value,
-      })),
-      onFilter: (value, record) => record.status === value,
+      width: 100,
+      render: () => (
+        <Tag color="orange" icon={<ClockCircleOutlined />}>
+          Pending
+        </Tag>
+      ),
     },
     {
-      title: t('tenant_requests.list.column_submitted'),
-      dataIndex: "submittedAt",
-      key: "submittedAt",
+      title: "Submitted",
+      dataIndex: "lastActive",
+      key: "lastActive",
+      width: 150,
       render: (date) => (
         <Text type="secondary" className="text-xs">
           {formatDate(date)}
         </Text>
       ),
       sorter: (a, b) =>
-        new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime(),
+        new Date(a.lastActive).getTime() - new Date(b.lastActive).getTime(),
       defaultSortOrder: "descend",
     },
     {
-      title: t('tenant_requests.list.column_actions'),
+      title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 150,
+      width: 200,
       render: (_, record) => (
         <Space size="small" wrap>
           <Button
@@ -331,34 +274,32 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
             icon={<EyeOutlined />}
             onClick={() => handleViewDetails(record)}
           >
-            {t('tenant_requests.list.action_view')}
+            View
           </Button>
-          {record.status === "pending" && (
-            <>
-              <Button
-                type="link"
-                size="small"
-                onClick={() => handleApprove(record)}
-                style={{ color: "var(--success)" }}
-              >
-                {t('tenant_requests.list.action_approve')}
-              </Button>
-              <Button
-                type="link"
-                size="small"
-                danger
-                onClick={() => handleReject(record)}
-              >
-                {t('tenant_requests.list.action_reject')}
-              </Button>
-            </>
-          )}
+          <Button
+            type="primary"
+            size="small"
+            icon={<CheckCircleOutlined />}
+            loading={actionLoading === record.id}
+            onClick={() => handleApprove(record)}
+          >
+            Approve
+          </Button>
+          <Button
+            danger
+            size="small"
+            icon={<CloseCircleOutlined />}
+            loading={actionLoading === record.id}
+            onClick={() => handleReject(record)}
+          >
+            Reject
+          </Button>
         </Space>
       ),
     },
   ];
 
-  const pendingCount = MOCK_REQUESTS.filter((r) => r.status === "pending").length;
+  const pendingCount = requests.length;
 
   return (
     <Card
@@ -381,24 +322,27 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
         <div className="flex flex-col sm:flex-row flex-1 gap-2 max-w-2xl">
           <Input
             allowClear
-            placeholder={t('tenant_requests.list.column_business_name')}
+            placeholder="Search by name, email, phone, or hostname..."
             prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full sm:flex-1"
           />
-          <Select
-            className="w-full sm:w-40"
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={STATUS_OPTIONS_TRANSLATED}
-          />
         </div>
-        <Badge count={pendingCount} showZero>
-          <Button type="default" className="w-full sm:w-auto">
-            {t('tenant_requests.list.pending_requests')}
+        <div className="flex gap-2">
+          <Badge count={pendingCount} showZero>
+            <Button type="default" className="w-full sm:w-auto">
+              Pending Requests
+            </Button>
+          </Badge>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={fetchPendingRequests}
+            loading={loading}
+          >
+            Refresh
           </Button>
-        </Badge>
+        </div>
       </div>
 
       {/* Table */}
@@ -407,6 +351,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
         dataSource={filteredData}
         rowKey="id"
         size="small"
+        loading={loading}
         className="admin-tenants-table"
         style={
           {
@@ -420,14 +365,14 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
           showSizeChanger: true,
           showTotal: (total) => (
             <span style={{ color: "var(--text-muted)" }}>
-              {t('tenant_requests.list.total_requests', { count: total })}
+              Total {total} pending request{total !== 1 ? 's' : ''}
             </span>
           ),
           className: "px-3 md:px-4 pb-3",
           responsive: true,
           showLessItems: true,
         }}
-        scroll={{ x: 1000 }}
+        scroll={{ x: 1200 }}
       />
 
       {/* Detail Modal */}
@@ -435,108 +380,88 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
         title={
           <Space>
             <ShopOutlined />
-            {t('tenant_requests.list.detail_modal_title')}
+            Tenant Request Details
           </Space>
         }
         open={detailModal.visible}
         onCancel={() => setDetailModal({ visible: false, request: null })}
-        footer={
-          detailModal.request?.status === "pending"
-            ? [
-                <Button
-                  key="reject"
-                  danger
-                  onClick={() => {
-                    if (detailModal.request) {
-                      handleReject(detailModal.request);
-                      setDetailModal({ visible: false, request: null });
-                    }
-                  }}
-                >
-                  {t('tenant_requests.list.action_reject')}
-                </Button>,
-                <Button
-                  key="approve"
-                  type="primary"
-                  onClick={() => {
-                    if (detailModal.request) {
-                      handleApprove(detailModal.request);
-                      setDetailModal({ visible: false, request: null });
-                    }
-                  }}
-                >
-                  {t('tenant_requests.list.action_approve')}
-                </Button>,
-              ]
-            : [
-                <Button
-                  key="close"
-                  onClick={() => setDetailModal({ visible: false, request: null })}
-                >
-                  {t('tenant_requests.list.detail_close')}
-                </Button>,
-              ]
-        }
+        footer={[
+          <Button
+            key="close"
+            onClick={() => setDetailModal({ visible: false, request: null })}
+          >
+            Close
+          </Button>,
+          <Button
+            key="reject"
+            danger
+            loading={actionLoading === detailModal.request?.id}
+            onClick={() => {
+              if (detailModal.request) {
+                handleReject(detailModal.request);
+                setDetailModal({ visible: false, request: null });
+              }
+            }}
+          >
+            Reject
+          </Button>,
+          <Button
+            key="approve"
+            type="primary"
+            loading={actionLoading === detailModal.request?.id}
+            onClick={() => {
+              if (detailModal.request) {
+                handleApprove(detailModal.request);
+                setDetailModal({ visible: false, request: null });
+              }
+            }}
+          >
+            Approve
+          </Button>,
+        ]}
         width="90%"
         style={{ maxWidth: 700 }}
         styles={{ body: { maxHeight: '70vh', overflowY: 'auto' } }}
       >
         {detailModal.request && (
           <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label={t('tenant_requests.list.detail_business_name')}>
+            <Descriptions.Item label="Restaurant Name">
+              {detailModal.request.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Hostname">
+              <Text code>{detailModal.request.hostName}</Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Business Name">
               {detailModal.request.businessName}
             </Descriptions.Item>
-            <Descriptions.Item label={t('tenant_requests.list.detail_contact_person')}>
-              {detailModal.request.contactPersonName}
+            <Descriptions.Item label="Owner Email">
+              {detailModal.request.ownerEmail}
             </Descriptions.Item>
-            <Descriptions.Item label={t('tenant_requests.list.detail_business_email')}>
-              {detailModal.request.businessEmail}
+            <Descriptions.Item label="Restaurant Email">
+              {detailModal.request.mailRestaurant}
             </Descriptions.Item>
-            <Descriptions.Item label={t('tenant_requests.list.detail_phone')}>
-              {detailModal.request.businessPhone}
+            <Descriptions.Item label="Phone Number">
+              {detailModal.request.phoneNumber}
             </Descriptions.Item>
-            <Descriptions.Item label={t('tenant_requests.list.detail_address')}>
-              {detailModal.request.businessAddress}
+            <Descriptions.Item label="Address">
+              <div>
+                <div>{detailModal.request.addressLine1}</div>
+                {detailModal.request.addressLine2 && <div>{detailModal.request.addressLine2}</div>}
+                {detailModal.request.addressLine3 && <div>{detailModal.request.addressLine3}</div>}
+                {detailModal.request.addressLine4 && <div>{detailModal.request.addressLine4}</div>}
+              </div>
             </Descriptions.Item>
-            <Descriptions.Item label={t('tenant_requests.list.detail_plan')}>
-              <TenantPlanTag plan={detailModal.request.requestedPlan} />
+            <Descriptions.Item label="Plan">
+              <TenantPlanTag plan={detailModal.request.plan} />
             </Descriptions.Item>
-            <Descriptions.Item label={t('tenant_requests.list.detail_status')}>
-              <TenantRequestStatusTag status={detailModal.request.status} t={t} />
+            <Descriptions.Item label="Status">
+              <Tag color="orange" icon={<ClockCircleOutlined />}>
+                Pending Approval
+              </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label={t('tenant_requests.list.detail_submitted')}>
-              {formatDate(detailModal.request.submittedAt)}
+            <Descriptions.Item label="Submitted At">
+              {formatDate(detailModal.request.lastActive)}
             </Descriptions.Item>
-            {detailModal.request.approvedAt && (
-              <Descriptions.Item label={t('tenant_requests.list.detail_approved_at')}>
-                {formatDate(detailModal.request.approvedAt)}
-              </Descriptions.Item>
-            )}
-            {detailModal.request.approvedBy && (
-              <Descriptions.Item label={t('tenant_requests.list.detail_approved_by')}>
-                {detailModal.request.approvedBy}
-              </Descriptions.Item>
-            )}
-            {detailModal.request.rejectionReason && (
-              <Descriptions.Item label={t('tenant_requests.list.detail_rejection_reason')}>
-                <Text type="danger">{detailModal.request.rejectionReason}</Text>
-              </Descriptions.Item>
-            )}
-            {detailModal.request.notes && (
-              <Descriptions.Item label={t('tenant_requests.list.detail_notes')}>
-                {detailModal.request.notes}
-              </Descriptions.Item>
-            )}
-            {detailModal.request.createdTenantId && (
-              <Descriptions.Item label="Created Tenant ID">
-                <Text code>{detailModal.request.createdTenantId}</Text>
-              </Descriptions.Item>
-            )}
-          </Descriptions>
-        )}
-      </Modal>
-    </Card>
-  );
 };
 
 export default TenantRequestList;

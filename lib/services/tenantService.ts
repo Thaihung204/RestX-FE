@@ -390,4 +390,69 @@ export const tenantService = {
   deleteTenant: async (id: string): Promise<void> => {
     await adminAxiosInstance.delete(`/tenants/${id}`);
   },
+
+  /**
+   * Submit tenant request (public - no auth required)
+   * Creates tenant with status = false (pending approval)
+   * Backend endpoint: POST /api/tenants
+   */
+  submitTenantRequest: async (
+    input: TenantCreateInput,
+  ): Promise<TenantApiResponse> => {
+    const apiData = mapCreateInputToApi(input);
+    
+    // Force status to false (pending)
+    const requestData = {
+      ...apiData,
+      status: false,
+    };
+
+    const formData = toFormData(requestData);
+    const response = await adminAxiosInstance.post("/tenants", formData, {
+      headers: { "Content-Type": undefined },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get all pending tenant requests (status = false)
+   * Backend endpoint: GET /api/tenants
+   * Filters for tenants with status = false
+   */
+  getPendingTenantRequests: async (): Promise<ITenant[]> => {
+    const response = await adminAxiosInstance.get<TenantApiResponse[]>("/tenants");
+    const allTenants = response.data.map(mapApiResponseToTenant);
+    
+    // Filter only pending requests (inactive status)
+    return allTenants.filter(tenant => tenant.status === "inactive");
+  },
+
+  /**
+   * Approve tenant request (set status = true)
+   * Backend endpoint: PUT /api/tenants/{id}
+   */
+  approveTenantRequest: async (id: string): Promise<TenantApiResponse> => {
+    // Get current tenant data
+    const tenant = await adminAxiosInstance.get<TenantApiResponse>(`/tenants/${id}`);
+    
+    // Update with status = true
+    const approvedData = {
+      ...tenant.data,
+      status: true,
+    };
+
+    const formData = toFormData(approvedData);
+    const response = await adminAxiosInstance.put(`/tenants/${id}`, formData, {
+      headers: { "Content-Type": undefined },
+    });
+    return response.data;
+  },
+
+  /**
+   * Reject tenant request (delete the tenant)
+   * Backend endpoint: DELETE /api/tenants/{id}
+   */
+  rejectTenantRequest: async (id: string): Promise<void> => {
+    await adminAxiosInstance.delete(`/tenants/${id}`);
+  },
 };
