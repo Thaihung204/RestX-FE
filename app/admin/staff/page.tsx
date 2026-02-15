@@ -16,6 +16,7 @@ interface Staff {
   status: "active" | "inactive";
   joinDate: string;
   createdDate: string;
+  avatarUrl?: string;
 }
 
 export default function StaffPage() {
@@ -66,6 +67,7 @@ export default function StaffPage() {
             | "inactive",
           joinDate: item.hireDate || new Date().toISOString(),
           createdDate: item.createdDate || new Date().toISOString(),
+          avatarUrl: item.avatarUrl,
         }));
 
         setStaffList(mappedData);
@@ -400,11 +402,28 @@ export default function StaffPage() {
                   {/* Profile Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
-                        style={{ background: "var(--primary)" }}>
-                        {member.name.charAt(0).toUpperCase()}
-                      </div>
+                      {member.avatarUrl ? (
+                        <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-[var(--primary)]">
+                          <img
+                            src={member.avatarUrl}
+                            alt={member.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              if (target.parentElement) {
+                                target.parentElement.innerHTML = `<div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold" style="background: var(--primary)">${member.name.charAt(0).toUpperCase()}</div>`;
+                              }
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
+                          style={{ background: "var(--primary)" }}>
+                          {member.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div>
                         <h3
                           className="text-lg font-bold"

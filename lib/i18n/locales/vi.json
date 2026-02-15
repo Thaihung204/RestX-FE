@@ -748,6 +748,28 @@
         "position_placeholder": "Ví dụ: Bếp trưởng, Nhân viên phục vụ, v.v.",
         "active_description": "Hoạt động (Nhân viên đang làm việc)"
       },
+      "avatar": {
+        "profile_picture": "Ảnh đại diện",
+        "change_photo": "Thay đổi ảnh",
+        "remove_photo": "Xóa ảnh",
+        "drop_image_here": "Thả ảnh vào đây",
+        "drop_your_photo_here": "Thả ảnh của bạn vào đây",
+        "or_click_to_browse": "hoặc nhấp để chọn",
+        "supported_formats": "Định dạng hỗ trợ",
+        "max_size": "Tối đa 5MB"
+      },
+      "account_status": {
+        "title": "Trạng thái tài khoản",
+        "active": "Hoạt động",
+        "inactive": "Ngừng hoạt động",
+        "enabled": "ĐANG BẬT",
+        "disabled": "ĐÃ TẮT",
+        "account_can_access": "Tài khoản này có thể truy cập hệ thống",
+        "account_disabled": "Tài khoản này hiện đang bị vô hiệu hóa"
+      },
+      "errors": {
+        "save_failed": "Không thể lưu thông tin nhân viên"
+      },
       "modal": {
         "activate_title": "Kích hoạt nhân viên",
         "deactivate_title": "Ngừng kích hoạt nhân viên",

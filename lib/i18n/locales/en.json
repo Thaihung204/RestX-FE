@@ -748,6 +748,28 @@
         "position_placeholder": "e.g., Head Chef, Server, etc.",
         "active_description": "Active (Staff member is currently working)"
       },
+      "avatar": {
+        "profile_picture": "Profile Picture",
+        "change_photo": "Change Photo",
+        "remove_photo": "Remove Photo",
+        "drop_image_here": "Drop image here",
+        "drop_your_photo_here": "Drop your photo here",
+        "or_click_to_browse": "or click to browse",
+        "supported_formats": "Supported formats",
+        "max_size": "Max 5MB"
+      },
+      "account_status": {
+        "title": "Account Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "enabled": "ENABLED",
+        "disabled": "DISABLED",
+        "account_can_access": "This account can access the system",
+        "account_disabled": "This account is currently disabled"
+      },
+      "errors": {
+        "save_failed": "Failed to save staff"
+      },
       "modal": {
         "activate_title": "Activate Staff Member",
         "deactivate_title": "Deactivate Staff Member",

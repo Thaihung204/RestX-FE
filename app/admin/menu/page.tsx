@@ -339,7 +339,7 @@ export default function MenuPage() {
           <div className="rounded-xl p-4 bg-red-500/10 border border-red-500/20">
             <p className="text-red-500 font-medium">{error}</p>
             <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
-              Please check your API connection
+              Please check your connection
             </p>
           </div>
         )}

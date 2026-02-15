@@ -19,6 +19,7 @@ export interface CreateEmployeeDto {
   // salary: number;
   // salaryType: string;
   role: string;
+  avatar?: File;
 }
 
 export interface UpdateEmployeeDto {
@@ -32,6 +33,7 @@ export interface UpdateEmployeeDto {
   // salary?: number;
   // salaryType?: string;
   isActive?: boolean;
+  avatar?: File | null; // null means remove avatar, undefined means keep existing
 }
 
 export interface EmployeeResponseDto {
@@ -50,6 +52,7 @@ export interface EmployeeResponseDto {
   email: string;
   fullName: string;
   phoneNumber?: string;
+  avatarUrl?: string;
   roles: string[];
 }
 
@@ -62,6 +65,7 @@ export interface EmployeeListItemDto {
   isActive: boolean;
   hireDate: string;
   createdDate: string;
+  avatarUrl?: string;
 }
 
 export interface EmployeeListResponseDto {
@@ -81,7 +85,6 @@ export interface EmployeeListResponseDto {
 }
 
 class EmployeeService {
-
   async getEmployees(
     filter?: EmployeeFilterParams,
   ): Promise<EmployeeListResponseDto> {
@@ -97,8 +100,10 @@ class EmployeeService {
 
   async getEmployeeById(id: string): Promise<EmployeeResponseDto> {
     const response = await axiosInstance.get(`/employees/${id}`);
-    const body = response.data as EmployeeResponseDto | { data?: EmployeeResponseDto };
-    return (body && typeof body === "object" && "data" in body && body.data)
+    const body = response.data as
+      | EmployeeResponseDto
+      | { data?: EmployeeResponseDto };
+    return body && typeof body === "object" && "data" in body && body.data
       ? body.data
       : (body as EmployeeResponseDto);
   }
@@ -106,7 +111,20 @@ class EmployeeService {
   async createEmployee(
     employee: CreateEmployeeDto,
   ): Promise<EmployeeResponseDto> {
-    const response = await axiosInstance.post("/employees", employee);
+    const formData = new FormData();
+    formData.append("Email", employee.email);
+    formData.append("FullName", employee.fullName);
+    if (employee.phoneNumber)
+      formData.append("PhoneNumber", employee.phoneNumber);
+    if (employee.address) formData.append("Address", employee.address);
+    formData.append("Position", employee.position);
+    formData.append("HireDate", employee.hireDate);
+    formData.append("Role", employee.role);
+    if (employee.avatar) formData.append("Avatar", employee.avatar);
+
+    const response = await axiosInstance.post("/employees", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   }
 
@@ -114,7 +132,30 @@ class EmployeeService {
     id: string,
     employee: UpdateEmployeeDto,
   ): Promise<EmployeeResponseDto> {
-    const response = await axiosInstance.put(`/employees/${id}`, employee);
+    const formData = new FormData();
+    if (employee.fullName) formData.append("FullName", employee.fullName);
+    if (employee.phoneNumber)
+      formData.append("PhoneNumber", employee.phoneNumber);
+    if (employee.code) formData.append("Code", employee.code);
+    if (employee.address) formData.append("Address", employee.address);
+    if (employee.position) formData.append("Position", employee.position);
+    if (employee.hireDate) formData.append("HireDate", employee.hireDate);
+    if (employee.terminationDate)
+      formData.append("TerminationDate", employee.terminationDate);
+    if (employee.isActive !== undefined)
+      formData.append("IsActive", employee.isActive.toString());
+
+    if (employee.avatar !== undefined) {
+      if (employee.avatar === null) {
+        formData.append("Avatar", "");
+      } else {
+        formData.append("Avatar", employee.avatar);
+      }
+    }
+
+    const response = await axiosInstance.put(`/employees/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   }
 
