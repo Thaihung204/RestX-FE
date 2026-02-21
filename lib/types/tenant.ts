@@ -38,12 +38,12 @@ export interface TenantUpdateInput {
   name: string;
   hostname?: string;
   prefix?: string;
-  
+
   // Branding & Assets
   logoUrl?: string;
   faviconUrl?: string;
   backgroundUrl?: string;
-  
+
   // Theme Colors
   baseColor?: string;
   primaryColor?: string;
@@ -56,13 +56,13 @@ export interface TenantUpdateInput {
   darkBaseColor?: string;
   darkSurfaceColor?: string;
   darkCardColor?: string;
-  
+
   // Network & Config
   networkIp?: string;
   connectionString?: string;
   status?: boolean;
   expiredAt?: string;
-  
+
   // Business Info
   businessName: string;
   aboutUs?: string;
@@ -80,7 +80,7 @@ export interface TenantUpdateInput {
   businessEmailAddress?: string;
   businessCompanyNumber?: string;
   businessOpeningHours?: string;
-  
+
   // Meta
   plan?: "basic" | "pro" | "enterprise";
 }
@@ -128,22 +128,49 @@ export interface TenantApiResponse {
   modifiedBy?: string;
 }
 
-// Tenant Request types
-export type TenantRequestStatus = "pending" | "approved" | "rejected";
+// Tenant Request types (matching backend DTO)
+// Backend returns string enum: "Pending", "Accepted", "Denied"
+export enum TenantRequestStatus {
+  Pending = 0,
+  Accepted = 1,
+  Denied = 2,
+}
+
+// Type for tenantRequestStatus that backend may return as string or number
+export type TenantRequestStatusValue =
+  | TenantRequestStatus
+  | "Pending"
+  | "Accepted"
+  | "Denied"
+  | 0
+  | 1
+  | 2;
 
 export interface ITenantRequest {
-  id: string;
-  businessName: string;
-  contactPersonName: string;
-  businessEmail: string;
-  businessPhone: string;
-  businessAddress: string;
-  requestedPlan: "basic" | "pro" | "enterprise";
-  status: TenantRequestStatus;
-  rejectionReason?: string;
-  submittedAt: string;
-  approvedAt?: string;
-  approvedBy?: string;
-  createdTenantId?: string;
-  notes?: string;
+  id?: string;
+  name: string;
+  hostname: string;
+  businessName?: string;
+  businessPrimaryPhone?: string;
+  businessEmailAddress?: string;
+  businessAddressLine1?: string;
+  businessAddressLine2?: string;
+  businessAddressLine3?: string;
+  businessAddressLine4?: string;
+  businessCountry?: string;
+  tenantRequestStatus?: TenantRequestStatusValue;
+}
+
+// Request input for creating tenant request
+export interface TenantRequestInput {
+  name: string;
+  hostname: string;
+  businessName?: string;
+  businessPrimaryPhone?: string;
+  businessEmailAddress?: string;
+  businessAddressLine1?: string;
+  businessAddressLine2?: string;
+  businessAddressLine3?: string;
+  businessAddressLine4?: string;
+  businessCountry?: string;
 }

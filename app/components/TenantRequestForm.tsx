@@ -1,28 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Modal, Form, Input, Select, App, Row, Col } from 'antd';
+import { tenantService } from "@/lib/services/tenantService";
+import { TenantRequestInput } from "@/lib/types/tenant";
 import {
-  ShopOutlined,
-  UserOutlined,
+  EnvironmentOutlined,
+  GlobalOutlined,
   MailOutlined,
   PhoneOutlined,
-  EnvironmentOutlined,
-} from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
-import type { ITenantRequest } from '@/lib/types/tenant';
+  ShopOutlined,
+} from "@ant-design/icons";
+import { App, Col, Form, Input, Modal, Row } from "antd";
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const { TextArea } = Input;
-
-interface TenantRequestFormData {
-  businessName: string;
-  contactPersonName: string;
-  businessEmail: string;
-  businessPhone: string;
-  businessAddress: string;
-  requestedPlan: 'basic' | 'pro' | 'enterprise';
-  notes?: string;
-}
 
 interface TenantRequestFormProps {
   visible: boolean;
@@ -37,28 +28,46 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const { message } = App.useApp();
-  const [form] = Form.useForm<TenantRequestFormData>();
+  const [form] = Form.useForm<TenantRequestInput>();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (values: TenantRequestFormData) => {
+  const handleSubmit = async (values: TenantRequestInput) => {
     setLoading(true);
-    
-    // Simulate API call - sẽ thay thế bằng real API
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Tenant Request Submitted:', values);
-      
+      console.log("[TenantRequestForm] Submitting request:", values);
+
+      // Call real API
+      const requestId = await tenantService.addTenantRequest(values);
+
+      console.log(
+        "[TenantRequestForm] Request created successfully, ID:",
+        requestId,
+      );
+
       message.success({
-        content: t('tenant_requests.form.success_message'),
+        content:
+          t("tenant_requests.form.success_message") ||
+          "Request submitted successfully! Our team will review it shortly.",
         duration: 5,
       });
-      
+
       form.resetFields();
       onSuccess?.();
       onCancel();
-    } catch (error) {
-      message.error(t('tenant_requests.form.error_message'));
+    } catch (error: any) {
+      console.error("[TenantRequestForm] Failed to submit request:", error);
+      console.error(
+        "[TenantRequestForm] Error response:",
+        error?.response?.data,
+      );
+
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        t("tenant_requests.form.error_message") ||
+        "Failed to submit request. Please try again.";
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -69,160 +78,148 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
     onCancel();
   };
 
+  const validateSlug = (_: unknown, value: string) => {
+    if (!value) {
+      return Promise.resolve();
+    }
+
+    if (!/^[a-z0-9-]+$/.test(value)) {
+      return Promise.reject(
+        new Error("Only lowercase letters, numbers, and hyphens are allowed"),
+      );
+    }
+    return Promise.resolve();
+  };
+
   return (
     <Modal
       title={
         <div className="flex items-center gap-2">
           <ShopOutlined className="text-orange-500" />
-          <span>{t('tenant_requests.form.title')}</span>
+          <span>
+            {t("tenant_requests.form.title") || "Request Restaurant Portal"}
+          </span>
         </div>
       }
       open={visible}
       onCancel={handleCancel}
       onOk={() => form.submit()}
-      okText={t('tenant_requests.form.submit')}
-      cancelText={t('tenant_requests.form.cancel')}
+      okText={t("tenant_requests.form.submit") || "Submit Request"}
+      cancelText={t("tenant_requests.form.cancel") || "Cancel"}
       confirmLoading={loading}
       width="90%"
       style={{ maxWidth: 700 }}
-      styles={{ body: { maxHeight: '75vh', overflowY: 'auto', paddingTop: 16, paddingBottom: 16 } }}
-      destroyOnClose
-    >
+      styles={{
+        body: {
+          maxHeight: "75vh",
+          overflowY: "auto",
+          paddingTop: 16,
+          paddingBottom: 16,
+        },
+      }}
+      destroyOnClose>
       <div className="py-2">
-        <p className="mb-4 text-sm" style={{ color: 'var(--text-muted)' }}>
-          Fill in your restaurant information and our team will contact you to set up your account.
+        <p className="mb-4 text-sm" style={{ color: "var(--text-muted)" }}>
+          {t("tenant_requests.form.description")}
         </p>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{ requestedPlan: 'basic' }}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item
-                label={t('tenant_requests.form.business_name')}
-                name="businessName"
+                label={t("tenant_requests.form.restaurant_name")}
+                name="name"
                 rules={[
-                  { required: true, message: t('tenant_requests.form.business_name_required') },
-                  { min: 3, message: t('tenant_requests.form.business_name_required') },
-                ]}
-              >
+                  { required: true, message: t("tenant_requests.form.restaurant_name_required") },
+                  {
+                    min: 3,
+                    message: t("tenant_requests.form.restaurant_name_min"),
+                  },
+                ]}>
                 <Input
-                  prefix={<ShopOutlined style={{ color: 'var(--text-muted)' }} />}
-                  placeholder={t('tenant_requests.form.business_name_placeholder')}
+                  prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />}
+                  placeholder={t("tenant_requests.form.restaurant_name_placeholder")}
                 />
               </Form.Item>
             </Col>
 
             <Col xs={24} md={12}>
               <Form.Item
-                label={t('tenant_requests.form.contact_person')}
-                name="contactPersonName"
+                label={t("tenant_requests.form.hostname")}
+                name="hostname"
                 rules={[
-                  { required: true, message: t('tenant_requests.form.contact_person_required') },
-                  { min: 2, message: t('tenant_requests.form.contact_person_required') },
+                  { required: true, message: t("tenant_requests.form.hostname_required") },
+                  { validator: validateSlug },
                 ]}
+                tooltip={t("tenant_requests.form.hostname_tooltip")}
               >
                 <Input
-                  prefix={<UserOutlined style={{ color: 'var(--text-muted)' }} />}
-                  placeholder={t('tenant_requests.form.contact_person_placeholder')}
+                  prefix={<GlobalOutlined style={{ color: "var(--text-muted)" }} />}
+                  placeholder={t("tenant_requests.form.hostname_placeholder")}
                 />
               </Form.Item>
             </Col>
           </Row>
 
+          <Form.Item label={t("tenant_requests.form.business_name")} name="businessName">
+            <Input
+              prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />}
+              placeholder={t("tenant_requests.form.business_name_placeholder")}
+            />
+          </Form.Item>
+
           <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item
-                label={t('tenant_requests.form.business_email')}
-                name="businessEmail"
+                label={t("tenant_requests.form.business_email")}
+                name="businessEmailAddress"
                 rules={[
-                  { required: true, message: t('tenant_requests.form.business_email_required') },
-                  { type: 'email', message: t('tenant_requests.form.business_email_invalid') },
-                ]}
-              >
+                  { type: "email", message: t("tenant_requests.form.business_email_invalid") },
+                ]}>
                 <Input
-                  prefix={<MailOutlined style={{ color: 'var(--text-muted)' }} />}
-                  placeholder={t('tenant_requests.form.business_email_placeholder')}
+                  prefix={<MailOutlined style={{ color: "var(--text-muted)" }} />}
+                  placeholder={t("tenant_requests.form.business_email_placeholder")}
                   type="email"
                 />
               </Form.Item>
             </Col>
 
             <Col xs={24} md={12}>
-              <Form.Item
-                label={t('tenant_requests.form.phone_number')}
-                name="businessPhone"
-                rules={[
-                  { required: true, message: t('tenant_requests.form.phone_number_required') },
-                  { 
-                    pattern: /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
-                    message: t('tenant_requests.form.phone_number_required') 
-                  },
-                ]}
-              >
+              <Form.Item label={t("tenant_requests.form.phone_number")} name="businessPrimaryPhone">
                 <Input
-                  prefix={<PhoneOutlined style={{ color: 'var(--text-muted)' }} />}
-                  placeholder={t('tenant_requests.form.phone_number_placeholder')}
+                  prefix={<PhoneOutlined style={{ color: "var(--text-muted)" }} />}
+                  placeholder={t("tenant_requests.form.phone_number_placeholder")}
                 />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item
-            label={t('tenant_requests.form.business_address')}
-            name="businessAddress"
-            rules={[
-              { required: true, message: t('tenant_requests.form.business_address_required') },
-              { min: 10, message: t('tenant_requests.form.business_address_required') },
-            ]}
-          >
+          <Form.Item label={t("tenant_requests.form.address_line_1")} name="businessAddressLine1">
             <Input
-              prefix={<EnvironmentOutlined style={{ color: 'var(--text-muted)' }} />}
-              placeholder={t('tenant_requests.form.business_address_placeholder')}
+              prefix={<EnvironmentOutlined style={{ color: "var(--text-muted)" }} />}
+              placeholder={t("tenant_requests.form.address_line_1_placeholder")}
             />
           </Form.Item>
 
-          <Form.Item
-            label={t('tenant_requests.form.select_plan')}
-            name="requestedPlan"
-            rules={[{ required: true, message: t('tenant_requests.form.select_plan_required') }]}
-          >
-            <Select placeholder={t('tenant_requests.form.select_plan_placeholder')}>
-              <Select.Option value="basic">
-                <div className="py-1">
-                  <div className="font-medium">{t('tenant_requests.form.plan_basic')}</div>
-                  <div className="text-xs text-gray-500">{t('tenant_requests.form.plan_basic_desc')}</div>
-                </div>
-              </Select.Option>
-              <Select.Option value="pro">
-                <div className="py-1">
-                  <div className="font-medium">{t('tenant_requests.form.plan_professional')}</div>
-                  <div className="text-xs text-gray-500">{t('tenant_requests.form.plan_professional_desc')}</div>
-                </div>
-              </Select.Option>
-              <Select.Option value="enterprise">
-                <div className="py-1">
-                  <div className="font-medium">{t('tenant_requests.form.plan_enterprise')}</div>
-                  <div className="text-xs text-gray-500">{t('tenant_requests.form.plan_enterprise_desc')}</div>
-                </div>
-              </Select.Option>
-            </Select>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col xs={24} md={8}>
+              <Form.Item label={t("tenant_requests.form.address_line_2")} name="businessAddressLine2">
+                <Input placeholder={t("tenant_requests.form.address_line_2_placeholder")}/>
+              </Form.Item>
+            </Col>
 
-          <Form.Item
-            label={t('tenant_requests.form.additional_notes')}
-            name="notes"
-          >
-            <TextArea
-              rows={3}
-              placeholder={t('tenant_requests.form.additional_notes_placeholder')}
-              maxLength={500}
-              showCount
-            />
-          </Form.Item>
+            <Col xs={24} md={8}>
+              <Form.Item label={t("tenant_requests.form.address_line_3")} name="businessAddressLine3">
+                <Input placeholder={t("tenant_requests.form.address_line_3_placeholder")}/>
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={8}>
+              <Form.Item label={t("tenant_requests.form.country")} name="businessCountry">
+                <Input placeholder={t("tenant_requests.form.country_placeholder")}/>
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </div>
     </Modal>
