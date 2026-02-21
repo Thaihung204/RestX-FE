@@ -1,4 +1,10 @@
-import { ITenant, TenantApiResponse, TenantCreateInput } from "../types/tenant";
+import {
+  ITenant,
+  ITenantRequest,
+  TenantApiResponse,
+  TenantCreateInput,
+  TenantRequestInput,
+} from "../types/tenant";
 import adminAxiosInstance from "./adminAxiosInstance";
 
 export interface TenantConfig {
@@ -161,56 +167,59 @@ export const tenantService = {
       const data = response.data;
 
       if (data) {
-        console.log('[getTenantConfig] Raw API response keys:', Object.keys(data));
-        console.log('[getTenantConfig] id:', data.id, '| Id:', data.Id);
+        console.log(
+          "[getTenantConfig] Raw API response keys:",
+          Object.keys(data),
+        );
+        console.log("[getTenantConfig] id:", data.id, "| Id:", data.Id);
 
         // Comprehensive PascalCase -> camelCase normalization
         // Backend (C#) returns PascalCase by default, frontend uses camelCase
         const pascalToCamelMap: Record<string, string> = {
-          Id: 'id',
-          Name: 'name',
-          Prefix: 'prefix',
-          Hostname: 'hostname',
-          HostName: 'hostname',
-          Status: 'status',
-          BusinessName: 'businessName',
-          LogoUrl: 'logoUrl',
-          FaviconUrl: 'faviconUrl',
-          BackgroundUrl: 'backgroundUrl',
-          BaseColor: 'baseColor',
-          PrimaryColor: 'primaryColor',
-          SecondaryColor: 'secondaryColor',
-          HeaderColor: 'headerColor',
-          FooterColor: 'footerColor',
-          LightBaseColor: 'lightBaseColor',
-          LightSurfaceColor: 'lightSurfaceColor',
-          LightCardColor: 'lightCardColor',
-          DarkBaseColor: 'darkBaseColor',
-          DarkSurfaceColor: 'darkSurfaceColor',
-          DarkCardColor: 'darkCardColor',
-          NetworkIp: 'networkIp',
-          ConnectionString: 'connectionString',
-          ExpiredAt: 'expiredAt',
-          AboutUs: 'aboutUs',
-          AboutUsType: 'aboutUsType',
-          Overview: 'overview',
-          BusinessAddressLine1: 'businessAddressLine1',
-          BusinessAddressLine2: 'businessAddressLine2',
-          BusinessAddressLine3: 'businessAddressLine3',
-          BusinessAddressLine4: 'businessAddressLine4',
-          BusinessCounty: 'businessCounty',
-          BusinessPostCode: 'businessPostCode',
-          BusinessCountry: 'businessCountry',
-          BusinessPrimaryPhone: 'businessPrimaryPhone',
-          BusinessSecondaryPhone: 'businessSecondaryPhone',
-          BusinessEmailAddress: 'businessEmailAddress',
-          BusinessCompanyNumber: 'businessCompanyNumber',
-          BusinessOpeningHours: 'businessOpeningHours',
-          CreatedDate: 'createdDate',
-          ModifiedDate: 'modifiedDate',
-          CreatedBy: 'createdBy',
-          ModifiedBy: 'modifiedBy',
-          TenantSettings: 'tenantSettings',
+          Id: "id",
+          Name: "name",
+          Prefix: "prefix",
+          Hostname: "hostname",
+          HostName: "hostname",
+          Status: "status",
+          BusinessName: "businessName",
+          LogoUrl: "logoUrl",
+          FaviconUrl: "faviconUrl",
+          BackgroundUrl: "backgroundUrl",
+          BaseColor: "baseColor",
+          PrimaryColor: "primaryColor",
+          SecondaryColor: "secondaryColor",
+          HeaderColor: "headerColor",
+          FooterColor: "footerColor",
+          LightBaseColor: "lightBaseColor",
+          LightSurfaceColor: "lightSurfaceColor",
+          LightCardColor: "lightCardColor",
+          DarkBaseColor: "darkBaseColor",
+          DarkSurfaceColor: "darkSurfaceColor",
+          DarkCardColor: "darkCardColor",
+          NetworkIp: "networkIp",
+          ConnectionString: "connectionString",
+          ExpiredAt: "expiredAt",
+          AboutUs: "aboutUs",
+          AboutUsType: "aboutUsType",
+          Overview: "overview",
+          BusinessAddressLine1: "businessAddressLine1",
+          BusinessAddressLine2: "businessAddressLine2",
+          BusinessAddressLine3: "businessAddressLine3",
+          BusinessAddressLine4: "businessAddressLine4",
+          BusinessCounty: "businessCounty",
+          BusinessPostCode: "businessPostCode",
+          BusinessCountry: "businessCountry",
+          BusinessPrimaryPhone: "businessPrimaryPhone",
+          BusinessSecondaryPhone: "businessSecondaryPhone",
+          BusinessEmailAddress: "businessEmailAddress",
+          BusinessCompanyNumber: "businessCompanyNumber",
+          BusinessOpeningHours: "businessOpeningHours",
+          CreatedDate: "createdDate",
+          ModifiedDate: "modifiedDate",
+          CreatedBy: "createdBy",
+          ModifiedBy: "modifiedBy",
+          TenantSettings: "tenantSettings",
         };
 
         for (const [pascalKey, camelKey] of Object.entries(pascalToCamelMap)) {
@@ -219,27 +228,38 @@ export const tenantService = {
           }
         }
 
-        console.log('[getTenantConfig] Normalized id:', data.id);
+        console.log("[getTenantConfig] Normalized id:", data.id);
 
         // Backend's TenantOverview DTO does NOT include Id field.
         // If id is still missing, resolve it by fetching the full tenant list
         // (GET /api/tenants returns full Tenant entities which include Id)
         if (!data.id && data.hostname) {
           try {
-            console.log('[getTenantConfig] ID missing from response, resolving via tenant list...');
-            const listResponse = await adminAxiosInstance.get('/tenants');
+            console.log(
+              "[getTenantConfig] ID missing from response, resolving via tenant list...",
+            );
+            const listResponse = await adminAxiosInstance.get("/tenants");
             const allTenants = listResponse.data;
-            const match = allTenants.find((t: any) =>
-              (t.hostname || t.Hostname) === data.hostname
+            const match = allTenants.find(
+              (t: any) => (t.hostname || t.Hostname) === data.hostname,
             );
             if (match) {
               data.id = match.id || match.Id;
-              console.log('[getTenantConfig] Resolved ID from tenant list:', data.id);
+              console.log(
+                "[getTenantConfig] Resolved ID from tenant list:",
+                data.id,
+              );
             } else {
-              console.warn('[getTenantConfig] Could not find matching tenant for hostname:', data.hostname);
+              console.warn(
+                "[getTenantConfig] Could not find matching tenant for hostname:",
+                data.hostname,
+              );
             }
           } catch (listError) {
-            console.error('[getTenantConfig] Failed to resolve tenant ID:', listError);
+            console.error(
+              "[getTenantConfig] Failed to resolve tenant ID:",
+              listError,
+            );
           }
         }
       }
@@ -388,6 +408,202 @@ export const tenantService = {
    * Backend endpoint: DELETE /api/tenants/{id}
    */
   deleteTenant: async (id: string): Promise<void> => {
+    await adminAxiosInstance.delete(`/tenants/${id}`);
+  },
+
+  // ============ TENANT REQUESTS API ============
+
+  /**
+   * Get all tenant requests
+   * Backend endpoint: GET /api/tenants/requests
+   */
+  getAllTenantRequests: async (): Promise<ITenantRequest[]> => {
+    const response = await adminAxiosInstance.get<any[]>("/tenants/requests");
+
+    // Normalize PascalCase to camelCase (backend returns PascalCase)
+    const normalizedData = response.data.map((item: any, index: number) => {
+      const normalized: any = {};
+
+      // Map PascalCase to camelCase
+      const fieldMap: Record<string, string> = {
+        Id: "id",
+        Name: "name",
+        Hostname: "hostname",
+        BusinessName: "businessName",
+        BusinessPrimaryPhone: "businessPrimaryPhone",
+        BusinessEmailAddress: "businessEmailAddress",
+        BusinessAddressLine1: "businessAddressLine1",
+        BusinessAddressLine2: "businessAddressLine2",
+        BusinessAddressLine3: "businessAddressLine3",
+        BusinessAddressLine4: "businessAddressLine4",
+        BusinessCountry: "businessCountry",
+        TenantRequestStatus: "tenantRequestStatus",
+        tenantRequestStatus: "tenantRequestStatus",
+      };
+
+      // Copy all fields, normalizing case
+      for (const [pascalKey, camelKey] of Object.entries(fieldMap)) {
+        if (item[pascalKey] !== undefined) {
+          normalized[camelKey] = item[pascalKey];
+        }
+      }
+
+      // Also copy lowercase fields if they exist
+      if (item.id !== undefined) normalized.id = item.id;
+      if (item.name !== undefined) normalized.name = item.name;
+      if (item.hostname !== undefined) normalized.hostname = item.hostname;
+      if (item.businessName !== undefined)
+        normalized.businessName = item.businessName;
+      if (item.businessPrimaryPhone !== undefined)
+        normalized.businessPrimaryPhone = item.businessPrimaryPhone;
+      if (item.businessEmailAddress !== undefined)
+        normalized.businessEmailAddress = item.businessEmailAddress;
+      if (item.businessAddressLine1 !== undefined)
+        normalized.businessAddressLine1 = item.businessAddressLine1;
+      if (item.businessAddressLine2 !== undefined)
+        normalized.businessAddressLine2 = item.businessAddressLine2;
+      if (item.businessAddressLine3 !== undefined)
+        normalized.businessAddressLine3 = item.businessAddressLine3;
+      if (item.businessAddressLine4 !== undefined)
+        normalized.businessAddressLine4 = item.businessAddressLine4;
+      if (item.businessCountry !== undefined)
+        normalized.businessCountry = item.businessCountry;
+      if (item.tenantRequestStatus !== undefined)
+        normalized.tenantRequestStatus = item.tenantRequestStatus;
+
+      return normalized as ITenantRequest;
+    });
+
+    return normalizedData;
+  },
+
+  /**
+   * Get tenant request by ID
+   * Backend endpoint: GET /api/tenants/requests/{id}
+   */
+  getTenantRequestById: async (id: string): Promise<ITenantRequest> => {
+    const response = await adminAxiosInstance.get<ITenantRequest>(
+      `/tenants/requests/${id}`,
+    );
+    return response.data;
+  },
+
+  /**
+   * Add new tenant request (public - no auth required)
+   * Backend endpoint: POST /api/tenants/requests
+   */
+  addTenantRequest: async (request: TenantRequestInput): Promise<string> => {
+    const response = await adminAxiosInstance.post<string>(
+      "/tenants/requests",
+      request,
+    );
+
+    return response.data; // Returns the created tenant request ID (Guid)
+  },
+
+  /**
+   * Accept tenant request
+   * Backend endpoint: POST /api/tenants/requests/{id}/accept
+   */
+  acceptTenantRequest: async (id: string): Promise<string> => {
+    const response = await adminAxiosInstance.post<string>(
+      `/tenants/requests/${id}/accept`,
+    );
+    return response.data; // Returns the created tenant ID (Guid)
+  },
+
+  /**
+   * Decline tenant request
+   * Backend endpoint: POST /api/tenants/requests/{id}/decline
+   */
+  declineTenantRequest: async (id: string): Promise<string> => {
+    const response = await adminAxiosInstance.post<string>(
+      `/tenants/requests/${id}/decline`,
+    );
+    return response.data; // Returns the tenant request ID (Guid)
+  },
+
+  /**
+   * Delete tenant request
+   * Backend endpoint: DELETE /api/tenants/requests/{id}
+   */
+  deleteTenantRequest: async (id: string): Promise<void> => {
+    await adminAxiosInstance.delete(`/tenants/requests/${id}`);
+  },
+
+  // ============ LEGACY METHODS (deprecated, use above instead) ============
+
+  // ============ LEGACY METHODS (deprecated, use above instead) ============
+
+  /**
+   * @deprecated Use addTenantRequest() instead
+   * Submit tenant request (public - no auth required)
+   * Creates tenant with status = false (pending approval)
+   * Backend endpoint: POST /api/tenants
+   */
+  submitTenantRequest: async (
+    input: TenantCreateInput,
+  ): Promise<TenantApiResponse> => {
+    const apiData = mapCreateInputToApi(input);
+
+    // Force status to false (pending)
+    const requestData = {
+      ...apiData,
+      status: false,
+    };
+
+    const formData = toFormData(requestData);
+    const response = await adminAxiosInstance.post("/tenants", formData, {
+      headers: { "Content-Type": undefined },
+    });
+    return response.data;
+  },
+
+  /**
+   * @deprecated Use getAllTenantRequests() instead
+   * Get all pending tenant requests (status = false)
+   * Backend endpoint: GET /api/tenants
+   * Filters for tenants with status = false
+   */
+  getPendingTenantRequests: async (): Promise<ITenant[]> => {
+    const response =
+      await adminAxiosInstance.get<TenantApiResponse[]>("/tenants");
+    const allTenants = response.data.map(mapApiResponseToTenant);
+
+    // Filter only pending requests (inactive status)
+    return allTenants.filter((tenant) => tenant.status === "inactive");
+  },
+
+  /**
+   * @deprecated Use acceptTenantRequest() instead
+   * Approve tenant request (set status = true)
+   * Backend endpoint: PUT /api/tenants/{id}
+   */
+  approveTenantRequest: async (id: string): Promise<TenantApiResponse> => {
+    // Get current tenant data
+    const tenant = await adminAxiosInstance.get<TenantApiResponse>(
+      `/tenants/${id}`,
+    );
+
+    // Update with status = true
+    const approvedData = {
+      ...tenant.data,
+      status: true,
+    };
+
+    const formData = toFormData(approvedData);
+    const response = await adminAxiosInstance.put(`/tenants/${id}`, formData, {
+      headers: { "Content-Type": undefined },
+    });
+    return response.data;
+  },
+
+  /**
+   * @deprecated Use declineTenantRequest() or deleteTenantRequest() instead
+   * Reject tenant request (delete the tenant)
+   * Backend endpoint: DELETE /api/tenants/{id}
+   */
+  rejectTenantRequest: async (id: string): Promise<void> => {
     await adminAxiosInstance.delete(`/tenants/${id}`);
   },
 };

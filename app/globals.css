@@ -576,7 +576,17 @@ img {
 .admin-tenants-table .ant-table-tbody > tr {
   background: var(--card) !important;
 }
+/* =========================================================
+ * Hide Required Asterisk (*) in All Forms
+ * ========================================================= */
+.ant-form-item-required::before {
+  display: none !important;
+}
 
+/* Also hide in label if Ant Design uses different selector */
+.ant-form-item-label > label.ant-form-item-required::before {
+  display: none !important;
+}
 .admin-tenants-table .ant-table-tbody > tr:hover > td {
   background: var(--surface-subtle) !important;
 }

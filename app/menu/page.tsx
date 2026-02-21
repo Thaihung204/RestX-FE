@@ -254,7 +254,9 @@ export default function MenuPage() {
           token: {
             colorPrimary: "var(--primary)",
           },
-        }}>
+        }}
+        form={{ requiredMark: false }}
+      >
         <div
           style={{
             minHeight: "100vh",
@@ -286,7 +288,9 @@ export default function MenuPage() {
           token: {
             colorPrimary: "var(--primary)",
           },
-        }}>
+        }}
+        form={{ requiredMark: false }}
+      >
         <div
           style={{
             minHeight: "100vh",
@@ -348,7 +352,9 @@ export default function MenuPage() {
               activeBorderColor: "var(--primary)",
             },
           },
-        }}>
+        }}
+        form={{ requiredMark: false }}
+      >
         <div
           style={{
             minHeight: "100vh",

@@ -29,11 +29,10 @@ import {
   Modal,
   Radio,
   Select,
-  Spin,
   Statistic,
   Table,
   Tabs,
-  Typography,
+  Typography
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
@@ -41,6 +40,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TenantPlanTag from "../../../components/(admin)/tenants/TenantPlanTag";
+import TenantRequestList from "../../../components/(admin)/tenants/TenantRequestList";
 import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
 import { tenantService } from "../../../lib/services/tenantService";
 import { ITenant } from "../../../lib/types/tenant";
@@ -662,7 +662,7 @@ const TenantPage: React.FC = () => {
             </Card>
           </div>
 
-          {/* Tabs: Tenant list & System revenue */}
+          {/* Tabs: Tenant list, Tenant Requests & System revenue */}
           <Tabs
             defaultActiveKey="tenants"
             items={[
@@ -680,14 +680,13 @@ const TenantPage: React.FC = () => {
                     }}>
                     {/* Filter Bar */}
                     <div
-                      className="p-5 flex flex-col md:flex-row gap-4 justify-between"
+                      className="p-3 md:p-4 flex flex-col sm:flex-row gap-2 md:gap-3 justify-between items-stretch sm:items-center"
                       style={{
                         borderBottom: "1px solid var(--border)",
                         background: "var(--card)",
                       }}>
-                      <div className="flex flex-1 gap-3 max-w-2xl">
+                      <div className="flex flex-col sm:flex-row flex-1 gap-2 max-w-2xl">
                         <Input
-                          size="large"
                           allowClear
                           placeholder={t("tenants.filter.search_placeholder")}
                           prefix={
@@ -697,30 +696,36 @@ const TenantPage: React.FC = () => {
                           }
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
+                          className="w-full sm:flex-1"
                         />
+                        <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          Total: {tenants.length} | Filtered: {filteredData.length}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
                         <Select
-                          size="large"
-                          className="w-48"
+                          className="w-40"
                           value={status}
                           onChange={setStatus}
                           options={STATUS_OPTIONS_TRANSLATED}
                         />
+                        <Button
+                          icon={<ReloadOutlined />}
+                          onClick={handleRefresh}
+                          loading={loading}>
+                          {t("tenants.filter.refresh")}
+                        </Button>
                       </div>
-                      <Button
-                        icon={<ReloadOutlined />}
-                        onClick={handleRefresh}
-                        size="large"
-                        type="text">
-                        {t("tenants.filter.refresh")}
-                      </Button>
                     </div>
 
                     {/* Table */}
-                    <Spin spinning={loading}>
+                    <div className="w-full overflow-auto">
                       <Table
                         rowKey="id"
                         columns={columns}
                         dataSource={filteredData}
+                        size="small"
+                        loading={loading}
                         className="admin-tenants-table"
                         style={
                           {
@@ -730,18 +735,27 @@ const TenantPage: React.FC = () => {
                           } as React.CSSProperties
                         }
                         pagination={{
-                          pageSize: 8,
+                          pageSize: 10,
+                          showSizeChanger: true,
                           showTotal: (total) => (
                             <span style={{ color: "var(--text-muted)" }}>
                               {t("tenants.table.total", { count: total })}
                             </span>
                           ),
-                          className: "px-5 pb-4",
+                          className: "px-3 md:px-4 pb-3",
+                          responsive: true,
+                          showLessItems: true,
                         }}
+                        scroll={{ x: "max-content", y: "calc(100vh - 400px)" }}
                       />
-                    </Spin>
+                    </div>
                   </Card>
                 ),
+              },
+              {
+                key: "requests",
+                label: t("tenants.tabs.tenant_requests"),
+                children: <TenantRequestList />,
               },
               {
                 key: "revenue",
