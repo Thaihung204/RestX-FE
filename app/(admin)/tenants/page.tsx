@@ -5,6 +5,8 @@ import RevenueChart from "@/components/admin/charts/RevenueChart";
 import { useLanguage } from "@/components/I18nProvider";
 import {
   CheckCircleOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
   MailOutlined,
   MoreOutlined,
   PhoneOutlined,
@@ -124,6 +126,7 @@ const TenantPage: React.FC = () => {
     tenant: null,
     confirmText: "",
   });
+  const [deleting, setDeleting] = useState(false);
 
   // Fetch tenants from API
   useEffect(() => {
@@ -199,10 +202,11 @@ const TenantPage: React.FC = () => {
     if (!deleteModal.tenant) return;
 
     if (deleteModal.confirmText !== deleteModal.tenant.name) {
-      message.error(t("tenants.actions.delete_name_mismatch"));
+      message.error(t("tenants.edit.delete_modal.name_mismatch"));
       return;
     }
 
+    setDeleting(true);
     try {
       await tenantService.deleteTenant(deleteModal.tenant.id);
       message.success(t("tenants.toasts.delete_success_message"));
@@ -214,6 +218,8 @@ const TenantPage: React.FC = () => {
         error?.response?.data?.message ||
         t("tenants.toasts.delete_error_message");
       message.error(errorMsg);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -323,33 +329,6 @@ const TenantPage: React.FC = () => {
       key: "status",
       width: 140,
       render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
-    },
-    {
-      title: t("tenants.table.owner"),
-      dataIndex: "ownerEmail",
-      key: "ownerEmail",
-      width: 200,
-      render: (email) => (
-        <span
-          className="text-[11px] truncate max-w-[180px] block"
-          style={{ color: "var(--text-muted)" }}
-          title={email}>
-          {email}
-        </span>
-      ),
-    },
-    {
-      title: t("tenants.table.last_active"),
-      dataIndex: "lastActive",
-      key: "lastActive",
-      width: 120,
-      render: (value: string) => (
-        <span
-          className="text-[11px] font-variant-numeric tabular-nums whitespace-nowrap"
-          style={{ color: "var(--text-muted)" }}>
-          {formatDate(value)}
-        </span>
-      ),
     },
     {
       title: "",
@@ -603,7 +582,7 @@ const TenantPage: React.FC = () => {
               </div>
 
               <ThemeToggle />
-              <Link href="/tenants/create">
+              <Link href="/tenants/new">
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
@@ -839,49 +818,98 @@ const TenantPage: React.FC = () => {
       <Modal
         open={deleteModal.visible}
         title={
-          <span style={{ color: "var(--text)" }}>
-            {t("tenants.actions.delete_confirm_title")}
-          </span>
+          <div className="flex items-center gap-3">
+            <ExclamationCircleOutlined className="text-red-500 text-2xl" />
+            <span className="text-lg font-semibold">
+              {t("tenants.edit.delete_modal.title")}
+            </span>
+          </div>
         }
         onCancel={() =>
           setDeleteModal({ visible: false, tenant: null, confirmText: "" })
         }
-        onOk={handleDeleteConfirm}
-        okText={t("tenants.actions.delete_confirm_ok")}
-        okType="danger"
-        cancelText={t("tenants.actions.delete_confirm_cancel")}
-        okButtonProps={{
-          disabled: deleteModal.confirmText !== deleteModal.tenant?.name,
-        }}>
-        <div className="space-y-4 py-2">
-          <p style={{ color: "var(--text)", marginBottom: "16px" }}>
-            {t("tenants.actions.delete_warning", {
-              name: deleteModal.tenant?.name,
-            })}
-          </p>
-          <div>
-            <label
-              className="block mb-2 text-sm font-medium"
-              style={{ color: "var(--text-muted)" }}>
-              {t("tenants.actions.delete_type_name", {
-                name: deleteModal.tenant?.name,
-              })}
-            </label>
-            <Input
-              placeholder={deleteModal.tenant?.name}
-              value={deleteModal.confirmText}
-              onChange={(e) =>
-                setDeleteModal({ ...deleteModal, confirmText: e.target.value })
-              }
-              status={
-                deleteModal.confirmText &&
-                deleteModal.confirmText !== deleteModal.tenant?.name
-                  ? "error"
-                  : ""
-              }
-              autoFocus
-            />
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() =>
+              setDeleteModal({ visible: false, tenant: null, confirmText: "" })
+            }
+            size="large">
+            {t("tenants.edit.delete_modal.button_cancel")}
+          </Button>,
+          <Button
+            key="delete"
+            type="primary"
+            danger
+            loading={deleting}
+            disabled={
+              deleteModal.confirmText !== deleteModal.tenant?.name || deleting
+            }
+            onClick={handleDeleteConfirm}
+            size="large"
+            icon={<DeleteOutlined />}>
+            {t("tenants.edit.delete_modal.button_delete")}
+          </Button>,
+        ]}
+        width={520}>
+        <div className="py-4 space-y-4">
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-4">
+            <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+              {t("tenants.edit.delete_modal.warning_title")}
+            </p>
+            <p className="text-sm text-red-700 dark:text-red-300">
+              {t("tenants.edit.delete_modal.warning_description")}
+            </p>
+            <ul className="text-sm text-red-700 dark:text-red-300 list-disc list-inside mt-2 space-y-1">
+              <li>{t("tenants.edit.delete_modal.warning_items.data")}</li>
+              <li>{t("tenants.edit.delete_modal.warning_items.users")}</li>
+              <li>
+                {t("tenants.edit.delete_modal.warning_items.transactions")}
+              </li>
+              <li>{t("tenants.edit.delete_modal.warning_items.assets")}</li>
+            </ul>
           </div>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+              {t("tenants.edit.delete_modal.confirm_instruction")}
+            </p>
+            <p
+              className="text-base font-semibold px-3 py-2 rounded"
+              style={{
+                backgroundColor: "var(--bg-base)",
+                color: "var(--text)",
+              }}>
+              {deleteModal.tenant?.name}
+            </p>
+          </div>
+
+          <Input
+            placeholder={t("tenants.edit.delete_modal.input_placeholder")}
+            value={deleteModal.confirmText}
+            onChange={(e) =>
+              setDeleteModal({ ...deleteModal, confirmText: e.target.value })
+            }
+            size="large"
+            autoFocus
+            onPressEnter={() => {
+              if (deleteModal.confirmText === deleteModal.tenant?.name) {
+                handleDeleteConfirm();
+              }
+            }}
+          />
+
+          {deleteModal.confirmText &&
+            deleteModal.confirmText !== deleteModal.tenant?.name && (
+              <p className="text-sm text-red-500 mt-1">
+                {t("tenants.edit.delete_modal.name_mismatch")}
+              </p>
+            )}
+          {deleteModal.confirmText === deleteModal.tenant?.name && (
+            <p className="text-sm text-green-500 mt-1">
+              {t("tenants.edit.delete_modal.name_match")}
+            </p>
+          )}
         </div>
       </Modal>{" "}
     </div>
