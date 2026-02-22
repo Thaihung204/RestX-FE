@@ -34,7 +34,7 @@ export default function IngredientList() {
       const data = await ingredientService.getAll();
       setIngredients(data);
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Không tải được danh sách nguyên liệu");
+      setError(err?.response?.data?.message || t("dashboard.ingredients.list.load_error", "Không tải được danh sách nguyên liệu"));
     } finally {
       setLoading(false);
     }
@@ -56,9 +56,9 @@ export default function IngredientList() {
   });
 
   const TABS = [
-    { id: "all",      label: "Tất cả" },
-    { id: "active",   label: "Đang dùng" },
-    { id: "inactive", label: "Ngừng dùng" },
+    { id: "all",      label: t("dashboard.ingredients.tab_all", "Tất cả") },
+    { id: "active",   label: t("dashboard.ingredients.tab_active", "Đang dùng") },
+    { id: "inactive", label: t("dashboard.ingredients.tab_inactive", "Ngừng dùng") },
   ];
 
   const activeTabStyle: React.CSSProperties  = { background: "#FF380B", color: "white" };
@@ -77,7 +77,7 @@ export default function IngredientList() {
       <div className="rounded-xl p-6 text-center" style={{ background: "var(--card)", border: "1px solid rgba(239,68,68,0.3)" }}>
         <p className="text-sm mb-3" style={{ color: "#dc2626" }}>{error}</p>
         <button onClick={fetchIngredients} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "#FF380B" }}>
-          Thử lại
+          {t("dashboard.ingredients.retry", "Thử lại")}
         </button>
       </div>
     );
@@ -88,11 +88,10 @@ export default function IngredientList() {
 
       <div className="rounded-xl p-4 sm:p-5" style={{ background: "var(--bg-surface)" }}>
         <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search */}
           <div className="flex-1">
             <input
               type="text"
-              placeholder="Tìm tên, mã hoặc nhà cung cấp..."
+              placeholder={t("dashboard.ingredients.list.search_placeholder", "Tìm tên, mã hoặc nhà cung cấp...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border outline-none transition-all text-sm"
@@ -107,7 +106,7 @@ export default function IngredientList() {
               className="px-3 py-2 rounded-lg border outline-none text-sm"
               style={{ background: "var(--bg-base)", color: "var(--text)", borderColor: "var(--border)" }}
             >
-              <option value="all">Tất cả loại</option>
+              <option value="all">{t("dashboard.ingredients.list.filter_all_types", "Tất cả loại")}</option>
               {types.map((tp) => <option key={tp} value={tp}>{tp}</option>)}
             </select>
           )}
@@ -125,7 +124,7 @@ export default function IngredientList() {
             </button>
           ))}
           <span className="ml-auto text-sm" style={{ color: "var(--text-secondary)" }}>
-            {filtered.length} kết quả
+            {t("dashboard.ingredients.list.results_count", "{{count}} kết quả", { count: filtered.length })}
           </span>
         </div>
       </div>
@@ -136,25 +135,25 @@ export default function IngredientList() {
             <thead>
               <tr style={{ background: "var(--bg-base)", borderBottom: "2px solid var(--border)" }}>
                 <th className="text-left px-4 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", minWidth: 160 }}>
-                  Tên nguyên liệu
+                  {t("dashboard.ingredients.list.col_name", "Tên nguyên liệu")}
                 </th>
                 <th className="text-left px-3 py-3 font-semibold whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text)", width: 90 }}>
-                  Mã
+                  {t("dashboard.ingredients.list.col_code", "Mã")}
                 </th>
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 70 }}>
-                  Đơn vị
+                  {t("dashboard.ingredients.list.col_unit", "Đơn vị")}
                 </th>
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden xl:table-cell" style={{ color: "var(--text)", width: 120 }}>
-                  Min / Max
+                  {t("dashboard.ingredients.list.col_min_max", "Min / Max")}
                 </th>
                 <th className="text-left px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", minWidth: 120 }}>
-                  Nhà cung cấp
+                  {t("dashboard.ingredients.list.col_supplier", "Nhà cung cấp")}
                 </th>
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text)", width: 90 }}>
-                  Loại
+                  {t("dashboard.ingredients.list.col_type", "Loại")}
                 </th>
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 110 }}>
-                  Trạng thái
+                  {t("dashboard.ingredients.list.col_status", "Trạng thái")}
                 </th>
                 <th className="text-center px-3 py-3 font-semibold" style={{ color: "var(--text)", width: 60 }}>
                   &nbsp;
@@ -217,7 +216,9 @@ export default function IngredientList() {
                         className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
                         style={STATUS_BADGE[status]}
                       >
-                        {item.isActive ? "Đang dùng" : "Ngừng dùng"}
+                        {item.isActive
+                          ? t("dashboard.ingredients.list.badge_active", "Đang dùng")
+                          : t("dashboard.ingredients.list.badge_inactive", "Ngừng dùng")}
                       </span>
                     </td>
 
@@ -228,7 +229,7 @@ export default function IngredientList() {
                         style={{ background: "rgba(255,56,11,0.1)", color: "#FF380B" }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,56,11,0.2)")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,56,11,0.1)")}
-                        title="Chỉnh sửa"
+                        title={t("dashboard.ingredients.list.edit_tooltip", "Chỉnh sửa")}
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -260,26 +261,28 @@ export default function IngredientList() {
                     <p className="text-xs font-mono mt-0.5" style={{ color: "var(--text-muted)" }}>{item.code}</p>
                   </div>
                   <span className="px-2 py-0.5 rounded-full text-xs font-semibold shrink-0" style={STATUS_BADGE[status]}>
-                    {item.isActive ? "Đang dùng" : "Ngừng"}
+                    {item.isActive
+                      ? t("dashboard.ingredients.list.badge_active", "Đang dùng")
+                      : t("dashboard.ingredients.list.badge_inactive_short", "Ngừng")}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mt-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
                   <div>
-                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>Đơn vị: </span>
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>{t("dashboard.ingredients.list.mobile_unit", "Đơn vị: ")}</span>
                     <span style={{ color: "var(--text)" }}>{item.unit}</span>
                   </div>
                   <div>
-                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>Min/Max: </span>
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>{t("dashboard.ingredients.list.mobile_min_max", "Min/Max: ")}</span>
                     <span style={{ color: "var(--text)" }}>{item.minStockLevel}/{item.maxStockLevel}</span>
                   </div>
                   <div className="col-span-2 mt-1">
-                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>Nhà CC: </span>
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>{t("dashboard.ingredients.list.mobile_supplier", "Nhà CC: ")}</span>
                     <span style={{ color: "var(--text)" }}>{item.supplierName || "—"}</span>
                   </div>
                   {item.type && (
                     <div>
-                      <span className="text-xs" style={{ color: "var(--text-muted)" }}>Loại: </span>
+                      <span className="text-xs" style={{ color: "var(--text-muted)" }}>{t("dashboard.ingredients.list.mobile_type", "Loại: ")}</span>
                       <span style={{ color: "var(--text)" }}>{item.type}</span>
                     </div>
                   )}
@@ -291,7 +294,7 @@ export default function IngredientList() {
 
         {filtered.length === 0 && (
           <div className="text-center py-14">
-            <p style={{ color: "var(--text-secondary)" }}>Không tìm thấy nguyên liệu nào</p>
+            <p style={{ color: "var(--text-secondary)" }}>{t("dashboard.ingredients.list.empty", "Không tìm thấy nguyên liệu nào")}</p>
           </div>
         )}
       </div>

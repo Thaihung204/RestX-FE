@@ -186,7 +186,7 @@ export default function IngredientFormPage() {
                   {t("dashboard.ingredients.no_suppliers", "Chưa có nhà cung cấp nào")}
                 </p>
                 <p className="text-sm mt-0.5" style={{ color: "#ca8a04", opacity: 0.85 }}>
-                  Không thể thêm nguyên liệu. Vui lòng{" "}
+                  {t("dashboard.ingredients.no_supplier_warning", "Không thể thêm nguyên liệu. Vui lòng")}{" "}
                   <button
                     type="button"
                     onClick={() => router.push("/admin/manage?tab=suppliers")}
@@ -194,7 +194,7 @@ export default function IngredientFormPage() {
                   >
                     {t("dashboard.ingredients.create_supplier", "tạo nhà cung cấp")}
                   </button>{" "}
-                  trước.
+                  {t("dashboard.ingredients.no_supplier_warning_after", "trước.")}
                 </p>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function IngredientFormPage() {
                 >
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
                     <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
-                    Thông tin cơ bản
+                    {t("dashboard.ingredients.basic_info", "Thông tin cơ bản")}
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -298,8 +298,8 @@ export default function IngredientFormPage() {
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        Loại / Danh mục
-                        <span className="ml-1 text-xs opacity-50">(tuỳ chọn)</span>
+                        {t("dashboard.ingredients.type", "Loại / Danh mục")}
+                        <span className="ml-1 text-xs opacity-50">{t("dashboard.ingredients.type_optional", "(tuỳ chọn)")}</span>
                       </label>
                       <input
                         type="text" name="type"
@@ -321,13 +321,13 @@ export default function IngredientFormPage() {
                 >
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
                     <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
-                    Mức tồn kho
+                    {t("dashboard.ingredients.stock_levels", "Mức tồn kho")}
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        Mức tối thiểu (Min)
+                        {t("dashboard.ingredients.min_stock", "Mức tối thiểu (Min)")}
                       </label>
                       <input
                         type="number" name="minStockLevel"
@@ -341,7 +341,7 @@ export default function IngredientFormPage() {
                     </div>
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        Mức tối đa (Max)
+                        {t("dashboard.ingredients.max_stock", "Mức tối đa (Max)")}
                       </label>
                       <input
                         type="number" name="maxStockLevel"
@@ -356,8 +356,7 @@ export default function IngredientFormPage() {
                   </div>
 
                   <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                    Đơn vị tính theo <strong>{form.unit || "—"}</strong>.
-                    Tồn kho thực tế quản lý qua module <strong>Inventory Stock</strong>.
+                    {t("dashboard.ingredients.stock_unit_note", "Đơn vị tính theo {{unit}}. Tồn kho thực tế quản lý qua module Inventory Stock.", { unit: form.unit || "—" })}
                   </p>
                 </section>
               </div>
@@ -370,14 +369,14 @@ export default function IngredientFormPage() {
                 >
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
                     <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
-                    Thao tác
+                    {t("dashboard.ingredients.actions_section", "Thao tác")}
                   </h3>
 
                   <div className="space-y-3">
                     <button
                       type="submit"
                       disabled={loading || cannotSave}
-                      title={cannotSave ? "Cần có ít nhất một nhà cung cấp trước khi thêm nguyên liệu" : undefined}
+                      title={cannotSave ? t("dashboard.ingredients.need_supplier_tooltip", "Cần có ít nhất một nhà cung cấp trước khi thêm nguyên liệu") : undefined}
                       className="w-full py-2.5 rounded-lg font-bold text-white transition-all
                         hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       style={{ background: loading || cannotSave ? "#aaa" : "#FF380B" }}
@@ -385,8 +384,10 @@ export default function IngredientFormPage() {
                       onMouseLeave={(e) => { if (!loading && !cannotSave) e.currentTarget.style.background = "#FF380B"; }}
                     >
                       {loading
-                        ? "Đang lưu…"
-                        : isNew ? "Tạo nguyên liệu" : "Cập nhật"}
+                        ? t("dashboard.ingredients.saving", "Đang lưu…")
+                        : isNew
+                          ? t("dashboard.ingredients.create_btn", "Tạo nguyên liệu")
+                          : t("dashboard.ingredients.update_btn", "Cập nhật")}
                     </button>
 
                     <button
@@ -397,7 +398,7 @@ export default function IngredientFormPage() {
                       onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface)")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
-                      Huỷ
+                      {t("dashboard.ingredients.cancel", "Huỷ")}
                     </button>
 
                     {!isNew && !showDeleteConfirm && (
@@ -409,7 +410,7 @@ export default function IngredientFormPage() {
                         onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.2)")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.1)")}
                       >
-                        Xoá nguyên liệu
+                        {t("dashboard.ingredients.delete_btn_label", "Xoá nguyên liệu")}
                       </button>
                     )}
                   </div>
@@ -420,7 +421,7 @@ export default function IngredientFormPage() {
                       style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}
                     >
                       <p className="text-sm font-medium mb-3" style={{ color: "#dc2626" }}>
-                        Xoá &quot;{form.name}&quot;? Không thể hoàn tác.
+                        {t("dashboard.ingredients.delete_btn", "Xoá")} &quot;{form.name}&quot;? {t("dashboard.ingredients.delete_confirm_msg", "Không thể hoàn tác.")}
                       </p>
                       <div className="flex gap-2">
                         <button
@@ -428,14 +429,14 @@ export default function IngredientFormPage() {
                           className="flex-1 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
                           style={{ background: "#dc2626" }}
                         >
-                          Xoá
+                          {t("dashboard.ingredients.delete_btn", "Xoá")}
                         </button>
                         <button
                           type="button" onClick={() => setShowDeleteConfirm(false)}
                           className="flex-1 py-2 rounded-lg text-sm font-medium"
                           style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                         >
-                          Huỷ
+                          {t("dashboard.ingredients.cancel", "Huỷ")}
                         </button>
                       </div>
                     </div>
@@ -448,7 +449,7 @@ export default function IngredientFormPage() {
                 >
                   <h3 className="text-base font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--text)" }}>
                     <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
-                    Trạng thái
+                    {t("dashboard.ingredients.status_section", "Trạng thái")}
                   </h3>
 
                   <div
@@ -457,10 +458,14 @@ export default function IngredientFormPage() {
                   >
                     <div>
                       <p className="font-semibold text-sm" style={{ color: "var(--text)" }}>
-                        {form.isActive ? "Đang sử dụng" : "Ngừng sử dụng"}
+                        {form.isActive
+                          ? t("dashboard.ingredients.status_active", "Đang sử dụng")
+                          : t("dashboard.ingredients.status_inactive", "Ngừng sử dụng")}
                       </p>
                       <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                        {form.isActive ? "Nguyên liệu đang hoạt động" : "Nguyên liệu bị vô hiệu hoá"}
+                        {form.isActive
+                          ? t("dashboard.ingredients.status_desc_active", "Nguyên liệu đang hoạt động")
+                          : t("dashboard.ingredients.status_desc_inactive", "Nguyên liệu bị vô hiệu hoá")}
                       </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
@@ -486,7 +491,7 @@ export default function IngredientFormPage() {
                     style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                   >
                     <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
-                      Thông tin hệ thống
+                      {t("dashboard.ingredients.system_info", "Thông tin hệ thống")}
                     </p>
                     <p className="text-xs break-all" style={{ color: "var(--text-muted)" }}>ID: {id}</p>
                   </section>
