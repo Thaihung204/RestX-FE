@@ -156,7 +156,6 @@ export default function IngredientFormPage() {
       <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
 
-          {/* ── Header ── */}
           <div className="mb-6">
             <button
               onClick={() => router.back()}
@@ -173,7 +172,6 @@ export default function IngredientFormPage() {
             </h2>
           </div>
 
-          {/* ── No-supplier warning (add mode only) ── */}
           {isNew && hasNoSuppliers && (
             <div
               className="mb-6 rounded-xl p-4 flex items-start gap-3"
@@ -203,13 +201,10 @@ export default function IngredientFormPage() {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Responsive: stack on mobile/small desktop, 2-col on lg */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-              {/* ── LEFT: Form fields ── */}
               <div className="lg:col-span-8 space-y-5">
 
-                {/* Basic Info */}
                 <section
                   className="rounded-xl p-5 sm:p-6"
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
@@ -220,7 +215,6 @@ export default function IngredientFormPage() {
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Name — full width */}
                     <div className="sm:col-span-2">
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.name", "Tên nguyên liệu")} <span style={{ color: "#FF380B" }}>*</span>
@@ -234,7 +228,6 @@ export default function IngredientFormPage() {
                       />
                     </div>
 
-                    {/* Code */}
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.code", "Mã")} <span style={{ color: "#FF380B" }}>*</span>{" "}
@@ -250,7 +243,6 @@ export default function IngredientFormPage() {
                       />
                     </div>
 
-                    {/* Unit */}
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.unit", "Đơn vị")} <span style={{ color: "#FF380B" }}>*</span>
@@ -265,7 +257,6 @@ export default function IngredientFormPage() {
                       </select>
                     </div>
 
-                    {/* Supplier — REQUIRED */}
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.supplier", "Nhà cung cấp")} <span style={{ color: "#FF380B" }}>*</span>
@@ -305,7 +296,6 @@ export default function IngredientFormPage() {
                       )}
                     </div>
 
-                    {/* Type */}
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         Loại / Danh mục
@@ -325,7 +315,6 @@ export default function IngredientFormPage() {
                   </div>
                 </section>
 
-                {/* Stock Levels */}
                 <section
                   className="rounded-xl p-5 sm:p-6"
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
@@ -373,10 +362,8 @@ export default function IngredientFormPage() {
                 </section>
               </div>
 
-              {/* ── RIGHT: Sidebar ── */}
               <div className="lg:col-span-4 space-y-5">
 
-                {/* Action buttons */}
                 <section
                   className="rounded-xl p-5 sm:p-6"
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
@@ -387,7 +374,6 @@ export default function IngredientFormPage() {
                   </h3>
 
                   <div className="space-y-3">
-                    {/* Save */}
                     <button
                       type="submit"
                       disabled={loading || cannotSave}
@@ -403,7 +389,6 @@ export default function IngredientFormPage() {
                         : isNew ? "Tạo nguyên liệu" : "Cập nhật"}
                     </button>
 
-                    {/* Cancel */}
                     <button
                       type="button"
                       onClick={() => router.back()}
@@ -415,7 +400,6 @@ export default function IngredientFormPage() {
                       Huỷ
                     </button>
 
-                    {/* Delete */}
                     {!isNew && !showDeleteConfirm && (
                       <button
                         type="button"
@@ -430,7 +414,6 @@ export default function IngredientFormPage() {
                     )}
                   </div>
 
-                  {/* Delete confirm */}
                   {!isNew && showDeleteConfirm && (
                     <div
                       className="mt-4 p-3 rounded-lg"
@@ -459,7 +442,6 @@ export default function IngredientFormPage() {
                   )}
                 </section>
 
-                {/* Status toggle */}
                 <section
                   className="rounded-xl p-5 sm:p-6"
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
@@ -498,7 +480,6 @@ export default function IngredientFormPage() {
                   </div>
                 </section>
 
-                {/* System info (edit only) */}
                 {!isNew && (
                   <section
                     className="rounded-xl p-4"

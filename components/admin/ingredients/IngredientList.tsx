@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-// ── Status ────────────────────────────────────────────────────────────────────
-
 function getStatus(item: IngredientItem): "active" | "inactive" {
   return item.isActive ? "active" : "inactive";
 }
@@ -66,7 +64,6 @@ export default function IngredientList() {
   const activeTabStyle: React.CSSProperties  = { background: "#FF380B", color: "white" };
   const normalTabStyle: React.CSSProperties  = { background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" };
 
-  // ── Loading ───────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -75,7 +72,6 @@ export default function IngredientList() {
     );
   }
 
-  // ── Error ─────────────────────────────────────────────────────────────────────
   if (error) {
     return (
       <div className="rounded-xl p-6 text-center" style={{ background: "var(--card)", border: "1px solid rgba(239,68,68,0.3)" }}>
@@ -90,7 +86,6 @@ export default function IngredientList() {
   return (
     <div className="space-y-4">
 
-      {/* ── Filters ── */}
       <div className="rounded-xl p-4 sm:p-5" style={{ background: "var(--bg-surface)" }}>
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search */}
@@ -105,7 +100,6 @@ export default function IngredientList() {
             />
           </div>
 
-          {/* Type filter */}
           {types.length > 0 && (
             <select
               value={filterType}
@@ -119,7 +113,6 @@ export default function IngredientList() {
           )}
         </div>
 
-        {/* Status tabs + count */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {TABS.map((tab) => (
             <button
@@ -137,41 +130,32 @@ export default function IngredientList() {
         </div>
       </div>
 
-      {/* ── Table (desktop md+) ── */}
       <div className="rounded-xl overflow-hidden" style={{ background: "var(--bg-surface)" }}>
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: "var(--bg-base)", borderBottom: "2px solid var(--border)" }}>
-                {/* Tên – always visible */}
                 <th className="text-left px-4 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", minWidth: 160 }}>
                   Tên nguyên liệu
                 </th>
-                {/* Mã – hidden on md, show lg+ */}
                 <th className="text-left px-3 py-3 font-semibold whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text)", width: 90 }}>
                   Mã
                 </th>
-                {/* Đơn vị */}
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 70 }}>
                   Đơn vị
                 </th>
-                {/* Min/Max – hidden on md, show xl+ */}
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden xl:table-cell" style={{ color: "var(--text)", width: 120 }}>
                   Min / Max
                 </th>
-                {/* Nhà CC */}
                 <th className="text-left px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", minWidth: 120 }}>
                   Nhà cung cấp
                 </th>
-                {/* Loại – hidden on md, show lg+ */}
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text)", width: 90 }}>
                   Loại
                 </th>
-                {/* Trạng thái */}
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 110 }}>
                   Trạng thái
                 </th>
-                {/* Actions */}
                 <th className="text-center px-3 py-3 font-semibold" style={{ color: "var(--text)", width: 60 }}>
                   &nbsp;
                 </th>
@@ -189,12 +173,9 @@ export default function IngredientList() {
                     onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface)")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   >
-                    {/* Name */}
                     <td className="px-4 py-3">
                       <p className="font-semibold truncate max-w-[180px]" style={{ color: "var(--text)" }}>{item.name}</p>
                     </td>
-
-                    {/* Code */}
                     <td className="px-3 py-3 hidden lg:table-cell">
                       <span
                         className="px-1.5 py-0.5 rounded text-xs font-mono"
@@ -204,24 +185,20 @@ export default function IngredientList() {
                       </span>
                     </td>
 
-                    {/* Unit */}
                     <td className="px-3 py-3 text-center" style={{ color: "var(--text)" }}>
                       {item.unit}
                     </td>
 
-                    {/* Min/Max */}
                     <td className="px-3 py-3 text-center text-xs hidden xl:table-cell" style={{ color: "var(--text-secondary)" }}>
                       {item.minStockLevel} / {item.maxStockLevel}
                     </td>
 
-                    {/* Supplier */}
                     <td className="px-3 py-3">
                       <p className="truncate max-w-[150px] text-sm" style={{ color: "var(--text)" }}>
                         {item.supplierName || <span style={{ color: "var(--text-muted)" }}>—</span>}
                       </p>
                     </td>
 
-                    {/* Type */}
                     <td className="px-3 py-3 text-center hidden lg:table-cell">
                       {item.type ? (
                         <span
@@ -235,7 +212,6 @@ export default function IngredientList() {
                       )}
                     </td>
 
-                    {/* Status */}
                     <td className="px-3 py-3 text-center">
                       <span
                         className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
@@ -245,7 +221,6 @@ export default function IngredientList() {
                       </span>
                     </td>
 
-                    {/* Action btn */}
                     <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => router.push(`/admin/ingredients/${item.id}`)}
@@ -268,7 +243,6 @@ export default function IngredientList() {
           </table>
         </div>
 
-        {/* ── Mobile cards (< md) ── */}
         <div className="md:hidden divide-y" style={{ borderColor: "var(--border)" }}>
           {filtered.map((item) => {
             const status = getStatus(item);
@@ -315,7 +289,6 @@ export default function IngredientList() {
           })}
         </div>
 
-        {/* Empty */}
         {filtered.length === 0 && (
           <div className="text-center py-14">
             <p style={{ color: "var(--text-secondary)" }}>Không tìm thấy nguyên liệu nào</p>

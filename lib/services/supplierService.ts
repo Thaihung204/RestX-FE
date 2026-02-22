@@ -30,14 +30,12 @@ const supplierService = {
   },
 
   create: async (payload: Omit<SupplierItem, 'id'> & { id?: any }): Promise<string> => {
-    // Destructure to strip id (empty string "" is invalid Guid in .NET)
     const { id: _id, ...body } = payload as any;
     const res = await axiosInstance.post('/suppliers', body);
     return res.data as string;
   },
 
   update: async (id: string, payload: SupplierItem): Promise<string> => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _id, ...rest } = payload;
     const res = await axiosInstance.put(`/suppliers/${id}`, { ...rest, id });
     return res.data as string;
