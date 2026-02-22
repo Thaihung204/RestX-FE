@@ -1,39 +1,23 @@
 "use client";
 
-import { message, Popconfirm } from "antd";
+import supplierService, { SupplierItem } from "@/lib/services/supplierService";
+import { App, Popconfirm } from "antd";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
-// Helper to generate ID safely
-const generateId = () => {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return (
-    Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15)
-  );
-};
-
-interface Supplier {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
-  isActive: boolean;
-  createdAt?: string; // Changed to string to match JSON persistence
-  updatedAt?: string; // Changed to string to match JSON persistence
-}
+// Re-use the shared type from service; alias for local clarity
+type Supplier = SupplierItem & { phone: string; email: string; address: string };
 
 export default function SupplierSettings() {
   const { t } = useTranslation("common");
+  const { message } = App.useApp();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [formData, setFormData] = useState<Supplier>({
-    id: "",
     name: "",
     phone: "",
     email: "",
@@ -41,59 +25,20 @@ export default function SupplierSettings() {
     isActive: true,
   });
 
-  // Load suppliers from localStorage on mount
   useEffect(() => {
-    const savedSuppliers = localStorage.getItem("restaurant-suppliers");
-    if (savedSuppliers) {
-      try {
-        setSuppliers(JSON.parse(savedSuppliers));
-      } catch (error) {
-        console.error("Failed to load suppliers from localStorage:", error);
-        loadDefaultSuppliers();
-      }
-    } else {
-      loadDefaultSuppliers();
-    }
+    fetchSuppliers();
   }, []);
 
-  // Save suppliers to localStorage whenever they change
-  useEffect(() => {
-    if (suppliers.length > 0) {
-      localStorage.setItem("restaurant-suppliers", JSON.stringify(suppliers));
+  const fetchSuppliers = async () => {
+    try {
+      setLoading(true);
+      const data = await supplierService.getAll();
+      setSuppliers(data as Supplier[]);
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || t("dashboard.manage.suppliers.fetch_failed", { defaultValue: "Không tải được danh sách nhà cung cấp" }));
+    } finally {
+      setLoading(false);
     }
-  }, [suppliers]);
-
-  const loadDefaultSuppliers = () => {
-    setSuppliers([
-      {
-        id: generateId(),
-        name: t("dashboard.manage.suppliers.defaults.supplier1.name", {
-          defaultValue: "Fresh Veggies Co.",
-        }),
-        email: "contact@freshveggies.com",
-        phone: "0123456789",
-        address: t("dashboard.manage.suppliers.defaults.supplier1.address", {
-          defaultValue: "123 Market Street, District 1",
-        }),
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: generateId(),
-        name: t("dashboard.manage.suppliers.defaults.supplier2.name", {
-          defaultValue: "Ocean Seafood Ltd.",
-        }),
-        email: "contact@oceanseafood.com",
-        phone: "0987654321",
-        address: t("dashboard.manage.suppliers.defaults.supplier2.address", {
-          defaultValue: "456 Harbor Road, District 2",
-        }),
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ]);
   };
 
   const handleOpenModal = (supplier?: Supplier) => {
@@ -119,57 +64,62 @@ export default function SupplierSettings() {
     setEditingSupplier(null);
   };
 
-  const handleSave = () => {
-    // Validation
+  const handleSave = async () => {
     if (!formData.name.trim()) {
-      message.error(t("restaurant.messages.name_required"));
-      return;
-    }
-    if (!formData.phone.trim()) {
-      message.error(t("restaurant.messages.phone_required"));
+      message.error(t("dashboard.manage.suppliers.name_required", { defaultValue: "Vui lòng nhập tên nhà cung cấp" }));
       return;
     }
 
-    const now = new Date().toISOString();
-
-    if (editingSupplier) {
-      // Edit
-      setSuppliers(
-        suppliers.map((s) =>
-          s.id === editingSupplier.id
-            ? { ...formData, id: s.id, updatedAt: now }
-            : s,
-        ),
-      );
-      message.success(t("restaurant.messages.supplier_updated"));
-    } else {
-      // Add
-      const newSupplier: Supplier = {
-        ...formData,
-        id: generateId(),
-        createdAt: now,
-        updatedAt: now,
-      };
-      setSuppliers([...suppliers, newSupplier]);
-      message.success(t("restaurant.messages.supplier_added"));
+    try {
+      setSaving(true);
+      if (editingSupplier?.id) {
+        await supplierService.update(editingSupplier.id, { ...formData, id: editingSupplier.id });
+        message.success(t("dashboard.manage.suppliers.updated", { defaultValue: "Cập nhật thành công" }));
+      } else {
+        await supplierService.create(formData);
+        message.success(t("dashboard.manage.suppliers.created", { defaultValue: "Thêm thành công" }));
+      }
+      await fetchSuppliers();
+      handleCloseModal();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || t("dashboard.manage.suppliers.save_failed", { defaultValue: "Lưu thất bại" }));
+    } finally {
+      setSaving(false);
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
-    setSuppliers(suppliers.filter((s) => s.id !== id));
-    message.success(t("dashboard.manage.suppliers.deleted"));
+  const handleDelete = async (id: string) => {
+    try {
+      await supplierService.delete(id);
+      message.success(t("dashboard.manage.suppliers.deleted", { defaultValue: "Đã xoá" }));
+      setSuppliers((prev) => prev.filter((s) => s.id !== id));
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || t("dashboard.manage.suppliers.delete_failed", { defaultValue: "Xoá thất bại" }));
+    }
   };
 
-  const toggleStatus = (id: string) => {
-    setSuppliers(
-      suppliers.map((s) =>
-        s.id === id
-          ? { ...s, isActive: !s.isActive, updatedAt: new Date().toISOString() }
-          : s,
-      ),
+  const toggleStatus = async (supplier: Supplier) => {
+    if (!supplier.id) return;
+    const updated = { ...supplier, isActive: !supplier.isActive };
+    // Optimistic update
+    setSuppliers((prev) => prev.map((s) => (s.id === supplier.id ? updated : s)));
+    try {
+      await supplierService.update(supplier.id, updated);
+    } catch (err: any) {
+      // Revert on failure
+      setSuppliers((prev) => prev.map((s) => (s.id === supplier.id ? supplier : s)));
+      message.error(t("dashboard.manage.suppliers.status_update_failed", { defaultValue: "Cập nhật trạng thái thất bại" }));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: "var(--primary)" }} />
+        <span className="ml-4 text-lg font-medium" style={{ color: "var(--text-muted)" }}>{t("dashboard.manage.suppliers.loading", { defaultValue: "Đang tải nhà cung cấp..." })}</span>
+      </div>
     );
-  };
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -315,7 +265,7 @@ export default function SupplierSettings() {
                   </td>
                   <td className="p-4 align-top">
                     <button
-                      onClick={() => toggleStatus(supplier.id)}
+                      onClick={() => toggleStatus(supplier)}
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-colors ${supplier.isActive
                         ? "bg-green-500 text-white dark:bg-green-600"
                         : "bg-gray-500 text-white dark:bg-gray-600"
@@ -349,7 +299,7 @@ export default function SupplierSettings() {
                         title={t("dashboard.manage.suppliers.confirm_delete", {
                           defaultValue: "Are you sure you want to delete this supplier?",
                         })}
-                        onConfirm={() => handleDelete(supplier.id)}
+                        onConfirm={() => supplier.id && handleDelete(supplier.id)}
                         okText={t("common.yes", { defaultValue: "Yes" })}
                         cancelText={t("common.no", { defaultValue: "No" })}
                         okButtonProps={{ danger: true }}>
@@ -395,9 +345,7 @@ export default function SupplierSettings() {
                       <p
                         className="text-lg font-medium"
                         style={{ color: "var(--text)" }}>
-                        {t("dashboard.manage.suppliers.empty_title", {
-                          defaultValue: "No Suppliers Found",
-                        })}
+                        {t("dashboard.manage.suppliers.empty", { defaultValue: "Chưa có nhà cung cấp nào. Nhấn \"Thêm nhà cung cấp\" để tạo mới." })}
                       </p>
                       <button
                         onClick={() => handleOpenModal()}
@@ -655,10 +603,10 @@ export default function SupplierSettings() {
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={!formData.name.trim() || !formData.phone.trim()}
+                  disabled={!formData.name.trim() || saving}
                   className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[var(--primary)]/20 hover:shadow-[var(--primary)]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: "var(--primary)" }}>
-                  {t("dashboard.settings.buttons.save_changes")}
+                  {saving ? t("dashboard.settings.buttons.saving", { defaultValue: "Đang lưu..." }) : t("dashboard.settings.buttons.save_changes")}
                 </button>
               </div>
             </div>

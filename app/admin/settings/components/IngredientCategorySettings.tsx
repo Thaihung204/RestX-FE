@@ -312,7 +312,7 @@ export default function IngredientCategorySettings() {
                         <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
                             <div>
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                    {t("dashboard.manage.ingredient_categories.name", { defaultValue: "Name" })} <span className="text-[#FF380B]">*</span>
+                                    {t("dashboard.manage.ingredient_categories.name", { defaultValue: "Name" })}
                                 </label>
                                 <input
                                     type="text"
