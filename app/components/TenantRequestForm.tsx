@@ -46,9 +46,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
       );
 
       message.success({
-        content:
-          t("tenant_requests.form.success_message") ||
-          "Request submitted successfully! Our team will review it shortly.",
+        content: t("tenant_requests.form.success_message"),
         duration: 5,
       });
 
@@ -65,8 +63,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||
-        t("tenant_requests.form.error_message") ||
-        "Failed to submit request. Please try again.";
+        t("tenant_requests.form.error_message");
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -85,7 +82,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
 
     if (!/^[a-z0-9-]+$/.test(value)) {
       return Promise.reject(
-        new Error("Only lowercase letters, numbers, and hyphens are allowed"),
+        new Error(t("tenant_requests.form.hostname_invalid")),
       );
     }
     return Promise.resolve();
@@ -97,15 +94,15 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
         <div className="flex items-center gap-2">
           <ShopOutlined className="text-orange-500" />
           <span>
-            {t("tenant_requests.form.title") || "Request Restaurant Portal"}
+            {t("tenant_requests.form.title")}
           </span>
         </div>
       }
       open={visible}
       onCancel={handleCancel}
       onOk={() => form.submit()}
-      okText={t("tenant_requests.form.submit") || "Submit Request"}
-      cancelText={t("tenant_requests.form.cancel") || "Cancel"}
+      okText={t("tenant_requests.form.submit")}
+      cancelText={t("tenant_requests.form.cancel")}
       confirmLoading={loading}
       width="90%"
       style={{ maxWidth: 700 }}

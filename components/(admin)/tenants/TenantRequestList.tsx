@@ -76,7 +76,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
 
       setRequests(pendingRequests);
     } catch (error) {
-      message.error("Failed to load tenant requests");
+      message.error(t("tenant_requests.list.load_error"));
       setRequests([]);
     } finally {
       setLoading(false);
@@ -108,28 +108,35 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
 
   const handleApprove = async (request: ITenantRequest) => {
     modal.confirm({
-      title: "Approve Tenant Request",
-      content: `Are you sure you want to approve "${request.name}"? This will create a new tenant with hostname ${request.hostname}`,
-      okText: "Approve",
+      title: t("tenant_requests.list.approve_confirm_title"),
+      content: t("tenant_requests.list.approve_confirm_message", {
+        name: request.name,
+        hostname: request.hostname,
+      }),
+      okText: t("tenant_requests.list.approve_confirm_ok"),
       okType: "primary",
-      cancelText: "Cancel",
+      cancelText: t("tenant_requests.list.approve_confirm_cancel"),
       onOk: async () => {
         try {
           if (!request.id) {
-            message.error("Invalid request ID");
+            message.error(t("tenant_requests.list.invalid_id"));
             return;
           }
           setActionLoading(request.id);
           const tenantId = await tenantService.acceptTenantRequest(request.id);
           message.success(
-            `Tenant "${request.name}" has been approved! Tenant ID: ${tenantId}`,
+            t("tenant_requests.list.approve_success", {
+              name: request.name,
+              id: tenantId,
+            }),
           );
           await fetchPendingRequests();
           onRequestUpdated?.();
         } catch (error: any) {
-          message.error(
-            error?.response?.data?.message || "Failed to approve tenant",
-          );
+          const errorMessage =
+            error?.response?.data?.message ||
+            t("tenant_requests.list.approve_error");
+          message.error(errorMessage);
         } finally {
           setActionLoading(null);
         }
@@ -139,26 +146,31 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
 
   const handleReject = async (request: ITenantRequest) => {
     modal.confirm({
-      title: "Reject Tenant Request",
-      content: `Are you sure you want to reject "${request.name}"? This will mark the request as denied.`,
-      okText: "Reject",
+      title: t("tenant_requests.list.reject_confirm_title"),
+      content: t("tenant_requests.list.reject_confirm_message", {
+        name: request.name,
+      }),
+      okText: t("tenant_requests.list.reject_confirm_ok"),
       okType: "danger",
-      cancelText: "Cancel",
+      cancelText: t("tenant_requests.list.reject_confirm_cancel"),
       onOk: async () => {
         try {
           if (!request.id) {
-            message.error("Invalid request ID");
+            message.error(t("tenant_requests.list.invalid_id"));
             return;
           }
           setActionLoading(request.id);
           await tenantService.declineTenantRequest(request.id);
-          message.warning(`Tenant request "${request.name}" has been rejected`);
+          message.success(
+            t("tenant_requests.list.reject_success", { name: request.name }),
+          );
           await fetchPendingRequests();
           onRequestUpdated?.();
         } catch (error: any) {
-          message.error(
-            error?.response?.data?.message || "Failed to reject tenant",
-          );
+          const errorMessage =
+            error?.response?.data?.message ||
+            t("tenant_requests.list.reject_error");
+          message.error(errorMessage);
         } finally {
           setActionLoading(null);
         }
@@ -269,7 +281,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
       width: 110,
       render: () => (
         <Tag color="orange" icon={<ClockCircleOutlined />}>
-          Pending
+          {t("tenant_requests.list.status_pending")}
         </Tag>
       ),
     },
@@ -285,7 +297,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
             size="small"
             icon={<EyeOutlined />}
             onClick={() => handleViewDetails(record)}>
-            View
+            {t("tenant_requests.list.action_view")}
           </Button>
           <Button
             type="primary"
@@ -293,7 +305,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
             icon={<CheckCircleOutlined />}
             loading={actionLoading === record.id}
             onClick={() => handleApprove(record)}>
-            Approve
+            {t("tenant_requests.list.action_approve")}
           </Button>
           <Button
             danger
@@ -301,7 +313,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
             icon={<CloseCircleOutlined />}
             loading={actionLoading === record.id}
             onClick={() => handleReject(record)}>
-            Reject
+            {t("tenant_requests.list.action_reject")}
           </Button>
         </Space>
       ),
@@ -375,9 +387,6 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
             emptyText: (
               <div style={{ padding: "40px", color: "var(--text-muted)" }}>
                 <div>{t("tenant_requests.list.no_data")}</div>
-                <div style={{ fontSize: "12px", marginTop: "8px" }}>
-                  Debug: {t("tenant_requests.list.total_filtered", { total: requests.length, filtered: filteredData.length })}
-                </div>
               </div>
             ),
           }}
@@ -402,7 +411,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
         title={
           <Space>
             <ShopOutlined />
-            Tenant Request Details
+            {t("tenant_requests.list.detail_modal_title")}
           </Space>
         }
         open={detailModal.visible}
@@ -411,7 +420,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
           <Button
             key="close"
             onClick={() => setDetailModal({ visible: false, request: null })}>
-            Close
+            {t("tenant_requests.list.detail_close")}
           </Button>,
           <Button
             key="reject"
@@ -423,7 +432,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
                 setDetailModal({ visible: false, request: null });
               }
             }}>
-            Reject
+            {t("tenant_requests.list.action_reject")}
           </Button>,
           <Button
             key="approve"
@@ -435,7 +444,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
                 setDetailModal({ visible: false, request: null });
               }
             }}>
-            Approve
+            {t("tenant_requests.list.action_approve")}
           </Button>,
         ]}
         width="90%"
@@ -443,24 +452,28 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
         styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}>
         {detailModal.request && (
           <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Restaurant Name">
+            <Descriptions.Item
+              label={t("tenant_requests.list.detail_restaurant_name")}>
               {detailModal.request.name}
             </Descriptions.Item>
-            <Descriptions.Item label="Hostname">
+            <Descriptions.Item label={t("tenant_requests.list.detail_hostname")}>
               <Text code>{detailModal.request.hostname}</Text>
             </Descriptions.Item>
             {detailModal.request.businessName && (
-              <Descriptions.Item label="Business Name">
+              <Descriptions.Item
+                label={t("tenant_requests.list.detail_business_name")}>
                 {detailModal.request.businessName}
               </Descriptions.Item>
             )}
             {detailModal.request.businessEmailAddress && (
-              <Descriptions.Item label="Business Email">
+              <Descriptions.Item
+                label={t("tenant_requests.list.detail_business_email")}>
                 {detailModal.request.businessEmailAddress}
               </Descriptions.Item>
             )}
             {detailModal.request.businessPrimaryPhone && (
-              <Descriptions.Item label="Phone Number">
+              <Descriptions.Item
+                label={t("tenant_requests.list.detail_phone")}>
                 {detailModal.request.businessPrimaryPhone}
               </Descriptions.Item>
             )}
@@ -468,7 +481,8 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
               detailModal.request.businessAddressLine2 ||
               detailModal.request.businessAddressLine3 ||
               detailModal.request.businessAddressLine4) && (
-              <Descriptions.Item label="Address">
+              <Descriptions.Item
+                label={t("tenant_requests.list.detail_address")}>
                 <div>
                   {detailModal.request.businessAddressLine1 && (
                     <div>{detailModal.request.businessAddressLine1}</div>
@@ -486,13 +500,13 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
               </Descriptions.Item>
             )}
             {detailModal.request.businessCountry && (
-              <Descriptions.Item label="Country">
+              <Descriptions.Item label={t("tenant_requests.list.detail_country")}>
                 {detailModal.request.businessCountry}
               </Descriptions.Item>
             )}
-            <Descriptions.Item label="Status">
+            <Descriptions.Item label={t("tenant_requests.list.detail_status")}>
               <Tag color="orange" icon={<ClockCircleOutlined />}>
-                Pending Approval
+                {t("tenant_requests.list.status_pending_approval")}
               </Tag>
             </Descriptions.Item>
           </Descriptions>

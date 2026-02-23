@@ -46,10 +46,10 @@ import { tenantService } from "../../../lib/services/tenantService";
 import { ITenant } from "../../../lib/types/tenant";
 
 const STATUS_OPTIONS = [
-  { label: "All Status", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "Maintenance", value: "maintenance" },
+  { label: "all", value: "all" },
+  { label: "active", value: "active" },
+  { label: "inactive", value: "inactive" },
+  { label: "maintenance", value: "maintenance" },
 ];
 
 // --- HELPER COMPONENTS ---
@@ -302,7 +302,7 @@ const TenantPage: React.FC = () => {
       ),
     },
     {
-      title: "Domain / IP",
+      title: t("tenants.table.domain"),
       dataIndex: "networkIp",
       key: "networkIp",
       width: 180,
@@ -310,8 +310,14 @@ const TenantPage: React.FC = () => {
         <span
           className="text-[11px] font-mono truncate max-w-[160px] block"
           style={{ color: networkIp ? "var(--text)" : "var(--text-muted)" }}
-          title={networkIp || "Not configured"}>
-          {networkIp || <span className="italic opacity-60">Not set</span>}
+          title={
+            networkIp || t("tenants.table.domain_not_configured")
+          }>
+          {networkIp || (
+            <span className="italic opacity-60">
+              {t("tenants.table.domain_not_set")}
+            </span>
+          )}
         </span>
       ),
     },
@@ -698,8 +704,13 @@ const TenantPage: React.FC = () => {
                           onChange={(e) => setSearch(e.target.value)}
                           className="w-full sm:flex-1"
                         />
-                        <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-                          Total: {tenants.length} | Filtered: {filteredData.length}
+                        <div
+                          className="text-xs"
+                          style={{ color: "var(--text-muted)" }}>
+                          {t("tenants.filter.total_filtered", {
+                            total: tenants.length,
+                            filtered: filteredData.length,
+                          })}
                         </div>
                       </div>
                       <div className="flex gap-2">

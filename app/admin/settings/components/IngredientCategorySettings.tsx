@@ -29,38 +29,38 @@ export default function IngredientCategorySettings() {
     const getDefaultCategories = (): IngredientCategory[] => [
         {
             id: "1",
-            name: t("dashboard.manage.ingredient_categories.defaults.vegetables.name", { defaultValue: "Vegetables" }),
-            description: t("dashboard.manage.ingredient_categories.defaults.vegetables.description", { defaultValue: "Fresh vegetables and greens" }),
+            name: t("dashboard.manage.ingredient_categories.defaults.vegetables.name"),
+            description: t("dashboard.manage.ingredient_categories.defaults.vegetables.description"),
             unit: "kg"
         },
         {
             id: "2",
-            name: t("dashboard.manage.ingredient_categories.defaults.meat.name", { defaultValue: "Meat" }),
-            description: t("dashboard.manage.ingredient_categories.defaults.meat.description", { defaultValue: "Beef, pork, chicken, etc." }),
+            name: t("dashboard.manage.ingredient_categories.defaults.meat.name"),
+            description: t("dashboard.manage.ingredient_categories.defaults.meat.description"),
             unit: "kg"
         },
         {
             id: "3",
-            name: t("dashboard.manage.ingredient_categories.defaults.seafood.name", { defaultValue: "Seafood" }),
-            description: t("dashboard.manage.ingredient_categories.defaults.seafood.description", { defaultValue: "Fish, shrimp, crab, etc." }),
+            name: t("dashboard.manage.ingredient_categories.defaults.seafood.name"),
+            description: t("dashboard.manage.ingredient_categories.defaults.seafood.description"),
             unit: "kg"
         },
         {
             id: "4",
-            name: t("dashboard.manage.ingredient_categories.defaults.dairy.name", { defaultValue: "Dairy" }),
-            description: t("dashboard.manage.ingredient_categories.defaults.dairy.description", { defaultValue: "Milk, cheese, butter, etc." }),
+            name: t("dashboard.manage.ingredient_categories.defaults.dairy.name"),
+            description: t("dashboard.manage.ingredient_categories.defaults.dairy.description"),
             unit: "liter"
         },
         {
             id: "5",
-            name: t("dashboard.manage.ingredient_categories.defaults.spices.name", { defaultValue: "Spices" }),
-            description: t("dashboard.manage.ingredient_categories.defaults.spices.description", { defaultValue: "Salt, pepper, herbs, etc." }),
+            name: t("dashboard.manage.ingredient_categories.defaults.spices.name"),
+            description: t("dashboard.manage.ingredient_categories.defaults.spices.description"),
             unit: "gram"
         },
         {
             id: "6",
-            name: t("dashboard.manage.ingredient_categories.defaults.sauces.name", { defaultValue: "Sauces" }),
-            description: t("dashboard.manage.ingredient_categories.defaults.sauces.description", { defaultValue: "Soy sauce, fish sauce, etc." }),
+            name: t("dashboard.manage.ingredient_categories.defaults.sauces.name"),
+            description: t("dashboard.manage.ingredient_categories.defaults.sauces.description"),
             unit: "bottle"
         },
     ];
@@ -127,12 +127,10 @@ export default function IngredientCategorySettings() {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
-                        {t("dashboard.manage.ingredient_categories.title", { defaultValue: "Ingredient Categories" })}
+                        {t("dashboard.manage.ingredient_categories.title")}
                     </h3>
                     <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-                        {t("dashboard.manage.ingredient_categories.subtitle", {
-                            defaultValue: "Organize your ingredients by category for better inventory management"
-                        })}
+                        {t("dashboard.manage.ingredient_categories.subtitle")}
                     </p>
                 </div>
                 <button
@@ -143,7 +141,7 @@ export default function IngredientCategorySettings() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    {t("dashboard.manage.ingredient_categories.add", { defaultValue: "Add Category" })}
+                    {t("dashboard.manage.ingredient_categories.add")}
                 </button>
             </div>
 
@@ -160,16 +158,16 @@ export default function IngredientCategorySettings() {
                         <thead style={{ background: 'var(--bg-base)' }}>
                             <tr>
                                 <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>
-                                    {t("dashboard.manage.ingredient_categories.name", { defaultValue: "Name" })}
+                                    {t("dashboard.manage.ingredient_categories.name")}
                                 </th>
                                 <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>
-                                    {t("dashboard.manage.ingredient_categories.description", { defaultValue: "Description" })}
+                                    {t("dashboard.manage.ingredient_categories.description")}
                                 </th>
                                 <th className="p-5 font-semibold text-sm tracking-wide uppercase" style={{ color: 'var(--text-muted)' }}>
-                                    {t("dashboard.manage.ingredient_categories.unit", { defaultValue: "Default Unit" })}
+                                    {t("dashboard.manage.ingredient_categories.unit")}
                                 </th>
                                 <th className="p-5 font-semibold text-sm tracking-wide uppercase text-right" style={{ color: 'var(--text-muted)' }}>
-                                    {t("dashboard.manage.ingredient_categories.actions", { defaultValue: "Actions" })}
+                                    {t("dashboard.manage.ingredient_categories.actions")}
                                 </th>
                             </tr>
                         </thead>
@@ -216,23 +214,21 @@ export default function IngredientCategorySettings() {
                                             <button
                                                 onClick={() => handleOpenModal(cat)}
                                                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-blue-500 hover:text-blue-600"
-                                                title="Edit"
+                                                title={t("dashboard.manage.ingredient_categories.tooltip_edit")}
                                             >
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
                                             </button>
                                             <Popconfirm
-                                                title={t("dashboard.manage.ingredient_categories.confirm_delete", {
-                                                    defaultValue: "Are you sure you want to delete this category?"
-                                                })}
+                                                title={t("dashboard.manage.ingredient_categories.confirm_delete")}
                                                 onConfirm={() => handleDelete(cat.id)}
                                                 okText={t("common.yes", { defaultValue: "Yes" })}
                                                 cancelText={t("common.no", { defaultValue: "No" })}
                                                 okButtonProps={{ danger: true }}>
                                                 <button
                                                     className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-red-500 hover:text-red-600"
-                                                    title="Delete"
+                                                    title={t("dashboard.manage.ingredient_categories.tooltip_delete")}
                                                 >
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -253,18 +249,16 @@ export default function IngredientCategorySettings() {
                                                 </svg>
                                             </div>
                                             <p className="text-lg font-medium" style={{ color: 'var(--text)' }}>
-                                                {t("dashboard.manage.ingredient_categories.empty_title", { defaultValue: "No Categories Found" })}
+                                                {t("dashboard.manage.ingredient_categories.empty_title")}
                                             </p>
                                             <p className="text-sm mt-1 max-w-sm mx-auto" style={{ color: 'var(--text-muted)' }}>
-                                                {t("dashboard.manage.ingredient_categories.empty", {
-                                                    defaultValue: "Get started by adding your first ingredient category."
-                                                })}
+                                                {t("dashboard.manage.ingredient_categories.empty")}
                                             </p>
                                             <button
                                                 onClick={() => handleOpenModal()}
                                                 className="mt-4 px-4 py-2 text-sm text-[#FF380B] font-medium hover:bg-[#FF380B]/10 rounded-lg transition-colors"
                                             >
-                                                {t("dashboard.manage.ingredient_categories.add", { defaultValue: "Add Category" })}
+                                                {t("dashboard.manage.ingredient_categories.add")}
                                             </button>
                                         </div>
                                     </td>
@@ -312,7 +306,7 @@ export default function IngredientCategorySettings() {
                         <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
                             <div>
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                    {t("dashboard.manage.ingredient_categories.name", { defaultValue: "Name" })} <span className="text-[#FF380B]">*</span>
+                                    {t("dashboard.manage.ingredient_categories.name")}
                                 </label>
                                 <input
                                     type="text"
@@ -330,7 +324,7 @@ export default function IngredientCategorySettings() {
 
                             <div>
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                    {t("dashboard.manage.ingredient_categories.description", { defaultValue: "Description" })}
+                                    {t("dashboard.manage.ingredient_categories.description")}
                                 </label>
                                 <textarea
                                     value={formData.description}
@@ -348,7 +342,7 @@ export default function IngredientCategorySettings() {
 
                             <div>
                                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text)' }}>
-                                    {t("dashboard.manage.ingredient_categories.unit", { defaultValue: "Default Unit" })}
+                                    {t("dashboard.manage.ingredient_categories.unit")}
                                 </label>
                                 <div className="relative">
                                     <select
@@ -383,7 +377,7 @@ export default function IngredientCategorySettings() {
                                 className="px-5 py-2.5 rounded-xl font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
                                 style={{ color: 'var(--text-muted)' }}
                             >
-                                {t("dashboard.settings.buttons.cancel", { defaultValue: "Cancel" })}
+                                {t("dashboard.settings.buttons.cancel")}
                             </button>
                             <button
                                 onClick={handleSave}
@@ -391,7 +385,7 @@ export default function IngredientCategorySettings() {
                                 className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[#FF380B]/20 hover:shadow-[#FF380B]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ background: '#FF380B' }}
                             >
-                                {t("dashboard.settings.buttons.save_changes", { defaultValue: "Save" })}
+                                {t("dashboard.settings.buttons.save_changes")}
                             </button>
                         </div>
                     </div>
