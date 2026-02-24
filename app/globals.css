@@ -145,7 +145,12 @@ body {
 
   .primary-gradient {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    transition: filter 0.2s ease;
   }
+
+  .primary-gradient:hover {
+  filter: brightness(1.1);
+}
 
   .primary-soft-bg {
     background: var(--primary-soft);
@@ -735,8 +740,7 @@ textarea::placeholder {
 
 /* Reduce paint/layout thrashing for theme-dependent elements */
 [data-theme] {
-  /* Optimize CSS variable reads with contain */
-  contain: layout style;
+  contain: style;
 }
 
 /* Use content-visibility for off-screen content (lazy rendering) */

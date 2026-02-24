@@ -748,6 +748,18 @@
         "position_placeholder": "Ví dụ: Bếp trưởng, Nhân viên phục vụ, v.v.",
         "active_description": "Hoạt động (Nhân viên đang làm việc)"
       },
+      "employment_details": {
+        "title": "Chi tiết việc làm",
+        "salary": "Mức lương",
+        "salary_type": "Hình thức lương",
+        "termination_date": "Ngày kết thúc hợp đồng",
+        "roles": "Vai trò hệ thống",
+        "salary_types": {
+          "monthly": "Lương tháng",
+          "hourly": "Lương giờ",
+          "daily": "Lương ngày"
+        }
+      },
       "avatar": {
         "profile_picture": "Ảnh đại diện",
         "change_photo": "Thay đổi ảnh",
@@ -783,8 +795,12 @@
         "view_profile": "Xem hồ sơ"
       },
       "roles": {
+        "manager": "Quản lý",
+        "chef": "Đầu bếp",
+        "waiter": "Phục vụ",
+        "cashier": "Thu ngân",
         "kitchen staff": "Nhân viên bếp",
-        "waiter": "Phục vụ"
+        "staff": "Nhân viên"
       },
       "status": {
         "active": "Hoạt động",

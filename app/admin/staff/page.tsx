@@ -1,7 +1,7 @@
 "use client";
 
 import employeeService from "@/lib/services/employeeService";
-import { message } from "antd";
+import { App, Button, Modal } from "antd";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,11 +19,24 @@ interface Staff {
   avatarUrl?: string;
 }
 
+const PAGE_SIZE = 12;
+
 export default function StaffPage() {
   const { t } = useTranslation(["common", "dashboard"]);
+  const { message } = App.useApp();
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Stats from full DB (from totalCount metadata)
+  const [totalActive, setTotalActive] = useState(0);
+  const [totalInactive, setTotalInactive] = useState(0);
+  const [totalPositions, setTotalPositions] = useState(0);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
@@ -34,23 +47,62 @@ export default function StaffPage() {
     currentStatus: "active" | "inactive";
   } | null>(null);
 
-  const roles = ["Manager", "Waiter", "Chef", "Cashier"];
+  const roles = ["Manager", "Waiter", "Kitchen Chef"];
 
-  const fetchStaffList = async () => {
+  const fetchStaffStats = async () => {
+    try {
+      const [activeRes, inactiveRes] = await Promise.all([
+        employeeService.getEmployees({
+          page: 1,
+          itemsPerPage: 1,
+          isActive: true,
+        }),
+        employeeService.getEmployees({
+          page: 1,
+          itemsPerPage: 1,
+          isActive: false,
+        }),
+      ]);
+
+      const extractTotal = (res: any) => {
+        const pd = res.data;
+        return (
+          pd?.totalCount ??
+          res.totalCount ??
+          pd?.items?.length ??
+          pd?.employees?.length ??
+          (Array.isArray(res.data) ? res.data.length : 0) ??
+          0
+        );
+      };
+
+      setTotalActive(extractTotal(activeRes));
+      setTotalInactive(extractTotal(inactiveRes));
+    } catch {
+      setTotalActive(
+        staffList.filter((s) => s.status === "active").length,
+      );
+      setTotalInactive(
+        staffList.filter((s) => s.status === "inactive").length,
+      );
+    }
+  };
+
+  const fetchStaffList = async (page: number = 1) => {
     try {
       setLoading(true);
       setError(null);
 
       const data = await employeeService.getEmployees({
-        page: 1,
-        itemsPerPage: 100,
+        page,
+        itemsPerPage: PAGE_SIZE,
       });
 
-      // Extract array from response
+      const paginatedData = data.data;
       const arrayData =
-        data.data?.employees ||
-        data.data?.data ||
-        data.data?.items ||
+        paginatedData?.items ||
+        paginatedData?.employees ||
+        paginatedData?.data ||
         data.employees ||
         (Array.isArray(data.data) ? data.data : null);
 
@@ -71,6 +123,20 @@ export default function StaffPage() {
         }));
 
         setStaffList(mappedData);
+
+        // Pagination metadata
+        const tc = paginatedData?.totalCount ?? data.totalCount ?? mappedData.length;
+        const tp = (paginatedData?.totalPages ?? Math.ceil(tc / PAGE_SIZE)) || 1;
+        setTotalCount(tc);
+        setTotalPages(tp);
+
+        setTotalPositions(
+          new Set(mappedData.map((s) => s.position).filter(Boolean)).size
+        );
+
+        // Fetch global active/inactive stats from API metadata
+        fetchStaffStats();
+
         setError(null);
       } else {
         setError("Data structure not supported");
@@ -98,8 +164,25 @@ export default function StaffPage() {
   };
 
   useEffect(() => {
-    fetchStaffList();
-  }, []);
+    fetchStaffList(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
+
+  useEffect(() => {
+    if (showStatusConfirm) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showStatusConfirm]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
 
   const handleToggleStatus = async (
     id: string,
@@ -123,7 +206,7 @@ export default function StaffPage() {
       message.success(`${itemToToggle.name} has been ${action} successfully`);
       setShowStatusConfirm(false);
       setItemToToggle(null);
-      await fetchStaffList();
+      await fetchStaffList(currentPage);
     } catch (err: any) {
       const errorMsg =
         err.response?.data?.message || err.message || "Unknown error";
@@ -138,6 +221,7 @@ export default function StaffPage() {
     setItemToToggle(null);
   };
 
+  // Client-side filter within current page
   const filteredStaff = staffList.filter((staff) => {
     const matchesSearch =
       staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -149,9 +233,26 @@ export default function StaffPage() {
     return matchesSearch && matchesRole;
   });
 
+  // Build pagination page numbers array
+  const buildPageNumbers = () => {
+    const pages: (number | "...")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-[var(--bg-base)]">
-      <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+    <div className="flex-1 flex flex-col bg-[var(--bg-base)]">
+      <main className="flex-1 p-6 lg:p-8">
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -167,14 +268,8 @@ export default function StaffPage() {
             </div>
             <Link
               href="/admin/staff/new"
-              className="px-6 py-2.5 text-white rounded-lg font-medium transition-all shadow-lg flex items-center gap-2"
-              style={{ background: "var(--primary)" }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "var(--primary-hover)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "var(--primary)")
-              }>
+              className="px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-orange-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-orange-500/30 active:translate-y-0 flex items-center gap-2"
+              style={{ background: "var(--primary)", color: "var(--text)" }}>
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -249,7 +344,7 @@ export default function StaffPage() {
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Stats — totalCount từ API metadata */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div
               className="rounded-xl p-4"
@@ -263,7 +358,7 @@ export default function StaffPage() {
                     {t("dashboard.staff.stats.total_staff")}
                   </p>
                   <p className="text-3xl font-bold text-blue-500 mt-1">
-                    {staffList.length}
+                    {totalCount}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
@@ -295,7 +390,7 @@ export default function StaffPage() {
                     {t("dashboard.staff.stats.on_duty")}
                   </p>
                   <p className="text-3xl font-bold text-green-500 mt-1">
-                    {staffList.filter((s) => s.status === "active").length}
+                    {totalActive}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
@@ -329,7 +424,7 @@ export default function StaffPage() {
                   <p
                     className="text-3xl font-bold mt-1"
                     style={{ color: "var(--primary)" }}>
-                    {staffList.filter((s) => s.status === "inactive").length}
+                    {totalInactive}
                   </p>
                 </div>
                 <div
@@ -364,10 +459,7 @@ export default function StaffPage() {
                     {t("dashboard.staff.stats.positions")}
                   </p>
                   <p className="text-3xl font-bold text-purple-500 mt-1">
-                    {
-                      new Set(staffList.map((s) => s.position).filter(Boolean))
-                        .size
-                    }
+                    {totalPositions}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
@@ -434,7 +526,7 @@ export default function StaffPage() {
                           className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${
                             member.role === "Manager"
                               ? "bg-purple-500/10 text-purple-500"
-                              : member.role === "Chef"
+                              : member.role === "Kitchen Chef"
                                 ? "bg-orange-500/10 text-orange-500"
                                 : member.role === "Waiter"
                                   ? "bg-blue-500/10 text-blue-500"
@@ -444,10 +536,6 @@ export default function StaffPage() {
                             `dashboard.staff.roles.${member.role.toLowerCase()}`,
                           )}
                         </span>
-                        {/* Role badge translated */}
-                        <div className="flex items-center gap-2 mt-1">
-                          {/* Removed duplicate/broken role badge code */}
-                        </div>
                       </div>
                     </div>
                     <span
@@ -644,19 +732,97 @@ export default function StaffPage() {
               </p>
             </div>
           )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                {t("common.showing", {
+                  from: (currentPage - 1) * PAGE_SIZE + 1,
+                  to: Math.min(currentPage * PAGE_SIZE, totalCount),
+                  total: totalCount,
+                  defaultValue: `Showing ${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, totalCount)} of ${totalCount}`,
+                })}
+              </p>
+              <div className="flex items-center gap-1">
+                {/* Prev */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text)",
+                  }}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                {buildPageNumbers().map((p, idx) =>
+                  p === "..." ? (
+                    <span
+                      key={`ellipsis-${idx}`}
+                      className="w-9 h-9 flex items-center justify-center text-sm"
+                      style={{ color: "var(--text-muted)" }}>
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => handlePageChange(p as number)}
+                      className="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all"
+                      style={
+                        currentPage === p
+                          ? {
+                              background: "var(--primary)",
+                              color: "white",
+                              border: "1px solid var(--primary)",
+                            }
+                          : {
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              color: "var(--text)",
+                            }
+                      }>
+                      {p}
+                    </button>
+                  ),
+                )}
+
+                {/* Next */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text)",
+                  }}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
       {/* Status Toggle Confirmation Modal */}
-      {showStatusConfirm && itemToToggle && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div
-            className="rounded-xl p-6 max-w-md w-full"
-            style={{
-              background: "var(--card)",
-              border: "1px solid var(--border)",
-            }}>
-            <div className="flex items-start gap-4 mb-4">
+      <Modal
+        open={showStatusConfirm && !!itemToToggle}
+        onCancel={cancelToggleStatus}
+        footer={null}
+        centered
+        closable={false}
+        width={450}
+      >
+        {itemToToggle && (
+          <>
+            <div className="flex items-start gap-4 mb-4 pt-4">
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{
@@ -685,67 +851,39 @@ export default function StaffPage() {
                 </svg>
               </div>
               <div className="flex-1">
-                <h3
-                  className="text-lg font-bold mb-2"
-                  style={{ color: "var(--text)" }}>
+                <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>
                   {itemToToggle.currentStatus === "active"
                     ? t("dashboard.staff.modal.deactivate_title")
                     : t("dashboard.staff.modal.activate_title")}
                 </h3>
                 <p style={{ color: "var(--text-muted)" }}>
                   {itemToToggle.currentStatus === "active"
-                    ? t("dashboard.staff.modal.deactivate_message", {
-                        name: itemToToggle.name,
-                      })
-                    : t("dashboard.staff.modal.activate_message", {
-                        name: itemToToggle.name,
-                      })}
+                    ? t("dashboard.staff.modal.deactivate_message", { name: itemToToggle.name })
+                    : t("dashboard.staff.modal.activate_message", { name: itemToToggle.name })}
                   .
                 </p>
               </div>
             </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={cancelToggleStatus}
-                className="px-4 py-2 rounded-lg font-medium transition-all"
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}>
-                {t("common.cancel")}
-              </button>
-              <button
+            <div className="flex gap-3 justify-end mt-6">
+              <Button onClick={cancelToggleStatus}>{t("common.cancel")}</Button>
+              <Button
+                type="primary"
+                danger={itemToToggle.currentStatus === "active"}
+                style={
+                  itemToToggle.currentStatus !== "active"
+                    ? { backgroundColor: "rgb(34, 197, 94)", borderColor: "rgb(34, 197, 94)" }
+                    : undefined
+                }
                 onClick={confirmToggleStatus}
-                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-                style={{
-                  backgroundColor:
-                    itemToToggle.currentStatus === "active"
-                      ? "rgb(239, 68, 68)"
-                      : "rgb(34, 197, 94)",
-                }}
-                onMouseEnter={(e) => {
-                  if (itemToToggle.currentStatus === "active") {
-                    e.currentTarget.style.backgroundColor = "rgb(220, 38, 38)";
-                  } else {
-                    e.currentTarget.style.backgroundColor = "rgb(21, 128, 61)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (itemToToggle.currentStatus === "active") {
-                    e.currentTarget.style.backgroundColor = "rgb(239, 68, 68)";
-                  } else {
-                    e.currentTarget.style.backgroundColor = "rgb(34, 197, 94)";
-                  }
-                }}>
+              >
                 {itemToToggle.currentStatus === "active"
                   ? t("dashboard.staff.deactivate")
                   : t("dashboard.staff.activate")}
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }
