@@ -588,3 +588,46 @@ img {
 .admin-tenants-table .ant-table-container {
   background: var(--card) !important;
 }
+
+.admin-loyalty-table .ant-table-thead>tr>th {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-weight: 600 !important;
+}
+
+.admin-loyalty-table .ant-table-tbody>tr {
+  background: var(--card) !important;
+}
+
+.admin-loyalty-table .ant-table-tbody>tr:hover>td {
+  background: var(--surface-subtle) !important;
+}
+
+.admin-loyalty-table .ant-table-tbody>tr>td {
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.admin-loyalty-table .ant-table {
+  background: var(--card) !important;
+}
+
+.admin-loyalty-table .ant-table-container {
+  background: var(--card) !important;
+}
+
+.admin-loyalty-table .ant-pagination .ant-pagination-item a,
+.admin-loyalty-table .ant-pagination .ant-pagination-prev button,
+.admin-loyalty-table .ant-pagination .ant-pagination-next button {
+  color: var(--text) !important;
+}
+
+.admin-loyalty-table .ant-pagination .ant-pagination-item-active {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.admin-loyalty-table .ant-pagination .ant-pagination-item-active a {
+  color: #fff !important;
+}
