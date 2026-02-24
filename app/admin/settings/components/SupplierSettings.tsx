@@ -35,7 +35,10 @@ export default function SupplierSettings() {
       const data = await supplierService.getAll();
       setSuppliers(data as Supplier[]);
     } catch (err: any) {
-      message.error(err?.response?.data?.message || t("dashboard.manage.suppliers.fetch_failed", { defaultValue: "Không tải được danh sách nhà cung cấp" }));
+      message.error(
+        err?.response?.data?.message ||
+          t("dashboard.manage.suppliers.fetch_failed"),
+      );
     } finally {
       setLoading(false);
     }
@@ -66,23 +69,29 @@ export default function SupplierSettings() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      message.error(t("dashboard.manage.suppliers.name_required", { defaultValue: "Vui lòng nhập tên nhà cung cấp" }));
+      message.error(t("dashboard.manage.suppliers.name_required"));
       return;
     }
 
     try {
       setSaving(true);
       if (editingSupplier?.id) {
-        await supplierService.update(editingSupplier.id, { ...formData, id: editingSupplier.id });
-        message.success(t("dashboard.manage.suppliers.updated", { defaultValue: "Cập nhật thành công" }));
+        await supplierService.update(editingSupplier.id, {
+          ...formData,
+          id: editingSupplier.id,
+        });
+        message.success(t("dashboard.manage.suppliers.updated"));
       } else {
         await supplierService.create(formData);
-        message.success(t("dashboard.manage.suppliers.created", { defaultValue: "Thêm thành công" }));
+        message.success(t("dashboard.manage.suppliers.created"));
       }
       await fetchSuppliers();
       handleCloseModal();
     } catch (err: any) {
-      message.error(err?.response?.data?.message || t("dashboard.manage.suppliers.save_failed", { defaultValue: "Lưu thất bại" }));
+      message.error(
+        err?.response?.data?.message ||
+          t("dashboard.manage.suppliers.save_failed"),
+      );
     } finally {
       setSaving(false);
     }
@@ -94,7 +103,10 @@ export default function SupplierSettings() {
       message.success(t("dashboard.manage.suppliers.deleted", { defaultValue: "Đã xoá" }));
       setSuppliers((prev) => prev.filter((s) => s.id !== id));
     } catch (err: any) {
-      message.error(err?.response?.data?.message || t("dashboard.manage.suppliers.delete_failed", { defaultValue: "Xoá thất bại" }));
+      message.error(
+        err?.response?.data?.message ||
+          t("dashboard.manage.suppliers.delete_failed"),
+      );
     }
   };
 
@@ -102,21 +114,32 @@ export default function SupplierSettings() {
     if (!supplier.id) return;
     const updated = { ...supplier, isActive: !supplier.isActive };
     // Optimistic update
-    setSuppliers((prev) => prev.map((s) => (s.id === supplier.id ? updated : s)));
+      setSuppliers((prev) =>
+        prev.map((s) => (s.id === supplier.id ? updated : s)),
+      );
     try {
       await supplierService.update(supplier.id, updated);
     } catch (err: any) {
       // Revert on failure
-      setSuppliers((prev) => prev.map((s) => (s.id === supplier.id ? supplier : s)));
-      message.error(t("dashboard.manage.suppliers.status_update_failed", { defaultValue: "Cập nhật trạng thái thất bại" }));
+      setSuppliers((prev) =>
+        prev.map((s) => (s.id === supplier.id ? supplier : s)),
+      );
+      message.error(t("dashboard.manage.suppliers.status_update_failed"));
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: "var(--primary)" }} />
-        <span className="ml-4 text-lg font-medium" style={{ color: "var(--text-muted)" }}>{t("dashboard.manage.suppliers.loading", { defaultValue: "Đang tải nhà cung cấp..." })}</span>
+        <div
+          className="animate-spin rounded-full h-10 w-10 border-b-2"
+          style={{ borderColor: "var(--primary)" }}
+        />
+        <span
+          className="ml-4 text-lg font-medium"
+          style={{ color: "var(--text-muted)" }}>
+          {t("dashboard.manage.suppliers.loading")}
+        </span>
       </div>
     );
   }
@@ -281,7 +304,7 @@ export default function SupplierSettings() {
                       <button
                         onClick={() => handleOpenModal(supplier)}
                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-blue-500 hover:text-blue-600"
-                        title="Edit Supplier">
+                        title={t("dashboard.manage.suppliers.tooltip_edit")}>
                         <svg
                           className="w-5 h-5"
                           fill="none"
@@ -296,16 +319,14 @@ export default function SupplierSettings() {
                         </svg>
                       </button>
                       <Popconfirm
-                        title={t("dashboard.manage.suppliers.confirm_delete", {
-                          defaultValue: "Are you sure you want to delete this supplier?",
-                        })}
+                        title={t("dashboard.manage.suppliers.confirm_delete")}
                         onConfirm={() => supplier.id && handleDelete(supplier.id)}
-                        okText={t("common.yes", { defaultValue: "Yes" })}
-                        cancelText={t("common.no", { defaultValue: "No" })}
+                        okText={t("common.yes")}
+                        cancelText={t("common.no")}
                         okButtonProps={{ danger: true }}>
                         <button
                           className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-red-500 hover:text-red-600"
-                          title="Delete Supplier">
+                          title={t("dashboard.manage.suppliers.tooltip_delete")}>
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -345,7 +366,7 @@ export default function SupplierSettings() {
                       <p
                         className="text-lg font-medium"
                         style={{ color: "var(--text)" }}>
-                        {t("dashboard.manage.suppliers.empty", { defaultValue: "Chưa có nhà cung cấp nào. Nhấn \"Thêm nhà cung cấp\" để tạo mới." })}
+                        {t("dashboard.manage.suppliers.empty")}
                       </p>
                       <button
                         onClick={() => handleOpenModal()}
@@ -606,7 +627,9 @@ export default function SupplierSettings() {
                   disabled={!formData.name.trim() || saving}
                   className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[var(--primary)]/20 hover:shadow-[var(--primary)]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: "var(--primary)" }}>
-                  {saving ? t("dashboard.settings.buttons.saving", { defaultValue: "Đang lưu..." }) : t("dashboard.settings.buttons.save_changes")}
+                  {saving
+                    ? t("dashboard.settings.buttons.saving")
+                    : t("dashboard.settings.buttons.save_changes")}
                 </button>
               </div>
             </div>

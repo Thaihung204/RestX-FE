@@ -6,6 +6,7 @@ import { PlayCircleOutlined, FileTextOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { usePageTransition } from './PageTransition';
+import TenantRequestForm from './TenantRequestForm';
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -23,6 +24,7 @@ const HeroSection: React.FC = () => {
   // and use screens for the larger layout breaks (lg).
 
   const [isMobile, setIsMobile] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -209,6 +211,7 @@ const HeroSection: React.FC = () => {
                       type="primary"
                       size={isMobile ? 'middle' : 'large'}
                       block={isMobile}
+                      onClick={() => setModalVisible(true)}
                       style={{
                         height: isMobile ? 44 : 52,
                         padding: isMobile ? '0 24px' : '0 36px',
@@ -479,6 +482,15 @@ const HeroSection: React.FC = () => {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Tenant Request Form Modal */}
+      <TenantRequestForm
+        visible={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        onSuccess={() => {
+          console.log('Tenant request submitted successfully');
+        }}
+      />
     </section>
   );
 };
