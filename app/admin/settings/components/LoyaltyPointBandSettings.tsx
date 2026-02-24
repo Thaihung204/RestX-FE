@@ -2,6 +2,8 @@
 
 import loyaltyService, {
   LoyaltyPointBand,
+  TIER_COLORS,
+  getTierFromColor,
 } from "@/lib/services/loyaltyService";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import {
@@ -60,7 +62,7 @@ export default function LoyaltyPointBandSettings() {
     isActive: true,
     min: 0,
     discountPercentage: 0,
-    icon: "bronze",
+    logoColor: TIER_COLORS.bronze,
     name: "",
     benefitDescription: "",
   };
@@ -177,19 +179,11 @@ export default function LoyaltyPointBandSettings() {
     }
   };
 
-  const getVipTierColor = (tier: string) => {
-    switch (tier?.toLowerCase()) {
-      case "platinum":
-        return "#E5E7EB";
-      case "gold":
-        return "#FBBF24";
-      case "silver":
-        return "#9CA3AF";
-      case "bronze":
-        return "#CD7F32";
-      default:
-        return "#6B7280";
-    }
+  /** Returns the hex color for a tier name — now uses the centralized TIER_COLORS map */
+  const getVipTierColor = (tierOrColor: string): string => {
+    // If it looks like a hex color already (from BE logoColor), return as-is
+    if (tierOrColor?.startsWith('#')) return tierOrColor;
+    return TIER_COLORS[tierOrColor?.toLowerCase()] ?? '#6B7280';
   };
 
   const columns = [
@@ -199,14 +193,15 @@ export default function LoyaltyPointBandSettings() {
       width: 100,
       align: "center" as const,
       render: (_: any, record: LoyaltyPointBand) => {
-        const color = getVipTierColor(record.icon);
+        const color = record.logoColor || getVipTierColor(record.name);
+        const tier = getTierFromColor(color);
         return (
           <div className="flex items-center justify-center">
-            {record.icon === "platinum" ? (
+            {tier === "platinum" || tier === "diamond" ? (
               <Diamond sx={{ fontSize: 24, color }} />
-            ) : record.icon === "gold" ? (
+            ) : tier === "gold" ? (
               <EmojiEvents sx={{ fontSize: 24, color }} />
-            ) : record.icon === "silver" ? (
+            ) : tier === "silver" ? (
               <Star sx={{ fontSize: 24, color }} />
             ) : (
               <WorkspacePremium sx={{ fontSize: 24, color }} />
@@ -256,8 +251,8 @@ export default function LoyaltyPointBandSettings() {
         <button
           onClick={() => handleToggleStatus(record)}
           className={`cursor-pointer inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-all hover:opacity-80 ${isActive
-              ? "bg-green-500 text-white dark:bg-green-600"
-              : "bg-gray-500 text-white dark:bg-gray-600"
+            ? "bg-green-500 text-white dark:bg-green-600"
+            : "bg-gray-500 text-white dark:bg-gray-600"
             }`}>
           <span className="w-1.5 h-1.5 rounded-full mr-2 bg-white"></span>
           {isActive
@@ -335,7 +330,7 @@ export default function LoyaltyPointBandSettings() {
         rowKey="id"
         loading={loading}
         pagination={{ pageSize: 10 }}
-        className="custom-table"
+        className="admin-loyalty-table"
       />
 
       <Modal
@@ -359,33 +354,31 @@ export default function LoyaltyPointBandSettings() {
         }}>
         <Form form={form} layout="vertical">
           <Form.Item
-            name="icon"
+            name="logoColor"
             label={t("dashboard.manage.loyalty.form.logo", {
               defaultValue: "Rank Icon",
             })}
             rules={[{ required: true }]}>
             <Radio.Group className="w-full">
-              <div className="grid grid-cols-4 gap-2">
-                {["bronze", "silver", "gold", "platinum"].map((tier) => (
+              <div className="grid grid-cols-5 gap-2">
+                {Object.entries(TIER_COLORS).map(([tier, color]) => (
                   <Radio.Button
                     key={tier}
-                    value={tier}
+                    value={color}
                     className="flex flex-col items-center justify-center h-20 !p-1"
                     style={{ height: "auto", padding: "10px" }}>
                     <div className="flex flex-col items-center gap-1">
-                      {tier === "platinum" ? (
-                        <Diamond sx={{ color: getVipTierColor(tier) }} />
+                      {tier === "platinum" || tier === "diamond" ? (
+                        <Diamond sx={{ color }} />
                       ) : tier === "gold" ? (
-                        <EmojiEvents sx={{ color: getVipTierColor(tier) }} />
+                        <EmojiEvents sx={{ color }} />
                       ) : tier === "silver" ? (
-                        <Star sx={{ color: getVipTierColor(tier) }} />
+                        <Star sx={{ color }} />
                       ) : (
-                        <WorkspacePremium
-                          sx={{ color: getVipTierColor(tier) }}
-                        />
+                        <WorkspacePremium sx={{ color }} />
                       )}
                       <span className="text-xs capitalize">
-                        {t(`dashboard.manage.loyalty.badges.${tier}`)}
+                        {t(`dashboard.manage.loyalty.badges.${tier}`, { defaultValue: tier })}
                       </span>
                     </div>
                   </Radio.Button>

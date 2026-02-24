@@ -1,7 +1,7 @@
-import { motion, useMotionValue } from "framer-motion";
+import { motion } from "framer-motion";
 import React, { useEffect, useCallback } from "react";
 
-type TableStatus = "AVAILABLE" | "OCCUPIED" | "RESERVED" | "DISABLED";
+type TableStatus = "AVAILABLE" | "OCCUPIED" | "RESERVED" | "DISABLED" | "SELECTED";
 
 export interface TableData {
   id: string;
@@ -11,10 +11,10 @@ export interface TableData {
   status: TableStatus;
   area: string;
   position: { x: number; y: number };
-  shape?: "Square" | "Circle" | "Rectangle" | "Oval";
-  width?: number;
-  height?: number;
-  rotation?: number;
+  shape: "Circle" | "Rectangle" | "Square" | "Oval";
+  width: number;
+  height: number;
+  rotation: number;
   zoneId?: string;
 }
 
@@ -48,6 +48,11 @@ const STATUS_CONFIG = {
     fill: "#f5f5f5",
     text: "#8c8c8c",
   },
+  SELECTED: {
+    stroke: "var(--primary)",
+    fill: "var(--primary-soft)",
+    text: "var(--primary)",
+  },
 };
 
 export const DraggableTable: React.FC<DraggableTableProps> = ({
@@ -62,23 +67,14 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
   const [isDragging, setIsDragging] = React.useState(false);
   const [isResizing, setIsResizing] = React.useState(false);
 
-  // Default dimensions
-  const width = table.width || 80;
-  const height = table.height || 80;
-  const shape = table.shape || "Square";
-  const rotation = table.rotation || 0;
+  // STRICT DEFAULTS: Use ?? 100 as requested
+  const width = table.width ?? 100;
+  const height = table.height ?? 100;
+  const shape = table.shape;
+  const rotation = table.rotation ?? 0;
 
-  // ─── FIX: Use motion values for drag offset instead of animate ───
-  // Position via CSS left/top, drag offset via motion values.
-  // When parent updates table.position, we reset the drag offset to 0.
-  // This eliminates the conflict between framer-motion animate and drag.
-  const motionX = useMotionValue(0);
-  const motionY = useMotionValue(0);
-
-  useEffect(() => {
-    motionX.set(0);
-    motionY.set(0);
-  }, [table.position.x, table.position.y]);
+  // DEBUG LOGGING
+  // console.log("RENDER TABLE", { id: table.id, shape, width, height, position: table.position });
 
   // ─── Resize: local size state for live preview during resize ───
   const [localSize, setLocalSize] = React.useState({ width, height });
@@ -119,8 +115,6 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
   const displayW = isResizing ? localSize.width : width;
   const displayH = isResizing ? localSize.height : height;
 
-
-
   const getShapeStyle = (): React.CSSProperties => {
     const base: React.CSSProperties = {
       width: "100%",
@@ -136,11 +130,11 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
       transition: "box-shadow 0.2s",
     };
 
-    if (shape === "Circle" || shape === "Oval") {
-      base.borderRadius = "50%";
-    } else {
-      base.borderRadius = "4px";
-    }
+    if (shape === "Circle") base.borderRadius = "50%";
+    else if (shape === "Oval") base.borderRadius = "50%";
+    else if (shape === "Square") base.borderRadius = "4px";
+    else if (shape === "Rectangle") base.borderRadius = "4px";
+    else base.borderRadius = "4px"; // Default
 
     return base;
   };
@@ -153,6 +147,8 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
       onDragStart={() => setIsDragging(true)}
       onDragEnd={(event, info) => {
         setIsDragging(false);
+        // Calculate new positions based on current mouse delta
+        // We aren't using motion values anymore, but info.offset still works relative to start of drag
         const snap = 10;
         const newX = Math.round((table.position.x + info.offset.x) / snap) * snap;
         const newY = Math.round((table.position.y + info.offset.y) / snap) * snap;
@@ -163,21 +159,17 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
           onClick(table);
         }
       }}
-      // ─── FIX: Position via left/top + motion offset (x, y) ───
-      // No more animate={{ x, y }} which conflicts with drag
       style={{
         position: "absolute",
         left: table.position.x,
         top: table.position.y,
-        x: motionX,
-        y: motionY,
-        rotate: rotation,
         width: displayW,
         height: displayH,
+        transform: `rotate(${rotation}deg)`, // Use transform for rotation
         zIndex: isDragging || isResizing ? 10 : 1,
       }}
-      whileHover={{ scale: 1.02, cursor: draggable ? "grab" : "pointer" }}
-      whileTap={{ scale: isDragging ? 0.98 : 1, cursor: "grabbing" }}
+      whileHover={draggable ? { scale: 1.02, cursor: "grab" } : { cursor: "pointer" }}
+      whileTap={draggable ? { scale: 0.98, cursor: "grabbing" } : {}}
     >
 
 

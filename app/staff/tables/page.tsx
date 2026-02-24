@@ -208,6 +208,10 @@ export default function TableManagement() {
             table.status === 'occupied' ? 'OCCUPIED' :
               table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
           area: table.zone,
+          shape: 'Rectangle' as const,
+          width: 100,
+          height: 100,
+          rotation: 0,
           position: {
             x: 40 + (index % itemsPerRow) * itemWidth,
             y: currentY + Math.floor(index / itemsPerRow) * itemHeight

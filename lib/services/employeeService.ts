@@ -16,8 +16,8 @@ export interface CreateEmployeeDto {
   address?: string;
   position: string;
   hireDate: string;
-  // salary: number;
-  // salaryType: string;
+  salary?: number;
+  salaryType?: string;
   role: string;
   avatar?: File;
 }
@@ -30,8 +30,8 @@ export interface UpdateEmployeeDto {
   position?: string;
   hireDate?: string;
   terminationDate?: string;
-  // salary?: number;
-  // salaryType?: string;
+  salary?: number;
+  salaryType?: string;
   isActive?: boolean;
   avatar?: File | null; // null means remove avatar, undefined means keep existing
 }
@@ -43,8 +43,8 @@ export interface EmployeeResponseDto {
   position: string;
   hireDate: string;
   terminationDate?: string;
-  // salary: number;
-  // salaryType: string;
+  salary: number;
+  salaryType: string;
   isActive: boolean;
   createdDate: string;
   modifiedDate?: string;
@@ -68,19 +68,25 @@ export interface EmployeeListItemDto {
   avatarUrl?: string;
 }
 
+export interface EmployeePaginatedData {
+  items?: EmployeeListItemDto[];
+  employees?: EmployeeListItemDto[];
+  data?: EmployeeListItemDto[];
+  pageNumber?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+}
+
 export interface EmployeeListResponseDto {
   success?: boolean;
-  data?: {
-    employees?: EmployeeListItemDto[];
-    data?: EmployeeListItemDto[];
-    items?: EmployeeListItemDto[];
-    totalCount?: number;
-    page?: number;
-    itemsPerPage?: number;
-  };
+  data?: EmployeePaginatedData;
   employees?: EmployeeListItemDto[];
   totalCount?: number;
   page?: number;
+  pageSize?: number;
   itemsPerPage?: number;
 }
 
@@ -90,9 +96,15 @@ class EmployeeService {
   ): Promise<EmployeeListResponseDto> {
     const response = await axiosInstance.get("/employees", {
       params: {
+        // Keep both legacy and new param names to match API
         page: filter?.page || 1,
-        itemsPerPage: filter?.itemsPerPage || 100,
-        ...filter,
+        pageNumber: filter?.page || 1,
+        itemsPerPage: filter?.itemsPerPage || 12,
+        pageSize: filter?.itemsPerPage || 12,
+        ...(filter?.position !== undefined && { position: filter.position }),
+        ...(filter?.isActive !== undefined && { isActive: filter.isActive }),
+        ...(filter?.hireDateFrom !== undefined && { hireDateFrom: filter.hireDateFrom }),
+        ...(filter?.hireDateTo !== undefined && { hireDateTo: filter.hireDateTo }),
       },
     });
     return response.data;
@@ -142,6 +154,10 @@ class EmployeeService {
     if (employee.hireDate) formData.append("HireDate", employee.hireDate);
     if (employee.terminationDate)
       formData.append("TerminationDate", employee.terminationDate);
+    if (employee.salary !== undefined)
+      formData.append("Salary", employee.salary.toString());
+    if (employee.salaryType)
+      formData.append("SalaryType", employee.salaryType);
     if (employee.isActive !== undefined)
       formData.append("IsActive", employee.isActive.toString());
 

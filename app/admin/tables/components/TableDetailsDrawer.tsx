@@ -501,7 +501,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                           marginBottom: 8,
                           letterSpacing: "-0.01em",
                         }}>
-                        Dining Area
+                        Floor
                       </label>
                       <div style={{ position: "relative" }}>
                         <select

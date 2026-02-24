@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 interface AddAreaModalProps {
@@ -23,9 +26,9 @@ export const AddAreaModal: React.FC<AddAreaModalProps> = ({
     }
   };
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-[var(--card)] rounded-xl shadow-xl w-full max-w-md border border-[var(--border)]">
         <div className="p-6 border-b border-[var(--border)]">
@@ -65,6 +68,7 @@ export const AddAreaModal: React.FC<AddAreaModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

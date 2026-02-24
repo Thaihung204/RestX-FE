@@ -6,7 +6,7 @@
   --primary: #FF380B;
   --bg-light-base: #FFFFFF;
   --bg-dark-base: #0A0E14;
-  
+
   --light-surface: #F9FAFB;
   --light-card: #FFFFFF;
   --dark-surface: #1A1F2E;
@@ -60,11 +60,11 @@
   --gold: #D4AF37;
   --gold-bright: #FDD835;
   --gold-glow: color-mix(in srgb, var(--gold), transparent 60%);
-  
+
   /* Shadows & Overlays for Light Mode */
-  --shadow-sm: 0 4px 12px rgba(0,0,0,0.08);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
-  --shadow-lg: 0 20px 40px rgba(0,0,0,0.15);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
   --modal-overlay: color-mix(in srgb, black, transparent 60%);
   --decoration-glow: color-mix(in srgb, var(--primary), transparent 92%);
   --backdrop-blur: color-mix(in srgb, var(--surface), transparent 35%);
@@ -101,11 +101,11 @@
   --stroke-subtle: color-mix(in srgb, var(--text), transparent 86%);
   --surface-subtle: color-mix(in srgb, var(--surface), var(--text) 6%);
   --pattern-dot: color-mix(in srgb, var(--text), transparent 90%);
-  
+
   /* Shadows & Overlays for Dark Mode */
-  --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
-  --shadow-lg: 0 20px 40px rgba(0,0,0,0.5);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
   --modal-overlay: color-mix(in srgb, black, transparent 30%);
   --decoration-glow: color-mix(in srgb, var(--primary), transparent 88%);
   --backdrop-blur: color-mix(in srgb, var(--surface), transparent 20%);
@@ -145,7 +145,12 @@ body {
 
   .primary-gradient {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    transition: filter 0.2s ease;
   }
+
+  .primary-gradient:hover {
+  filter: brightness(1.1);
+}
 
   .primary-soft-bg {
     background: var(--primary-soft);
@@ -234,23 +239,240 @@ body {
   }
 }
 
-/* Authentication pages theme-based styles using CSS variables */
-[data-theme="dark"] .auth-bg-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--bg-base) 0%,
-    var(--surface) 55%,
-    color-mix(in srgb, var(--surface), var(--primary) 12%) 100%
-  );
+/* =========================================================
+ * Authentication Pages — CSS variable-driven classes
+ * All colors come from CSS variables → auto tenant theming
+ * ========================================================= */
+
+/* Page wrapper */
+.auth-page-bg {
+  background: var(--bg-base);
+  min-height: 100vh;
 }
 
-[data-theme="light"] .auth-bg-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--bg-base) 0%,
-    var(--surface) 55%,
-    color-mix(in srgb, var(--surface), var(--primary) 10%) 100%
-  );
+/* Glassmorphism form card */
+.auth-form-card {
+  background: color-mix(in srgb, var(--card), transparent 15%);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-lg);
+  border-radius: 1rem;
+}
+
+[data-theme="dark"] .auth-form-card {
+  background: color-mix(in srgb, var(--card), transparent 35%);
+  border-color: color-mix(in srgb, var(--text), transparent 88%);
+}
+
+/* Headings */
+.auth-heading {
+  color: var(--text);
+}
+
+/* Muted text */
+.auth-text {
+  color: var(--text-muted);
+}
+
+/* Input labels */
+.auth-label {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+/* Glass input fields */
+.auth-input {
+  background: color-mix(in srgb, var(--surface), transparent 40%);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 0.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+[data-theme="dark"] .auth-input {
+  background: color-mix(in srgb, var(--surface), transparent 20%);
+  border-color: color-mix(in srgb, var(--text), transparent 88%);
+}
+
+/* Input icon */
+.auth-input-icon {
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.group:focus-within .auth-input-icon {
+  color: var(--primary);
+}
+
+/* OR divider */
+.auth-divider {
+  border-color: var(--border);
+}
+
+.auth-divider-label {
+  color: var(--text-muted);
+  background: var(--bg-base);
+  padding: 0 0.75rem;
+  border-radius: 9999px;
+}
+
+[data-theme="dark"] .auth-divider-label {
+  background: var(--bg-base);
+}
+
+/* Secondary buttons (e.g. "Login with Email") */
+.auth-alt-btn {
+  background: color-mix(in srgb, var(--card), transparent 20%);
+  border: 1px solid var(--border);
+  color: var(--text);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  border-radius: 0.75rem;
+}
+
+.auth-alt-btn:hover {
+  background: var(--surface);
+  border-color: var(--primary-border);
+}
+
+/* Welcome success banner */
+.auth-welcome-banner {
+  background: var(--success-soft);
+  border: 1px solid var(--success-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  text-align: center;
+  color: var(--text);
+}
+
+/* Footer note */
+.auth-footer-text {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+/* Terms links */
+.auth-terms-text {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.auth-terms-link {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.auth-terms-link:hover {
+  text-decoration: underline;
+}
+
+/* Checkbox */
+.auth-checkbox {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+/* Icon buttons */
+.auth-icon-button {
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.auth-icon-button:hover {
+  color: var(--text);
+}
+
+/* Ambient decorative orbs */
+.auth-decorative {
+  background: var(--primary);
+}
+
+.auth-orb {
+  background: var(--primary);
+  filter: blur(80px);
+  opacity: 0.06;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+/* Hero left-panel (always dark bg to contrast food photo) */
+/* This panel is intentionally always dark regardless of tenant theme */
+/* Force white text: body { color: var(--text) } would override otherwise */
+.auth-hero-panel {
+  background: #0D1117;
+  color: #ffffff !important;
+}
+
+/* Ensure ALL text descendants inside hero panel stay white */
+/* Uses high specificity to beat JSX-injected AntdProvider styles (a { color: var(--primary) }) */
+.auth-hero-panel *,
+.auth-hero-panel h1,
+.auth-hero-panel h2,
+.auth-hero-panel h3,
+.auth-hero-panel p,
+.auth-hero-panel span,
+.auth-hero-panel a,
+.auth-hero-panel li {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Keep images unaffected by color rule */
+.auth-hero-panel img {
+  color: unset !important;
+  text-shadow: none !important;
+}
+
+/* bg-gradient alias kept for backward compat */
+.auth-bg-gradient {
+  background: var(--bg-base);
+}
+
+/* Auth animations */
+@keyframes auth-fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-animate-in {
+  animation: auth-fade-in-down 0.25s ease-out both;
+}
+
+@keyframes auth-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.auth-fade-in {
+  animation: auth-fade-in 0.25s ease-out both;
 }
 
 [data-theme="dark"] .auth-card {
@@ -318,11 +540,9 @@ body {
 }
 
 [data-theme="light"] .loading-screen-bg {
-  background: linear-gradient(
-    135deg,
-    var(--surface) 0%,
-    color-mix(in srgb, var(--surface), var(--primary) 6%) 100%
-  );
+  background: linear-gradient(135deg,
+      var(--surface) 0%,
+      color-mix(in srgb, var(--surface), var(--primary) 6%) 100%);
 }
 
 [data-theme="dark"] .loading-screen-text {
@@ -481,6 +701,7 @@ textarea::placeholder {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -511,6 +732,7 @@ textarea::placeholder {
 [data-theme="light"] .app-logo-img {
   filter: none;
 }
+
 /* Enable hardware acceleration for smooth animations */
 * {
   will-change: auto;
@@ -518,8 +740,7 @@ textarea::placeholder {
 
 /* Reduce paint/layout thrashing for theme-dependent elements */
 [data-theme] {
-  /* Optimize CSS variable reads with contain */
-  contain: layout style;
+  contain: style;
 }
 
 /* Use content-visibility for off-screen content (lazy rendering) */
@@ -566,14 +787,14 @@ img {
 }
 
 /* Admin Tenants Table - Override Ant Design dark mode defaults */
-.admin-tenants-table .ant-table-thead > tr > th {
+.admin-tenants-table .ant-table-thead>tr>th {
   background: var(--surface) !important;
   color: var(--text) !important;
   border-bottom: 1px solid var(--border) !important;
   font-weight: 600 !important;
 }
 
-.admin-tenants-table .ant-table-tbody > tr {
+.admin-tenants-table .ant-table-tbody>tr {
   background: var(--card) !important;
 }
 /* =========================================================
@@ -583,15 +804,15 @@ img {
   display: none !important;
 }
 
-/* Also hide in label if Ant Design uses different selector */
 .ant-form-item-label > label.ant-form-item-required::before {
   display: none !important;
 }
+
 .admin-tenants-table .ant-table-tbody > tr:hover > td {
   background: var(--surface-subtle) !important;
 }
 
-.admin-tenants-table .ant-table-tbody > tr > td {
+.admin-tenants-table .ant-table-tbody>tr>td {
   border-bottom: 1px solid var(--border) !important;
 }
 
@@ -601,4 +822,47 @@ img {
 
 .admin-tenants-table .ant-table-container {
   background: var(--card) !important;
+}
+
+.admin-loyalty-table .ant-table-thead>tr>th {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-weight: 600 !important;
+}
+
+.admin-loyalty-table .ant-table-tbody>tr {
+  background: var(--card) !important;
+}
+
+.admin-loyalty-table .ant-table-tbody>tr:hover>td {
+  background: var(--surface-subtle) !important;
+}
+
+.admin-loyalty-table .ant-table-tbody>tr>td {
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.admin-loyalty-table .ant-table {
+  background: var(--card) !important;
+}
+
+.admin-loyalty-table .ant-table-container {
+  background: var(--card) !important;
+}
+
+.admin-loyalty-table .ant-pagination .ant-pagination-item a,
+.admin-loyalty-table .ant-pagination .ant-pagination-prev button,
+.admin-loyalty-table .ant-pagination .ant-pagination-next button {
+  color: var(--text) !important;
+}
+
+.admin-loyalty-table .ant-pagination .ant-pagination-item-active {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.admin-loyalty-table .ant-pagination .ant-pagination-item-active a {
+  color: #fff !important;
 }
