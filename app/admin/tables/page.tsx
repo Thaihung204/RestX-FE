@@ -8,8 +8,8 @@ import { AddTableModal } from "./components/AddTableModal";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
-import { TableMap2D, Layout, Floor, Zone } from "./components/TableMap2D";
-import { tableService, TableStatus } from "@/lib/services/tableService";
+import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
+import { tableService, TableStatus, TableItem, LayoutResponse } from "@/lib/services/tableService";
 
 interface Table {
   id: string;
@@ -32,9 +32,7 @@ interface Table {
   viewDescription?: string;
   defaultViewUrl?: string;
   qrCodeUrl?: string;
-  // Frontend-only: zone tracking
-  zoneId?: string;
-  zoneName?: string;
+
 }
 
 type ViewMode = "grid" | "map";
@@ -175,7 +173,7 @@ export default function TablesPage() {
         width: savedFloor?.width || 1000,
         height: savedFloor?.height || 800,
         backgroundImage: savedFloor?.backgroundImage || undefined,
-        zones: (savedFloor?.zones || []) as Zone[],
+
         tables: floorTables
       };
     });
@@ -189,24 +187,49 @@ export default function TablesPage() {
 
   }, [tables, t, availableAreas]); // dependency on tables ensures updates propagate
 
-  const handleLayoutChange = (newLayout: Layout) => {
+  const handleLayoutChange = async (newLayout: Layout) => {
     setLayout(newLayout);
-    // Persist configuration (backgrounds, dimensions)
-    // We don't need to persist tables inside local storage layout, because they come from DB.
-    // But for simplicity of the "Upload Floorplan" requirement which updates `layout.floors`, 
-    // we save the floor metadata.
-    const layoutToSave = {
-      ...newLayout,
-      floors: newLayout.floors.map(f => ({
-        id: f.id,
-        name: f.name,
-        width: f.width,
-        height: f.height,
-        backgroundImage: f.backgroundImage,
-        zones: f.zones || [],
-      }))
-    };
-    localStorage.setItem('restaurant_layout', JSON.stringify(layoutToSave));
+
+    try {
+      const layoutPayload: LayoutResponse = {
+        id: newLayout.id,
+        name: newLayout.name,
+        activeFloorId: newLayout.activeFloorId,
+        floors: newLayout.floors.map(f => ({
+          id: f.id,
+          name: f.name,
+          width: f.width,
+          height: f.height,
+          backgroundImage: f.backgroundImage,
+          zones: [],
+          tables: f.tables.map(t => {
+            const fullTable = tables.find(ft => ft.id === t.id);
+            return {
+              id: t.id,
+              code: t.name,
+              type: t.area,
+              seatingCapacity: t.seats,
+              shape: t.shape,
+              positionX: t.position.x,
+              positionY: t.position.y,
+              width: t.width,
+              height: t.height,
+              rotation: t.rotation,
+              isActive: fullTable?.isActive ?? true,
+              tableStatusId: fullTable?.status === 'occupied' ? TableStatus.Occupied : (fullTable?.status === 'reserved' ? TableStatus.Reserved : TableStatus.Available),
+              has3DView: fullTable?.has3DView,
+              viewDescription: fullTable?.viewDescription,
+              defaultViewUrl: fullTable?.defaultViewUrl,
+              qrCodeUrl: fullTable?.qrCodeUrl
+            } as TableItem;
+          })
+        }))
+      };
+
+      await tableService.saveLayout(layoutPayload);
+    } catch (error) {
+      console.error("Failed to save layout:", error);
+    }
   };
 
   const handleMap2DTablePositionChange = async (tableId: string, position: { x: number; y: number; zoneId?: string }) => {
@@ -217,7 +240,7 @@ export default function TablesPage() {
       if (f.id === layout.activeFloorId) {
         return {
           ...f,
-          tables: f.tables.map(t => t.id === tableId ? { ...t, position: { x: position.x, y: position.y }, zoneId: position.zoneId } : t)
+          tables: f.tables.map(t => t.id === tableId ? { ...t, position: { x: position.x, y: position.y } } : t)
         };
       }
       return f;
@@ -250,13 +273,8 @@ export default function TablesPage() {
 
       await tableService.updateTable(tableId, apiData);
 
-      // Update local tables state — persist position AND zoneId
-      const zoneName = position.zoneId
-        ? layout.floors.find(f => f.id === layout.activeFloorId)?.zones?.find(z => z.id === position.zoneId)?.name
-        : undefined;
-
       setTables(prev => prev.map(t =>
-        t.id === tableId ? { ...t, positionX: position.x, positionY: position.y, zoneId: position.zoneId, zoneName } : t
+        t.id === tableId ? { ...t, positionX: position.x, positionY: position.y } : t
       ));
     } catch (err) {
       console.error("Failed to move table:", err);
@@ -264,31 +282,7 @@ export default function TablesPage() {
     }
   };
 
-  // Add a new zone to the active floor
-  const handleAddZone = () => {
-    if (!layout) return;
 
-    const newZone: Zone = {
-      id: crypto.randomUUID(),
-      name: `Zone ${(layout.floors.find(f => f.id === layout.activeFloorId)?.zones?.length || 0) + 1}`,
-      x: 50,
-      y: 50,
-      width: 300,
-      height: 200,
-      color: "rgba(0,0,0,0.05)"
-    };
-
-    const updatedFloors = layout.floors.map(f => {
-      if (f.id === layout.activeFloorId) {
-        return { ...f, zones: [...(f.zones || []), newZone] };
-      }
-      return f;
-    });
-
-    const newLayout = { ...layout, floors: updatedFloors };
-    setLayout(newLayout);
-    handleLayoutChange(newLayout);
-  };
 
   // Resize table handler
   const handleMap2DTableResize = async (tableId: string, size: { width: number; height: number }) => {
@@ -577,7 +571,7 @@ export default function TablesPage() {
               <button
                 onClick={() => setAddAreaModalOpen(true)}
                 className="px-4 py-2 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium transition-all hover:bg-[var(--bg-base)]">
-                + {t("dashboard.tables.add_area")}
+                + {t("dashboard.tables.add_floor", "Add Floor")}
               </button>
               <button
                 onClick={() => setAddModalOpen(true)}
@@ -635,7 +629,7 @@ export default function TablesPage() {
                 onTablePositionChange={handleMap2DTablePositionChange}
                 onTableMerge={handleMap2DTableMerge}
                 onTableResize={handleMap2DTableResize}
-                onAddZone={handleAddZone}
+
                 readOnly={false}
                 selectedTableId={selectedTable?.id}
                 renderTableContent={(table) => {
@@ -676,7 +670,7 @@ export default function TablesPage() {
                     <p
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}>
-                      {table.area} {t("dashboard.tables.card.area")}
+                      {table.area} {t("dashboard.tables.card.floor", "Floor")}
                     </p>
                   </div>
                   <span
@@ -839,7 +833,7 @@ export default function TablesPage() {
       < DeleteConfirmModal
         open={!!zoneToDelete}
         itemName={zoneToDelete || ""}
-        itemType="Area"
+        itemType="Floor"
         onClose={() => setZoneToDelete(null)}
         onConfirm={confirmDeleteZone}
       />

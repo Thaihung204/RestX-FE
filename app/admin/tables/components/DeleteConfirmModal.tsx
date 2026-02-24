@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 interface DeleteConfirmModalProps {
     open: boolean;
     itemName: string | number;
-    itemType?: 'Table' | 'Area';
+    itemType?: 'Table' | 'Area' | 'Floor';
     onClose: () => void;
     onConfirm: () => void;
 }
