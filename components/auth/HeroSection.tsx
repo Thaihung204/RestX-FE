@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const HeroSection: React.FC = () => {
     return (
-        <div className="hidden md:block md:w-1/2 relative overflow-hidden bg-[#0E121A] z-10 h-full min-h-screen">
+        <div className="hidden md:block md:w-1/2 relative overflow-hidden auth-hero-panel z-10 h-full min-h-screen">
             <img
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4"
                 alt="Atmospheric dark restaurant interior with warm lighting"

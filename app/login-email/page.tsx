@@ -129,7 +129,7 @@ export default function LoginEmailPage() {
   const isDark = mode === 'dark';
 
   return (
-    <div className={`min-h-screen flex flex-col md:flex-row relative transition-colors duration-300 ${isDark ? 'bg-[#0E121A]' : 'bg-[#F7F8FA]'}`}>
+    <div className="auth-page-bg flex flex-col md:flex-row relative transition-colors duration-300">
       {/* Mobile Background: Image with Overlay */}
       <div className="absolute inset-0 z-0 md:hidden">
         <img
@@ -138,7 +138,7 @@ export default function LoginEmailPage() {
           className="w-full h-full object-cover"
         />
         {/* Dark overlay for mobile legibility */}
-        <div className={`absolute inset-0 backdrop-blur-[2px] ${isDark ? 'bg-[#0E121A]/80' : 'bg-black/40'}`}></div>
+        <div className="absolute inset-0 backdrop-blur-[2px] bg-black/40"></div>
       </div>
 
       {/* Left Side: Hero Image & Branding (Desktop Only) */}
@@ -148,14 +148,11 @@ export default function LoginEmailPage() {
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-12 lg:p-20 relative overflow-hidden min-h-screen z-10">
 
         {/* Desktop Ambient Orbs */}
-        <div className="hidden md:block absolute top-0 right-0 w-96 h-96 bg-[#FF380B] rounded-full filter blur-[100px] opacity-[0.05] pointer-events-none"></div>
-        <div className="hidden md:block absolute bottom-0 left-0 w-64 h-64 bg-[#FF6B3B] rounded-full filter blur-[80px] opacity-[0.05] pointer-events-none"></div>
+        <div className="hidden md:block absolute top-0 right-0 w-96 h-96 auth-orb"></div>
+        <div className="hidden md:block absolute bottom-0 left-0 w-64 h-64 auth-orb"></div>
 
         {/* Login Form Container */}
-        <div className={`w-full max-w-md backdrop-blur-xl rounded-2xl p-8 lg:p-10 relative z-20 border transition-colors duration-300
-        ${isDark
-            ? 'bg-white/5 border-white/10 shadow-2xl'
-            : 'bg-white/80 border-gray-200 shadow-xl'}`}>
+        <div className="auth-form-card w-full max-w-md p-8 lg:p-10 relative z-20 transition-colors duration-300">
 
           <div className="md:hidden w-full flex flex-col items-center mb-8">
             <div className="w-20 h-20 bg-[#FF380B]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[#FF380B]/20 p-4">
@@ -165,11 +162,11 @@ export default function LoginEmailPage() {
                 className={`w-full h-full object-contain ${isDark ? 'filter invert hue-rotate-180 brightness-110' : ''}`}
               />
             </div>
-            <span className={`font-bold uppercase tracking-[0.2em] text-2xl drop-shadow-md ${isDark ? 'text-white' : 'text-gray-900'}`}>RestX</span>
+            <span className="auth-heading font-bold uppercase tracking-[0.2em] text-2xl drop-shadow-md">RestX</span>
           </div>
 
           <div className="text-center md:text-left mb-8">
-            <h1 className={`text-3xl font-bold tracking-tight drop-shadow-sm transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h1 className="auth-heading text-3xl font-bold tracking-tight drop-shadow-sm transition-colors">
               {t('login_email_page.title')}
             </h1>
           </div>
@@ -253,12 +250,9 @@ export default function LoginEmailPage() {
 
 
 
-            <div className={`text-center text-sm mt-6 pt-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-              <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('login_email_page.no_account')} </span>
-              <a
-                href="/register"
-                className="font-semibold text-[#FF380B] hover:text-[#ff5c35] hover:underline transition-colors"
-              >
+            <div className="text-center text-sm mt-6 pt-4 border-t auth-divider">
+              <span className="auth-text">{t('login_email_page.no_account')} </span>
+              <a href="/register" className="auth-terms-link font-semibold hover:underline transition-colors">
                 {t('login_email_page.sign_up_here')}
               </a>
             </div>
@@ -266,10 +260,10 @@ export default function LoginEmailPage() {
 
           <div className="relative mt-8">
             <div className="absolute inset-0 flex items-center">
-              <div className={`w-full border-t ${isDark ? 'border-white/20' : 'border-gray-200'}`}></div>
+              <div className="auth-divider w-full border-t"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className={`px-3 bg-transparent backdrop-blur-xl rounded-full border md:border-none ${isDark ? 'text-gray-400 border-white/10 md:bg-[#0E121A]' : 'text-gray-500 border-gray-200 md:bg-[#F7F8FA]'}`}>
+              <span className="auth-divider-label">
                 {t('login_email_page.or_login_with')}
               </span>
             </div>
@@ -279,20 +273,17 @@ export default function LoginEmailPage() {
             <button
               type="button"
               onClick={() => router.push('/login')}
-              className={`w-full inline-flex justify-center items-center py-3 px-4 border rounded-xl shadow-sm backdrop-blur-md text-sm font-medium transition-all duration-200 group
-              ${isDark
-                  ? 'border-white/20 bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white hover:border-white/30'
-                  : 'border-gray-200 bg-white/50 hover:bg-white/80 text-gray-700 hover:text-gray-900 hover:border-gray-300'}`}
+              className="auth-alt-btn w-full inline-flex justify-center items-center py-3 px-4 shadow-sm text-sm font-medium group"
             >
-              <PhoneOutlined className={`text-xl mr-3 group-hover:text-inherit ${isDark ? 'text-gray-300' : 'text-gray-500'}`} />
+              <PhoneOutlined className="auth-input-icon text-xl mr-3" />
               <span>{t('login_email_page.phone_number')}</span>
             </button>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none mix-blend-plus-lighter">
-          <p className={`text-xs ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
+        <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none">
+          <p className="auth-footer-text">
             © {new Date().getFullYear()} RestX. All rights reserved.
           </p>
         </div>
