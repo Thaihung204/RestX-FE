@@ -1,7 +1,8 @@
 'use client';
 
+import { AnimatePresence, motion } from 'framer-motion';
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 interface DeleteConfirmModalProps {
@@ -22,7 +23,9 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
     const { t } = useTranslation();
     const translatedType = t(`components.delete_modal.types.${itemType}`, { defaultValue: itemType });
 
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
         <AnimatePresence>
             {open && (
                 <>
@@ -241,6 +244,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                     </motion.div>
                 </>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body,
     );
 };

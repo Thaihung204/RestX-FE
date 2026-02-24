@@ -726,7 +726,7 @@
       "try_adjusting_filters": "Try adjusting your search or filters",
       "stats": {
         "total_staff": "Total Staff",
-        "on_duty": "On Duty",
+        "on_duty": "Active",
         "departments": "Departments",
         "avg_rating": "Avg Rating",
         "inactive": "Inactive",
@@ -747,6 +747,18 @@
         "enter_address": "Enter address",
         "position_placeholder": "e.g., Head Chef, Server, etc.",
         "active_description": "Active (Staff member is currently working)"
+      },
+      "employment_details": {
+        "title": "Employment Details",
+        "salary": "Salary",
+        "salary_type": "Salary Type",
+        "termination_date": "Termination Date",
+        "roles": "System Roles",
+        "salary_types": {
+          "monthly": "Monthly",
+          "hourly": "Hourly",
+          "daily": "Daily"
+        }
       },
       "avatar": {
         "profile_picture": "Profile Picture",
@@ -783,8 +795,12 @@
         "view_profile": "View Profile"
       },
       "roles": {
+        "manager": "Manager",
+        "chef": "Chef",
+        "waiter": "Waiter",
+        "cashier": "Cashier",
         "kitchen staff": "Kitchen Staff",
-        "waiter": "Waiter"
+        "staff": "Staff"
       },
       "status": {
         "active": "Active",
