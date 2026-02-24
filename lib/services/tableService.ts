@@ -61,7 +61,33 @@ export const tableService = {
             { headers: { 'Content-Type': 'application/json' } }
         );
         return response.data;
+    },
+
+    getLayout: async (tenantId: string): Promise<LayoutResponse> => {
+        const response = await axiosInstance.get<LayoutResponse>(`/public/layout/${tenantId}`);
+        return response.data;
+    },
+
+    saveLayout: async (layout: LayoutResponse): Promise<void> => {
+        await axiosInstance.put('/admin/layout', layout);
     }
 };
+
+export interface LayoutResponse {
+    id: string;
+    name: string;
+    activeFloorId: string;
+    floors: FloorResponse[];
+}
+
+export interface FloorResponse {
+    id: string;
+    name: string;
+    width: number;
+    height: number;
+    backgroundImage?: string;
+    zones: any[];
+    tables: TableItem[];
+}
 
 export default tableService;

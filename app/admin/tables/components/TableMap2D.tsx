@@ -4,23 +4,12 @@ import React, { useState, useRef, useCallback } from "react";
 import { DraggableTable, TableData } from "./DraggableTable";
 import { useTranslation } from "react-i18next";
 
-export interface Zone {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color?: string;
-}
-
 export interface Floor {
   id: string;
   name: string;
   backgroundImage?: string;
   width: number;
   height: number;
-  zones: Zone[];
   tables: TableData[];
 }
 
@@ -41,290 +30,10 @@ interface TableMap2DProps {
   ) => void;
   onTableMerge?: (sourceTableId: string, targetTableId: string) => void;
   onTableResize?: (tableId: string, size: { width: number; height: number }) => void;
-  onAddZone?: () => void;
   renderTableContent?: (table: TableData) => React.ReactNode;
   readOnly?: boolean;
   selectedTableId?: string;
 }
-
-/* ── Inline Editable Zone Name ── */
-const ZoneName: React.FC<{
-  name: string;
-  readOnly: boolean;
-  onChange: (name: string) => void;
-}> = ({ name, readOnly, onChange }) => {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(name);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  if (readOnly) {
-    return (
-      <span style={{ fontSize: 11, fontWeight: 600, opacity: 0.7, color: "var(--text)", userSelect: "none" }}>
-        {name}
-      </span>
-    );
-  }
-
-  if (editing) {
-    return (
-      <input
-        ref={inputRef}
-        autoFocus
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={() => { setEditing(false); onChange(value); }}
-        onKeyDown={(e) => { if (e.key === "Enter") { setEditing(false); onChange(value); } if (e.key === "Escape") { setEditing(false); setValue(name); } }}
-        onClick={(e) => e.stopPropagation()}
-        onPointerDown={(e) => e.stopPropagation()}
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          background: "rgba(255,255,255,0.9)",
-          border: "1px solid var(--primary)",
-          borderRadius: 3,
-          padding: "1px 4px",
-          outline: "none",
-          width: "100%",
-          maxWidth: 120,
-          color: "var(--text)",
-        }}
-      />
-    );
-  }
-
-  return (
-    <span
-      onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
-      title="Double-click to rename"
-      style={{
-        fontSize: 11,
-        fontWeight: 600,
-        opacity: 0.7,
-        color: "var(--text)",
-        userSelect: "none",
-        cursor: "text",
-      }}
-    >
-      {name}
-    </span>
-  );
-};
-
-/* ── Interactive Zone Component ── */
-const InteractiveZone: React.FC<{
-  zone: Zone;
-  readOnly: boolean;
-  floorWidth: number;
-  floorHeight: number;
-  onUpdate: (zoneId: string, updates: Partial<Zone>) => void;
-  onDelete?: (zoneId: string) => void;
-}> = ({ zone, readOnly, floorWidth, floorHeight, onUpdate, onDelete }) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [localPos, setLocalPos] = useState({ x: zone.x, y: zone.y });
-  const [localSize, setLocalSize] = useState({ w: zone.width, h: zone.height });
-  const [showActions, setShowActions] = useState(false);
-
-  const dragRef = useRef({ startX: 0, startY: 0, origX: 0, origY: 0 });
-  const resizeRef = useRef({ startX: 0, startY: 0, origW: 0, origH: 0, handle: "" });
-
-  // Sync from props when not interacting
-  React.useEffect(() => {
-    if (!isDragging) setLocalPos({ x: zone.x, y: zone.y });
-  }, [zone.x, zone.y, isDragging]);
-
-  React.useEffect(() => {
-    if (!isResizing) setLocalSize({ w: zone.width, h: zone.height });
-  }, [zone.width, zone.height, isResizing]);
-
-  /* ─── Drag ─── */
-  const handleDragStart = useCallback((e: React.PointerEvent) => {
-    if (readOnly || isResizing) return;
-    e.stopPropagation();
-    e.preventDefault();
-    setIsDragging(true);
-    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: localPos.x, origY: localPos.y };
-
-    const handleMove = (ev: PointerEvent) => {
-      const dx = ev.clientX - dragRef.current.startX;
-      const dy = ev.clientY - dragRef.current.startY;
-      const newX = Math.max(0, Math.min(floorWidth - localSize.w, dragRef.current.origX + dx));
-      const newY = Math.max(0, Math.min(floorHeight - localSize.h, dragRef.current.origY + dy));
-      setLocalPos({ x: newX, y: newY });
-    };
-
-    const handleUp = () => {
-      setIsDragging(false);
-      document.removeEventListener("pointermove", handleMove);
-      document.removeEventListener("pointerup", handleUp);
-      // Commit
-      setLocalPos(pos => {
-        onUpdate(zone.id, { x: pos.x, y: pos.y });
-        return pos;
-      });
-    };
-
-    document.addEventListener("pointermove", handleMove);
-    document.addEventListener("pointerup", handleUp);
-  }, [readOnly, isResizing, localPos, localSize, floorWidth, floorHeight, zone.id, onUpdate]);
-
-  /* ─── Resize ─── */
-  const handleResizeStart = useCallback((e: React.PointerEvent, handle: string) => {
-    if (readOnly) return;
-    e.stopPropagation();
-    e.preventDefault();
-    setIsResizing(true);
-    resizeRef.current = { startX: e.clientX, startY: e.clientY, origW: localSize.w, origH: localSize.h, handle };
-
-    const handleMove = (ev: PointerEvent) => {
-      const dx = ev.clientX - resizeRef.current.startX;
-      const dy = ev.clientY - resizeRef.current.startY;
-      const h = resizeRef.current.handle;
-      let newW = resizeRef.current.origW;
-      let newH = resizeRef.current.origH;
-
-      if (h.includes("e")) newW = Math.max(60, resizeRef.current.origW + dx);
-      if (h.includes("s")) newH = Math.max(40, resizeRef.current.origH + dy);
-      if (h.includes("w")) newW = Math.max(60, resizeRef.current.origW - dx);
-      if (h.includes("n")) newH = Math.max(40, resizeRef.current.origH - dy);
-
-      // Clamp to floor bounds
-      newW = Math.min(newW, floorWidth - localPos.x);
-      newH = Math.min(newH, floorHeight - localPos.y);
-
-      setLocalSize({ w: newW, h: newH });
-    };
-
-    const handleUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("pointermove", handleMove);
-      document.removeEventListener("pointerup", handleUp);
-      setLocalSize(size => {
-        onUpdate(zone.id, { width: size.w, height: size.h });
-        return size;
-      });
-    };
-
-    document.addEventListener("pointermove", handleMove);
-    document.addEventListener("pointerup", handleUp);
-  }, [readOnly, localSize, localPos, floorWidth, floorHeight, zone.id, onUpdate]);
-
-  const MIN_HANDLE = 10;
-  const handleStyle = (cursor: string): React.CSSProperties => ({
-    position: "absolute",
-    width: MIN_HANDLE,
-    height: MIN_HANDLE,
-    background: isDragging || isResizing ? "var(--primary)" : "transparent",
-    border: "2px solid var(--primary)",
-    borderRadius: 2,
-    cursor,
-    zIndex: 3,
-    transition: "background 0.15s",
-  });
-
-  return (
-    <div
-      onPointerDown={handleDragStart}
-      onMouseEnter={() => !readOnly && setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
-      style={{
-        position: "absolute",
-        left: localPos.x,
-        top: localPos.y,
-        width: localSize.w,
-        height: localSize.h,
-        border: `2px dashed ${(isDragging || isResizing || showActions) ? "var(--primary)" : "rgba(100,100,100,0.25)"}`,
-        background: zone.color || "rgba(0,0,0,0.03)",
-        borderRadius: 6,
-        cursor: readOnly ? "default" : (isDragging ? "grabbing" : "grab"),
-        zIndex: isDragging || isResizing ? 5 : 0,
-        transition: isDragging || isResizing ? "none" : "border-color 0.2s",
-        userSelect: "none",
-      }}
-    >
-      {/* Zone Name — top-left */}
-      <div
-        style={{ position: "absolute", top: 4, left: 6, zIndex: 2 }}
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        <ZoneName
-          name={zone.name}
-          readOnly={readOnly}
-          onChange={(newName) => onUpdate(zone.id, { name: newName })}
-        />
-      </div>
-
-      {/* Dimension label during drag/resize */}
-      {(isDragging || isResizing) && (
-        <div style={{
-          position: "absolute",
-          bottom: -22,
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: "var(--primary)",
-          color: "white",
-          fontSize: 10,
-          padding: "2px 6px",
-          borderRadius: 4,
-          whiteSpace: "nowrap",
-          zIndex: 10,
-          fontWeight: 600,
-        }}>
-          {Math.round(localSize.w)} × {Math.round(localSize.h)}
-          {isDragging && ` @ (${Math.round(localPos.x)}, ${Math.round(localPos.y)})`}
-        </div>
-      )}
-
-      {/* Delete button — top-right */}
-      {showActions && !readOnly && onDelete && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(zone.id); }}
-          onPointerDown={(e) => e.stopPropagation()}
-          style={{
-            position: "absolute",
-            top: 2,
-            right: 2,
-            width: 18,
-            height: 18,
-            borderRadius: "50%",
-            background: "#ef4444",
-            color: "white",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 11,
-            fontWeight: "bold",
-            lineHeight: 1,
-            zIndex: 3,
-          }}
-          title="Delete zone"
-        >
-          ×
-        </button>
-      )}
-
-      {/* Resize Handles — only if not readOnly and hovering */}
-      {!readOnly && showActions && (
-        <>
-          {/* Bottom-right */}
-          <div onPointerDown={(e) => handleResizeStart(e, "se")} style={{ ...handleStyle("nwse-resize"), bottom: -5, right: -5 }} />
-          {/* Bottom-left */}
-          <div onPointerDown={(e) => handleResizeStart(e, "sw")} style={{ ...handleStyle("nesw-resize"), bottom: -5, left: -5 }} />
-          {/* Top-right */}
-          <div onPointerDown={(e) => handleResizeStart(e, "ne")} style={{ ...handleStyle("nesw-resize"), top: -5, right: -5 }} />
-          {/* Top-left */}
-          <div onPointerDown={(e) => handleResizeStart(e, "nw")} style={{ ...handleStyle("nwse-resize"), top: -5, left: -5 }} />
-          {/* Right edge */}
-          <div onPointerDown={(e) => handleResizeStart(e, "e")} style={{ position: "absolute", top: "20%", right: -4, width: 6, height: "60%", cursor: "ew-resize", zIndex: 3 }} />
-          {/* Bottom edge */}
-          <div onPointerDown={(e) => handleResizeStart(e, "s")} style={{ position: "absolute", left: "20%", bottom: -4, width: "60%", height: 6, cursor: "ns-resize", zIndex: 3 }} />
-        </>
-      )}
-    </div>
-  );
-};
 
 /* ══════════════════════════════════════════════
    Main TableMap2D Component
@@ -336,7 +45,6 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   onTablePositionChange,
   onTableMerge,
   onTableResize,
-  onAddZone,
   renderTableContent,
   readOnly = false,
   selectedTableId,
@@ -448,53 +156,12 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
     }
 
     if (!merged) {
-      const centerX = x + tableW / 2;
-      const centerY = y + tableH / 2;
-
-      const matchedZone = activeFloor.zones?.find(zone =>
-        centerX >= zone.x &&
-        centerX <= zone.x + zone.width &&
-        centerY >= zone.y &&
-        centerY <= zone.y + zone.height
-      );
-
       onTablePositionChange(tableId, {
         x,
         y,
-        zoneId: matchedZone?.id
       });
     }
   };
-
-  /* ─── Zone update handler ─── */
-  const handleZoneUpdate = (zoneId: string, updates: Partial<Zone>) => {
-    const updatedFloors = layout.floors.map(f => {
-      if (f.id === activeFloor.id) {
-        return {
-          ...f,
-          zones: f.zones.map(z => z.id === zoneId ? { ...z, ...updates } : z),
-        };
-      }
-      return f;
-    });
-    onLayoutChange({ ...layout, floors: updatedFloors });
-  };
-
-  /* ─── Zone delete handler ─── */
-  const handleZoneDelete = (zoneId: string) => {
-    const updatedFloors = layout.floors.map(f => {
-      if (f.id === activeFloor.id) {
-        return {
-          ...f,
-          zones: f.zones.filter(z => z.id !== zoneId),
-        };
-      }
-      return f;
-    });
-    onLayoutChange({ ...layout, floors: updatedFloors });
-  };
-
-
 
   return (
     <div className="flex flex-col gap-4 h-full">
@@ -538,20 +205,6 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
                 {t("dashboard.tables.map.upload_floorplan")}
               </button>
             </>
-          )}
-
-          {/* Add Zone Button */}
-          {!readOnly && onAddZone && (
-            <button
-              onClick={onAddZone}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[var(--text-muted)] bg-[var(--card)] border border-dashed border-[var(--border)] rounded-md hover:text-[var(--text)] hover:bg-[var(--bg-base)] transition-all"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M12 8v8M8 12h8" />
-              </svg>
-              {t("dashboard.tables.add_zone")}
-            </button>
           )}
 
           {/* Grid Toggle */}
@@ -600,19 +253,6 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
             />
           )}
 
-          {/* Zones Layer — Interactive */}
-          {activeFloor.zones?.map(zone => (
-            <InteractiveZone
-              key={zone.id}
-              zone={zone}
-              readOnly={readOnly}
-              floorWidth={activeFloor.width}
-              floorHeight={activeFloor.height}
-              onUpdate={handleZoneUpdate}
-              onDelete={readOnly ? undefined : handleZoneDelete}
-            />
-          ))}
-
           {/* Tables */}
           {activeFloor.tables.map((table) => (
             <DraggableTable
@@ -634,9 +274,6 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
           {t("dashboard.tables.map.floor_dimensions")}: {activeFloor.width}px × {activeFloor.height}px
         </div>
         <div className="flex items-center gap-3">
-          {(activeFloor.zones?.length || 0) > 0 && (
-            <span>{activeFloor.zones.length} {t("dashboard.tables.map.zones")}</span>
-          )}
           <span>{activeFloor.tables.length} {t("dashboard.tables.map.tables_on_floor")}</span>
         </div>
       </div>

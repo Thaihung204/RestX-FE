@@ -6,7 +6,7 @@
   --primary: #FF380B;
   --bg-light-base: #FFFFFF;
   --bg-dark-base: #0A0E14;
-  
+
   --light-surface: #F9FAFB;
   --light-card: #FFFFFF;
   --dark-surface: #1A1F2E;
@@ -60,11 +60,11 @@
   --gold: #D4AF37;
   --gold-bright: #FDD835;
   --gold-glow: color-mix(in srgb, var(--gold), transparent 60%);
-  
+
   /* Shadows & Overlays for Light Mode */
-  --shadow-sm: 0 4px 12px rgba(0,0,0,0.08);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
-  --shadow-lg: 0 20px 40px rgba(0,0,0,0.15);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
   --modal-overlay: color-mix(in srgb, black, transparent 60%);
   --decoration-glow: color-mix(in srgb, var(--primary), transparent 92%);
   --backdrop-blur: color-mix(in srgb, var(--surface), transparent 35%);
@@ -101,11 +101,11 @@
   --stroke-subtle: color-mix(in srgb, var(--text), transparent 86%);
   --surface-subtle: color-mix(in srgb, var(--surface), var(--text) 6%);
   --pattern-dot: color-mix(in srgb, var(--text), transparent 90%);
-  
+
   /* Shadows & Overlays for Dark Mode */
-  --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
-  --shadow-lg: 0 20px 40px rgba(0,0,0,0.5);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
   --modal-overlay: color-mix(in srgb, black, transparent 30%);
   --decoration-glow: color-mix(in srgb, var(--primary), transparent 88%);
   --backdrop-blur: color-mix(in srgb, var(--surface), transparent 20%);
@@ -236,21 +236,17 @@ body {
 
 /* Authentication pages theme-based styles using CSS variables */
 [data-theme="dark"] .auth-bg-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--bg-base) 0%,
-    var(--surface) 55%,
-    color-mix(in srgb, var(--surface), var(--primary) 12%) 100%
-  );
+  background: linear-gradient(135deg,
+      var(--bg-base) 0%,
+      var(--surface) 55%,
+      color-mix(in srgb, var(--surface), var(--primary) 12%) 100%);
 }
 
 [data-theme="light"] .auth-bg-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--bg-base) 0%,
-    var(--surface) 55%,
-    color-mix(in srgb, var(--surface), var(--primary) 10%) 100%
-  );
+  background: linear-gradient(135deg,
+      var(--bg-base) 0%,
+      var(--surface) 55%,
+      color-mix(in srgb, var(--surface), var(--primary) 10%) 100%);
 }
 
 [data-theme="dark"] .auth-card {
@@ -318,11 +314,9 @@ body {
 }
 
 [data-theme="light"] .loading-screen-bg {
-  background: linear-gradient(
-    135deg,
-    var(--surface) 0%,
-    color-mix(in srgb, var(--surface), var(--primary) 6%) 100%
-  );
+  background: linear-gradient(135deg,
+      var(--surface) 0%,
+      color-mix(in srgb, var(--surface), var(--primary) 6%) 100%);
 }
 
 [data-theme="dark"] .loading-screen-text {
@@ -481,6 +475,7 @@ textarea::placeholder {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -511,6 +506,7 @@ textarea::placeholder {
 [data-theme="light"] .app-logo-img {
   filter: none;
 }
+
 /* Enable hardware acceleration for smooth animations */
 * {
   will-change: auto;
@@ -566,22 +562,22 @@ img {
 }
 
 /* Admin Tenants Table - Override Ant Design dark mode defaults */
-.admin-tenants-table .ant-table-thead > tr > th {
+.admin-tenants-table .ant-table-thead>tr>th {
   background: var(--surface) !important;
   color: var(--text) !important;
   border-bottom: 1px solid var(--border) !important;
   font-weight: 600 !important;
 }
 
-.admin-tenants-table .ant-table-tbody > tr {
+.admin-tenants-table .ant-table-tbody>tr {
   background: var(--card) !important;
 }
 
-.admin-tenants-table .ant-table-tbody > tr:hover > td {
+.admin-tenants-table .ant-table-tbody>tr:hover>td {
   background: var(--surface-subtle) !important;
 }
 
-.admin-tenants-table .ant-table-tbody > tr > td {
+.admin-tenants-table .ant-table-tbody>tr>td {
   border-bottom: 1px solid var(--border) !important;
 }
 
