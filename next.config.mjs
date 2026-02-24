@@ -30,7 +30,7 @@ const nextConfig = {
     return [
       // Admin API rewrites - always go to admin backend
       {
-        source: '/api/admin/:path*',
+        source: '/api/:path*',
         destination: `${adminApiUrl}/:path*`,
       },
       // Tenant API rewrites - go to tenant backend (development only)

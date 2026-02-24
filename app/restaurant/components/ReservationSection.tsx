@@ -471,7 +471,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                 <div className="w-2 h-2 bg-[var(--primary-soft)] rounded-full animate-bounce delay-200" />
                                             </div>
                                         ) : (
-                                            <p className="text-sm text-[var(--text-muted)] italic leading-relaxed">"{recommendation || 'Selecting our premium window tables offers an unmatched view of the harbor.'}"</p>
+                                            <p className="text-sm text-[var(--text-muted)] italic leading-relaxed">&ldquo;{recommendation || 'Selecting our premium window tables offers an unmatched view of the harbor.'}&rdquo;</p>
                                         )}
                                     </div>
                                 </div>
