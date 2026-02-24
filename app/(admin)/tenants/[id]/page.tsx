@@ -3,9 +3,11 @@
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { useLanguage } from "@/components/I18nProvider";
 import { tenantService } from "@/lib/services/tenantService";
-import { TenantCreateInput } from "@/lib/types/tenant";
+import { TenantUpdateInput } from "@/lib/types/tenant";
 import {
   ArrowLeftOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
   GlobalOutlined,
   MailOutlined,
   PhoneOutlined,
@@ -20,6 +22,7 @@ import {
   Col,
   Form,
   Input,
+  Modal,
   Row,
   Select,
   Space,
@@ -33,54 +36,89 @@ import { useTranslation } from "react-i18next";
 const { TextArea } = Input;
 const { Title, Paragraph, Text } = Typography;
 
-const TenantFormPage: React.FC = () => {
+const TenantEditPage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
   const { t } = useTranslation();
   const { language, changeLanguage } = useLanguage();
   const { message } = App.useApp();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-  const [form] = Form.useForm<TenantCreateInput>();
-  const [formData, setFormData] = useState<Partial<TenantCreateInput>>({
-    plan: "basic",
-  });
+  const [form] = Form.useForm<TenantUpdateInput>();
+  const [formData, setFormData] = useState<Partial<TenantUpdateInput>>({});
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [confirmInput, setConfirmInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const tenantId = params.id as string;
-  const isEditMode = tenantId !== "create";
 
   useEffect(() => {
-    if (isEditMode) {
-      fetchTenantDetails();
-    } else {
-      setInitialLoading(false);
-    }
+    fetchTenantDetails();
   }, [tenantId]);
 
   const fetchTenantDetails = async () => {
     try {
       setInitialLoading(true);
-      const data = await tenantService.getTenantById(tenantId);
+      const data = await tenantService.getTenantConfig(tenantId);
 
-      const displayValue = data.networkIp || data.hostName;
-      const cleanHostname = displayValue.replace(/\.restx\.food$/i, "");
+      if (!data) {
+        message.error(t("tenants.toasts.detail_error_message"));
+        router.push("/tenants");
+        return;
+      }
 
-      const formValues = {
+      const displayValue = data.networkIp || data.hostname;
+      const cleanHostname = displayValue?.replace(/\.restx\.food$/i, "") || "";
+
+      const formValues: Partial<TenantUpdateInput> = {
         name: data.name,
-        hostName: cleanHostname,
+        hostname: cleanHostname,
+        prefix: data.prefix,
+        
+        // Branding
+        logoUrl: data.logoUrl,
+        faviconUrl: data.faviconUrl,
+        backgroundUrl: data.backgroundUrl,
+        
+        // Theme Colors
+        primaryColor: data.primaryColor,
+        baseColor: data.baseColor,
+        secondaryColor: data.secondaryColor,
+        headerColor: data.headerColor,
+        footerColor: data.footerColor,
+        lightBaseColor: data.lightBaseColor,
+        lightSurfaceColor: data.lightSurfaceColor,
+        lightCardColor: data.lightCardColor,
+        darkBaseColor: data.darkBaseColor,
+        darkSurfaceColor: data.darkSurfaceColor,
+        darkCardColor: data.darkCardColor,
+        
+        // Network
+        networkIp: data.networkIp,
+        connectionString: data.connectionString,
+        status: data.status,
+        expiredAt: data.expiredAt,
+        
+        // Business Info
         businessName: data.businessName,
-        phoneNumber: data.phoneNumber,
-        mailRestaurant: data.mailRestaurant,
-        addressLine1: data.addressLine1,
-        addressLine2: data.addressLine2,
-        addressLine3: data.addressLine3,
-        addressLine4: data.addressLine4,
-        ownerEmail: data.ownerEmail,
-        plan: data.plan || "basic",
+        aboutUs: data.aboutUs,
+        aboutUsType: data.aboutUsType,
+        overview: data.overview,
+        businessAddressLine1: data.businessAddressLine1,
+        businessAddressLine2: data.businessAddressLine2,
+        businessAddressLine3: data.businessAddressLine3,
+        businessAddressLine4: data.businessAddressLine4,
+        businessCounty: data.businessCounty,
+        businessPostCode: data.businessPostCode,
+        businessCountry: data.businessCountry,
+        businessPrimaryPhone: data.businessPrimaryPhone,
+        businessSecondaryPhone: data.businessSecondaryPhone,
+        businessEmailAddress: data.businessEmailAddress,
+        businessCompanyNumber: data.businessCompanyNumber,
+        businessOpeningHours: data.businessOpeningHours,
       };
 
-      // Set both form and state to ensure controlled input works correctly
       form.setFieldsValue(formValues);
       setFormData(formValues);
     } catch (error) {
@@ -92,8 +130,7 @@ const TenantFormPage: React.FC = () => {
     }
   };
 
-  const onFinish: FormProps<TenantCreateInput>["onFinish"] = async (values) => {
-    // Prevent duplicate submissions
+  const onFinish: FormProps<TenantUpdateInput>["onFinish"] = async (values) => {
     if (loading) {
       return;
     }
@@ -101,27 +138,19 @@ const TenantFormPage: React.FC = () => {
     setLoading(true);
 
     try {
-      // Prepare the full hostname with .restx.food suffix
-      // In edit mode, use formData.hostName (from disabled field)
-      // In create mode, use values.hostName (from form input)
-      const hostnameValue = isEditMode ? formData.hostName : values.hostName;
-      const hostname = hostnameValue
-        ? `${hostnameValue}.restx.food`
+      const hostname = formData.hostname
+        ? `${formData.hostname}.restx.food`
         : undefined;
 
-      const requestData = {
+      const requestData: any = {
         ...values,
-        hostName: hostname,
+        id: tenantId,
+        hostname: hostname,
         networkIp: hostname,
       };
 
-      if (isEditMode) {
-        const result = await tenantService.updateTenant(tenantId, requestData);
-        message.success(t("tenants.toasts.update_success_message"));
-      } else {
-        const result = await tenantService.createTenant(requestData);
-        message.success(t("tenants.toasts.create_success_message"));
-      }
+      await tenantService.upsertTenant(requestData);
+      message.success(t("tenants.toasts.update_success_message"));
       router.push("/tenants");
     } catch (error: any) {
       const errorMessage =
@@ -138,25 +167,38 @@ const TenantFormPage: React.FC = () => {
     router.push("/tenants");
   };
 
-  // Slug validation: only lowercase letters, numbers, and hyphens
-  const validateSlug = (_: unknown, value: string) => {
-    // Skip validation in edit mode (field is disabled)
-    if (isEditMode) {
-      return Promise.resolve();
+  const handleDeleteClick = () => {
+    setDeleteModalVisible(true);
+    setConfirmInput("");
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (confirmInput !== formData.name) {
+      message.error("Tenant name does not match. Please try again.");
+      return;
     }
 
-    // In create mode, hostname is optional
-    if (!value) {
-      return Promise.resolve();
+    setDeleting(true);
+    try {
+      await tenantService.deleteTenant(tenantId);
+      message.success(t("tenants.toasts.delete_success_message") || "Tenant deleted successfully");
+      router.push("/tenants");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        t("tenants.toasts.delete_error_message") ||
+        "Failed to delete tenant";
+      message.error(errorMessage);
+    } finally {
+      setDeleting(false);
+      setDeleteModalVisible(false);
     }
+  };
 
-    // If provided, must follow slug format
-    if (!/^[a-z0-9-]+$/.test(value)) {
-      return Promise.reject(
-        new Error(t("tenants.create.validation.slug_invalid")),
-      );
-    }
-    return Promise.resolve();
+  const handleDeleteCancel = () => {
+    setDeleteModalVisible(false);
+    setConfirmInput("");
   };
 
   return (
@@ -181,9 +223,7 @@ const TenantFormPage: React.FC = () => {
                     ),
                   },
                   {
-                    title: isEditMode
-                      ? t("tenants.edit.breadcrumb_edit")
-                      : t("tenants.create.breadcrumb_create"),
+                    title: t("tenants.edit.breadcrumb_edit"),
                   },
                 ]}
                 className="text-xs font-medium mb-1"
@@ -197,9 +237,7 @@ const TenantFormPage: React.FC = () => {
                   color: "var(--text)",
                 }}>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
-                  {isEditMode
-                    ? t("tenants.edit.title")
-                    : t("tenants.create.title")}
+                  {t("tenants.edit.title")}
                 </span>
               </Title>
               <Paragraph
@@ -208,9 +246,7 @@ const TenantFormPage: React.FC = () => {
                   marginBottom: 0,
                   color: "var(--text-muted)",
                 }}>
-                {isEditMode
-                  ? t("tenants.edit.subtitle")
-                  : t("tenants.create.subtitle")}
+                {t("tenants.edit.subtitle")}
               </Paragraph>
             </div>
 
@@ -415,7 +451,7 @@ const TenantFormPage: React.FC = () => {
                 size="large"
                 icon={<ArrowLeftOutlined />}
                 onClick={() => router.push("/tenants")}>
-                {isEditMode ? t("tenants.edit.back") : t("tenants.create.back")}
+                {t("tenants.edit.back")}
               </Button>
             </div>
           </div>
@@ -479,14 +515,11 @@ const TenantFormPage: React.FC = () => {
                         </span>
                       }
                       name="hostName"
-                      rules={[{ validator: validateSlug }]}
                       extra={
                         <span
                           className="text-[11px]"
                           style={{ color: "var(--text-muted)" }}>
-                          {isEditMode
-                            ? t("tenants.create.fields.hostname_disabled_text")
-                            : `${t("tenants.create.fields.access_url")} hostname.restx.food`}
+                          {t("tenants.create.fields.hostname_disabled_text")}
                         </span>
                       }>
                       <Space.Compact className="w-full" size="large">
@@ -510,23 +543,21 @@ const TenantFormPage: React.FC = () => {
                           prefix={
                             <GlobalOutlined className="text-gray-400 mr-1" />
                           }
-                          value={formData.hostName || ""}
-                          disabled={isEditMode}
+                          value={formData.hostname || ""}
+                          disabled={true}
                           style={{
                             fontSize: "14px",
-                            ...(isEditMode && {
-                              color: "var(--text)",
-                              cursor: "not-allowed",
-                              opacity: 1,
-                            }),
+                            color: "var(--text)",
+                            cursor: "not-allowed",
+                            opacity: 1,
                           }}
                           onChange={(e) => {
                             const value = e.target.value
                               .toLowerCase()
                               .replace(/\s+/g, "-")
                               .replace(/[^a-z0-9-]/g, "");
-                            form.setFieldValue("hostName", value);
-                            setFormData({ ...formData, hostName: value });
+                            form.setFieldValue("hostname", value);
+                            setFormData({ ...formData, hostname: value });
                           }}
                         />
                         <Input
@@ -582,7 +613,7 @@ const TenantFormPage: React.FC = () => {
                             {t("tenants.create.fields.phone_number")}
                           </span>
                         }
-                        name="phoneNumber"
+                        name="businessPrimaryPhone"
                         rules={[
                           {
                             required: true,
@@ -648,7 +679,7 @@ const TenantFormPage: React.FC = () => {
                       </label>
 
                       <Form.Item
-                        name="addressLine1"
+                        name="businessAddressLine1"
                         rules={[
                           {
                             required: true,
@@ -666,7 +697,7 @@ const TenantFormPage: React.FC = () => {
                       </Form.Item>
 
                       <Form.Item
-                        name="addressLine2"
+                        name="businessAddressLine2"
                         rules={[
                           {
                             required: true,
@@ -684,7 +715,7 @@ const TenantFormPage: React.FC = () => {
                       </Form.Item>
 
                       <Form.Item
-                        name="addressLine3"
+                        name="businessAddressLine3"
                         rules={[
                           {
                             required: true,
@@ -702,7 +733,7 @@ const TenantFormPage: React.FC = () => {
                       </Form.Item>
 
                       <Form.Item
-                        name="addressLine4"
+                        name="businessAddressLine4"
                         rules={[
                           {
                             required: true,
@@ -716,6 +747,137 @@ const TenantFormPage: React.FC = () => {
                           placeholder={t(
                             "tenants.create.fields.address_line4_placeholder",
                           )}
+                        />
+                      </Form.Item>
+                    </div>
+
+                    {/* Extended Business Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-dashed border-gray-200 dark:border-gray-700">
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.edit.fields.county")}
+                          </span>
+                        }
+                        name="businessCounty">
+                        <Input
+                          className="text-sm"
+                          placeholder={t("tenants.edit.fields.county_placeholder")}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.edit.fields.post_code")}
+                          </span>
+                        }
+                        name="businessPostCode">
+                        <Input
+                          className="text-sm"
+                          placeholder={t("tenants.edit.fields.post_code_placeholder")}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.edit.fields.country")}
+                          </span>
+                        }
+                        name="businessCountry">
+                        <Input
+                          className="text-sm"
+                          placeholder={t("tenants.edit.fields.country_placeholder")}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.edit.fields.company_number")}
+                          </span>
+                        }
+                        name="businessCompanyNumber">
+                        <Input
+                          className="text-sm"
+                          placeholder={t("tenants.edit.fields.company_number_placeholder")}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.edit.fields.secondary_phone")}
+                          </span>
+                        }
+                        name="businessSecondaryPhone">
+                        <Input
+                          className="text-sm"
+                          placeholder={t("tenants.edit.fields.secondary_phone_placeholder")}
+                          prefix={
+                            <PhoneOutlined className="text-gray-400 mr-1" />
+                          }
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.edit.fields.opening_hours")}
+                          </span>
+                        }
+                        name="businessOpeningHours">
+                        <Input
+                          className="text-sm"
+                          placeholder={t("tenants.edit.fields.opening_hours_placeholder")}
+                        />
+                      </Form.Item>
+                    </div>
+
+                    {/* About Us & Overview */}
+                    <div className="space-y-3 mt-6 pt-6 border-t border-dashed border-gray-200 dark:border-gray-700">
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.edit.fields.about_us")}
+                          </span>
+                        }
+                        name="aboutUs">
+                        <TextArea
+                          className="text-sm"
+                          rows={4}
+                          placeholder={t("tenants.edit.fields.about_us_placeholder")}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("tenants.edit.fields.overview")}
+                          </span>
+                        }
+                        name="overview">
+                        <TextArea
+                          className="text-sm"
+                          rows={3}
+                          placeholder={t("tenants.edit.fields.overview_placeholder")}
                         />
                       </Form.Item>
                     </div>
@@ -745,17 +907,11 @@ const TenantFormPage: React.FC = () => {
                           <span
                             className="text-sm"
                             style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.create.fields.owner_email")}
+                            {t("tenants.create.fields.mail_restaurant")}
                           </span>
                         }
-                        name="ownerEmail"
+                        name="businessEmailAddress"
                         rules={[
-                          {
-                            required: !isEditMode,
-                            message: t(
-                              "tenants.create.validation.email_required",
-                            ),
-                          },
                           {
                             type: "email",
                             message: t(
@@ -767,46 +923,13 @@ const TenantFormPage: React.FC = () => {
                           className="text-sm"
                           type="email"
                           placeholder={t(
-                            "tenants.create.fields.owner_email_placeholder",
+                            "tenants.create.fields.mail_restaurant_placeholder",
                           )}
                           prefix={
                             <MailOutlined className="text-gray-400 mr-1" />
                           }
                         />
                       </Form.Item>
-
-                      {!isEditMode && (
-                        <Form.Item
-                          label={
-                            <span
-                              className="text-sm"
-                              style={{ color: "var(--text-muted)" }}>
-                              {t("tenants.create.fields.owner_password")}
-                            </span>
-                          }
-                          name="ownerPassword"
-                          rules={[
-                            {
-                              required: true,
-                              message: t(
-                                "tenants.create.validation.password_required",
-                              ),
-                            },
-                            {
-                              min: 6,
-                              message: t(
-                                "tenants.create.validation.password_min",
-                              ),
-                            },
-                          ]}>
-                          <Input.Password
-                            className="text-sm"
-                            placeholder={t(
-                              "tenants.create.fields.password_placeholder",
-                            )}
-                          />
-                        </Form.Item>
-                      )}
                     </Card>
 
                     {/* Plan Selection Card */}
@@ -868,6 +991,7 @@ const TenantFormPage: React.FC = () => {
 
                       {/* Action Buttons */}
                       <div className="pt-4 mt-auto border-t border-dashed border-gray-200 dark:border-gray-700">
+                        {/* Save Changes */}
                         <Button
                           type="primary"
                           htmlType="submit"
@@ -876,10 +1000,21 @@ const TenantFormPage: React.FC = () => {
                           size="large"
                           block
                           className="shadow-orange-900/20 shadow-lg border-none h-12 text-base font-medium">
-                          {isEditMode
-                            ? t("tenants.edit.buttons.update")
-                            : t("tenants.create.buttons.create")}
+                        {t("tenants.edit.buttons.update")}
                         </Button>
+
+                        {/* Delete Tenant */}
+                        <Button
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={handleDeleteClick}
+                          size="large"
+                          block
+                          className="mt-2 border-red-500 text-red-500 hover:!bg-red-50 dark:hover:!bg-red-950">
+                          {t("tenants.edit.buttons.delete")}
+                        </Button>
+
+                        {/* Cancel */}
                         <Button
                           onClick={handleCancel}
                           size="large"
@@ -897,8 +1032,86 @@ const TenantFormPage: React.FC = () => {
           </Spin>
         </div>
       </main>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-3">
+            <ExclamationCircleOutlined className="text-red-500 text-2xl" />
+            <span className="text-lg font-semibold">{t("tenants.edit.delete_modal.title")}</span>
+          </div>
+        }
+        open={deleteModalVisible}
+        onCancel={handleDeleteCancel}
+        footer={[
+          <Button key="cancel" onClick={handleDeleteCancel} size="large">
+            {t("tenants.edit.delete_modal.button_cancel")}
+          </Button>,
+          <Button
+            key="delete"
+            type="primary"
+            danger
+            loading={deleting}
+            disabled={confirmInput !== formData.name || deleting}
+            onClick={handleDeleteConfirm}
+            size="large"
+            icon={<DeleteOutlined />}>
+            {t("tenants.edit.delete_modal.button_delete")}
+          </Button>,
+        ]}
+        width={520}>
+        <div className="py-4 space-y-4">
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-4">
+            <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+              {t("tenants.edit.delete_modal.warning_title")}
+            </p>
+            <p className="text-sm text-red-700 dark:text-red-300">
+              {t("tenants.edit.delete_modal.warning_description")}
+            </p>
+            <ul className="text-sm text-red-700 dark:text-red-300 list-disc list-inside mt-2 space-y-1">
+              <li>{t("tenants.edit.delete_modal.warning_items.data")}</li>
+              <li>{t("tenants.edit.delete_modal.warning_items.users")}</li>
+              <li>{t("tenants.edit.delete_modal.warning_items.transactions")}</li>
+              <li>{t("tenants.edit.delete_modal.warning_items.assets")}</li>
+            </ul>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+              {t("tenants.edit.delete_modal.confirm_instruction")}
+            </p>
+            <p className="text-base font-semibold px-3 py-2 rounded" style={{ backgroundColor: "var(--bg-base)", color: "var(--text)" }}>
+              {formData.name}
+            </p>
+          </div>
+
+          <Input
+            placeholder={t("tenants.edit.delete_modal.input_placeholder")}
+            value={confirmInput}
+            onChange={(e) => setConfirmInput(e.target.value)}
+            size="large"
+            autoFocus
+            onPressEnter={() => {
+              if (confirmInput === formData.name) {
+                handleDeleteConfirm();
+              }
+            }}
+          />
+
+          {confirmInput && confirmInput !== formData.name && (
+            <p className="text-sm text-red-500 mt-1">
+              {t("tenants.edit.delete_modal.name_mismatch")}
+            </p>
+          )}
+          {confirmInput === formData.name && (
+            <p className="text-sm text-green-500 mt-1">
+              {t("tenants.edit.delete_modal.name_match")}
+            </p>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };
 
-export default TenantFormPage;
+export default TenantEditPage;

@@ -383,7 +383,6 @@ export default function CategorySettings() {
                     className="block text-sm font-medium mb-1.5"
                     style={{ color: "var(--text)" }}>
                     {t("dashboard.settings.categories.name")}{" "}
-                    <span className="text-[#FF380B]">*</span>
                   </label>
                   <input
                     type="text"
