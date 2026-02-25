@@ -8,9 +8,47 @@ import {
 } from "@/lib/constants/themeDefaults";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
-import { App } from "antd";
-import React, { useEffect, useRef, useState } from "react";
+import { Alert, App, Select, Spin } from "antd";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+/**
+ * Detect which tenant hostname this admin panel is managing.
+ * - admin.restx.food → demo.restx.food (or whichever tenant is current)
+ * - admin.localhost → demo.restx.food (dev default)
+ * - demo.restx.food/admin → demo.restx.food
+ */
+function detectTenantHostname(): string | null {
+  if (typeof window === "undefined") return null;
+  const host = window.location.host;
+  const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
+
+  // admin.restx.food → super admin, needs tenant picker
+  if (hostWithoutPort === "admin.restx.food") return null;
+
+  // admin.localhost (dev) → default to demo.restx.food
+  if (hostWithoutPort === "admin.localhost" || hostWithoutPort === "localhost" || hostWithoutPort === "127.0.0.1") {
+    return "demo.restx.food";
+  }
+
+  // admin.demo.localhost (dev with explicit subdomain) → demo.restx.food
+  if (hostWithoutPort.endsWith(".localhost")) {
+    const subdomain = hostWithoutPort.replace(".localhost", "");
+    if (subdomain && subdomain !== "admin") {
+      return `${subdomain}.restx.food`;
+    }
+    // admin.localhost fallback
+    return "demo.restx.food";
+  }
+
+  // demo.restx.food (accessing admin from tenant domain — not typical but handle it)
+  if (!hostWithoutPort.startsWith("admin.")) {
+    return hostWithoutPort;
+  }
+
+  // admin.*.restx.food patterns (other envs) → show picker
+  return null;
+}
 
 /** Convert camelCase to snake_case for i18n key lookup */
 function camelToSnake(s: string): string {
@@ -73,19 +111,30 @@ function resolveTenantId(tenant: TenantConfig): string | undefined {
 
 export default function TenantBrandingSettings() {
   const { t } = useTranslation("common");
-  const { tenant, loading: tenantLoading, refreshTenant } = useTenant();
+  // TenantContext may be null on admin.* domains (context skips load)
+  const { tenant: contextTenant, loading: tenantLoading, refreshTenant } = useTenant();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(null);
 
+  // Self-fetched tenant (when on admin domain where TenantContext returns null)
+  const [selfTenant, setSelfTenant] = useState<TenantConfig | null>(null);
+  const [selfLoading, setSelfLoading] = useState(false);
+  const [allTenants, setAllTenants] = useState<{ label: string; value: string }[]>([]);
+  const [selectedHostname, setSelectedHostname] = useState<string | null>(null);
+  const [needsTenantPicker, setNeedsTenantPicker] = useState(false);
+
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     logoUrl: "",
     backgroundUrl: "",
+    faviconUrl: "",
     logoFile: null as File | null,
     bannerFile: null as File | null,
+    faviconFile: null as File | null,
   });
 
   const [colors, setColors] = useState<Record<ThemeColorField, string>>(
@@ -98,7 +147,7 @@ export default function TenantBrandingSettings() {
   /** Validate and set an image file with preview */
   const handleImageChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: "logoFile" | "bannerFile",
+    field: "logoFile" | "bannerFile" | "faviconFile",
     setPreview: (url: string) => void,
     maxMB: number,
   ) => {
@@ -121,37 +170,82 @@ export default function TenantBrandingSettings() {
   // Preview URLs for uploaded files
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [bannerPreview, setBannerPreview] = useState<string>("");
+  const [faviconPreview, setFaviconPreview] = useState<string>("");
 
-  useEffect(() => {
-    if (tenant) {
-      const tenantId = resolveTenantId(tenant);
-      if (tenantId) {
-        setResolvedTenantId(tenantId);
-      } else if (tenant.hostname) {
-        tenantService.getAllTenantsForAdmin().then((all) => {
-          const match = all.find((t) => t.hostName === tenant.hostname);
-          if (match) setResolvedTenantId(match.id);
-        }).catch(() => {});
-      }
+  /** Populate form fields from a tenant config object */
+  const populateFromTenant = useCallback((tenantData: TenantConfig) => {
+    const tenantId = resolveTenantId(tenantData);
+    if (tenantId) setResolvedTenantId(tenantId);
 
-      setFormData((prev) => ({
-        ...prev,
-        logoUrl: tenant.logoUrl || "",
-        backgroundUrl: tenant.backgroundUrl || "",
-      }));
+    setFormData((prev) => ({
+      ...prev,
+      logoUrl: tenantData.logoUrl || "",
+      backgroundUrl: tenantData.backgroundUrl || "",
+      faviconUrl: tenantData.faviconUrl || "",
+    }));
 
-      // Use DB colors, fallback to globals.css defaults for empty fields
-      const defaults = getThemeDefaults();
-      const tenantColors = { ...defaults };
-      for (const field of THEME_COLOR_FIELDS) {
-        const dbVal = (tenant as any)[field] as string;
-        if (dbVal?.trim()) tenantColors[field] = dbVal;
-      }
-      setColors(tenantColors);
-      setLogoPreview(tenant.logoUrl || "");
-      setBannerPreview(tenant.backgroundUrl || "");
+    const defaults = getThemeDefaults();
+    const tenantColors = { ...defaults };
+    for (const field of THEME_COLOR_FIELDS) {
+      const dbVal = (tenantData as any)[field] as string;
+      if (dbVal?.trim()) tenantColors[field] = dbVal;
     }
-  }, [tenant]);
+    setColors(tenantColors);
+    setLogoPreview(tenantData.logoUrl || "");
+    setBannerPreview(tenantData.backgroundUrl || "");
+    setFaviconPreview(tenantData.faviconUrl || "");
+  }, []);
+
+  /** Fetch tenant by hostname for self-load mode */
+  const fetchTenantByHostname = useCallback(async (hostname: string) => {
+    setSelfLoading(true);
+    try {
+      const data = await tenantService.getTenantConfig(hostname);
+      if (data) {
+        setSelfTenant(data);
+        populateFromTenant(data);
+      }
+    } catch (err) {
+      console.error("[TenantBranding] Failed to fetch tenant:", err);
+    } finally {
+      setSelfLoading(false);
+    }
+  }, [populateFromTenant]);
+
+  // On mount: decide whether to use context tenant or self-fetch
+  useEffect(() => {
+    if (contextTenant) {
+      // TenantContext loaded successfully (tenant domain) — use it directly
+      populateFromTenant(contextTenant);
+      return;
+    }
+
+    if (tenantLoading) return; // Wait for context to finish
+
+    // Context has no tenant (admin domain) — self-fetch
+    const detectedHostname = detectTenantHostname();
+    if (detectedHostname) {
+      setSelectedHostname(detectedHostname);
+      fetchTenantByHostname(detectedHostname);
+    } else {
+      // Super admin — show tenant picker
+      setNeedsTenantPicker(true);
+      tenantService.getAllTenantsForAdmin().then((all) => {
+        setAllTenants(
+          all.map((ten) => ({
+            label: `${ten.businessName || ten.name} (${ten.hostName})`,
+            value: ten.hostName,
+          }))
+        );
+      }).catch(console.error);
+    }
+  }, [contextTenant, tenantLoading, fetchTenantByHostname, populateFromTenant]);
+
+  // Active tenant: prefer context tenant, fall back to self-fetched
+  const tenant = contextTenant || selfTenant;
+  const isLoading = tenantLoading || selfLoading;
+
+
 
   const handleSave = async () => {
     if (!tenant) {
@@ -172,17 +266,31 @@ export default function TenantBrandingSettings() {
         id: tenantId,
         logoUrl: formData.logoUrl,
         backgroundUrl: formData.backgroundUrl,
+        faviconUrl: formData.faviconUrl,
         ...colors,
       };
+
+      console.log('[TenantBranding] Saving with files:', {
+        logo: formData.logoFile?.name,
+        banner: formData.bannerFile?.name,
+        favicon: formData.faviconFile?.name,
+      });
 
       await tenantService.upsertTenant(updatedTenant, {
         logo: formData.logoFile,
         background: formData.bannerFile,
+        favicon: formData.faviconFile,
       });
 
       message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Branding updated successfully!" }));
-      setFormData((prev) => ({ ...prev, logoFile: null, bannerFile: null }));
-      await refreshTenant?.();
+      setFormData((prev) => ({ ...prev, logoFile: null, bannerFile: null, faviconFile: null }));
+      // Refresh: if we have a context tenant, refresh the context; if self-fetched, re-fetch by hostname
+      if (refreshTenant) {
+        await refreshTenant();
+      } else if (selectedHostname) {
+        await fetchTenantByHostname(selectedHostname);
+      }
+
     } catch (error) {
       console.error("Failed to update branding:", error);
       message.error(t("dashboard.settings.notifications.error_update", { defaultValue: "Failed to update branding" }));
@@ -191,9 +299,11 @@ export default function TenantBrandingSettings() {
     }
   };
 
-  if (tenantLoading) {
+  if (isLoading) {
     return (
-      <div className="animate-pulse h-40 bg-gray-100 dark:bg-gray-800 rounded-xl"></div>
+      <div className="flex items-center justify-center h-40 rounded-xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+        <Spin size="large" tip="Loading tenant branding..." />
+      </div>
     );
   }
 
@@ -209,6 +319,50 @@ export default function TenantBrandingSettings() {
           defaultValue: "Store Branding",
         })}
       </h3>
+
+      {/* Tenant Picker — shown for super admin (admin.restx.food) */}
+      {needsTenantPicker && (
+        <div className="mb-6 p-4 rounded-lg" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-muted)" }}>
+            Select Tenant to Edit
+          </label>
+          <Select
+            showSearch
+            placeholder="Choose a tenant..."
+            options={allTenants}
+            value={selectedHostname}
+            onChange={async (hostname) => {
+              setSelectedHostname(hostname);
+              await fetchTenantByHostname(hostname);
+            }}
+            style={{ width: "100%" }}
+            filterOption={(input, option) =>
+              (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+            }
+          />
+        </div>
+      )}
+
+      {/* Show which tenant is being edited */}
+      {tenant && (
+        <Alert
+          message={`Editing branding for: ${tenant.businessName || tenant.name} (${tenant.hostname})`}
+          type="info"
+          showIcon
+          className="mb-6"
+          style={{ borderRadius: 8 }}
+        />
+      )}
+
+      {/* No tenant loaded yet (super admin hasn't picked one) */}
+      {!tenant && needsTenantPicker && (
+        <Alert
+          message="Please select a tenant above to edit its branding."
+          type="warning"
+          showIcon
+          className="mb-6"
+        />
+      )}
 
       <div className="space-y-6">
         {/* Logo Section */}
@@ -233,8 +387,8 @@ export default function TenantBrandingSettings() {
                   alt="Logo Preview"
                   className="w-full h-full object-contain p-2"
                   onError={(e) =>
-                    (e.currentTarget.src =
-                      "/images/logo/restx-removebg-preview.png")
+                  (e.currentTarget.src =
+                    "/images/logo/restx-removebg-preview.png")
                   }
                 />
               ) : (
@@ -365,6 +519,75 @@ export default function TenantBrandingSettings() {
               {formData.bannerFile && (
                 <p className="text-xs text-green-500">
                   ✓ {formData.bannerFile.name}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Favicon Section */}
+        <div>
+          <label
+            className="block text-sm font-medium mb-2"
+            style={{ color: "var(--text-muted)" }}>
+            {t("dashboard.settings.appearance.favicon", { defaultValue: "Favicon" })}
+          </label>
+          <div className="flex gap-4 items-start">
+            {/* Favicon Preview */}
+            <div
+              className="w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center overflow-hidden cursor-pointer transition-all hover:border-[var(--primary)] group"
+              style={{
+                borderColor: "var(--border)",
+                background: "var(--surface)",
+              }}
+              onClick={() => faviconInputRef.current?.click()}>
+              {faviconPreview ? (
+                <img
+                  src={faviconPreview}
+                  alt="Favicon Preview"
+                  className="w-full h-full object-contain p-1"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+              ) : (
+                <div className="text-center p-1">
+                  <svg
+                    className="w-6 h-6 mx-auto text-gray-400 group-hover:text-[var(--primary)] transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                    />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            <input
+              ref={faviconInputRef}
+              type="file"
+              accept="image/png,image/x-icon,image/svg+xml,image/webp"
+              onChange={(e) => handleImageChange(e, "faviconFile", setFaviconPreview, 1)}
+              className="hidden"
+            />
+
+            <div className="flex-1">
+              <p className="text-sm mb-2" style={{ color: "var(--text)" }}>
+                {t("dashboard.settings.appearance.favicon_help", {
+                  defaultValue: "Browser tab icon for your restaurant site",
+                })}
+              </p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                {t("dashboard.settings.appearance.favicon_format", {
+                  defaultValue: "Recommended: 32x32px or 64x64px, PNG or ICO. Max 1MB.",
+                })}
+              </p>
+              {formData.faviconFile && (
+                <p className="text-xs mt-1 text-green-500">
+                  ✓ {formData.faviconFile.name}
                 </p>
               )}
             </div>
@@ -512,11 +735,11 @@ export default function TenantBrandingSettings() {
             }}>
             {loading
               ? t("dashboard.settings.buttons.saving", {
-                  defaultValue: "Saving...",
-                })
+                defaultValue: "Saving...",
+              })
               : t("dashboard.settings.buttons.save_branding", {
-                  defaultValue: "Save Changes",
-                })}
+                defaultValue: "Save Changes",
+              })}
           </button>
         </div>
       </div>

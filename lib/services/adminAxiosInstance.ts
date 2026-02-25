@@ -41,6 +41,15 @@ if (typeof window !== 'undefined') {
 adminAxiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
+        if (error.response) {
+            console.error('[adminAxios] Error response:', {
+                status: error.response.status,
+                url: error.config?.url,
+                method: error.config?.method?.toUpperCase(),
+                data: error.response.data,
+                headers: error.response.headers,
+            });
+        }
         return Promise.reject(error);
     }
 );

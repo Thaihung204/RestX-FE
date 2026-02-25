@@ -1,4 +1,5 @@
 import I18nProvider from "@/components/I18nProvider";
+import TenantFavicon from "@/components/TenantFavicon";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { CartProvider } from "@/lib/contexts/CartContext";
 import { TenantProvider } from "@/lib/contexts/TenantContext";
@@ -98,6 +99,7 @@ export default function RootLayout({
         {/* I18n Provider Wrapper */}
         <I18nProvider>
           <TenantProvider>
+            <TenantFavicon />
             <AuthProvider>
               <CartProvider>
                 <ToastProvider>
