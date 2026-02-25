@@ -68,6 +68,8 @@
         "status": "Status",
         "total": "Total",
         "other_items": "other items",
+        "more_items": "more items",
+        "not_done": "not done",
         "items_not_done": "not done"
       },
       "status": {
@@ -93,6 +95,7 @@
         "main": "Main Courses",
         "drink": "Drinks"
       },
+      "empty": "No orders found",
       "messages": {
         "select_table_and_items": "Please select a table and add items",
         "order_created": "New order created successfully",

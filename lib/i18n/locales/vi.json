@@ -68,6 +68,8 @@
         "status": "Trạng thái",
         "total": "Tổng cộng",
         "other_items": "món khác",
+        "more_items": "món khác",
+        "not_done": "chưa xong",
         "items_not_done": "chưa xong"
       },
       "status": {
@@ -93,6 +95,7 @@
         "main": "Món chính",
         "drink": "Đồ uống"
       },
+      "empty": "Không có order nào",
       "messages": {
         "select_table_and_items": "Vui lòng chọn bàn và thêm món",
         "order_created": "Đã tạo order mới",
