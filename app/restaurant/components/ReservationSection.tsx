@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { ReservationStep, BookingData, Table, UserDetails } from './types';
 import { TenantConfig } from '@/lib/services/tenantService';
-import { tableService, TableItem, TableStatus } from '@/lib/services/tableService';
+import { tableService, floorService, TableItem, TableStatus, FloorLayoutTableItem } from '@/lib/services/tableService';
 import reservationService, { CreateReservationRequest } from '@/lib/services/reservationService';
 import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
@@ -62,67 +62,107 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [isAiThinking, setIsAiThinking] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [confirmationCode, setConfirmationCode] = useState<string>('');
 
     useEffect(() => {
         if (step === ReservationStep.TABLE_SELECTION) {
             const loadTables = async () => {
-                const normalizeShape = (s: string): "Circle" | "Rectangle" | "Square" | "Oval" => {
+
+                /** Convert BE shape string to TableData shape union */
+                const normalizeShape = (s: string): 'Circle' | 'Rectangle' | 'Square' | 'Oval' => {
                     if (s === 'Round' || s === 'Circle') return 'Circle';
                     if (s === 'Oval') return 'Oval';
                     if (s === 'Square') return 'Square';
                     return 'Rectangle';
                 };
 
-                const mapTableItem = (t: TableItem, floorName: string): TableData => {
-                    let status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'SELECTED' = 'AVAILABLE';
-                    if (t.tableStatusId === TableStatus.Occupied) status = 'OCCUPIED';
-                    else if (t.tableStatusId === TableStatus.Reserved) status = 'RESERVED';
-                    return {
-                        id: t.id,
-                        tenantId: tenant?.id || 'default',
-                        name: t.code,
-                        seats: t.seatingCapacity,
-                        status,
-                        area: floorName,
-                        position: { x: t.positionX ?? 0, y: t.positionY ?? 0 },
-                        shape: normalizeShape(t.shape),
-                        width: t.width ?? 100,
-                        height: t.height ?? 100,
-                        rotation: t.rotation ?? 0,
-                        zoneId: floorName
-                    };
+                /** Convert numeric-string status from BE floor layout to TableData status */
+                const parseLayoutStatus = (s: string): 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' => {
+                    if (s === '2' || s?.toLowerCase() === 'occupied') return 'OCCUPIED';
+                    if (s === '1' || s?.toLowerCase() === 'reserved') return 'RESERVED';
+                    return 'AVAILABLE';
                 };
 
-                // ── Path 1: Layout API (requires BE Floor entity) ──
-                if (tenant?.id) {
-                    try {
-                        const layoutResponse = await tableService.getLayout(tenant.id);
-                        if (layoutResponse?.floors?.length) {
-                            const floors = layoutResponse.floors.map(floor => ({
-                                id: floor.id,
-                                name: floor.name,
-                                width: floor.width,
-                                height: floor.height,
-                                backgroundImage: floor.backgroundImage ?? tenant?.backgroundUrl,
-                                tables: floor.tables.map((t: TableItem) => mapTableItem(t, floor.name))
-                            }));
-                            setLayout({
-                                id: layoutResponse.id || 'layout',
-                                name: layoutResponse.name || 'Main Layout',
-                                activeFloorId: layoutResponse.activeFloorId || floors[0]?.id || '',
-                                floors
-                            });
-                            setTables(layoutResponse.floors.flatMap(f => f.tables));
-                            return; // Done — no fallback needed
-                        }
-                    } catch {
-                        // Layout API not implemented yet — fall through to fallback
+                // ── Primary Path: GET /api/floors then /api/floors/{id}/layout ──
+                try {
+                    const allFloors = await floorService.getAllFloors();
+                    const activeFloors = allFloors.filter(f => f.isActive !== false);
+
+                    if (activeFloors.length > 0) {
+                        // Fetch layout for each floor in parallel
+                        const layoutResults = await Promise.allSettled(
+                            activeFloors.map(f => floorService.getFloorLayout(f.id))
+                        );
+
+                        const floors = activeFloors.map((floorSummary, idx) => {
+                            const layoutResult = layoutResults[idx];
+                            const layoutData = layoutResult.status === 'fulfilled' ? layoutResult.value : null;
+
+                            const tableDataList: TableData[] = (layoutData?.tables ?? []).map(
+                                (t: FloorLayoutTableItem) => ({
+                                    id: t.id,
+                                    tenantId: tenant?.id || 'default',
+                                    name: t.code,
+                                    seats: t.seatingCapacity,
+                                    status: parseLayoutStatus(t.status),
+                                    area: floorSummary.name,
+                                    position: { x: Number(t.layout.x), y: Number(t.layout.y) },
+                                    shape: normalizeShape(t.layout.shape),
+                                    width: Number(t.layout.width) || 100,
+                                    height: Number(t.layout.height) || 100,
+                                    rotation: Number(t.layout.rotation) || 0,
+                                    zoneId: floorSummary.name,
+                                })
+                            );
+                            // DEBUG: show BE positions
+                            console.log(`[Restaurant] Floor "${floorSummary.name}" tables:`, tableDataList.map(t => ({ id: t.id, code: t.name, x: t.position.x, y: t.position.y })));
+
+                            return {
+                                id: floorSummary.id,
+                                name: floorSummary.name,
+                                width: Number(layoutData?.floor.width ?? floorSummary.width ?? 1400),
+                                height: Number(layoutData?.floor.height ?? floorSummary.height ?? 900),
+                                backgroundImage: layoutData?.floor.backgroundImageUrl ?? floorSummary.imageUrl ?? undefined,
+                                tables: tableDataList,
+                            };
+                        });
+
+                        setLayout({
+                            id: 'be-layout',
+                            name: 'Main Layout',
+                            activeFloorId: floors[0]?.id || '',
+                            floors,
+                        });
+                        // Flatten all tables for local reference
+                        const allTableItems: TableItem[] = floors.flatMap(f =>
+                            f.tables.map(td => ({
+                                id: td.id,
+                                code: td.name,
+                                type: td.area,
+                                seatingCapacity: td.seats,
+                                shape: td.shape,
+                                positionX: td.position.x,
+                                positionY: td.position.y,
+                                width: td.width ?? 100,
+                                height: td.height ?? 100,
+                                rotation: td.rotation ?? 0,
+                                isActive: true,
+                                tableStatusId: td.status === 'OCCUPIED'
+                                    ? TableStatus.Occupied
+                                    : td.status === 'RESERVED'
+                                        ? TableStatus.Reserved
+                                        : TableStatus.Available,
+                            } as TableItem))
+                        );
+                        setTables(allTableItems);
+                        return;
                     }
+                } catch (err) {
+                    console.warn('[ReservationSection] Floor API failed, falling back to getAllTables:', err);
                 }
 
-                // ── Path 2: Fallback — derive layout from getAllTables(), group by table.type ──
+                // ── Fallback: GET /api/tables — group by table.type ──
                 try {
-                    console.info('[ReservationSection] Layout API unavailable — using getAllTables fallback');
                     const items = await tableService.getAllTables();
                     const activeTables = items.filter(t => t.isActive);
                     if (!activeTables.length) return;
@@ -132,13 +172,34 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                         const floorTables = activeTables.filter(t => (t.type || 'Indoor') === typeName);
                         const maxX = Math.max(...floorTables.map(t => (t.positionX ?? 0) + (t.width ?? 100)), 800);
                         const maxY = Math.max(...floorTables.map(t => (t.positionY ?? 0) + (t.height ?? 100)), 600);
+                        const tableDataList: TableData[] = floorTables.map(t => {
+                            let status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' = 'AVAILABLE';
+                            if (t.tableStatusId === TableStatus.Occupied) status = 'OCCUPIED';
+                            else if (t.tableStatusId === TableStatus.Reserved) status = 'RESERVED';
+                            return {
+                                id: t.id,
+                                tenantId: tenant?.id || 'default',
+                                name: t.code,
+                                seats: t.seatingCapacity,
+                                status,
+                                area: typeName,
+                                position: { x: t.positionX ?? 0, y: t.positionY ?? 0 },
+                                shape: (t.shape === 'Round' || t.shape === 'Circle' ? 'Circle'
+                                    : t.shape === 'Square' ? 'Square'
+                                        : t.shape === 'Oval' ? 'Oval'
+                                            : 'Rectangle') as 'Circle' | 'Rectangle' | 'Square' | 'Oval',
+                                width: t.width ?? 100,
+                                height: t.height ?? 100,
+                                rotation: t.rotation ?? 0,
+                                zoneId: typeName,
+                            };
+                        });
                         return {
                             id: typeName,
                             name: typeName,
                             width: maxX + 100,
                             height: maxY + 100,
-                            backgroundImage: tenant?.backgroundUrl,
-                            tables: floorTables.map(t => mapTableItem(t, typeName))
+                            tables: tableDataList,
                         };
                     });
 
@@ -146,11 +207,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                         id: 'fallback-layout',
                         name: 'Main Layout',
                         activeFloorId: floors[0]?.id || '',
-                        floors
+                        floors,
                     });
                     setTables(activeTables);
                 } catch (error) {
-                    console.error('Failed to load tables:', error);
+                    console.error('[ReservationSection] Failed to load tables:', error);
                 }
             };
             loadTables();
@@ -160,34 +221,24 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const handleMapTableClick = (table: TableData) => {
         if (table.status === 'OCCUPIED' || table.status === 'RESERVED' || table.status === 'DISABLED') return;
 
-        // Prepare layout update to reflect selection
+        // Toggle selection: if clicking same table, unselect it
+        const isAlreadySelected = selectedTable?.id === table.id;
+
         if (layout) {
-            const activeFloor = layout.floors.find(f => f.id === layout.activeFloorId);
-            if (!activeFloor) return;
-
-            const newTables = activeFloor.tables.map(t => {
-                if (t.id === table.id) {
-                    return { ...t, status: 'SELECTED' as const };
-                } else if (t.status === 'SELECTED') {
-                    return { ...t, status: 'AVAILABLE' as const };
-                }
-                return t;
-            });
-
-            // We must also revert selections on OTHER floors if any (though single selection is standard)
-            // But usually we just update the active floor's tables.
-            // Ideally, we should iterate ALL floors to clear other selections if we want single-table-globally.
             const updatedFloors = layout.floors.map(f => {
-                if (f.id === activeFloor.id) {
-                    return { ...f, tables: newTables };
-                } else {
-                    // Start of optional: Clear selection on other floors to ensure only 1 table global
-                    const clearedTables = f.tables.map(t =>
-                        t.status === 'SELECTED' ? { ...t, status: 'AVAILABLE' as const } : t
-                    );
-                    return { ...f, tables: clearedTables };
-                    // End optional
-                }
+                const updatedTables = f.tables.map(t => {
+                    if (isAlreadySelected) {
+                        // Unselect all — restore to AVAILABLE
+                        return t.status === 'SELECTED' ? { ...t, status: 'AVAILABLE' as const } : t;
+                    }
+                    if (t.id === table.id) {
+                        return { ...t, status: 'SELECTED' as const };
+                    } else if (t.status === 'SELECTED') {
+                        return { ...t, status: 'AVAILABLE' as const };
+                    }
+                    return t;
+                });
+                return { ...f, tables: updatedTables };
             });
 
             setLayout({
@@ -196,21 +247,26 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             });
         }
 
-        // Update selectedTable state for the summary panel
-        setSelectedTable({
-            id: table.id,
-            label: table.name,
-            capacity: table.seats,
-            isOccupied: false,
-            isPremium: table.area === 'Window' || table.area === 'VIP',
-            zone: table.area,
-            x: table.position.x,
-            y: table.position.y,
-            width: table.width || 80,
-            height: table.height || 80,
-            shape: table.shape === 'Circle' ? 'Round' : 'Rectangle',
-            rotation: table.rotation || 0
-        });
+        if (isAlreadySelected) {
+            // Unselect
+            setSelectedTable(null);
+        } else {
+            // Select new table
+            setSelectedTable({
+                id: table.id,
+                label: table.name,
+                capacity: table.seats,
+                isOccupied: false,
+                isPremium: table.area === 'Window' || table.area === 'VIP',
+                zone: table.area,
+                x: table.position.x,
+                y: table.position.y,
+                width: table.width || 80,
+                height: table.height || 80,
+                shape: table.shape === 'Circle' ? 'Round' : 'Rectangle',
+                rotation: table.rotation || 0
+            });
+        }
     };
 
     // --- Gemini Integration ---
@@ -282,18 +338,45 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         setSubmitError(null);
 
         try {
-            const request: CreateReservationRequest = {
+            // NOTE: BE endpoint POST /api/reservations is not yet implemented.
+            // Using client-side mock reservation until BE is ready.
+            // When BE is ready, uncomment the API call below and remove the mock block.
+            //
+            // const request: CreateReservationRequest = {
+            //     tableId: selectedTable.id,
+            //     reservationDate: booking.date,
+            //     startTime: booking.time,
+            //     partySize: booking.guests,
+            //     customerName: userDetails.name,
+            //     customerPhone: userDetails.phone,
+            //     customerEmail: userDetails.email,
+            //     note: userDetails.requests
+            // };
+            // await reservationService.createReservation(request);
+
+            // ── Mock: generate confirmation code & save to localStorage ──
+            const code = 'RX-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+            const reservation = {
+                id: code,
                 tableId: selectedTable.id,
-                reservationDate: booking.date,
-                startTime: booking.time,
-                partySize: booking.guests,
+                tableLabel: selectedTable.label,
+                date: booking.date,
+                time: booking.time,
+                guests: booking.guests,
                 customerName: userDetails.name,
                 customerPhone: userDetails.phone,
                 customerEmail: userDetails.email,
-                note: userDetails.requests
+                note: userDetails.requests,
+                createdAt: new Date().toISOString(),
+                confirmationCode: code,
             };
 
-            await reservationService.createReservation(request);
+            // Save to localStorage for reference
+            const existing = JSON.parse(localStorage.getItem('reservations') || '[]');
+            existing.push(reservation);
+            localStorage.setItem('reservations', JSON.stringify(existing));
+
+            setConfirmationCode(code);
             setStep(ReservationStep.SUCCESS);
         } catch (error) {
             console.error("Failed to create reservation:", error);
@@ -487,6 +570,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             onTableClick={handleMapTableClick}
                                             onTablePositionChange={() => { }}
                                             readOnly={true}
+                                            selectedTableId={selectedTable?.id}
                                         />
                                     </div>
                                 ) : (
@@ -713,30 +797,54 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 )}
 
                 {step === ReservationStep.SUCCESS && (
-                    <div className="max-w-xl w-full fade-in text-center bg-[var(--card)] rounded-[3rem] p-12 shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-2 bg-[var(--success)]" />
-                        <div className="w-24 h-24 bg-[var(--success-soft)] rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
-                            <span className="material-symbols-outlined text-[var(--success)] text-6xl">verified</span>
+                    <div className="max-w-md w-full fade-in text-center bg-[var(--card)] rounded-3xl p-10 shadow-2xl relative overflow-hidden">
+                        {/* Green top accent */}
+                        <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--success)]" />
+
+                        {/* Success icon */}
+                        <div className="w-20 h-20 bg-[var(--success-soft)] rounded-full flex items-center justify-center mx-auto mb-6">
+                            <span className="material-symbols-outlined text-[var(--success)] text-5xl">verified</span>
                         </div>
-                        <h2 className="text-4xl font-serif font-bold text-[var(--text)] mb-4">Confirmed!</h2>
-                        <p className="text-[var(--text-muted)] mb-10 leading-relaxed">
-                            Thank you, <span className="text-[var(--text)] font-bold">{userDetails.name}</span>. Your table <span className="text-[var(--primary)] font-bold">{selectedTable?.label}</span> is waiting for you on {new Date(booking.date).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })} at {booking.time}.
+
+                        <h2 className="text-3xl font-serif font-bold text-[var(--text)] mb-3">Confirmed!</h2>
+                        <p className="text-[var(--text-muted)] text-sm mb-8 leading-relaxed px-2">
+                            Thank you,{' '}
+                            <span className="text-[var(--text)] font-semibold">{userDetails.name}</span>.{' '}
+                            Table <span className="text-[var(--primary)] font-bold">
+                                {selectedTable?.label ? `#${selectedTable.label}` : ''}
+                            </span>
+                            {selectedTable?.zone ? ` (${selectedTable.zone})` : ''} is reserved for{' '}
+                            <span className="text-[var(--text)] font-semibold">{booking.guests} guests</span> on{' '}
+                            <span className="text-[var(--text)] font-semibold">
+                                {new Date(booking.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </span>{' '}
+                            at <span className="text-[var(--text)] font-semibold">{booking.time}</span>.
                         </p>
 
-                        <div className="bg-[var(--surface)] rounded-2xl p-6 mb-10 text-left border border-[var(--border)]">
-                            <div className="flex justify-between mb-2">
-                                <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-bold">Booking Reference</span>
-                                <span className="text-sm font-bold text-[var(--text)]">#LM-77492-X</span>
+                        {/* Info block */}
+                        <div className="bg-[var(--surface)] rounded-2xl p-5 mb-8 text-left border border-[var(--border)] space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold">Booking Reference</span>
+                                <span className="text-sm font-bold text-[var(--primary)] font-mono tracking-wider">
+                                    #{confirmationCode || 'RX-XXXXX'}
+                                </span>
                             </div>
-                            <div className="text-sm text-[var(--text-muted)] flex items-center gap-2">
-                                <span className="material-symbols-outlined text-base">mail</span>
-                                <span>Confirmation sent to {userDetails.email}</span>
+                            <div className="h-px bg-[var(--border)]" />
+                            <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                                <span className="material-symbols-outlined text-base text-[var(--text-muted)]">mail</span>
+                                <span className="truncate">Confirmation sent to <span className="text-[var(--text)]">{userDetails.email}</span></span>
                             </div>
+                            {userDetails.phone && (
+                                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                                    <span className="material-symbols-outlined text-base text-[var(--text-muted)]">phone</span>
+                                    <span>{userDetails.phone}</span>
+                                </div>
+                            )}
                         </div>
 
                         <button
                             onClick={() => window.location.reload()}
-                            className="w-full py-4 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all"
+                            className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm"
                         >
                             Make Another Booking
                         </button>

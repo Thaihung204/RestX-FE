@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AntdProvider";
 import { message } from "antd";
@@ -16,6 +16,8 @@ const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMV
 export default function LoginEmailPage() {
   const { t } = useTranslation('auth');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect');
   const { login } = useAuth();
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
@@ -109,7 +111,10 @@ export default function LoginEmailPage() {
       const userRoles: string[] = user.roles || (user.role ? [user.role] : []);
       const hasRole = (role: string) => userRoles.some(r => r.toLowerCase() === role.toLowerCase());
 
-      if (hasRole('Admin') || hasRole('System Admin')) {
+      // If middleware saved a redirect path (e.g. /admin/tables), go there
+      if (redirectPath) {
+        router.push(redirectPath);
+      } else if (hasRole('Admin') || hasRole('System Admin')) {
         router.push('/admin');
       } else if (hasRole('Waiter') || hasRole('Kitchen Staff')) {
         router.push('/staff');
