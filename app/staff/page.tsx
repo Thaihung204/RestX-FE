@@ -1,5 +1,6 @@
 'use client';
 
+import { tableService, TableStatus } from '@/lib/services/tableService';
 import {
   CalendarOutlined,
   CheckCircleOutlined,
@@ -19,7 +20,6 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { tableService, TableStatus } from '@/lib/services/tableService';
 import PageTransition from '../components/PageTransition';
 import { useThemeMode } from '../theme/AntdProvider';
 
@@ -162,13 +162,13 @@ export default function StaffDashboard() {
     fetchTables();
   }, []);
 
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { mode } = useThemeMode();
 
   const statsData = [
     {
       title: t('staff.dashboard.stats.serving_tables'), // 'Bàn đang phục vụ'
-      value: tables.filter(t => t.tableStatusId === TableStatus.Occupied).length,
+      value: tables.filter(table => table.tableStatusId === TableStatus.Occupied).length,
       total: tables.length,
       icon: <TableOutlined />,
       color: '#FF380B',
@@ -254,27 +254,20 @@ export default function StaffDashboard() {
   ];
 
   const tableStatus = React.useMemo(() => {
-    const zones = Array.from(new Set(tables.map(t => t.type || 'Other')));
-    const defaultZones = ['A', 'B', 'VIP']; // Default zones if empty to match UI expectation or just generic
-    // Actually better to just use what dynamic data we have.
-    // But to match the previous UI style, let's map them.
-
     // Group tables by zone
     const statusByZone: Record<string, { total: number, occupied: number, available: number, name: string }> = {};
 
-    tables.forEach(t => {
-      const zoneName = t.type || 'Other';
+    tables.forEach(table => {
+      const zoneName = table.type || 'Other';
       if (!statusByZone[zoneName]) {
         statusByZone[zoneName] = {
           total: 0, occupied: 0, available: 0,
-          name: i18n.exists('staff.tables.zones.zone_' + zoneName.toLowerCase())
-            ? t('staff.tables.zones.zone_' + zoneName.toLowerCase())
-            : zoneName
+          name: t('staff.tables.zones.zone_' + zoneName.toLowerCase(), { defaultValue: zoneName })
         };
       }
       statusByZone[zoneName].total++;
-      if (t.tableStatusId === TableStatus.Occupied) statusByZone[zoneName].occupied++;
-      else if (t.tableStatusId === TableStatus.Available) statusByZone[zoneName].available++;
+      if (table.tableStatusId === TableStatus.Occupied) statusByZone[zoneName].occupied++;
+      else if (table.tableStatusId === TableStatus.Available) statusByZone[zoneName].available++;
     });
 
     return Object.values(statusByZone);
@@ -464,7 +457,7 @@ export default function StaffDashboard() {
                           icon={<ShoppingCartOutlined />}
                           style={{
                             background: 'rgba(255, 255, 255, 0.95)',
-                            color: '#FF380B',
+                            color: 'white',
                             border: 'none',
                             borderRadius: 10,
                             fontWeight: 600,
@@ -920,8 +913,12 @@ export default function StaffDashboard() {
           padding: 14px 20px !important;
           background: var(--card) !important;
           font-weight: 600;
-          color: var(--text-muted);
+          color: var(--text) !important;
           font-size: 13px;
+        }
+        .ant-table-wrapper .ant-table-thead > tr > th span,
+        .ant-table-wrapper .ant-table-thead > tr > th .ant-table-column-title {
+          color: var(--text) !important;
         }
         .ant-table-wrapper .ant-table-tbody > tr:hover > td {
           background: rgba(255, 56, 11, 0.08) !important;
