@@ -2,11 +2,11 @@
 
 import { App as AntdApp, ConfigProvider, theme } from "antd";
 import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
+    createContext,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from "react";
 import { darkTheme, lightTheme, ThemeMode } from "./themeConfig";
 
@@ -117,7 +117,7 @@ export default function AntdProvider({
           rowHoverBg: "var(--surface-subtle)",
         },
         Badge: {
-          colorError: "#FF380B",
+          colorError: "var(--primary)",
         },
         Descriptions: {
           labelBg: "var(--surface)",
@@ -127,15 +127,15 @@ export default function AntdProvider({
           colorBorder: "var(--border)",
         },
         Tabs: {
-          itemSelectedColor: "#FF380B",
-          itemHoverColor: "#FF380B",
-          itemActiveColor: "#FF380B",
-          inkBarColor: "#FF380B",
+          itemSelectedColor: "var(--primary)",
+          itemHoverColor: "var(--primary)",
+          itemActiveColor: "var(--primary)",
+          inkBarColor: "var(--primary)",
           titleFontSize: 15,
         },
         Layout: {
-          colorBgBody: "var(--bg-base)",
-          colorBgHeader: "var(--card)",
+          bodyBg: "var(--bg-base)",
+          headerBg: "var(--card)",
         },
         Message: {
           contentBg: "#FFFFFF",
@@ -269,13 +269,13 @@ export default function AntdProvider({
 
         /* Tabs - Orange active state */
         .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #FF380B !important;
+          color: var(--primary) !important;
         }
         .ant-tabs-tab:hover .ant-tabs-tab-btn {
-          color: #FF380B !important;
+          color: var(--primary) !important;
         }
         .ant-tabs-ink-bar {
-          background: #FF380B !important;
+          background: var(--primary) !important;
         }
         .ant-tabs-tab-btn {
           color: var(--text-muted) !important;
@@ -283,17 +283,17 @@ export default function AntdProvider({
 
         /* Pagination - Orange theme */
         .ant-pagination-item-active {
-          background: #FF380B !important;
-          border-color: #FF380B !important;
+          background: var(--primary) !important;
+          border-color: var(--primary) !important;
         }
         .ant-pagination-item-active a {
           color: #ffffff !important;
         }
         .ant-pagination-item:hover {
-          border-color: #FF380B !important;
+          border-color: var(--primary) !important;
         }
         .ant-pagination-item:hover a {
-          color: #FF380B !important;
+          color: var(--primary) !important;
         }
         .ant-select-selector:hover {
           border-color: var(--primary) !important;

@@ -187,16 +187,11 @@ export default function StaffLayout({
             />
           </div>
           {(!collapsed || inDrawer) && (
-            <span
-              style={{
-                marginLeft: 12,
-                fontSize: 22,
-                fontWeight: 700,
-                color: mode === "dark" ? "#fff" : "#1a1a2e",
-                letterSpacing: "-0.5px",
-              }}>
-              Rest<span style={{ color: "#FF380B" }}>X</span>
-            </span>
+            <h2
+              className="font-bold text-lg"
+              style={{ color: "var(--text)" }}>
+              Rest<span style={{ color: "var(--primary)" }}>X</span>
+            </h2>
           )}
         </Link>
       </div>
@@ -224,7 +219,7 @@ export default function StaffLayout({
             <div>
               <Text
                 style={{
-                  color: mode === "dark" ? "#fff" : "#1a1a2e",
+                  color: 'var(--text)',
                   fontWeight: 600,
                   fontSize: 14,
                   display: "block",
@@ -233,10 +228,7 @@ export default function StaffLayout({
               </Text>
               <Text
                 style={{
-                  color:
-                    mode === "dark"
-                      ? "rgba(255, 255, 255, 0.5)"
-                      : "rgba(0, 0, 0, 0.45)",
+                  color: 'var(--text)',
                   fontSize: 12,
                 }}>
                 {t("staff.sidebar.staff_role")}
@@ -310,7 +302,7 @@ export default function StaffLayout({
 
   return (
     <StaffAuthGuard>
-      <Layout style={{ minHeight: "100vh" }}>
+      <Layout style={{ height: "100vh", overflow: "hidden", display: "flex", flexDirection: "row" }}>
         {/* Mobile Bottom Navigation */}
         {isDrawerDevice && (
           <div
@@ -394,10 +386,12 @@ export default function StaffLayout({
               background: "var(--card)",
               boxShadow: "4px 0 20px rgba(0, 0, 0, 0.15)",
               borderRight: mode === "dark" ? "none" : "1px solid var(--border)",
-              position: "fixed",
-              height: "100vh",
-              left: 0,
+              position: "sticky",
               top: 0,
+              height: "100vh",
+              overflowY: "auto",
+              overflowX: "hidden",
+              flexShrink: 0,
               zIndex: 100,
             }}>
             <SidebarContent />
@@ -407,10 +401,11 @@ export default function StaffLayout({
         {/* Main Layout */}
         <Layout
           style={{
-            marginLeft: isDrawerDevice ? 0 : collapsed ? 80 : 260,
-            transition: "margin-left 0.2s",
-            minHeight: "100vh",
-            width: "100%",
+            flex: 1,
+            minWidth: 0,
+            height: "100vh",
+            overflowY: "auto",
+            overflowX: "hidden",
           }}>
           {/* Header */}
           <Header
@@ -598,7 +593,6 @@ export default function StaffLayout({
               margin: isMobile ? 12 : 24,
               marginBottom: isDrawerDevice ? 130 : 24,
               padding: 0,
-              minHeight: "calc(100vh - 120px)",
             }}>
             {children}
           </Content>

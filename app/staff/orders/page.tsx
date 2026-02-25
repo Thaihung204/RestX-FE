@@ -1,39 +1,39 @@
 'use client';
 
 import {
-  AppstoreOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  CoffeeOutlined,
-  ExclamationCircleOutlined,
-  FireOutlined,
-  MinusOutlined,
-  PlusOutlined,
-  PrinterOutlined,
-  SearchOutlined,
-  SendOutlined,
-  ShoppingCartOutlined,
-  SyncOutlined
+    AppstoreOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CoffeeOutlined,
+    ExclamationCircleOutlined,
+    FireOutlined,
+    MinusOutlined,
+    PlusOutlined,
+    PrinterOutlined,
+    SearchOutlined,
+    SendOutlined,
+    ShoppingCartOutlined,
+    SyncOutlined
 } from '@ant-design/icons';
 import {
-  App,
-  Avatar,
-  Badge,
-  Button,
-  Card,
-  Col,
-  Divider,
-  Empty,
-  Input,
-  Modal,
-  Row,
-  Select,
-  Space,
-  Tabs,
-  Tag,
-  Typography
+    App,
+    Avatar,
+    Badge,
+    Button,
+    Card,
+    Col,
+    Divider,
+    Empty,
+    Input,
+    Modal,
+    Row,
+    Select,
+    Space,
+    Tabs,
+    Tag,
+    Typography
 } from 'antd';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useThemeMode } from '../../theme/AntdProvider';
 
@@ -141,7 +141,7 @@ export default function OrderManagement() {
     const fetchTables = async () => {
       try {
         const data = await tableService.getAllTables();
-        setTables(data.map(t => ({ id: t.id, name: t.code })));
+        setTables(data.map(row => ({ id: row.id, name: row.code })));
       } catch (error) {
         console.error('Failed to fetch tables:', error);
       }
