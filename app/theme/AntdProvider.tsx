@@ -107,6 +107,32 @@ export default function AntdProvider({
           colorBgContainer: "var(--card)",
           colorBorderSecondary: "var(--border)",
         },
+        Table: {
+          headerBg: "var(--surface)",
+          headerColor: "var(--text)",
+          colorBgContainer: "var(--card)",
+          colorText: "var(--text)",
+          colorTextHeading: "var(--text)",
+          borderColor: "var(--border)",
+          rowHoverBg: "var(--surface-subtle)",
+        },
+        Badge: {
+          colorError: "#FF380B",
+        },
+        Descriptions: {
+          labelBg: "var(--surface)",
+          contentBg: "var(--card)",
+          colorText: "var(--text)",
+          colorTextLabel: "var(--text)",
+          colorBorder: "var(--border)",
+        },
+        Tabs: {
+          itemSelectedColor: "#FF380B",
+          itemHoverColor: "#FF380B",
+          itemActiveColor: "#FF380B",
+          inkBarColor: "#FF380B",
+          titleFontSize: 15,
+        },
         Layout: {
           colorBgBody: "var(--bg-base)",
           colorBgHeader: "var(--card)",
@@ -135,7 +161,10 @@ export default function AntdProvider({
 
   return (
     <ThemeContext.Provider value={{ mode, toggleTheme, setTheme }}>
-      <ConfigProvider theme={antdTheme}>
+      <ConfigProvider 
+        theme={antdTheme}
+        form={{ requiredMark: false }}
+      >
         <AntdApp>{children}</AntdApp>
       </ConfigProvider>
       <style jsx global>{`
@@ -236,6 +265,275 @@ export default function AntdProvider({
 
         .ant-notification-notice-icon-info {
           color: #1890ff !important;
+        }
+
+        /* Tabs - Orange active state */
+        .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+          color: #FF380B !important;
+        }
+        .ant-tabs-tab:hover .ant-tabs-tab-btn {
+          color: #FF380B !important;
+        }
+        .ant-tabs-ink-bar {
+          background: #FF380B !important;
+        }
+        .ant-tabs-tab-btn {
+          color: var(--text-muted) !important;
+        }
+
+        /* Pagination - Orange theme */
+        .ant-pagination-item-active {
+          background: #FF380B !important;
+          border-color: #FF380B !important;
+        }
+        .ant-pagination-item-active a {
+          color: #ffffff !important;
+        }
+        .ant-pagination-item:hover {
+          border-color: #FF380B !important;
+        }
+        .ant-pagination-item:hover a {
+          color: #FF380B !important;
+        }
+        .ant-select-selector:hover {
+          border-color: var(--primary) !important;
+        }
+
+        /* Admin Tenants Table - Consistent styling */
+        .admin-tenants-table .ant-table-thead > tr > th {
+          background: var(--table-header-bg, var(--surface)) !important;
+          color: var(--table-header-text, var(--text)) !important;
+          border-bottom: 1px solid var(--border) !important;
+          font-weight: 600 !important;
+        }
+        
+        .admin-tenants-table .ant-table-tbody > tr {
+          background: var(--card) !important;
+        }
+        
+        .admin-tenants-table .ant-table-tbody > tr > td {
+          border-bottom: 1px solid var(--border) !important;
+          color: var(--text) !important;
+        }
+        
+        .admin-tenants-table .ant-table-tbody > tr:hover > td {
+          background: var(--table-row-hover-bg, var(--surface-subtle)) !important;
+        }
+        
+        .admin-tenants-table .ant-table {
+          background: transparent !important;
+        }
+        
+        .admin-tenants-table .ant-table-container {
+          border: none !important;
+        }
+        
+        .admin-tenants-table .ant-table-cell {
+          background: transparent !important;
+        }
+        
+        /* Table pagination in dark mode */
+        .admin-tenants-table .ant-pagination {
+          color: var(--text) !important;
+        }
+        
+        .admin-tenants-table .ant-pagination-item {
+          background: var(--card) !important;
+          border-color: var(--border) !important;
+        }
+        
+        .admin-tenants-table .ant-pagination-item a {
+          color: var(--text) !important;
+        }
+        
+        .admin-tenants-table .ant-select-selector {
+          background: var(--surface) !important;
+          border-color: var(--border) !important;
+          color: var(--text) !important;
+        }
+        
+        .admin-tenants-table .ant-select-arrow {
+          color: var(--text-muted) !important;
+        }
+        
+        .admin-tenants-table .ant-pagination-options-quick-jumper input {
+          background: var(--surface) !important;
+          border-color: var(--border) !important;
+          color: var(--text) !important;
+        }
+
+        /* Select dropdown - Match theme */
+        .ant-select-dropdown {
+          background: var(--card) !important;
+          border-color: var(--border) !important;
+        }
+        
+        .ant-select-item {
+          color: var(--text) !important;
+        }
+        
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+          background: var(--primary-soft) !important;
+          color: var(--text) !important;
+        }
+        
+        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background: var(--surface-subtle) !important;
+        }
+        
+        .ant-select-item-option:hover {
+          background: var(--surface-subtle) !important;
+        }
+        
+        /* Input in filter - consistent styling */
+        .ant-input {
+          background: var(--surface) !important;
+          border-color: var(--border) !important;
+          color: var(--text) !important;
+        }
+        
+        .ant-input::placeholder {
+          color: var(--text-muted) !important;
+        }
+        
+        .ant-input:hover {
+          border-color: var(--primary) !important;
+        }
+        
+        .ant-input:focus {
+          border-color: var(--primary) !important;
+          box-shadow: 0 0 0 2px var(--primary-soft) !important;
+        }
+        
+        /* Button styling consistency */
+        .ant-btn-link {
+          color: var(--text) !important;
+        }
+        
+        .ant-btn-link:hover {
+          color: var(--primary) !important;
+        }
+        
+        .ant-btn-link[style*="color: var(--success)"] {
+          color: #34d399 !important;
+        }
+        
+        .ant-btn-link[style*="color: var(--success)"]:hover {
+          color: #10b981 !important;
+        }
+        
+        .ant-btn-link.ant-btn-dangerous {
+          color: var(--danger) !important;
+        }
+        
+        .ant-btn-link.ant-btn-dangerous:hover {
+          color: #ff7875 !important;
+        }
+        
+        .ant-btn-default {
+          background: var(--surface) !important;
+          border-color: var(--border) !important;
+          color: var(--text) !important;
+        }
+        
+        .ant-btn-default:hover {
+          border-color: var(--primary) !important;
+          color: var(--primary) !important;
+        }
+        
+        /* Modal styling */
+        .ant-modal-content {
+          background: var(--card) !important;
+          border-color: var(--border) !important;
+        }
+        
+        .ant-modal-header {
+          background: var(--card) !important;
+          border-bottom-color: var(--border) !important;
+        }
+        
+        .ant-modal-title {
+          color: var(--text) !important;
+        }
+        
+        .ant-modal-body {
+          color: var(--text) !important;
+        }
+        
+        .ant-modal-footer {
+          border-top-color: var(--border) !important;
+        }
+        
+        /* Descriptions in modal */
+        .ant-descriptions-bordered .ant-descriptions-item-label {
+          background: var(--surface) !important;
+          color: var(--text) !important;
+        }
+        
+        .ant-descriptions-bordered .ant-descriptions-item-content {
+          background: var(--card) !important;
+          color: var(--text) !important;
+        }
+        
+        .ant-descriptions-bordered .ant-descriptions-view {
+          border-color: var(--border) !important;
+        }
+        
+        .ant-descriptions-bordered .ant-descriptions-row {
+          border-color: var(--border) !important;
+        }
+        
+        /* Tag styling */
+        .ant-tag {
+          border-color: transparent !important;
+        }
+        
+        /* Empty state */
+        .ant-empty-description {
+          color: var(--text-muted) !important;
+        }
+        
+        /* Responsive adjustments for small screens */
+        @media (max-width: 768px) {
+          .admin-tenants-table .ant-table {
+            font-size: 13px !important;
+          }
+          
+          .admin-tenants-table .ant-table-thead > tr > th {
+            padding: 8px 4px !important;
+            font-size: 12px !important;
+          }
+          
+          .admin-tenants-table .ant-table-tbody > tr > td {
+            padding: 8px 4px !important;
+          }
+          
+          .ant-pagination {
+            font-size: 13px !important;
+          }
+          
+          .ant-pagination-item {
+            min-width: 28px !important;
+            height: 28px !important;
+            line-height: 26px !important;
+            margin: 0 2px !important;
+          }
+          
+          .ant-pagination-prev,
+          .ant-pagination-next {
+            min-width: 28px !important;
+            height: 28px !important;
+            line-height: 26px !important;
+          }
+          
+          .ant-modal {
+            max-width: calc(100vw - 16px) !important;
+            margin: 8px auto !important;
+          }
+          
+          .ant-modal-body {
+            padding: 16px 12px !important;
+          }
         }
       `}</style>
     </ThemeContext.Provider>

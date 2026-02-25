@@ -2,20 +2,21 @@
 
 import customerService, { Customer } from "@/lib/services/customerService";
 import {
-  Cake,
-  Cancel,
-  CheckCircle,
-  Close,
-  Diamond,
-  Email,
-  EmojiEvents,
-  History,
-  Phone,
-  Star,
-  WorkspacePremium
+    Cake,
+    Cancel,
+    CheckCircle,
+    Close,
+    Diamond,
+    Email,
+    EmojiEvents,
+    History,
+    Phone,
+    Star,
+    WorkspacePremium
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 interface CustomerDetailProps {
@@ -61,7 +62,9 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
     }
   };
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div 
       className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/80 backdrop-blur-sm"
       onClick={onClose}
@@ -201,6 +204,7 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
 
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   );
 }

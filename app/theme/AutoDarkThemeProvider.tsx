@@ -92,6 +92,7 @@ const AutoDarkThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
           token: (mode === "dark" ? darkTheme : lightTheme).tokens.token,
           components: (mode === "dark" ? darkTheme : lightTheme).tokens.components,
         }}
+        form={{ requiredMark: false }}
       >
         <style jsx global>{`
           /* Scrollbar Styling - Webkit (Chrome, Safari, Edge) */

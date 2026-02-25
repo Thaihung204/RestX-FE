@@ -406,6 +406,9 @@
         "confirm_delete": "Are you sure you want to delete this category?",
         "name_placeholder": "e.g. Vegetables, Meat, Dairy...",
         "description_placeholder": "Brief description of this ingredient category",
+        "empty_title": "No Categories Found",
+        "tooltip_edit": "Edit category",
+        "tooltip_delete": "Delete category",
         "defaults": {
           "vegetables": {
             "name": "Vegetables",
@@ -460,6 +463,13 @@
         "inactive": "Inactive",
         "empty": "No suppliers found.",
         "confirm_delete": "Are you sure you want to delete this supplier?",
+        "fetch_failed": "Failed to load suppliers",
+        "save_failed": "Failed to save supplier",
+        "status_update_failed": "Failed to update status",
+        "loading": "Loading suppliers...",
+        "name_required": "Please enter supplier name",
+        "tooltip_edit": "Edit supplier",
+        "tooltip_delete": "Delete supplier",
         "created": "Supplier created successfully",
         "updated": "Supplier updated successfully",
         "deleted": "Supplier deleted",
@@ -726,7 +736,7 @@
       "try_adjusting_filters": "Try adjusting your search or filters",
       "stats": {
         "total_staff": "Total Staff",
-        "on_duty": "On Duty",
+        "on_duty": "Active",
         "departments": "Departments",
         "avg_rating": "Avg Rating",
         "inactive": "Inactive",
@@ -747,6 +757,18 @@
         "enter_address": "Enter address",
         "position_placeholder": "e.g., Head Chef, Server, etc.",
         "active_description": "Active (Staff member is currently working)"
+      },
+      "employment_details": {
+        "title": "Employment Details",
+        "salary": "Salary",
+        "salary_type": "Salary Type",
+        "termination_date": "Termination Date",
+        "roles": "System Roles",
+        "salary_types": {
+          "monthly": "Monthly",
+          "hourly": "Hourly",
+          "daily": "Daily"
+        }
       },
       "avatar": {
         "profile_picture": "Profile Picture",
@@ -783,8 +805,12 @@
         "view_profile": "View Profile"
       },
       "roles": {
+        "manager": "Manager",
+        "chef": "Chef",
+        "waiter": "Waiter",
+        "cashier": "Cashier",
         "kitchen staff": "Kitchen Staff",
-        "waiter": "Waiter"
+        "staff": "Staff"
       },
       "status": {
         "active": "Active",
@@ -1005,7 +1031,8 @@
       },
       "buttons": {
         "cancel": "Cancel",
-        "save_changes": "Save Changes"
+        "save_changes": "Save Changes",
+        "saving": "Saving..."
       }
     },
     "help": {
@@ -1860,6 +1887,9 @@
       "tenant_info": "Tenant Info",
       "contact": "Contact",
       "address": "Address",
+      "domain": "Domain / IP",
+      "domain_not_configured": "Not configured",
+      "domain_not_set": "Not set",
       "plan": "Plan",
       "status": "Status",
       "owner": "Owner",
@@ -1872,7 +1902,8 @@
       "active": "Active",
       "inactive": "Inactive",
       "maintenance": "Maintenance",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "total_filtered": "Total: {{total}} | Filtered: {{filtered}}"
     },
     "actions": {
       "view_details": "View Details",
@@ -2045,7 +2076,7 @@
       },
       "delete_modal": {
         "title": "Delete Tenant",
-        "warning_title": "⚠️ Warning: This action cannot be undone!",
+        "warning_title": "Warning: This action cannot be undone!",
         "warning_description": "Deleting this tenant will permanently remove:",
         "warning_items": {
           "data": "All restaurant data and settings",
@@ -2055,8 +2086,8 @@
         },
         "confirm_instruction": "To confirm deletion, please type the tenant name:",
         "input_placeholder": "Type tenant name to confirm",
-        "name_mismatch": "✗ Tenant name does not match",
-        "name_match": "✓ Ready to delete",
+        "name_mismatch": "Tenant name does not match",
+        "name_match": "Ready to delete",
         "button_cancel": "Cancel",
         "button_delete": "Delete Permanently"
       }
@@ -2064,20 +2095,42 @@
   },
   "tenant_requests": {
     "form": {
-      "title": "Register Your Restaurant",
+      "description": "Fill in your restaurant information and our team will contact you to set up your account.",
+      "restaurant_info": "Restaurant Information",
+      "contact_info": "Contact Information",
+      "address_section": "Address",
+      "restaurant_name": "Restaurant Name",
+      "restaurant_name_placeholder": "e.g., My Restaurant",
+      "restaurant_name_required": "Please enter restaurant name",
+      "restaurant_name_min": "Restaurant name must be at least 3 characters",
+      "hostname": "Subdomain/Hostname",
+      "hostname_placeholder": "myrestaurant",
+      "hostname_required": "Please enter subdomain",
+      "hostname_invalid": "Only lowercase letters, numbers, and hyphens are allowed",
+      "hostname_tooltip": "This will be your portal hostname",
       "business_name": "Business Name",
-      "business_name_placeholder": "Your restaurant name",
+      "business_name_placeholder": "Legal business name (optional)",
       "business_name_required": "Please enter business name",
       "contact_person": "Contact Person",
       "contact_person_placeholder": "Full name",
       "contact_person_required": "Please enter contact person name",
       "business_email": "Business Email",
-      "business_email_placeholder": "business@example.com",
+      "business_email_placeholder": "info@yourrestaurant.com (optional)",
       "business_email_required": "Please enter business email",
       "business_email_invalid": "Please enter a valid email",
       "phone_number": "Phone Number",
-      "phone_number_placeholder": "+1234567890",
+      "phone_number_placeholder": "+84 123 456 789 (optional)",
       "phone_number_required": "Please enter phone number",
+      "address_line_1": "Address Line 1",
+      "address_line_1_placeholder": "Street address (optional)",
+      "address_line_2": "Address Line 2",
+      "address_line_2_placeholder": "District/Ward (optional)",
+      "address_line_3": "Address Line 3",
+      "address_line_3_placeholder": "City (optional)",
+      "address_line_4": "Address Line 4",
+      "address_line_4_placeholder": "State/Province (optional)",
+      "country": "Country",
+      "country_placeholder": "Country (optional)",
       "business_address": "Business Address",
       "business_address_placeholder": "Full business address",
       "business_address_required": "Please enter business address",
@@ -2103,7 +2156,12 @@
     "list": {
       "title": "Tenant Requests",
       "pending_requests": "Pending Requests",
+      "search_placeholder": "Search by name, email, phone, or hostname...",
+      "total_filtered": "Total: {{total}} | Filtered: {{filtered}}",
+      "refresh": "Refresh",
+      "column_restaurant": "Restaurant",
       "column_business_name": "Business Name",
+      "column_contact": "Contact",
       "column_contact_info": "Contact Info",
       "column_address": "Address",
       "column_plan": "Plan",
@@ -2113,15 +2171,20 @@
       "status_pending": "Pending",
       "status_approved": "Approved",
       "status_rejected": "Rejected",
+      "status_pending_approval": "Pending Approval",
       "action_view": "View",
       "action_approve": "Approve",
       "action_reject": "Reject",
-      "detail_modal_title": "Request Details",
+      "action_delete": "Delete",
+      "detail_modal_title": "Tenant Request Details",
+      "detail_restaurant_name": "Restaurant Name",
+      "detail_hostname": "Hostname",
       "detail_business_name": "Business Name",
       "detail_contact_person": "Contact Person",
       "detail_business_email": "Business Email",
       "detail_phone": "Phone Number",
       "detail_address": "Address",
+      "detail_country": "Country",
       "detail_plan": "Requested Plan",
       "detail_status": "Status",
       "detail_submitted": "Submitted Date",
@@ -2132,24 +2195,27 @@
       "detail_rejected_at": "Rejected At",
       "detail_rejection_reason": "Rejection Reason",
       "detail_close": "Close",
-      "approve_confirm_title": "Approve Request",
-      "approve_confirm_message": "Are you sure you want to approve this tenant request? This will create a new tenant in the system.",
-      "approve_confirm_ok": "Yes, Approve",
+      "approve_confirm_title": "Approve Tenant Request",
+      "approve_confirm_message": "Are you sure you want to approve \"{{name}}\"? This will create a new tenant with hostname {{hostname}}",
+      "approve_confirm_ok": "Approve",
       "approve_confirm_cancel": "Cancel",
-      "reject_confirm_title": "Reject Request",
-      "reject_confirm_message": "Are you sure you want to reject this request?",
-      "reject_confirm_ok": "Yes, Reject",
+      "reject_confirm_title": "Reject Tenant Request",
+      "reject_confirm_message": "Are you sure you want to reject \"{{name}}\"? This will mark the request as denied.",
+      "reject_confirm_ok": "Reject",
       "reject_confirm_cancel": "Cancel",
-      "approve_success": "Request approved successfully!",
-      "reject_success": "Request rejected successfully!",
-      "approve_error": "Failed to approve request",
-      "reject_error": "Failed to reject request",
+      "approve_success": "Tenant \"{{name}}\" has been approved! Tenant ID: {{id}}",
+      "reject_success": "Tenant request \"{{name}}\" has been rejected",
+      "approve_error": "Failed to approve tenant",
+      "reject_error": "Failed to reject tenant",
       "filter_all": "All Requests",
       "filter_pending": "Pending",
       "filter_approved": "Approved",
       "filter_rejected": "Rejected",
-      "no_data": "No requests found",
-      "total_requests": "Total {{count}} requests"
+      "load_error": "Failed to load tenant requests",
+      "invalid_id": "Invalid request ID",
+      "no_data": "No pending tenant requests",
+      "total_requests": "Total {{count}} requests",
+      "total_requests_singular": "Total 1 pending request"
     }
   },
   "landing": {

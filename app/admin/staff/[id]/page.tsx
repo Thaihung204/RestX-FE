@@ -1,12 +1,13 @@
 "use client";
 
 import employeeService from "@/lib/services/employeeService";
-import { message } from "antd";
+import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const ROLES = ["Kitchen Staff", "Waiter"];
+const SALARY_TYPES = ["Monthly", "Hourly", "Daily"];
 
 export default function StaffFormPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function StaffFormPage() {
   const id = params.id as string;
   const isNewStaff = id === "new";
   const { t } = useTranslation(["common"]);
+  const { message } = App.useApp();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -22,7 +24,11 @@ export default function StaffFormPage() {
     address: "",
     position: "",
     hireDate: new Date().toISOString().split("T")[0],
+    terminationDate: "",
+    salary: 0,
+    salaryType: "Monthly",
     role: "Kitchen Staff",
+    roles: [] as string[],
     isActive: true,
   });
 
@@ -52,7 +58,13 @@ export default function StaffFormPage() {
         hireDate: employee.hireDate
           ? new Date(employee.hireDate).toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0],
+        terminationDate: employee.terminationDate
+          ? new Date(employee.terminationDate).toISOString().split("T")[0]
+          : "",
+        salary: employee.salary ?? 0,
+        salaryType: employee.salaryType || "Monthly",
         role: employee.roles?.[0] || "Kitchen Staff",
+        roles: employee.roles || [],
         isActive: employee.isActive !== undefined ? employee.isActive : true,
       });
       setCurrentAvatarUrl(employee.avatarUrl || null);
@@ -72,7 +84,11 @@ export default function StaffFormPage() {
     setFormData((prev) => ({
       ...prev,
       [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : name === "salary"
+            ? parseFloat(value) || 0
+            : value,
     }));
   };
 
@@ -137,7 +153,15 @@ export default function StaffFormPage() {
           ? null
           : (avatarFile ?? undefined);
         await employeeService.updateEmployee(id, {
-          ...formData,
+          fullName: formData.fullName,
+          phoneNumber: formData.phoneNumber,
+          address: formData.address,
+          position: formData.position,
+          hireDate: formData.hireDate,
+          terminationDate: formData.terminationDate || undefined,
+          salary: formData.salary,
+          salaryType: formData.salaryType,
+          isActive: formData.isActive,
           avatar: avatarValue,
         });
         message.success(t("dashboard.toasts.staff.updated_message"));
@@ -151,6 +175,9 @@ export default function StaffFormPage() {
       setLoading(false);
     }
   };
+
+  const formatSalary = (amount: number) =>
+    new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
 
   if (loading && !isNewStaff) {
     return (
@@ -200,6 +227,7 @@ export default function StaffFormPage() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left Column: Form Fields */}
             <div className="lg:col-span-8 space-y-6">
+              {/* Basic Information */}
               <div
                 className="rounded-xl p-6 shadow-sm"
                 style={{
@@ -364,6 +392,129 @@ export default function StaffFormPage() {
                       }}
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Employment Details */}
+              <div
+                className="rounded-xl p-6 shadow-sm"
+                style={{
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                }}>
+                <h3
+                  className="text-lg font-semibold mb-6 flex items-center gap-2"
+                  style={{ color: "var(--text)" }}>
+                  <span className="w-1 h-5 bg-orange-500 rounded-full"></span>
+                  {t("dashboard.staff.employment_details.title")}
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Salary */}
+                  <div>
+                    <label
+                      className="block mb-1.5 text-sm font-medium"
+                      style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.staff.employment_details.salary")}
+                    </label>
+                    <input
+                      type="number"
+                      name="salary"
+                      value={formData.salary}
+                      onChange={handleChange}
+                      min={0}
+                      step={100000}
+                      className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                      style={{
+                        background: "var(--surface)",
+                        borderColor: "var(--border)",
+                        color: "var(--text)",
+                      }}
+                    />
+                    {formData.salary > 0 && (
+                      <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
+                        {formatSalary(formData.salary)}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Salary Type */}
+                  <div>
+                    <label
+                      className="block mb-1.5 text-sm font-medium"
+                      style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.staff.employment_details.salary_type")}
+                    </label>
+                    <select
+                      name="salaryType"
+                      value={formData.salaryType}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                      style={{
+                        background: "var(--surface)",
+                        borderColor: "var(--border)",
+                        color: "var(--text)",
+                      }}>
+                      {SALARY_TYPES.map((st) => (
+                        <option key={st} value={st}>
+                          {t(`dashboard.staff.employment_details.salary_types.${st.toLowerCase()}`, { defaultValue: st })}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Termination Date */}
+                  <div>
+                    <label
+                      className="block mb-1.5 text-sm font-medium"
+                      style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.staff.employment_details.termination_date")}
+                      <span className="ml-1 text-xs opacity-60">({t("common.optional", { defaultValue: "optional" })})</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="terminationDate"
+                      value={formData.terminationDate}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                      style={{
+                        background: "var(--surface)",
+                        borderColor: "var(--border)",
+                        color: "var(--text)",
+                      }}
+                    />
+                  </div>
+
+                  {/* Roles (read-only for edit, always populated from API) */}
+                  {!isNewStaff && formData.roles.length > 0 && (
+                    <div>
+                      <label
+                        className="block mb-1.5 text-sm font-medium"
+                        style={{ color: "var(--text-muted)" }}>
+                        {t("dashboard.staff.employment_details.roles")}
+                      </label>
+                      <div className="flex flex-wrap gap-2 px-4 py-2.5 rounded-lg border min-h-[42px] items-center"
+                        style={{
+                          background: "var(--surface)",
+                          borderColor: "var(--border)",
+                        }}>
+                        {formData.roles.map((role) => (
+                          <span
+                            key={role}
+                            className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                            style={{
+                              background: "var(--primary-soft)",
+                              color: "var(--primary)",
+                            }}>
+                            {t(
+                              `dashboard.staff.roles.${role.toLowerCase()}`,
+                              { defaultValue: role },
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -715,6 +866,7 @@ export default function StaffFormPage() {
                       className="w-full py-3 rounded-lg font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-orange-500/30 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       style={{
                         background: loading ? "#999" : "var(--primary)",
+                        color: "var(--text)"
                       }}>
                       {loading ? (
                         <span className="flex items-center justify-center gap-2">

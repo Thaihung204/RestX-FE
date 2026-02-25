@@ -406,6 +406,9 @@
         "confirm_delete": "Bạn có chắc muốn xóa loại nguyên liệu này?",
         "name_placeholder": "Ví dụ: Rau củ, Thịt, Sữa...",
         "description_placeholder": "Mô tả ngắn gọn về loại nguyên liệu này",
+        "empty_title": "Chưa có danh mục nào",
+        "tooltip_edit": "Chỉnh sửa loại",
+        "tooltip_delete": "Xóa loại",
         "defaults": {
           "vegetables": {
             "name": "Rau củ",
@@ -458,7 +461,7 @@
         "actions": "Thao tác",
         "active": "Hoạt động",
         "inactive": "Ngừng hoạt động",
-        "empty": "Chưa có nhà cung cấp nào.",
+        "empty": "Chưa có nhà cung cấp nào. Nhấn \"Thêm nhà cung cấp\" để tạo mới.",
         "confirm_delete": "Bạn có chắc muốn xóa nhà cung cấp này?",
         "created": "Đã thêm nhà cung cấp",
         "updated": "Đã cập nhật nhà cung cấp",
@@ -467,6 +470,13 @@
         "phone_placeholder": "0123456789",
         "email_placeholder": "lienhe@nhacungcap.com",
         "address_placeholder": "Địa chỉ đầy đủ của nhà cung cấp",
+        "fetch_failed": "Không tải được danh sách nhà cung cấp",
+        "save_failed": "Lưu nhà cung cấp thất bại",
+        "status_update_failed": "Cập nhật trạng thái thất bại",
+        "loading": "Đang tải nhà cung cấp...",
+        "name_required": "Vui lòng nhập tên nhà cung cấp",
+        "tooltip_edit": "Chỉnh sửa nhà cung cấp",
+        "tooltip_delete": "Xóa nhà cung cấp",
         "defaults": {
           "supplier1": {
             "name": "Công ty Rau Sạch",
@@ -748,6 +758,18 @@
         "position_placeholder": "Ví dụ: Bếp trưởng, Nhân viên phục vụ, v.v.",
         "active_description": "Hoạt động (Nhân viên đang làm việc)"
       },
+      "employment_details": {
+        "title": "Chi tiết việc làm",
+        "salary": "Mức lương",
+        "salary_type": "Hình thức lương",
+        "termination_date": "Ngày kết thúc hợp đồng",
+        "roles": "Vai trò hệ thống",
+        "salary_types": {
+          "monthly": "Lương tháng",
+          "hourly": "Lương giờ",
+          "daily": "Lương ngày"
+        }
+      },
       "avatar": {
         "profile_picture": "Ảnh đại diện",
         "change_photo": "Thay đổi ảnh",
@@ -783,8 +805,12 @@
         "view_profile": "Xem hồ sơ"
       },
       "roles": {
+        "manager": "Quản lý",
+        "chef": "Đầu bếp",
+        "waiter": "Phục vụ",
+        "cashier": "Thu ngân",
         "kitchen staff": "Nhân viên bếp",
-        "waiter": "Phục vụ"
+        "staff": "Nhân viên"
       },
       "status": {
         "active": "Hoạt động",
@@ -1005,7 +1031,8 @@
       },
       "buttons": {
         "cancel": "Hủy",
-        "save_changes": "Lưu thay đổi"
+        "save_changes": "Lưu thay đổi",
+        "saving": "Đang lưu..."
       }
     },
     "help": {
@@ -1860,6 +1887,9 @@
       "tenant_info": "Thông tin nhà hàng",
       "contact": "Liên hệ",
       "address": "Địa chỉ",
+      "domain": "Tên miền / IP",
+      "domain_not_configured": "Chưa cấu hình",
+      "domain_not_set": "Chưa thiết lập",
       "plan": "Gói",
       "status": "Trạng thái",
       "owner": "Chủ sở hữu",
@@ -1872,7 +1902,8 @@
       "active": "Hoạt động",
       "inactive": "Không hoạt động",
       "maintenance": "Bảo trì",
-      "refresh": "Làm mới"
+      "refresh": "Làm mới",
+      "total_filtered": "Tổng: {{total}} | Đã lọc: {{filtered}}"
     },
     "actions": {
       "view_details": "Xem chi tiết",
@@ -2045,7 +2076,7 @@
       },
       "delete_modal": {
         "title": "Xóa nhà hàng",
-        "warning_title": "⚠️ Cảnh báo: Hành động này không thể hoàn tác!",
+        "warning_title": "Cảnh báo: Hành động này không thể hoàn tác!",
         "warning_description": "Xóa nhà hàng này sẽ xóa vĩnh viễn:",
         "warning_items": {
           "data": "Tất cả dữ liệu và cài đặt nhà hàng",
@@ -2055,8 +2086,8 @@
         },
         "confirm_instruction": "Để xác nhận xóa, vui lòng nhập tên nhà hàng:",
         "input_placeholder": "Nhập tên nhà hàng để xác nhận",
-        "name_mismatch": "✗ Tên nhà hàng không khớp",
-        "name_match": "✓ Sẵn sàng xóa",
+        "name_mismatch": "Tên nhà hàng không khớp",
+        "name_match": "Sẵn sàng xóa",
         "button_cancel": "Hủy",
         "button_delete": "Xóa vĩnh viễn"
       }
@@ -2065,19 +2096,42 @@
   "tenant_requests": {
     "form": {
       "title": "Đăng ký nhà hàng",
-      "business_name": "Tên nhà hàng",
-      "business_name_placeholder": "Tên nhà hàng của bạn",
+      "description": "Điền thông tin nhà hàng của bạn và đội ngũ chúng tôi sẽ liên hệ để thiết lập tài khoản.",
+      "restaurant_info": "Thông tin nhà hàng",
+      "contact_info": "Thông tin liên hệ",
+      "address_section": "Địa chỉ",
+      "restaurant_name": "Tên nhà hàng",
+      "restaurant_name_placeholder": "Ví dụ: Nhà hàng của tôi",
+      "restaurant_name_required": "Vui lòng nhập tên nhà hàng",
+      "restaurant_name_min": "Tên nhà hàng phải có ít nhất 3 ký tự",
+      "hostname": "Subdomain/Hostname",
+      "hostname_placeholder": "nhahangtoi",
+      "hostname_required": "Vui lòng nhập subdomain",
+      "hostname_invalid": "Chỉ cho phép chữ thường, số và dấu gạch ngang",
+      "hostname_tooltip": "Đây sẽ là hostname cổng thông tin của bạn",
+      "business_name": "Tên doanh nghiệp",
+      "business_name_placeholder": "Tên pháp lý doanh nghiệp (không bắt buộc)",
       "business_name_required": "Vui lòng nhập tên nhà hàng",
       "contact_person": "Người liên hệ",
       "contact_person_placeholder": "Họ và tên",
       "contact_person_required": "Vui lòng nhập tên người liên hệ",
       "business_email": "Email doanh nghiệp",
-      "business_email_placeholder": "doanhnghiep@example.com",
-      "business_email_required": "Vui lòng nhập email doanh nghiệp",
+      "business_email_placeholder": "info@nhahangtoi.com (không bắt buộc)",
       "business_email_invalid": "Vui lòng nhập email hợp lệ",
+      "business_email_required": "Vui lòng nhập email doanh nghiệp",
       "phone_number": "Số điện thoại",
-      "phone_number_placeholder": "+84987654321",
+      "phone_number_placeholder": "+84 123 456 789 (không bắt buộc)",
       "phone_number_required": "Vui lòng nhập số điện thoại",
+      "address_line_1": "Địa chỉ dòng 1",
+      "address_line_1_placeholder": "Địa chỉ đường phố (không bắt buộc)",
+      "address_line_2": "Địa chỉ dòng 2",
+      "address_line_2_placeholder": "Quận/Phường (không bắt buộc)",
+      "address_line_3": "Địa chỉ dòng 3",
+      "address_line_3_placeholder": "Thành phố (không bắt buộc)",
+      "address_line_4": "Địa chỉ dòng 4",
+      "address_line_4_placeholder": "Tỉnh/Thành (không bắt buộc)",
+      "country": "Quốc gia",
+      "country_placeholder": "Quốc gia (không bắt buộc)",
       "business_address": "Địa chỉ doanh nghiệp",
       "business_address_placeholder": "Địa chỉ đầy đủ",
       "business_address_required": "Vui lòng nhập địa chỉ doanh nghiệp",
@@ -2095,15 +2149,20 @@
       "cancel": "Hủy",
       "submit": "Gửi yêu cầu",
       "submitting": "Đang gửi...",
+      "success_message": "Yêu cầu đã được gửi thành công! Đội ngũ của chúng tôi sẽ xem xét và liên hệ lại sớm.",
+      "error_message": "Không thể gửi yêu cầu. Vui lòng thử lại.",
       "success_title": "Gửi yêu cầu thành công!",
-      "success_message": "Cảm ơn bạn đã quan tâm! Chúng tôi sẽ xem xét yêu cầu và liên hệ lại trong vòng 24-48 giờ.",
-      "error_title": "Gửi yêu cầu thất bại",
-      "error_message": "Vui lòng thử lại hoặc liên hệ bộ phận hỗ trợ."
+      "error_title": "Gửi yêu cầu thất bại"
     },
     "list": {
       "title": "Yêu cầu Tenant",
       "pending_requests": "Yêu cầu đang chờ",
-      "column_business_name": "Tên nhà hàng",
+      "search_placeholder": "Tìm theo tên, email, SĐT hoặc hostname...",
+      "total_filtered": "Tổng: {{total}} | Lọc: {{filtered}}",
+      "refresh": "Làm mới",
+      "column_restaurant": "Nhà hàng",
+      "column_business_name": "Tên doanh nghiệp",
+      "column_contact": "Liên hệ",
       "column_contact_info": "Thông tin liên hệ",
       "column_address": "Địa chỉ",
       "column_plan": "Gói dịch vụ",
@@ -2113,15 +2172,20 @@
       "status_pending": "Chờ duyệt",
       "status_approved": "Đã duyệt",
       "status_rejected": "Đã từ chối",
+      "status_pending_approval": "Chờ phê duyệt",
       "action_view": "Xem",
       "action_approve": "Duyệt",
       "action_reject": "Từ chối",
-      "detail_modal_title": "Chi tiết yêu cầu",
-      "detail_business_name": "Tên nhà hàng",
+      "action_delete": "Xóa",
+      "detail_modal_title": "Chi tiết yêu cầu Tenant",
+      "detail_restaurant_name": "Tên nhà hàng",
+      "detail_hostname": "Hostname",
+      "detail_business_name": "Tên doanh nghiệp",
       "detail_contact_person": "Người liên hệ",
       "detail_business_email": "Email doanh nghiệp",
       "detail_phone": "Số điện thoại",
       "detail_address": "Địa chỉ",
+      "detail_country": "Quốc gia",
       "detail_plan": "Gói dịch vụ yêu cầu",
       "detail_status": "Trạng thái",
       "detail_submitted": "Ngày gửi",
@@ -2132,24 +2196,38 @@
       "detail_rejected_at": "Thời gian từ chối",
       "detail_rejection_reason": "Lý do từ chối",
       "detail_close": "Đóng",
-      "approve_confirm_title": "Duyệt yêu cầu",
-      "approve_confirm_message": "Bạn có chắc chắn muốn duyệt yêu cầu này? Hệ thống sẽ tạo tenant mới.",
-      "approve_confirm_ok": "Đồng ý duyệt",
+      "approve_confirm_title": "Duyệt yêu cầu Tenant",
+      "approve_confirm_message": "Bạn có chắc chắn muốn duyệt \"{{name}}\"? Hệ thống sẽ tạo tenant mới với hostname {{hostname}}",
+      "approve_confirm_ok": "Duyệt",
       "approve_confirm_cancel": "Hủy",
-      "reject_confirm_title": "Từ chối yêu cầu",
-      "reject_confirm_message": "Bạn có chắc chắn muốn từ chối yêu cầu này?",
-      "reject_confirm_ok": "Đồng ý từ chối",
+      "reject_confirm_title": "Từ chối yêu cầu Tenant",
+      "reject_confirm_message": "Bạn có chắc chắn muốn từ chối \"{{name}}\"? Yêu cầu này sẽ được đánh dấu là đã từ chối.",
+      "reject_confirm_ok": "Từ chối",
       "reject_confirm_cancel": "Hủy",
-      "approve_success": "Duyệt yêu cầu thành công!",
-      "reject_success": "Từ chối yêu cầu thành công!",
-      "approve_error": "Không thể duyệt yêu cầu",
-      "reject_error": "Không thể từ chối yêu cầu",
+      "approve_success": "Tenant \"{{name}}\" đã được duyệt! Tenant ID: {{id}}",
+      "reject_success": "Yêu cầu tenant \"{{name}}\" đã bị từ chối",
+      "approve_error": "Không thể duyệt tenant",
+      "reject_error": "Không thể từ chối tenant",
       "filter_all": "Tất cả yêu cầu",
       "filter_pending": "Chờ duyệt",
       "filter_approved": "Đã duyệt",
       "filter_rejected": "Đã từ chối",
-      "no_data": "Không có yêu cầu nào",
-      "total_requests": "Tổng {{count}} yêu cầu"
+      "load_error": "Không thể tải danh sách yêu cầu tenant",
+      "invalid_id": "ID yêu cầu không hợp lệ",
+      "no_data": "Không có yêu cầu đang chờ",
+      "total_requests": "Tổng {{count}} yêu cầu",
+      "total_requests_singular": "Tổng 1 yêu cầu đang chờ"
+    },
+    "page": {
+      "title": "Yêu cầu Cổng thông tin Nhà hàng",
+      "description": "Điền vào biểu mẫu dưới đây để yêu cầu cổng thông tin quản lý nhà hàng của riêng bạn. Đội ngũ của chúng tôi sẽ xem xét yêu cầu và liên hệ lại sớm.",
+      "restaurant_info": "Thông tin nhà hàng",
+      "contact_info": "Thông tin liên hệ",
+      "address": "Địa chỉ",
+      "submit_button": "Gửi yêu cầu",
+      "cancel_button": "Hủy",
+      "success_message": "Yêu cầu đã được gửi thành công! Đội ngũ của chúng tôi sẽ xem xét và liên hệ lại sớm.",
+      "error_message": "Không thể gửi yêu cầu. Vui lòng thử lại."
     }
   },
   "landing": {

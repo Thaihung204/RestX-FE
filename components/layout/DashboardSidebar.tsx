@@ -259,9 +259,10 @@ export default function DashboardSidebar() {
       className={`relative flex flex-col transition-all duration-300 z-30 ${
         collapsed ? "w-20" : "w-64"
       }`}
-      style={{ color: "var(--text)" }}>
-      {/* Logo Removed - Moved to Header */}
-      <div className="h-4"></div>
+      style={{
+        background: "var(--card)",
+        color: "var(--text)",
+      }}>
 
       {/* Navigation */}
       <nav className="flex-1 py-6 px-3 overflow-y-auto">
@@ -298,9 +299,6 @@ export default function DashboardSidebar() {
                       }}>
                       {item.label}
                     </span>
-                  )}
-                  {!collapsed && isActive && (
-                    <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
                   )}
                 </Link>
               </li>
