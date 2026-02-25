@@ -107,6 +107,10 @@ const mapCreateInputToApi = (input: TenantCreateInput) => {
   };
 };
 
+/** Convert camelCase to PascalCase for C# backend compatibility */
+const toPascalCase = (str: string): string =>
+  str.charAt(0).toUpperCase() + str.slice(1);
+
 const toFormData = (
   data: any,
   files?: {
@@ -117,32 +121,62 @@ const toFormData = (
 ): FormData => {
   const formData = new FormData();
 
-  // Append simple fields
-  Object.keys(data).forEach((key) => {
+  // Fields that are non-nullable `string` in C# TenantItem → MUST always be present.
+  // If missing from FormData, ASP.NET model binding fails → 500.
+  const requiredFields: string[] = [
+    'id', 'name', 'hostname', 'status',
+    'primaryColor', 'lightBaseColor', 'lightSurfaceColor', 'lightCardColor',
+    'darkBaseColor', 'darkSurfaceColor', 'darkCardColor',
+    'businessName',
+    'businessAddressLine1', 'businessAddressLine2', 'businessAddressLine3', 'businessAddressLine4',
+    'businessPrimaryPhone', 'businessEmailAddress',
+  ];
+
+  // Fields that are nullable `string?` in C# TenantItem → only send if present.
+  const optionalFields: string[] = [
+    'prefix', 'logoUrl', 'faviconUrl', 'backgroundUrl',
+    'networkIp', 'connectionString',
+    'businessCounty', 'businessPostCode', 'businessCountry',
+    'businessSecondaryPhone', 'businessCompanyNumber', 'businessOpeningHours',
+    'aboutUs',
+  ];
+
+  const appendedKeys: string[] = [];
+
+  // Always send required fields (fallback to '' if missing)
+  requiredFields.forEach((key) => {
     const value = data[key];
-    if (value !== null && value !== undefined && key !== "tenantSettings") {
-      if (
-        typeof value === "object" &&
-        !Array.isArray(value) &&
-        !(value instanceof Date)
-      ) {
-      } else if (typeof value === "boolean") {
-        formData.append(key, value ? "true" : "false");
-      } else {
-        formData.append(key, value.toString());
-      }
+    const pascalKey = toPascalCase(key);
+    if (typeof value === 'boolean') {
+      formData.append(pascalKey, value ? 'true' : 'false');
+    } else {
+      formData.append(pascalKey, (value ?? '').toString());
+    }
+    appendedKeys.push(pascalKey);
+  });
+
+  // Only send optional fields when they have a value
+  optionalFields.forEach((key) => {
+    const value = data[key];
+    if (value !== null && value !== undefined && value !== '') {
+      const pascalKey = toPascalCase(key);
+      formData.append(pascalKey, value.toString());
+      appendedKeys.push(pascalKey);
     }
   });
 
-  // Append files
+  // Append file uploads (already PascalCase)
   if (files) {
-    if (files.logo) formData.append("LogoFile", files.logo);
-    if (files.background) formData.append("BackgroundFile", files.background);
-    if (files.favicon) formData.append("FaviconFile", files.favicon);
+    if (files.logo) { formData.append('LogoFile', files.logo); appendedKeys.push('LogoFile'); }
+    if (files.background) { formData.append('BackgroundFile', files.background); appendedKeys.push('BackgroundFile'); }
+    if (files.favicon) { formData.append('FaviconFile', files.favicon); appendedKeys.push('FaviconFile'); }
   }
+
+  console.log('[toFormData] Sending fields:', appendedKeys);
 
   return formData;
 };
+
 
 export const tenantService = {
   /**
@@ -357,21 +391,37 @@ export const tenantService = {
 
     // If tenant has an ID, use PUT to update
     if (tenantId) {
-      // We filter out tenantSettings and other non-primitive complex objects that backend might not expect
       const formData = toFormData(tenant, files);
 
-      console.log(`[tenantService] Performing PUT update for ID: ${tenantId}`);
-      return await adminAxiosInstance.put(`/tenants/${tenantId}`, formData, {
-        headers: { "Content-Type": undefined },
-      });
+      console.log(`[tenantService] PUT /tenants/${tenantId}`);
+
+      try {
+        const response = await adminAxiosInstance.put(`/tenants/${tenantId}`, formData, {
+          headers: { "Content-Type": undefined },
+        });
+        console.log('[tenantService] PUT success:', response.status, response.data);
+        return response;
+      } catch (err: any) {
+        console.error('[tenantService] PUT failed:', err.response?.status, err.response?.data);
+        throw err;
+      }
+
     } else {
       // Create new
-      console.log("[tenantService] Performing POST create (no ID found)");
+      console.log("[tenantService] POST /tenants (no ID found)");
       const formData = toFormData(tenant, files);
-      return await adminAxiosInstance.post("/tenants", formData, {
-        headers: { "Content-Type": undefined },
-      });
+      try {
+        const response = await adminAxiosInstance.post("/tenants", formData, {
+          headers: { "Content-Type": undefined },
+        });
+        console.log('[tenantService] POST success:', response.status, response.data);
+        return response;
+      } catch (err: any) {
+        console.error('[tenantService] POST failed:', err.response?.status, err.response?.data);
+        throw err;
+      }
     }
+
   },
 
   /**

@@ -13,12 +13,13 @@ const getAdminBaseUrl = (): string => {
     const host = window.location.host;
     const hostWithoutPort = host.includes(':') ? host.split(':')[0] : host;
 
-    // Development mode: use environment variable from .env.local
-    // This allows testing with live backend or localhost backend
+    // Development mode: use relative /api/admin path so Next.js rewrite
+    // '/api/admin/:path*' → admin backend (https://admin.restx.food/api)
+    // handles the proxy correctly without CORS issues.
     if (hostWithoutPort === 'localhost' ||
         hostWithoutPort === '127.0.0.1' ||
         hostWithoutPort.endsWith('.localhost')) {
-        return process.env.NEXT_PUBLIC_ADMIN_API_URL || '/api';
+        return process.env.NEXT_PUBLIC_ADMIN_API_URL || '/api/admin';
     }
 
     // Production: construct admin URL dynamically from current domain
@@ -49,6 +50,15 @@ if (typeof window !== 'undefined') {
 adminAxiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
+        if (error.response) {
+            console.error('[adminAxios] Error response:', {
+                status: error.response.status,
+                url: error.config?.url,
+                method: error.config?.method?.toUpperCase(),
+                data: error.response.data,
+                headers: error.response.headers,
+            });
+        }
         return Promise.reject(error);
     }
 );
