@@ -11,7 +11,7 @@ const getAdminBaseUrl = (): string => {
     if (hostWithoutPort === 'localhost' ||
         hostWithoutPort === '127.0.0.1' ||
         hostWithoutPort.endsWith('.localhost')) {
-        return '/api';
+        return '/api/admin';
     }
 
     const parts = hostWithoutPort.split('.');

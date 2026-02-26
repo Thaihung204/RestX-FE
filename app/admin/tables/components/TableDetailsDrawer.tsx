@@ -9,7 +9,7 @@ interface Table {
   number: number;
   capacity: number;
   status: "available" | "occupied" | "reserved" | "cleaning";
-  area: "VIP" | "Indoor" | "Outdoor";
+  area: string;
   currentOrder?: string;
   reservationTime?: string;
   shape?: "Square" | "Circle" | "Rectangle" | "Oval";
@@ -78,7 +78,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
   const [formData, setFormData] = React.useState({
     number: 0,
     capacity: 4,
-    area: "Indoor" as "VIP" | "Indoor" | "Outdoor",
+    area: "Indoor" as string,
     status: "available" as "available" | "occupied" | "reserved" | "cleaning",
     shape: "Square" as "Square" | "Circle" | "Rectangle" | "Oval",
     width: 80,

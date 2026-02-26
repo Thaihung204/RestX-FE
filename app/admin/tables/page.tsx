@@ -9,14 +9,15 @@ import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
-import { tableService, TableStatus, TableItem, LayoutResponse } from "@/lib/services/tableService";
+import { tableService, TableStatus, TableItem, floorService, FloorSummary } from "@/lib/services/tableService";
 
 interface Table {
   id: string;
   number: number;
   capacity: number;
   status: "available" | "occupied" | "reserved" | "cleaning";
-  area: "VIP" | "Indoor" | "Outdoor";
+  area: string; // floorName from BE
+  floorId?: string; // BE floor GUID
   currentOrder?: string;
   reservationTime?: string;
   // Backend fields to preserve
@@ -32,7 +33,6 @@ interface Table {
   viewDescription?: string;
   defaultViewUrl?: string;
   qrCodeUrl?: string;
-
 }
 
 type ViewMode = "grid" | "map";
@@ -70,28 +70,28 @@ export default function TablesPage() {
     },
   };
 
-  /* State for Map Layout - Added availableAreas */
-  const [availableAreas, setAvailableAreas] = useState<string[]>([
-    "VIP",
-    "Indoor",
-    "Outdoor",
-  ]);
+  /* BE floors state */
+  const [beFloors, setBeFloors] = useState<FloorSummary[]>([]);
   /* Add Area Modal State */
   const [addAreaModalOpen, setAddAreaModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch tables from API
+  // Fetch tables + floors from BE API
   const fetchTables = async () => {
     try {
       setLoading(true);
-      const items = await tableService.getAllTables();
+      const [items, floors] = await Promise.all([
+        tableService.getAllTables(),
+        floorService.getAllFloors(),
+      ]);
+
+      setBeFloors(floors);
 
       const mappedTables: Table[] = items.map(item => {
         let status: Table['status'] = 'available';
         if (item.tableStatusId === TableStatus.Reserved) status = 'reserved';
         if (item.tableStatusId === TableStatus.Occupied) status = 'occupied';
-        // Handle cleaning if statusName provided or extended enum in future
         if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
 
         return {
@@ -99,7 +99,8 @@ export default function TablesPage() {
           number: parseInt(item.code) || 0,
           capacity: item.seatingCapacity,
           status: status,
-          area: (item.type as any) || 'Indoor',
+          area: item.floorName || item.type || 'Indoor',
+          floorId: item.floorId,
           shape: (item.shape as any) || 'Square',
           positionX: Number(item.positionX) || 0,
           positionY: Number(item.positionY) || 0,
@@ -107,21 +108,15 @@ export default function TablesPage() {
           height: Number(item.height) || 80,
           rotation: Number(item.rotation) || 0,
           isActive: item.isActive,
-          // Map optional backend fields
           has3DView: item.has3DView,
           viewDescription: item.viewDescription,
           defaultViewUrl: item.defaultViewUrl,
           qrCodeUrl: item.qrCodeUrl,
         };
       });
+      // DEBUG: show BE positions
+      console.log('[Admin] Tables from BE:', mappedTables.map(t => ({ id: t.id, code: t.number, floorId: t.floorId, x: t.positionX, y: t.positionY })));
       setTables(mappedTables);
-
-      // Update available areas
-      const areas = Array.from(new Set(mappedTables.map(t => t.area)));
-      const defaultAreas = ["VIP", "Indoor", "Outdoor"];
-      const uniqueAreas = Array.from(new Set([...defaultAreas, ...areas]));
-      setAvailableAreas(uniqueAreas);
-
     } catch (error) {
       console.error("Failed to fetch tables:", error);
     } finally {
@@ -136,100 +131,98 @@ export default function TablesPage() {
   // Layout State for Map Mode
   const [layout, setLayout] = useState<Layout | null>(null);
 
-  // Sync Layout with Tables
+  // Upload floor background image directly to BE
+  const handleFloorImageUpload = async (floorId: string, file: File) => {
+    try {
+      const floor = beFloors.find(f => f.id === floorId);
+      await floorService.updateFloor(floorId, {
+        name: floor?.name ?? 'Floor',
+        width: floor?.width ?? 1400,
+        height: floor?.height ?? 900,
+        image: file,
+      });
+      // Refresh floors to get Cloudinary URL
+      const updatedFloors = await floorService.getAllFloors();
+      setBeFloors(updatedFloors);
+    } catch (err) {
+      console.error('Failed to upload floor background to BE:', err);
+    }
+  };
+
+  // Sync Layout with Tables using real BE floors
   useEffect(() => {
-    if (tables.length === 0) return;
+    if (beFloors.length === 0 && tables.length === 0) return;
 
-    // Load saved layout config (backgrounds, dimensions) from local storage
-    const savedLayoutStr = localStorage.getItem('restaurant_layout');
-    const savedLayout = savedLayoutStr ? JSON.parse(savedLayoutStr) : null;
-
-    // Group tables by area -> Floors
-    const areas = Array.from(new Set(tables.map(t => t.area)));
-    // Ensure we have at least the default areas or the saved floors
-    const floorIds = new Set([...areas, ...availableAreas]);
-
-    const floors: Floor[] = Array.from(floorIds).map(areaId => {
-      const savedFloor = savedLayout?.floors?.find((f: any) => f.id === areaId);
+    // Build floors from BE floor data
+    const floors: Floor[] = beFloors.map(bf => {
       const floorTables = tables
-        .filter(table => table.area === areaId && table.isActive)
+        .filter(table => table.floorId === bf.id && table.isActive)
         .map(table => ({
           id: table.id,
-          tenantId: "tenant-1", // Placeholder
-          name: t("dashboard.tables.card.table_name", { number: table.number }),
+          tenantId: 'tenant-1',
+          name: t('dashboard.tables.card.table_name', { number: table.number }),
           seats: table.capacity,
-          status: table.status === "available" ? "AVAILABLE" : table.status === "occupied" ? "OCCUPIED" : table.status === "reserved" ? "RESERVED" : "DISABLED",
+          status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
           area: table.area,
           position: { x: table.positionX, y: table.positionY },
           shape: table.shape as any,
           width: table.width || 80,
           height: table.height || 80,
-          rotation: table.rotation
+          rotation: table.rotation,
         } as Map2DTableData));
 
       return {
-        id: areaId,
-        name: t(`dashboard.table_status.areas.${areaId.toLowerCase()}`, { defaultValue: areaId }),
-        width: savedFloor?.width || 1000,
-        height: savedFloor?.height || 800,
-        backgroundImage: savedFloor?.backgroundImage || undefined,
-
-        tables: floorTables
+        id: bf.id,
+        name: bf.name,
+        width: Number(bf.width) || 1400,
+        height: Number(bf.height) || 900,
+        backgroundImage: bf.imageUrl || undefined,
+        tables: floorTables,
       };
     });
 
-    setLayout({
-      id: savedLayout?.id || 'default-layout',
-      name: savedLayout?.name || 'My Restaurant',
-      activeFloorId: layout?.activeFloorId && floorIds.has(layout.activeFloorId as any) ? layout.activeFloorId : (floors[0]?.id || 'Indoor'),
-      floors: floors
-    });
+    // Also add tables that have no matching BE floor (orphaned — group by area name)
+    const assignedTableIds = new Set(floors.flatMap(f => f.tables.map(t => t.id)));
+    const orphanedTables = tables.filter(t => t.isActive && !assignedTableIds.has(t.id));
+    if (orphanedTables.length > 0) {
+      const orphanAreas = Array.from(new Set(orphanedTables.map(t => t.area)));
+      for (const areaName of orphanAreas) {
+        const areaTables = orphanedTables.filter(t => t.area === areaName);
+        floors.push({
+          id: `orphan-${areaName}`,
+          name: areaName,
+          width: 1400,
+          height: 900,
+          tables: areaTables.map(table => ({
+            id: table.id,
+            tenantId: 'tenant-1',
+            name: t('dashboard.tables.card.table_name', { number: table.number }),
+            seats: table.capacity,
+            status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
+            area: table.area,
+            position: { x: table.positionX, y: table.positionY },
+            shape: table.shape as any,
+            width: table.width || 80,
+            height: table.height || 80,
+            rotation: table.rotation,
+          } as Map2DTableData)),
+        });
+      }
+    }
 
-  }, [tables, t, availableAreas]); // dependency on tables ensures updates propagate
+    if (floors.length === 0) return;
 
+    setLayout(prev => ({
+      id: 'be-layout',
+      name: 'My Restaurant',
+      activeFloorId: prev?.activeFloorId && floors.some(f => f.id === prev.activeFloorId) ? prev.activeFloorId : floors[0].id,
+      floors,
+    }));
+  }, [tables, beFloors, t]);
+
+  // When layout changes in TableMap2D (table dragged, etc.)
   const handleLayoutChange = async (newLayout: Layout) => {
     setLayout(newLayout);
-
-    try {
-      const layoutPayload: LayoutResponse = {
-        id: newLayout.id,
-        name: newLayout.name,
-        activeFloorId: newLayout.activeFloorId,
-        floors: newLayout.floors.map(f => ({
-          id: f.id,
-          name: f.name,
-          width: f.width,
-          height: f.height,
-          backgroundImage: f.backgroundImage,
-          zones: [],
-          tables: f.tables.map(t => {
-            const fullTable = tables.find(ft => ft.id === t.id);
-            return {
-              id: t.id,
-              code: t.name,
-              type: t.area,
-              seatingCapacity: t.seats,
-              shape: t.shape,
-              positionX: t.position.x,
-              positionY: t.position.y,
-              width: t.width,
-              height: t.height,
-              rotation: t.rotation,
-              isActive: fullTable?.isActive ?? true,
-              tableStatusId: fullTable?.status === 'occupied' ? TableStatus.Occupied : (fullTable?.status === 'reserved' ? TableStatus.Reserved : TableStatus.Available),
-              has3DView: fullTable?.has3DView,
-              viewDescription: fullTable?.viewDescription,
-              defaultViewUrl: fullTable?.defaultViewUrl,
-              qrCodeUrl: fullTable?.qrCodeUrl
-            } as TableItem;
-          })
-        }))
-      };
-
-      await tableService.saveLayout(layoutPayload);
-    } catch (error) {
-      console.error("Failed to save layout:", error);
-    }
   };
 
   const handleMap2DTablePositionChange = async (tableId: string, position: { x: number; y: number; zoneId?: string }) => {
@@ -253,11 +246,15 @@ export default function TablesPage() {
       const tableToUpdate = tables.find(t => t.id === tableId);
       if (!tableToUpdate) return;
 
+      // Use layout.activeFloorId as fallback if table has no floorId
+      const effectiveFloorId = tableToUpdate.floorId || layout.activeFloorId;
+
       const apiData: any = {
         id: tableToUpdate.id,
         code: tableToUpdate.number.toString(),
         seatingCapacity: tableToUpdate.capacity,
         type: tableToUpdate.area,
+        floorId: effectiveFloorId,
         shape: tableToUpdate.shape,
         positionX: position.x,
         positionY: position.y,
@@ -271,10 +268,12 @@ export default function TablesPage() {
       if (tableToUpdate.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
       else if (tableToUpdate.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
 
+      console.log('[Admin] Saving table position:', { tableId, x: position.x, y: position.y, floorId: effectiveFloorId });
       await tableService.updateTable(tableId, apiData);
+      console.log('[Admin] Table position saved successfully');
 
       setTables(prev => prev.map(t =>
-        t.id === tableId ? { ...t, positionX: position.x, positionY: position.y } : t
+        t.id === tableId ? { ...t, positionX: position.x, positionY: position.y, floorId: effectiveFloorId } : t
       ));
     } catch (err) {
       console.error("Failed to move table:", err);
@@ -310,6 +309,7 @@ export default function TablesPage() {
         code: tableToUpdate.number.toString(),
         seatingCapacity: tableToUpdate.capacity,
         type: tableToUpdate.area,
+        floorId: tableToUpdate.floorId || layout.activeFloorId,
         shape: tableToUpdate.shape,
         positionX: tableToUpdate.positionX,
         positionY: tableToUpdate.positionY,
@@ -358,8 +358,8 @@ export default function TablesPage() {
     );
 
     try {
-      await tableService.updateTable(targetTableId, { seatingCapacity: newCapacity });
-      await tableService.updateTable(sourceTableId, { isActive: false });
+      await tableService.updateTable(targetTableId, { seatingCapacity: newCapacity, floorId: targetTable.floorId });
+      await tableService.updateTable(sourceTableId, { isActive: false, floorId: sourceTable.floorId });
     } catch (err) {
       console.error("Merge failed:", err);
       fetchTables();
@@ -388,11 +388,16 @@ export default function TablesPage() {
     const formData = new FormData(e.currentTarget);
 
     try {
-      const area = formData.get('area') as string;
+      const selectedFloorId = formData.get('area') as string;
+      // Find floor name from beFloors to set as type
+      const selectedFloor = beFloors.find(f => f.id === selectedFloorId);
+      const floorName = selectedFloor?.name || 'Indoor';
+
       const newTableData = {
         code: (formData.get('number') as string),
         seatingCapacity: parseInt(formData.get('capacity') as string),
-        type: area,
+        type: floorName,
+        floorId: selectedFloorId,
         tableStatusId: TableStatus.Available,
         isActive: true,
         shape: 'Square',
@@ -435,6 +440,7 @@ export default function TablesPage() {
             code: selectedTable.number.toString(),
             seatingCapacity: selectedTable.capacity,
             type: selectedTable.area,
+            floorId: selectedTable.floorId || layout?.activeFloorId,
             shape: selectedTable.shape,
             positionX: selectedTable.positionX,
             positionY: selectedTable.positionY,
@@ -500,31 +506,45 @@ export default function TablesPage() {
 
   const confirmDeleteZone = async () => {
     if (zoneToDelete) {
-      // Remove area logic - simple implementation
-      setAvailableAreas(prev => prev.filter(area => area !== zoneToDelete));
+      try {
+        // Delete floor from BE
+        await floorService.deleteFloor(zoneToDelete);
 
-      // Move tables to default
-      const fallbackArea = availableAreas.find(a => a !== zoneToDelete) || 'Indoor';
-      const tablesToUpdate = tables.filter(t => t.area === zoneToDelete);
+        // Move tables in that floor to the first available floor
+        const fallbackFloor = beFloors.find(f => f.id !== zoneToDelete);
+        const fallbackArea = fallbackFloor?.name || 'Indoor';
+        const tablesToUpdate = tables.filter(t => t.floorId === zoneToDelete);
 
-      for (const t of tablesToUpdate) {
-        try {
-          await tableService.updateTable(t.id, { type: fallbackArea });
-        } catch (e) { console.error(e); }
+        for (const t of tablesToUpdate) {
+          try {
+            if (fallbackFloor) {
+              await tableService.updateTable(t.id, { type: fallbackArea, floorId: fallbackFloor.id } as any);
+            }
+          } catch (e) { console.error(e); }
+        }
+
+        // Refresh data from BE
+        await fetchTables();
+      } catch (err) {
+        console.error('Failed to delete floor:', err);
       }
-
-      setTables(prev => prev.map(t =>
-        t.area === zoneToDelete ? { ...t, area: fallbackArea as any } : t
-      ));
 
       setZoneToDelete(null);
     }
   };
 
-  const handleAddArea = (name: string) => {
-    if (!availableAreas.includes(name)) {
-      setAvailableAreas([...availableAreas, name]);
+  const handleAddArea = async (name: string) => {
+    // Create a real floor on the BE
+    try {
+      await floorService.createFloor({ name, width: 1400, height: 900 });
+      // Refresh floors from BE
+      const updatedFloors = await floorService.getAllFloors();
+      setBeFloors(updatedFloors);
       setAddAreaModalOpen(false);
+    } catch (err) {
+      console.error('Failed to create floor on BE:', err);
+      // Fallback: show error
+      alert('Failed to create floor. Please try again.');
     }
   };
 
@@ -629,6 +649,7 @@ export default function TablesPage() {
                 onTablePositionChange={handleMap2DTablePositionChange}
                 onTableMerge={handleMap2DTableMerge}
                 onTableResize={handleMap2DTableResize}
+                onBackgroundImageUpload={handleFloorImageUpload}
 
                 readOnly={false}
                 selectedTableId={selectedTable?.id}
@@ -811,6 +832,7 @@ export default function TablesPage() {
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         onAdd={handleAddTable}
+        floors={beFloors.map(f => ({ id: f.id, name: f.name }))}
       />
 
       {/* Add Area Modal */}

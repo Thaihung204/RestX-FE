@@ -63,6 +63,18 @@ export interface GenericResponse {
   error?: string;
 }
 
+// ── Cookie helpers (middleware runs server-side, needs cookie not localStorage) ──
+function setAuthCookie(token: string) {
+  if (typeof document === 'undefined') return;
+  const maxAge = 8 * 60 * 60; // 8 hours in seconds
+  document.cookie = `accessToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+
+function clearAuthCookie() {
+  if (typeof document === 'undefined') return;
+  document.cookie = 'accessToken=; path=/; max-age=0; SameSite=Lax';
+}
+
 const authService = {
   // Check phone existence
   async checkPhone(phoneNumber: string): Promise<{ exists: boolean; name?: string }> {
@@ -172,6 +184,9 @@ const authService = {
         localStorage.setItem('refreshToken', tokens.refreshToken);
       }
       localStorage.setItem('userInfo', JSON.stringify(normalizedUser));
+
+      // Lưu token vào cookie để middleware có thể đọc (server-side auth check)
+      setAuthCookie(tokens.accessToken);
 
       console.log('Login successful, user:', normalizedUser);
       return normalizedUser;
@@ -356,6 +371,8 @@ const authService = {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userInfo');
+    // Xóa cookie để middleware biết user đã logout
+    clearAuthCookie();
   },
 
   // Get current user

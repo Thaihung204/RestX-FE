@@ -1,5 +1,4 @@
-import { motion } from "framer-motion";
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 
 type TableStatus = "AVAILABLE" | "OCCUPIED" | "RESERVED" | "DISABLED" | "SELECTED";
 
@@ -25,6 +24,7 @@ interface DraggableTableProps {
   onResize?: (tableId: string, size: { width: number; height: number }) => void;
   draggable?: boolean;
   renderContent?: (table: TableData) => React.ReactNode;
+  scale?: number;
 }
 
 const STATUS_CONFIG = {
@@ -62,26 +62,85 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
   onResize,
   draggable = true,
   renderContent,
+  scale = 1,
 }) => {
   const statusStyle = STATUS_CONFIG[table.status];
   const [isDragging, setIsDragging] = React.useState(false);
   const [isResizing, setIsResizing] = React.useState(false);
+  const didDragRef = useRef(false);
 
-  // STRICT DEFAULTS: Use ?? 100 as requested
+  // STRICT DEFAULTS
   const width = table.width ?? 100;
   const height = table.height ?? 100;
   const shape = table.shape;
   const rotation = table.rotation ?? 0;
 
-  // DEBUG LOGGING
-  // console.log("RENDER TABLE", { id: table.id, shape, width, height, position: table.position });
+  // ── Live drag position (for smooth dragging without re-render) ──
+  const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
+  const dragStartRef = useRef({ mouseX: 0, mouseY: 0, tableX: 0, tableY: 0 });
 
-  // ─── Resize: local size state for live preview during resize ───
+  // ── Resize: local size state for live preview during resize ──
   const [localSize, setLocalSize] = React.useState({ width, height });
   useEffect(() => {
     setLocalSize({ width, height });
   }, [width, height]);
 
+  // ── DRAG via pointer events — smooth, pixel-perfect ──
+  const handleDragPointerDown = useCallback((e: React.PointerEvent) => {
+    if (!draggable || isResizing) return;
+    // Only left mouse button
+    if (e.button !== 0) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    didDragRef.current = false;
+
+    dragStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      tableX: table.position.x,
+      tableY: table.position.y,
+    };
+
+    const s = scale || 1;
+    const handleMove = (ev: PointerEvent) => {
+      // Divide by scale: screen pixels → canvas pixels
+      const dx = (ev.clientX - dragStartRef.current.mouseX) / s;
+      const dy = (ev.clientY - dragStartRef.current.mouseY) / s;
+
+      // Only start drag after 3px screen movement to allow clicks
+      if (!didDragRef.current && (Math.abs(ev.clientX - dragStartRef.current.mouseX) + Math.abs(ev.clientY - dragStartRef.current.mouseY)) > 3) {
+        didDragRef.current = true;
+        setIsDragging(true);
+      }
+
+      if (didDragRef.current) {
+        setDragOffset({ x: dx, y: dy });
+      }
+    };
+
+    const handleUp = (ev: PointerEvent) => {
+      document.removeEventListener("pointermove", handleMove);
+      document.removeEventListener("pointerup", handleUp);
+      setIsDragging(false);
+
+      if (didDragRef.current) {
+        const s = scale || 1;
+        const dx = (ev.clientX - dragStartRef.current.mouseX) / s;
+        const dy = (ev.clientY - dragStartRef.current.mouseY) / s;
+        const newX = Math.max(0, Math.round(dragStartRef.current.tableX + dx));
+        const newY = Math.max(0, Math.round(dragStartRef.current.tableY + dy));
+        onDragEnd(table.id, { x: newX, y: newY });
+      }
+
+      setDragOffset({ x: 0, y: 0 });
+    };
+
+    document.addEventListener("pointermove", handleMove);
+    document.addEventListener("pointerup", handleUp);
+  }, [draggable, isResizing, table.position.x, table.position.y, table.id, onDragEnd, scale]);
+
+  // ── RESIZE via pointer events ──
   const handleResizePointerDown = useCallback((e: React.PointerEvent) => {
     if (!draggable || !onResize) return;
     e.stopPropagation();
@@ -93,9 +152,10 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
     const startW = width;
     const startH = height;
 
+    const s = scale || 1;
     const handleMove = (ev: PointerEvent) => {
-      const newW = Math.max(40, Math.round((startW + (ev.clientX - startX)) / 10) * 10);
-      const newH = Math.max(40, Math.round((startH + (ev.clientY - startY)) / 10) * 10);
+      const newW = Math.max(40, Math.round(startW + (ev.clientX - startX) / s));
+      const newH = Math.max(40, Math.round(startH + (ev.clientY - startY) / s));
       setLocalSize({ width: newW, height: newH });
     };
 
@@ -103,17 +163,21 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
       document.removeEventListener("pointermove", handleMove);
       document.removeEventListener("pointerup", handleUp);
       setIsResizing(false);
-      const finalW = Math.max(40, Math.round((startW + (ev.clientX - startX)) / 10) * 10);
-      const finalH = Math.max(40, Math.round((startH + (ev.clientY - startY)) / 10) * 10);
+      const finalW = Math.max(40, Math.round(startW + (ev.clientX - startX) / s));
+      const finalH = Math.max(40, Math.round(startH + (ev.clientY - startY) / s));
       onResize!(table.id, { width: finalW, height: finalH });
     };
 
     document.addEventListener("pointermove", handleMove);
     document.addEventListener("pointerup", handleUp);
-  }, [draggable, onResize, width, height, table.id]);
+  }, [draggable, onResize, width, height, table.id, scale]);
 
   const displayW = isResizing ? localSize.width : width;
   const displayH = isResizing ? localSize.height : height;
+
+  // Live position: base + drag offset during drag
+  const displayX = table.position.x + (isDragging ? dragOffset.x : 0);
+  const displayY = table.position.y + (isDragging ? dragOffset.y : 0);
 
   const getShapeStyle = (): React.CSSProperties => {
     const base: React.CSSProperties = {
@@ -127,53 +191,47 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
       justifyContent: "center",
       position: "relative",
       boxShadow: isDragging ? "0 8px 16px rgba(0,0,0,0.15)" : "0 2px 4px rgba(0,0,0,0.05)",
-      transition: "box-shadow 0.2s",
+      transition: isDragging ? "none" : "box-shadow 0.2s",
     };
 
     if (shape === "Circle") base.borderRadius = "50%";
     else if (shape === "Oval") base.borderRadius = "50%";
     else if (shape === "Square") base.borderRadius = "4px";
     else if (shape === "Rectangle") base.borderRadius = "4px";
-    else base.borderRadius = "4px"; // Default
+    else base.borderRadius = "4px";
 
     return base;
   };
 
+  const handleClick = useCallback(() => {
+    // Only fire click if we didn't drag
+    if (!didDragRef.current && !isResizing) {
+      onClick(table);
+    }
+  }, [onClick, table, isResizing]);
+
   return (
-    <motion.div
-      drag={draggable && !isResizing}
-      dragElastic={0}
-      dragMomentum={false}
-      onDragStart={() => setIsDragging(true)}
-      onDragEnd={(event, info) => {
-        setIsDragging(false);
-        // Calculate new positions based on current mouse delta
-        // We aren't using motion values anymore, but info.offset still works relative to start of drag
-        const snap = 10;
-        const newX = Math.round((table.position.x + info.offset.x) / snap) * snap;
-        const newY = Math.round((table.position.y + info.offset.y) / snap) * snap;
-        onDragEnd(table.id, { x: Math.max(0, newX), y: Math.max(0, newY) });
-      }}
-      onTap={() => {
-        if (!isDragging && !isResizing) {
-          onClick(table);
-        }
-      }}
+    <div
+      onPointerDown={handleDragPointerDown}
+      onClick={handleClick}
       style={{
         position: "absolute",
-        left: table.position.x,
-        top: table.position.y,
+        left: displayX,
+        top: displayY,
         width: displayW,
         height: displayH,
-        transform: `rotate(${rotation}deg)`, // Use transform for rotation
+        transform: `rotate(${rotation}deg)`,
         zIndex: isDragging || isResizing ? 10 : 1,
+        cursor: draggable
+          ? isDragging ? "grabbing" : "grab"
+          : "pointer",
+        userSelect: "none",
+        touchAction: "none",
+        // Smooth position transition when NOT dragging (e.g. after drop)
+        transition: isDragging ? "none" : "left 0.15s ease, top 0.15s ease",
+        opacity: isDragging ? 0.9 : 1,
       }}
-      whileHover={draggable ? { scale: 1.02, cursor: "grab" } : { cursor: "pointer" }}
-      whileTap={draggable ? { scale: 0.98, cursor: "grabbing" } : {}}
     >
-
-
-
       <div style={getShapeStyle()}>
         {/* Table Label */}
         <div
@@ -223,6 +281,6 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
           }}
         />
       )}
-    </motion.div>
+    </div>
   );
 };
