@@ -1,27 +1,27 @@
 "use client";
 
 import orderDetailStatusService, {
-  OrderDetailStatus,
+    OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
 import {
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined,
-  StarFilled,
-  StarOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    PlusOutlined,
+    StarFilled,
+    StarOutlined,
 } from "@ant-design/icons";
 import {
-  Button,
-  ColorPicker,
-  Form,
-  Input,
-  message,
-  Modal,
-  Popconfirm,
-  Switch,
-  Table,
-  Tag,
-  Tooltip,
+    Button,
+    ColorPicker,
+    Form,
+    Input,
+    message,
+    Modal,
+    Popconfirm,
+    Switch,
+    Table,
+    Tag,
+    Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
@@ -41,8 +41,7 @@ export default function OrderDetailStatusSettings() {
   const defaultValues = {
     name: "",
     code: "",
-    color: "var(--primary)",
-    isActive: true,
+    color: "#FFA500",
     isDefault: false,
   };
 
@@ -117,9 +116,10 @@ export default function OrderDetailStatusSettings() {
         }),
       );
       fetchStatuses();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to delete order detail status:", error);
       message.error(
+        error?.response?.data?.message ||
         t("dashboard.manage.errors.delete_failed", {
           defaultValue: "Failed to delete",
         }),
@@ -135,11 +135,13 @@ export default function OrderDetailStatusSettings() {
       const colorValue =
         typeof values.color === "string"
           ? values.color
-          : values.color?.toHexString();
+          : values.color?.toHexString?.() ?? values.color;
 
       const statusData = {
-        ...values,
+        name: values.name,
+        code: values.code,
         color: colorValue,
+        isDefault: values.isDefault ?? false,
       };
 
       if (editingStatus) {
@@ -163,37 +165,14 @@ export default function OrderDetailStatusSettings() {
 
       setModalVisible(false);
       fetchStatuses();
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.response) {
+        message.error(
+          error?.response?.data?.message ||
+          t("dashboard.manage.errors.save_failed", { defaultValue: "Failed to save" })
+        );
+      }
       console.error("Failed to save order detail status:", error);
-    }
-  };
-
-  const handleToggleActive = async (
-    record: OrderDetailStatus,
-    checked: boolean,
-  ) => {
-    try {
-      // Optimistic update
-      const newStatuses = statuses.map((s) =>
-        s.id === record.id ? { ...s, isActive: checked } : s,
-      );
-      setStatuses(newStatuses);
-
-      await orderDetailStatusService.toggleActive(record.id);
-      message.success(
-        t("dashboard.manage.notifications.update_success", {
-          defaultValue: "Updated successfully",
-        }),
-      );
-      fetchStatuses(); // Refresh to be sure
-    } catch (error) {
-      console.error("Failed to update status:", error);
-      message.error(
-        t("dashboard.manage.errors.update_failed", {
-          defaultValue: "Failed to update status",
-        }),
-      );
-      fetchStatuses(); // Revert on error
     }
   };
 
@@ -300,20 +279,7 @@ export default function OrderDetailStatusSettings() {
         </Tooltip>
       ),
     },
-    {
-      title: t("dashboard.manage.order_status.table.status", {
-        defaultValue: "Status",
-      }),
-      key: "isActive",
-      width: 120,
-      render: (_, record) => (
-        <Switch
-          checked={record.isActive}
-          onChange={(checked) => handleToggleActive(record, checked)}
-          className={record.isActive ? "bg-green-500" : ""}
-        />
-      ),
-    },
+
     {
       title: t("dashboard.manage.order_status.table.actions", {
         defaultValue: "Actions",
@@ -624,33 +590,6 @@ export default function OrderDetailStatusSettings() {
           </div>
 
           <div className="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-xl space-y-4 border border-gray-100 dark:border-zinc-800">
-            <Form.Item name="isActive" valuePropName="checked" noStyle>
-              <div
-                className="flex items-center justify-between cursor-pointer group"
-                onClick={() =>
-                  form.setFieldValue(
-                    "isActive",
-                    !form.getFieldValue("isActive"),
-                  )
-                }>
-                <div className="flex flex-col">
-                  <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-500 transition-colors">
-                    {t("dashboard.manage.order_status.is_active", {
-                      defaultValue: "Active Status",
-                    })}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {t("dashboard.manage.order_status.is_active_desc", {
-                      defaultValue: "Bật hoặc tắt trạng thái này",
-                    })}
-                  </span>
-                </div>
-                <Switch checked={form.getFieldValue("isActive")} />
-              </div>
-            </Form.Item>
-
-            <div className="h-px bg-gray-200 dark:bg-zinc-800 w-full" />
-
             <Form.Item name="isDefault" valuePropName="checked" noStyle>
               <div
                 className="flex items-center justify-between cursor-pointer group"
