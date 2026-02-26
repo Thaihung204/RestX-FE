@@ -1,27 +1,27 @@
 "use client";
 
 import orderDetailStatusService, {
-    OrderDetailStatus,
+  OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
 import {
-    DeleteOutlined,
-    EditOutlined,
-    PlusOutlined,
-    StarFilled,
-    StarOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  StarFilled,
+  StarOutlined,
 } from "@ant-design/icons";
 import {
-    Button,
-    ColorPicker,
-    Form,
-    Input,
-    message,
-    Modal,
-    Popconfirm,
-    Switch,
-    Table,
-    Tag,
-    Tooltip,
+  Button,
+  ColorPicker,
+  Form,
+  Input,
+  message,
+  Modal,
+  Popconfirm,
+  Switch,
+  Table,
+  Tag,
+  Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
@@ -41,27 +41,14 @@ export default function OrderDetailStatusSettings() {
   const defaultValues = {
     name: "",
     code: "",
-    color: "#FFA500",
+    color: "",
     isDefault: false,
   };
 
-  // Predefined colors for ColorPicker
-  const presettedColors = [
-    "var(--primary)",
-    "#FFA500",
-    "#1890FF",
-    "#52C41A",
-    "#FF4D4F",
-    "#722ED1",
-    "#13C2C2",
-    "#FA8C16",
-    "#2F54EB",
-    "#F5222D",
-    "#EB2F96",
-    "#A0D911",
-  ];
+  const dbColors = Array.from(
+    new Set(statuses.map((s) => s.color).filter(Boolean))
+  );
 
-  // Fetch statuses from service
   const fetchStatuses = async () => {
     setLoading(true);
     try {
@@ -307,6 +294,7 @@ export default function OrderDetailStatusSettings() {
               type="text"
               icon={<DeleteOutlined className="text-red-500" />}
               className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              style={{ color: "var(--primary)" }}
             />
           </Popconfirm>
         </div>
@@ -412,7 +400,7 @@ export default function OrderDetailStatusSettings() {
           pagination={{
             pageSize: 10,
             showSizeChanger: false,
-            position: ["bottomCenter"],
+            placement: ["bottomCenter"],
           }}
           locale={{
             emptyText: (
@@ -583,7 +571,11 @@ export default function OrderDetailStatusSettings() {
                 showText
                 size="large"
                 format="hex"
-                presets={[{ label: "Recommended", colors: presettedColors }]}
+                presets={
+                  dbColors.length > 0
+                    ? [{ label: t("dashboard.manage.order_status.color_from_db", { defaultValue: "Màu hiện có" }), colors: dbColors }]
+                    : []
+                }
                 className="w-full justify-start rounded-xl"
               />
             </Form.Item>
