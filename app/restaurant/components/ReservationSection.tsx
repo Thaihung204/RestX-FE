@@ -5,7 +5,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { ReservationStep, BookingData, Table, UserDetails } from './types';
 import { TenantConfig } from '@/lib/services/tenantService';
 import { tableService, floorService, TableItem, TableStatus, FloorLayoutTableItem } from '@/lib/services/tableService';
-import reservationService, { CreateReservationRequest } from '@/lib/services/reservationService';
+import reservationService from '@/lib/services/reservationService';
 import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
 
@@ -338,49 +338,27 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         setSubmitError(null);
 
         try {
-            // NOTE: BE endpoint POST /api/reservations is not yet implemented.
-            // Using client-side mock reservation until BE is ready.
-            // When BE is ready, uncomment the API call below and remove the mock block.
-            //
-            // const request: CreateReservationRequest = {
-            //     tableId: selectedTable.id,
-            //     reservationDate: booking.date,
-            //     startTime: booking.time,
-            //     partySize: booking.guests,
-            //     customerName: userDetails.name,
-            //     customerPhone: userDetails.phone,
-            //     customerEmail: userDetails.email,
-            //     note: userDetails.requests
-            // };
-            // await reservationService.createReservation(request);
+            // Combine date + time thành ISO datetime
+            const reservationDateTime = `${booking.date}T${booking.time}:00`;
 
-            // ── Mock: generate confirmation code & save to localStorage ──
-            const code = 'RX-' + Math.random().toString(36).substring(2, 7).toUpperCase();
-            const reservation = {
-                id: code,
-                tableId: selectedTable.id,
-                tableLabel: selectedTable.label,
-                date: booking.date,
-                time: booking.time,
-                guests: booking.guests,
-                customerName: userDetails.name,
-                customerPhone: userDetails.phone,
-                customerEmail: userDetails.email,
-                note: userDetails.requests,
-                createdAt: new Date().toISOString(),
-                confirmationCode: code,
-            };
+            const result = await reservationService.createReservation({
+                tableIds: [selectedTable.id],
+                reservationDateTime,
+                numberOfGuests: booking.guests,
+                guestName: userDetails.name,
+                guestPhone: userDetails.phone,
+                guestEmail: userDetails.email,
+                specialRequests: userDetails.requests || undefined,
+            });
 
-            // Save to localStorage for reference
-            const existing = JSON.parse(localStorage.getItem('reservations') || '[]');
-            existing.push(reservation);
-            localStorage.setItem('reservations', JSON.stringify(existing));
-
-            setConfirmationCode(code);
+            setConfirmationCode(result.confirmationCode);
             setStep(ReservationStep.SUCCESS);
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to create reservation:", error);
-            setSubmitError("Unable to complete reservation. Please try again later.");
+            // Hiển thị message lỗi từ BE nếu có
+            const axiosError = error as { response?: { data?: { message?: string } } };
+            const beMessage = axiosError?.response?.data?.message;
+            setSubmitError(beMessage || "Unable to complete reservation. Please try again later.");
         } finally {
             setIsSubmitting(false);
         }

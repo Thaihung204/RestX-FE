@@ -27,6 +27,13 @@ export default function LoginPage() {
   const [nameError, setNameError] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
 
+  // Helper: set auth cookie so Next middleware sees login state
+  const setAuthCookie = (token: string) => {
+    if (typeof document === "undefined") return;
+    const maxAge = 8 * 60 * 60; // 8 hours in seconds
+    document.cookie = `accessToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  };
+
   // Validation Logic
   const validatePhone = (phone: string) => {
     if (!phone) {
@@ -126,6 +133,12 @@ export default function LoginPage() {
         });
 
         if (result.user || !result.requireLogin) {
+          // Nếu backend trả token và đã được authService.register lưu vào localStorage,
+          // cố gắng đọc và sync sang cookie để middleware nhận diện.
+          const token = localStorage.getItem("accessToken");
+          if (token) {
+            setAuthCookie(token);
+          }
           window.location.href = '/customer';
         } else {
           message.info(result.message || 'Registration successful. Please login.');
@@ -137,7 +150,11 @@ export default function LoginPage() {
 
         if (response.data?.success && response.data?.data) {
           const data = response.data.data;
-          if (data.accessToken) localStorage.setItem('accessToken', data.accessToken);
+          if (data.accessToken) {
+            localStorage.setItem('accessToken', data.accessToken);
+            // Sync token vào cookie cho middleware
+            setAuthCookie(data.accessToken);
+          }
           if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
           if (data.user) localStorage.setItem('userInfo', JSON.stringify(data.user));
 
