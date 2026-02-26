@@ -1,5 +1,6 @@
 "use client";
 
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CartModal from "@/components/customer/CartModal";
 import CustomerFooter from "@/components/customer/CustomerFooter";
 import MenuCTA from "@/components/customer/MenuCTA";
@@ -75,7 +76,8 @@ export default function CustomerHomePage() {
   };
 
   return (
-    <ConfigProvider
+    <ProtectedRoute>
+      <ConfigProvider
       theme={{
         algorithm:
           themeMode === "dark"
@@ -207,5 +209,6 @@ export default function CustomerHomePage() {
         <NotificationSystem />
       </div>
     </ConfigProvider>
+    </ProtectedRoute>
   );
 }

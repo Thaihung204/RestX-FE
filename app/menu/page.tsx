@@ -1,5 +1,6 @@
 "use client";
 
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CartModal from "@/components/customer/CartModal";
 import CustomerFooter from "@/components/customer/CustomerFooter";
 import NotificationSystem from "@/components/notifications/NotificationSystem";
@@ -312,7 +313,8 @@ export default function MenuPage() {
   }
 
   return (
-    <>
+    <ProtectedRoute>
+      <>
       {contextHolder}
       <ConfigProvider
         theme={{
@@ -1147,5 +1149,6 @@ export default function MenuPage() {
       </ConfigProvider>
       <NotificationSystem />
     </>
+    </ProtectedRoute>
   );
 }

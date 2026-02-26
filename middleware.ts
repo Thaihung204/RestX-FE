@@ -24,8 +24,6 @@ export function middleware(req: NextRequest) {
     "/register",
     "/forgot-password",
     "/restaurant",
-    "/customer",
-    "/menu",
     "/reset-password",
   ]);
 
@@ -43,9 +41,7 @@ export function middleware(req: NextRequest) {
   // Allow public routes on any domain
   const isPublicRoute =
     PUBLIC_ROUTES.has(pathname) ||
-    pathname.startsWith('/restaurant') ||
-    pathname.startsWith('/customer') ||
-    pathname.startsWith('/menu');
+    pathname.startsWith('/restaurant');
 
   if (isPublicRoute) {
     return NextResponse.next();
@@ -111,6 +107,19 @@ export function middleware(req: NextRequest) {
         return NextResponse.redirect(loginUrl);
       }
       // Has token → let AdminAuthGuard do the role check on client
+      return NextResponse.next();
+    }
+
+    // Customer-facing authenticated routes: require access token
+    if (
+      (pathname === '/customer' || pathname.startsWith('/customer/')) ||
+      (pathname === '/menu' || pathname.startsWith('/menu/'))
+    ) {
+      if (!hasAuthToken) {
+        const loginUrl = new URL('/login', req.url);
+        loginUrl.searchParams.set('redirect', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
       return NextResponse.next();
     }
 
