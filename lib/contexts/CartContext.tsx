@@ -1,6 +1,7 @@
 "use client";
 
 import type { CartItem } from "@/lib/types/menu";
+import orderService, { OrderRequestDto } from "@/lib/services/orderService";
 import { message } from "antd";
 import React, {
   createContext,
@@ -16,6 +17,11 @@ interface CartContextType {
   orderedItems: CartItem[];
   cartModalOpen: boolean;
   activeCartTab: string;
+
+  // Order context
+  orderTableId?: string;
+  orderCustomerId?: string;
+  setOrderContext: (context: { tableId: string; customerId?: string }) => void;
 
   // Computed values
   cartItemCount: number;
@@ -46,6 +52,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
   const [cartModalOpen, setCartModalOpen] = useState(false);
   const [activeCartTab, setActiveCartTab] = useState<string>("1");
+  const [orderTableId, setOrderTableId] = useState<string | undefined>();
+  const [orderCustomerId, setOrderCustomerId] = useState<string | undefined>();
 
   // Computed values
   const cartItemCount = useMemo(
@@ -69,6 +77,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         0,
       ),
     [orderedItems],
+  );
+
+  // Order context
+  const setOrderContext = useCallback(
+    (context: { tableId: string; customerId?: string }) => {
+      setOrderTableId(context.tableId);
+      if (context.customerId) {
+        setOrderCustomerId(context.customerId);
+      }
+    },
+    [],
   );
 
   // Cart actions
@@ -111,37 +130,64 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Order actions
-  const confirmOrder = useCallback(() => {
+  const confirmOrder = useCallback(async () => {
     if (cartItems.length === 0) {
       messageApi.warning("Giỏ hàng đang trống!");
       return;
     }
 
-    setOrderedItems((prevOrdered) => {
-      const newOrdered = [...prevOrdered];
+    if (!orderTableId) {
+      messageApi.error("Không tìm thấy thông tin bàn. Vui lòng quét lại QR.");
+      return;
+    }
 
-      cartItems.forEach((cartItem) => {
-        const existingIndex = newOrdered.findIndex(
-          (item) => item.id === cartItem.id,
-        );
+    try {
+      const orderDetails = cartItems.map((cartItem) => ({
+        dishId: cartItem.id,
+        quantity: cartItem.quantity,
+      }));
 
-        if (existingIndex > -1) {
-          newOrdered[existingIndex] = {
-            ...newOrdered[existingIndex],
-            quantity: newOrdered[existingIndex].quantity + cartItem.quantity,
-          };
-        } else {
-          newOrdered.push({ ...cartItem });
-        }
+      const payload: OrderRequestDto = {
+        tableId: orderTableId,
+        customerId:
+          orderCustomerId ?? "00000000-0000-0000-0000-000000000000",
+        orderDetails,
+      };
+
+      await orderService.createOrder(payload);
+
+      setOrderedItems((prevOrdered) => {
+        const newOrdered = [...prevOrdered];
+
+        cartItems.forEach((cartItem) => {
+          const existingIndex = newOrdered.findIndex(
+            (item) => item.id === cartItem.id,
+          );
+
+          if (existingIndex > -1) {
+            newOrdered[existingIndex] = {
+              ...newOrdered[existingIndex],
+              quantity:
+                newOrdered[existingIndex].quantity + cartItem.quantity,
+            };
+          } else {
+            newOrdered.push({ ...cartItem });
+          }
+        });
+
+        return newOrdered;
       });
 
-      return newOrdered;
-    });
-
-    setCartItems([]);
-    setActiveCartTab("2");
-    messageApi.success("Yêu cầu gọi món đã được gửi đến nhân viên!");
-  }, [cartItems, messageApi]);
+      setCartItems([]);
+      setActiveCartTab("2");
+      messageApi.success(
+        "Đặt món thành công! Yêu cầu đã được gửi đến nhân viên.",
+      );
+    } catch (error) {
+      console.error("Create order failed:", error);
+      messageApi.error("Đặt món thất bại. Vui lòng thử lại.");
+    }
+  }, [cartItems, messageApi, orderTableId, orderCustomerId]);
 
   const requestPayment = useCallback(() => {
     if (orderedItems.length === 0) {
@@ -167,6 +213,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       orderedItems,
       cartModalOpen,
       activeCartTab,
+      orderTableId,
+      orderCustomerId,
+      setOrderContext,
       cartItemCount,
       totalCartAmount,
       totalOrderAmount,
@@ -185,6 +234,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       orderedItems,
       cartModalOpen,
       activeCartTab,
+      orderTableId,
+      orderCustomerId,
       cartItemCount,
       totalCartAmount,
       totalOrderAmount,
@@ -196,6 +247,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       requestPayment,
       openCartModal,
       closeCartModal,
+      setOrderContext,
     ],
   );
 
