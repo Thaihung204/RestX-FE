@@ -51,7 +51,19 @@ export default function MenuPage() {
   const router = useRouter();
   const params = useParams();
   // Lấy tableId từ URL: /menu/[tableId]
-  const tableId = params?.tableId || "";
+  const rawTableId = params?.tableId;
+  const tableId = Array.isArray(rawTableId) ? rawTableId[0] : rawTableId || "";
+
+  // Hàm kiểm tra GUID
+  function isValidGuid(id: string) {
+    return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+  }
+
+  useEffect(() => {
+    if (!isValidGuid(tableId)) {
+      router.replace("/404");
+    }
+  }, [tableId]);
   const { mode: themeMode } = useTheme();
   const { user } = useAuth();
   const {
@@ -60,6 +72,7 @@ export default function MenuPage() {
     updateQuantity,
     openCartModal,
     cartModalOpen,
+    setOrderContext,
   } = useCart();
 
   // Ref to track if data has been fetched
@@ -194,6 +207,19 @@ export default function MenuPage() {
       loadCustomerProfile();
     }
   }, []); // Empty dependency array - only run once on mount
+
+  // Sync order context (table + customer) into CartContext for order API
+  useEffect(() => {
+    if (!isValidGuid(tableId)) return;
+
+    const customerId =
+      customerProfile?.id || user?.customerId || undefined;
+
+    setOrderContext({
+      tableId: tableId as string,
+      customerId,
+    });
+  }, [tableId, customerProfile?.id, user?.customerId, setOrderContext]);
 
   // Re-fetch customer profile when user changes (login/logout)
   useEffect(() => {
