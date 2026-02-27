@@ -866,3 +866,26 @@ img {
 .admin-loyalty-table .ant-pagination .ant-pagination-item-active a {
   color: #fff !important;
 }
+
+/* Loyalty rank selector in modal */
+.loyalty-rank-radio-group .ant-radio-button-wrapper {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.loyalty-rank-radio-group .ant-radio-button-wrapper:hover {
+  color: var(--text) !important;
+  border-color: var(--primary) !important;
+}
+
+.loyalty-rank-radio-group .ant-radio-button-wrapper-checked {
+  background: var(--surface-subtle) !important;
+  color: var(--text) !important;
+  border-color: var(--primary) !important;
+}
+
+.loyalty-rank-radio-group .ant-radio-button-wrapper-checked::before,
+.loyalty-rank-radio-group .ant-radio-button-wrapper::before {
+  background-color: var(--border) !important;
+}
