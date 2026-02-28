@@ -889,3 +889,34 @@ img {
 .loyalty-rank-radio-group .ant-radio-button-wrapper::before {
   background-color: var(--border) !important;
 }
+
+/* Popconfirm / Popover theme consistency */
+.ant-popover .ant-popover-inner {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.ant-popover .ant-popover-title,
+.ant-popover .ant-popover-inner-content,
+.ant-popover .ant-popover-message-title,
+.ant-popover .ant-popover-message,
+.ant-popover .ant-popover-description {
+  color: var(--text) !important;
+}
+
+.ant-popover .ant-popover-arrow::before,
+.ant-popover .ant-popover-arrow::after {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+.ant-popconfirm .ant-btn-default {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.ant-popconfirm .ant-btn-default:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}

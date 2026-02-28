@@ -1,6 +1,6 @@
 "use client";
 
-import ingredientService, { IngredientItem } from "@/lib/services/ingredientService";
+import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
 import supplierService, { SupplierItem } from "@/lib/services/supplierService";
 import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
@@ -43,7 +43,9 @@ export default function IngredientFormPage() {
   });
 
   const [suppliers, setSuppliers] = useState<SupplierItem[]>([]);
+  const [ingredientCategories, setIngredientCategories] = useState<IngredientCategory[]>([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(!isNew);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -51,8 +53,28 @@ export default function IngredientFormPage() {
   const hasNoSuppliers = !loadingSuppliers && suppliers.length === 0;
   const cannotSave = isNew && hasNoSuppliers;
 
+  const normalizeTypeCode = (value?: string | null) => {
+    if (!value) return "";
+    const trimmed = value.trim();
+    const found = ingredientCategories.find((c) => c.code === trimmed || c.name === trimmed);
+    return found?.code || trimmed;
+  };
+
+  const toTypeTranslationKey = (value?: string | null) => {
+    if (!value) return "";
+    return value.trim().toLowerCase().replace(/\s+/g, "_");
+  };
+
+  const getCategoryLabel = (category: IngredientCategory) => {
+    const normalizedCode = normalizeTypeCode(category.code || category.name);
+    return t(`dashboard.ingredients.type_codes.${toTypeTranslationKey(normalizedCode)}`, {
+      defaultValue: category.name,
+    });
+  };
+
   useEffect(() => {
     fetchSuppliers();
+    fetchIngredientCategories();
     if (!isNew) fetchIngredient();
   }, [id, isNew]);
 
@@ -68,6 +90,18 @@ export default function IngredientFormPage() {
     }
   };
 
+  const fetchIngredientCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const data = await ingredientService.getAllCategories();
+      setIngredientCategories(data.filter((c) => c.isActive !== false));
+    } catch {
+      message.warning(t("dashboard.ingredients.fetch_categories_failed", { defaultValue: "Không tải được danh mục nguyên liệu" }));
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
   const fetchIngredient = async () => {
     try {
       setLoadingData(true);
@@ -79,7 +113,7 @@ export default function IngredientFormPage() {
         minStockLevel: data.minStockLevel ?? 0,
         maxStockLevel: data.maxStockLevel ?? 0,
         supplierId:    data.supplierId    ?? null,
-        type:          data.type          ?? "",
+        type:          normalizeTypeCode(data.type),
         isActive:      data.isActive      ?? true,
       });
     } catch {
@@ -112,13 +146,18 @@ export default function IngredientFormPage() {
     if (form.unit.length > 20)    { message.error(t("dashboard.ingredients.unit_max_length", { defaultValue: "Đơn vị tối đa 20 ký tự" })); return; }
     if (isNew && !form.supplierId){ message.error(t("dashboard.ingredients.supplier_required", { defaultValue: "Vui lòng chọn nhà cung cấp" })); return; }
 
+    const normalizedPayload = {
+      ...form,
+      type: normalizeTypeCode(form.type),
+    };
+
     try {
       setLoading(true);
       if (isNew) {
-        await ingredientService.create(form);
+        await ingredientService.create(normalizedPayload);
         message.success(t("dashboard.ingredients.create_success", { defaultValue: "Tạo nguyên liệu thành công" }));
       } else {
-        await ingredientService.update(id, { ...form, id });
+        await ingredientService.update(id, { ...normalizedPayload, id });
         message.success(t("dashboard.ingredients.update_success", { defaultValue: "Cập nhật nguyên liệu thành công" }));
       }
       router.push("/admin/ingredients");
@@ -301,16 +340,30 @@ export default function IngredientFormPage() {
                         {t("dashboard.ingredients.type", "Loại / Danh mục")}
                         <span className="ml-1 text-xs opacity-50">{t("dashboard.ingredients.type_optional", "(tuỳ chọn)")}</span>
                       </label>
-                      <input
-                        type="text" name="type"
-                        value={form.type ?? ""}
-                        onChange={handleChange}
-                        maxLength={50}
-                        disabled={cannotSave}
-                        placeholder="VD: Seafood, Grains…"
-                        className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
-                        style={cannotSave ? disabledFieldStyle : fieldStyle}
-                      />
+                      {loadingCategories ? (
+                        <div
+                          className="w-full px-3 py-2.5 rounded-lg border text-sm"
+                          style={disabledFieldStyle}
+                        >
+                          {t("dashboard.ingredients.loading_categories", "Đang tải danh mục…")}
+                        </div>
+                      ) : (
+                        <select
+                          name="type"
+                          value={form.type ?? ""}
+                          onChange={handleChange}
+                          disabled={cannotSave}
+                          className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
+                          style={cannotSave ? disabledFieldStyle : fieldStyle}
+                        >
+                          <option value="">{t("dashboard.ingredients.select_category_optional", "— Chọn danh mục (tuỳ chọn) —")}</option>
+                          {ingredientCategories.map((c) => (
+                            <option key={c.id} value={c.code ?? c.name}>
+                              {getCategoryLabel(c)}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </div>
                 </section>

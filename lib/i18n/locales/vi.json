@@ -944,7 +944,15 @@
       "update_success": "Cập nhật nguyên liệu thành công",
       "save_failed": "Lưu thất bại, thử lại sau",
       "delete_success": "Đã xoá nguyên liệu",
-      "delete_failed": "Xoá thất bại"
+      "delete_failed": "Xoá thất bại",
+      "type_codes": {
+        "seafood": "Hải sản",
+        "grains": "Ngũ cốc",
+        "vegetables": "Rau củ",
+        "sauces": "Gia vị & Sốt",
+        "spices": "Gia vị",
+        "dairy": "Sữa"
+      }
     },
     "settings": {
       "title": "Cài đặt",
