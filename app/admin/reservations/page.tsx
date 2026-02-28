@@ -222,7 +222,7 @@ function ReservationDetailModal({
                                     </p>
                                     <InfoRow label="Tên" value={detail.contact.name} />
                                     <InfoRow label="SĐT" value={detail.contact.phone} />
-                                    <InfoRow label="Email" value={detail.contact.email} />
+                                    <InfoRow label="Email" value={detail.contact.email ?? "—"} />
                                     <InfoRow label="Loại" value={detail.contact.isGuest ? "🏷️ Khách vãng lai" : "👤 Thành viên"} />
                                     {detail.contact.membershipLevel && (
                                         <InfoRow label="Hạng" value={detail.contact.membershipLevel} />
