@@ -37,6 +37,8 @@ interface CustomerFooterProps {
   phoneNumber: string;
   avatarUrl: string | null;
   onProfileUpdate?: () => void;
+  position?: "sticky" | "fixed";
+  bottomPadding?: number;
 }
 
 export default function CustomerFooter({
@@ -45,6 +47,8 @@ export default function CustomerFooter({
   phoneNumber,
   avatarUrl,
   onProfileUpdate,
+  position = "sticky",
+  bottomPadding = 24,
 }: CustomerFooterProps) {
   const { cartItemCount, totalCartAmount, openCartModal } = useCart();
   const { t, i18n } = useTranslation();
@@ -140,112 +144,114 @@ export default function CustomerFooter({
     );
   };
 
+  const footerBar = (
+    <div
+      className="w-full"
+      style={{
+        position: position === "fixed" ? "fixed" : "sticky",
+        bottom: 0,
+        left: position === "fixed" ? 0 : undefined,
+        right: position === "fixed" ? 0 : undefined,
+        width: "100%",
+        zIndex: position === "fixed" ? 9999 : 50,
+        background: "var(--backdrop-blur)",
+        backdropFilter: "blur(20px)",
+        borderTop: "1px solid var(--primary-border)",
+        padding: `10px 12px ${bottomPadding}px 12px`,
+        boxShadow: "var(--shadow-md)",
+      }}>
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto",
+          display: "flex",
+          gap: 8,
+          alignItems: "center",
+        }}>
+        {/* Nút Ngắn: Hồ sơ */}
+        <Button
+          icon={<UserOutlined />}
+          onClick={() => setProfileModalOpen(true)}
+          style={{
+            height: 44,
+            width: 44,
+            borderRadius: 10,
+            background: "var(--warning-soft)",
+            border: "1px solid var(--warning-border)",
+            color: "var(--gold)",
+            fontSize: 18,
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        />
+
+        {/* Nút Dài 1: Gọi phục vụ */}
+        <Button
+          icon={<BellOutlined />}
+          onClick={handleAskService}
+          style={{
+            flex: 1,
+            height: 44,
+            borderRadius: 10,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            color: "var(--text)",
+            fontWeight: 600,
+            fontSize: 13,
+          }}>
+          {t("customer_page.footer.call_service")}
+        </Button>
+
+        {/* Nút Dài 2: Card Giỏ hàng (Thay thế Thanh toán) */}
+        <div
+          onClick={openCartModal}
+          style={{
+            flex: 1.2,
+            height: 44,
+            background: "var(--primary)",
+            borderRadius: 10,
+            padding: "0 12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "0 4px 12px var(--primary-glow)",
+            cursor: "pointer",
+          }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              lineHeight: 1.1,
+            }}>
+            <Text
+              style={{
+                color: "color-mix(in srgb, var(--text-inverse), transparent 30%)",
+                fontSize: 10,
+                fontWeight: 600,
+              }}>
+              {cartItemCount} món
+            </Text>
+            <Text
+              style={{
+                color: "var(--text-inverse)",
+                fontSize: 13,
+                fontWeight: 700,
+              }}>
+              {formatVND(totalCartAmount)}
+            </Text>
+          </div>
+          <ShoppingCartOutlined style={{ color: "var(--text-inverse)", fontSize: 18 }} />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       {contextHolder}
-
-      {/* --- Footer bar: 2 dài, 1 ngắn --- */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: "var(--backdrop-blur)",
-          backdropFilter: "blur(20px)",
-          borderTop: "1px solid var(--primary-border)",
-          padding: "10px 12px 24px 12px", // Thêm padding bottom cho mobile
-          zIndex: 1000,
-          boxShadow: "var(--shadow-md)",
-        }}>
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            display: "flex",
-            gap: 8,
-            alignItems: "center",
-          }}>
-          {/* Nút Ngắn: Hồ sơ */}
-          <Button
-            icon={<UserOutlined />}
-            onClick={() => setProfileModalOpen(true)}
-            style={{
-              height: 44,
-              width: 44,
-              borderRadius: 10,
-              background: "var(--warning-soft)",
-              border: "1px solid var(--warning-border)",
-              color: "var(--gold)",
-              fontSize: 18,
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          />
-
-          {/* Nút Dài 1: Gọi phục vụ */}
-          <Button
-            icon={<BellOutlined />}
-            onClick={handleAskService}
-            style={{
-              flex: 1,
-              height: 44,
-              borderRadius: 10,
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              color: "var(--text)",
-              fontWeight: 600,
-              fontSize: 13,
-            }}>
-            {t("customer_page.footer.call_service")}
-          </Button>
-
-          {/* Nút Dài 2: Card Giỏ hàng (Thay thế Thanh toán) */}
-          <div
-            onClick={openCartModal}
-            style={{
-              flex: 1.2,
-              height: 44,
-              background: "var(--primary)",
-              borderRadius: 10,
-              padding: "0 12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              boxShadow: "0 4px 12px var(--primary-glow)",
-              cursor: "pointer",
-            }}>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                lineHeight: 1.1,
-              }}>
-              <Text
-                style={{
-                  color: "color-mix(in srgb, var(--text-inverse), transparent 30%)",
-                  fontSize: 10,
-                  fontWeight: 600,
-                }}>
-                {cartItemCount} món
-              </Text>
-              <Text
-                style={{
-                  color: "var(--text-inverse)",
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}>
-                {formatVND(totalCartAmount)}
-              </Text>
-            </div>
-            <ShoppingCartOutlined
-              style={{ color: "var(--text-inverse)", fontSize: 18 }}
-            />
-          </div>
-        </div>
-      </div>
+      {footerBar}
 
       {/* Profile Modal - Giữ nguyên thiết kế trang trí của bạn */}
       <Modal

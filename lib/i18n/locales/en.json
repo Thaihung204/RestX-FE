@@ -1505,7 +1505,7 @@
     "footer": {
       "call_service": "Call Service",
       "service_called": "Staff will be at your table shortly!",
-      "language_switched_vi": "Switched to Vietnamese",
+      "language_switched_vi": "Chuyển sang tiếng Việt",
       "language_switched_en": "Switched to English",
       "theme_switched_light": "Switched to Light Mode",
       "theme_switched_dark": "Switched to Dark Mode"

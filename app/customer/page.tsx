@@ -7,13 +7,13 @@ import RestaurantHeader from "@/components/customer/RestaurantHeader";
 import WelcomeCard from "@/components/customer/WelcomeCard";
 import NotificationSystem from "@/components/notifications/NotificationSystem";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useTenant } from "@/lib/contexts/TenantContext";
 import { useTheme } from "@/lib/hooks/useTheme";
 import customerService, {
   CustomerResponseDto,
 } from "@/lib/services/customerService";
 import { ConfigProvider, Space, Typography, message, theme } from "antd";
 import { useRouter } from "next/navigation";
-import { useTenant } from "@/lib/contexts/TenantContext";
 import { useCallback, useEffect, useState } from "react";
 
 const { Text, Title } = Typography;
@@ -121,7 +121,7 @@ export default function CustomerHomePage() {
             radial-gradient(circle at 0% 0%, var(--primary-soft), transparent 45%),
             radial-gradient(circle at 100% 100%, var(--primary-faint), transparent 45%)
           `,
-          paddingBottom: 100,
+          paddingBottom: 0,
         }}>
         {contextHolder}
 
@@ -151,7 +151,7 @@ export default function CustomerHomePage() {
               margin: "0 auto",
               padding: "0 16px",
               position: "absolute",
-              bottom: 80, // Lifted up
+              bottom: 80,
               left: 0,
               right: 0,
             }}>
@@ -202,6 +202,8 @@ export default function CustomerHomePage() {
           phoneNumber={phoneNumber}
           avatarUrl={avatarUrl}
           onProfileUpdate={loadCustomerProfile}
+          position="sticky"
+          bottomPadding={0}
         />
         <CartModal />
         <NotificationSystem />
