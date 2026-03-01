@@ -321,8 +321,8 @@ export default function SupplierSettings() {
                       <Popconfirm
                         title={t("dashboard.manage.suppliers.confirm_delete")}
                         onConfirm={() => supplier.id && handleDelete(supplier.id)}
-                        okText={t("common.yes")}
-                        cancelText={t("common.no")}
+                        okText={t("common.actions.yes", { defaultValue: "Yes" })}
+                        cancelText={t("common.actions.no", { defaultValue: "No" })}
                         okButtonProps={{ danger: true }}>
                         <button
                           className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-red-500 hover:text-red-600"
