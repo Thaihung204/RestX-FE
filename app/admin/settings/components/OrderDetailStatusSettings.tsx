@@ -41,28 +41,14 @@ export default function OrderDetailStatusSettings() {
   const defaultValues = {
     name: "",
     code: "",
-    color: "var(--primary)",
-    isActive: true,
+    color: "",
     isDefault: false,
   };
 
-  // Predefined colors for ColorPicker
-  const presettedColors = [
-    "var(--primary)",
-    "#FFA500",
-    "#1890FF",
-    "#52C41A",
-    "#FF4D4F",
-    "#722ED1",
-    "#13C2C2",
-    "#FA8C16",
-    "#2F54EB",
-    "#F5222D",
-    "#EB2F96",
-    "#A0D911",
-  ];
+  const dbColors = Array.from(
+    new Set(statuses.map((s) => s.color).filter(Boolean))
+  );
 
-  // Fetch statuses from service
   const fetchStatuses = async () => {
     setLoading(true);
     try {
@@ -117,9 +103,10 @@ export default function OrderDetailStatusSettings() {
         }),
       );
       fetchStatuses();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to delete order detail status:", error);
       message.error(
+        error?.response?.data?.message ||
         t("dashboard.manage.errors.delete_failed", {
           defaultValue: "Failed to delete",
         }),
@@ -135,11 +122,13 @@ export default function OrderDetailStatusSettings() {
       const colorValue =
         typeof values.color === "string"
           ? values.color
-          : values.color?.toHexString();
+          : values.color?.toHexString?.() ?? values.color;
 
       const statusData = {
-        ...values,
+        name: values.name,
+        code: values.code,
         color: colorValue,
+        isDefault: values.isDefault ?? false,
       };
 
       if (editingStatus) {
@@ -163,37 +152,14 @@ export default function OrderDetailStatusSettings() {
 
       setModalVisible(false);
       fetchStatuses();
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.response) {
+        message.error(
+          error?.response?.data?.message ||
+          t("dashboard.manage.errors.save_failed", { defaultValue: "Failed to save" })
+        );
+      }
       console.error("Failed to save order detail status:", error);
-    }
-  };
-
-  const handleToggleActive = async (
-    record: OrderDetailStatus,
-    checked: boolean,
-  ) => {
-    try {
-      // Optimistic update
-      const newStatuses = statuses.map((s) =>
-        s.id === record.id ? { ...s, isActive: checked } : s,
-      );
-      setStatuses(newStatuses);
-
-      await orderDetailStatusService.toggleActive(record.id);
-      message.success(
-        t("dashboard.manage.notifications.update_success", {
-          defaultValue: "Updated successfully",
-        }),
-      );
-      fetchStatuses(); // Refresh to be sure
-    } catch (error) {
-      console.error("Failed to update status:", error);
-      message.error(
-        t("dashboard.manage.errors.update_failed", {
-          defaultValue: "Failed to update status",
-        }),
-      );
-      fetchStatuses(); // Revert on error
     }
   };
 
@@ -300,20 +266,7 @@ export default function OrderDetailStatusSettings() {
         </Tooltip>
       ),
     },
-    {
-      title: t("dashboard.manage.order_status.table.status", {
-        defaultValue: "Status",
-      }),
-      key: "isActive",
-      width: 120,
-      render: (_, record) => (
-        <Switch
-          checked={record.isActive}
-          onChange={(checked) => handleToggleActive(record, checked)}
-          className={record.isActive ? "bg-green-500" : ""}
-        />
-      ),
-    },
+
     {
       title: t("dashboard.manage.order_status.table.actions", {
         defaultValue: "Actions",
@@ -341,6 +294,7 @@ export default function OrderDetailStatusSettings() {
               type="text"
               icon={<DeleteOutlined className="text-red-500" />}
               className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              style={{ color: "var(--primary)" }}
             />
           </Popconfirm>
         </div>
@@ -446,7 +400,7 @@ export default function OrderDetailStatusSettings() {
           pagination={{
             pageSize: 10,
             showSizeChanger: false,
-            position: ["bottomCenter"],
+            placement: ["bottomCenter"],
           }}
           locale={{
             emptyText: (
@@ -617,40 +571,17 @@ export default function OrderDetailStatusSettings() {
                 showText
                 size="large"
                 format="hex"
-                presets={[{ label: "Recommended", colors: presettedColors }]}
+                presets={
+                  dbColors.length > 0
+                    ? [{ label: t("dashboard.manage.order_status.color_from_db", { defaultValue: "Màu hiện có" }), colors: dbColors }]
+                    : []
+                }
                 className="w-full justify-start rounded-xl"
               />
             </Form.Item>
           </div>
 
           <div className="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-xl space-y-4 border border-gray-100 dark:border-zinc-800">
-            <Form.Item name="isActive" valuePropName="checked" noStyle>
-              <div
-                className="flex items-center justify-between cursor-pointer group"
-                onClick={() =>
-                  form.setFieldValue(
-                    "isActive",
-                    !form.getFieldValue("isActive"),
-                  )
-                }>
-                <div className="flex flex-col">
-                  <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-500 transition-colors">
-                    {t("dashboard.manage.order_status.is_active", {
-                      defaultValue: "Active Status",
-                    })}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {t("dashboard.manage.order_status.is_active_desc", {
-                      defaultValue: "Bật hoặc tắt trạng thái này",
-                    })}
-                  </span>
-                </div>
-                <Switch checked={form.getFieldValue("isActive")} />
-              </div>
-            </Form.Item>
-
-            <div className="h-px bg-gray-200 dark:bg-zinc-800 w-full" />
-
             <Form.Item name="isDefault" valuePropName="checked" noStyle>
               <div
                 className="flex items-center justify-between cursor-pointer group"

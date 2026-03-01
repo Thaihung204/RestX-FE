@@ -154,8 +154,14 @@ export default function LoyaltyPointBandSettings() {
 
       setModalVisible(false);
       fetchBands();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save loyalty point band:", error);
+      message.error(
+        error?.message ||
+          t("dashboard.manage.errors.save_failed", {
+            defaultValue: "Failed to save loyalty point band",
+          }),
+      );
     }
   };
 
@@ -359,7 +365,7 @@ export default function LoyaltyPointBandSettings() {
               defaultValue: "Rank Icon",
             })}
             rules={[{ required: true }]}>
-            <Radio.Group className="w-full">
+            <Radio.Group className="w-full loyalty-rank-radio-group">
               <div className="grid grid-cols-5 gap-2">
                 {Object.entries(TIER_COLORS).map(([tier, color]) => (
                   <Radio.Button

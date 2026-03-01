@@ -11,6 +11,7 @@ import RestaurantLandingHero from './components/RestaurantLandingHero';
 import AboutSection from './components/AboutSection';
 import MenuSection, { MenuSectionCategory } from './components/MenuSection';
 import ReservationSection from './components/ReservationSection';
+import ReservationLookupSection from './components/ReservationLookupSection';
 import NewsSection from './components/NewsSection';
 import FeaturedCategories from './components/FeaturedCategories';
 import OverviewSection from './components/OverviewSection';
@@ -126,6 +127,8 @@ export default function RestaurantPage() {
           <NewsSection tenant={tenant} />
 
           <ReservationSection tenant={tenant} />
+
+          <ReservationLookupSection />
         </main>
 
         <Footer />

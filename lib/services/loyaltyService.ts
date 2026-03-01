@@ -1,5 +1,13 @@
 import axiosInstance from './axiosInstance';
 
+const LOYALTY_BANDS_API = '/loyalty-point-bands';
+
+type ApiEnvelope<T> = {
+    success: boolean;
+    data: T;
+    message?: string;
+};
+
 // ── Matches BE: LoyaltyPointBand entity + DTO ──
 export interface LoyaltyPointBand {
     id: string;
@@ -57,8 +65,8 @@ const MOCK_BANDS: LoyaltyPointBand[] = [
 const loyaltyService = {
     getAllBands: async (): Promise<LoyaltyPointBand[]> => {
         try {
-            const response = await axiosInstance.get<LoyaltyPointBand[]>('/loyalty/bands');
-            return response.data;
+            const response = await axiosInstance.get<ApiEnvelope<LoyaltyPointBand[]>>(LOYALTY_BANDS_API);
+            return response.data.data;
         } catch {
             console.info('[loyaltyService] API not ready — using mock bands');
             return [...MOCK_BANDS];
@@ -67,28 +75,38 @@ const loyaltyService = {
 
     getBandById: async (id: string): Promise<LoyaltyPointBand> => {
         try {
-            const response = await axiosInstance.get<LoyaltyPointBand>(`/loyalty/bands/${id}`);
-            return response.data;
+            const response = await axiosInstance.get<ApiEnvelope<LoyaltyPointBand>>(`${LOYALTY_BANDS_API}/${id}`);
+            return response.data.data;
         } catch {
-            const band = MOCK_BANDS.find(b => b.id === id);
+            const band = MOCK_BANDS.find((b) => b.id === id);
             if (!band) throw new Error('Band not found');
             return band;
         }
     },
 
-    createBand: async (data: CreateLoyaltyPointBandDto): Promise<LoyaltyPointBand> => {
-        const response = await axiosInstance.post<LoyaltyPointBand>('/loyalty/bands', data);
-        return response.data;
+    createBand: async (data: CreateLoyaltyPointBandDto): Promise<string> => {
+        try {
+            const response = await axiosInstance.post<ApiEnvelope<{ id: string }>>(LOYALTY_BANDS_API, data);
+            return response.data.data.id;
+        } catch (error: any) {
+            const message = error?.response?.data?.message || 'Failed to create loyalty point band';
+            throw new Error(message);
+        }
     },
 
-    updateBand: async (id: string, data: UpdateLoyaltyPointBandDto): Promise<LoyaltyPointBand> => {
-        const response = await axiosInstance.put<LoyaltyPointBand>(`/loyalty/bands/${id}`, data);
-        return response.data;
+    updateBand: async (id: string, data: UpdateLoyaltyPointBandDto): Promise<string> => {
+        try {
+            const response = await axiosInstance.put<ApiEnvelope<{ id: string }>>(`${LOYALTY_BANDS_API}/${id}`, data);
+            return response.data.data.id;
+        } catch (error: any) {
+            const message = error?.response?.data?.message || 'Failed to update loyalty point band';
+            throw new Error(message);
+        }
     },
 
     deleteBand: async (id: string): Promise<void> => {
-        await axiosInstance.delete(`/loyalty/bands/${id}`);
-    }
+        await axiosInstance.delete(`${LOYALTY_BANDS_API}/${id}`);
+    },
 };
 
 export default loyaltyService;
