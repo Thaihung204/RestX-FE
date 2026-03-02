@@ -1,6 +1,5 @@
 import axiosInstance from './axiosInstance';
 
-// Backend DTO shape from /api/statuses/ORDER-DETAIL
 interface BackendStatusValue {
     id: number;
     code: string;
@@ -33,7 +32,6 @@ export interface UpdateOrderDetailStatusDto extends CreateOrderDetailStatusDto {
     id: string;
 }
 
-const TYPE_CODE = 'ORDER-DETAIL';
 
 // Map backend -> frontend
 function mapFromBackend(sv: BackendStatusValue): OrderDetailStatus {
@@ -48,12 +46,11 @@ function mapFromBackend(sv: BackendStatusValue): OrderDetailStatus {
 
 class OrderDetailStatusService {
     private get apiBase() {
-        return `/statuses/${TYPE_CODE}`;
+        return `/statuses/order-detail`;
     }
 
     /**
-     * Get all order detail statuses
-     * GET /api/statuses/ORDER-DETAIL
+     * GET /api/statuses/order-detail
      */
     async getAllStatuses(): Promise<OrderDetailStatus[]> {
         const response = await axiosInstance.get<BackendResponse<BackendStatusValue[]>>(this.apiBase);
@@ -62,8 +59,7 @@ class OrderDetailStatusService {
     }
 
     /**
-     * Get a single order detail status by ID
-     * GET /api/statuses/ORDER-DETAIL/{id}
+     * GET /api/statuses/order-detail/{id}
      */
     async getStatusById(id: string): Promise<OrderDetailStatus> {
         const response = await axiosInstance.get<BackendResponse<BackendStatusValue>>(`${this.apiBase}/${id}`);
@@ -71,8 +67,7 @@ class OrderDetailStatusService {
     }
 
     /**
-     * Create a new order detail status
-     * POST /api/statuses/ORDER-DETAIL
+     * POST /api/statuses/order-detail
      */
     async createStatus(data: CreateOrderDetailStatusDto): Promise<OrderDetailStatus> {
         const payload = {
@@ -86,8 +81,7 @@ class OrderDetailStatusService {
     }
 
     /**
-     * Update an existing order detail status
-     * PUT /api/statuses/ORDER-DETAIL/{id}
+     * PUT /api/statuses/order-detail/{id}
      */
     async updateStatus(id: string, data: UpdateOrderDetailStatusDto | Partial<OrderDetailStatus>): Promise<OrderDetailStatus> {
         const payload = {
@@ -101,20 +95,17 @@ class OrderDetailStatusService {
     }
 
     /**
-     * Delete an order detail status
-     * DELETE /api/statuses/ORDER-DETAIL/{id}
+     * DELETE /api/statuses/order-detail/{id}
      */
     async deleteStatus(id: string): Promise<void> {
         await axiosInstance.delete(`${this.apiBase}/${id}`);
     }
 
     /**
-     * Set a status as default (and unset all others via backend)
-     * PUT /api/statuses/ORDER-DETAIL/{id}  with isDefault=true
+     * PUT /api/statuses/order-detail/{id} with isDefault=true
      */
-    async setAsDefault(id: string): Promise<OrderDetailStatus> {
-        const current = await this.getStatusById(id);
-        return this.updateStatus(id, { ...current, isDefault: true });
+    async setAsDefault(status: OrderDetailStatus): Promise<OrderDetailStatus> {
+        return this.updateStatus(status.id, { ...status, isDefault: true });
     }
 }
 

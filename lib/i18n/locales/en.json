@@ -522,7 +522,7 @@
         "subtitle": "Manage order detail statuses, codes, and colors",
         "add_status": "Add Status",
         "edit_status": "Edit Order Detail Status",
-        "name": "Name",
+        "name": "No status order yet",
         "name_placeholder": "Enter status name",
         "name_required": "Please enter status name",
         "code": "Code",

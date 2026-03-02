@@ -81,52 +81,53 @@ export default function TimeSlotManagementModal({
       className="timeslot-modal"
     >
       <div className="space-y-4 pt-4">
-        {editingId ? (
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSave}
-            initialValues={{}}
-            onValuesChange={(changedValues) => {
-              if (changedValues.timeRange) {
-                const [start, end] = changedValues.timeRange;
-                if (start && end) {
-                  // Format logic: if minutes are 0, just show Hour + 'h', else show HH:mm
-                  const startStr = start.minute() === 0 ? start.format('H[h]') : start.format('HH:mm');
-                  const endStr = end.minute() === 0 ? end.format('H[h]') : end.format('HH:mm');
-                  const autoLabel = `${startStr} - ${endStr}`;
-                  form.setFieldValue("label", autoLabel);
-                }
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSave}
+          initialValues={{}}
+          onValuesChange={(changedValues) => {
+            if (changedValues.timeRange) {
+              const [start, end] = changedValues.timeRange;
+              if (start && end) {
+                // Format logic: if minutes are 0, just show Hour + 'h', else show HH:mm
+                const startStr = start.minute() === 0 ? start.format('H[h]') : start.format('HH:mm');
+                const endStr = end.minute() === 0 ? end.format('H[h]') : end.format('HH:mm');
+                const autoLabel = `${startStr} - ${endStr}`;
+                form.setFieldValue("label", autoLabel);
               }
-            }}
-            className="p-5 rounded-xl border animate-fadeIn"
-            style={{
-              background: "var(--surface)",
-              borderColor: "var(--border)"
-            }}
+            }
+          }}
+          className="p-5 rounded-xl border animate-fadeIn"
+          style={{
+            display: editingId ? "block" : "none",
+            background: "var(--surface)",
+            borderColor: "var(--border)",
+          }}
+        >
+          <Form.Item
+            name="label"
+            label={t('time_slots.label')}
+            rules={[{ required: true, message: t('time_slots.validation.label_required') }]}
           >
-            <Form.Item
-              name="label"
-              label={t('time_slots.label')}
-              rules={[{ required: true, message: t('time_slots.validation.label_required') }]}
-            >
-              <Input placeholder={t('time_slots.label_placeholder')} size="large" />
-            </Form.Item>
-            <Form.Item
-              name="timeRange"
-              label={t('time_slots.time_range')}
-              rules={[{ required: true, message: t('time_slots.validation.time_required') }]}
-            >
-              <TimePicker.RangePicker format="HH:mm" className="w-full" size="large" />
-            </Form.Item>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button onClick={() => setEditingId(null)} size="large">{t('common.cancel')}</Button>
-              <Button type="primary" htmlType="submit" size="large" className="bg-orange-500 hover:bg-orange-600">
-                {t('common.save_changes')}
-              </Button>
-            </div>
-          </Form>
-        ) : (
+            <Input placeholder={t('time_slots.label_placeholder')} size="large" />
+          </Form.Item>
+          <Form.Item
+            name="timeRange"
+            label={t('time_slots.time_range')}
+            rules={[{ required: true, message: t('time_slots.validation.time_required') }]}
+          >
+            <TimePicker.RangePicker format="HH:mm" className="w-full" size="large" />
+          </Form.Item>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button onClick={() => setEditingId(null)} size="large">{t('common.cancel')}</Button>
+            <Button type="primary" htmlType="submit" size="large" className="bg-orange-500 hover:bg-orange-600">
+              {t('common.save_changes')}
+            </Button>
+          </div>
+        </Form>
+
+        {!editingId && (
           <Button
             type="dashed"
             block
