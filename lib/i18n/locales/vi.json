@@ -1513,8 +1513,8 @@
     "footer": {
       "call_service": "Gọi phục vụ",
       "service_called": "Nhân viên sẽ đến bàn của bạn ngay!",
-      "language_switched_vi": "Switched to Vietnamese",
-      "language_switched_en": "Chuyển sang tiếng Anh",
+      "language_switched_vi": "Chuyển sang tiếng Việt",
+      "language_switched_en": "Switched to English",
       "theme_switched_light": "Chuyển sang chế độ sáng",
       "theme_switched_dark": "Chuyển sang chế độ tối"
     },

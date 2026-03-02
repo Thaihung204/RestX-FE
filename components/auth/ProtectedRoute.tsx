@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,22 +10,28 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        // Not logged in, redirect to login
-        router.push('/login');
+        const query = searchParams?.toString();
+        const fullPath = `${pathname}${query ? `?${query}` : ''}`;
+        const redirect = encodeURIComponent(fullPath || '/');
+        router.push(`/login?redirect=${redirect}`);
       } else if (requiredRole && user.role !== requiredRole) {
-        // Logged in but wrong role
         if (requiredRole === 'admin' || requiredRole === 'shop') {
           router.push('/login-admin');
         } else {
-          router.push('/login');
+          const query = searchParams?.toString();
+          const fullPath = `${pathname}${query ? `?${query}` : ''}`;
+          const redirect = encodeURIComponent(fullPath || '/');
+          router.push(`/login?redirect=${redirect}`);
         }
       }
     }
-  }, [user, loading, requiredRole, router]);
+  }, [user, loading, requiredRole, router, pathname, searchParams]);
 
   if (loading) {
     return (
