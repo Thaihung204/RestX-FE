@@ -50,6 +50,22 @@ export default function AntdProvider({
     const theme = mode === "dark" ? darkTheme : lightTheme;
     const root = document.documentElement;
     root.setAttribute("data-theme", mode);
+    if (mode === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+
+    const bodyEl = document.body;
+    if (bodyEl) {
+      bodyEl.setAttribute("data-theme", mode);
+      if (mode === "dark") {
+        bodyEl.classList.add("dark");
+      } else {
+        bodyEl.classList.remove("dark");
+      }
+    }
+
     const vars = theme.customColors;
     Object.entries(vars).forEach(([key, value]) => {
       root.style.setProperty(`--${key}`, value);
@@ -125,6 +141,11 @@ export default function AntdProvider({
           colorText: "var(--text)",
           colorTextLabel: "var(--text)",
           colorBorder: "var(--border)",
+        },
+        Popover: {
+          colorBgElevated: "var(--card)",
+          colorText: "var(--text)",
+          colorTextHeading: "var(--text)",
         },
         Tabs: {
           itemSelectedColor: "var(--primary)",
@@ -445,6 +466,27 @@ export default function AntdProvider({
         .ant-modal-content {
           background: var(--card) !important;
           border-color: var(--border) !important;
+        }
+
+        /* Popconfirm/Popover - force follow current CSS variables */
+        .ant-popover,
+        .ant-popconfirm {
+          --ant-popover-bg: var(--card) !important;
+        }
+
+        .ant-popover .ant-popover-inner {
+          background: var(--card) !important;
+          border: 1px solid var(--border) !important;
+          box-shadow: var(--shadow-md) !important;
+        }
+
+        .ant-popover .ant-popover-inner,
+        .ant-popover .ant-popover-inner-content,
+        .ant-popover .ant-popover-message,
+        .ant-popover .ant-popover-message-title,
+        .ant-popover .ant-popover-title,
+        .ant-popover .ant-popover-description {
+          color: var(--text) !important;
         }
         
         .ant-modal-header {

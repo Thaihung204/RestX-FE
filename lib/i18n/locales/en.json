@@ -944,7 +944,15 @@
       "update_success": "Ingredient updated successfully",
       "save_failed": "Save failed, please try again",
       "delete_success": "Ingredient deleted",
-      "delete_failed": "Delete failed"
+      "delete_failed": "Delete failed",
+      "type_codes": {
+        "seafood": "Seafood",
+        "grains": "Grains",
+        "vegetables": "Vegetables",
+        "sauces": "Sauces",
+        "spices": "Spices",
+        "dairy": "Dairy"
+      }
     },
     "settings": {
       "title": "Settings",

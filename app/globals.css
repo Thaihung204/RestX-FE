@@ -889,3 +889,74 @@ img {
 .loyalty-rank-radio-group .ant-radio-button-wrapper::before {
   background-color: var(--border) !important;
 }
+
+/* Popconfirm / Popover theme consistency */
+/* Default (light) first to avoid black popup before theme attr hydration */
+.ant-popover,
+.ant-popconfirm {
+  --ant-popover-bg: #ffffff !important;
+}
+
+.ant-popover .ant-popover-inner {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-popover .ant-popover-title,
+.ant-popover .ant-popover-inner-content,
+.ant-popover .ant-popover-message-title,
+.ant-popover .ant-popover-message,
+.ant-popover .ant-popover-description,
+.ant-popover .ant-popover-inner-content * {
+  color: #111111 !important;
+}
+
+.ant-popover .ant-popover-arrow::before,
+.ant-popover .ant-popover-arrow::after {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Dark mode override */
+[data-theme="dark"] .ant-popover,
+[data-theme="dark"] .ant-popconfirm {
+  --ant-popover-bg: #ffffff !important;
+}
+
+[data-theme="dark"] .ant-popover .ant-popover-inner {
+  background: var(--card) !important;
+  background-color: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .ant-popover .ant-popover-title,
+[data-theme="dark"] .ant-popover .ant-popover-inner-content,
+[data-theme="dark"] .ant-popover .ant-popover-message-title,
+[data-theme="dark"] .ant-popover .ant-popover-message,
+[data-theme="dark"] .ant-popover .ant-popover-description,
+[data-theme="dark"] .ant-popover .ant-popover-inner-content * {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .ant-popover .ant-popover-arrow::before,
+[data-theme="dark"] .ant-popover .ant-popover-arrow::after {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+.ant-popconfirm .ant-popover-message .anticon {
+  color: var(--warning) !important;
+}
+
+.ant-popconfirm .ant-btn-default {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.ant-popconfirm .ant-btn-default:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}

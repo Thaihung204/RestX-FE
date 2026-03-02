@@ -45,6 +45,17 @@ export default function RootLayout({
                   } else {
                     root.classList.remove('dark');
                   }
+
+                  // Keep AntD portal popups synced (they render under body)
+                  var bodyEl = document.body;
+                  if (bodyEl) {
+                    bodyEl.setAttribute('data-theme', mode);
+                    if (mode === 'dark') {
+                      bodyEl.classList.add('dark');
+                    } else {
+                      bodyEl.classList.remove('dark');
+                    }
+                  }
                   
                   // 2. Preload tenant colors from localStorage (prevents FOUC)
                   var tenantColors = localStorage.getItem(TENANT_COLORS_KEY);
