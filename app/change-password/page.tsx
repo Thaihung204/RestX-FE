@@ -2,6 +2,7 @@
 
 import LoginButton from "@/components/auth/LoginButton";
 import authService from "@/lib/services/authService";
+import Link from "next/link";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -272,7 +273,7 @@ export default function ChangePasswordPage() {
                                 borderColor: 'var(--border)'
                             }}
                         >
-                            <a
+                            <Link
                                 href="/"
                                 className="text-sm font-semibold transition-colors inline-flex items-center"
                                 style={{ color: '#FF380B' }}
@@ -292,7 +293,7 @@ export default function ChangePasswordPage() {
                                     />
                                 </svg>
                                 {t('change_password_page.back_to_dashboard')}
-                            </a>
+                            </Link>
                         </div>
                     </form>
                 </div>

@@ -211,7 +211,7 @@ export default function CustomerFooter({
           gap: 8,
           alignItems: "center",
         }}>
-        {/* Nút Ngắn: Hồ sơ */}
+        {/*profile*/}
         <Button
           icon={<UserOutlined />}
           onClick={() => setProfileModalOpen(true)}
@@ -230,7 +230,7 @@ export default function CustomerFooter({
           }}
         />
 
-        {/* Nút Dài 1: Gọi phục vụ */}
+        {/*Call wwaiter*/}
         <Button
           icon={<BellOutlined />}
           onClick={handleAskService}
@@ -247,7 +247,7 @@ export default function CustomerFooter({
           {t("customer_page.footer.call_service")}
         </Button>
 
-        {/* Nút Dài 2: Card Giỏ hàng (Thay thế Thanh toán) */}
+          {/*Cart*/}
         <div
           onClick={openCartModal}
           style={{
@@ -296,7 +296,7 @@ export default function CustomerFooter({
       {contextHolder}
       {footerBar}
 
-      {/* Profile Modal - Giữ nguyên thiết kế trang trí của bạn */}
+      {/* Profile Modal */}
       <Modal
         open={profileModalOpen}
         onCancel={() => {
