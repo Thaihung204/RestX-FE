@@ -1,5 +1,6 @@
 "use client";
 
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CartModal from "@/components/customer/CartModal";
 import CustomerFooter from "@/components/customer/CustomerFooter";
 import NotificationSystem from "@/components/notifications/NotificationSystem";
@@ -7,40 +8,40 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useTheme } from "@/lib/hooks/useTheme";
 import customerService, {
-    CustomerResponseDto,
+  CustomerResponseDto,
 } from "@/lib/services/customerService";
 import menuService from "@/lib/services/menuService";
 import type {
-    CartItem,
-    Category,
-    CategoryWithDishes,
-    MenuItem,
+  CartItem,
+  Category,
+  CategoryWithDishes,
+  MenuItem,
 } from "@/lib/types/menu";
 import {
-    ArrowLeftOutlined,
-    CloseOutlined,
-    FireOutlined,
-    HeartFilled,
-    MinusOutlined,
-    PlusOutlined,
-    SearchOutlined,
-    StarFilled,
+  ArrowLeftOutlined,
+  CloseOutlined,
+  FireOutlined,
+  HeartFilled,
+  MinusOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  StarFilled,
 } from "@ant-design/icons";
 import {
-    Affix,
-    Button,
-    Card,
-    Col,
-    ConfigProvider,
-    Input,
-    Modal,
-    Row,
-    Spin,
-    Typography,
-    message,
-    theme,
+  Affix,
+  Button,
+  Card,
+  Col,
+  ConfigProvider,
+  Input,
+  Modal,
+  Row,
+  Spin,
+  Typography,
+  message,
+  theme,
 } from "antd";
-import { useRouter, useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -50,11 +51,10 @@ export default function MenuPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
   const params = useParams();
-  // Lấy tableId từ URL: /menu/[tableId]
+  
   const rawTableId = params?.tableId;
   const tableId = Array.isArray(rawTableId) ? rawTableId[0] : rawTableId || "";
 
-  // Hàm kiểm tra GUID
   function isValidGuid(id: string) {
     return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
   }
@@ -163,7 +163,6 @@ export default function MenuPage() {
                   item.isBestSeller ||
                   item.name === "Bún bò Huế" ||
                   item.name === "Cà phê sữa đá",
-                // item.isBestSeller || false,
                 isSpicy:
                   item.isSpicy ||
                   item.name?.toLowerCase().includes("bún bò") ||
@@ -206,7 +205,7 @@ export default function MenuPage() {
       fetchMenuData();
       loadCustomerProfile();
     }
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
 
   // Sync order context (table + customer) into CartContext for order API
   useEffect(() => {
@@ -341,7 +340,8 @@ export default function MenuPage() {
   }
 
   return (
-    <>
+    <ProtectedRoute>
+      <>
       {contextHolder}
       <ConfigProvider
         theme={{
@@ -354,7 +354,7 @@ export default function MenuPage() {
             fontFamily:
               "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
             borderRadius: 12,
-            controlHeight: 45, // Increase input/select height for easier tap
+            controlHeight: 45,
           },
           components: {
             Modal: {
@@ -417,7 +417,7 @@ export default function MenuPage() {
             {/* Back Button */}
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => router.push("/customer")}
+              onClick={() => router.push(`/customer/${tableId}`)}
               style={{
                 position: "absolute",
                 top: 16,
@@ -772,7 +772,7 @@ export default function MenuPage() {
                     <div
                       style={{
                         width: "100%",
-                        aspectRatio: "4/3", // Better image aspect ratio
+                        aspectRatio: "4/3",
                         borderRadius: 16,
                         overflow: "hidden",
                         marginBottom: 20,
@@ -1176,5 +1176,6 @@ export default function MenuPage() {
       </ConfigProvider>
       <NotificationSystem />
     </>
+    </ProtectedRoute>
   );
 }

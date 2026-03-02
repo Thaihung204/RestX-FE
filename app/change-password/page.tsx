@@ -273,7 +273,7 @@ export default function ChangePasswordPage() {
                             }}
                         >
                             <a
-                                href="/customer"
+                                href="/"
                                 className="text-sm font-semibold transition-colors inline-flex items-center"
                                 style={{ color: '#FF380B' }}
                                 onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}

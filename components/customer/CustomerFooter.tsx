@@ -53,7 +53,7 @@ export default function CustomerFooter({
   avatarUrl,
   onProfileUpdate,
   position = "sticky",
-  bottomPadding = 24,
+  bottomPadding = 12,
 }: CustomerFooterProps) {
   const router = useRouter();
   const { logout } = useAuth();
@@ -77,7 +77,6 @@ export default function CustomerFooter({
       const data = await reservationService.getMyReservations();
       setReservations(data);
     } catch {
-      // not logged in or no reservations
     } finally {
       setResLoading(false);
     }
@@ -97,13 +96,11 @@ export default function CustomerFooter({
     }
   };
 
-  // State tạm thời cho việc chỉnh sửa
   const [tempName, setTempName] = useState("");
   const [tempPhone, setTempPhone] = useState("");
   const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Các giá trị tính toán
   const currentPoints = customerProfile?.loyaltyPoints || 0;
   const totalPointsNeeded = 500;
   const progress = Math.min((currentPoints / totalPointsNeeded) * 100, 100);
@@ -118,7 +115,7 @@ export default function CustomerFooter({
     return new Intl.NumberFormat("vi-VN").format(amount) + "đ";
   };
 
-  // Profile Handlers (Giữ nguyên logic của bạn)
+  // Profile Handlers
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -885,7 +882,7 @@ export default function CustomerFooter({
               )}
             </div>
           ) : (
-            // ── Tab: Reservation History ──────────────────────────
+            // Tab: Reservation History 
             <div
               style={{
                 maxHeight: 420,

@@ -31,7 +31,7 @@ export default function AdminAuthGuard({
                 if (userRoles.some(r => r === 'Waiter' || r === 'Kitchen Staff')) {
                     router.replace("/staff");
                 } else {
-                    router.replace("/customer");
+                    router.replace("/");
                 }
             }
         }

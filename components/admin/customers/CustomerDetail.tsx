@@ -55,10 +55,10 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
 
   const getVipBadgeColor = (tier?: string) => {
      switch(tier) {
-      case 'platinum': return '#E5E7EB'; // Platinum
-      case 'gold': return '#EAB308';     // Gold
-      case 'silver': return '#9CA3AF';   // Silver
-      default: return '#FB923C';         // Bronze
+      case 'platinum': return '#E5E7EB'; 
+      case 'gold': return '#EAB308';    
+      case 'silver': return '#9CA3AF';   
+      default: return '#FB923C';         
     }
   };
 
