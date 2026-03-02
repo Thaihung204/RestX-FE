@@ -52,7 +52,7 @@ export default function ReservationLookupSection() {
                             color: 'var(--primary)',
                         }}
                     >
-                        <span>🔍</span> Tra cứu đặt bàn
+                        Tra cứu đặt bàn
                     </div>
                     <h2
                         className="text-3xl md:text-4xl font-bold mb-3"
@@ -136,7 +136,7 @@ export default function ReservationLookupSection() {
                                 Đang tìm kiếm...
                             </span>
                         ) : (
-                            '🔍 Tra cứu ngay'
+                            'Tra cứu ngay'
                         )}
                     </button>
                 </form>
@@ -147,7 +147,6 @@ export default function ReservationLookupSection() {
                         className="rounded-xl p-4 flex items-start gap-3 mb-4"
                         style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
                     >
-                        <span className="text-lg mt-0.5">❌</span>
                         <p className="text-sm" style={{ color: '#ef4444' }}>{error}</p>
                     </div>
                 )}
