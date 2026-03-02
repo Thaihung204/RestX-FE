@@ -522,7 +522,7 @@
         "subtitle": "Quản lý các trạng thái đơn hàng, mã và màu sắc",
         "add_status": "Thêm trạng thái",
         "edit_status": "Chỉnh sửa trạng thái",
-        "name": "Tên trạng thái",
+        "name": "Chưa có trạng thái đơn hàng nào",
         "name_placeholder": "Nhập tên trạng thái",
         "name_required": "Vui lòng nhập tên trạng thái",
         "code": "Mã",
