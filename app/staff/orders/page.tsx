@@ -190,7 +190,7 @@ export default function OrderManagement() {
     pending: { color: 'orange', text: t('common.status.pending'), icon: <ExclamationCircleOutlined /> },
     preparing: { color: 'blue', text: t('common.status.preparing'), icon: <SyncOutlined spin /> },
     ready: { color: 'green', text: t('common.status.ready'), icon: <CheckCircleOutlined /> },
-    served: { color: 'default', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
+    served: { color: 'green', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
     cancelled: { color: 'red', text: t('common.status.cancelled'), icon: <ClockCircleOutlined /> },
   };
 
@@ -198,7 +198,7 @@ export default function OrderManagement() {
     pending: { color: 'orange', text: t('common.status.pending') },
     preparing: { color: 'blue', text: t('common.status.preparing') },
     ready: { color: 'green', text: t('common.status.ready') },
-    served: { color: 'default', text: t('common.status.served') },
+    served: { color: 'green', text: t('common.status.served') },
   };
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
