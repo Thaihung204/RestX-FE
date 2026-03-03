@@ -649,6 +649,30 @@
       "payment_status": {
         "paid": "Đã thanh toán",
         "unpaid": "Chưa thanh toán"
+      },
+      "labels": {
+        "table_code": "Bàn {{tableCode}}",
+        "items_count": "{{count}} món",
+        "total_quantity": "{{count}} phần"
+      },
+      "actions": {
+        "view_details": "Xem chi tiết"
+      },
+      "fallbacks": {
+        "guest_name": "Khách lẻ"
+      },
+      "modal": {
+        "title": "Chi tiết đơn {{orderNumber}}",
+        "close": "Đóng",
+        "table_code": "Bàn {{tableCode}}",
+        "total_items": "Tổng số món: {{count}}",
+        "empty": "Đơn hàng này chưa có món nào.",
+        "unknown_dish": "Món không xác định",
+        "total": "Tổng thanh toán",
+        "columns": {
+          "dish": "Món ăn",
+          "qty": "SL"
+        }
       }
     },
     "tables": {

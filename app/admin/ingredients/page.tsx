@@ -3,6 +3,7 @@
 import IngredientList from "@/components/admin/ingredients/IngredientList";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import Link from "next/link";
 
 export default function IngredientsPage() {
   const { t } = useTranslation("common");
@@ -24,18 +25,34 @@ export default function IngredientsPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => router.push("/admin/ingredients/new")}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-semibold text-sm shadow-md transition-all"
-          style={{ background: "#FF380B" }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#CC2D08")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "#FF380B")}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          {t("dashboard.ingredients.add_ingredient", "Thêm nguyên liệu")}
-        </button>
+        <Link href="/admin/ingredients/new">
+              <button
+                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                style={{ background: "var(--primary)", color: "var(--text)" }}
+                onMouseEnter={(e) =>
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, #CC2D08, #B32607)")
+                }
+                onMouseLeave={(e) =>
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, #FF380B, #CC2D08)")
+                }
+                suppressHydrationWarning> 
+                <svg
+                className="w-5 h-5 inline-block mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+                {t("dashboard.ingredients.add_ingredient")}
+              </button>
+            </Link>
       </div>
 
       <IngredientList />

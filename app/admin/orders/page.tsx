@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import orderService, { OrderDto } from "@/lib/services/orderService";
-import { tableService, type TableItem } from "@/lib/services/tableService";
+import OrderDetailsModal from "@/components/admin/orders/OrderDetailsModal";
 import customerService from "@/lib/services/customerService";
 import menuService from "@/lib/services/menuService";
+import orderService, { OrderDto } from "@/lib/services/orderService";
+import { tableService, type TableItem } from "@/lib/services/tableService";
+import { type OrderDetailModalItem } from "@/lib/types/order";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 type OrderStatusUi =
   | "pending"
@@ -38,7 +40,7 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<
-    { id: string; name?: string; quantity: number }[] | null
+    OrderDetailModalItem[] | null
   >(null);
 
   // Map backend enums to UI strings
@@ -69,12 +71,14 @@ export default function OrdersPage() {
         dict[t.id] = t;
       });
       setTablesById(dict);
+      return dict;
     } catch (error) {
       console.error("Failed to load tables for orders page:", error);
+      return {} as Record<string, TableItem>;
     }
   };
 
-  const loadOrders = async () => {
+  const loadOrders = async (tablesDict?: Record<string, TableItem>) => {
     try {
       setLoading(true);
       const data = await orderService.getAllOrders();
@@ -97,7 +101,7 @@ export default function OrdersPage() {
 
       setOrders(
         data.map((o) => {
-          const table = tablesById[o.tableId];
+          const table = (tablesDict ?? tablesById)[o.tableId];
           const tableCode = table?.code || o.tableId;
           const distinctCount = o.orderDetails?.length ?? 0;
           const totalQuantity =
@@ -112,7 +116,8 @@ export default function OrdersPage() {
               o.reference && o.reference.trim().length > 0
                 ? o.reference
                 : `#${(o.id ?? "").slice(0, 8)}`,
-            customerName: customer?.name ?? "Guest",
+            customerName:
+              customer?.name ?? t("dashboard.orders.fallbacks.guest_name"),
             customerAvatar: customer?.avatar ?? null,
             tableCode,
             items: distinctCount,
@@ -468,17 +473,23 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span style={{ color: "var(--text-muted)" }}>
-                        Table {order.tableCode}
+                        {t("dashboard.orders.labels.table_code", {
+                          tableCode: order.tableCode,
+                        })}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span style={{ color: "var(--text-muted)" }}>
-                        {order.items} items
+                        {t("dashboard.orders.labels.items_count", {
+                          count: order.items,
+                        })}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-green-500 font-bold">
-                        {order.totalQuantity} món
+                        {t("dashboard.orders.labels.total_quantity", {
+                          count: order.totalQuantity,
+                        })}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -542,7 +553,7 @@ export default function OrdersPage() {
                             setSelectedOrderDetails(mapped);
                             setDetailOpen(true);
                           }}
-                          title="View Details">
+                          title={t("dashboard.orders.actions.view_details")}>
                           <svg
                             className="w-4 h-4"
                             fill="none"
@@ -572,70 +583,14 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        {/* Order Detail Overlay */}
-        {detailOpen && selectedOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div
-              className="w-full max-w-xl rounded-2xl shadow-xl"
-              style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <div
-                className="flex items-center justify-between px-6 py-4 border-b"
-                style={{ borderColor: "var(--border)" }}>
-                <div>
-                  <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
-                    {t("dashboard.orders.title")} {selectedOrder.orderNumber}
-                  </h3>
-                  <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-                    Table {selectedOrder.tableCode}
-                  </p>
-                </div>
-                <button
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5 transition"
-                  onClick={() => setDetailOpen(false)}>
-                  <span className="text-lg" style={{ color: "var(--text-muted)" }}>
-                    ×
-                  </span>
-                </button>
-              </div>
-
-              <div className="px-6 py-4 max-h-80 overflow-y-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr style={{ color: "var(--text-muted)" }}>
-                      <th className="text-left pb-2">Dish</th>
-                      <th className="text-right pb-2">Qty</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(selectedOrderDetails ?? selectedOrder?.raw.orderDetails ?? []).map((d) => (
-                      <tr key={(d as any).id ?? (d as any).dishId}>
-                        <td className="py-1.5" style={{ color: "var(--text)" }}>
-                          {typeof (d as any).name === "string" && (d as any).name
-                            ? (d as any).name
-                            : (d as any).dishId ?? (d as any).id}
-                        </td>
-                        <td className="py-1.5 text-right" style={{ color: "var(--text-muted)" }}>
-                          {(d as any).quantity}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div
-                className="flex items-center justify-between px-6 py-4 border-t"
-                style={{ borderColor: "var(--border)" }}>
-                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-                  {t("dashboard.orders.table.total")}
-                </span>
-                <span className="text-lg font-semibold text-green-500">
-                  {selectedOrder.total.toLocaleString("vi-VN")}đ
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
+        <OrderDetailsModal
+          open={detailOpen && !!selectedOrder}
+          orderNumber={selectedOrder?.orderNumber ?? ""}
+          tableCode={selectedOrder?.tableCode ?? ""}
+          total={selectedOrder?.total ?? 0}
+          items={selectedOrderDetails ?? []}
+          onClose={() => setDetailOpen(false)}
+        />
       </div>
     </main>
   );
