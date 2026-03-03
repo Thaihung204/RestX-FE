@@ -114,7 +114,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
           paddingBottom: 16,
         },
       }}
-      destroyOnClose>
+      destroyOnHidden>
       <div className="py-2">
         <p className="mb-4 text-sm" style={{ color: "var(--text-muted)" }}>
           {t("tenant_requests.form.description")}
