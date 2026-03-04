@@ -1113,7 +1113,7 @@ export default function OrderManagement() {
 
             {/* Actions */}
             <Row gutter={[8, 8]} style={{ marginTop: isMobile ? 16 : 24 }}>
-              <Col xs={12} sm={6}>
+              {/* <Col xs={12} sm={6}>
                 <Button
                   icon={<PrinterOutlined />}
                   size={isMobile ? "middle" : "large"}
@@ -1121,7 +1121,7 @@ export default function OrderManagement() {
                   style={{ borderRadius: 12 }}>
                   {isMobile ? t("staff.orders.modal.print_short") : t("staff.orders.modal.print")}
                 </Button>
-              </Col>
+              </Col> */}
               <Col xs={12} sm={6}>
                 <Button
                   icon={<PlusOutlined />}
