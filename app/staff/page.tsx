@@ -309,7 +309,7 @@ export default function StaffDashboard() {
           pending: { color: 'orange', text: t('common.status.pending'), icon: <ExclamationCircleOutlined /> },
           preparing: { color: 'blue', text: t('common.status.preparing'), icon: <SyncOutlined spin /> },
           ready: { color: 'green', text: t('common.status.ready'), icon: <CheckCircleOutlined /> },
-          served: { color: 'default', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
+          served: { color: 'green', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
           // Mock data contains these exact status strings 
         };
         const config = statusConfig[status] || { color: 'default', text: status, icon: null };

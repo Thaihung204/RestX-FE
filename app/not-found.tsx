@@ -287,7 +287,7 @@ export default function NotFound() {
               </Link>
               <span style={{ color: isDark ? '#4B5563' : '#D1D5DB' }}>•</span>
               <Link
-                href="/customer"
+                href="/"
                 style={{
                   color: '#FF380B',
                   textDecoration: 'none',

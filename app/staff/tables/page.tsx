@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useThemeMode } from '../../theme/AntdProvider';
-import { TableMap2D } from '../../admin/tables/components/TableMap2D';
+import { TableMap2D, Layout, Floor } from '../../admin/tables/components/TableMap2D';
 import { TableData as Map2DTableData } from '../../admin/tables/components/DraggableTable';
-import { tableService, TableStatus as TableStatusEnum, TableItem } from '@/lib/services/tableService';
+import { tableService, TableStatus as TableStatusEnum, floorService, FloorSummary } from '@/lib/services/tableService';
 
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../../../components/I18nProvider';
 import {
   Card,
   Row,
@@ -47,7 +46,10 @@ interface TableData {
   id: string;
   name: string;
   zone: string;
+  floorId?: string;
   capacity: number;
+  positionX?: number;
+  positionY?: number;
   status: TableStatus;
   guests?: number;
   startTime?: string;
@@ -97,8 +99,7 @@ type ViewMode = 'grid' | 'map';
 
 export default function TableManagement() {
   const { mode } = useThemeMode();
-  const { t, i18n } = useTranslation();
-  const { language } = useLanguage();
+  const { t } = useTranslation();
   const [messageApi, contextHolder] = message.useMessage();
   const [tables, setTables] = useState<TableData[]>([]);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
@@ -106,14 +107,22 @@ export default function TableManagement() {
   const [isOpenTableModal, setIsOpenTableModal] = useState(false);
   const [activeZone, setActiveZone] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [beFloors, setBeFloors] = useState<FloorSummary[]>([]);
+  const [layout, setLayout] = useState<Layout | null>(null);
 
   const [form] = Form.useForm();
   const [isMobile, setIsMobile] = useState(false);
 
-  // Fetch tables
+  // Fetch tables + floors
   const fetchTables = useCallback(async () => {
     try {
-      const items = await tableService.getAllTables();
+      const [items, floors] = await Promise.all([
+        tableService.getAllTables(),
+        floorService.getAllFloors(),
+      ]);
+
+      setBeFloors(floors);
+
       const mappedTables: TableData[] = items.map(item => {
         let status: TableStatus = 'available';
         if (item.tableStatusId === TableStatusEnum.Reserved) status = 'reserved';
@@ -123,10 +132,12 @@ export default function TableManagement() {
         return {
           id: item.id,
           name: item.code,
-          zone: item.type || 'Other',
+          zone: item.floorName || item.type || 'Other',
+          floorId: item.floorId,
           capacity: item.seatingCapacity,
-          status: status,
-          // Mock data for extended fields
+          positionX: Number(item.positionX) || 0,
+          positionY: Number(item.positionY) || 0,
+          status,
           guests: item.tableStatusId === TableStatusEnum.Occupied ? 2 : undefined,
           startTime: item.tableStatusId === TableStatusEnum.Occupied ? '18:30' : undefined,
           order: item.tableStatusId === TableStatusEnum.Occupied ? { id: 'ORD-MOCK', items: 3, total: 150000 } : undefined,
@@ -143,6 +154,49 @@ export default function TableManagement() {
     fetchTables();
   }, [fetchTables]);
 
+  useEffect(() => {
+    if (beFloors.length === 0 && tables.length === 0) return;
+
+    const floors: Floor[] = beFloors.map((bf) => ({
+      id: bf.id,
+      name: bf.name,
+      width: Number(bf.width) || 1400,
+      height: Number(bf.height) || 900,
+      backgroundImage: bf.imageUrl || undefined,
+      tables: tables
+        .filter((table) => table.floorId === bf.id)
+        .map((table) => ({
+          id: table.id,
+          tenantId: 'tenant-1',
+          name: table.name,
+          seats: table.capacity,
+          status:
+            table.status === 'available'
+              ? 'AVAILABLE'
+              : table.status === 'occupied'
+                ? 'OCCUPIED'
+                : table.status === 'reserved'
+                  ? 'RESERVED'
+                  : 'DISABLED',
+          area: table.zone,
+          position: { x: table.positionX || 0, y: table.positionY || 0 },
+          shape: 'Rectangle',
+          width: 100,
+          height: 100,
+          rotation: 0,
+        } as Map2DTableData)),
+    }));
+
+    if (floors.length === 0) return;
+
+    setLayout((prev) => ({
+      id: 'staff-layout',
+      name: 'Staff View',
+      activeFloorId: prev?.activeFloorId && floors.some((f) => f.id === prev.activeFloorId) ? prev.activeFloorId : floors[0].id,
+      floors,
+    }));
+  }, [tables, beFloors]);
+
   // Check mobile viewport
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -155,77 +209,7 @@ export default function TableManagement() {
 
   const filteredTables = activeZone === 'all'
     ? tables
-    : tables.filter(t => t.zone === activeZone);
-
-  // Convert tables to Map2D format
-  // Calculate map layout (positions and markers)
-  const { map2DTables, mapMarkers, mapHeight } = React.useMemo(() => {
-    const markers: { id: string; label: string; position: { x: number; y: number }; style?: React.CSSProperties }[] = [];
-    const mappedTables: Map2DTableData[] = [];
-
-    // Group tables by zone
-    const tablesByZone: Record<string, TableData[]> = {};
-    const zones = activeZone === 'all'
-      ? Array.from(new Set(tables.map(t => t.zone))).sort()
-      : [activeZone];
-
-    zones.forEach(zone => {
-      tablesByZone[zone] = tables.filter(t => t.zone === zone);
-    });
-
-    let currentY = 40;
-    const itemsPerRow = 5;
-    const itemWidth = 130;
-    const itemHeight = 130;
-
-    zones.forEach(zone => {
-      const zoneTables = tablesByZone[zone];
-      if (zoneTables.length === 0) return;
-
-      // Add Zone Label Marker
-      markers.push({
-        id: `zone-${zone}`,
-        label: i18n.exists('staff.tables.zones.zone_' + zone.toLowerCase())
-          ? t('staff.tables.zones.zone_' + zone.toLowerCase())
-          : `${t('staff.tables.zones.zone')} ${zone}`,
-        position: { x: 40, y: currentY - 30 },
-        style: {
-          fontSize: 18,
-          fontWeight: 'bold',
-          color: mode === 'dark' ? '#fff' : '#000',
-          opacity: 0.8,
-        }
-      });
-
-      // Position tables for this zone
-      zoneTables.forEach((table, index) => {
-        mappedTables.push({
-          id: table.id,
-          tenantId: 'tenant-1',
-          name: table.name,
-          seats: table.capacity,
-          status: table.status === 'available' ? 'AVAILABLE' :
-            table.status === 'occupied' ? 'OCCUPIED' :
-              table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
-          area: table.zone,
-          shape: 'Rectangle' as const,
-          width: 100,
-          height: 100,
-          rotation: 0,
-          position: {
-            x: 40 + (index % itemsPerRow) * itemWidth,
-            y: currentY + Math.floor(index / itemsPerRow) * itemHeight
-          },
-        });
-      });
-
-      // Update Y for next zone (rows + specific gap)
-      const rows = Math.ceil(zoneTables.length / itemsPerRow);
-      currentY += rows * itemHeight + 80; // 80px gap between zones
-    });
-
-    return { map2DTables: mappedTables, mapMarkers: markers, mapHeight: Math.max(600, currentY + 50) };
-  }, [tables, activeZone, mode, t]);
+    : tables.filter(t => (t.floorId || t.zone) === activeZone);
 
   const handleTableClick = (table: TableData) => {
     setSelectedTable(table);
@@ -412,9 +396,10 @@ export default function TableManagement() {
             size={isMobile ? 'small' : 'middle'}
             items={[
               { key: 'all', label: `${t('staff.tables.zones.all')} (${tables.length})` },
-              { key: 'A', label: `${t('staff.tables.zones.zone_a')} (${tables.filter(t => t.zone === 'A').length})` },
-              { key: 'B', label: `${t('staff.tables.zones.zone_b')} (${tables.filter(t => t.zone === 'B').length})` },
-              { key: 'VIP', label: `${t('staff.tables.zones.zone_vip')} (${tables.filter(t => t.zone === 'VIP').length})` },
+              ...beFloors.map((floor) => ({
+                key: floor.id,
+                label: `${floor.name} (${tables.filter((tb) => tb.floorId === floor.id || (!tb.floorId && tb.zone === floor.name)).length})`,
+              })),
             ]}
           />
 
@@ -452,57 +437,64 @@ export default function TableManagement() {
               </Col>
             ))}
           </Row>
+        ) : layout ? (
+          <div style={{ position: 'relative' }}>
+            <div
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                zIndex: 10,
+                padding: '6px 10px',
+                borderRadius: 999,
+                fontSize: 12,
+                fontWeight: 600,
+                background: mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                color: 'var(--text)',
+                border: '1px solid var(--border)',
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              View only
+            </div>
+
+            <TableMap2D
+              layout={layout}
+              onLayoutChange={setLayout}
+              onTableClick={handleMap2DTableClick}
+              onTablePositionChange={() => { }}
+              readOnly
+              renderTableContent={(table) => {
+                const hasOrder = table.status === 'OCCUPIED' || table.status === 'RESERVED';
+                return (
+                  hasOrder && (
+                    <div style={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      background: '#FF380B',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: 20,
+                      height: 20,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 10,
+                      fontWeight: 'bold',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}>
+                      !
+                    </div>
+                  )
+                );
+              }}
+            />
+          </div>
         ) : (
-          (() => {
-            // Build a proper Layout object from the computed map data
-            const staffLayout = {
-              id: 'staff-layout',
-              name: 'Staff View',
-              activeFloorId: 'main',
-              floors: [{
-                id: 'main',
-                name: 'Main Floor',
-                width: 800,
-                height: mapHeight,
-                zones: [],
-                tables: map2DTables,
-              }],
-            };
-            return (
-              <TableMap2D
-                layout={staffLayout}
-                onLayoutChange={() => { }}
-                onTableClick={handleMap2DTableClick}
-                onTablePositionChange={() => { }}
-                readOnly={true}
-                renderTableContent={(table) => {
-                  const hasOrder = table.status === 'OCCUPIED' || table.status === 'RESERVED';
-                  return (
-                    hasOrder && (
-                      <div style={{
-                        position: 'absolute',
-                        top: -8,
-                        right: -8,
-                        background: '#FF380B',
-                        color: 'white',
-                        borderRadius: '50%',
-                        width: 20,
-                        height: 20,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 10,
-                        fontWeight: 'bold',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                      }}>
-                        !
-                      </div>
-                    )
-                  );
-                }}
-              />
-            );
-          })()
+          <div className="py-10 text-center" style={{ color: 'var(--text-muted)' }}>
+            {t('staff.tables.messages.fetch_tables_failed')}
+          </div>
         )}
       </Card>
       {/* Table Detail Modal */}
@@ -591,9 +583,9 @@ export default function TableManagement() {
                   styles={{ body: { padding: '16px 20px' } }}
                 >
                   <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                    {t('staff.tables.modal.zone')}
+                    Floor
                   </Text>
-                  <Text strong style={{ fontSize: 16, display: 'block' }}>{t('staff.tables.zones.zone')} {selectedTable.zone}</Text>
+                  <Text strong style={{ fontSize: 16, display: 'block' }}>{selectedTable.zone}</Text>
                 </Card>
               </Col>
               <Col span={12}>

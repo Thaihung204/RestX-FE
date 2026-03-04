@@ -1,18 +1,30 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useThemeMode } from "../theme/AntdProvider";
-import { message } from "antd";
 import { HeroSection } from "@/components/auth/HeroSection";
 import { GlassInput } from "@/components/ui/GlassInput";
-import { PhoneOutlined, UserOutlined, LoginOutlined, MailOutlined } from "@ant-design/icons";
+import { LoginOutlined, MailOutlined, PhoneOutlined, UserOutlined } from "@ant-design/icons";
+import { message } from "antd";
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useThemeMode } from "../theme/AntdProvider";
 
 const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
 export default function LoginPage() {
   const { t } = useTranslation('auth');
   const { mode } = useThemeMode();
+
+  const redirectPath = (() => {
+    if (typeof window === 'undefined') return '/';
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    if (!redirect) return '/';
+    try {
+      const decoded = decodeURIComponent(redirect);
+      return decoded.startsWith('/') ? decoded : '/';
+    } catch {
+      return '/';
+    }
+  })();
 
   // State
   const [phone, setPhone] = useState("");
@@ -139,7 +151,7 @@ export default function LoginPage() {
           if (token) {
             setAuthCookie(token);
           }
-          window.location.href = '/customer';
+          window.location.href = redirectPath;
         } else {
           message.info(result.message || 'Registration successful. Please login.');
         }
@@ -166,7 +178,7 @@ export default function LoginPage() {
           } else if (hasRole('Admin') || hasRole('System Admin')) {
             window.location.href = '/admin';
           } else {
-            window.location.href = '/customer';
+            window.location.href = redirectPath;
           }
         } else {
           throw new Error(response.data?.message || 'Login failed');
