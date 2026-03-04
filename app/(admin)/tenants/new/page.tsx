@@ -400,7 +400,7 @@ const TenantCreatePage: React.FC = () => {
                       <span
                         className="text-sm"
                         style={{ color: "var(--text-muted)" }}>
-                        {t("tenants.create.fields.host_name")} (optional)
+                        {t("tenants.create.fields.host_name")}
                       </span>
                     }
                     name="hostName"
