@@ -361,7 +361,6 @@ export default function OrderManagement() {
         customerId: "00000000-0000-0000-0000-000000000000",
         orderStatusId: 0,
         paymentStatusId: 0,
-        totalAmount: cartTotal,
         orderDetails: cart.map((c) => ({
           dishId: c.item.id,
           quantity: c.quantity,
@@ -436,7 +435,7 @@ export default function OrderManagement() {
                     <Text
                       strong
                       style={{ fontSize: isMobile ? 15 : 17, fontWeight: 500 }}>
-                     {t("staff.orders.order.table")} {order.tableName}
+                      {t("staff.orders.order.table")} {order.tableName}
                     </Text>
                     {isMobile && (
                       <Tag
@@ -829,9 +828,7 @@ export default function OrderManagement() {
                 border: "none",
                 width: "100%",
               }}>
-              {isMobile || isTablet
-                ? t("staff.orders.create_order_short")
-                : t("common.actions.create_order")}
+              {isMobile || isTablet ? t("staff.orders.create_order_short") : t("common.actions.create_order")}
             </Button>
           </Col>
         </Row>
@@ -1128,9 +1125,7 @@ export default function OrderManagement() {
                   size={isMobile ? "middle" : "large"}
                   block
                   style={{ borderRadius: 12 }}>
-                  {isMobile
-                    ? t("staff.orders.modal.print_short")
-                    : t("staff.orders.modal.print")}
+                  {isMobile ? t("staff.orders.modal.print_short") : t("staff.orders.modal.print")}
                 </Button>
               </Col>
               <Col xs={12} sm={6}>

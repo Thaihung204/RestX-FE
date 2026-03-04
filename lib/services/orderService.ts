@@ -17,7 +17,6 @@ export interface OrderRequestDto {
   discountAmount?: number | null;
   taxAmount?: number | null;
   serviceCharge?: number | null;
-  totalAmount?: number;
   tableIds?: string[];
   orderDetails: OrderDetailRequestDto[];
 }
