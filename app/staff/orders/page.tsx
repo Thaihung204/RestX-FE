@@ -1069,13 +1069,7 @@ export default function OrderManagement() {
                         {item.quantity}x
                       </Tag>
                     </Space>
-                    <div>
-                      <Text
-                        type="secondary"
-                        style={{ fontSize: isMobile ? 12 : 14 }}>
-                        {(item.price * item.quantity).toLocaleString("vi-VN")}đ
-                      </Text>
-                    </div>
+                    {/* price hidden in order details per request */}
                   </div>
                   <Select
                     value={item.status}
@@ -1101,7 +1095,7 @@ export default function OrderManagement() {
             <Divider style={{ margin: isMobile ? "12px 0" : "16px 0" }} />
 
             {/* Total */}
-            <div
+            {/* <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -1115,7 +1109,7 @@ export default function OrderManagement() {
                 style={{ fontSize: isMobile ? 20 : 24, color: "#FF380B" }}>
                 {selectedOrder.total.toLocaleString("vi-VN")}đ
               </Text>
-            </div>
+            </div> */}
 
             {/* Actions */}
             <Row gutter={[8, 8]} style={{ marginTop: isMobile ? 16 : 24 }}>
