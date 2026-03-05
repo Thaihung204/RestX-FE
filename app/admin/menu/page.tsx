@@ -5,6 +5,7 @@ import { message, Modal } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { usePageLoading } from "@/components/PageTransitionLoader";
 
 interface MenuItem {
   id: string;
@@ -26,6 +27,7 @@ export default function MenuPage() {
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  usePageLoading(loading);
   const [error, setError] = useState<string | null>(null);
 
   const fetchMenuItems = async () => {

@@ -10,6 +10,7 @@ import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
 import { tableService, TableStatus, TableItem, floorService, FloorSummary } from "@/lib/services/tableService";
+import { usePageLoading } from "@/components/PageTransitionLoader";
 
 interface Table {
   id: string;
@@ -77,6 +78,7 @@ export default function TablesPage() {
   const [addAreaModalOpen, setAddAreaModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  usePageLoading(loading);
 
   // Fetch tables + floors from BE API
   const fetchTables = async () => {

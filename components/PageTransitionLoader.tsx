@@ -77,12 +77,11 @@ const DURATION = 2000;
 const FADEOUT = 280;
 const T_TOTAL = DURATION + FADEOUT;
 
-// ease-in-out cubic
+// ─── Utils ────────────────────────────────────────────────────────────────────
 function easeInOut(t: number) {
     return t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
-// interpolate hex colors
 function lerpColor(a: string, b: string, t: number) {
     const p = (h: string, o: number) => parseInt(h.slice(1 + o * 2, 3 + o * 2), 16);
     const r = Math.round(p(a, 0) + (p(b, 0) - p(a, 0)) * t);
@@ -110,7 +109,7 @@ function getHeatLabel(pct: number) {
     return 'Sôi rồi! 🎉';
 }
 
-// ─── Inner overlay — uses refs for all animated values ────────────────────────
+// ─── Inner overlay ────────────────────────────────────────────────────────────
 function PotBubbleOverlay({ visible }: { visible: boolean }) {
     const [mounted, setMounted] = useState(false);
     const [exiting, setExiting] = useState(false);
@@ -118,7 +117,6 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
     const [logoExit, setLogoExit] = useState(false);
     const [isWild, setIsWild] = useState(false);
 
-    // DOM refs — updated directly, no setState
     const liquidRef = useRef<SVGRectElement>(null);
     const waveARef = useRef<SVGRectElement>(null);
     const waveBRef = useRef<SVGRectElement>(null);
@@ -126,7 +124,6 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
     const glowRef = useRef<HTMLDivElement>(null);
     const labelRef = useRef<HTMLDivElement>(null);
     const flamesRef = useRef<HTMLDivElement>(null);
-
     const rafRef = useRef<number | null>(null);
     const startRef = useRef<number | null>(null);
     const ts = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -141,13 +138,10 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
         setShowLogo(false); setLogoExit(false); setIsWild(false);
         startRef.current = null;
 
-        // ── RAF loop — writes directly to DOM, zero React re-renders ──
         const tick = (now: number) => {
             if (!startRef.current) startRef.current = now;
             const raw = Math.min((now - startRef.current) / DURATION, 1);
             const pct = easeInOut(raw) * 100;
-
-            // Liquid fill: max 70px of 112px pot interior
             const fillH = Math.max(3, (pct / 100) * 70);
             const yPos = 112 - fillH;
             const lColor = getLiquidColor(pct);
@@ -157,35 +151,22 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                 liquidRef.current.setAttribute('height', String(fillH + 8));
                 liquidRef.current.setAttribute('fill', lColor);
             }
-
-            // Wave surface follows liquid top
             const wy = yPos - 10;
             if (waveARef.current) waveARef.current.setAttribute('y', String(wy));
             if (waveBRef.current) waveBRef.current.setAttribute('y', String(wy));
+            if (barRef.current) barRef.current.style.width = `${pct}%`;
 
-            // Progress bar width
-            if (barRef.current) {
-                barRef.current.style.width = `${pct}%`;
-            }
-
-            // Ambient glow color
             const gc = getGlowColor(pct);
-            if (glowRef.current) {
+            if (glowRef.current)
                 glowRef.current.style.background = `radial-gradient(ellipse, rgba(${gc},0.18) 0%, transparent 70%)`;
-            }
 
-            // Heat label
-            if (labelRef.current) {
-                labelRef.current.textContent = getHeatLabel(pct);
-            }
+            if (labelRef.current) labelRef.current.textContent = getHeatLabel(pct);
 
-            // Flames height
             if (flamesRef.current) {
                 const fh = pct < 20 ? 7 : pct < 50 ? 12 : pct < 80 ? 17 : 22;
-                const children = flamesRef.current.children;
-                for (let i = 0; i < children.length; i++) {
-                    (children[i] as HTMLElement).style.height = `${fh + i * 2}px`;
-                }
+                Array.from(flamesRef.current.children).forEach((c, i) => {
+                    (c as HTMLElement).style.height = `${fh + i * 2}px`;
+                });
             }
 
             if (raw < 1) rafRef.current = requestAnimationFrame(tick);
@@ -210,7 +191,6 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
         <>
             <style>{CSS}</style>
 
-            {/* Root */}
             <div style={{
                 position: 'fixed', inset: 0, zIndex: 9999,
                 display: 'flex', flexDirection: 'column',
@@ -222,14 +202,12 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                     : `overlayIn 180ms ease forwards`,
             }}>
 
-                {/* Ambient glow — updated by RAF via ref */}
                 <div ref={glowRef} style={{
                     position: 'absolute', inset: 0,
                     background: 'radial-gradient(ellipse, rgba(96,165,250,0.18) 0%, transparent 70%)',
                     pointerEvents: 'none',
                 }} />
 
-                {/* ── Pot scene ── */}
                 <div className="pot-scene" style={{ position: 'relative' }}>
 
                     {/* Lid */}
@@ -250,7 +228,6 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                             <path d="M26 30 Q77 11 128 30" stroke="rgba(255,255,255,0.28)" strokeWidth="3" strokeLinecap="round" fill="none" />
                         </svg>
 
-                        {/* Steam */}
                         {[
                             { l: '28%', d: 0, dur: 980 },
                             { l: '44%', d: 210, dur: 850 },
@@ -268,10 +245,9 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                         ))}
                     </div>
 
-                    {/* Pot body SVG */}
+                    {/* Pot body */}
                     <div style={{ position: 'relative', zIndex: 3 }}>
-                        <svg width="154" height="120" viewBox="0 0 154 120" fill="none"
-                            style={{ overflow: 'visible' }}>
+                        <svg width="154" height="120" viewBox="0 0 154 120" fill="none" style={{ overflow: 'visible' }}>
                             <defs>
                                 <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor="#64748b" />
@@ -282,33 +258,18 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                                 </clipPath>
                             </defs>
 
-                            {/* Shell */}
                             <path d="M13 8 L10 112 Q10 118 17 118 L137 118 Q144 118 144 112 L141 8 Z"
                                 fill="url(#pg)" stroke="#475569" strokeWidth="2" />
 
-                            {/* ── Liquid (DOM-updated) ── */}
                             <g clipPath="url(#pc)">
-                                <rect ref={liquidRef}
-                                    x="10" y="112" width="134" height="8"
-                                    fill="#60a5fa"
-                                />
-
-                                {/* Wave A — CSS translateX */}
-                                <rect ref={waveARef}
-                                    x="-10" y="102" width="174" height="14"
-                                    rx="6"
+                                <rect ref={liquidRef} x="10" y="112" width="134" height="8" fill="#60a5fa" />
+                                <rect ref={waveARef} x="-10" y="102" width="174" height="14" rx="6"
                                     fill="rgba(255,255,255,0.18)"
-                                    style={{ animation: 'waveA 1100ms ease-in-out infinite' }}
-                                />
-                                {/* Wave B */}
-                                <rect ref={waveBRef}
-                                    x="-10" y="105" width="174" height="10"
-                                    rx="5"
+                                    style={{ animation: 'waveA 1100ms ease-in-out infinite' }} />
+                                <rect ref={waveBRef} x="-10" y="105" width="174" height="10" rx="5"
                                     fill="rgba(255,255,255,0.1)"
-                                    style={{ animation: 'waveB 800ms ease-in-out 180ms infinite' }}
-                                />
+                                    style={{ animation: 'waveB 800ms ease-in-out 180ms infinite' }} />
 
-                                {/* Bubbles — pure CSS, no JS */}
                                 {[
                                     { x: 18, s: 7, d: 0, dur: 920 },
                                     { x: 36, s: 5, d: 240, dur: 760 },
@@ -319,32 +280,20 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                                     { x: 72, s: 5, d: 640, dur: 740 },
                                     { x: 48, s: 6, d: 300, dur: 870 },
                                 ].map((b, i) => (
-                                    <circle key={i}
-                                        cx={b.x} cy={110} r={b.s / 2}
+                                    <circle key={i} cx={b.x} cy={110} r={b.s / 2}
                                         fill="rgba(255,255,255,0.75)"
-                                        style={{
-                                            animation: `bubbleRise ${b.dur}ms ease ${b.d}ms infinite`,
-                                            opacity: 0,
-                                        }}
+                                        style={{ animation: `bubbleRise ${b.dur}ms ease ${b.d}ms infinite`, opacity: 0 }}
                                     />
                                 ))}
                             </g>
 
-                            {/* Shine */}
                             <path d="M20 16 L16 98" stroke="rgba(255,255,255,0.1)" strokeWidth="7" strokeLinecap="round" />
-                            {/* Rim */}
                             <rect x="10" y="5" width="134" height="10" rx="5" fill="#475569" stroke="#64748b" strokeWidth="1" />
-                            {/* Handles */}
-                            <path d="M4 28 Q-3 28 -3 50 Q-3 72 4 72 L13 72 L13 28 Z"
-                                fill="#475569" stroke="#64748b" strokeWidth="1.5" />
-                            <path d="M150 28 Q157 28 157 50 Q157 72 150 72 L141 72 L141 28 Z"
-                                fill="#475569" stroke="#64748b" strokeWidth="1.5" />
+                            <path d="M4 28 Q-3 28 -3 50 Q-3 72 4 72 L13 72 L13 28 Z" fill="#475569" stroke="#64748b" strokeWidth="1.5" />
+                            <path d="M150 28 Q157 28 157 50 Q157 72 150 72 L141 72 L141 28 Z" fill="#475569" stroke="#64748b" strokeWidth="1.5" />
                         </svg>
 
-                        {/* Flames — height updated by RAF via ref */}
-                        <div ref={flamesRef} style={{
-                            display: 'flex', justifyContent: 'center', gap: 5, marginTop: 3,
-                        }}>
+                        <div ref={flamesRef} style={{ display: 'flex', justifyContent: 'center', gap: 5, marginTop: 3 }}>
                             {[0, 1, 2, 3].map(i => (
                                 <div key={i} style={{
                                     width: 10, height: 8,
@@ -361,60 +310,42 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                     </div>
                 </div>
 
-                {/* Heat label — updated by RAF via ref */}
                 <div ref={labelRef} style={{
-                    marginTop: 14,
-                    fontSize: 12, fontWeight: 700,
-                    color: 'var(--text-muted)',
-                    fontFamily: "'DM Sans',sans-serif",
-                    letterSpacing: '0.1em',
-                    animation: 'textBlink 1.4s ease infinite',
-                    height: 18,
+                    marginTop: 14, fontSize: 12, fontWeight: 700,
+                    color: 'var(--text-muted)', fontFamily: "'DM Sans',sans-serif",
+                    letterSpacing: '0.1em', animation: 'textBlink 1.4s ease infinite', height: 18,
                 }}>
                     Đang làm nóng...
                 </div>
 
-                {/* Progress bar — width updated by RAF via ref */}
                 <div style={{
-                    marginTop: 8,
-                    width: 150, height: 3,
-                    borderRadius: 99,
-                    background: 'var(--surface)',
-                    overflow: 'hidden',
-                    border: '1px solid var(--border)',
+                    marginTop: 8, width: 150, height: 3, borderRadius: 99,
+                    background: 'var(--surface)', overflow: 'hidden', border: '1px solid var(--border)',
                 }}>
                     <div ref={barRef} style={{
-                        height: '100%', width: '0%',
-                        borderRadius: 99,
+                        height: '100%', width: '0%', borderRadius: 99,
                         background: 'linear-gradient(90deg,#60a5fa,#fb923c,#ef4444,#FF380B)',
                         backgroundSize: '150px 100%',
-                        // no transition — RAF updates every frame directly
                     }} />
                 </div>
 
-                {/* Logo */}
                 {showLogo && (
                     <div style={{
-                        marginTop: 18,
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                        marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                         animation: logoExit
                             ? 'logoOut 200ms ease forwards'
                             : 'logoIn 300ms cubic-bezier(0.34,1.56,0.64,1) forwards',
                         pointerEvents: 'none',
                     }}>
                         <p style={{
-                            margin: 0, lineHeight: 1,
-                            fontSize: 22, fontWeight: 900,
-                            letterSpacing: '0.05em',
-                            textTransform: 'uppercase',
-                            fontFamily: "'DM Sans','Barlow Condensed',sans-serif",
-                            color: 'var(--text)',
+                            margin: 0, lineHeight: 1, fontSize: 22, fontWeight: 900,
+                            letterSpacing: '0.05em', textTransform: 'uppercase',
+                            fontFamily: "'DM Sans','Barlow Condensed',sans-serif", color: 'var(--text)',
                         }}>
                             rest<span style={{ color: 'var(--primary)' }}>X</span>
                         </p>
                         <p style={{
-                            margin: 0, fontSize: 9,
-                            letterSpacing: '0.24em', textTransform: 'uppercase',
+                            margin: 0, fontSize: 9, letterSpacing: '0.24em', textTransform: 'uppercase',
                             color: 'var(--text-muted)', fontFamily: "'DM Sans',sans-serif",
                         }}>
                             Restaurant Platform
@@ -426,65 +357,125 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
     );
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Trigger helpers ──────────────────────────────────────────────────────────
 
-/** Extract the top-level section from a path, e.g. "/admin/tables" → "admin" */
 function getSection(path: string): string {
     return path.split('/').filter(Boolean)[0] ?? '';
 }
 
-/**
- * Detect hard refresh via Performance Navigation API.
- * Returns true if the page was reloaded (F5 / Ctrl+R / browser reload).
- */
 function isHardRefresh(): boolean {
     if (typeof window === 'undefined') return false;
     try {
         const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
         if (nav) return nav.type === 'reload';
-        // Fallback for older browsers
         return (performance as any).navigation?.type === 1;
     } catch {
         return false;
     }
 }
 
-// ─── Route watcher ─────────────────────────────────────────────────────────────
+// ─── Custom events (namespaced) ───────────────────────────────────────────────
+const EV_LOADING = 'restx:page-loading';
+const EV_LOADED = 'restx:page-loaded';
+
+/**
+ * Hook để báo cho loader biết trang đang fetch dữ liệu chậm.
+ * Loader chỉ hiện sau 600ms — trang load nhanh sẽ không thấy gì.
+ *
+ * @example
+ *   usePageLoading(isLoading)  // isLoading từ useState / SWR / React Query
+ */
+export function usePageLoading(isLoading: boolean) {
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        window.dispatchEvent(new CustomEvent(isLoading ? EV_LOADING : EV_LOADED));
+    }, [isLoading]);
+}
+
+// ─── Route watcher (3 triggers) ───────────────────────────────────────────────
+const SHOW_DELAY = 600;    // wait before showing — cancels for fast loads
+const MAX_WAIT = 12000;  // safety cap if EV_LOADED never fires
+
 export function PageTransitionLoader() {
     const pathname = usePathname();
     const [loading, setLoading] = useState(false);
-    const prev = useRef<string | null>(null);
-    const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Show on hard refresh (once, before any navigation)
+    // Ref to avoid stale closures in event listeners
+    const loadingRef = useRef(false);
+    const prevPath = useRef<string | null>(null);
+    const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const show = () => {
+        loadingRef.current = true;
+        setLoading(true);
+    };
+
+    const hide = (afterMs = 0) => {
+        if (showTimer.current) { clearTimeout(showTimer.current); showTimer.current = null; }
+        if (hideTimer.current) clearTimeout(hideTimer.current);
+        if (afterMs > 0) {
+            hideTimer.current = setTimeout(() => { loadingRef.current = false; setLoading(false); }, afterMs);
+        } else {
+            loadingRef.current = false;
+            setLoading(false);
+        }
+    };
+
+    // ── Trigger 1: Hard refresh (F5 / Ctrl+R) ──
     useEffect(() => {
         if (isHardRefresh()) {
-            setLoading(true);
-            timer.current = setTimeout(() => setLoading(false), T_TOTAL);
+            show();
+            hideTimer.current = setTimeout(() => { loadingRef.current = false; setLoading(false); }, T_TOTAL);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // ── Trigger 2: Cross-section navigation ──
+    // /admin/... → /restaurant/... triggers, /admin/a → /admin/b does NOT
     useEffect(() => {
-        if (prev.current === null) {
-            prev.current = pathname;
-            return;
-        }
+        if (prevPath.current === null) { prevPath.current = pathname; return; }
+        if (prevPath.current === pathname) return;
 
-        if (prev.current === pathname) return;
-
-        const prevSection = getSection(prev.current);
+        const prevSection = getSection(prevPath.current);
         const nextSection = getSection(pathname);
-        prev.current = pathname;
+        prevPath.current = pathname;
 
-        // Only trigger when crossing between top-level sections
-        // e.g. /admin/... → /restaurant/... or /staff/...
         if (prevSection !== nextSection) {
-            setLoading(true);
-            if (timer.current) clearTimeout(timer.current);
-            timer.current = setTimeout(() => setLoading(false), T_TOTAL);
+            show();
+            if (hideTimer.current) clearTimeout(hideTimer.current);
+            hideTimer.current = setTimeout(() => { loadingRef.current = false; setLoading(false); }, T_TOTAL);
         }
     }, [pathname]);
+
+    // ── Trigger 3: Slow page content (via usePageLoading hook) ──
+    useEffect(() => {
+        const handleLoading = () => {
+            if (loadingRef.current) return; // already showing
+            if (showTimer.current) clearTimeout(showTimer.current);
+            // Only show after SHOW_DELAY — cancels if page loads in time
+            showTimer.current = setTimeout(() => {
+                show();
+                if (hideTimer.current) clearTimeout(hideTimer.current);
+                hideTimer.current = setTimeout(() => { loadingRef.current = false; setLoading(false); }, MAX_WAIT);
+            }, SHOW_DELAY);
+        };
+
+        const handleLoaded = () => {
+            // Page finished before threshold → cancel pending show, no overlay
+            if (showTimer.current) { clearTimeout(showTimer.current); showTimer.current = null; }
+            // Page finished after overlay appeared → fade out
+            if (loadingRef.current) hide(FADEOUT);
+        };
+
+        window.addEventListener(EV_LOADING, handleLoading);
+        window.addEventListener(EV_LOADED, handleLoaded);
+        return () => {
+            window.removeEventListener(EV_LOADING, handleLoading);
+            window.removeEventListener(EV_LOADED, handleLoaded);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return <PotBubbleOverlay visible={loading} />;
 }
