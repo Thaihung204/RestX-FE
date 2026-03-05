@@ -426,6 +426,29 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
     );
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Extract the top-level section from a path, e.g. "/admin/tables" → "admin" */
+function getSection(path: string): string {
+    return path.split('/').filter(Boolean)[0] ?? '';
+}
+
+/**
+ * Detect hard refresh via Performance Navigation API.
+ * Returns true if the page was reloaded (F5 / Ctrl+R / browser reload).
+ */
+function isHardRefresh(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+        const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+        if (nav) return nav.type === 'reload';
+        // Fallback for older browsers
+        return (performance as any).navigation?.type === 1;
+    } catch {
+        return false;
+    }
+}
+
 // ─── Route watcher ─────────────────────────────────────────────────────────────
 export function PageTransitionLoader() {
     const pathname = usePathname();
@@ -433,13 +456,34 @@ export function PageTransitionLoader() {
     const prev = useRef<string | null>(null);
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    // Show on hard refresh (once, before any navigation)
     useEffect(() => {
-        if (prev.current !== null && prev.current !== pathname) {
+        if (isHardRefresh()) {
+            setLoading(true);
+            timer.current = setTimeout(() => setLoading(false), T_TOTAL);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        if (prev.current === null) {
+            prev.current = pathname;
+            return;
+        }
+
+        if (prev.current === pathname) return;
+
+        const prevSection = getSection(prev.current);
+        const nextSection = getSection(pathname);
+        prev.current = pathname;
+
+        // Only trigger when crossing between top-level sections
+        // e.g. /admin/... → /restaurant/... or /staff/...
+        if (prevSection !== nextSection) {
             setLoading(true);
             if (timer.current) clearTimeout(timer.current);
             timer.current = setTimeout(() => setLoading(false), T_TOTAL);
         }
-        prev.current = pathname;
     }, [pathname]);
 
     return <PotBubbleOverlay visible={loading} />;
