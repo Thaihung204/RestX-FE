@@ -5,10 +5,8 @@ import RevenueChart from "@/components/admin/charts/RevenueChart";
 import { useLanguage } from "@/components/I18nProvider";
 import {
   CheckCircleOutlined,
-  DeleteOutlined,
-  ExclamationCircleOutlined,
+  EyeOutlined,
   MailOutlined,
-  MoreOutlined,
   PhoneOutlined,
   PlusOutlined,
   ReloadOutlined,
@@ -16,7 +14,6 @@ import {
   SearchOutlined,
   ShopOutlined,
 } from "@ant-design/icons";
-import type { MenuProps } from "antd";
 import {
   App,
   Avatar,
@@ -24,9 +21,7 @@ import {
   Button,
   Card,
   DatePicker,
-  Dropdown,
   Input,
-  Modal,
   Radio,
   Select,
   Statistic,
@@ -44,67 +39,11 @@ import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPi
 import { tenantService } from "../../../lib/services/tenantService";
 import { ITenant } from "../../../lib/types/tenant";
 
-const STATUS_OPTIONS = [
-  { label: "all", value: "all" },
-  { label: "active", value: "active" },
-  { label: "inactive", value: "inactive" },
-  { label: "maintenance", value: "maintenance" },
-];
-
-// --- HELPER COMPONENTS ---
-
-// Dark Mode Status Pill
-const StatusPill = ({ status }: { status: ITenant["status"] }) => {
-  // Using rgba colors for better dark mode blending
-  const config = {
-    active: {
-      color: "text-emerald-400",
-      bg: "bg-emerald-900/30",
-      border: "border-emerald-800/50",
-      text: "Active",
-      dot: "bg-emerald-500",
-    },
-    inactive: {
-      color: "text-rose-400",
-      bg: "bg-rose-900/30",
-      border: "border-rose-800/50",
-      text: "Inactive",
-      dot: "bg-rose-500",
-    },
-    maintenance: {
-      color: "text-[#FF6B3B]",
-      bg: "bg-[#CC2D08]/30",
-      border: "border-[#CC2D08]/50",
-      text: "Maintenance",
-      dot: "bg-[#FF380B]",
-    },
-  };
-  const style = config[status];
-
-  return (
-    <div
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full border ${style.bg} ${style.border}`}>
-      <span
-        className={`w-1.5 h-1.5 rounded-full mr-2 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${style.dot}`}
-      />
-      <span className={`text-xs font-medium ${style.color}`}>{style.text}</span>
-    </div>
-  );
-};
-
-const formatDate = (isoDate: string) => {
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(isoDate));
-};
-
 // --- MAIN PAGE COMPONENT ---
 
 const TenantPage: React.FC = () => {
   const router = useRouter();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { language, changeLanguage } = useLanguage();
   const { message } = App.useApp();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -115,16 +54,6 @@ const TenantPage: React.FC = () => {
   >("month");
   const [tenants, setTenants] = useState<ITenant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deleteModal, setDeleteModal] = useState<{
-    visible: boolean;
-    tenant: ITenant | null;
-    confirmText: string;
-  }>({
-    visible: false,
-    tenant: null,
-    confirmText: "",
-  });
-  const [deleting, setDeleting] = useState(false);
 
   // Fetch tenants from API
   useEffect(() => {
@@ -182,58 +111,9 @@ const TenantPage: React.FC = () => {
     { label: t("tenants.filter.maintenance"), value: "maintenance" },
   ];
 
-  const handleMenuClick = (key: string, record: ITenant) => {
-    if (key === "view") {
-      router.push(`/tenants/${record.id}`);
-    } else if (key === "domain") {
-      message.info(t("tenants.toasts.feature_coming_message"));
-    } else if (key === "suspend") {
-      setDeleteModal({
-        visible: true,
-        tenant: record,
-        confirmText: "",
-      });
-    }
+  const handleViewDetails = (record: ITenant) => {
+    router.push(`/tenants/${record.id}`);
   };
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteModal.tenant) return;
-
-    if (deleteModal.confirmText !== deleteModal.tenant.name) {
-      message.error(t("tenants.edit.delete_modal.name_mismatch"));
-      return;
-    }
-
-    setDeleting(true);
-    try {
-      await tenantService.deleteTenant(deleteModal.tenant.id);
-      message.success(t("tenants.toasts.delete_success_message"));
-      setDeleteModal({ visible: false, tenant: null, confirmText: "" });
-      await fetchTenants();
-    } catch (error: any) {
-      console.error("Failed to delete tenant:", error);
-      const errorMsg =
-        error?.response?.data?.message ||
-        t("tenants.toasts.delete_error_message");
-      message.error(errorMsg);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const menuItems: MenuProps["items"] = [
-    { key: "view", label: t("tenants.actions.view_details") },
-    { key: "domain", label: t("tenants.actions.configure_domain") },
-    { type: "divider" },
-    {
-      key: "suspend",
-      label: (
-        <span className="text-red-500">
-          {t("tenants.actions.suspend_tenant")}
-        </span>
-      ),
-    },
-  ];
 
   const columns: ColumnsType<ITenant> = [
     {
@@ -317,23 +197,19 @@ const TenantPage: React.FC = () => {
       render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
     },
     {
-      title: "",
+      title: t("dashboard.tables.card.view_details"),
       key: "actions",
-      width: 50,
+      width: 70,
+      align: "center",
       render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: menuItems,
-            onClick: ({ key }) => handleMenuClick(key, record),
-          }}
-          trigger={["click"]}
-          placement="bottomRight">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<MoreOutlined style={{ color: "var(--text-muted)" }} />}
-          />
-        </Dropdown>
+        <Button
+          type="text"
+          shape="circle"
+          icon={<EyeOutlined style={{ color: "var(--text-muted)" }} />}
+          onClick={() => handleViewDetails(record)}
+          title={t("tenants.actions.view_details")}
+          aria-label={t("tenants.actions.view_details")}
+        />
       ),
     },
   ];
@@ -814,104 +690,6 @@ const TenantPage: React.FC = () => {
           />
         </div>
       </main>
-      {/* Delete Confirmation Modal */}
-      <Modal
-        open={deleteModal.visible}
-        title={
-          <div className="flex items-center gap-3">
-            <ExclamationCircleOutlined className="text-red-500 text-2xl" />
-            <span className="text-lg font-semibold">
-              {t("tenants.edit.delete_modal.title")}
-            </span>
-          </div>
-        }
-        onCancel={() =>
-          setDeleteModal({ visible: false, tenant: null, confirmText: "" })
-        }
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() =>
-              setDeleteModal({ visible: false, tenant: null, confirmText: "" })
-            }
-            size="large">
-            {t("tenants.edit.delete_modal.button_cancel")}
-          </Button>,
-          <Button
-            key="delete"
-            type="primary"
-            danger
-            loading={deleting}
-            disabled={
-              deleteModal.confirmText !== deleteModal.tenant?.name || deleting
-            }
-            onClick={handleDeleteConfirm}
-            size="large"
-            icon={<DeleteOutlined />}>
-            {t("tenants.edit.delete_modal.button_delete")}
-          </Button>,
-        ]}
-        width={520}>
-        <div className="py-4 space-y-4">
-          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-4">
-            <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
-              {t("tenants.edit.delete_modal.warning_title")}
-            </p>
-            <p className="text-sm text-red-700 dark:text-red-300">
-              {t("tenants.edit.delete_modal.warning_description")}
-            </p>
-            <ul className="text-sm text-red-700 dark:text-red-300 list-disc list-inside mt-2 space-y-1">
-              <li>{t("tenants.edit.delete_modal.warning_items.data")}</li>
-              <li>{t("tenants.edit.delete_modal.warning_items.users")}</li>
-              <li>
-                {t("tenants.edit.delete_modal.warning_items.transactions")}
-              </li>
-              <li>{t("tenants.edit.delete_modal.warning_items.assets")}</li>
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
-              {t("tenants.edit.delete_modal.confirm_instruction")}
-            </p>
-            <p
-              className="text-base font-semibold px-3 py-2 rounded"
-              style={{
-                backgroundColor: "var(--bg-base)",
-                color: "var(--text)",
-              }}>
-              {deleteModal.tenant?.name}
-            </p>
-          </div>
-
-          <Input
-            placeholder={t("tenants.edit.delete_modal.input_placeholder")}
-            value={deleteModal.confirmText}
-            onChange={(e) =>
-              setDeleteModal({ ...deleteModal, confirmText: e.target.value })
-            }
-            size="large"
-            autoFocus
-            onPressEnter={() => {
-              if (deleteModal.confirmText === deleteModal.tenant?.name) {
-                handleDeleteConfirm();
-              }
-            }}
-          />
-
-          {deleteModal.confirmText &&
-            deleteModal.confirmText !== deleteModal.tenant?.name && (
-              <p className="text-sm text-red-500 mt-1">
-                {t("tenants.edit.delete_modal.name_mismatch")}
-              </p>
-            )}
-          {deleteModal.confirmText === deleteModal.tenant?.name && (
-            <p className="text-sm text-green-500 mt-1">
-              {t("tenants.edit.delete_modal.name_match")}
-            </p>
-          )}
-        </div>
-      </Modal>{" "}
     </div>
   );
 };

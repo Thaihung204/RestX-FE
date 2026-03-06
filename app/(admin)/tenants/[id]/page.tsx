@@ -33,6 +33,18 @@ const { TextArea } = Input;
 const { Title, Paragraph } = Typography;
 
 const customStyles = `
+  .tenant-delete-modal .ant-modal-root,
+  .tenant-delete-modal .ant-modal-mask,
+  .tenant-delete-modal .ant-modal-wrap {
+    position: fixed !important;
+    inset: 0 !important;
+  }
+
+  .tenant-delete-modal .ant-modal-wrap {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .tenant-form .ant-input-affix-wrapper,
   .tenant-form .ant-input:not(.url-bar .ant-input) {
     border-radius: 6px !important;
@@ -114,6 +126,21 @@ const TenantEditPage: React.FC = () => {
   useEffect(() => {
     fetchTenantDetails();
   }, [tenantId]);
+
+  useEffect(() => {
+    if (!deleteModalVisible) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [deleteModalVisible]);
 
   const fetchTenantDetails = async () => {
     try {
@@ -1077,6 +1104,11 @@ const TenantEditPage: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       <Modal
+        getContainer={() => document.body}
+        rootClassName="tenant-delete-modal"
+        centered
+        maskClosable={!deleting}
+        keyboard={!deleting}
         title={
           <div className="flex items-center gap-3">
             <ExclamationCircleOutlined className="text-red-500 text-2xl" />
@@ -1103,7 +1135,14 @@ const TenantEditPage: React.FC = () => {
             {t("tenants.edit.delete_modal.button_delete")}
           </Button>,
         ]}
-        width={520}>
+        width={520}
+        styles={{
+          mask: {
+            backdropFilter: "blur(10px)",
+            background: "var(--modal-overlay)",
+          },
+        }}>
+
         <div className="py-4 space-y-4">
           <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-4">
             <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
