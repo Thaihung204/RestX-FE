@@ -1898,6 +1898,7 @@
       "tenant_info": "Tenant Info",
       "contact": "Contact",
       "address": "Address",
+      "hostname": "Hostname",
       "domain": "Domain / IP",
       "domain_not_configured": "Not configured",
       "domain_not_set": "Not set",
@@ -2006,7 +2007,7 @@
         "business_name": "Business Name",
         "business_name_placeholder": "Legal business name",
         "phone_number": "Phone Number",
-        "phone_placeholder": "Primary contact number",
+        "phone_placeholder": "Contact number",
         "mail_restaurant": "Mail Restaurant",
         "mail_restaurant_placeholder": "Restaurant contact email",
         "address": "Restaurant Address",
@@ -2078,7 +2079,10 @@
         "about_us": "About Us",
         "about_us_placeholder": "Enter restaurant description or about us content",
         "overview": "Overview",
-        "overview_placeholder": "Enter brief overview or tagline"
+        "overview_placeholder": "Enter brief overview or tagline",
+        "status": "Tenant Status",
+        "status_active": "Active — Restaurant is live and accessible",
+        "status_inactive": "Inactive — Restaurant is disabled"
       },
       "buttons": {
         "update": "Save Changes",

@@ -8,7 +8,6 @@ import {
   ArrowLeftOutlined,
   DeleteOutlined,
   ExclamationCircleOutlined,
-  GlobalOutlined,
   MailOutlined,
   PhoneOutlined,
   ShopOutlined,
@@ -19,14 +18,11 @@ import {
   Breadcrumb,
   Button,
   Card,
-  Col,
   Form,
   Input,
   Modal,
-  Row,
-  Select,
-  Space,
   Spin,
+  Switch,
   Typography,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
@@ -34,7 +30,68 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const { TextArea } = Input;
-const { Title, Paragraph, Text } = Typography;
+const { Title, Paragraph } = Typography;
+
+const customStyles = `
+  .tenant-form .ant-input-affix-wrapper,
+  .tenant-form .ant-input:not(.url-bar .ant-input) {
+    border-radius: 6px !important;
+    background: var(--card) !important;
+    font-size: 14px !important;
+  }
+
+  .tenant-form .ant-input-affix-wrapper .ant-input {
+    background: transparent !important;
+    font-size: 14px !important;
+  }
+
+  .tenant-form .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):focus,
+  .tenant-form .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover,
+  .tenant-form .ant-input-affix-wrapper-focused,
+  .tenant-form .ant-input:not([disabled]):focus,
+  .tenant-form .ant-input:not([disabled]):hover {
+    border-color: #f97316 !important;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1) !important;
+  }
+
+  .url-bar {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--ant-color-border, #d9d9d9);
+    border-radius: 6px;
+    height: 40px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    padding: 0 12px;
+    gap: 2px;
+  }
+
+  .url-bar-disabled {
+    background: var(--ant-color-bg-container-disabled, rgba(0,0,0,0.04)) !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .url-bar .ant-input {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    height: 100%;
+    border-radius: 0 !important;
+    font-size: 14px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .url-bar .url-segment {
+    font-size: 14px;
+    white-space: nowrap;
+    user-select: none;
+    flex-shrink: 0;
+    color: #6b7280;
+  }
+`;
 
 const TenantEditPage: React.FC = () => {
   const router = useRouter();
@@ -50,6 +107,7 @@ const TenantEditPage: React.FC = () => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [confirmInput, setConfirmInput] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [tenantStatus, setTenantStatus] = useState<boolean>(true);
 
   const tenantId = params.id as string;
 
@@ -75,36 +133,30 @@ const TenantEditPage: React.FC = () => {
         name: data.name,
         hostname: cleanHostname,
         prefix: data.prefix,
-        
+
         // Branding
         logoUrl: data.logoUrl,
         faviconUrl: data.faviconUrl,
         backgroundUrl: data.backgroundUrl,
-        
+
         // Theme Colors
         primaryColor: data.primaryColor,
-        baseColor: data.baseColor,
-        secondaryColor: data.secondaryColor,
-        headerColor: data.headerColor,
-        footerColor: data.footerColor,
         lightBaseColor: data.lightBaseColor,
         lightSurfaceColor: data.lightSurfaceColor,
         lightCardColor: data.lightCardColor,
         darkBaseColor: data.darkBaseColor,
         darkSurfaceColor: data.darkSurfaceColor,
         darkCardColor: data.darkCardColor,
-        
+
         // Network
         networkIp: data.networkIp,
         connectionString: data.connectionString,
         status: data.status,
         expiredAt: data.expiredAt,
-        
+
         // Business Info
         businessName: data.businessName,
         aboutUs: data.aboutUs,
-        aboutUsType: data.aboutUsType,
-        overview: data.overview,
         businessAddressLine1: data.businessAddressLine1,
         businessAddressLine2: data.businessAddressLine2,
         businessAddressLine3: data.businessAddressLine3,
@@ -121,6 +173,9 @@ const TenantEditPage: React.FC = () => {
 
       form.setFieldsValue(formValues);
       setFormData(formValues);
+      setTenantStatus(
+        typeof data.status === "boolean" ? data.status : data.status === true,
+      );
     } catch (error) {
       console.error("Failed to fetch tenant details:", error);
       message.error(t("tenants.toasts.detail_error_message"));
@@ -138,15 +193,17 @@ const TenantEditPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const hostname = formData.hostname
-        ? `${formData.hostname}.restx.food`
+      const hostname = values.hostname
+        ? `${values.hostname}.restx.food`
         : undefined;
 
       const requestData: any = {
         ...values,
         id: tenantId,
-        hostname: hostname,
-        networkIp: hostname,
+        hostname,
+        networkIp: formData.networkIp || hostname,
+        expiredAt: formData.expiredAt,
+        status: tenantStatus,
       };
 
       await tenantService.upsertTenant(requestData);
@@ -174,21 +231,20 @@ const TenantEditPage: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (confirmInput !== formData.name) {
-      message.error("Tenant name does not match. Please try again.");
+      message.error(t("tenants.edit.delete_modal.name_mismatch"));
       return;
     }
 
     setDeleting(true);
     try {
       await tenantService.deleteTenant(tenantId);
-      message.success(t("tenants.toasts.delete_success_message") || "Tenant deleted successfully");
+      message.success(t("tenants.toasts.delete_success_message"));
       router.push("/tenants");
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||
-        t("tenants.toasts.delete_error_message") ||
-        "Failed to delete tenant";
+        t("tenants.toasts.delete_error_message");
       message.error(errorMessage);
     } finally {
       setDeleting(false);
@@ -205,6 +261,7 @@ const TenantEditPage: React.FC = () => {
     <div
       className="min-h-screen"
       style={{ background: "var(--bg-base)", color: "var(--text)" }}>
+      <style>{customStyles}</style>
       <main
         className="px-6 lg:px-8 py-8"
         style={{ background: "var(--bg-base)", color: "var(--text)" }}>
@@ -463,44 +520,97 @@ const TenantEditPage: React.FC = () => {
               layout="vertical"
               onFinish={onFinish}
               initialValues={formData}
-              requiredMark="optional"
+              className="tenant-form"
               style={{ opacity: initialLoading ? 0 : 1 }}>
-              <Row gutter={[24, 24]}>
-                {/* Left Column: Restaurant Info */}
-                <Col xs={24} lg={14}>
-                  <Card
-                    variant="borderless"
-                    className="shadow-md h-full"
-                    style={{
-                      background: "var(--card)",
-                      borderColor: "var(--border)",
-                    }}
-                    title={
-                      <Title
-                        level={5}
-                        style={{ margin: 0, color: "var(--text)" }}>
-                        {t("tenants.create.restaurant_info")}
-                      </Title>
+              <div className="max-w-2xl mx-auto space-y-4">
+                {/* Restaurant Information */}
+                <Card
+                  style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "16px",
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                  }}
+                  title={
+                    <Title
+                      level={5}
+                      style={{ margin: 0, color: "var(--text)" }}>
+                      {t("tenants.create.restaurant_info")}
+                    </Title>
+                  }>
+                  <Form.Item
+                    label={
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: "var(--text)" }}>
+                        {t("tenants.create.fields.name")}
+                      </span>
+                    }
+                    name="name"
+                    rules={[
+                      {
+                        required: true,
+                        message: t("tenants.create.validation.name_required"),
+                      },
+                    ]}>
+                    <Input
+                      size="large"
+                      placeholder={t("tenants.create.fields.name_placeholder")}
+                      prefix={<ShopOutlined className="text-gray-400 mr-1" />}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label={
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: "var(--text)" }}>
+                        {t("tenants.create.fields.host_name")}
+                      </span>
+                    }
+                    name="hostname"
+                    extra={
+                      <span
+                        className="text-[11px]"
+                        style={{ color: "var(--text-muted)" }}>
+                        {t("tenants.create.fields.hostname_disabled_text")}
+                      </span>
                     }>
+                    <div className="url-bar url-bar-disabled">
+                      <span className="url-segment">https://</span>
+                      <Input
+                        disabled
+                        value={formData.hostname || ""}
+                        placeholder={t(
+                          "tenants.create.fields.host_name_placeholder",
+                        )}
+                      />
+                      <span className="url-segment">.restx.food</span>
+                    </div>
+                  </Form.Item>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Form.Item
                       label={
                         <span
-                          className="text-sm"
-                          style={{ color: "var(--text-muted)" }}>
-                          {t("tenants.create.fields.name")}
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.create.fields.business_name")}
                         </span>
                       }
-                      name="name"
+                      name="businessName"
                       rules={[
                         {
                           required: true,
-                          message: t("tenants.create.validation.name_required"),
+                          message: t(
+                            "tenants.create.validation.business_name_required",
+                          ),
                         },
                       ]}>
                       <Input
-                        className="text-sm"
+                        size="large"
                         placeholder={t(
-                          "tenants.create.fields.name_placeholder",
+                          "tenants.create.fields.business_name_placeholder",
                         )}
                         prefix={<ShopOutlined className="text-gray-400 mr-1" />}
                       />
@@ -509,525 +619,457 @@ const TenantEditPage: React.FC = () => {
                     <Form.Item
                       label={
                         <span
-                          className="text-sm"
-                          style={{ color: "var(--text-muted)" }}>
-                          {t("tenants.create.fields.host_name")} (optional)
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.create.fields.phone_number")}
                         </span>
                       }
-                      name="hostName"
-                      extra={
-                        <span
-                          className="text-[11px]"
-                          style={{ color: "var(--text-muted)" }}>
-                          {t("tenants.create.fields.hostname_disabled_text")}
-                        </span>
-                      }>
-                      <Space.Compact className="w-full" size="large">
-                        <Input
-                          disabled
-                          value="https://"
-                          className="text-center flex-none"
-                          style={{
-                            background: "var(--bg-base)",
-                            color: "var(--text-muted)",
-                            cursor: "default",
-                            width: "90px",
-                            fontSize: "14px",
-                            fontWeight: 500,
-                          }}
-                        />
-                        <Input
-                          placeholder={t(
-                            "tenants.create.fields.host_name_placeholder",
-                          )}
-                          prefix={
-                            <GlobalOutlined className="text-gray-400 mr-1" />
-                          }
-                          value={formData.hostname || ""}
-                          disabled={true}
-                          style={{
-                            fontSize: "14px",
-                            color: "var(--text)",
-                            cursor: "not-allowed",
-                            opacity: 1,
-                          }}
-                          onChange={(e) => {
-                            const value = e.target.value
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")
-                              .replace(/[^a-z0-9-]/g, "");
-                            form.setFieldValue("hostname", value);
-                            setFormData({ ...formData, hostname: value });
-                          }}
-                        />
-                        <Input
-                          disabled
-                          value=".restx.food"
-                          className="text-center flex-none"
-                          style={{
-                            background: "var(--bg-base)",
-                            color: "var(--text-muted)",
-                            cursor: "default",
-                            width: "120px",
-                            fontSize: "14px",
-                            fontWeight: 500,
-                          }}
-                        />
-                      </Space.Compact>
-                    </Form.Item>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.create.fields.business_name")}
-                          </span>
-                        }
-                        name="businessName"
-                        rules={[
-                          {
-                            required: true,
-                            message: t(
-                              "tenants.create.validation.business_name_required",
-                            ),
-                          },
-                        ]}>
-                        <Input
-                          className="text-sm"
-                          placeholder={t(
-                            "tenants.create.fields.business_name_placeholder",
-                          )}
-                          prefix={
-                            <ShopOutlined className="text-gray-400 mr-1" />
-                          }
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.create.fields.phone_number")}
-                          </span>
-                        }
-                        name="businessPrimaryPhone"
-                        rules={[
-                          {
-                            required: true,
-                            message: t(
-                              "tenants.create.validation.phone_required",
-                            ),
-                          },
-                          {
-                            pattern: /^[0-9]{10,11}$/,
-                            message: t(
-                              "tenants.create.validation.phone_invalid",
-                            ),
-                          },
-                        ]}>
-                        <Input
-                          className="text-sm"
-                          placeholder={t(
-                            "tenants.create.fields.phone_placeholder",
-                          )}
-                          prefix={
-                            <PhoneOutlined className="text-gray-400 mr-1" />
-                          }
-                        />
-                      </Form.Item>
-                    </div>
-
-                    <Form.Item
-                      label={
-                        <span
-                          className="text-sm"
-                          style={{ color: "var(--text-muted)" }}>
-                          {t("tenants.create.fields.mail_restaurant")}
-                        </span>
-                      }
-                      name="mailRestaurant"
+                      name="businessPrimaryPhone"
                       rules={[
                         {
                           required: true,
                           message: t(
-                            "tenants.create.validation.restaurant_email_required",
+                            "tenants.create.validation.phone_required",
                           ),
                         },
                         {
-                          type: "email",
-                          message: t("tenants.create.validation.email_invalid"),
+                          pattern: /^[0-9]{10,11}$/,
+                          message: t("tenants.create.validation.phone_invalid"),
                         },
                       ]}>
                       <Input
-                        className="text-sm"
-                        type="email"
+                        size="large"
                         placeholder={t(
-                          "tenants.create.fields.mail_restaurant_placeholder",
+                          "tenants.create.fields.phone_placeholder",
                         )}
-                        prefix={<MailOutlined className="text-gray-400 mr-1" />}
+                        prefix={
+                          <PhoneOutlined className="text-gray-400 mr-1" />
+                        }
                       />
                     </Form.Item>
-
-                    <div className="space-y-3">
-                      <label
-                        className="text-sm font-medium"
-                        style={{ color: "var(--text-muted)" }}>
-                        {t("tenants.create.fields.address")}
-                      </label>
-
-                      <Form.Item
-                        name="businessAddressLine1"
-                        rules={[
-                          {
-                            required: true,
-                            message: t(
-                              "tenants.create.validation.street_number_required",
-                            ),
-                          },
-                        ]}>
-                        <Input
-                          className="text-sm"
-                          placeholder={t(
-                            "tenants.create.fields.address_line1_placeholder",
-                          )}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        name="businessAddressLine2"
-                        rules={[
-                          {
-                            required: true,
-                            message: t(
-                              "tenants.create.validation.street_name_required",
-                            ),
-                          },
-                        ]}>
-                        <Input
-                          className="text-sm"
-                          placeholder={t(
-                            "tenants.create.fields.address_line2_placeholder",
-                          )}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        name="businessAddressLine3"
-                        rules={[
-                          {
-                            required: true,
-                            message: t(
-                              "tenants.create.validation.city_required",
-                            ),
-                          },
-                        ]}>
-                        <Input
-                          className="text-sm"
-                          placeholder={t(
-                            "tenants.create.fields.address_line3_placeholder",
-                          )}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        name="businessAddressLine4"
-                        rules={[
-                          {
-                            required: true,
-                            message: t(
-                              "tenants.create.validation.country_required",
-                            ),
-                          },
-                        ]}>
-                        <Input
-                          className="text-sm"
-                          placeholder={t(
-                            "tenants.create.fields.address_line4_placeholder",
-                          )}
-                        />
-                      </Form.Item>
-                    </div>
-
-                    {/* Extended Business Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-dashed border-gray-200 dark:border-gray-700">
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.edit.fields.county")}
-                          </span>
-                        }
-                        name="businessCounty">
-                        <Input
-                          className="text-sm"
-                          placeholder={t("tenants.edit.fields.county_placeholder")}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.edit.fields.post_code")}
-                          </span>
-                        }
-                        name="businessPostCode">
-                        <Input
-                          className="text-sm"
-                          placeholder={t("tenants.edit.fields.post_code_placeholder")}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.edit.fields.country")}
-                          </span>
-                        }
-                        name="businessCountry">
-                        <Input
-                          className="text-sm"
-                          placeholder={t("tenants.edit.fields.country_placeholder")}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.edit.fields.company_number")}
-                          </span>
-                        }
-                        name="businessCompanyNumber">
-                        <Input
-                          className="text-sm"
-                          placeholder={t("tenants.edit.fields.company_number_placeholder")}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.edit.fields.secondary_phone")}
-                          </span>
-                        }
-                        name="businessSecondaryPhone">
-                        <Input
-                          className="text-sm"
-                          placeholder={t("tenants.edit.fields.secondary_phone_placeholder")}
-                          prefix={
-                            <PhoneOutlined className="text-gray-400 mr-1" />
-                          }
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.edit.fields.opening_hours")}
-                          </span>
-                        }
-                        name="businessOpeningHours">
-                        <Input
-                          className="text-sm"
-                          placeholder={t("tenants.edit.fields.opening_hours_placeholder")}
-                        />
-                      </Form.Item>
-                    </div>
-
-                    {/* About Us & Overview */}
-                    <div className="space-y-3 mt-6 pt-6 border-t border-dashed border-gray-200 dark:border-gray-700">
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm font-medium"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.edit.fields.about_us")}
-                          </span>
-                        }
-                        name="aboutUs">
-                        <TextArea
-                          className="text-sm"
-                          rows={4}
-                          placeholder={t("tenants.edit.fields.about_us_placeholder")}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm font-medium"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.edit.fields.overview")}
-                          </span>
-                        }
-                        name="overview">
-                        <TextArea
-                          className="text-sm"
-                          rows={3}
-                          placeholder={t("tenants.edit.fields.overview_placeholder")}
-                        />
-                      </Form.Item>
-                    </div>
-                  </Card>
-                </Col>
-
-                {/* Right Column: Owner & Plan */}
-                <Col xs={24} lg={10}>
-                  <div className="flex flex-col gap-6 h-full">
-                    {/* Owner Info Card */}
-                    <Card
-                      variant="borderless"
-                      className="shadow-md"
-                      style={{
-                        background: "var(--card)",
-                        borderColor: "var(--border)",
-                      }}
-                      title={
-                        <Title
-                          level={5}
-                          style={{ margin: 0, color: "var(--text)" }}>
-                          {t("tenants.create.owner_info")}
-                        </Title>
-                      }>
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.create.fields.mail_restaurant")}
-                          </span>
-                        }
-                        name="businessEmailAddress"
-                        rules={[
-                          {
-                            type: "email",
-                            message: t(
-                              "tenants.create.validation.email_invalid",
-                            ),
-                          },
-                        ]}>
-                        <Input
-                          className="text-sm"
-                          type="email"
-                          placeholder={t(
-                            "tenants.create.fields.mail_restaurant_placeholder",
-                          )}
-                          prefix={
-                            <MailOutlined className="text-gray-400 mr-1" />
-                          }
-                        />
-                      </Form.Item>
-                    </Card>
-
-                    {/* Plan Selection Card */}
-                    <Card
-                      variant="borderless"
-                      className="shadow-md flex-1"
-                      style={{
-                        background: "var(--card)",
-                        borderColor: "var(--border)",
-                      }}
-                      title={
-                        <Title
-                          level={5}
-                          style={{ margin: 0, color: "var(--text)" }}>
-                          {t("tenants.create.subscription_plan")}
-                        </Title>
-                      }>
-                      <Form.Item
-                        name="plan"
-                        rules={[
-                          {
-                            required: true,
-                            message: t(
-                              "tenants.create.validation.plan_required",
-                            ),
-                          },
-                        ]}>
-                        <Select
-                          className="text-sm"
-                          placeholder={t(
-                            "tenants.create.fields.plan_placeholder",
-                          )}>
-                          <Select.Option value="basic">
-                            <span className="font-medium text-emerald-500 text-sm">
-                              {t("tenants.create.plan_options.basic")}
-                            </span>
-                            <span className="text-gray-400 text-[11px] ml-2">
-                              {t("tenants.create.plan_options.basic_desc")}
-                            </span>
-                          </Select.Option>
-                          <Select.Option value="pro">
-                            <span className="font-medium text-blue-500 text-sm">
-                              {t("tenants.create.plan_options.pro")}
-                            </span>
-                            <span className="text-gray-400 text-[11px] ml-2">
-                              {t("tenants.create.plan_options.pro_desc")}
-                            </span>
-                          </Select.Option>
-                          <Select.Option value="enterprise">
-                            <span className="font-medium text-purple-500 text-sm">
-                              {t("tenants.create.plan_options.enterprise")}
-                            </span>
-                            <span className="text-gray-400 text-[11px] ml-2">
-                              {t("tenants.create.plan_options.enterprise_desc")}
-                            </span>
-                          </Select.Option>
-                        </Select>
-                      </Form.Item>
-
-                      {/* Action Buttons */}
-                      <div className="pt-4 mt-auto border-t border-dashed border-gray-200 dark:border-gray-700">
-                        {/* Save Changes */}
-                        <Button
-                          type="primary"
-                          htmlType="submit"
-                          loading={loading}
-                          disabled={loading}
-                          size="large"
-                          block
-                          className="shadow-orange-900/20 shadow-lg border-none h-12 text-base font-medium">
-                        {t("tenants.edit.buttons.update")}
-                        </Button>
-
-                        {/* Delete Tenant */}
-                        <Button
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={handleDeleteClick}
-                          size="large"
-                          block
-                          className="mt-2 border-red-500 text-red-500 hover:!bg-red-50 dark:hover:!bg-red-950">
-                          {t("tenants.edit.buttons.delete")}
-                        </Button>
-
-                        {/* Cancel */}
-                        <Button
-                          onClick={handleCancel}
-                          size="large"
-                          block
-                          type="text"
-                          className="mt-2 text-gray-500">
-                          {t("tenants.create.buttons.cancel")}
-                        </Button>
-                      </div>
-                    </Card>
                   </div>
-                </Col>
-              </Row>
+
+                  <Form.Item
+                    label={
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: "var(--text)" }}>
+                        {t("tenants.create.fields.mail_restaurant")}
+                      </span>
+                    }
+                    name="businessEmailAddress"
+                    rules={[
+                      {
+                        required: true,
+                        message: t(
+                          "tenants.create.validation.restaurant_email_required",
+                        ),
+                      },
+                      {
+                        type: "email",
+                        message: t("tenants.create.validation.email_invalid"),
+                      },
+                    ]}>
+                    <Input
+                      size="large"
+                      type="email"
+                      placeholder={t(
+                        "tenants.create.fields.mail_restaurant_placeholder",
+                      )}
+                      prefix={<MailOutlined className="text-gray-400 mr-1" />}
+                    />
+                  </Form.Item>
+
+                  <div className="space-y-3">
+                    <label
+                      className="text-sm font-semibold"
+                      style={{ color: "var(--text)" }}>
+                      {t("tenants.create.fields.address")}
+                    </label>
+                    <Form.Item
+                      name="businessAddressLine1"
+                      rules={[
+                        {
+                          required: true,
+                          message: t(
+                            "tenants.create.validation.street_number_required",
+                          ),
+                        },
+                      ]}>
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.create.fields.address_line1_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="businessAddressLine2"
+                      rules={[
+                        {
+                          required: true,
+                          message: t(
+                            "tenants.create.validation.street_name_required",
+                          ),
+                        },
+                      ]}>
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.create.fields.address_line2_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="businessAddressLine3"
+                      rules={[
+                        {
+                          required: true,
+                          message: t("tenants.create.validation.city_required"),
+                        },
+                      ]}>
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.create.fields.address_line3_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="businessAddressLine4"
+                      rules={[
+                        {
+                          required: true,
+                          message: t(
+                            "tenants.create.validation.country_required",
+                          ),
+                        },
+                      ]}>
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.create.fields.address_line4_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                  </div>
+
+                  <div
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-dashed"
+                    style={{ borderColor: "var(--border)" }}>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.county")}
+                        </span>
+                      }
+                      name="businessCounty">
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.edit.fields.county_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.post_code")}
+                        </span>
+                      }
+                      name="businessPostCode">
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.edit.fields.post_code_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.country")}
+                        </span>
+                      }
+                      name="businessCountry">
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.edit.fields.country_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.company_number")}
+                        </span>
+                      }
+                      name="businessCompanyNumber">
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.edit.fields.company_number_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.secondary_phone")}
+                        </span>
+                      }
+                      name="businessSecondaryPhone">
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.edit.fields.secondary_phone_placeholder",
+                        )}
+                        prefix={
+                          <PhoneOutlined className="text-gray-400 mr-1" />
+                        }
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.opening_hours")}
+                        </span>
+                      }
+                      name="businessOpeningHours">
+                      <Input
+                        size="large"
+                        placeholder={t("tenants.edit.fields.opening_hours")}
+                      />
+                    </Form.Item>
+                  </div>
+
+                  <div
+                    className="mt-6 pt-6 border-t border-dashed"
+                    style={{ borderColor: "var(--border)" }}>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.about_us")}
+                        </span>
+                      }
+                      name="aboutUs">
+                      <TextArea
+                        rows={4}
+                        placeholder={t(
+                          "tenants.edit.fields.about_us_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                  </div>
+                </Card>
+
+                {/* Branding & Theme */}
+                <Card
+                  style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "16px",
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                  }}
+                  title={
+                    <Title
+                      level={5}
+                      style={{ margin: 0, color: "var(--text)" }}>
+                      Branding &amp; Theme
+                    </Title>
+                  }>
+                  <div className="grid grid-cols-1 gap-4">
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          Logo URL
+                        </span>
+                      }
+                      name="logoUrl">
+                      <Input size="large" placeholder="https://..." />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          Favicon URL
+                        </span>
+                      }
+                      name="faviconUrl">
+                      <Input size="large" placeholder="https://..." />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          Background URL
+                        </span>
+                      }
+                      name="backgroundUrl">
+                      <Input size="large" placeholder="https://..." />
+                    </Form.Item>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--text)" }}>
+                            Primary Color
+                          </span>
+                        }
+                        name="primaryColor">
+                        <Input size="large" placeholder="#0EA5E9" />
+                      </Form.Item>
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--text)" }}>
+                            Light Base
+                          </span>
+                        }
+                        name="lightBaseColor">
+                        <Input size="large" placeholder="#FB7185" />
+                      </Form.Item>
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--text)" }}>
+                            Light Surface
+                          </span>
+                        }
+                        name="lightSurfaceColor">
+                        <Input size="large" placeholder="#FFFBEB" />
+                      </Form.Item>
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--text)" }}>
+                            Light Card
+                          </span>
+                        }
+                        name="lightCardColor">
+                        <Input size="large" placeholder="#FFFFFF" />
+                      </Form.Item>
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--text)" }}>
+                            Dark Base
+                          </span>
+                        }
+                        name="darkBaseColor">
+                        <Input size="large" placeholder="#0369A1" />
+                      </Form.Item>
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--text)" }}>
+                            Dark Surface
+                          </span>
+                        }
+                        name="darkSurfaceColor">
+                        <Input size="large" placeholder="#082F49" />
+                      </Form.Item>
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--text)" }}>
+                            Dark Card
+                          </span>
+                        }
+                        name="darkCardColor">
+                        <Input size="large" placeholder="#0C4A6E" />
+                      </Form.Item>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3 mt-4">
+                  {/* Status Toggle */}
+                  <div
+                    className="flex items-center justify-between px-4 py-3 rounded-xl"
+                    style={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                    }}>
+                    <div className="flex flex-col">
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: "var(--text)" }}>
+                        {t("tenants.edit.fields.status")}
+                      </span>
+                      <span
+                        className="text-xs"
+                        style={{ color: "var(--text-muted)" }}>
+                        {tenantStatus
+                          ? t("tenants.edit.fields.status_active")
+                          : t("tenants.edit.fields.status_inactive")}
+                      </span>
+                    </div>
+                    <Switch
+                      checked={tenantStatus}
+                      onChange={setTenantStatus}
+                      checkedChildren={t("tenants.filter.active")}
+                      unCheckedChildren={t("tenants.filter.inactive")}
+                    />
+                  </div>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    disabled={loading}
+                    size="large"
+                    block
+                    className="shadow-orange-900/20 shadow-lg border-none h-12 text-base font-medium">
+                    {t("tenants.edit.buttons.update")}
+                  </Button>
+                  <div className="flex gap-3">
+                    <Button
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={handleDeleteClick}
+                      size="large"
+                      block
+                      className="h-12 text-base font-medium">
+                      {t("tenants.edit.buttons.delete")}
+                    </Button>
+                    <Button
+                      onClick={handleCancel}
+                      size="large"
+                      block
+                      type="default"
+                      className="h-12 text-base font-medium">
+                      {t("tenants.create.buttons.cancel")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </Form>
           </Spin>
         </div>
@@ -1038,7 +1080,9 @@ const TenantEditPage: React.FC = () => {
         title={
           <div className="flex items-center gap-3">
             <ExclamationCircleOutlined className="text-red-500 text-2xl" />
-            <span className="text-lg font-semibold">{t("tenants.edit.delete_modal.title")}</span>
+            <span className="text-lg font-semibold">
+              {t("tenants.edit.delete_modal.title")}
+            </span>
           </div>
         }
         open={deleteModalVisible}
@@ -1071,7 +1115,9 @@ const TenantEditPage: React.FC = () => {
             <ul className="text-sm text-red-700 dark:text-red-300 list-disc list-inside mt-2 space-y-1">
               <li>{t("tenants.edit.delete_modal.warning_items.data")}</li>
               <li>{t("tenants.edit.delete_modal.warning_items.users")}</li>
-              <li>{t("tenants.edit.delete_modal.warning_items.transactions")}</li>
+              <li>
+                {t("tenants.edit.delete_modal.warning_items.transactions")}
+              </li>
               <li>{t("tenants.edit.delete_modal.warning_items.assets")}</li>
             </ul>
           </div>
@@ -1080,7 +1126,12 @@ const TenantEditPage: React.FC = () => {
             <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
               {t("tenants.edit.delete_modal.confirm_instruction")}
             </p>
-            <p className="text-base font-semibold px-3 py-2 rounded" style={{ backgroundColor: "var(--bg-base)", color: "var(--text)" }}>
+            <p
+              className="text-base font-semibold px-3 py-2 rounded"
+              style={{
+                backgroundColor: "var(--bg-base)",
+                color: "var(--text)",
+              }}>
               {formData.name}
             </p>
           </div>

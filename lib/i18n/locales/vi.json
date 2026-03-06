@@ -1898,6 +1898,7 @@
       "tenant_info": "Thông tin nhà hàng",
       "contact": "Liên hệ",
       "address": "Địa chỉ",
+      "hostname": "Tên miền",
       "domain": "Tên miền / IP",
       "domain_not_configured": "Chưa cấu hình",
       "domain_not_set": "Chưa thiết lập",
@@ -1999,7 +2000,7 @@
       "fields": {
         "name": "Tên",
         "name_placeholder": "Tên nhà hàng",
-        "host_name": "Tên miền phụ",
+        "host_name": "Tên miền",
         "host_name_placeholder": "nha-hang-cua-toi",
         "hostname_disabled_text": "Tên miền không thể thay đổi sau khi tạo",
         "access_url": "URL truy cập:",

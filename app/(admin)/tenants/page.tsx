@@ -32,14 +32,13 @@ import {
   Statistic,
   Table,
   Tabs,
-  Typography
+  Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import TenantPlanTag from "../../../components/(admin)/tenants/TenantPlanTag";
 import TenantRequestList from "../../../components/(admin)/tenants/TenantRequestList";
 import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
 import { tenantService } from "../../../lib/services/tenantService";
@@ -259,11 +258,6 @@ const TenantPage: React.FC = () => {
             <span className="text-xs" style={{ color: "var(--text-muted)" }}>
               {record.businessName}
             </span>
-            <span
-              className="text-xs font-mono"
-              style={{ color: "var(--text-muted)" }}>
-              {record.hostName.replace(/\.restx\.food$/, "")}.restx.food
-            </span>
           </div>
         </div>
       ),
@@ -302,31 +296,18 @@ const TenantPage: React.FC = () => {
       ),
     },
     {
-      title: t("tenants.table.domain"),
-      dataIndex: "networkIp",
-      key: "networkIp",
-      width: 180,
-      render: (networkIp: string) => (
+      title: t("tenants.table.hostname"),
+      dataIndex: "hostName",
+      key: "hostName",
+      width: 200,
+      render: (hostName: string) => (
         <span
-          className="text-[11px] font-mono truncate max-w-[160px] block"
-          style={{ color: networkIp ? "var(--text)" : "var(--text-muted)" }}
-          title={
-            networkIp || t("tenants.table.domain_not_configured")
-          }>
-          {networkIp || (
-            <span className="italic opacity-60">
-              {t("tenants.table.domain_not_set")}
-            </span>
-          )}
+          className="text-[11px] font-mono truncate max-w-[180px] block"
+          style={{ color: "var(--text-muted)" }}
+          title={hostName}>
+          {hostName}
         </span>
       ),
-    },
-    {
-      title: t("tenants.table.plan"),
-      dataIndex: "plan",
-      key: "plan",
-      width: 100,
-      render: (plan: ITenant["plan"]) => <TenantPlanTag plan={plan} />,
     },
     {
       title: t("tenants.table.status"),
