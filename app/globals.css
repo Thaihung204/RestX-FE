@@ -751,28 +751,11 @@ textarea::placeholder {
   contain-intrinsic-size: auto 100px;
 }
 
-/* Optimize expensive gradients with GPU acceleration */
-.gradient-bg,
-.primary-gradient,
-[style*="linear-gradient"] {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
 /* Prevent layout shifts during image load */
 img {
   max-width: 100%;
   height: auto;
   display: block;
-}
-
-/* Reduce repaint for fixed/sticky elements */
-.fixed,
-.sticky,
-[class*="fixed"],
-[class*="sticky"] {
-  will-change: transform;
-  transform: translateZ(0);
 }
 
 /* Font loading optimization - prevent FOIT */

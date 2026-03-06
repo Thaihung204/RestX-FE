@@ -670,21 +670,88 @@ export default function MenuPage() {
                               </div>
                             </div>
 
-                            {/* Quick Add Button */}
-                            <Button
-                              type="primary"
-                              shape="circle"
-                              icon={<PlusOutlined />}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddToCart(item);
-                              }}
-                              style={{
-                                background: "var(--primary)",
-                                border: "none",
-                                boxShadow: "0 4px 10px var(--primary-glow)",
-                              }}
-                            />
+                            {/* Quick Add / Quantity Controls */}
+                            {(() => {
+                              const cartItem = cartItems.find(
+                                (cart) => cart.id === item.id,
+                              );
+
+                              if (cartItem) {
+                                return (
+                                  <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 8,
+                                      background: "var(--surface)",
+                                      padding: "4px 6px",
+                                      borderRadius: 10,
+                                      border: "1px solid var(--border)",
+                                    }}>
+                                    <Button
+                                      icon={<MinusOutlined style={{ fontSize: 12 }} />}
+                                      onClick={() =>
+                                        updateQuantity(item.id, cartItem.quantity - 1)
+                                      }
+                                      size="small"
+                                      style={{
+                                        background: "transparent",
+                                        border: "none",
+                                        color: "var(--text)",
+                                        width: 24,
+                                        height: 24,
+                                        minWidth: 24,
+                                      }}
+                                    />
+                                    <Text
+                                      style={{
+                                        color: "var(--primary)",
+                                        fontSize: 14,
+                                        fontWeight: 700,
+                                        minWidth: 18,
+                                        textAlign: "center",
+                                      }}>
+                                      {cartItem.quantity}
+                                    </Text>
+                                    <Button
+                                      icon={<PlusOutlined style={{ fontSize: 12 }} />}
+                                      onClick={() =>
+                                        updateQuantity(item.id, cartItem.quantity + 1)
+                                      }
+                                      size="small"
+                                      style={{
+                                        background: "var(--primary)",
+                                        border: "none",
+                                        color: "var(--text)",
+                                        width: 24,
+                                        height: 24,
+                                        minWidth: 24,
+                                        borderRadius: 8,
+                                        boxShadow: "0 4px 10px var(--primary-glow)",
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <Button
+                                  type="primary"
+                                  shape="circle"
+                                  icon={<PlusOutlined />}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddToCart(item);
+                                  }}
+                                  style={{
+                                    background: "var(--primary)",
+                                    border: "none",
+                                    boxShadow: "0 4px 10px var(--primary-glow)",
+                                  }}
+                                />
+                              );
+                            })()}
                           </div>
                         </Card>
                       </Col>
