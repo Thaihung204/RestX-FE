@@ -31,7 +31,7 @@ export default function StaffAuthGuard({
                 if (userRoles.some(r => r === 'Admin' || r === 'System Admin')) {
                     router.replace("/admin");
                 } else {
-                    router.replace("/customer");
+                    router.replace("/");
                 }
             }
         }

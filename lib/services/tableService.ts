@@ -8,10 +8,10 @@ export enum TableStatus {
 
 export interface TableItem {
     id: string;
-    code: string;        // Table number/code
-    type: string;        // Area type (VIP, Indoor, Outdoor)
+    code: string;
+    type: string;
     seatingCapacity: number;
-    shape: string;       // Circle, Square, Rectangle, Oval
+    shape: string;
     positionX: number;
     positionY: number;
     width: number;
@@ -29,7 +29,6 @@ export interface TableItem {
     qrCodeUrl?: string;
 }
 
-// ─── Table CRUD Service ────────────────────────────────────────────────────────
 export const tableService = {
     /** GET /api/tables — AllowAnonymous */
     getAllTables: async (): Promise<TableItem[]> => {
@@ -71,16 +70,13 @@ export const tableService = {
     },
 };
 
-// ─── Floor API Types ───────────────────────────────────────────────────────────
-// Matches BE DTO: RestX.BLL.DataTranferObjects.Floor
-
 /** Summary DTO returned by GET /api/floors */
 export interface FloorSummary {
     id: string;
     name: string;
     width: number;
     height: number;
-    imageUrl?: string;   // BackgroundImageUrl
+    imageUrl?: string;
     tableCount?: number;
     isActive?: boolean;
 }
@@ -129,7 +125,6 @@ export interface SaveLayoutRequest {
     }>;
 }
 
-// ─── Floor Service ─────────────────────────────────────────────────────────────
 export const floorService = {
     /**
      * GET /api/floors — AllowAnonymous

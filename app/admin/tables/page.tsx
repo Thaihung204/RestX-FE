@@ -10,6 +10,7 @@ import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
 import { tableService, TableStatus, TableItem, floorService, FloorSummary } from "@/lib/services/tableService";
+import { usePageLoading } from "@/components/PageTransitionLoader";
 
 interface Table {
   id: string;
@@ -45,6 +46,7 @@ export default function TablesPage() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [tables, setTables] = useState<Table[]>([]);
+  const [qrModal, setQrModal] = useState<{ url: string; number: number } | null>(null);
 
   const statusConfig = {
     available: {
@@ -76,6 +78,7 @@ export default function TablesPage() {
   const [addAreaModalOpen, setAddAreaModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  usePageLoading(loading);
 
   // Fetch tables + floors from BE API
   const fetchTables = async () => {
@@ -785,6 +788,39 @@ export default function TablesPage() {
                     suppressHydrationWarning>
                     {t("dashboard.tables.card.view_details")}
                   </button>
+
+                  {/* QR Button — only show if qrCodeUrl exists */}
+                  {table.qrCodeUrl && (
+                    <button
+                      title="Xem QR Code"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setQrModal({ url: table.qrCodeUrl!, number: table.number });
+                      }}
+                      className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                      style={{
+                        background: "var(--surface)",
+                        color: "var(--text-muted)",
+                        border: "1px solid var(--border)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = "var(--primary)";
+                        e.currentTarget.style.borderColor = "var(--primary)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = "var(--text-muted)";
+                        e.currentTarget.style.borderColor = "var(--border)";
+                      }}
+                      suppressHydrationWarning>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <path d="M14 14h2v2h-2zM18 14h3M14 18v3M18 18h3v3h-3z" />
+                      </svg>
+                    </button>
+                  )}
                   <button
                     className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                     style={{
@@ -859,6 +895,141 @@ export default function TablesPage() {
         onClose={() => setZoneToDelete(null)}
         onConfirm={confirmDeleteZone}
       />
+
+      {/* ── QR Code Modal ── */}
+      {qrModal && (
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setQrModal(null)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1100,
+              background: 'rgba(0,0,0,0.65)',
+              backdropFilter: 'blur(6px)',
+            }}
+          />
+
+          {/* Card */}
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1101,
+            background: 'var(--card)',
+            borderRadius: 20,
+            border: '1px solid var(--border)',
+            boxShadow: '0 32px 64px -12px rgba(0,0,0,0.5)',
+            width: 280,
+            overflow: 'hidden',
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '18px 20px 14px',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <path d="M14 14h2v2h-2zM18 14h3M14 18v3M18 18h3v3h-3z" />
+                </svg>
+                <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+                  QR — Bàn {qrModal.number}
+                </span>
+              </div>
+              <button
+                onClick={() => setQrModal(null)}
+                style={{
+                  background: 'var(--surface)', border: '1px solid var(--border)',
+                  borderRadius: 8, padding: '4px 6px', cursor: 'pointer',
+                  display: 'flex', color: 'var(--text-muted)',
+                }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* QR Image */}
+            <div style={{
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: 16, padding: '20px',
+            }}>
+              <div style={{
+                padding: 12, background: '#fff',
+                borderRadius: 14,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              }}>
+                <img
+                  src={qrModal.url}
+                  alt={`QR Code bàn ${qrModal.number}`}
+                  width={160} height={160}
+                  style={{ display: 'block', borderRadius: 4 }}
+                />
+              </div>
+
+              <p style={{
+                margin: 0, fontSize: 11,
+                color: 'var(--text-muted)',
+                textAlign: 'center',
+                letterSpacing: '0.04em',
+              }}>
+                Khách hàng quét để đặt món
+              </p>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(qrModal.url);
+                  }}
+                  style={{
+                    flex: 1, padding: '9px 0', borderRadius: 10,
+                    border: '1.5px solid var(--border)',
+                    background: 'var(--surface)', color: 'var(--text)',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                  Copy link
+                </button>
+                <button
+                  onClick={() => {
+                    const a = document.createElement('a');
+                    a.href = qrModal.url;
+                    a.download = `table-${qrModal.number}-qr.png`;
+                    a.target = '_blank';
+                    a.click();
+                  }}
+                  style={{
+                    flex: 1, padding: '9px 0', borderRadius: 10,
+                    border: 'none',
+                    background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)',
+                    color: '#fff',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                    boxShadow: '0 2px 10px var(--primary-glow)',
+                  }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Tải QR
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div >
   );
 }

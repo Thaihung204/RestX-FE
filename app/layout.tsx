@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AntdProvider from "./theme/AntdProvider";
+import PageTransitionLoader from "@/components/PageTransitionLoader";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
@@ -45,7 +46,7 @@ export default function RootLayout({
                   } else {
                     root.classList.remove('dark');
                   }
-
+                  
                   // Keep AntD portal popups synced (they render under body)
                   var bodyEl = document.body;
                   if (bodyEl) {
@@ -114,7 +115,10 @@ export default function RootLayout({
             <AuthProvider>
               <CartProvider>
                 <ToastProvider>
-                  <AntdProvider>{children}</AntdProvider>
+                  <AntdProvider>
+                    <PageTransitionLoader />
+                    {children}
+                  </AntdProvider>
                 </ToastProvider>
               </CartProvider>
             </AuthProvider>

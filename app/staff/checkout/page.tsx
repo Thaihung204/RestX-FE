@@ -516,6 +516,7 @@ export default function CheckoutPage() {
                 {/* Bill Details */}
                 <Col xs={24} lg={14} style={{ display: 'flex', width: '100%' }}>
                   <Card
+                    className="payment-static-card"
                     size="small"
                     title={<span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>{t('staff.checkout.payment.bill_detail')}</span>}
                     style={{
@@ -767,6 +768,14 @@ export default function CheckoutPage() {
         }
         .ant-modal-close:hover .ant-modal-close-x {
           color: ${mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.85)'} !important;
+        }
+
+        /* Keep bill details card border static on hover */
+        .payment-static-card.ant-card-hoverable:hover,
+        .payment-static-card.ant-card-hoverable:hover .ant-card-head,
+        .payment-static-card.ant-card-hoverable:hover .ant-card-body {
+          border-color: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#E5E7EB'} !important;
+          box-shadow: ${mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)'} !important;
         }
       `}</style>
     </div>

@@ -119,7 +119,7 @@ export default function LoginEmailPage() {
       } else if (hasRole('Waiter') || hasRole('Kitchen Staff')) {
         router.push('/staff');
       } else {
-        router.push('/customer');
+        router.push('/');
       }
 
     } catch (error: any) {

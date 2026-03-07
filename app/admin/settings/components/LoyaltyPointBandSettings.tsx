@@ -3,15 +3,9 @@
 import loyaltyService, {
   LoyaltyPointBand,
   TIER_COLORS,
-  getTierFromColor,
 } from "@/lib/services/loyaltyService";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import {
-  Diamond,
-  EmojiEvents,
-  Star,
-  WorkspacePremium,
-} from "@mui/icons-material";
+import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
 import {
   Button,
   Form,
@@ -200,18 +194,9 @@ export default function LoyaltyPointBandSettings() {
       align: "center" as const,
       render: (_: any, record: LoyaltyPointBand) => {
         const color = record.logoColor || getVipTierColor(record.name);
-        const tier = getTierFromColor(color);
         return (
           <div className="flex items-center justify-center">
-            {tier === "platinum" || tier === "diamond" ? (
-              <Diamond sx={{ fontSize: 24, color }} />
-            ) : tier === "gold" ? (
-              <EmojiEvents sx={{ fontSize: 24, color }} />
-            ) : tier === "silver" ? (
-              <Star sx={{ fontSize: 24, color }} />
-            ) : (
-              <WorkspacePremium sx={{ fontSize: 24, color }} />
-            )}
+            <LoyaltyBandIcon color={color} size={24} />
           </div>
         );
       },
@@ -374,15 +359,7 @@ export default function LoyaltyPointBandSettings() {
                     className="flex flex-col items-center justify-center h-20 !p-1"
                     style={{ height: "auto", padding: "10px" }}>
                     <div className="flex flex-col items-center gap-1">
-                      {tier === "platinum" || tier === "diamond" ? (
-                        <Diamond sx={{ color }} />
-                      ) : tier === "gold" ? (
-                        <EmojiEvents sx={{ color }} />
-                      ) : tier === "silver" ? (
-                        <Star sx={{ color }} />
-                      ) : (
-                        <WorkspacePremium sx={{ color }} />
-                      )}
+                      <LoyaltyBandIcon color={color} size={22} />
                       <span className="text-xs capitalize">
                         {t(`dashboard.manage.loyalty.badges.${tier}`, { defaultValue: tier })}
                       </span>

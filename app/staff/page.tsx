@@ -165,42 +165,42 @@ export default function StaffDashboard() {
   const { t } = useTranslation();
   const { mode } = useThemeMode();
 
-  const statsData = [
-    {
-      title: t('staff.dashboard.stats.serving_tables'), // 'Bàn đang phục vụ'
-      value: tables.filter(table => table.tableStatusId === TableStatus.Occupied).length,
-      total: tables.length,
-      icon: <TableOutlined />,
-      color: '#FF380B',
-      bgColor: 'rgba(255, 56, 11, 0.1)',
-      suffix: t('staff.orders.order.table'),
-    },
-    {
-      title: t('staff.dashboard.stats.processing_orders'), // 'Order đang xử lý'
-      value: 8,
-      icon: <ShoppingCartOutlined />,
-      color: '#1890ff',
-      bgColor: 'rgba(24, 144, 255, 0.1)',
-      suffix: t('staff.dashboard.stats.orders_suffix'), // 'đơn'
-    },
-    {
-      title: t('staff.dashboard.stats.today_revenue'), // 'Doanh thu hôm nay'
-      value: 15750000,
-      icon: <DollarOutlined />,
-      color: '#52c41a',
-      bgColor: 'rgba(82, 196, 26, 0.1)',
-      prefix: '',
-      isMoney: true,
-    },
-    {
-      title: t('staff.dashboard.stats.today_hours'), // 'Giờ làm hôm nay'
-      value: 5.5,
-      icon: <ClockCircleOutlined />,
-      color: '#722ed1',
-      bgColor: 'rgba(114, 46, 209, 0.1)',
-      suffix: t('staff.dashboard.stats.hours_suffix'), // 'giờ'
-    },
-  ];
+  // const statsData = [
+  //   {
+  //     title: t('staff.dashboard.stats.serving_tables'), // 'Bàn đang phục vụ'
+  //     value: tables.filter(table => table.tableStatusId === TableStatus.Occupied).length,
+  //     total: tables.length,
+  //     icon: <TableOutlined />,
+  //     color: '#FF380B',
+  //     bgColor: 'rgba(255, 56, 11, 0.1)',
+  //     suffix: t('staff.orders.order.table'),
+  //   },
+  //   {
+  //     title: t('staff.dashboard.stats.processing_orders'), // 'Order đang xử lý'
+  //     value: 8,
+  //     icon: <ShoppingCartOutlined />,
+  //     color: '#1890ff',
+  //     bgColor: 'rgba(24, 144, 255, 0.1)',
+  //     suffix: t('staff.dashboard.stats.orders_suffix'), // 'đơn'
+  //   },
+  //   {
+  //     title: t('staff.dashboard.stats.today_revenue'), // 'Doanh thu hôm nay'
+  //     value: 15750000,
+  //     icon: <DollarOutlined />,
+  //     color: '#52c41a',
+  //     bgColor: 'rgba(82, 196, 26, 0.1)',
+  //     prefix: '',
+  //     isMoney: true,
+  //   },
+  //   {
+  //     title: t('staff.dashboard.stats.today_hours'), // 'Giờ làm hôm nay'
+  //     value: 5.5,
+  //     icon: <ClockCircleOutlined />,
+  //     color: '#722ed1',
+  //     bgColor: 'rgba(114, 46, 209, 0.1)',
+  //     suffix: t('staff.dashboard.stats.hours_suffix'), // 'giờ'
+  //   },
+  // ];
 
   const recentOrders = [
     {
@@ -309,7 +309,7 @@ export default function StaffDashboard() {
           pending: { color: 'orange', text: t('common.status.pending'), icon: <ExclamationCircleOutlined /> },
           preparing: { color: 'blue', text: t('common.status.preparing'), icon: <SyncOutlined spin /> },
           ready: { color: 'green', text: t('common.status.ready'), icon: <CheckCircleOutlined /> },
-          served: { color: 'default', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
+          served: { color: 'green', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
           // Mock data contains these exact status strings 
         };
         const config = statusConfig[status] || { color: 'default', text: status, icon: null };
@@ -520,8 +520,7 @@ export default function StaffDashboard() {
           </Card>
         </motion.div>
 
-        {/* Statistics Cards */}
-        <motion.div variants={itemVariants}>
+        {/* <motion.div variants={itemVariants}>
           <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ marginBottom: isMobile ? 16 : 24 }}>
             {statsData.map((stat, index) => (
               <Col xs={12} sm={12} lg={6} key={index} style={{ display: 'flex' }}>
@@ -618,7 +617,7 @@ export default function StaffDashboard() {
               </Col>
             ))}
           </Row>
-        </motion.div>
+        </motion.div> */}
 
         <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ display: 'flex', flexWrap: 'wrap' }}>
           {/* Recent Orders */}

@@ -203,11 +203,11 @@ export default function AntdProvider({
         }
 
         /* Override hardcoded colors with CSS variables */
-        .ant-btn-primary {
+        .ant-btn-primary:not(.ant-btn-dangerous) {
           background: var(--primary) !important;
           border-color: var(--primary) !important;
         }
-        .ant-btn-primary:hover {
+        .ant-btn-primary:not(.ant-btn-dangerous):hover {
           background: var(--primary-hover) !important;
           border-color: var(--primary-hover) !important;
         }
@@ -317,7 +317,7 @@ export default function AntdProvider({
           color: var(--primary) !important;
         }
         .ant-select-selector:hover {
-          border-color: var(--primary) !important;
+          border-color: var(--primary-border) !important;
         }
 
         /* Admin Tenants Table - Consistent styling */
@@ -458,10 +458,16 @@ export default function AntdProvider({
         }
         
         .ant-btn-default:hover {
-          border-color: var(--primary) !important;
+          border-color: var(--primary-border) !important;
           color: var(--primary) !important;
         }
-        
+
+        /* Soften hover border/shadow in light mode */
+        .ant-card-hoverable:hover {
+          border-color: var(--primary-border) !important;
+          box-shadow: var(--shadow-sm) !important;
+        }
+
         /* Modal styling */
         .ant-modal-content {
           background: var(--card) !important;
@@ -528,6 +534,11 @@ export default function AntdProvider({
         /* Tag styling */
         .ant-tag {
           border-color: transparent !important;
+        }
+        .ant-tag:not(.ant-tag-has-color) {
+          background: var(--surface) !important;
+          color: var(--text) !important;
+          border: 1px solid var(--border) !important;
         }
         
         /* Empty state */
