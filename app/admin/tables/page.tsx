@@ -1,15 +1,15 @@
 "use client";
 
 
-import { useState, useMemo, useEffect } from "react";
+import { floorService, FloorSummary, tableService, TableStatus } from "@/lib/services/tableService";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AddAreaModal } from "./components/AddAreaModal";
 import { AddTableModal } from "./components/AddTableModal";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
-import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
-import { tableService, TableStatus, TableItem, floorService, FloorSummary } from "@/lib/services/tableService";
+import { Floor, Layout, TableMap2D } from "./components/TableMap2D";
 
 interface Table {
   id: string;
@@ -75,12 +75,10 @@ export default function TablesPage() {
   /* Add Area Modal State */
   const [addAreaModalOpen, setAddAreaModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   // Fetch tables + floors from BE API
   const fetchTables = async () => {
     try {
-      setLoading(true);
       const [items, floors] = await Promise.all([
         tableService.getAllTables(),
         floorService.getAllFloors(),
@@ -120,7 +118,6 @@ export default function TablesPage() {
     } catch (error) {
       console.error("Failed to fetch tables:", error);
     } finally {
-      setLoading(false);
     }
   };
 
@@ -413,7 +410,9 @@ export default function TablesPage() {
       setAddModalOpen(false);
     } catch (err) {
       console.error("Failed to add table:", err);
-      alert(t("dashboard.tables.errors.add_failed"));
+      alert(
+        t("dashboard.tables.errors.add_failed"),
+      );
     }
   };
 
@@ -498,7 +497,9 @@ export default function TablesPage() {
         setSelectedTable(null);
       } catch (err) {
         console.error("Delete failed", err);
-        alert("Failed to delete table");
+        alert(
+          t("dashboard.tables.errors.delete_failed"),
+        );
       }
       setDeleteConfirmOpen(false);
     }
@@ -544,7 +545,9 @@ export default function TablesPage() {
     } catch (err) {
       console.error('Failed to create floor on BE:', err);
       // Fallback: show error
-      alert('Failed to create floor. Please try again.');
+      alert(
+        t("dashboard.tables.errors.create_floor_failed"),
+      );
     }
   };
 

@@ -123,6 +123,29 @@ export default function MenuPage() {
     }
   }, [user]);
 
+  const toBoolean = (value: unknown): boolean => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === "true") return true;
+      if (normalized === "false") return false;
+    }
+    if (typeof value === "number") return value === 1;
+    return false;
+  };
+
+  const buildDishTags = (dish: {
+    isSpicy?: boolean;
+    isVegetarian?: boolean;
+    isBestSeller?: boolean;
+  }) => {
+    const tags: string[] = [];
+    if (dish.isBestSeller) tags.push("best");
+    if (dish.isSpicy) tags.push("spicy");
+    if (dish.isVegetarian) tags.push("vegan");
+    return tags;
+  };
+
   const fetchMenuData = useCallback(async () => {
     try {
       setLoading(true);
@@ -159,25 +182,14 @@ export default function MenuPage() {
                 categoryName:
                   item.categoryName || categoryGroup.categoryName || "",
                 isPopular: item.isPopular || false,
-                isBestSeller:
-                  item.isBestSeller ||
-                  item.name === "Bún bò Huế" ||
-                  item.name === "Cà phê sữa đá",
-                isSpicy:
-                  item.isSpicy ||
-                  item.name?.toLowerCase().includes("bún bò") ||
-                  item.name?.toLowerCase().includes("cay") ||
-                  false,
-                isVegetarian:
-                  item.isVegetarian ||
-                  item.name?.toLowerCase().includes("chay") ||
-                  item.name?.toLowerCase().includes("rau") ||
-                  false,
-                tags: [
-                  item.isSpicy && "spicy",
-                  item.isVegetarian && "vegan",
-                  item.isBestSeller && "best",
-                ].filter(Boolean) as string[],
+                isBestSeller: toBoolean(item.isBestSeller),
+                isSpicy: toBoolean(item.isSpicy),
+                isVegetarian: toBoolean(item.isVegetarian),
+                tags: buildDishTags({
+                  isBestSeller: toBoolean(item.isBestSeller),
+                  isSpicy: toBoolean(item.isSpicy),
+                  isVegetarian: toBoolean(item.isVegetarian),
+                }),
                 note: item.isBestSeller
                   ? t("menu_page.best_seller")
                   : undefined,
@@ -246,6 +258,11 @@ export default function MenuPage() {
       }))
       .filter((group) => group.dishes.length > 0);
   }, [dishes, categories, searchText]);
+
+  const handleOpenFoodDetail = (item: MenuItem) => {
+    setSelectedFood(item);
+    setFoodDetailModalOpen(true);
+  };
 
   const handleAddToCart = (item: MenuItem) => {
     const cartItem: CartItem = {
@@ -542,8 +559,7 @@ export default function MenuPage() {
                           hoverable
                           variant="borderless"
                           onClick={() => {
-                            setSelectedFood(item);
-                            setFoodDetailModalOpen(true);
+                            handleOpenFoodDetail(item);
                           }}
                           style={{
                             background: "var(--card)",
@@ -912,170 +928,74 @@ export default function MenuPage() {
                         {selectedFood.name}
                       </Title>
 
-                      {/* Additional Info Tags */}
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 8,
-                          flexWrap: "wrap",
-                          marginBottom: 8,
-                        }}>
-                        {selectedFood.isSpicy && (
-                          <span
-                            style={{
-                              background: "var(--danger-soft)",
-                              color: "var(--danger)",
-                              padding: "6px 12px",
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              border: "1px solid var(--danger-border)",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 5,
-                            }}>
-                            <FireOutlined />
-                            {t("menu_page.tags.spicy", { defaultValue: "Spicy" })}
-                          </span>
-                        )}
-                        {selectedFood.isVegetarian && (
-                          <span
-                            style={{
-                              background: "var(--success-soft)",
-                              color: "var(--success)",
-                              padding: "6px 12px",
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              border: "1px solid var(--success-border)",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 5,
-                            }}>
-                            <HeartFilled />
-                            {t("menu_page.tags.vegan", { defaultValue: "Vegetarian" })}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Tags */}
-                      {selectedFood.tags && selectedFood.tags.length > 0 && (
+                      {/* Info Tags */}
+                      {(selectedFood.isBestSeller ||
+                        selectedFood.isSpicy ||
+                        selectedFood.isVegetarian) && (
                         <div
                           style={{
                             display: "flex",
-                            gap: 6,
+                            gap: 8,
                             flexWrap: "wrap",
+                            marginBottom: 8,
                           }}>
-                          {selectedFood.tags.map((tag, idx) => {
-                            let icon = <StarFilled />;
-                            let color = "var(--primary)";
-                            let bg = "var(--primary-soft)";
-                            let label = t("menu_page.tags." + tag, {
-                              defaultValue: tag,
-                            });
-
-                            if (tag === "spicy") {
-                              icon = <FireOutlined />;
-                              color = "var(--danger)";
-                              bg = "var(--danger-soft)";
-                            } else if (tag === "vegan") {
-                              icon = <HeartFilled />;
-                              color = "var(--success)";
-                              bg = "var(--success-soft)";
-                            } else if (tag === "best") {
-                              icon = <StarFilled />;
-                              color = "var(--warning)";
-                              bg = "var(--warning-soft)";
-                            }
-
-                            return (
-                              <span
-                                key={idx}
-                                style={{
-                                  background: bg,
-                                  color: color,
-                                  padding: "4px 10px",
-                                  borderRadius: 8,
-                                  fontSize: 11,
-                                  fontWeight: 600,
-                                  border: `1px solid ${color}`,
-                                  textTransform: "capitalize",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 5,
-                                }}>
-                                {icon}
-                                {label}
-                              </span>
-                            );
-                          })}
+                          {selectedFood.isBestSeller && (
+                            <span
+                              style={{
+                                background: "var(--warning-soft)",
+                                color: "var(--warning)",
+                                padding: "6px 12px",
+                                borderRadius: 8,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                border: "1px solid var(--warning-border)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                              }}>
+                              <StarFilled />
+                              {t("menu_page.best_seller")}
+                            </span>
+                          )}
+                          {selectedFood.isSpicy && (
+                            <span
+                              style={{
+                                background: "var(--danger-soft)",
+                                color: "var(--danger)",
+                                padding: "6px 12px",
+                                borderRadius: 8,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                border: "1px solid var(--danger-border)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                              }}>
+                              <FireOutlined />
+                              {t("menu_page.tags.spicy")}
+                            </span>
+                          )}
+                          {selectedFood.isVegetarian && (
+                            <span
+                              style={{
+                                background: "var(--success-soft)",
+                                color: "var(--success)",
+                                padding: "6px 12px",
+                                borderRadius: 8,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                border: "1px solid var(--success-border)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                              }}>
+                              <HeartFilled />
+                              {t("menu_page.tags.vegan")}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
-
-                    {/* Additional Fields */}
-                    {(selectedFood.isSpicy ||
-                      selectedFood.isVegetarian ||
-                      selectedFood.isBestSeller) && (
-                      <div
-                        style={{
-                          marginBottom: 16,
-                          display: "flex",
-                          gap: 12,
-                        }}>
-                        {selectedFood.isBestSeller && (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                              color: "#faad14",
-                              background: "rgba(250, 173, 20, 0.1)",
-                              padding: "4px 8px",
-                              borderRadius: 6,
-                            }}>
-                            <StarFilled />
-                            <Text style={{ color: "inherit", fontWeight: 600 }}>
-                              {t("menu_page.best_seller", "Best Seller")}
-                            </Text>
-                          </div>
-                        )}
-                        {selectedFood.isSpicy && (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                              color: "#ff4d4f",
-                              background: "rgba(255, 77, 79, 0.1)",
-                              padding: "4px 8px",
-                              borderRadius: 6,
-                            }}>
-                            <FireOutlined />
-                            <Text style={{ color: "inherit", fontWeight: 600 }}>
-                              {t("menu_page.tags.spicy", "Spicy")}
-                            </Text>
-                          </div>
-                        )}
-                        {selectedFood.isVegetarian && (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                              color: "#52c41a",
-                              background: "rgba(82, 196, 26, 0.1)",
-                              padding: "4px 8px",
-                              borderRadius: 6,
-                            }}>
-                            <HeartFilled />
-                            <Text style={{ color: "inherit", fontWeight: 600 }}>
-                              {t("menu_page.tags.vegan", "Vegetarian")}
-                            </Text>
-                          </div>
-                        )}
-                      </div>
-                    )}
 
                     {/* Description */}
                     <div
