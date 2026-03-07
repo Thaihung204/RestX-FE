@@ -6,6 +6,7 @@ import orderService, { OrderDto } from "@/lib/services/orderService";
 import { tableService, type TableItem } from "@/lib/services/tableService";
 import customerService from "@/lib/services/customerService";
 import menuService from "@/lib/services/menuService";
+import { usePageLoading } from "@/components/PageTransitionLoader";
 
 type OrderStatusUi =
   | "pending"
@@ -34,6 +35,7 @@ export default function OrdersPage() {
   const { t } = useTranslation("common");
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  usePageLoading(loading);
   const [tablesById, setTablesById] = useState<Record<string, TableItem>>({});
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -401,15 +403,15 @@ export default function OrdersPage() {
                     {t("dashboard.orders.table.table")}
                   </th>
                   <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.orders.table.items")}
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.orders.table.total")}
-                    </th>
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.orders.table.items")}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.orders.table.total")}
+                  </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{ color: "var(--text-muted)" }}>
@@ -483,19 +485,17 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                          statusConfig[order.status].badge
-                        }`}>
+                        className={`px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[order.status].badge
+                          }`}>
                         {statusConfig[order.status].text}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          order.paymentStatus === "paid"
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${order.paymentStatus === "paid"
                             ? "bg-green-500/10 text-green-500 border border-green-500/20"
                             : "bg-red-500/10 text-red-500 border border-red-500/20"
-                        }`}>
+                          }`}>
                         {order.paymentStatus === "paid"
                           ? t("dashboard.orders.payment_status.paid")
                           : t("dashboard.orders.payment_status.unpaid")}
@@ -515,12 +515,12 @@ export default function OrdersPage() {
                             color: "var(--primary)",
                           }}
                           onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "rgba(255,56,11,0.2)")
+                          (e.currentTarget.style.backgroundColor =
+                            "rgba(255,56,11,0.2)")
                           }
                           onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "rgba(255,56,11,0.1)")
+                          (e.currentTarget.style.backgroundColor =
+                            "rgba(255,56,11,0.1)")
                           }
                           suppressHydrationWarning
                           onClick={async () => {

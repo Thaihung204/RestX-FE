@@ -85,8 +85,9 @@ const ingredientService = {
     return normalizeCategory(res.data);
   },
 
-  createCategory: async (payload: Omit<IngredientCategory, 'id'>): Promise<string> => {
-    const res = await axiosInstance.post('/ingredients/categories', payload);
+  createCategory: async (payload: Omit<IngredientCategory, 'id'> & { id?: any }): Promise<string> => {
+    const { id: _id, ...body } = payload as any;
+    const res = await axiosInstance.post('/ingredients/categories', body);
     return res.data as string;
   },
 
