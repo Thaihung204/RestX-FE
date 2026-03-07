@@ -5,6 +5,7 @@ import { App, Button, Modal } from "antd";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { usePageLoading } from "@/components/PageTransitionLoader";
 
 interface Staff {
   id: string;
@@ -26,6 +27,7 @@ export default function StaffPage() {
   const { message } = App.useApp();
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
+  usePageLoading(loading);
   const [error, setError] = useState<string | null>(null);
 
   // Pagination state
@@ -516,15 +518,14 @@ export default function StaffPage() {
                           {member.name}
                         </h3>
                         <span
-                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${
-                            member.role === "Manager"
+                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${member.role === "Manager"
                               ? "bg-purple-500/10 text-purple-500"
                               : member.role === "Kitchen Chef"
                                 ? "bg-orange-500/10 text-orange-500"
                                 : member.role === "Waiter"
                                   ? "bg-blue-500/10 text-blue-500"
                                   : "bg-gray-500/10 text-gray-500"
-                          }`}>
+                            }`}>
                           {t(
                             `dashboard.staff.roles.${member.role.toLowerCase()}`,
                           )}
@@ -532,11 +533,10 @@ export default function StaffPage() {
                       </div>
                     </div>
                     <span
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                        member.status === "active"
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${member.status === "active"
                           ? "bg-green-500/10 text-green-500"
                           : "bg-gray-500/10 text-gray-500"
-                      }`}>
+                        }`}>
                       {member.status === "active"
                         ? t("dashboard.staff.status.active")
                         : t("dashboard.staff.status.inactive")}
@@ -769,15 +769,15 @@ export default function StaffPage() {
                       style={
                         currentPage === p
                           ? {
-                              background: "var(--primary)",
-                              color: "white",
-                              border: "1px solid var(--primary)",
-                            }
+                            background: "var(--primary)",
+                            color: "white",
+                            border: "1px solid var(--primary)",
+                          }
                           : {
-                              background: "var(--surface)",
-                              border: "1px solid var(--border)",
-                              color: "var(--text)",
-                            }
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }
                       }>
                       {p}
                     </button>

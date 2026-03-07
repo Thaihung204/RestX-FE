@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Table {
@@ -16,6 +16,7 @@ interface Table {
   width?: number;
   height?: number;
   rotation?: number;
+  qrCodeUrl?: string;
 }
 
 interface TableDetailsDrawerProps {
@@ -66,6 +67,194 @@ const SHAPE_OPTIONS = [
   { label: "Rectangle", value: "Rectangle" },
   { label: "Oval", value: "Oval" },
 ];
+
+// ─── QR Code Section ───────────────────────────────────────────────────────────
+function QRCodeSection({ qrCodeUrl, tableNumber }: { qrCodeUrl: string; tableNumber: number }) {
+  const [copied, setCopied] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(qrCodeUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = qrCodeUrl;
+    link.download = `table-${tableNumber}-qr.png`;
+    link.target = '_blank';
+    link.click();
+  };
+
+  return (
+    <motion.div
+      initial={{ scale: 0.96, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ delay: 0.15 }}
+      style={{
+        marginBottom: 28,
+        borderRadius: 12,
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Header */}
+      <div style={{
+        padding: '14px 18px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+      }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <path d="M14 14h2v2h-2zM18 14h3M14 18v3M18 18h3v3h-3z" />
+        </svg>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+          QR Code — Bàn {tableNumber}
+        </span>
+        <span style={{
+          marginLeft: 'auto',
+          fontSize: 11,
+          color: 'var(--text-muted)',
+          background: 'var(--card)',
+          border: '1px solid var(--border)',
+          borderRadius: 20,
+          padding: '2px 8px',
+        }}>
+          Scan to order
+        </span>
+      </div>
+
+      {/* QR Image */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 16,
+        padding: '20px 18px',
+      }}>
+        {imgError ? (
+          <div style={{
+            width: 160, height: 160,
+            borderRadius: 10,
+            background: 'var(--card)',
+            border: '2px dashed var(--border)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            color: 'var(--text-muted)',
+            fontSize: 12,
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.5">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+            </svg>
+            <span style={{ textAlign: 'center' }}>Không tải được QR</span>
+          </div>
+        ) : (
+          <div style={{
+            padding: 12,
+            background: '#fff',
+            borderRadius: 12,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+          }}>
+            <img
+              src={qrCodeUrl}
+              alt={`QR Code bàn ${tableNumber}`}
+              width={148}
+              height={148}
+              style={{ display: 'block', borderRadius: 4 }}
+              onError={() => setImgError(true)}
+            />
+          </div>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+          <button
+            type="button"
+            onClick={handleCopy}
+            style={{
+              flex: 1,
+              padding: '9px 14px',
+              borderRadius: 8,
+              border: '1.5px solid var(--border)',
+              background: copied ? 'rgba(82,196,26,0.1)' : 'var(--card)',
+              color: copied ? '#52c41a' : 'var(--text)',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              transition: 'all 0.2s',
+            }}
+          >
+            {copied ? (
+              <>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                Đã copy!
+              </>
+            ) : (
+              <>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+                Copy link
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDownload}
+            style={{
+              flex: 1,
+              padding: '9px 14px',
+              borderRadius: 8,
+              border: 'none',
+              background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              boxShadow: '0 2px 8px var(--primary-glow)',
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Tải QR
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
   open,
@@ -323,6 +512,11 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                       </p>
                     </div>
                   </motion.div>
+
+                  {/* QR Code Section */}
+                  {table.qrCodeUrl && (
+                    <QRCodeSection qrCodeUrl={table.qrCodeUrl} tableNumber={table.number} />
+                  )}
 
                   {/* Form Fields */}
                   <div

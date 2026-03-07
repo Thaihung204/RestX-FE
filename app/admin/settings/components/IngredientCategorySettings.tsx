@@ -38,9 +38,6 @@ export default function IngredientCategorySettings() {
     description: "",
     isActive: true,
   });
-  const [nameVi, setNameVi] = useState("");
-  const [nameEn, setNameEn] = useState("");
-
   const getCategoryLabel = (category: IngredientCategory) => {
     const code = normalizeCode(category.code || category.name);
     const fallback = category.name;
@@ -72,17 +69,13 @@ export default function IngredientCategorySettings() {
       setFormData({
         id: category.id,
         code,
-        name: category.name,
+        name: getCategoryLabel(category),
         description: category.description ?? "",
         isActive: category.isActive ?? true,
       });
-      setNameVi(getTypeTranslation(code, "vi", category.name));
-      setNameEn(getTypeTranslation(code, "en", category.name));
     } else {
       setEditingCategory(null);
       setFormData({ id: "", code: "", name: "", description: "", isActive: true });
-      setNameVi("");
-      setNameEn("");
     }
     setIsModalOpen(true);
   };
@@ -93,12 +86,12 @@ export default function IngredientCategorySettings() {
   };
 
   const handleSave = async () => {
-    if (!nameVi.trim() && !nameEn.trim()) return;
+    if (!formData.name?.trim()) return;
 
-    const code = normalizeCode(formData.code || generateCode(nameEn, nameVi, formData.name));
+    const code = normalizeCode(formData.code || generateCode(undefined, undefined, formData.name));
     if (!code) return;
 
-    const resolvedName = locale === "en" ? (nameEn.trim() || nameVi.trim()) : (nameVi.trim() || nameEn.trim());
+    const resolvedName = formData.name.trim();
 
     try {
       setIsSaving(true);
@@ -117,12 +110,18 @@ export default function IngredientCategorySettings() {
           id: editingCategory.id,
         });
       } else {
-        await ingredientService.createCategory(payload);
+        await ingredientService.createCategory({
+          code: payload.code,
+          name: payload.name,
+          description: payload.description,
+          isActive: payload.isActive,
+        });
       }
 
+      // Lưu dynamic translation, tạm dùng cùng một tên cho cả VI/EN.
       upsertTypeTranslations(code, {
-        vi: nameVi || resolvedName,
-        en: nameEn || resolvedName,
+        vi: resolvedName,
+        en: resolvedName,
       });
 
       await loadCategories();
@@ -260,29 +259,15 @@ export default function IngredientCategorySettings() {
               <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>
-                    {t("dashboard.manage.ingredient_categories.name")} (VI)
+                    {t("dashboard.manage.ingredient_categories.name")}
                   </label>
                   <input
                     type="text"
-                    value={nameVi}
-                    onChange={(e) => setNameVi(e.target.value)}
+                    value={formData.name ?? ""}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
                     style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }}
-                    placeholder="Ví dụ: Hải sản"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>
-                    {t("dashboard.manage.ingredient_categories.name")} (EN)
-                  </label>
-                  <input
-                    type="text"
-                    value={nameEn}
-                    onChange={(e) => setNameEn(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
-                    style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }}
-                    placeholder="Example: Seafood"
+                    placeholder={t("dashboard.manage.ingredient_categories.name_placeholder", { defaultValue: "Ví dụ: Hải sản" })}
                   />
                 </div>
 
@@ -321,7 +306,7 @@ export default function IngredientCategorySettings() {
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={(!nameVi.trim() && !nameEn.trim()) || isSaving}
+                  disabled={!formData.name?.trim() || isSaving}
                   className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[#FF380B]/20 hover:shadow-[#FF380B]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: "#FF380B" }}
                 >

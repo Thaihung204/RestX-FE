@@ -91,11 +91,10 @@ const mapApiResponseToTenant = (apiTenant: TenantApiResponse): ITenant => {
 
 // Helper function to convert frontend create input to API format
 const mapCreateInputToApi = (input: TenantCreateInput) => {
-  // Remove .restx.food suffix if accidentally included
-  const fullHostname =
-    input.hostName && input.hostName.endsWith(".restx.food")
-      ? input.hostName
-      : `${input.hostName}.restx.food`;
+  const slug = input.hostName || "";
+  const fullHostname = slug.endsWith(".restx.food")
+    ? slug
+    : `${slug}.restx.food`;
 
   return {
     name: input.name,
@@ -109,7 +108,13 @@ const mapCreateInputToApi = (input: TenantCreateInput) => {
     businessPrimaryPhone: input.phoneNumber,
     businessEmailAddress: input.mailRestaurant,
     status: true,
-    // ownerEmail, ownerPassword and plan will need to be added to backend
+    primaryColor: "#FF380B",
+    lightBaseColor: "#FFFFFF",
+    lightSurfaceColor: "#F9FAFB",
+    lightCardColor: "#FFFFFF",
+    darkBaseColor: "#0A0E14",
+    darkSurfaceColor: "#1A1F2E",
+    darkCardColor: "#151A24",
   };
 };
 
@@ -130,21 +135,40 @@ const toFormData = (
   // Fields that are non-nullable `string` in C# TenantItem → MUST always be present.
   // If missing from FormData, ASP.NET model binding fails → 500.
   const requiredFields: string[] = [
-    'id', 'name', 'hostname', 'status',
-    'primaryColor', 'lightBaseColor', 'lightSurfaceColor', 'lightCardColor',
-    'darkBaseColor', 'darkSurfaceColor', 'darkCardColor',
-    'businessName',
-    'businessAddressLine1', 'businessAddressLine2', 'businessAddressLine3', 'businessAddressLine4',
-    'businessPrimaryPhone', 'businessEmailAddress',
+    "name",
+    "hostname",
+    "status",
+    "primaryColor",
+    "lightBaseColor",
+    "lightSurfaceColor",
+    "lightCardColor",
+    "darkBaseColor",
+    "darkSurfaceColor",
+    "darkCardColor",
+    "businessName",
+    "businessAddressLine1",
+    "businessAddressLine2",
+    "businessAddressLine3",
+    "businessAddressLine4",
+    "businessPrimaryPhone",
+    "businessEmailAddress",
   ];
 
-  // Fields that are nullable `string?` in C# TenantItem → only send if present.
   const optionalFields: string[] = [
-    'prefix', 'logoUrl', 'faviconUrl', 'backgroundUrl',
-    'networkIp', 'connectionString',
-    'businessCounty', 'businessPostCode', 'businessCountry',
-    'businessSecondaryPhone', 'businessCompanyNumber', 'businessOpeningHours',
-    'aboutUs',
+    "id",
+    "prefix",
+    "logoUrl",
+    "faviconUrl",
+    "backgroundUrl",
+    "networkIp",
+    "connectionString",
+    "businessCounty",
+    "businessPostCode",
+    "businessCountry",
+    "businessSecondaryPhone",
+    "businessCompanyNumber",
+    "businessOpeningHours",
+    "aboutUs",
   ];
 
   const appendedKeys: string[] = [];
@@ -153,10 +177,10 @@ const toFormData = (
   requiredFields.forEach((key) => {
     const value = data[key];
     const pascalKey = toPascalCase(key);
-    if (typeof value === 'boolean') {
-      formData.append(pascalKey, value ? 'true' : 'false');
+    if (typeof value === "boolean") {
+      formData.append(pascalKey, value ? "true" : "false");
     } else {
-      formData.append(pascalKey, (value ?? '').toString());
+      formData.append(pascalKey, (value ?? "").toString());
     }
     appendedKeys.push(pascalKey);
   });
@@ -164,7 +188,7 @@ const toFormData = (
   // Only send optional fields when they have a value
   optionalFields.forEach((key) => {
     const value = data[key];
-    if (value !== null && value !== undefined && value !== '') {
+    if (value !== null && value !== undefined && value !== "") {
       const pascalKey = toPascalCase(key);
       formData.append(pascalKey, value.toString());
       appendedKeys.push(pascalKey);
@@ -173,16 +197,24 @@ const toFormData = (
 
   // Append file uploads (already PascalCase)
   if (files) {
-    if (files.logo) { formData.append('LogoFile', files.logo); appendedKeys.push('LogoFile'); }
-    if (files.background) { formData.append('BackgroundFile', files.background); appendedKeys.push('BackgroundFile'); }
-    if (files.favicon) { formData.append('FaviconFile', files.favicon); appendedKeys.push('FaviconFile'); }
+    if (files.logo) {
+      formData.append("LogoFile", files.logo);
+      appendedKeys.push("LogoFile");
+    }
+    if (files.background) {
+      formData.append("BackgroundFile", files.background);
+      appendedKeys.push("BackgroundFile");
+    }
+    if (files.favicon) {
+      formData.append("FaviconFile", files.favicon);
+      appendedKeys.push("FaviconFile");
+    }
   }
 
-  console.log('[toFormData] Sending fields:', appendedKeys);
+  console.log("[toFormData] Sending fields:", appendedKeys);
 
   return formData;
 };
-
 
 export const tenantService = {
   /**
@@ -416,16 +448,27 @@ export const tenantService = {
       console.log(`[tenantService] PUT /tenants/${tenantId}`);
 
       try {
-        const response = await adminAxiosInstance.put(`/tenants/${tenantId}`, formData, {
-          headers: { "Content-Type": undefined },
-        });
-        console.log('[tenantService] PUT success:', response.status, response.data);
+        const response = await adminAxiosInstance.put(
+          `/tenants/${tenantId}`,
+          formData,
+          {
+            headers: { "Content-Type": undefined },
+          },
+        );
+        console.log(
+          "[tenantService] PUT success:",
+          response.status,
+          response.data,
+        );
         return response;
       } catch (err: any) {
-        console.error('[tenantService] PUT failed:', err.response?.status, err.response?.data);
+        console.error(
+          "[tenantService] PUT failed:",
+          err.response?.status,
+          err.response?.data,
+        );
         throw err;
       }
-
     } else {
       // Create new
       console.log("[tenantService] POST /tenants (no ID found)");
@@ -434,14 +477,21 @@ export const tenantService = {
         const response = await adminAxiosInstance.post("/tenants", formData, {
           headers: { "Content-Type": undefined },
         });
-        console.log('[tenantService] POST success:', response.status, response.data);
+        console.log(
+          "[tenantService] POST success:",
+          response.status,
+          response.data,
+        );
         return response;
       } catch (err: any) {
-        console.error('[tenantService] POST failed:', err.response?.status, err.response?.data);
+        console.error(
+          "[tenantService] POST failed:",
+          err.response?.status,
+          err.response?.data,
+        );
         throw err;
       }
     }
-
   },
 
   /**
