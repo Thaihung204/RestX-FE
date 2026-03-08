@@ -1,27 +1,27 @@
 "use client";
 
 import orderDetailStatusService, {
-    OrderDetailStatus,
+  OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
 import {
-    DeleteOutlined,
-    EditOutlined,
-    PlusOutlined,
-    StarFilled,
-    StarOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  StarFilled,
+  StarOutlined,
 } from "@ant-design/icons";
 import {
-    Button,
-    ColorPicker,
-    Form,
-    Input,
-    message,
-    Modal,
-    Popconfirm,
-    Switch,
-    Table,
-    Tag,
-    Tooltip,
+  Button,
+  ColorPicker,
+  Form,
+  Input,
+  message,
+  Modal,
+  Popconfirm,
+  Switch,
+  Table,
+  Tag,
+  Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
