@@ -56,8 +56,22 @@ class OrderService {
     return response.data as unknown as string;
   }
 
+  async updateOrder(id: string, payload: OrderRequestDto): Promise<void> {
+    await axiosInstance.put(`/orders/${id}`, payload);
+  }
+
   async getAllOrders(): Promise<OrderDto[]> {
     const response = await axiosInstance.get<OrderDto[]>("/orders");
+    return response.data;
+  }
+
+  async getOrdersByFilter(params: {
+    tableId?: string;
+    paymentStatusId?: number;
+  }): Promise<OrderDto[]> {
+    const response = await axiosInstance.get<OrderDto[]>("/orders", {
+      params,
+    });
     return response.data;
   }
 

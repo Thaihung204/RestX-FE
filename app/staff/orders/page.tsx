@@ -5,16 +5,11 @@ import orderService, { OrderDto, OrderRequestDto } from "@/lib/services/orderSer
 import { tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import {
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ExclamationCircleOutlined,
   MinusOutlined,
   PlusOutlined,
-  PrinterOutlined,
   SearchOutlined,
   SendOutlined,
   ShoppingCartOutlined,
-  SyncOutlined,
 } from "@ant-design/icons";
 import {
   App,
@@ -40,7 +35,6 @@ import { useThemeMode } from "../../theme/AntdProvider";
 const { Text } = Typography;
 const { Search } = Input;
 
-type OrderStatus = "pending" | "preparing" | "ready" | "served" | "cancelled";
 type OrderItemStatus = "pending" | "preparing" | "ready" | "served";
 
 interface OrderItem {
@@ -59,27 +53,11 @@ interface Order {
   tableId: string;
   tableName: string;
   items: OrderItem[];
-  status: OrderStatus;
   createdAt: string;
   total: number;
   notes?: string;
   raw?: OrderDto;
 }
-
-const mapOrderStatus = (orderStatusId: number): OrderStatus => {
-  switch (orderStatusId) {
-    case 0:
-      return "pending";
-    case 1:
-      return "preparing";
-    case 2:
-      return "served";
-    case 3:
-      return "cancelled";
-    default:
-      return "pending";
-  }
-};
 
 const mapOrderItemStatus = (status?: string | null): OrderItemStatus => {
   const normalized = (status ?? "").toLowerCase();
@@ -164,7 +142,6 @@ export default function OrderManagement() {
             tableId: order.tableId,
             tableName,
             items,
-            status: mapOrderStatus(order.orderStatusId),
             createdAt: order.completedAt
               ? new Date(order.completedAt).toLocaleTimeString("vi-VN", {
                   hour: "2-digit",
@@ -202,39 +179,7 @@ export default function OrderManagement() {
     fetchMenu();
   }, []);
 
-  // Create status configs inside component to use translations
-  const statusConfig: Record<
-    OrderStatus,
-    { color: string; text: string; icon: React.ReactNode }
-  > = {
-    pending: {
-      color: "orange",
-      text: t("common.status.pending"),
-      icon: <ExclamationCircleOutlined />,
-    },
-    preparing: {
-      color: "blue",
-      text: t("common.status.preparing"),
-      icon: <SyncOutlined spin />,
-    },
-    ready: {
-      color: "green",
-      text: t("common.status.ready"),
-      icon: <CheckCircleOutlined />,
-    },
-    served: {
-      color: "default",
-      text: t("common.status.served"),
-      icon: <CheckCircleOutlined />,
-    },
-    cancelled: {
-      color: "red",
-      text: t("common.status.cancelled"),
-      icon: <ClockCircleOutlined />,
-    },
-  };
-
-  const itemStatusConfig: Record<
+    const itemStatusConfig: Record<
     OrderItemStatus,
     { color: string; text: string }
   > = {
@@ -245,11 +190,10 @@ export default function OrderManagement() {
   };
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("all");
+  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [cart, setCart] = useState<{ item: DishItem; quantity: number }[]>([]);
-  const [selectedTable, setSelectedTable] = useState<string>("");
+  const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] = useState<string>("");
   const [activeMenuCategory, setActiveMenuCategory] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -276,15 +220,9 @@ export default function OrderManagement() {
     const matchesSearch =
       order.tableName.toLowerCase().includes(searchText.toLowerCase()) ||
       order.reference.toLowerCase().includes(searchText.toLowerCase());
-    const matchesTab = activeTab === "all" || order.status === activeTab;
-    return matchesSearch && matchesTab;
+    return matchesSearch;
   });
 
-  const stats = {
-    pending: orders.filter((o) => o.status === "pending").length,
-    preparing: orders.filter((o) => o.status === "preparing").length,
-    ready: orders.filter((o) => o.status === "ready").length,
-  };
 
   const handleOrderClick = (order: Order) => {
     setSelectedOrder(order);
@@ -302,20 +240,7 @@ export default function OrderManagement() {
           const updatedItems = order.items.map((item) =>
             item.id === itemId ? { ...item, status: newStatus } : item,
           );
-          // Update order status based on items
-          let orderStatus: OrderStatus = order.status;
-          if (updatedItems.every((i) => i.status === "served")) {
-            orderStatus = "served";
-          } else if (
-            updatedItems.every(
-              (i) => i.status === "ready" || i.status === "served",
-            )
-          ) {
-            orderStatus = "ready";
-          } else if (updatedItems.some((i) => i.status === "preparing")) {
-            orderStatus = "preparing";
-          }
-          return { ...order, items: updatedItems, status: orderStatus };
+          return { ...order, items: updatedItems };
         }
         return order;
       }),
@@ -349,39 +274,58 @@ export default function OrderManagement() {
 
   const cartTotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
 
-  const handleCreateOrder = async () => {
-    if (!selectedTable || cart.length === 0) {
+  const handleAddItemsToOrder = async () => {
+    if (!selectedOrderIdForAdd || cart.length === 0) {
       message.error(t("staff.orders.messages.select_table_and_items"));
+      return;
+    }
+
+    const selectedOrder = orders.find((o) => o.id === selectedOrderIdForAdd);
+    if (!selectedOrder?.raw) {
+      message.error(t("staff.orders.messages.order_create_failed"));
       return;
     }
 
     try {
       const payload: OrderRequestDto = {
-        tableId: selectedTable,
-        customerId: "00000000-0000-0000-0000-000000000000",
-        orderStatusId: 0,
-        paymentStatusId: 0,
-        orderDetails: cart.map((c) => ({
-          dishId: c.item.id,
-          quantity: c.quantity,
-        })),
+        tableId: selectedOrder.raw.tableId,
+        customerId:
+          selectedOrder.raw.customerId ||
+          "00000000-0000-0000-0000-000000000000",
+        orderStatusId: selectedOrder.raw.orderStatusId,
+        paymentStatusId: selectedOrder.raw.paymentStatusId,
+        reservationId: selectedOrder.raw.reservationId ?? null,
+        discountAmount: selectedOrder.raw.discountAmount ?? 0,
+        taxAmount: selectedOrder.raw.taxAmount ?? 0,
+        serviceCharge: selectedOrder.raw.serviceCharge ?? 0,
+        tableIds: selectedOrder.raw.tableIds,
+        orderDetails: [
+          ...(selectedOrder.raw.orderDetails ?? []).map((d) => ({
+            dishId: d.dishId,
+            quantity: d.quantity,
+            note: d.note ?? undefined,
+          })),
+          ...cart.map((c) => ({
+            dishId: c.item.id,
+            quantity: c.quantity,
+          })),
+        ],
       };
 
-      await orderService.createOrder(payload);
+      await orderService.updateOrder(selectedOrderIdForAdd, payload);
 
       message.success(t("staff.orders.messages.order_created"));
-      setIsNewOrderModalOpen(false);
+      setIsAddItemModalOpen(false);
       setCart([]);
-      setSelectedTable("");
+      setSelectedOrderIdForAdd("");
       setOrdersRefreshKey((prev) => prev + 1);
     } catch (error) {
-      console.error("Create order failed:", error);
+      console.error("Update order failed:", error);
       message.error(t("staff.orders.messages.order_create_failed"));
     }
   };
 
   const renderOrderCard = (order: Order) => {
-    const config = statusConfig[order.status];
     const pendingItems = order.items.filter(
       (i) => i.status === "pending" || i.status === "preparing",
     ).length;
@@ -437,20 +381,6 @@ export default function OrderManagement() {
                       style={{ fontSize: isMobile ? 15 : 17, fontWeight: 500 }}>
                       {t("staff.orders.order.table")} {order.tableName}
                     </Text>
-                    {isMobile && (
-                      <Tag
-                        icon={config.icon}
-                        color={config.color}
-                        style={{
-                          borderRadius: 8,
-                          padding: "4px 12px",
-                          fontSize: 12,
-                          fontWeight: 500,
-                          margin: 0,
-                        }}>
-                        {config.text}
-                      </Tag>
-                    )}
                   </div>
                   <Text
                     style={{
@@ -527,19 +457,6 @@ export default function OrderManagement() {
               </div>
             </div>
 
-            {!isMobile && (
-              <Tag
-                icon={config.icon}
-                color={config.color}
-                style={{
-                  borderRadius: 8,
-                  padding: "6px 14px",
-                  fontSize: 13,
-                  fontWeight: 500,
-                }}>
-                {config.text}
-              </Tag>
-            )}
           </div>
         </Card>
       </div>
@@ -548,239 +465,6 @@ export default function OrderManagement() {
 
   return (
     <div>
-      {/* Header Stats */}
-      <Row
-        gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]}
-        style={{ marginBottom: isMobile ? 16 : 24 }}>
-        <Col xs={24} sm={8} md={8}>
-          <Card
-            style={{
-              borderRadius: 12,
-              background:
-                mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFFFF",
-              border:
-                mode === "dark"
-                  ? "1px solid rgba(255, 56, 11, 0.2)"
-                  : "1px solid #E5E5E5",
-              overflow: "hidden",
-              height: "100%",
-              boxShadow:
-                mode === "dark"
-                  ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-                  : "0 2px 8px rgba(0, 0, 0, 0.08)",
-            }}
-            styles={{ body: { padding: isMobile ? 12 : 28 } }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: isMobile ? "center" : "flex-start",
-                gap: isMobile ? 12 : 20,
-                flexDirection: isMobile ? "column" : "row",
-                height: "100%",
-              }}>
-              <div
-                style={{
-                  width: isMobile ? 40 : 56,
-                  height: isMobile ? 40 : 56,
-                  borderRadius: 10,
-                  background:
-                    mode === "dark"
-                      ? "rgba(255, 56, 11, 0.1)"
-                      : "rgba(255, 56, 11, 0.08)",
-                  border:
-                    mode === "dark"
-                      ? "1px solid rgba(255, 56, 11, 0.2)"
-                      : "1px solid rgba(255, 56, 11, 0.15)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}>
-                <ExclamationCircleOutlined
-                  style={{ fontSize: isMobile ? 20 : 24, color: "#FF380B" }}
-                />
-              </div>
-              <div style={{ textAlign: isMobile ? "center" : "left", flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: isMobile ? 28 : 36,
-                    fontWeight: 500,
-                    display: "block",
-                    color: mode === "dark" ? "#FFFFFF" : "#1A1A1A",
-                    lineHeight: 1.2,
-                    marginBottom: 8,
-                  }}>
-                  {stats.pending}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: isMobile ? 13 : 15,
-                    color:
-                      mode === "dark"
-                        ? "rgba(255, 255, 255, 0.6)"
-                        : "rgba(0, 0, 0, 0.6)",
-                    fontWeight: 400,
-                    display: "block",
-                  }}>
-                  {t("staff.orders.stats.pending")}
-                </Text>
-              </div>
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={8} md={8}>
-          <Card
-            style={{
-              borderRadius: 12,
-              background:
-                mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFFFF",
-              border:
-                mode === "dark"
-                  ? "1px solid rgba(255, 255, 255, 0.1)"
-                  : "1px solid #E5E5E5",
-              overflow: "hidden",
-              height: "100%",
-              boxShadow:
-                mode === "dark"
-                  ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-                  : "0 2px 8px rgba(0, 0, 0, 0.08)",
-            }}
-            styles={{ body: { padding: isMobile ? 12 : 28 } }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: isMobile ? "center" : "flex-start",
-                gap: isMobile ? 12 : 20,
-                flexDirection: isMobile ? "column" : "row",
-                height: "100%",
-              }}>
-              <div
-                style={{
-                  width: isMobile ? 40 : 56,
-                  height: isMobile ? 40 : 56,
-                  borderRadius: 10,
-                  background:
-                    mode === "dark"
-                      ? "rgba(255, 56, 11, 0.1)"
-                      : "rgba(255, 56, 11, 0.08)",
-                  border:
-                    mode === "dark"
-                      ? "1px solid rgba(255, 56, 11, 0.2)"
-                      : "1px solid rgba(255, 56, 11, 0.15)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}>
-                <SyncOutlined
-                  style={{ fontSize: isMobile ? 20 : 24, color: "#FF380B" }}
-                />
-              </div>
-              <div style={{ textAlign: isMobile ? "center" : "left", flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: isMobile ? 28 : 36,
-                    fontWeight: 500,
-                    display: "block",
-                    color: mode === "dark" ? "#FFFFFF" : "#1A1A1A",
-                    lineHeight: 1.2,
-                    marginBottom: 8,
-                  }}>
-                  {stats.preparing}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: isMobile ? 13 : 15,
-                    color:
-                      mode === "dark"
-                        ? "rgba(255, 255, 255, 0.6)"
-                        : "rgba(0, 0, 0, 0.6)",
-                    fontWeight: 400,
-                    display: "block",
-                  }}>
-                  {t("staff.orders.stats.preparing")}
-                </Text>
-              </div>
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={8} md={8}>
-          <Card
-            style={{
-              borderRadius: 12,
-              background:
-                mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFFFF",
-              border:
-                mode === "dark"
-                  ? "1px solid rgba(255, 255, 255, 0.1)"
-                  : "1px solid #E5E5E5",
-              overflow: "hidden",
-              height: "100%",
-              boxShadow:
-                mode === "dark"
-                  ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-                  : "0 2px 8px rgba(0, 0, 0, 0.08)",
-            }}
-            styles={{ body: { padding: isMobile ? 12 : 28 } }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: isMobile ? "center" : "flex-start",
-                gap: isMobile ? 12 : 20,
-                flexDirection: isMobile ? "column" : "row",
-                height: "100%",
-              }}>
-              <div
-                style={{
-                  width: isMobile ? 40 : 56,
-                  height: isMobile ? 40 : 56,
-                  borderRadius: 10,
-                  background:
-                    mode === "dark"
-                      ? "rgba(255, 56, 11, 0.1)"
-                      : "rgba(255, 56, 11, 0.08)",
-                  border:
-                    mode === "dark"
-                      ? "1px solid rgba(255, 56, 11, 0.2)"
-                      : "1px solid rgba(255, 56, 11, 0.15)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}>
-                <CheckCircleOutlined
-                  style={{ fontSize: isMobile ? 20 : 24, color: "#FF380B" }}
-                />
-              </div>
-              <div style={{ textAlign: isMobile ? "center" : "left", flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: isMobile ? 28 : 36,
-                    fontWeight: 500,
-                    display: "block",
-                    color: mode === "dark" ? "#FFFFFF" : "#1A1A1A",
-                    lineHeight: 1.2,
-                    marginBottom: 8,
-                  }}>
-                  {stats.ready}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: isMobile ? 13 : 15,
-                    color:
-                      mode === "dark"
-                        ? "rgba(255, 255, 255, 0.6)"
-                        : "rgba(0, 0, 0, 0.6)",
-                    fontWeight: 400,
-                    display: "block",
-                  }}>
-                  {t("staff.orders.stats.ready")}
-                </Text>
-              </div>
-            </div>
-          </Card>
-        </Col>
-      </Row>
 
       {/* Search & Filter */}
       <Card
@@ -818,7 +502,7 @@ export default function OrderManagement() {
               type="primary"
               size={isMobile ? "middle" : "large"}
               icon={<PlusOutlined />}
-              onClick={() => setIsNewOrderModalOpen(true)}
+              onClick={() => setIsAddItemModalOpen(true)}
               block={isMobile || isTablet}
               style={{
                 borderRadius: 12,
@@ -828,13 +512,13 @@ export default function OrderManagement() {
                 border: "none",
                 width: "100%",
               }}>
-              {isMobile || isTablet ? t("staff.orders.create_order_short") : t("common.actions.create_order")}
+              {t("staff.orders.modal.add_item")}
             </Button>
           </Col>
         </Row>
       </Card>
 
-      {/* Order List with Tabs */}
+      {/* Order List */}
       <Card
         style={{
           borderRadius: 12,
@@ -849,51 +533,6 @@ export default function OrderManagement() {
               : "0 2px 8px rgba(0, 0, 0, 0.08)",
         }}
         styles={{ body: { padding: isMobile ? 16 : 24 } }}>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          size={isMobile ? "small" : "middle"}
-          items={
-            isMobile
-              ? [
-                  {
-                    key: "all",
-                    label: `${t("staff.orders.tabs.all")} (${orders.length})`,
-                  },
-                  {
-                    key: "pending",
-                    label: `${t("staff.orders.tabs.pending")} (${stats.pending})`,
-                  },
-                  {
-                    key: "preparing",
-                    label: `${t("staff.orders.tabs.preparing")} (${stats.preparing})`,
-                  },
-                  {
-                    key: "ready",
-                    label: `${t("staff.orders.tabs.ready")} (${stats.ready})`,
-                  },
-                ]
-              : [
-                  {
-                    key: "all",
-                    label: `${t("staff.orders.tabs.all")} (${orders.length})`,
-                  },
-                  {
-                    key: "pending",
-                    label: `${t("staff.orders.tabs.pending")} (${stats.pending})`,
-                  },
-                  {
-                    key: "preparing",
-                    label: `${t("staff.orders.tabs.preparing")} (${stats.preparing})`,
-                  },
-                  {
-                    key: "ready",
-                    label: `${t("staff.orders.tabs.ready")} (${stats.ready})`,
-                  },
-                ]
-          }
-        />
-
         {filteredOrders.length > 0 ? (
           filteredOrders.map((order) => (
             <div key={order.id}>{renderOrderCard(order)}</div>
@@ -1017,29 +656,6 @@ export default function OrderManagement() {
                     {selectedOrder.createdAt}
                   </Text>
                 </Col>
-                <Col xs={8}>
-                  <Text
-                    type="secondary"
-                    style={{
-                      fontSize: isMobile ? 11 : 12,
-                      display: "block",
-                      marginBottom: 8,
-                      fontWeight: 500,
-                    }}>
-                    {t("staff.orders.order.status")}
-                  </Text>
-                  <Tag
-                    icon={statusConfig[selectedOrder.status].icon}
-                    color={statusConfig[selectedOrder.status].color}
-                    style={{
-                      marginTop: 0,
-                      fontSize: isMobile ? 11 : 12,
-                      borderRadius: 12,
-                      padding: "4px 12px",
-                    }}>
-                    {statusConfig[selectedOrder.status].text}
-                  </Tag>
-                </Col>
               </Row>
             </Card>
 
@@ -1113,20 +729,17 @@ export default function OrderManagement() {
 
             {/* Actions */}
             <Row gutter={[8, 8]} style={{ marginTop: isMobile ? 16 : 24 }}>
-              {/* <Col xs={12} sm={6}>
-                <Button
-                  icon={<PrinterOutlined />}
-                  size={isMobile ? "middle" : "large"}
-                  block
-                  style={{ borderRadius: 12 }}>
-                  {isMobile ? t("staff.orders.modal.print_short") : t("staff.orders.modal.print")}
-                </Button>
-              </Col> */}
+
               <Col xs={12} sm={6}>
                 <Button
                   icon={<PlusOutlined />}
                   size={isMobile ? "middle" : "large"}
                   block
+                  onClick={() => {
+                    setSelectedOrderIdForAdd(selectedOrder.id);
+                    setIsDetailModalOpen(false);
+                    setIsAddItemModalOpen(true);
+                  }}
                   style={{ borderRadius: 12 }}>
                   {t("staff.orders.modal.add_item")}
                 </Button>
@@ -1150,19 +763,19 @@ export default function OrderManagement() {
         )}
       </Modal>
 
-      {/* New Order Modal */}
+      {/* Add Item To Existing Order Modal */}
       <Modal
         title={
           <Space>
             <PlusOutlined/>
-            <span>{t("common.actions.create_order")}</span>
+            <span>{t("staff.orders.modal.add_item")}</span>
           </Space>
         }
-        open={isNewOrderModalOpen}
+        open={isAddItemModalOpen}
         onCancel={() => {
-          setIsNewOrderModalOpen(false);
+          setIsAddItemModalOpen(false);
           setCart([]);
-          setSelectedTable("");
+          setSelectedOrderIdForAdd("");
         }}
         footer={null}
         width={isMobile ? "95%" : 900}
@@ -1209,14 +822,14 @@ export default function OrderManagement() {
           <Col xs={24} md={14}>
             <div style={{ marginBottom: 16 }}>
               <Select
-                placeholder={t("staff.orders.modal.select_table")}
+                placeholder={t("staff.orders.modal.order_detail")}
                 size={isMobile ? "middle" : "large"}
                 style={{ width: "100%" }}
-                value={selectedTable || undefined}
-                onChange={setSelectedTable}
-                options={tables.map((table) => ({
-                  value: table.id,
-                  label: `${t("staff.orders.order.table")} ${table.name}`,
+                value={selectedOrderIdForAdd || undefined}
+                onChange={setSelectedOrderIdForAdd}
+                options={orders.map((order) => ({
+                  value: order.id,
+                  label: `${order.reference} - ${t("staff.orders.order.table")} ${order.tableName}`,
                 }))}
               />
             </div>
@@ -1401,7 +1014,7 @@ export default function OrderManagement() {
                     type="primary"
                     size={isMobile ? "middle" : "large"}
                     block
-                    onClick={handleCreateOrder}
+                    onClick={handleAddItemsToOrder}
                     style={{
                       borderRadius: 12,
                       height: isMobile ? 44 : 48,
@@ -1410,7 +1023,7 @@ export default function OrderManagement() {
                         "linear-gradient(135deg, #FF380B 0%, #FF380B 100%)",
                       border: "none",
                     }}>
-                    {t("staff.orders.create_order_short")}
+                    {t("staff.orders.modal.add_item")}
                   </Button>
                 </>
               ) : (

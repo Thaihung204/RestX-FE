@@ -1,12 +1,14 @@
 "use client";
 
-import type { CartItem } from "@/lib/types/menu";
+import menuService from "@/lib/services/menuService";
 import orderService, { OrderRequestDto } from "@/lib/services/orderService";
+import type { CartItem } from "@/lib/types/menu";
 import { message } from "antd";
 import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -37,6 +39,7 @@ interface CartContextType {
   // Order actions
   confirmOrder: () => void;
   requestPayment: () => void;
+  fetchOrderedItems: () => Promise<void>;
 
   // Modal actions
   openCartModal: () => void;
@@ -129,6 +132,79 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCartItems([]);
   }, []);
 
+  const fetchOrderedItems = useCallback(async () => {
+    if (!orderTableId) return;
+
+    try {
+      const [orders, menuData] = await Promise.all([
+        orderService.getOrdersByFilter({
+          tableId: orderTableId,
+          paymentStatusId: 0,
+        }),
+        menuService.getMenu(),
+      ]);
+
+      const dishLookup = new Map<
+        string,
+        {
+          name: string;
+          price: string;
+          categoryId: string;
+          categoryName: string;
+          image?: string;
+        }
+      >();
+
+      menuData.forEach((category) => {
+        category.items?.forEach((dish) => {
+          dishLookup.set(dish.id, {
+            name: dish.name,
+            price: dish.price?.toString() || "0",
+            categoryId: dish.categoryId || category.categoryId || "",
+            categoryName: dish.categoryName || category.categoryName || "",
+            image: dish.imageUrl ?? undefined,
+          });
+        });
+      });
+
+      const aggregatedByDishAndStatus = new Map<string, CartItem>();
+
+      orders.forEach((order) => {
+        order.orderDetails?.forEach((detail) => {
+          const dish = dishLookup.get(detail.dishId);
+          const quantity = detail.quantity || 0;
+          const status = detail.status || "Pending";
+          const aggregationKey = `${detail.dishId}__${status.toLowerCase()}`;
+          const existing = aggregatedByDishAndStatus.get(aggregationKey);
+
+          if (existing) {
+            aggregatedByDishAndStatus.set(aggregationKey, {
+              ...existing,
+              quantity: existing.quantity + quantity,
+            });
+            return;
+          }
+
+          aggregatedByDishAndStatus.set(aggregationKey, {
+            id: detail.dishId,
+            name: dish?.name || `Dish ${detail.dishId.slice(0, 8)}`,
+            price: dish?.price || "0",
+            quantity,
+            category: "food",
+            categoryId: dish?.categoryId || "",
+            categoryName: dish?.categoryName,
+            image: dish?.image,
+            status,
+          });
+        });
+      });
+
+      setOrderedItems(Array.from(aggregatedByDishAndStatus.values()));
+    } catch (error) {
+      console.error("Fetch ordered items failed:", error);
+    }
+  }, [orderTableId]);
+
   // Order actions
   const confirmOrder = useCallback(async () => {
     if (cartItems.length === 0) {
@@ -156,30 +232,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       await orderService.createOrder(payload);
 
-      setOrderedItems((prevOrdered) => {
-        const newOrdered = [...prevOrdered];
-
-        cartItems.forEach((cartItem) => {
-          const existingIndex = newOrdered.findIndex(
-            (item) => item.id === cartItem.id,
-          );
-
-          if (existingIndex > -1) {
-            newOrdered[existingIndex] = {
-              ...newOrdered[existingIndex],
-              quantity:
-                newOrdered[existingIndex].quantity + cartItem.quantity,
-            };
-          } else {
-            newOrdered.push({ ...cartItem });
-          }
-        });
-
-        return newOrdered;
-      });
-
       setCartItems([]);
       setActiveCartTab("2");
+      await fetchOrderedItems();
       messageApi.success(
         "Đặt món thành công! Yêu cầu đã được gửi đến nhân viên.",
       );
@@ -187,7 +242,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.error("Create order failed:", error);
       messageApi.error("Đặt món thất bại. Vui lòng thử lại.");
     }
-  }, [cartItems, messageApi, orderTableId, orderCustomerId]);
+  }, [
+    cartItems,
+    fetchOrderedItems,
+    messageApi,
+    orderTableId,
+    orderCustomerId,
+  ]);
 
   const requestPayment = useCallback(() => {
     if (orderedItems.length === 0) {
@@ -197,6 +258,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     messageApi.success("Yêu cầu thanh toán đã được gửi đến nhân viên!");
     setCartModalOpen(false);
   }, [orderedItems, messageApi]);
+
+  useEffect(() => {
+    if (!orderTableId) return;
+    fetchOrderedItems();
+  }, [orderTableId, fetchOrderedItems]);
+
+  useEffect(() => {
+    if (!cartModalOpen || activeCartTab !== "2") return;
+    fetchOrderedItems();
+  }, [cartModalOpen, activeCartTab, fetchOrderedItems]);
 
   // Modal actions
   const openCartModal = useCallback(() => {
@@ -225,6 +296,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       clearCart,
       confirmOrder,
       requestPayment,
+      fetchOrderedItems,
       openCartModal,
       closeCartModal,
       setActiveCartTab,
@@ -245,6 +317,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       clearCart,
       confirmOrder,
       requestPayment,
+      fetchOrderedItems,
       openCartModal,
       closeCartModal,
       setOrderContext,

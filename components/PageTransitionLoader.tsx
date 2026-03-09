@@ -105,8 +105,8 @@ function getGlowColor(pct: number) {
 function getHeatLabel(pct: number) {
     if (pct < 20) return 'Đang làm nóng...';
     if (pct < 50) return 'Đang đun...';
-    if (pct < 85) return 'Đang sôi... 🫧';
-    return 'Sôi rồi! 🎉';
+    if (pct < 85) return 'Đang sôi...';
+    return 'Sôi rồi! ';
 }
 
 // ─── Inner overlay ────────────────────────────────────────────────────────────
