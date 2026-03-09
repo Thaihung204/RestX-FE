@@ -28,6 +28,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import authService from "../../lib/services/authService";
 import { useLanguage } from "../../components/I18nProvider";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import ThemeToggle from "../components/ThemeToggle";
@@ -41,8 +42,8 @@ export default function StaffLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { t, i18n } = useTranslation();
-  const { language } = useLanguage();
+  const { t } = useTranslation();
+  useLanguage();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false); // e.g. iPad widths
@@ -142,9 +143,38 @@ export default function StaffLayout({
 
   const isDrawerDevice = isMobile || isTablet;
 
+  const triggerPageLoading = () => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new CustomEvent("restx:page-loading"));
+  };
+
   const handleMenuClick = (e: { key: string }) => {
+    if (pathname !== e.key) {
+      triggerPageLoading();
+    }
     router.push(e.key);
     if (isDrawerDevice) setDrawerOpen(false);
+  };
+
+  const handleUserMenuClick = async (e: { key: string }) => {
+    if (e.key === "logout") {
+      triggerPageLoading();
+      await authService.logoutServer();
+      authService.logout();
+      router.replace("/login");
+      return;
+    }
+
+    if (e.key === "profile") {
+      if (pathname !== "/staff") triggerPageLoading();
+      router.push("/staff");
+      return;
+    }
+
+    if (e.key === "settings") {
+      if (pathname !== "/staff") triggerPageLoading();
+      router.push("/staff");
+    }
   };
 
   // Sidebar content component for reuse
@@ -331,7 +361,7 @@ export default function StaffLayout({
               return (
                 <div
                   key={item.key}
-                  onClick={() => router.push(item.key)}
+                  onClick={() => handleMenuClick({ key: item.key })}
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -544,7 +574,7 @@ export default function StaffLayout({
 
               {/* User Menu */}
               <Dropdown
-                menu={{ items: userMenuItems }}
+                menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
                 placement="bottomRight"
                 trigger={["click"]}>
                 <div
@@ -571,13 +601,15 @@ export default function StaffLayout({
                     }}>
                     NV
                   </Avatar>
-                  {!isMobile && (
+                  {!isMobile && !isTablet && (
                     <Text
                       style={{
                         fontWeight: 500,
                         fontSize: 13,
                         color: "var(--text)",
                         paddingRight: 4,
+                        whiteSpace: "nowrap",
+                        wordBreak: "keep-all",
                       }}>
                       Nguyễn Văn A
                     </Text>
@@ -638,6 +670,44 @@ export default function StaffLayout({
         .ant-menu-light .ant-menu-item .ant-menu-item-icon {
           font-size: 18px !important;
         }
+
+        /* User dropdown menu theme fix */
+        [data-theme="light"] .ant-dropdown .ant-dropdown-menu,
+        [data-theme="light"] .ant-dropdown-menu {
+          background: #ffffff !important;
+          border: 1px solid #e5e7eb !important;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+        }
+        [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item {
+          color: #111827 !important;
+        }
+        [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item:hover {
+          background: #f3f4f6 !important;
+        }
+        [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item .ant-dropdown-menu-title-content,
+        [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item .anticon {
+          color: inherit !important;
+        }
+
+        [data-theme="dark"] .ant-dropdown .ant-dropdown-menu,
+        [data-theme="dark"] .ant-dropdown-menu {
+          background: #0f1419 !important;
+          border: 1px solid var(--border) !important;
+        }
+        [data-theme="dark"] .ant-dropdown-menu .ant-dropdown-menu-item {
+          color: var(--text) !important;
+        }
+
+        /* Keep logout red in both themes */
+        .ant-dropdown-menu .ant-dropdown-menu-item-danger,
+        .ant-dropdown-menu .ant-dropdown-menu-item-danger .ant-dropdown-menu-title-content,
+        .ant-dropdown-menu .ant-dropdown-menu-item-danger .anticon {
+          color: #ff4d4f !important;
+        }
+        .ant-dropdown-menu .ant-dropdown-menu-item-danger:hover {
+          background: rgba(255, 77, 79, 0.08) !important;
+        }
+
         /* Disable blur/backdrop on all masks (drawer + modal) */
         .ant-drawer-mask,
         .ant-modal-mask {

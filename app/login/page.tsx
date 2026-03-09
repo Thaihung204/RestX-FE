@@ -4,7 +4,7 @@ import { HeroSection } from "@/components/auth/HeroSection";
 import { GlassInput } from "@/components/ui/GlassInput";
 import { LoginOutlined, MailOutlined, PhoneOutlined, UserOutlined } from "@ant-design/icons";
 import { message } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AntdProvider";
 
@@ -15,14 +15,14 @@ export default function LoginPage() {
   const { mode } = useThemeMode();
 
   const redirectPath = (() => {
-    if (typeof window === 'undefined') return '/';
+    if (typeof window === 'undefined') return '/restaurant';
     const redirect = new URLSearchParams(window.location.search).get('redirect');
-    if (!redirect) return '/';
+    if (!redirect) return '/restaurant';
     try {
       const decoded = decodeURIComponent(redirect);
-      return decoded.startsWith('/') ? decoded : '/';
+      return decoded.startsWith('/') ? decoded : '/restaurant';
     } catch {
-      return '/';
+      return '/restaurant';
     }
   })();
 
@@ -38,6 +38,7 @@ export default function LoginPage() {
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [nameError, setNameError] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
+  const [phoneCheckMessage, setPhoneCheckMessage] = useState("");
 
   // Helper: set auth cookie so Next middleware sees login state
   const setAuthCookie = (token: string) => {
@@ -87,13 +88,24 @@ export default function LoginPage() {
       setPhoneChecked(true);
       setIsNewUser(!result.exists);
 
-      if (result.exists && result.name) {
-        setName(result.name);
+      if (result.exists) {
+        if (result.name) {
+          setName(result.name);
+          setPhoneCheckMessage(`${t('login_page.welcome_back')}, ${result.name}!`);
+        } else {
+          setName("");
+          setPhoneCheckMessage(t('login_page.status.registered') || 'Số điện thoại đã đăng ký');
+        }
       } else {
         setName("");
+        setPhoneCheckMessage(t('login_page.status.not_registered') || 'Số điện thoại chưa đăng ký');
       }
     } catch (err) {
       console.error(err);
+      setPhoneChecked(false);
+      setIsNewUser(false);
+      setName("");
+      setPhoneCheckMessage(t('login_page.status.check_failed') || 'Không thể kiểm tra số điện thoại');
     } finally {
       setCheckingPhone(false);
     }
@@ -103,17 +115,37 @@ export default function LoginPage() {
     const value = e.target.value.replace(/\D/g, "");
     if (value.length <= 11) {
       setPhone(value);
-      if (phoneChecked) {
-        setPhoneChecked(false);
-        setIsNewUser(false);
-        setName("");
-      }
-      if (phoneTouched && value.length === 10) {
-        setPhoneError("");
-        checkPhoneNumber(value);
+      setPhoneChecked(false);
+      setIsNewUser(false);
+      setName("");
+      setPhoneCheckMessage("");
+
+      if (phoneTouched) {
+        if (value.length === 10) {
+          setPhoneError("");
+        } else if (value.length > 0) {
+          setPhoneError(t('login_page.validation.phone_length'));
+        } else {
+          setPhoneError("");
+        }
       }
     }
   };
+
+  useEffect(() => {
+    const digits = phone.replace(/\D/g, '');
+
+    if (digits.length !== 10 || phoneError) {
+      setCheckingPhone(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      checkPhoneNumber(digits);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [phone, phoneError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,8 +296,14 @@ export default function LoginPage() {
                 )}
               </div>
 
+              {phoneCheckMessage && phone.length === 10 && (
+                <div className={`text-xs ml-1 font-medium ${isNewUser ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  {phoneCheckMessage}
+                </div>
+              )}
+
               {/* Tên Input - Chỉ hiện khi New User */}
-              {(isNewUser) && (
+              {(isNewUser && phoneChecked && !checkingPhone) && (
                 <div className="animate-fade-in-down">
                   <GlassInput
                     id="name"
@@ -288,14 +326,6 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {/* Welcome message */}
-              {phoneChecked && !isNewUser && name && (
-                <div className="auth-welcome-banner auth-fade-in">
-                  <p className="auth-welcome-text text-sm">
-                    {t('login_page.welcome_back')}, <span className="font-bold text-[var(--primary)]">{name}</span>!
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* Remember Me & Terms */}

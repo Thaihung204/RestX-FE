@@ -29,28 +29,10 @@ const MenuSection: React.FC<MenuSectionProps> = ({ menu = [] }) => {
   // If no menu, return null or empty state
   if (!menu.length) return null;
 
-  /* Custom scrollbar styles */
-  const scrollbarStyles = `
-    .hide-scrollbar::-webkit-scrollbar {
-      width: 6px;
-    }
-    .hide-scrollbar::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .hide-scrollbar::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 56, 11, 0.2);
-      border-radius: 20px;
-    }
-    .hide-scrollbar:hover::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 56, 11, 0.5);
-    }
-  `;
-
   return (
     <>
-      <style jsx global>{scrollbarStyles}</style>
-      <section id="menu" style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-base)', overflow: 'hidden', padding: '16px' }}>
-        <div style={{ flexShrink: 0, textAlign: 'center', marginBottom: 24, paddingTop: 16 }}>
+      <section id="menu" style={{ background: 'var(--bg-base)', padding: '16px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 24, paddingTop: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 8 }}>
             <div style={{ height: 1, width: 48, background: 'rgba(255, 56, 11, 0.4)' }}></div>
             <span style={{
@@ -70,7 +52,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ menu = [] }) => {
           </Title>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0 16px', maxWidth: 1280, width: '100%', margin: '0 auto' }} className="hide-scrollbar">
+        <div style={{ padding: '0 16px', maxWidth: 1280, width: '100%', margin: '0 auto' }}>
           <Row gutter={[48, 32]}>
             <Col xs={24} lg={12}>
               {leftCol.map(item => (
@@ -179,7 +161,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ menu = [] }) => {
           </Row>
         </div>
 
-        <div style={{ flexShrink: 0, textAlign: 'center', padding: '16px' }}>
+        <div style={{ textAlign: 'center', padding: '16px' }}>
           <button style={{
             display: 'inline-flex',
             alignItems: 'center',
