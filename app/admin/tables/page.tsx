@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AddAreaModal } from "./components/AddAreaModal";
 import { AddTableModal } from "./components/AddTableModal";
@@ -83,7 +83,6 @@ export default function TablesPage() {
   // Fetch tables + floors from BE API
   const fetchTables = async () => {
     try {
-      setLoading(true);
       const [items, floors] = await Promise.all([
         tableService.getAllTables(),
         floorService.getAllFloors(),
@@ -123,7 +122,6 @@ export default function TablesPage() {
     } catch (error) {
       console.error("Failed to fetch tables:", error);
     } finally {
-      setLoading(false);
     }
   };
 
@@ -416,7 +414,9 @@ export default function TablesPage() {
       setAddModalOpen(false);
     } catch (err) {
       console.error("Failed to add table:", err);
-      alert(t("dashboard.tables.errors.add_failed"));
+      alert(
+        t("dashboard.tables.errors.add_failed"),
+      );
     }
   };
 
@@ -501,7 +501,9 @@ export default function TablesPage() {
         setSelectedTable(null);
       } catch (err) {
         console.error("Delete failed", err);
-        alert("Failed to delete table");
+        alert(
+          t("dashboard.tables.errors.delete_failed"),
+        );
       }
       setDeleteConfirmOpen(false);
     }
@@ -547,7 +549,9 @@ export default function TablesPage() {
     } catch (err) {
       console.error('Failed to create floor on BE:', err);
       // Fallback: show error
-      alert('Failed to create floor. Please try again.');
+      alert(
+        t("dashboard.tables.errors.create_floor_failed"),
+      );
     }
   };
 

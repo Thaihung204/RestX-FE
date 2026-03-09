@@ -84,7 +84,7 @@ export default function IngredientFormPage() {
       const data = await supplierService.getAll();
       setSuppliers(data.filter((s) => s.isActive));
     } catch {
-      message.warning(t("dashboard.ingredients.fetch_suppliers_failed", { defaultValue: "Không tải được danh sách nhà cung cấp" }));
+      message.warning(t("dashboard.ingredients.fetch_suppliers_failed"));
     } finally {
       setLoadingSuppliers(false);
     }
@@ -96,7 +96,7 @@ export default function IngredientFormPage() {
       const data = await ingredientService.getAllCategories();
       setIngredientCategories(data.filter((c) => c.isActive !== false));
     } catch {
-      message.warning(t("dashboard.ingredients.fetch_categories_failed", { defaultValue: "Không tải được danh mục nguyên liệu" }));
+      message.warning(t("dashboard.ingredients.fetch_categories_failed"));
     } finally {
       setLoadingCategories(false);
     }
@@ -117,7 +117,7 @@ export default function IngredientFormPage() {
         isActive:      data.isActive      ?? true,
       });
     } catch {
-      message.error(t("dashboard.ingredients.fetch_ingredient_failed", { defaultValue: "Không tải được thông tin nguyên liệu" }));
+      message.error(t("dashboard.ingredients.fetch_ingredient_failed"));
     } finally {
       setLoadingData(false);
     }
@@ -140,11 +140,11 @@ export default function IngredientFormPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim())        { message.error(t("dashboard.ingredients.name_required", { defaultValue: "Tên không được để trống" })); return; }
-    if (!form.code.trim())        { message.error(t("dashboard.ingredients.code_required", { defaultValue: "Mã nguyên liệu không được để trống" })); return; }
-    if (form.code.length > 20)    { message.error(t("dashboard.ingredients.code_max_length", { defaultValue: "Mã tối đa 20 ký tự" })); return; }
-    if (form.unit.length > 20)    { message.error(t("dashboard.ingredients.unit_max_length", { defaultValue: "Đơn vị tối đa 20 ký tự" })); return; }
-    if (isNew && !form.supplierId){ message.error(t("dashboard.ingredients.supplier_required", { defaultValue: "Vui lòng chọn nhà cung cấp" })); return; }
+    if (!form.name.trim())        { message.error(t("dashboard.ingredients.name_required")); return; }
+    if (!form.code.trim())        { message.error(t("dashboard.ingredients.code_required")); return; }
+    if (form.code.length > 20)    { message.error(t("dashboard.ingredients.code_max_length")); return; }
+    if (form.unit.length > 20)    { message.error(t("dashboard.ingredients.unit_max_length")); return; }
+    if (isNew && !form.supplierId){ message.error(t("dashboard.ingredients.supplier_required")); return; }
 
     const normalizedPayload = {
       ...form,
@@ -155,14 +155,14 @@ export default function IngredientFormPage() {
       setLoading(true);
       if (isNew) {
         await ingredientService.create(normalizedPayload);
-        message.success(t("dashboard.ingredients.create_success", { defaultValue: "Tạo nguyên liệu thành công" }));
+        message.success(t("dashboard.ingredients.create_success"));
       } else {
         await ingredientService.update(id, { ...normalizedPayload, id });
-        message.success(t("dashboard.ingredients.update_success", { defaultValue: "Cập nhật nguyên liệu thành công" }));
+        message.success(t("dashboard.ingredients.update_success"));
       }
       router.push("/admin/ingredients");
     } catch (err: any) {
-      message.error(err?.response?.data?.message || err?.message || t("dashboard.ingredients.save_failed", { defaultValue: "Lưu thất bại, thử lại sau" }));
+      message.error(t("dashboard.ingredients.save_failed"));
     } finally {
       setLoading(false);
     }
@@ -172,10 +172,10 @@ export default function IngredientFormPage() {
     try {
       setLoading(true);
       await ingredientService.delete(id);
-      message.success(t("dashboard.ingredients.delete_success", { defaultValue: "Đã xoá nguyên liệu" }));
+      message.success(t("dashboard.ingredients.delete_success"));
       router.push("/admin/ingredients");
     } catch (err: any) {
-      message.error(err?.response?.data?.message || t("dashboard.ingredients.delete_failed", { defaultValue: "Xoá thất bại" }));
+      message.error(t("dashboard.ingredients.delete_failed"));
     } finally {
       setLoading(false);
     }
@@ -185,7 +185,7 @@ export default function IngredientFormPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: "#FF380B" }} />
-        <span className="ml-4 text-lg font-medium" style={{ color: "var(--text-muted)" }}>{t("dashboard.ingredients.loading", { defaultValue: "Đang tải thông tin nguyên liệu..." })}</span>
+        <span className="ml-4 text-lg font-medium" style={{ color: "var(--text-muted)" }}>{t("dashboard.ingredients.loading")}</span>
       </div>
     );
   }

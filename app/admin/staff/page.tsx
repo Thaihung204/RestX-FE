@@ -141,25 +141,11 @@ export default function StaffPage() {
 
         setError(null);
       } else {
-        setError("Data structure not supported");
+        setError(t("dashboard.staff.errors.load_failed"));
       }
-    } catch (err: any) {
-      if (err.response) {
-        const msg = `API Error: ${err.response?.status} - ${err.response?.data?.message || err.message}`;
-        setError(msg);
-        message.error(msg || t("dashboard.toasts.staff.load_error_message"));
-      } else if (err.request) {
-        const msg = t("dashboard.toasts.staff.load_error_message");
-        setError(msg);
-        message.error(msg);
-      } else {
-        const msg =
-          err instanceof Error
-            ? err.message
-            : t("dashboard.toasts.staff.load_error_message");
-        setError(msg);
-        message.error(msg);
-      }
+    } catch {
+      setError(t("dashboard.staff.errors.load_failed"));
+      message.error(t("dashboard.toasts.staff.load_error_message"));
     } finally {
       setLoading(false);
     }
@@ -204,15 +190,22 @@ export default function StaffPage() {
         isActive: newStatus,
       });
 
-      const action = newStatus ? "activated" : "deactivated";
-      message.success(`${itemToToggle.name} has been ${action} successfully`);
+      message.success(
+        newStatus
+          ? t("dashboard.staff.modal.activate_success", {
+              name: itemToToggle.name,
+              defaultValue: `${itemToToggle.name} has been activated successfully`,
+            })
+          : t("dashboard.staff.modal.deactivate_success", {
+              name: itemToToggle.name,
+              defaultValue: `${itemToToggle.name} has been deactivated successfully`,
+            }),
+      );
       setShowStatusConfirm(false);
       setItemToToggle(null);
       await fetchStaffList(currentPage);
     } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || err.message || "Unknown error";
-      message.error(errorMsg);
+      message.error(t("dashboard.staff.errors.update_failed"));
       setShowStatusConfirm(false);
       setItemToToggle(null);
     }
@@ -268,12 +261,21 @@ export default function StaffPage() {
                 {t("dashboard.staff.subtitle")}
               </p>
             </div>
-            <Link
-              href="/admin/staff/new"
-              className="px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-orange-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-orange-500/30 active:translate-y-0 flex items-center gap-2"
-              style={{ background: "var(--primary)", color: "var(--text)" }}>
-              <svg
-                className="w-5 h-5"
+            <Link href="/admin/menu/new">
+              <button
+                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                style={{ background: "var(--primary)", color: "var(--text)" }}
+                onMouseEnter={(e) =>
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, #CC2D08, #B32607)")
+                }
+                onMouseLeave={(e) =>
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, #FF380B, #CC2D08)")
+                }
+                suppressHydrationWarning> 
+                <svg
+                className="w-5 h-5 inline-block mr-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24">
@@ -281,10 +283,11 @@ export default function StaffPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 4v16m8-8H4"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                 />
               </svg>
-              {t("dashboard.staff.add_staff")}
+                {t("dashboard.staff.add_staff")}
+              </button>
             </Link>
           </div>
 

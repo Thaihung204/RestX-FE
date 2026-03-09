@@ -1,27 +1,27 @@
 "use client";
 
 import orderDetailStatusService, {
-    OrderDetailStatus,
+  OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
 import {
-    DeleteOutlined,
-    EditOutlined,
-    PlusOutlined,
-    StarFilled,
-    StarOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  StarFilled,
+  StarOutlined,
 } from "@ant-design/icons";
 import {
-    Button,
-    ColorPicker,
-    Form,
-    Input,
-    message,
-    Modal,
-    Popconfirm,
-    Switch,
-    Table,
-    Tag,
-    Tooltip,
+  Button,
+  ColorPicker,
+  Form,
+  Input,
+  message,
+  Modal,
+  Popconfirm,
+  Switch,
+  Table,
+  Tag,
+  Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
@@ -96,10 +96,7 @@ export default function OrderDetailStatusSettings() {
       fetchStatuses();
     } catch (error: any) {
       console.error("Failed to delete order detail status:", error);
-      messageApi.error(
-        error?.response?.data?.message ||
-          t("dashboard.manage.errors.delete_failed"),
-      );
+      messageApi.error(t("dashboard.manage.errors.delete_failed"));
     }
   };
 
@@ -134,10 +131,7 @@ export default function OrderDetailStatusSettings() {
       fetchStatuses();
     } catch (error: any) {
       if (error?.response) {
-        messageApi.error(
-          error?.response?.data?.message ||
-            t("dashboard.manage.errors.save_failed"),
-        );
+        messageApi.error(t("dashboard.manage.errors.save_failed"));
       }
       console.error("Failed to save order detail status:", error);
     }
