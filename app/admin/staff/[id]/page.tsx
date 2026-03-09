@@ -168,9 +168,7 @@ export default function StaffFormPage() {
       }
       setTimeout(() => router.push("/admin/staff"), 1500);
     } catch (err: any) {
-      message.error(
-        err.response?.data?.message || t("dashboard.staff.errors.save_failed"),
-      );
+      message.error(t("dashboard.staff.errors.save_failed"));
     } finally {
       setLoading(false);
     }

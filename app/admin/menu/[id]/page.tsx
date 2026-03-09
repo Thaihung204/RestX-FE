@@ -122,8 +122,10 @@ export default function MenuItemFormPage() {
           },
         ]);
       }
-    } catch (err: any) {
-      setError("Failed to load menu item");
+    } catch {
+      setError(
+        t("dashboard.menu.errors.detail_load_failed"),
+      );
       message.error(t("dashboard.menu.toasts.detail_error_message"));
     } finally {
       setLoading(false);
@@ -139,14 +141,18 @@ export default function MenuItemFormPage() {
 
       // Validation
       if (!formData.name.trim()) {
-        setError("Name is required");
+        setError(
+          t("dashboard.menu.errors.name_required"),
+        );
         message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
       }
 
       if (!formData.categoryId) {
-        setError("Please select a category");
+        setError(
+          t("dashboard.menu.errors.category_required"),
+        );
         message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
@@ -157,7 +163,9 @@ export default function MenuItemFormPage() {
         formData.price.replace(/\./g, "").replace(/,/g, "."),
       );
       if (!formData.price || priceValue <= 0 || isNaN(priceValue)) {
-        setError("Price must be greater than 0");
+        setError(
+          t("dashboard.menu.errors.price_invalid"),
+        );
         message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;

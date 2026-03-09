@@ -817,13 +817,16 @@
         "account_disabled": "Tài khoản này hiện đang bị vô hiệu hóa"
       },
       "errors": {
-        "save_failed": "Không thể lưu thông tin nhân viên"
+        "save_failed": "Không thể lưu thông tin nhân viên",
+        "update_failed": "Không thể cập nhật trạng thái nhân viên"
       },
       "modal": {
         "activate_title": "Kích hoạt nhân viên",
         "deactivate_title": "Ngừng kích hoạt nhân viên",
         "activate_message": "Bạn có chắc chắn muốn kích hoạt {{name}} ?",
-        "deactivate_message": "Bạn có chắc chắn muốn ngừng kích hoạt {{name}} ?"
+        "deactivate_message": "Bạn có chắc chắn muốn ngừng kích hoạt {{name}} ?",
+        "activate_success": "Đã kích hoạt {{name}} thành công",
+        "deactivate_success": "Đã ngừng kích hoạt {{name}} thành công"
       },
       "card": {
         "shift": "Ca làm",

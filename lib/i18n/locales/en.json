@@ -817,13 +817,16 @@
         "account_disabled": "This account is currently disabled"
       },
       "errors": {
-        "save_failed": "Failed to save staff"
+        "save_failed": "Failed to save staff",
+        "update_failed": "Failed to update staff status"
       },
       "modal": {
         "activate_title": "Activate Staff Member",
         "deactivate_title": "Deactivate Staff Member",
         "activate_message": "Are you sure you want to activate {{name}} ?",
-        "deactivate_message": "Are you sure you want to deactivate {{name}} ?"
+        "deactivate_message": "Are you sure you want to deactivate {{name}} ?",
+        "activate_success": "{{name}} has been activated successfully",
+        "deactivate_success": "{{name}} has been deactivated successfully"
       },
       "card": {
         "shift": "Shift",

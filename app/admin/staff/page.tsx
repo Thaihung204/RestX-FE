@@ -141,25 +141,11 @@ export default function StaffPage() {
 
         setError(null);
       } else {
-        setError("Data structure not supported");
+        setError(t("dashboard.staff.errors.load_failed"));
       }
-    } catch (err: any) {
-      if (err.response) {
-        const msg = `API Error: ${err.response?.status} - ${err.response?.data?.message || err.message}`;
-        setError(msg);
-        message.error(msg || t("dashboard.toasts.staff.load_error_message"));
-      } else if (err.request) {
-        const msg = t("dashboard.toasts.staff.load_error_message");
-        setError(msg);
-        message.error(msg);
-      } else {
-        const msg =
-          err instanceof Error
-            ? err.message
-            : t("dashboard.toasts.staff.load_error_message");
-        setError(msg);
-        message.error(msg);
-      }
+    } catch {
+      setError(t("dashboard.staff.errors.load_failed"));
+      message.error(t("dashboard.toasts.staff.load_error_message"));
     } finally {
       setLoading(false);
     }
@@ -204,15 +190,22 @@ export default function StaffPage() {
         isActive: newStatus,
       });
 
-      const action = newStatus ? "activated" : "deactivated";
-      message.success(`${itemToToggle.name} has been ${action} successfully`);
+      message.success(
+        newStatus
+          ? t("dashboard.staff.modal.activate_success", {
+              name: itemToToggle.name,
+              defaultValue: `${itemToToggle.name} has been activated successfully`,
+            })
+          : t("dashboard.staff.modal.deactivate_success", {
+              name: itemToToggle.name,
+              defaultValue: `${itemToToggle.name} has been deactivated successfully`,
+            }),
+      );
       setShowStatusConfirm(false);
       setItemToToggle(null);
       await fetchStaffList(currentPage);
     } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || err.message || "Unknown error";
-      message.error(errorMsg);
+      message.error(t("dashboard.staff.errors.update_failed"));
       setShowStatusConfirm(false);
       setItemToToggle(null);
     }

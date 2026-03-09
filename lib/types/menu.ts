@@ -65,6 +65,7 @@ export interface MenuSection {
 // Cart related types
 export interface CartItem {
   id: string;
+  lineId?: string;
   name: string;
   price: string;
   quantity: number;
@@ -72,6 +73,7 @@ export interface CartItem {
   categoryId: string;
   categoryName?: string;
   image?: string;
+  status?: string;
 }
 
 export type DishTag = "spicy" | "vegan" | "best" | "popular";

@@ -93,20 +93,12 @@ export default function MenuPage() {
         setMenuItems(mappedData);
         setError(null);
       } else {
-        setError("Data structure not supported");
-      }
-    } catch (err: any) {
-      if (err.response) {
         setError(
-          `API Error: ${err.response?.status} - ${err.response?.data?.message || err.message}`,
-        );
-      } else if (err.request) {
-        setError("Network Error: No response from server");
-      } else {
-        setError(
-          err instanceof Error ? err.message : "Failed to load menu items",
+          t("dashboard.menu.errors.load_failed"),
         );
       }
+    } catch {
+      setError(t("dashboard.menu.errors.load_failed"));
       message.error(t("dashboard.menu.toasts.fetch_error_message"));
     } finally {
       setLoading(false);
@@ -135,7 +127,7 @@ export default function MenuPage() {
           await dishService.deleteDish(id);
           message.success(t("dashboard.menu.toasts.delete_success_message"));
           await fetchMenuItems();
-        } catch (err: any) {
+        } catch {
           message.error(t("dashboard.menu.toasts.delete_error_message"));
         }
       },
@@ -361,7 +353,7 @@ export default function MenuPage() {
           <div className="rounded-xl p-4 bg-red-500/10 border border-red-500/20">
             <p className="text-red-500 font-medium">{error}</p>
             <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
-              Please check your connection
+              {t("dashboard.menu.errors.retry_hint")}
             </p>
           </div>
         )}

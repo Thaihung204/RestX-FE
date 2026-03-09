@@ -96,10 +96,7 @@ export default function OrderDetailStatusSettings() {
       fetchStatuses();
     } catch (error: any) {
       console.error("Failed to delete order detail status:", error);
-      messageApi.error(
-        error?.response?.data?.message ||
-          t("dashboard.manage.errors.delete_failed"),
-      );
+      messageApi.error(t("dashboard.manage.errors.delete_failed"));
     }
   };
 
@@ -134,10 +131,7 @@ export default function OrderDetailStatusSettings() {
       fetchStatuses();
     } catch (error: any) {
       if (error?.response) {
-        messageApi.error(
-          error?.response?.data?.message ||
-            t("dashboard.manage.errors.save_failed"),
-        );
+        messageApi.error(t("dashboard.manage.errors.save_failed"));
       }
       console.error("Failed to save order detail status:", error);
     }
