@@ -1,6 +1,6 @@
 "use client";
 
-import { CloseOutlined, MenuOutlined, TeamOutlined } from "@ant-design/icons";
+import { CloseOutlined, LogoutOutlined, MenuOutlined, TeamOutlined } from "@ant-design/icons";
 import { Button, Divider, Drawer, Layout, Menu, Space } from "antd";
 import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
@@ -12,6 +12,7 @@ import ThemeToggle from "./ThemeToggle";
 const { Header: AntHeader } = Layout;
 
 import { useTranslation } from "react-i18next";
+import authService from "../../lib/services/authService";
 
 const Header: React.FC = () => {
   const { t } = useTranslation();
@@ -43,6 +44,8 @@ const Header: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [displayName, setDisplayName] = useState<string>("");
   const { isAnimationReady } = usePageTransition();
   const { mode } = useThemeMode();
 
@@ -57,15 +60,33 @@ const Header: React.FC = () => {
       setScrolled(window.scrollY > 20);
     };
 
+    const syncAuth = () => {
+      const token = localStorage.getItem("accessToken");
+      const user = authService.getCurrentUser();
+      setIsAuthenticated(!!token);
+      setDisplayName(user?.name || user?.fullName || "");
+    };
+
     handleResize();
+    syncAuth();
     window.addEventListener("resize", handleResize);
     window.addEventListener("scroll", handleScroll);
+    window.addEventListener("focus", syncAuth);
 
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("focus", syncAuth);
     };
   }, []);
+
+  const handleLogout = async () => {
+    await authService.logoutServer();
+    authService.logout();
+    setIsAuthenticated(false);
+    setDisplayName("");
+    window.location.href = "/";
+  };
 
   // Don't render until mounted to prevent FOUC
   if (!mounted) {
@@ -184,45 +205,76 @@ const Header: React.FC = () => {
               </motion.div>
               <LanguageSwitcher />
               <ThemeToggle />
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}>
-                <Button
-                  type="text"
-                  href="/login"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    height: 40,
-                    padding: "0 20px",
-                    color: mode === "dark" ? "#ECECEC" : "#111111",
-                  }}>
-                  {t("homepage.header.login")}
-                </Button>
-              </motion.div>
-              <motion.div
-                whileHover={{
-                  scale: 1.05,
-                  boxShadow: "0 8px 25px rgba(255, 56, 11, 0.45)",
-                }}
-                whileTap={{ scale: 0.95 }}
-                style={{ borderRadius: 20 }}>
-                <Button
-                  type="primary"
-                  href="/register"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    height: 40,
-                    padding: "0 24px",
-                    background:
-                      "linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)",
-                    border: "none",
-                    boxShadow: "0 4px 14px rgba(255, 56, 11, 0.35)",
-                  }}>
-                  Sign up
-                </Button>
-              </motion.div>
+              {!isAuthenticated ? (
+                <>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}>
+                    <Button
+                      type="text"
+                      href="/login"
+                      style={{
+                        fontWeight: 600,
+                        fontSize: 15,
+                        height: 40,
+                        padding: "0 20px",
+                        color: mode === "dark" ? "#ECECEC" : "#111111",
+                      }}>
+                      {t("homepage.header.login")}
+                    </Button>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{
+                      scale: 1.05,
+                      boxShadow: "0 8px 25px rgba(255, 56, 11, 0.45)",
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ borderRadius: 20 }}>
+                    <Button
+                      type="primary"
+                      href="/register"
+                      style={{
+                        fontWeight: 600,
+                        fontSize: 15,
+                        height: 40,
+                        padding: "0 24px",
+                        background:
+                          "linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)",
+                        border: "none",
+                        boxShadow: "0 4px 14px rgba(255, 56, 11, 0.35)",
+                      }}>
+                      {t("homepage.header.signup")}
+                    </Button>
+                  </motion.div>
+                </>
+              ) : (
+                <>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      fontSize: 14,
+                      color: mode === "dark" ? "#ECECEC" : "#111111",
+                      maxWidth: 180,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}>
+                    {displayName || "User"}
+                  </span>
+                  <Button
+                    type="text"
+                    onClick={handleLogout}
+                    icon={<LogoutOutlined />}
+                    style={{
+                      fontWeight: 600,
+                      fontSize: 14,
+                      height: 40,
+                      color: "#FF380B",
+                    }}>
+                    {t("staff.user_menu.logout")}
+                  </Button>
+                </>
+              )}
             </Space>
           )}
 
@@ -318,33 +370,56 @@ const Header: React.FC = () => {
           <ThemeToggle />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <Button
-            block
-            size="large"
-            href="/login"
-            style={{
-              fontWeight: 600,
-              height: 48,
-              borderRadius: 50,
-              borderColor: "#E5E7EB",
-            }}>
-            {t("homepage.header.login")}
-          </Button>
-          <Button
-            type="primary"
-            block
-            size="large"
-            href="/register"
-            style={{
-              fontWeight: 600,
-              height: 48,
-              borderRadius: 50,
-              background: "linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)",
-              border: "none",
-              boxShadow: "0 4px 14px rgba(255, 56, 11, 0.35)",
-            }}>
-            {t("homepage.header.signup")}
-          </Button>
+          {!isAuthenticated ? (
+            <>
+              <Button
+                block
+                size="large"
+                href="/login"
+                style={{
+                  fontWeight: 600,
+                  height: 48,
+                  borderRadius: 50,
+                  borderColor: "#E5E7EB",
+                }}>
+                {t("homepage.header.login")}
+              </Button>
+              <Button
+                type="primary"
+                block
+                size="large"
+                href="/register"
+                style={{
+                  fontWeight: 600,
+                  height: 48,
+                  borderRadius: 50,
+                  background: "linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)",
+                  border: "none",
+                  boxShadow: "0 4px 14px rgba(255, 56, 11, 0.35)",
+                }}>
+                {t("homepage.header.signup")}
+              </Button>
+            </>
+          ) : (
+            <>
+              <div style={{ fontWeight: 600, textAlign: "center", color: "var(--text)" }}>
+                {displayName || "User"}
+              </div>
+              <Button
+                danger
+                block
+                size="large"
+                icon={<LogoutOutlined />}
+                onClick={handleLogout}
+                style={{
+                  fontWeight: 600,
+                  height: 48,
+                  borderRadius: 50,
+                }}>
+                {t("staff.user_menu.logout")}
+              </Button>
+            </>
+          )}
         </div>
       </Drawer>
     </>

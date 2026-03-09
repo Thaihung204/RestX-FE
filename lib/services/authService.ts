@@ -366,7 +366,17 @@ const authService = {
     }
   },
 
-  // Logout user
+  // Call logout API (invalidate server-side session/token if backend supports)
+  async logoutServer(): Promise<void> {
+    try {
+      await axiosInstance.post('/auth/logout');
+    } catch (error) {
+      // Không chặn luồng logout ở client nếu API lỗi
+      console.warn('Logout API error:', error);
+    }
+  },
+
+  // Logout user on client
   logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');

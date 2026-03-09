@@ -105,8 +105,8 @@ function getGlowColor(pct: number) {
 function getHeatLabel(pct: number) {
     if (pct < 20) return 'Đang làm nóng...';
     if (pct < 50) return 'Đang đun...';
-    if (pct < 85) return 'Đang sôi... 🫧';
-    return 'Sôi rồi! 🎉';
+    if (pct < 85) return 'Đang sôi...';
+    return 'Sôi rồi!';
 }
 
 // ─── Inner overlay ────────────────────────────────────────────────────────────
@@ -132,7 +132,19 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
     const at = (fn: () => void, ms: number) => { const t = setTimeout(fn, ms); ts.current.push(t); };
 
     useEffect(() => {
-        if (!visible) { clr(); return; }
+        if (!visible) {
+            clr();
+            setExiting(true);
+            const t = setTimeout(() => {
+                setMounted(false);
+                setExiting(false);
+                setShowLogo(false);
+                setLogoExit(false);
+                setIsWild(false);
+            }, FADEOUT);
+            ts.current.push(t);
+            return;
+        }
 
         setMounted(true); setExiting(false);
         setShowLogo(false); setLogoExit(false); setIsWild(false);
@@ -393,8 +405,9 @@ export function usePageLoading(isLoading: boolean) {
 }
 
 // ─── Route watcher (3 triggers) ───────────────────────────────────────────────
-const SHOW_DELAY = 600;    // wait before showing — cancels for fast loads
-const MAX_WAIT = 12000;  // safety cap if EV_LOADED never fires
+const SHOW_DELAY = 600;
+const MAX_WAIT = 12000;
+const MIN_VISIBLE_MS = 900;
 
 export function PageTransitionLoader() {
     const pathname = usePathname();
@@ -405,19 +418,32 @@ export function PageTransitionLoader() {
     const prevPath = useRef<string | null>(null);
     const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const visibleSinceRef = useRef<number | null>(null);
 
     const show = () => {
+        if (loadingRef.current) return;
         loadingRef.current = true;
+        visibleSinceRef.current = Date.now();
         setLoading(true);
     };
 
     const hide = (afterMs = 0) => {
         if (showTimer.current) { clearTimeout(showTimer.current); showTimer.current = null; }
         if (hideTimer.current) clearTimeout(hideTimer.current);
-        if (afterMs > 0) {
-            hideTimer.current = setTimeout(() => { loadingRef.current = false; setLoading(false); }, afterMs);
+
+        const visibleFor = visibleSinceRef.current ? Date.now() - visibleSinceRef.current : 0;
+        const minDelay = Math.max(0, MIN_VISIBLE_MS - visibleFor);
+        const delay = Math.max(afterMs, minDelay);
+
+        if (delay > 0) {
+            hideTimer.current = setTimeout(() => {
+                loadingRef.current = false;
+                visibleSinceRef.current = null;
+                setLoading(false);
+            }, delay);
         } else {
             loadingRef.current = false;
+            visibleSinceRef.current = null;
             setLoading(false);
         }
     };
@@ -431,21 +457,57 @@ export function PageTransitionLoader() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // ── Trigger 2: Cross-section navigation ──
-    // /admin/... → /restaurant/... triggers, /admin/a → /admin/b does NOT
+    // ── Trigger 2: Show immediately on link click (before route changes) ──
+    useEffect(() => {
+        const handleDocumentClick = (event: MouseEvent) => {
+            const target = event.target as HTMLElement | null;
+            if (!target) return;
+
+            const anchor = target.closest('a[href]') as HTMLAnchorElement | null;
+            if (!anchor) return;
+
+            const href = anchor.getAttribute('href');
+            if (!href) return;
+
+            // Skip same-page hash, new-tab, external links, download links
+            if (href.startsWith('#')) return;
+            if (anchor.target === '_blank') return;
+            if (anchor.hasAttribute('download')) return;
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+            try {
+                const toUrl = new URL(anchor.href, window.location.origin);
+                const isExternal = toUrl.origin !== window.location.origin;
+                if (isExternal) return;
+
+                const currentPath = window.location.pathname;
+                const currentSearch = window.location.search;
+                const nextPath = toUrl.pathname;
+                const nextSearch = toUrl.search;
+
+                // only show when actual route/search changes
+                if (currentPath === nextPath && currentSearch === nextSearch) return;
+
+                show();
+            } catch {
+                // ignore invalid urls
+            }
+        };
+
+        document.addEventListener('click', handleDocumentClick, true);
+        return () => document.removeEventListener('click', handleDocumentClick, true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // ── Trigger 3: Any route navigation (fallback + auto-hide) ──
     useEffect(() => {
         if (prevPath.current === null) { prevPath.current = pathname; return; }
         if (prevPath.current === pathname) return;
 
-        const prevSection = getSection(prevPath.current);
-        const nextSection = getSection(pathname);
         prevPath.current = pathname;
-
-        if (prevSection !== nextSection) {
-            show();
-            if (hideTimer.current) clearTimeout(hideTimer.current);
-            hideTimer.current = setTimeout(() => { loadingRef.current = false; setLoading(false); }, T_TOTAL);
-        }
+        show();
+        if (hideTimer.current) clearTimeout(hideTimer.current);
+        hideTimer.current = setTimeout(() => { hide(); }, T_TOTAL);
     }, [pathname]);
 
     // ── Trigger 3: Slow page content (via usePageLoading hook) ──

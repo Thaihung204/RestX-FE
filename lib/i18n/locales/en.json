@@ -1637,6 +1637,11 @@
       "or_login_with": "Or login with",
       "email_password": "Email & Password",
       "welcome_back": "Welcome back",
+      "status": {
+        "registered": "Phone number is registered",
+        "not_registered": "Phone number is not registered",
+        "check_failed": "Unable to check phone number"
+      },
       "validation": {
         "phone_length": "Phone number must be exactly 10 digits",
         "phone_digits": "Phone number must contain only digits",

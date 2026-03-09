@@ -20,7 +20,6 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import PageTransition from '../components/PageTransition';
 import { useThemeMode } from '../theme/AntdProvider';
 
 const { Title, Text } = Typography;
@@ -341,7 +340,6 @@ export default function StaffDashboard() {
     return t('staff.dashboard.greeting.evening');
   };
   return (
-    <PageTransition minimumLoadingTime={1500}>
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -940,6 +938,5 @@ export default function StaffDashboard() {
         }
       `}</style>
       </motion.div>
-    </PageTransition >
   );
 }

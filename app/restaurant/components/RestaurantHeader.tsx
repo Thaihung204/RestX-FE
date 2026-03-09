@@ -4,12 +4,11 @@ import ThemeToggle from '@/app/components/ThemeToggle';
 import { useThemeMode } from '@/app/theme/AntdProvider';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useTenant } from "@/lib/contexts/TenantContext";
+import authService, { User } from '@/lib/services/authService';
 import {
   CloseOutlined,
   DownOutlined,
   MenuOutlined,
-  SearchOutlined,
-  ShoppingCartOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Button, Drawer, Dropdown, Space } from 'antd';
@@ -40,7 +39,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [activeItem, setActiveItem] = useState('home');
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const headerContentColor = scrolled ? (mode === 'dark' ? 'white' : '#1a1a1a') : 'white';
 
   useEffect(() => {
@@ -52,13 +51,36 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
       setIsMobile(window.innerWidth < 768);
     };
 
+    const syncUserFromStorage = () => {
+      const localUser = authService.getCurrentUser();
+      setUser(localUser);
+    };
+
+    const syncUserFromApi = async () => {
+      const token = authService.getAccessToken();
+      if (!token) {
+        setUser(null);
+        return;
+      }
+      try {
+        const serverUser = await authService.getCurrentUserFromServer();
+        setUser(serverUser);
+      } catch {
+        setUser(authService.getCurrentUser());
+      }
+    };
+
     handleResize();
+    syncUserFromStorage();
+    void syncUserFromApi();
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleResize);
+    window.addEventListener('focus', syncUserFromStorage);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('focus', syncUserFromStorage);
     };
   }, []);
 
@@ -180,9 +202,55 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
             <LanguageSwitcher style={{ color: headerContentColor }} />
             <ThemeToggle style={{ color: headerContentColor }} />
 
-            <SearchOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
-            <UserOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
-            <ShoppingCartOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
+            <Dropdown
+              menu={{
+                className: 'restaurant-user-dropdown-menu',
+                style: { minWidth: 180 },
+                items: user
+                  ? [
+                      {
+                        key: 'logout',
+                        label: t('staff.user_menu.logout'),
+                        danger: true,
+                      },
+                    ]
+                  : [
+                      {
+                        key: 'login',
+                        label: t('homepage.header.login'),
+                      },
+                    ],
+                onClick: async ({ key }) => {
+                  if (key === 'logout') {
+                    await authService.logoutServer();
+                    authService.logout();
+                    setUser(null);
+                    window.location.href = '/login';
+                  }
+                  if (key === 'login') {
+                    window.location.href = '/login';
+                  }
+                },
+              }}
+              trigger={['click']}>
+              <Space size={8} style={{ cursor: 'pointer' }}>
+                <UserOutlined style={{ fontSize: 20, color: headerContentColor }} />
+                {user && !isMobile && (
+                  <span
+                    style={{
+                      maxWidth: 140,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      color: headerContentColor,
+                      fontWeight: 600,
+                      fontSize: 14,
+                    }}>
+                    {user.fullName || user.name || user.email}
+                  </span>
+                )}
+              </Space>
+            </Dropdown>
             <Button
               type="primary"
               href="#reservation"
@@ -262,7 +330,24 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
       </Drawer>
 
       {/* Keyframe animations */}
-      <style jsx>{`
+      <style jsx global>{`
+        .restaurant-user-dropdown-menu {
+          background: var(--card) !important;
+          border: 1px solid var(--border) !important;
+          border-radius: 12px !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
+          padding: 8px !important;
+        }
+
+        .restaurant-user-dropdown-menu .ant-dropdown-menu-item {
+          color: var(--text) !important;
+          border-radius: 8px !important;
+        }
+
+        .restaurant-user-dropdown-menu .ant-dropdown-menu-item:hover {
+          background: var(--surface-subtle) !important;
+        }
+
         @keyframes pulse {
           0%, 100% {
             opacity: 1;
