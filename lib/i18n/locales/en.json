@@ -649,6 +649,30 @@
       "payment_status": {
         "paid": "Paid",
         "unpaid": "Unpaid"
+      },
+      "labels": {
+        "table_code": "Table {{tableCode}}",
+        "items_count": "{{count}} items",
+        "total_quantity": "{{count}} portions"
+      },
+      "actions": {
+        "view_details": "View details"
+      },
+      "fallbacks": {
+        "guest_name": "Guest"
+      },
+      "modal": {
+        "title": "Order {{orderNumber}} Details",
+        "close": "Close",
+        "table_code": "Table {{tableCode}}",
+        "total_items": "Total items: {{count}}",
+        "empty": "This order has no items yet.",
+        "unknown_dish": "Unknown dish",
+        "total": "Total payment",
+        "columns": {
+          "dish": "Dish",
+          "qty": "Qty"
+        }
       }
     },
     "tables": {
