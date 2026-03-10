@@ -2,6 +2,7 @@
 
 import menuService from "@/lib/services/menuService";
 import orderService, { OrderRequestDto } from "@/lib/services/orderService";
+import orderSignalRService from "@/lib/services/orderSignalRService";
 import type { CartItem } from "@/lib/types/menu";
 import { message } from "antd";
 import React, {
@@ -12,6 +13,8 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useTenant } from "./TenantContext";
+import { HubConnectionState } from "@microsoft/signalr";
 
 interface CartContextType {
   // Cart state
@@ -50,6 +53,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { tenant } = useTenant();
   const [messageApi, contextHolder] = message.useMessage();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
@@ -225,8 +229,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       const payload: OrderRequestDto = {
         tableId: orderTableId,
-        customerId:
-          orderCustomerId ?? "00000000-0000-0000-0000-000000000000",
+        customerId: orderCustomerId ?? "00000000-0000-0000-0000-000000000000",
         orderDetails,
       };
 
@@ -242,13 +245,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.error("Create order failed:", error);
       messageApi.error("Đặt món thất bại. Vui lòng thử lại.");
     }
-  }, [
-    cartItems,
-    fetchOrderedItems,
-    messageApi,
-    orderTableId,
-    orderCustomerId,
-  ]);
+  }, [cartItems, fetchOrderedItems, messageApi, orderTableId, orderCustomerId]);
 
   const requestPayment = useCallback(() => {
     if (orderedItems.length === 0) {
@@ -263,6 +260,50 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!orderTableId) return;
     fetchOrderedItems();
   }, [orderTableId, fetchOrderedItems]);
+
+useEffect(() => {
+  if (!orderTableId || !tenant?.id) return;
+
+  const tenantId = tenant.id;
+  let isMounted = true;
+
+  const handleOrderChange = (payload: { tableId?: string } | null) => {
+    // Chỉ fetch lại nếu đơn hàng thay đổi thuộc đúng bàn hiện tại
+    if (payload?.tableId && payload.tableId !== orderTableId) return;
+    if (isMounted) fetchOrderedItems();
+  };
+
+  const events = ["orders.created", "orders.updated", "orders.deleted"];
+
+  const setupSignalR = async () => {
+    try {
+      await orderSignalRService.start();
+      
+      const conn = orderSignalRService.getConnection();
+      if (conn.state === HubConnectionState.Connected) {
+        // Tham gia group theo nhà hàng
+        await orderSignalRService.invoke("JoinTenantGroup", tenantId);
+        
+        // Đăng ký các sự kiện
+        events.forEach((event) => orderSignalRService.on(event, handleOrderChange));
+        console.log("SignalR: Listening to order events for tenant:", tenantId);
+      }
+    } catch (error) {
+      console.error("SignalR: Setup failed", error);
+    }
+  };
+
+  setupSignalR();
+
+  // Clean up
+  return () => {
+    isMounted = false;
+    events.forEach((event) => orderSignalRService.off(event, handleOrderChange));
+    // Không nên stop hoàn toàn connection nếu bạn dùng chung service cho toàn app
+    // Chỉ nên rời group
+    orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+  };
+}, [orderTableId, tenant?.id, fetchOrderedItems]);
 
   useEffect(() => {
     if (!cartModalOpen || activeCartTab !== "2") return;

@@ -49,6 +49,17 @@ export interface OrderDto {
   orderDetails: OrderDetailDto[];
 }
 
+const extractOrders = (data: unknown): OrderDto[] => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data as OrderDto[];
+
+  const record = data as Record<string, unknown>;
+  const orders = (record.orders || record.Orders) as unknown;
+  if (Array.isArray(orders)) return orders as OrderDto[];
+
+  return [];
+};
+
 class OrderService {
   async createOrder(payload: OrderRequestDto): Promise<string> {
     const response = await axiosInstance.post<string>("/orders", payload);
@@ -61,18 +72,18 @@ class OrderService {
   }
 
   async getAllOrders(): Promise<OrderDto[]> {
-    const response = await axiosInstance.get<OrderDto[]>("/orders");
-    return response.data;
+    const response = await axiosInstance.get("/orders");
+    return extractOrders(response.data);
   }
 
   async getOrdersByFilter(params: {
     tableId?: string;
     paymentStatusId?: number;
   }): Promise<OrderDto[]> {
-    const response = await axiosInstance.get<OrderDto[]>("/orders", {
+    const response = await axiosInstance.get("/orders", {
       params,
     });
-    return response.data;
+    return extractOrders(response.data);
   }
 
   async getOrderById(id: string): Promise<OrderDto> {
