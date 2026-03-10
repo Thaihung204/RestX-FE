@@ -233,14 +233,8 @@ export const tenantService = {
       const data = response.data;
 
       if (data) {
-        console.log(
-          "[getTenantConfig] Raw API response keys:",
-          Object.keys(data),
-        );
-        console.log("[getTenantConfig] id:", data.id, "| Id:", data.Id);
-
         // Comprehensive PascalCase -> camelCase normalization
-        // Backend (C#) returns PascalCase by default, frontend uses camelCase
+        // Backend returns PascalCase default, frontend uses camelCase
         const pascalToCamelMap: Record<string, string> = {
           Id: "id",
           Name: "name",
@@ -294,16 +288,11 @@ export const tenantService = {
           }
         }
 
-        console.log("[getTenantConfig] Normalized id:", data.id);
-
         // Backend's TenantOverview DTO does NOT include Id field.
         // If id is still missing, resolve it by fetching the full tenant list
         // (GET /api/tenants returns full Tenant entities which include Id)
         if (!data.id && data.hostname) {
           try {
-            console.log(
-              "[getTenantConfig] ID missing from response, resolving via tenant list...",
-            );
             const listResponse = await adminAxiosInstance.get("/tenants");
             const allTenants = listResponse.data;
             const match = allTenants.find(
@@ -311,10 +300,6 @@ export const tenantService = {
             );
             if (match) {
               data.id = match.id || match.Id;
-              console.log(
-                "[getTenantConfig] Resolved ID from tenant list:",
-                data.id,
-              );
             } else {
               console.warn(
                 "[getTenantConfig] Could not find matching tenant for hostname:",

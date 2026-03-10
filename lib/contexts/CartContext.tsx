@@ -2,6 +2,7 @@
 
 import menuService from "@/lib/services/menuService";
 import orderService, { OrderRequestDto } from "@/lib/services/orderService";
+import orderSignalRService from "@/lib/services/orderSignalRService";
 import type { CartItem } from "@/lib/types/menu";
 import { message } from "antd";
 import React, {
@@ -12,6 +13,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useTenant } from "./TenantContext";
 
 interface CartContextType {
   // Cart state
@@ -50,6 +52,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { tenant } = useTenant();
   const [messageApi, contextHolder] = message.useMessage();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
@@ -225,8 +228,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       const payload: OrderRequestDto = {
         tableId: orderTableId,
-        customerId:
-          orderCustomerId ?? "00000000-0000-0000-0000-000000000000",
+        customerId: orderCustomerId ?? "00000000-0000-0000-0000-000000000000",
         orderDetails,
       };
 
@@ -242,13 +244,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.error("Create order failed:", error);
       messageApi.error("Đặt món thất bại. Vui lòng thử lại.");
     }
-  }, [
-    cartItems,
-    fetchOrderedItems,
-    messageApi,
-    orderTableId,
-    orderCustomerId,
-  ]);
+  }, [cartItems, fetchOrderedItems, messageApi, orderTableId, orderCustomerId]);
 
   const requestPayment = useCallback(() => {
     if (orderedItems.length === 0) {
@@ -263,6 +259,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!orderTableId) return;
     fetchOrderedItems();
   }, [orderTableId, fetchOrderedItems]);
+
+  useEffect(() => {
+    if (!orderTableId || !tenant?.id) return;
+
+    const tenantId = tenant.id;
+
+    const handleOrderChange = (payload: { tableId?: string } | null) => {
+      if (payload?.tableId && payload.tableId !== orderTableId) return;
+      fetchOrderedItems();
+    };
+
+    const events = ["orders.created", "orders.updated", "orders.deleted"];
+
+    orderSignalRService
+      .start()
+      .then(() => orderSignalRService.invoke("JoinTenantGroup", tenantId))
+      .catch((error) => console.warn("SignalR connection failed:", error));
+
+    events.forEach((event) => orderSignalRService.on(event, handleOrderChange));
+
+    return () => {
+      events.forEach((event) =>
+        orderSignalRService.off(event, handleOrderChange),
+      );
+      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+      orderSignalRService.stop();
+    };
+  }, [orderTableId, tenant?.id, fetchOrderedItems]);
 
   useEffect(() => {
     if (!cartModalOpen || activeCartTab !== "2") return;
