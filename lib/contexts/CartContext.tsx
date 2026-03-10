@@ -14,6 +14,7 @@ import React, {
   useState,
 } from "react";
 import { useTenant } from "./TenantContext";
+import { HubConnectionState } from "@microsoft/signalr";
 
 interface CartContextType {
   // Cart state
@@ -260,33 +261,49 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     fetchOrderedItems();
   }, [orderTableId, fetchOrderedItems]);
 
-  useEffect(() => {
-    if (!orderTableId || !tenant?.id) return;
+useEffect(() => {
+  if (!orderTableId || !tenant?.id) return;
 
-    const tenantId = tenant.id;
+  const tenantId = tenant.id;
+  let isMounted = true;
 
-    const handleOrderChange = (payload: { tableId?: string } | null) => {
-      if (payload?.tableId && payload.tableId !== orderTableId) return;
-      fetchOrderedItems();
-    };
+  const handleOrderChange = (payload: { tableId?: string } | null) => {
+    // Chỉ fetch lại nếu đơn hàng thay đổi thuộc đúng bàn hiện tại
+    if (payload?.tableId && payload.tableId !== orderTableId) return;
+    if (isMounted) fetchOrderedItems();
+  };
 
-    const events = ["orders.created", "orders.updated", "orders.deleted"];
+  const events = ["orders.created", "orders.updated", "orders.deleted"];
 
-    orderSignalRService
-      .start()
-      .then(() => orderSignalRService.invoke("JoinTenantGroup", tenantId))
-      .catch((error) => console.warn("SignalR connection failed:", error));
+  const setupSignalR = async () => {
+    try {
+      await orderSignalRService.start();
+      
+      const conn = orderSignalRService.getConnection();
+      if (conn.state === HubConnectionState.Connected) {
+        // Tham gia group theo nhà hàng
+        await orderSignalRService.invoke("JoinTenantGroup", tenantId);
+        
+        // Đăng ký các sự kiện
+        events.forEach((event) => orderSignalRService.on(event, handleOrderChange));
+        console.log("SignalR: Listening to order events for tenant:", tenantId);
+      }
+    } catch (error) {
+      console.error("SignalR: Setup failed", error);
+    }
+  };
 
-    events.forEach((event) => orderSignalRService.on(event, handleOrderChange));
+  setupSignalR();
 
-    return () => {
-      events.forEach((event) =>
-        orderSignalRService.off(event, handleOrderChange),
-      );
-      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
-      orderSignalRService.stop();
-    };
-  }, [orderTableId, tenant?.id, fetchOrderedItems]);
+  // Clean up
+  return () => {
+    isMounted = false;
+    events.forEach((event) => orderSignalRService.off(event, handleOrderChange));
+    // Không nên stop hoàn toàn connection nếu bạn dùng chung service cho toàn app
+    // Chỉ nên rời group
+    orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+  };
+}, [orderTableId, tenant?.id, fetchOrderedItems]);
 
   useEffect(() => {
     if (!cartModalOpen || activeCartTab !== "2") return;

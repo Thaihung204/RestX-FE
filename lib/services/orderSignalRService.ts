@@ -2,49 +2,50 @@ import {
   HubConnection,
   HubConnectionBuilder,
   HubConnectionState,
+  HttpTransportType,
   LogLevel,
 } from "@microsoft/signalr";
 
 const getHubUrl = () => {
   if (typeof window === "undefined") return "/hubs/orders";
 
-  // In production: browser connects via subdomain (e.g. https://demo.restx.food/hubs/orders)
-  // YARP reverse proxy routes to backend — supports WebSocket.
-  // In development: NEXT_PUBLIC_SIGNALR_URL=https://localhost:5000 (direct to BE)
-  const base = process.env.NEXT_PUBLIC_SIGNALR_URL || window.location.origin;
-  return `${base}/hubs/orders`;
+  // NEXT_PUBLIC_SIGNALR_URL: direct to BE (e.g. https://localhost:5000)
+  // Fallback: relative path → goes through Next.js rewrite (dev) or YARP (prod)
+  const base = process.env.NEXT_PUBLIC_SIGNALR_URL;
+  return base ? `${base}/hubs/orders` : "/hubs/orders";
 };
 
 let connection: HubConnection | null = null;
 
 const getConnection = () => {
   if (!connection) {
+    const hubUrl = getHubUrl();
+    
+    // Ép buộc dùng WebSocket và bỏ qua đàm phán
     connection = new HubConnectionBuilder()
-      .withUrl(getHubUrl(), {
+      .withUrl(hubUrl, {
         skipNegotiation: true,
-        transport: 1,
+        transport: HttpTransportType.WebSockets, // Luôn dùng WebSockets
         accessTokenFactory: () =>
           typeof window !== "undefined"
             ? localStorage.getItem("accessToken") || ""
             : "",
       })
       .withAutomaticReconnect()
-      .configureLogging(LogLevel.None)
+      .configureLogging(LogLevel.Information)
       .build();
-  }
 
+    connection.serverTimeoutInMilliseconds = 60000;
+    connection.keepAliveIntervalInMilliseconds = 20000;
+  }
   return connection;
 };
 
 const start = async () => {
   if (typeof window === "undefined") return;
-  try {
-    const conn = getConnection();
-    if (conn.state === HubConnectionState.Disconnected) {
-      await conn.start();
-    }
-  } catch {
-    // SignalR is optional — app works without real-time updates
+  const conn = getConnection();
+  if (conn.state === HubConnectionState.Disconnected) {
+    await conn.start();
   }
 };
 
@@ -55,10 +56,12 @@ const stop = async () => {
   }
 };
 
-const invoke = async (methodName: string, ...args: unknown[]) => {
+const invoke = async (methodName: string, ...args: any[]) => {
   const conn = getConnection();
   if (conn.state === HubConnectionState.Connected) {
-    await conn.invoke(methodName, ...args);
+    return await conn.invoke(methodName, ...args);
+  } else {
+    console.warn(`SignalR: Cannot invoke ${methodName} because state is ${conn.state}`);
   }
 };
 

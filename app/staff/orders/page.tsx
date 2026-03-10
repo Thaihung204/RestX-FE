@@ -121,17 +121,35 @@ export default function OrderManagement() {
           const tableName =
             tables.find((table) => table.id === order.tableId)?.name ||
             order.tableId;
-          const items: OrderItem[] = (order.orderDetails ?? []).map(
-            (detail, index) => ({
+
+          const aggregatedItems = new Map<string, OrderItem>();
+          (order.orderDetails ?? []).forEach((detail, index) => {
+            const status = mapOrderItemStatus(detail.status);
+            const key = `${detail.dishId}__${status}`;
+            const existing = aggregatedItems.get(key);
+            const quantity = detail.quantity ?? 0;
+
+            if (existing) {
+              aggregatedItems.set(key, {
+                ...existing,
+                quantity: existing.quantity + quantity,
+                note: existing.note || detail.note || undefined,
+              });
+              return;
+            }
+
+            aggregatedItems.set(key, {
               id: detail.id || `${order.id || "order"}-${index}`,
               dishId: detail.dishId,
               name: dishNameMap[detail.dishId] || detail.dishId,
-              quantity: detail.quantity,
+              quantity,
               price: 0,
               note: detail.note || undefined,
-              status: mapOrderItemStatus(detail.status),
-            }),
-          );
+              status,
+            });
+          });
+
+          const items = Array.from(aggregatedItems.values());
 
           return {
             id: order.id || "",
@@ -682,7 +700,7 @@ export default function OrderManagement() {
                         {item.name}
                       </Text>
                       <Tag style={{ fontSize: isMobile ? 12 : 13 }}>
-                        {item.quantity}x
+                        x{item.quantity}
                       </Tag>
                     </Space>
                     {/* price hidden in order details per request */}
