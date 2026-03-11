@@ -33,6 +33,11 @@ const nextConfig = {
         source: '/api/admin/:path*',
         destination: `${adminApiUrl}/:path*`,
       },
+      // SignalR hub - proxy negotiate & transport through Next.js to avoid CORS
+      {
+        source: '/hubs/:path*',
+        destination: `${tenantApiUrl.replace(/\/api$/, '')}/hubs/:path*`,
+      },
       // Tenant API rewrites - go to tenant backend (development only)
       {
         source: '/api/:path*',

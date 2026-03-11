@@ -2,7 +2,9 @@
 
 import menuService from "@/lib/services/menuService";
 import orderService, { OrderRequestDto } from "@/lib/services/orderService";
+import orderSignalRService from "@/lib/services/orderSignalRService";
 import type { CartItem } from "@/lib/types/menu";
+import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import React, {
   createContext,
@@ -12,6 +14,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useTenant } from "./TenantContext";
 
 interface CartContextType {
   // Cart state
@@ -50,6 +53,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { tenant } = useTenant();
   const [messageApi, contextHolder] = message.useMessage();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
@@ -136,13 +140,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!orderTableId) return;
 
     try {
-      const [orders, menuData] = await Promise.all([
+      const [allOrders, menuData] = await Promise.all([
         orderService.getOrdersByFilter({
           tableId: orderTableId,
           paymentStatusId: 0,
         }),
         menuService.getMenu(),
       ]);
+
+      const orders = allOrders.filter((order) => {
+        const matchesTable =
+          order.tableId === orderTableId ||
+          (order.tableIds && order.tableIds.includes(orderTableId!));
+        const matchesPayment = order.paymentStatusId === 0;
+        return matchesTable && matchesPayment;
+      });
 
       const dishLookup = new Map<
         string,
@@ -225,8 +237,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       const payload: OrderRequestDto = {
         tableId: orderTableId,
-        customerId:
-          orderCustomerId ?? "00000000-0000-0000-0000-000000000000",
+        customerId: orderCustomerId,
         orderDetails,
       };
 
@@ -238,17 +249,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       messageApi.success(
         "Đặt món thành công! Yêu cầu đã được gửi đến nhân viên.",
       );
-    } catch (error) {
-      console.error("Create order failed:", error);
-      messageApi.error("Đặt món thất bại. Vui lòng thử lại.");
+    } catch (error: any) {
+      const serverMsg = error?.response?.data?.message || error?.response?.data;
+      console.error("Create order failed:", serverMsg, error);
+      messageApi.error(
+        typeof serverMsg === "string" && serverMsg.length < 200
+          ? `Đặt món thất bại: ${serverMsg}`
+          : "Đặt món thất bại. Vui lòng thử lại.",
+      );
     }
-  }, [
-    cartItems,
-    fetchOrderedItems,
-    messageApi,
-    orderTableId,
-    orderCustomerId,
-  ]);
+  }, [cartItems, fetchOrderedItems, messageApi, orderTableId, orderCustomerId, totalCartAmount]);
 
   const requestPayment = useCallback(() => {
     if (orderedItems.length === 0) {
@@ -263,6 +273,52 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!orderTableId) return;
     fetchOrderedItems();
   }, [orderTableId, fetchOrderedItems]);
+
+useEffect(() => {
+  if (!orderTableId || !tenant?.id) return;
+
+  const tenantId = tenant.id;
+  let isMounted = true;
+
+  // BE broadcast: { id, order: { tableId, tableIds, ... } }
+  const handleOrderChange = (payload: any) => {
+    const changedTableId = payload?.tableId || payload?.order?.tableId;
+    const changedTableIds = payload?.order?.tableIds as string[] | undefined;
+    if (
+      changedTableId &&
+      changedTableId !== orderTableId &&
+      (!changedTableIds || !changedTableIds.includes(orderTableId!))
+    ) return;
+    if (isMounted) fetchOrderedItems();
+  };
+
+  const events = ["orders.created", "orders.updated", "orders.deleted"];
+
+  const setupSignalR = async () => {
+    try {
+      await orderSignalRService.start();
+      
+      const conn = orderSignalRService.getConnection();
+      if (conn.state === HubConnectionState.Connected) {
+        await orderSignalRService.invoke("JoinTenantGroup", tenantId);
+        
+        events.forEach((event) => orderSignalRService.on(event, handleOrderChange));
+        console.log("SignalR: Listening to order events for tenant:", tenantId);
+      }
+    } catch (error) {
+      console.error("SignalR: Setup failed", error);
+    }
+  };
+
+  setupSignalR();
+
+  // Clean up
+  return () => {
+    isMounted = false;
+    events.forEach((event) => orderSignalRService.off(event, handleOrderChange));
+    orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+  };
+}, [orderTableId, tenant?.id, fetchOrderedItems]);
 
   useEffect(() => {
     if (!cartModalOpen || activeCartTab !== "2") return;

@@ -622,7 +622,9 @@ export default function StaffLayout({
           {/* Content */}
           <Content
             style={{
-              margin: isMobile ? 12 : 24,
+              marginTop: isMobile ? 12 : 24,
+              marginRight: isMobile ? 12 : 24,
+              marginLeft: isMobile ? 12 : 24,
               marginBottom: isDrawerDevice ? 130 : 24,
               padding: 0,
             }}>

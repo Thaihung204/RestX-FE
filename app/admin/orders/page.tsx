@@ -1,14 +1,16 @@
 "use client";
 
 import OrderDetailsModal from "@/components/admin/orders/OrderDetailsModal";
+import { usePageLoading } from "@/components/PageTransitionLoader";
 import customerService from "@/lib/services/customerService";
 import menuService from "@/lib/services/menuService";
 import orderService, { OrderDto } from "@/lib/services/orderService";
+import orderSignalRService from "@/lib/services/orderSignalRService";
 import { tableService, type TableItem } from "@/lib/services/tableService";
 import { type OrderDetailModalItem } from "@/lib/types/order";
-import { useEffect, useMemo, useState } from "react";
+import { HubConnectionState } from "@microsoft/signalr";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { usePageLoading } from "@/components/PageTransitionLoader";
 
 type OrderStatusUi =
   | "pending"
@@ -44,6 +46,8 @@ export default function OrdersPage() {
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<
     OrderDetailModalItem[] | null
   >(null);
+  const inFlightRef = useRef(false);
+  const lastRefreshRef = useRef<number | null>(null);
 
   // Map backend enums to UI strings
   const mapOrderStatus = (statusId: number): OrderStatusUi => {
@@ -65,7 +69,7 @@ export default function OrdersPage() {
     return statusId === 1 ? "paid" : "unpaid";
   };
 
-  const loadTables = async () => {
+  const loadTables = useCallback(async () => {
     try {
       const tables = await tableService.getAllTables();
       const dict: Record<string, TableItem> = {};
@@ -78,71 +82,129 @@ export default function OrdersPage() {
       console.error("Failed to load tables for orders page:", error);
       return {} as Record<string, TableItem>;
     }
-  };
+  }, []);
 
-  const loadOrders = async (tablesDict?: Record<string, TableItem>) => {
-    try {
-      setLoading(true);
-      const data = await orderService.getAllOrders();
-      // Pre-fetch unique customers referenced by orders to show name/avatar
-      const uniqueCustomerIds = Array.from(
-        new Set(data.map((o) => o.customerId).filter(Boolean)),
-      );
+  const loadOrders = useCallback(
+    async (tablesDict?: Record<string, TableItem>) => {
+      if (inFlightRef.current) return;
+      inFlightRef.current = true;
+      try {
+        setLoading(true);
+        const data = await orderService.getAllOrders();
+        // Pre-fetch unique customers referenced by orders to show name/avatar
+        const uniqueCustomerIds = Array.from(
+          new Set(data.map((o) => o.customerId).filter(Boolean)),
+        );
 
-      const customersById: Record<string, { name: string; avatar?: string }> = {};
-      await Promise.all(
-        uniqueCustomerIds.map(async (cid) => {
-          try {
-            const c = await customerService.getCustomerById(cid);
-            if (c) customersById[c.id] = { name: c.name, avatar: c.avatar };
-          } catch (err) {
-            console.error("Failed to load customer", cid, err);
-          }
-        }),
-      );
+        const customersById: Record<
+          string,
+          { name: string; avatar?: string }
+        > = {};
+        await Promise.all(
+          uniqueCustomerIds.map(async (cid) => {
+            try {
+              const c = await customerService.getCustomerById(cid);
+              if (c) customersById[c.id] = { name: c.name, avatar: c.avatar };
+            } catch (err) {
+              console.error("Failed to load customer", cid, err);
+            }
+          }),
+        );
 
-      setOrders(
-        data.map((o) => {
-          const table = (tablesDict ?? tablesById)[o.tableId];
-          const tableCode = table?.code || o.tableId;
-          const distinctCount = o.orderDetails?.length ?? 0;
-          const totalQuantity =
-            o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ?? 0;
-          const status = mapOrderStatus(o.orderStatusId);
-          const paymentStatus = mapPaymentStatus(o.paymentStatusId);
-          const customer = customersById[o.customerId];
+        setOrders(
+          data.map((o) => {
+            const table = (tablesDict ?? tablesById)[o.tableId];
+            const tableCode = table?.code || o.tableId;
+            const distinctCount = o.orderDetails?.length ?? 0;
+            const totalQuantity =
+              o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ?? 0;
+            const status = mapOrderStatus(o.orderStatusId);
+            const paymentStatus = mapPaymentStatus(o.paymentStatusId);
+            const customer = customersById[o.customerId];
 
-          return {
-            id: o.id ?? "",
-            orderNumber:
-              o.reference && o.reference.trim().length > 0
-                ? o.reference
-                : `#${(o.id ?? "").slice(0, 8)}`,
-            customerName:
-              customer?.name ?? t("dashboard.orders.fallbacks.guest_name"),
-            customerAvatar: customer?.avatar ?? null,
-            tableCode,
-            items: distinctCount,
-            totalQuantity,
-            total: Number(o.totalAmount ?? 0),
-            status,
-            time: "",
-            paymentStatus,
-            raw: o,
-          };
-        }),
-      );
-    } catch (error) {
-      console.error("Failed to load orders:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+            return {
+              id: o.id ?? "",
+              orderNumber:
+                o.reference && o.reference.trim().length > 0
+                  ? o.reference
+                  : `#${(o.id ?? "").slice(0, 8)}`,
+              customerName:
+                customer?.name ?? t("dashboard.orders.fallbacks.guest_name"),
+              customerAvatar: customer?.avatar ?? null,
+              tableCode,
+              items: distinctCount,
+              totalQuantity,
+              total: Number(o.totalAmount ?? 0),
+              status,
+              time: "",
+              paymentStatus,
+              raw: o,
+            };
+          }),
+        );
+      } catch (error) {
+        console.error("Failed to load orders:", error);
+      } finally {
+        setLoading(false);
+        inFlightRef.current = false;
+      }
+    },
+    [tablesById, t],
+  );
+
+  const refreshOrders = useCallback(async () => {
+    const now = Date.now();
+    if (lastRefreshRef.current && now - lastRefreshRef.current < 2000) return;
+    lastRefreshRef.current = now;
+    const tablesDict = await loadTables();
+    await loadOrders(tablesDict);
+  }, [loadTables, loadOrders]);
 
   useEffect(() => {
     // Load tables first, then orders so we can map table code
-    loadTables().then(loadOrders).catch(console.error);
-  }, []);
+    refreshOrders().catch(console.error);
+  }, [refreshOrders]);
+
+  useEffect(() => {
+    let isMounted = true;
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const handleOrderChange = () => {
+      if (!isMounted) return;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (!isMounted) return;
+        refreshOrders();
+      }, 300);
+    };
+
+    const events = ["orders.created", "orders.updated", "orders.deleted"];
+
+    const setupSignalR = async () => {
+      try {
+        await orderSignalRService.start();
+
+        const conn = orderSignalRService.getConnection();
+        if (conn.state === HubConnectionState.Connected) {
+          events.forEach((event) =>
+            orderSignalRService.on(event, handleOrderChange),
+          );
+        }
+      } catch (error) {
+        console.error("SignalR: Setup failed", error);
+      }
+    };
+
+    setupSignalR();
+
+    return () => {
+      isMounted = false;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      events.forEach((event) =>
+        orderSignalRService.off(event, handleOrderChange),
+      );
+    };
+  }, [refreshOrders]);
 
   const statusConfig = {
     pending: {

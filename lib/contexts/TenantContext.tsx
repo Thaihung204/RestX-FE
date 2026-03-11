@@ -24,7 +24,6 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
   const fetchTenant = async () => {
     const host = window.location.host; // e.g., demo.restx.food:3000
-    console.log("[TenantContext] Current host:", host);
 
     // 1. Check for Landing domains (Skip API call)
     if (host === "restx.food" || host === "www.restx.food") {
@@ -58,19 +57,12 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       hostname = "demo.restx.food";
     }
 
-    console.log(
-      "[TenantContext] Fetching tenant config for hostname:",
-      hostname,
-    );
-
     try {
       // 5. Call API to get tenant config
       const data = await tenantService.getTenantConfig(hostname);
-      console.log("[TenantContext] Tenant config response:", data);
 
       if (data) {
         setTenant(data);
-        console.log("[TenantContext] Tenant loaded successfully:", data.name);
       } else {
         console.warn(
           "[TenantContext] Tenant not found for hostname:",
