@@ -1,5 +1,132 @@
 {
   "staff": {
+    "reservations": {
+      "title": "Reservations",
+      "subtitle": "Manage reservations and actions",
+      "refresh": "Refresh",
+      "search_placeholder": "Search by name, phone, code...",
+      "filter_status": "Filter by status",
+      "status_all": "All statuses",
+      "empty": "No reservations found",
+      "load_error": "Failed to load reservations",
+      "action_error": "Action failed",
+      "confirm_success": "Reservation confirmed",
+      "checkin_success": "Checked in successfully",
+      "complete_success": "Reservation completed",
+      "cancel_success": "Reservation cancelled",
+      "columns": {
+        "code": "Code",
+        "customer": "Customer",
+        "table": "Table",
+        "date_time": "Date & Time",
+        "guests": "Guests",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "confirm": "Confirm",
+        "checkin": "Check-in",
+        "complete": "Complete",
+        "cancel": "Cancel"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "checkin": "Check-in",
+        "checked_in": "Checked in",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    }
+  },
+  "admin": {
+    "reservations": {
+      "title": "Reservation Management",
+      "total_count": "Total {{total}} reservations",
+      "refresh": "Refresh",
+      "stats": {
+        "total": "Total",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "checkin": "Check-in"
+      },
+      "filter": {
+        "search_placeholder": "Search by name, phone, booking code...",
+        "all_status": "All statuses",
+        "clear": "Clear filters"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "checkin": "Check-in",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "table_headers": {
+        "code": "Booking Code",
+        "customer": "Customer",
+        "table_floor": "Table / Floor",
+        "date_time": "Date & Time",
+        "guests": "Guests",
+        "status": "Status",
+        "walk_in": "Walk-in",
+        "actions": "Actions"
+      },
+      "empty": "No reservations found",
+      "pagination": {
+        "page_info": "Page {{page}} of {{total}} · {{count}} results",
+        "prev": "Prev",
+        "next": "Next"
+      },
+      "actions": {
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "checkin": "Check-in",
+        "complete": "Complete",
+        "quick_cancel": "Quick Cancel",
+        "view_detail": "View details & actions"
+      },
+      "side_effects": {
+        "CONFIRMED": "Table will be marked as Reserved",
+        "CHECKED_IN": "Table moves to Occupied, creates TableSession",
+        "COMPLETED": "Table returns to Available, closes TableSession",
+        "CANCELLED": "Table returns to Available"
+      },
+      "modal": {
+        "title": "Reservation Details",
+        "load_error": "Failed to load data",
+        "status_label": "Status:",
+        "confirm_action": "Confirm: {{action}}?",
+        "processing": "Processing...",
+        "cancel_btn": "Cancel",
+        "contact_title": "Contact Information",
+        "booking_title": "Booking Information",
+        "contact": {
+          "name": "Name",
+          "phone": "Phone",
+          "email": "Email",
+          "type": "Type",
+          "level": "Level",
+          "guest": "🏷️ Walk-in Guest",
+          "member": "👤 Member"
+        },
+        "booking": {
+          "date_time": "Date & Time",
+          "guests": "Guests",
+          "guests_suffix": "people",
+          "table": "Table",
+          "deposit": "Deposit",
+          "deposit_paid": "Deposit Paid",
+          "deposit_yes": "Yes",
+          "deposit_no": "No"
+        },
+        "special_requests": "Special Requests",
+        "created_at": "Created at:",
+        "checked_in_at": "Checked in:"
+      }
+    }
+  },
+  "staff": {
     "dashboard": {
       "greeting": {
         "morning": "Good morning",

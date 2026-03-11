@@ -32,10 +32,10 @@ export interface CreateReservationRequest {
     tableIds: string[];
     reservationDateTime: string;
     numberOfGuests: number;
+    name: string;
+    phone: string;
+    email: string;
     specialRequests?: string;
-    guestName?: string;
-    guestPhone?: string;
-    guestEmail?: string;
 }
 
 export interface CreateReservationResponse {
@@ -163,9 +163,8 @@ export interface CheckAvailabilityResponse {
 // ─────────────────────────────────────────────
 
 export interface LookupReservationParams {
-    code?: string; // FE cũ
-    confirmationCode?: string; // BE hiện tại
-    phone: string;
+    code?: string;
+    confirmationCode?: string;
 }
 
 // ─────────────────────────────────────────────
@@ -206,8 +205,32 @@ export const reservationService = {
     },
 
     /** PUT /api/reservations/{id} — cập nhật reservation */
+    updateReservation: async (
+        id: string,
+        data: {
+            tableIds?: string[];
+            reservationDateTime?: string;
+            numberOfGuests?: number;
+            specialRequests?: string;
+        }
+    ): Promise<void> => {
+        await axiosInstance.put(`/reservations/${id}`, data);
+    },
+
     updateReservationStatus: async (id: string, statusId: number): Promise<void> => {
-        await axiosInstance.put(`/reservations/${id}`, { statusId });
+        await axiosInstance.patch(`/reservations/${id}/status`, { statusId });
+    },
+
+    confirmReservation: async (id: string): Promise<void> => {
+        await axiosInstance.post(`/reservations/${id}/confirm`);
+    },
+
+    checkInReservation: async (id: string): Promise<void> => {
+        await axiosInstance.post(`/reservations/${id}/checkin`);
+    },
+
+    completeReservation: async (id: string): Promise<void> => {
+        await axiosInstance.post(`/reservations/${id}/complete`);
     },
 
     /** DELETE /api/reservations/{id} — cancel reservation */
@@ -222,34 +245,25 @@ export const reservationService = {
         return Array.isArray(data) ? data : (data?.items ?? []);
     },
 
-    /** GET /api/reservations/lookup — Guest tra cứu bằng confirmationCode + phone */
+    /**
+     * Lookup reservation by code.
+     * NOTE: Current BE exposes GET /reservations/{code} (role-protected), not /reservations/lookup.
+     */
     lookupReservation: async (params: LookupReservationParams): Promise<ReservationDetail> => {
-        const response = await axiosInstance.get<ApiEnvelope<ReservationDetail>>('/reservations/lookup', {
-            params: {
-                confirmationCode: params.confirmationCode ?? params.code,
-                phone: params.phone,
-            },
-        });
+        const confirmationCode = (params.confirmationCode ?? params.code ?? '').trim();
+        const response = await axiosInstance.get<ApiEnvelope<ReservationDetail>>(`/reservations/${encodeURIComponent(confirmationCode)}`);
         return response.data.data;
     },
 
-    /** GET /api/reservations/check-availability — Kiểm tra xung đột bàn */
-    checkAvailability: async (params: CheckAvailabilityParams): Promise<CheckAvailabilityResponse> => {
-        const reservationDateTime = params.reservationDateTime
-            ?? ((params.date && params.time) ? `${params.date}T${params.time}:00` : undefined);
-
-        const response = await axiosInstance.get<ApiEnvelope<CheckAvailabilityResponse>>('/reservations/check-availability', {
-            params: {
-                TableIds: params.tableIds,
-                ReservationDateTime: reservationDateTime,
-                BufferMinutes: params.bufferMinutes,
-            },
-            paramsSerializer: {
-                indexes: null,
-            },
-        });
-
-        return response.data.data;
+    /**
+     * Check availability is currently not exposed by BE controller.
+     * Keep API stable for UI callers by returning "available" fallback.
+     */
+    checkAvailability: async (_params: CheckAvailabilityParams): Promise<CheckAvailabilityResponse> => {
+        return {
+            available: true,
+            conflictingSlots: [],
+        };
     },
 
     STATUS_ID: {
