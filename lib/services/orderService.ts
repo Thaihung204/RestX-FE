@@ -10,13 +10,15 @@ export interface OrderDetailRequestDto {
 
 export interface OrderRequestDto {
   tableId: string;
-  customerId: string;
+  customerId?: string;
   orderStatusId?: number;
   paymentStatusId?: number;
   reservationId?: string | null;
+  subTotal?: number | null;
   discountAmount?: number | null;
   taxAmount?: number | null;
   serviceCharge?: number | null;
+  totalAmount?: number | null;
   tableIds?: string[];
   orderDetails: OrderDetailRequestDto[];
 }

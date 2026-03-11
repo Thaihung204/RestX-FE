@@ -4,6 +4,7 @@ import menuService from "@/lib/services/menuService";
 import orderService, { OrderRequestDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import type { CartItem } from "@/lib/types/menu";
+import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import React, {
   createContext,
@@ -14,7 +15,6 @@ import React, {
   useState,
 } from "react";
 import { useTenant } from "./TenantContext";
-import { HubConnectionState } from "@microsoft/signalr";
 
 interface CartContextType {
   // Cart state
@@ -140,13 +140,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!orderTableId) return;
 
     try {
-      const [orders, menuData] = await Promise.all([
+      const [allOrders, menuData] = await Promise.all([
         orderService.getOrdersByFilter({
           tableId: orderTableId,
           paymentStatusId: 0,
         }),
         menuService.getMenu(),
       ]);
+
+      const orders = allOrders.filter((order) => {
+        const matchesTable =
+          order.tableId === orderTableId ||
+          (order.tableIds && order.tableIds.includes(orderTableId!));
+        const matchesPayment = order.paymentStatusId === 0;
+        return matchesTable && matchesPayment;
+      });
 
       const dishLookup = new Map<
         string,
@@ -229,7 +237,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       const payload: OrderRequestDto = {
         tableId: orderTableId,
-        customerId: orderCustomerId ?? "00000000-0000-0000-0000-000000000000",
+        customerId: orderCustomerId,
         orderDetails,
       };
 
@@ -241,11 +249,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       messageApi.success(
         "Đặt món thành công! Yêu cầu đã được gửi đến nhân viên.",
       );
-    } catch (error) {
-      console.error("Create order failed:", error);
-      messageApi.error("Đặt món thất bại. Vui lòng thử lại.");
+    } catch (error: any) {
+      const serverMsg = error?.response?.data?.message || error?.response?.data;
+      console.error("Create order failed:", serverMsg, error);
+      messageApi.error(
+        typeof serverMsg === "string" && serverMsg.length < 200
+          ? `Đặt món thất bại: ${serverMsg}`
+          : "Đặt món thất bại. Vui lòng thử lại.",
+      );
     }
-  }, [cartItems, fetchOrderedItems, messageApi, orderTableId, orderCustomerId]);
+  }, [cartItems, fetchOrderedItems, messageApi, orderTableId, orderCustomerId, totalCartAmount]);
 
   const requestPayment = useCallback(() => {
     if (orderedItems.length === 0) {
@@ -267,9 +280,15 @@ useEffect(() => {
   const tenantId = tenant.id;
   let isMounted = true;
 
-  const handleOrderChange = (payload: { tableId?: string } | null) => {
-    // Chỉ fetch lại nếu đơn hàng thay đổi thuộc đúng bàn hiện tại
-    if (payload?.tableId && payload.tableId !== orderTableId) return;
+  // BE broadcast: { id, order: { tableId, tableIds, ... } }
+  const handleOrderChange = (payload: any) => {
+    const changedTableId = payload?.tableId || payload?.order?.tableId;
+    const changedTableIds = payload?.order?.tableIds as string[] | undefined;
+    if (
+      changedTableId &&
+      changedTableId !== orderTableId &&
+      (!changedTableIds || !changedTableIds.includes(orderTableId!))
+    ) return;
     if (isMounted) fetchOrderedItems();
   };
 
@@ -281,10 +300,8 @@ useEffect(() => {
       
       const conn = orderSignalRService.getConnection();
       if (conn.state === HubConnectionState.Connected) {
-        // Tham gia group theo nhà hàng
         await orderSignalRService.invoke("JoinTenantGroup", tenantId);
         
-        // Đăng ký các sự kiện
         events.forEach((event) => orderSignalRService.on(event, handleOrderChange));
         console.log("SignalR: Listening to order events for tenant:", tenantId);
       }
@@ -299,8 +316,6 @@ useEffect(() => {
   return () => {
     isMounted = false;
     events.forEach((event) => orderSignalRService.off(event, handleOrderChange));
-    // Không nên stop hoàn toàn connection nếu bạn dùng chung service cho toàn app
-    // Chỉ nên rời group
     orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
   };
 }, [orderTableId, tenant?.id, fetchOrderedItems]);
