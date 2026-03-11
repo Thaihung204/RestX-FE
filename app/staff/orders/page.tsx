@@ -1,6 +1,7 @@
 "use client";
 
 import menuService from "@/lib/services/menuService";
+import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderService, { OrderDto, OrderRequestDto } from "@/lib/services/orderService";
 import { tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
@@ -11,6 +12,7 @@ import {
   SendOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
+import { HubConnectionState } from "@microsoft/signalr";
 import {
   App,
   Badge,
@@ -28,9 +30,10 @@ import {
   Tag,
   Typography,
 } from "antd";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
+import { useTenant } from "@/lib/contexts/TenantContext";
 
 const { Text } = Typography;
 const { Search } = Input;
@@ -74,6 +77,7 @@ export default function OrderManagement() {
   const { message } = App.useApp();
   const { mode } = useThemeMode();
   const { t } = useTranslation();
+  const { tenant } = useTenant();
   const [orders, setOrders] = useState<Order[]>([]);
   const [tables, setTables] = useState<{ id: string; name: string }[]>([]);
   const [ordersRefreshKey, setOrdersRefreshKey] = useState(0);
@@ -90,96 +94,96 @@ export default function OrderManagement() {
     fetchTables();
   }, []);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const data = await orderService.getAllOrders();
+  const fetchOrders = useCallback(async () => {
+    try {
+      const data = await orderService.getAllOrders();
 
-        const uniqueDishIds = Array.from(
-          new Set(
-            data
-              .flatMap((order) =>
-                (order.orderDetails ?? []).map((detail) => detail.dishId),
-              )
-              .filter(Boolean),
-          ),
-        );
+      const uniqueDishIds = Array.from(
+        new Set(
+          data
+            .flatMap((order) =>
+              (order.orderDetails ?? []).map((detail) => detail.dishId),
+            )
+            .filter(Boolean),
+        ),
+      );
 
-        const dishNameMap: Record<string, string> = {};
-        await Promise.all(
-          uniqueDishIds.map(async (dishId) => {
-            try {
-              const dish = await menuService.getDishById(dishId);
-              dishNameMap[dishId] = dish?.name || dishId;
-            } catch {
-              dishNameMap[dishId] = dishId;
-            }
-          }),
-        );
+      const dishNameMap: Record<string, string> = {};
+      await Promise.all(
+        uniqueDishIds.map(async (dishId) => {
+          try {
+            const dish = await menuService.getDishById(dishId);
+            dishNameMap[dishId] = dish?.name || dishId;
+          } catch {
+            dishNameMap[dishId] = dishId;
+          }
+        }),
+      );
 
-        const mappedOrders: Order[] = data.map((order: OrderDto) => {
-          const tableName =
-            tables.find((table) => table.id === order.tableId)?.name ||
-            order.tableId;
+      const mappedOrders: Order[] = data.map((order: OrderDto) => {
+        const tableName =
+          tables.find((table) => table.id === order.tableId)?.name ||
+          order.tableId;
 
-          const aggregatedItems = new Map<string, OrderItem>();
-          (order.orderDetails ?? []).forEach((detail, index) => {
-            const status = mapOrderItemStatus(detail.status);
-            const key = `${detail.dishId}__${status}`;
-            const existing = aggregatedItems.get(key);
-            const quantity = detail.quantity ?? 0;
+        const aggregatedItems = new Map<string, OrderItem>();
+        (order.orderDetails ?? []).forEach((detail, index) => {
+          const status = mapOrderItemStatus(detail.status);
+          const key = `${detail.dishId}__${status}`;
+          const existing = aggregatedItems.get(key);
+          const quantity = detail.quantity ?? 0;
 
-            if (existing) {
-              aggregatedItems.set(key, {
-                ...existing,
-                quantity: existing.quantity + quantity,
-                note: existing.note || detail.note || undefined,
-              });
-              return;
-            }
-
+          if (existing) {
             aggregatedItems.set(key, {
-              id: detail.id || `${order.id || "order"}-${index}`,
-              dishId: detail.dishId,
-              name: dishNameMap[detail.dishId] || detail.dishId,
-              quantity,
-              price: 0,
-              note: detail.note || undefined,
-              status,
+              ...existing,
+              quantity: existing.quantity + quantity,
+              note: existing.note || detail.note || undefined,
             });
+            return;
+          }
+
+          aggregatedItems.set(key, {
+            id: detail.id || `${order.id || "order"}-${index}`,
+            dishId: detail.dishId,
+            name: dishNameMap[detail.dishId] || detail.dishId,
+            quantity,
+            price: 0,
+            note: detail.note || undefined,
+            status,
           });
-
-          const items = Array.from(aggregatedItems.values());
-
-          return {
-            id: order.id || "",
-            reference:
-              order.reference && order.reference.trim().length > 0
-                ? order.reference
-                : order.id || "",
-            tableId: order.tableId,
-            tableName,
-            items,
-            createdAt: order.completedAt
-              ? new Date(order.completedAt).toLocaleTimeString("vi-VN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : "",
-            total: Number(order.totalAmount || 0),
-            notes: undefined,
-            raw: order,
-          };
         });
 
-        setOrders(mappedOrders);
-      } catch (error) {
-        console.error("Failed to fetch orders:", error);
-      }
-    };
+        const items = Array.from(aggregatedItems.values());
 
+        return {
+          id: order.id || "",
+          reference:
+            order.reference && order.reference.trim().length > 0
+              ? order.reference
+              : order.id || "",
+          tableId: order.tableId,
+          tableName,
+          items,
+          createdAt: order.completedAt
+            ? new Date(order.completedAt).toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "",
+          total: Number(order.totalAmount || 0),
+          notes: undefined,
+          raw: order,
+        };
+      });
+
+      setOrders(mappedOrders);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    }
+  }, [tables]);
+
+  useEffect(() => {
     fetchOrders();
-  }, [tables, ordersRefreshKey]);
+  }, [fetchOrders, ordersRefreshKey]);
 
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
 
@@ -221,6 +225,48 @@ export default function OrderManagement() {
       setActiveMenuCategory(menuCategories[0].categoryId);
     }
   }, [menuCategories, activeMenuCategory]);
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+
+    const tenantId = tenant.id;
+    let isMounted = true;
+
+    const handleOrderChange = (payload: any) => {
+      if (!isMounted) return;
+      const changedTenantId = payload?.tenantId || payload?.order?.tenantId;
+      if (changedTenantId && changedTenantId !== tenantId) return;
+      fetchOrders();
+    };
+
+    const events = ["orders.created", "orders.updated", "orders.deleted"];
+
+    const setupSignalR = async () => {
+      try {
+        await orderSignalRService.start();
+
+        const conn = orderSignalRService.getConnection();
+        if (conn.state === HubConnectionState.Connected) {
+          await orderSignalRService.invoke("JoinTenantGroup", tenantId);
+          events.forEach((event) =>
+            orderSignalRService.on(event, handleOrderChange),
+          );
+        }
+      } catch (error) {
+        console.error("SignalR: Setup failed", error);
+      }
+    };
+
+    setupSignalR();
+
+    return () => {
+      isMounted = false;
+      events.forEach((event) =>
+        orderSignalRService.off(event, handleOrderChange),
+      );
+      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+    };
+  }, [tenant?.id, fetchOrders]);
 
   // Check viewport
   React.useEffect(() => {
