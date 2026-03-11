@@ -148,7 +148,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         menuService.getMenu(),
       ]);
 
-      // BE OrderSearch không hỗ trợ filter tableId/paymentStatusId → filter client-side
       const orders = allOrders.filter((order) => {
         const matchesTable =
           order.tableId === orderTableId ||
@@ -301,10 +300,8 @@ useEffect(() => {
       
       const conn = orderSignalRService.getConnection();
       if (conn.state === HubConnectionState.Connected) {
-        // Tham gia group theo nhà hàng
         await orderSignalRService.invoke("JoinTenantGroup", tenantId);
         
-        // Đăng ký các sự kiện
         events.forEach((event) => orderSignalRService.on(event, handleOrderChange));
         console.log("SignalR: Listening to order events for tenant:", tenantId);
       }

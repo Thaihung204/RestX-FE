@@ -21,11 +21,10 @@ const getConnection = () => {
   if (!connection) {
     const hubUrl = getHubUrl();
     
-    // Ép buộc dùng WebSocket và bỏ qua đàm phán
     connection = new HubConnectionBuilder()
       .withUrl(hubUrl, {
         skipNegotiation: true,
-        transport: HttpTransportType.WebSockets, // Luôn dùng WebSockets
+        transport: HttpTransportType.WebSockets,
         accessTokenFactory: () =>
           typeof window !== "undefined"
             ? localStorage.getItem("accessToken") || ""

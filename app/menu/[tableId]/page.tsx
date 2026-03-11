@@ -151,16 +151,13 @@ export default function MenuPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch menu data using service
       const menuData = await menuService.getMenu();
 
       if (menuData && Array.isArray(menuData)) {
-        // Extract all dishes from all categories
         const allDishes: MenuItem[] = [];
         const extractedCategories: Category[] = [];
 
         menuData.forEach((categoryGroup) => {
-          // Add category to the list
           if (categoryGroup.categoryId && categoryGroup.categoryName) {
             extractedCategories.push({
               id: categoryGroup.categoryId,
@@ -168,7 +165,6 @@ export default function MenuPage() {
             });
           }
 
-          // Map dishes from this category
           if (categoryGroup.items && Array.isArray(categoryGroup.items)) {
             categoryGroup.items.forEach((item) => {
               allDishes.push({
@@ -209,7 +205,6 @@ export default function MenuPage() {
     }
   }, [t]);
 
-  // Fetch data from API
   useEffect(() => {
     // Only fetch once on mount
     if (!hasFetchedData.current) {
@@ -219,7 +214,6 @@ export default function MenuPage() {
     }
   }, []);
 
-  // Sync order context (table + customer) into CartContext for order API
   useEffect(() => {
     if (!isValidGuid(tableId)) return;
 
@@ -237,7 +231,7 @@ export default function MenuPage() {
     if (hasFetchedData.current && user) {
       loadCustomerProfile();
     }
-  }, [user?.customerId, user?.email]); // Only when user ID or email changes
+  }, [user?.customerId, user?.email]);
 
   // Group dishes by category for display
   const categoriesWithDishes = useMemo<CategoryWithDishes[]>(() => {
