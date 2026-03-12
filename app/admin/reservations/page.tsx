@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Tooltip, Select } from "antd";
 import reservationService, {
     ReservationListItem,
     ReservationDetail,
     PaginatedReservations,
+    ReservationStatus,
 } from "@/lib/services/reservationService";
 
 // ─── Status actions (keys mapped to i18n) ────────────────────────────────────
@@ -18,8 +20,12 @@ const STATUS_ACTIONS_KEYS: Record<
         { actionKey: "cancel", nextStatusId: 5, color: "#ef4444" },
     ],
     CONFIRMED: [
+        { actionKey: "checkin", nextStatusId: 3, color: "#8b5cf6" },
         { actionKey: "complete", nextStatusId: 4, color: "#22c55e" },
         { actionKey: "cancel", nextStatusId: 5, color: "#ef4444" },
+    ],
+    CHECKED_IN: [
+        { actionKey: "complete", nextStatusId: 4, color: "#22c55e" },
     ],
     COMPLETED: [],
     CANCELLED: [],
@@ -28,19 +34,23 @@ const STATUS_ACTIONS_KEYS: Record<
 // Map nextStatusId → status code key for side effects lookup
 const STATUS_ID_TO_CODE: Record<number, string> = {
     2: "CONFIRMED",
+    3: "CHECKED_IN",
     4: "COMPLETED",
     5: "CANCELLED",
 };
 
 // ─── Badge component ──────────────────────────────────────────────────────────
 function StatusBadge({ code, name, colorCode }: { code: string; name: string; colorCode: string }) {
-    const bg = colorCode ? `${colorCode}22` : "rgba(255,255,255,0.08)";
+    const { t } = useTranslation();
+    const finalColorCode = code === "CONFIRMED" ? "#3b82f6" : colorCode;
+    const bg = finalColorCode ? `${finalColorCode}22` : "rgba(255,255,255,0.08)";
+    const fallbackName = name || code;
     return (
         <span
             className="px-2.5 py-1 rounded-full text-xs font-semibold border whitespace-nowrap"
-            style={{ color: colorCode, backgroundColor: bg, borderColor: `${colorCode}44` }}
+            style={{ color: finalColorCode, backgroundColor: bg, borderColor: `${finalColorCode}44` }}
         >
-            {name || code}
+            {code ? t(`admin.reservations.status.${code.toLowerCase()}`, { defaultValue: fallbackName }) : fallbackName}
         </span>
     );
 }
@@ -59,6 +69,8 @@ function ReservationDetailModal({
     const [detail, setDetail] = useState<ReservationDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
+    const [allStatuses, setAllStatuses] = useState<ReservationStatus[]>([]);
+    const [selectedStatusId, setSelectedStatusId] = useState<number | "">("");
     const [confirmAction, setConfirmAction] = useState<{
         actionKey: string;
         nextStatusId: number;
@@ -66,18 +78,66 @@ function ReservationDetailModal({
     } | null>(null);
 
     useEffect(() => {
+        reservationService.getReservationStatuses()
+            .then(setAllStatuses)
+            .catch(console.error);
+    }, []);
+
+    useEffect(() => {
         reservationService.getReservationById(reservationId)
-            .then(setDetail)
+            .then((d) => {
+                setDetail(d);
+                setSelectedStatusId(d.status.id);
+            })
             .catch(console.error)
             .finally(() => setLoading(false));
     }, [reservationId]);
 
-    const handleAction = async (nextStatusId: number) => {
+    const handleStatusChange = async (newStatusId: number) => {
+        if (!detail || newStatusId === detail.status.id) return;
+        setSelectedStatusId(newStatusId);
         setActionLoading(true);
         try {
-            await reservationService.updateReservationStatus(reservationId, nextStatusId);
+            // Special-case: checkin still uses dedicated POST endpoint
+            if (newStatusId === reservationService.STATUS_ID.CHECKED_IN) {
+                await reservationService.checkInReservation(detail.confirmationCode);
+            } else {
+                await reservationService.updateReservationStatus(reservationId, newStatusId);
+            }
             onStatusUpdated();
             onClose();
+        } catch (e) {
+            console.error(e);
+            // Revert on error
+            setSelectedStatusId(detail.status.id);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Keep old handleAction for the confirm-dialog flow
+    const handleAction = async (nextStatusId: number) => {
+        if (!detail) return;
+        setActionLoading(true);
+        try {
+            if (nextStatusId === 2) {
+                await reservationService.confirmReservation(reservationId);
+                onStatusUpdated();
+                onClose();
+            } else if (nextStatusId === 3) {
+                await reservationService.checkInReservation(detail.confirmationCode);
+                const updated = await reservationService.getReservationById(reservationId);
+                setDetail(updated);
+                onStatusUpdated();
+            } else if (nextStatusId === 4) {
+                await reservationService.completeReservation(reservationId);
+                onStatusUpdated();
+                onClose();
+            } else if (nextStatusId === 5) {
+                await reservationService.deleteReservation(reservationId);
+                onStatusUpdated();
+                onClose();
+            }
         } catch (e) {
             console.error(e);
         } finally {
@@ -100,7 +160,10 @@ function ReservationDetailModal({
         }
     };
 
-    const actions = detail ? STATUS_ACTIONS_KEYS[detail.status.code] ?? [] : [];
+    let actions = detail ? STATUS_ACTIONS_KEYS[detail.status.code] ?? [] : [];
+    if (detail?.checkedInAt) {
+        actions = actions.filter(a => a.actionKey !== "checkin");
+    }
 
     return (
         <div
@@ -152,77 +215,46 @@ function ReservationDetailModal({
                         <div className="space-y-6">
                             {/* Status + Actions */}
                             <div
-                                className="rounded-xl p-4 flex flex-wrap items-center justify-between gap-3"
+                                className="rounded-xl p-4 flex flex-wrap items-center gap-3"
                                 style={{ background: "var(--surface)" }}
                             >
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                                        {t('admin.reservations.modal.status_label')}
-                                    </span>
-                                    <StatusBadge {...detail.status} />
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {actions.map((action) => (
-                                        <button
-                                            key={action.nextStatusId}
-                                            onClick={() => setConfirmAction(action)}
-                                            disabled={actionLoading}
-                                            className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50"
-                                            style={{ background: action.color }}
-                                        >
-                                            {t(`admin.reservations.actions.${action.actionKey}`)}
-                                        </button>
-                                    ))}
-                                    {(detail.status.code === "PENDING" || detail.status.code === "CONFIRMED") && (
-                                        <button
-                                            onClick={handleDelete}
-                                            disabled={actionLoading}
-                                            className="px-4 py-1.5 rounded-lg text-sm font-semibold border transition-all disabled:opacity-50"
-                                            style={{ borderColor: "#ef4444", color: "#ef4444" }}
-                                        >
-                                            {t('admin.reservations.actions.quick_cancel')}
-                                        </button>
+                                <span className="text-sm font-medium shrink-0" style={{ color: "var(--text-muted)" }}>
+                                    {t('admin.reservations.modal.status_label')}
+                                </span>
+                                <Select
+                                    value={selectedStatusId !== "" ? selectedStatusId : undefined}
+                                    disabled={actionLoading || allStatuses.length === 0}
+                                    loading={actionLoading}
+                                    onChange={(val) => handleStatusChange(val)}
+                                    style={{ minWidth: 180 }}
+                                    optionLabelProp="label"
+                                    options={allStatuses.map((s) => {
+                                        const color = s.code === "CONFIRMED" ? "#3b82f6" : s.colorCode;
+                                        const label = t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name });
+                                        return {
+                                            value: s.id,
+                                            label: (
+                                                <span style={{ color, fontWeight: 600, fontSize: 13 }}>
+                                                    {label}
+                                                </span>
+                                            ),
+                                            rawLabel: label,
+                                            color,
+                                        };
+                                    })}
+                                    optionRender={(opt) => (
+                                        <div className="flex items-center gap-2">
+                                            <span
+                                                className="w-2 h-2 rounded-full shrink-0"
+                                                style={{ background: (opt.data as any).color }}
+                                            />
+                                            <span style={{ color: (opt.data as any).color, fontWeight: 600 }}>
+                                                {(opt.data as any).rawLabel}
+                                            </span>
+                                        </div>
                                     )}
-                                </div>
+                                />
                             </div>
-
-                            {/* Confirm dialog */}
-                            {confirmAction && (
-                                <div
-                                    className="rounded-xl p-4 border"
-                                    style={{ background: "var(--surface)", borderColor: confirmAction.color }}
-                                >
-                                    <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>
-                                        {t('admin.reservations.modal.confirm_action', {
-                                            action: t(`admin.reservations.actions.${confirmAction.actionKey}`)
-                                        })}
-                                    </p>
-                                    {STATUS_ID_TO_CODE[confirmAction.nextStatusId] && (
-                                        <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-                                            {t(`admin.reservations.side_effects.${STATUS_ID_TO_CODE[confirmAction.nextStatusId]}`)}
-                                        </p>
-                                    )}
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleAction(confirmAction.nextStatusId)}
-                                            disabled={actionLoading}
-                                            className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white"
-                                            style={{ background: confirmAction.color }}
-                                        >
-                                            {actionLoading
-                                                ? t('admin.reservations.modal.processing')
-                                                : t(`admin.reservations.actions.${confirmAction.actionKey}`)}
-                                        </button>
-                                        <button
-                                            onClick={() => setConfirmAction(null)}
-                                            className="px-4 py-1.5 rounded-lg text-sm font-medium border"
-                                            style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}
-                                        >
-                                            {t('admin.reservations.modal.cancel_btn')}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
 
                             {/* Info grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -290,6 +322,11 @@ function ReservationDetailModal({
                             {/* Timestamps */}
                             <div className="flex flex-wrap gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
                                 <span>{t('admin.reservations.modal.created_at')} {new Date(detail.createdAt).toLocaleString()}</span>
+                                {detail.checkedInAt && (
+                                    <span style={{ color: "#8b5cf6" }}>
+                                        ✓ Checked in: {new Date(detail.checkedInAt).toLocaleString()}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     )}
@@ -313,6 +350,7 @@ export default function ReservationsPage() {
     const { t } = useTranslation();
     const [data, setData] = useState<PaginatedReservations | null>(null);
     const [loading, setLoading] = useState(true);
+    const [statuses, setStatuses] = useState<ReservationStatus[]>([]);
 
     // Filters
     const [search, setSearch] = useState("");
@@ -333,7 +371,7 @@ export default function ReservationsPage() {
                 statusId: statusId !== "" ? statusId : undefined,
                 date: date || undefined,
                 sortBy: "reservationDateTime",
-                sortDescending: true,
+                sortDescending: false,
             });
             setData(result);
         } catch (e) {
@@ -345,21 +383,18 @@ export default function ReservationsPage() {
 
     useEffect(() => { fetchData(); }, [fetchData]);
     useEffect(() => { setPage(1); }, [search, statusId, date]);
-
-    const statusOptions = [
-        { id: 1, labelKey: "pending", color: "#FFA500" },
-        { id: 2, labelKey: "confirmed", color: "#3b82f6" },
-        { id: 3, labelKey: "checkin", color: "#8b5cf6" },
-        { id: 4, labelKey: "completed", color: "#22c55e" },
-        { id: 5, labelKey: "cancelled", color: "#ef4444" },
-    ];
+    useEffect(() => {
+        reservationService.getReservationStatuses()
+            .then(setStatuses)
+            .catch(console.error);
+    }, []);
 
     const pendingCount = data?.items.filter(i => i.status.code === "PENDING").length ?? 0;
     const confirmedCount = data?.items.filter(i => i.status.code === "CONFIRMED").length ?? 0;
-    const checkinCount = data?.items.filter(i => i.status.code === "CHECKED_IN").length ?? 0;
+    const completedCount = data?.items.filter(i => i.status.code === "COMPLETED").length ?? 0;
     const totalCount = data?.totalCount ?? 0;
 
-    const tableHeaderKeys = ["code", "customer", "table_floor", "date_time", "guests", "status", "walk_in", "actions"] as const;
+    const tableHeaderKeys = ["code", "customer", "table_floor", "date_time", "guests", "status", "actions"] as const;
 
     return (
         <main className="flex-1 p-6 lg:p-8">
@@ -392,7 +427,7 @@ export default function ReservationsPage() {
                         { labelKey: "total", value: totalCount, color: "var(--primary)", bg: "var(--primary-soft)" },
                         { labelKey: "pending", value: pendingCount, color: "#FFA500", bg: "rgba(255,165,0,0.1)" },
                         { labelKey: "confirmed", value: confirmedCount, color: "#3b82f6", bg: "rgba(59,130,246,0.1)" },
-                        { labelKey: "checkin", value: checkinCount, color: "#8b5cf6", bg: "rgba(139,92,246,0.1)" },
+                        { labelKey: "completed", value: completedCount, color: "#22c55e", bg: "rgba(34,197,94,0.1)" },
                     ].map((stat) => (
                         <div
                             key={stat.labelKey}
@@ -440,9 +475,9 @@ export default function ReservationsPage() {
                         style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                     >
                         <option value="">{t('admin.reservations.filter.all_status')}</option>
-                        {statusOptions.map((s) => (
+                        {statuses.map((s) => (
                             <option key={s.id} value={s.id}>
-                                {t(`admin.reservations.status.${s.labelKey}`)}
+                                {t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name })}
                             </option>
                         ))}
                     </select>
@@ -478,7 +513,8 @@ export default function ReservationsPage() {
                                     {tableHeaderKeys.map((key) => (
                                         <th
                                             key={key}
-                                            className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap"
+                                            className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap ${["table_floor", "guests", "status", "actions"].includes(key) ? "text-center" : "text-left"
+                                                }`}
                                             style={{ color: "var(--text-muted)" }}
                                         >
                                             {t(`admin.reservations.table_headers.${key}`)}
@@ -489,7 +525,7 @@ export default function ReservationsPage() {
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={8} className="py-16 text-center">
+                                        <td colSpan={7} className="py-16 text-center">
                                             <div className="flex justify-center">
                                                 <div
                                                     className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
@@ -500,7 +536,7 @@ export default function ReservationsPage() {
                                     </tr>
                                 ) : !data?.items.length ? (
                                     <tr>
-                                        <td colSpan={8} className="py-16 text-center" style={{ color: "var(--text-muted)" }}>
+                                        <td colSpan={7} className="py-16 text-center" style={{ color: "var(--text-muted)" }}>
                                             <div className="flex flex-col items-center gap-2">
                                                 <svg className="w-12 h-12 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -534,19 +570,25 @@ export default function ReservationsPage() {
                                                         {item.contactName.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{item.contactName}</p>
+                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                            <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{item.contactName}</p>
+                                                            {item.isGuest ? (
+                                                                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: "var(--surface)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>{t("admin.reservations.modal.contact.guest")}</span>
+                                                            ) : (
+                                                                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: "rgba(234, 179, 8, 0.1)", color: "#eab308", border: "1px solid rgba(234, 179, 8, 0.2)" }}>{t("admin.reservations.modal.contact.member")}</span>
+                                                            )}
+                                                        </div>
                                                         <p className="text-xs" style={{ color: "var(--text-muted)" }}>{item.contactPhone}</p>
                                                     </div>
                                                 </div>
                                             </td>
 
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <div className="space-y-0.5">
+                                            <td className="px-4 py-3">
+                                                <div className="flex flex-wrap justify-center gap-1.5 max-w-[180px] mx-auto">
                                                     {item.tables.map((t, i) => (
-                                                        <div key={i} className="flex items-center gap-1">
-                                                            <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>{t.code}</span>
-                                                            <span className="text-xs" style={{ color: "var(--text-muted)" }}>· {t.floorName}</span>
-                                                        </div>
+                                                        <span key={i} className="px-1.5 py-0.5 rounded flex items-center gap-1 text-[11px] font-medium" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>
+                                                            {t.code} <span style={{ color: "var(--text-muted)" }}>· {t.floorName}</span>
+                                                        </span>
                                                     ))}
                                                 </div>
                                             </td>
@@ -576,28 +618,27 @@ export default function ReservationsPage() {
                                                 </span>
                                             </td>
 
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <StatusBadge {...item.status} />
+                                            <td className="px-4 py-3 whitespace-nowrap text-center">
+                                                <div className="flex justify-center">
+                                                    <StatusBadge {...item.status} />
+                                                </div>
                                             </td>
+
 
                                             <td className="px-4 py-3 whitespace-nowrap text-center">
-                                                <span className="material-symbols-outlined text-base" style={{ color: 'var(--text-muted)' }}>
-                                                {item.isGuest ? 'sell' : 'person'}
-                                            </span>
-                                            </td>
-
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <button
-                                                    onClick={() => setSelectedId(item.id)}
-                                                    className="p-2 rounded-lg transition-all"
-                                                    style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
-                                                    title={t('admin.reservations.actions.view_detail')}
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                    </svg>
-                                                </button>
+                                                <div className="flex justify-center">
+                                                    <button
+                                                        onClick={() => setSelectedId(item.id)}
+                                                        className="p-2 rounded-lg transition-all"
+                                                        style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
+                                                        title={t('admin.reservations.actions.view_detail')}
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))

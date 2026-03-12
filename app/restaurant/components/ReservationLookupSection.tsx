@@ -16,29 +16,18 @@ export default function ReservationLookupSection() {
     const handleLookup = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!code.trim()) return;
-
-        // Nếu chưa đăng nhập thì hiện cảnh báo rõ ràng
-        if (!user) {
-            setError(t('landing.lookup.auth_required', 'Bạn cần đăng nhập với tài khoản nhân viên để tra cứu đặt bàn.'));
-            return;
-        }
-
         setLoading(true);
         setError(null);
         setResult(null);
 
         try {
+            const cleanCode = code.replace(/#/g, '').trim().toUpperCase();
             const data = await reservationService.lookupReservation({
-                code: code.trim().toUpperCase(),
+                code: cleanCode,
             });
             setResult(data);
         } catch (err: any) {
-            const status = err?.response?.status as number | undefined;
-            if (status === 401 || status === 403) {
-                setError(t('landing.lookup.auth_required', 'Bạn cần đăng nhập với tài khoản nhân viên để tra cứu đặt bàn.'));
-            } else {
-                setError(t('landing.lookup.error'));
-            }
+            setError(t('landing.lookup.error'));
         } finally {
             setLoading(false);
         }

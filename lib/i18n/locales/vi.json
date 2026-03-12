@@ -1,44 +1,4 @@
 {
-  "staff": {
-    "reservations": {
-      "title": "Đặt bàn",
-      "subtitle": "Quản lý đặt bàn và thao tác",
-      "refresh": "Làm mới",
-      "search_placeholder": "Tìm theo tên, SĐT, mã...",
-      "filter_status": "Lọc theo trạng thái",
-      "status_all": "Tất cả trạng thái",
-      "empty": "Không có đặt bàn",
-      "load_error": "Không tải được danh sách",
-      "action_error": "Thao tác thất bại",
-      "confirm_success": "Xác nhận đặt bàn thành công",
-      "checkin_success": "Check-in thành công",
-      "complete_success": "Hoàn tất đặt bàn",
-      "cancel_success": "Hủy đặt bàn thành công",
-      "columns": {
-        "code": "Mã",
-        "customer": "Khách hàng",
-        "table": "Bàn",
-        "date_time": "Ngày & Giờ",
-        "guests": "Số khách",
-        "status": "Trạng thái",
-        "actions": "Thao tác"
-      },
-      "actions": {
-        "confirm": "Xác nhận",
-        "checkin": "Check-in",
-        "complete": "Hoàn tất",
-        "cancel": "Hủy"
-      },
-      "status": {
-        "pending": "Chờ xác nhận",
-        "confirmed": "Đã xác nhận",
-        "checkin": "Check-in",
-        "checked_in": "Đã check-in",
-        "completed": "Hoàn tất",
-        "cancelled": "Đã hủy"
-      }
-    }
-  },
   "admin": {
     "reservations": {
       "title": "Quản lý đặt bàn",
@@ -48,7 +8,7 @@
         "total": "Tổng",
         "pending": "Chờ xác nhận",
         "confirmed": "Đã xác nhận",
-        "checkin": "Check-in"
+        "completed": "Hoàn thành"
       },
       "filter": {
         "search_placeholder": "Tìm theo tên, SĐT, mã đặt bàn...",
@@ -107,8 +67,8 @@
           "email": "Email",
           "type": "Loại",
           "level": "Hạng",
-          "guest": "🏷️ Khách vãng lai",
-          "member": "👤 Thành viên"
+          "guest": "Khách vãng lai",
+          "member": "Thành viên"
         },
         "booking": {
           "date_time": "Ngày & Giờ",
@@ -127,6 +87,50 @@
     }
   },
   "staff": {
+    "reservations": {
+      "title": "Đặt bàn",
+      "subtitle": "Quản lý đặt bàn và thao tác",
+      "refresh": "Làm mới",
+      "search_placeholder": "Tìm theo tên, SĐT, mã...",
+      "filter_status": "Lọc theo trạng thái",
+      "status_all": "Tất cả trạng thái",
+      "empty": "Không có đặt bàn",
+      "load_error": "Không tải được danh sách",
+      "action_error": "Thao tác thất bại",
+      "confirm_success": "Xác nhận đặt bàn thành công",
+      "checkin_success": "Check-in thành công",
+      "complete_success": "Hoàn tất đặt bàn",
+      "cancel_success": "Hủy đặt bàn thành công",
+      "stats": {
+        "total": "Tổng",
+        "pending": "Chờ xác nhận",
+        "confirmed": "Đã xác nhận",
+        "completed": "Hoàn thành"
+      },
+      "columns": {
+        "code": "Mã",
+        "customer": "Khách hàng",
+        "table": "Bàn",
+        "date_time": "Ngày & Giờ",
+        "guests": "Số khách",
+        "status": "Trạng thái",
+        "actions": "Thao tác"
+      },
+      "actions": {
+        "confirm": "Xác nhận",
+        "checkin": "Check-in",
+        "complete": "Hoàn tất",
+        "cancel": "Hủy"
+      },
+      "status": {
+        "pending": "Chờ xác nhận",
+        "confirmed": "Đã xác nhận",
+        "checkin": "Check-in",
+        "checked_in": "Đã check-in",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
+      }
+    },
     "dashboard": {
       "greeting": {
         "morning": "Chào buổi sáng",
@@ -297,7 +301,8 @@
       "orders": "Quản lý Order",
       "orders_short": "Order",
       "checkout": "Thanh toán",
-      "attendance": "Chấm công"
+      "attendance": "Chấm công",
+      "reservations": "Đặt bàn"
     },
     "user_menu": {
       "profile": "Thông tin cá nhân",
@@ -502,6 +507,7 @@
         "dashboard": "Tổng quan",
         "analytics": "Phân tích",
         "tables": "Bàn",
+        "reservations": "Đặt bàn",
         "menu": "Thực đơn",
         "ingredients": "Nguyên liệu",
         "orders": "Đơn hàng",
@@ -521,7 +527,7 @@
         "ingredient_categories": "Loại nguyên liệu",
         "suppliers": "Nhà cung cấp",
         "loyalty": "Hạng thành viên",
-        "order_status": "Trạng thái đơn hàng"
+        "order_status": "Trạng thái món ăn"
       },
       "ingredient_categories": {
         "title": "Loại nguyên liệu",
@@ -645,11 +651,11 @@
         }
       },
       "order_status": {
-        "title": "Quản lý trạng thái đơn hàng",
-        "subtitle": "Quản lý các trạng thái đơn hàng, mã và màu sắc",
+        "title": "Quản lý trạng thái món ăn",
+        "subtitle": "Quản lý các trạng thái món ăn, mã và màu sắc",
         "add_status": "Thêm trạng thái",
         "edit_status": "Chỉnh sửa trạng thái",
-        "name": "Chưa có trạng thái đơn hàng nào",
+        "name": "Chưa có trạng thái món ăn nào",
         "name_placeholder": "Nhập tên trạng thái",
         "name_required": "Vui lòng nhập tên trạng thái",
         "code": "Mã",
@@ -661,7 +667,7 @@
         "is_active": "Kích hoạt",
         "is_active_desc": "Bật hoặc tắt trạng thái này",
         "is_default": "Mặc định",
-        "is_default_desc": "Đặt làm trạng thái mặc định cho đơn mới",
+        "is_default_desc": "Đặt làm trạng thái mặc định cho món ăn mới",
         "default_note": "Chỉ một trạng thái được đặt làm mặc định. Việc này sẽ thay thế trạng thái mặc định hiện tại.",
         "tooltip": {
           "current_default": "Mặc định hiện tại",
@@ -1853,9 +1859,9 @@
     "login_email_page": {
       "title": "Đăng nhập bằng Email",
       "email_label": "Email",
-      "email_placeholder": "email.cuaban@example.com",
+      "email_placeholder": "",
       "password_label": "Mật khẩu",
-      "password_placeholder": "Nhập mật khẩu của bạn",
+      "password_placeholder": "",
       "forgot_password": "Quên mật khẩu?",
       "login_btn": "ĐĂNG NHẬP",
       "terms_text": "Bằng việc tiếp tục, bạn đồng ý với",
@@ -1877,9 +1883,9 @@
       "title": "Cổng Quản trị",
       "subtitle": "Hệ thống Quản lý Nhà hàng",
       "email_label": "Email",
-      "email_placeholder": "admin@restx.com",
+      "email_placeholder": "",
       "password_label": "Mật khẩu",
-      "password_placeholder": "Nhập mật khẩu của bạn",
+      "password_placeholder": "",
       "forgot_password": "Quên mật khẩu?",
       "login_btn": "ĐĂNG NHẬP",
       "terms_text": "Bằng việc tiếp tục, bạn đồng ý với",
@@ -1905,7 +1911,7 @@
       "title": "Quên Mật khẩu",
       "subtitle": "Nhập địa chỉ email của bạn và chúng tôi sẽ gửi cho bạn liên kết để đặt lại mật khẩu.",
       "email_label": "Địa chỉ Email",
-      "email_placeholder": "email.cuaban@example.com",
+      "email_placeholder": "",
       "send_btn": "GỬI LIÊN KẾT ĐẶT LẠI",
       "back_to_login": "Quay lại đăng nhập",
       "validation": {
@@ -2434,6 +2440,129 @@
         "4": "4 người",
         "6": "6 người",
         "more": "Trên 6 người"
+      }
+    },
+    "booking": {
+      "step": {
+        "schedule": "Thời gian",
+        "location": "Vị trí bàn",
+        "confirm": "Xác nhận"
+      },
+      "confirm": {
+        "error_required": "Vui lòng điền đầy đủ thông tin",
+        "error_generic": "Có lỗi xảy ra, vui lòng thử lại",
+        "change_table": "Đổi bàn",
+        "title": "Xác nhận đặt bàn",
+        "date_time": "Thời gian",
+        "selected_table": "Bàn đã chọn",
+        "contact": "Thông tin liên hệ",
+        "change": "Thay đổi",
+        "name": "Họ tên",
+        "phone": "Số điện thoại",
+        "special_requests": "Yêu cầu đặc biệt",
+        "submit": "Hoàn tất đặt bàn",
+        "submitting": "Đang xử lý...",
+        "success_title": "Đặt bàn thành công!",
+        "success_desc": "Cảm ơn bạn đã lựa chọn chúng tôi. Mã xác nhận đã được gửi đến số điện thoại của bạn.",
+        "new_booking": "Đặt bàn mới",
+        "finalize_title": "Hoàn tất đặt bàn",
+        "finalize_desc": "Vui lòng cung cấp thông tin liên lạc để chúng tôi gửi xác nhận cho bạn.",
+        "logged_in_hint": "Bạn đang đăng nhập với tình trạng: {{name}}",
+        "full_name": "Họ và tên",
+        "name_placeholder": "Nguyễn Văn A",
+        "phone_number": "Số điện thoại",
+        "phone_placeholder": "09xxxxxxxx",
+        "email": "Email",
+        "email_placeholder": "",
+        "special_requests_optional": "(Không bắt buộc)",
+        "requests_placeholder": "Dỏ đượng ngồi, được cồ hay không...",
+        "complete_btn": "Hoàn tất đặt bàn",
+        "processing": "Đang xử lý...",
+        "terms": "Bằng cách tiếp tục, bạn đồng ý với Điều khoản dịch vụ và Chính sách bảo mật của chúng tôi.",
+        "party_size": "{{count}} khách",
+        "standard_seating": "Ngồi tiêu chuẩn"
+      },
+      "success": {
+        "title": "Đặt bàn thành công!",
+        "thank_you": "Cảm ơn,",
+        "table_label": "Bàn",
+        "reserved_for": "được đặt cho",
+        "guests": "khách",
+        "on": "vào ngày",
+        "at": "lúc",
+        "booking_ref": "Mã đặt bàn",
+        "confirmation_sent": "Email xác nhận gửi tới:",
+        "make_another": "Đặt bàn mới"
+      },
+      "hero": {
+        "badge": "ĐẶT CHỖ TRỰC TUYẾN",
+        "title_prefix": "Trải nghiệm",
+        "title_highlight": "Ẩm thực đỉnh cao",
+        "description": "Đặt trước bàn để đảm bảo vị trí đẹp nhất cho bữa tối tuyệt vời của bạn."
+      },
+      "form": {
+        "arrival_date": "Ngày đến",
+        "preferred_time": "Giờ đến",
+        "party_size": "Số người",
+        "choose_table": "Chọn bàn",
+        "no_slots": "Đã hết khung giờ trống"
+      },
+      "features": {
+        "fine_dining": {
+          "label": "Ẩm thực cao cấp",
+          "desc": "Menu đa dạng & phong phú"
+        },
+        "instant_confirm": {
+          "label": "Xác nhận tức thì",
+          "desc": "Không cần chờ đợi"
+        },
+        "valet": {
+          "label": "Bãi đỗ xe",
+          "desc": "Có hỗ trợ đỗ xe an toàn"
+        }
+      },
+      "table_map": {
+        "change_schedule": "Thay đổi thời gian",
+        "reservation_for": "Đặt bàn cho",
+        "guests": "khách",
+        "title": "Sơ đồ nhà hàng",
+        "ai_assistant": "Trợ lý AI",
+        "ai_default": "Hãy để tôi tìm bàn phù hợp nhất cho bạn...",
+        "loading": "Đang tải sơ đồ...",
+        "no_map": "Không có sơ đồ khả dụng cho thời gian này.",
+        "booking_title": "Bàn đang chọn",
+        "floor": "Tầng",
+        "capacity": "Sức chứa",
+        "no_table_selected": "Chưa chọn bàn nào",
+        "info_timer": "Vui lòng chọn bàn trên sơ đồ",
+        "confirm_table": "Xác nhận bàn",
+        "mobile_selected": "Đã chọn",
+        "mobile_none": "Chưa chọn bàn",
+        "mobile_confirm": "Xong"
+      },
+      "footer": {
+        "tagline": "Dịch vụ đẳng cấp quốc tế"
+      }
+    },
+    "lookup": {
+      "auth_required": "Bạn cần đăng nhập với tài khoản nhân viên để tra cứu đặt bàn.",
+      "error": "Không tìm thấy thông tin đặt bàn hoặc có lỗi xảy ra.",
+      "badge": "TRA CỨU",
+      "title": "Thông tin đặt bàn",
+      "description": "Nhập mã xác nhận để kiểm tra trạng thái đặt bàn của bạn.",
+      "code_label": "Mã xác nhận",
+      "placeholder": "Ví dụ: RX-12345",
+      "searching": "Đang tra cứu...",
+      "search_btn": "Tra cứu",
+      "result": {
+        "confirmation_code": "Mã xác nhận",
+        "guest_name": "Khách hàng",
+        "phone": "Số điện thoại",
+        "date_time": "Thời gian",
+        "guests": "Số lượng",
+        "guests_suffix": "khách",
+        "table": "Bàn",
+        "special_requests": "Yêu cầu đặc biệt"
       }
     },
     "about": {

@@ -150,8 +150,9 @@ export const floorService = {
      * Returns full layout with table positions.
      * Response: { success: true, data: FloorLayoutResponse }
      */
-    getFloorLayout: async (floorId: string): Promise<FloorLayoutResponse | null> => {
-        const response = await axiosInstance.get<{ success: boolean; data: FloorLayoutResponse }>(`/floors/${floorId}/layout`);
+    getFloorLayout: async (floorId: string, at?: string): Promise<FloorLayoutResponse | null> => {
+        const url = at ? `/floors/${floorId}/layout?at=${encodeURIComponent(at)}` : `/floors/${floorId}/layout`;
+        const response = await axiosInstance.get<{ success: boolean; data: FloorLayoutResponse }>(url);
         return response.data?.data ?? null;
     },
 
