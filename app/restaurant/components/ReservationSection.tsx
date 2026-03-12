@@ -1,38 +1,114 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { ReservationStep, BookingData, Table, UserDetails } from './types';
 import { TenantConfig } from '@/lib/services/tenantService';
-import { tableService, floorService, TableItem, TableStatus, FloorLayoutTableItem } from '@/lib/services/tableService';
+import { tableService, floorService, TableStatus, FloorLayoutTableItem } from '@/lib/services/tableService';
 import reservationService from '@/lib/services/reservationService';
 import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
+import { DatePicker, Select } from 'antd';
+import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-// Constants
-// Constants
+// ─────────────────────────────────────────────────────
+// Constants & Helpers
+// ─────────────────────────────────────────────────────
+
+const DEFAULT_TIME_SLOTS = ['17:30', '18:00', '18:30', '19:00', '19:30', '20:00'];
+const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
+
+const parseOpeningHours = (hours?: string | null) => {
+    if (!hours) return null;
+    const match = hours.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+    if (!match) return null;
+    return { open: match[1], close: match[2] };
+};
+
+const buildTimeSlotsFromHours = (open: string, close: string, intervalMinutes = DEFAULT_SLOT_INTERVAL_MINUTES) => {
+    const baseDate = '1970-01-01';
+    const start = dayjs(`${baseDate}T${open}`);
+    const end = dayjs(`${baseDate}T${close}`);
+
+    if (!start.isValid() || !end.isValid() || end.isBefore(start) || end.isSame(start)) {
+        return [] as string[];
+    }
+
+    const slots: string[] = [];
+    let current = start;
+    while (current.isBefore(end) || current.isSame(end)) {
+        const next = current.add(intervalMinutes, 'minute');
+        if (next.isAfter(end)) break;
+        slots.push(current.format('HH:mm'));
+        current = next;
+    }
+
+    return slots;
+};
+
+const getTenantReservationConfig = (tenant: TenantConfig | null) => {
+    let timeSlots = DEFAULT_TIME_SLOTS;
+    let maxGuestsOverride: number | undefined;
+
+    const openingHours = parseOpeningHours(tenant?.businessOpeningHours);
+    if (openingHours) {
+        const generatedSlots = buildTimeSlotsFromHours(openingHours.open, openingHours.close);
+        if (generatedSlots.length) timeSlots = generatedSlots;
+    }
+
+    const settings = (tenant as any)?.tenantSettings ?? [];
+    if (Array.isArray(settings)) {
+        for (const raw of settings) {
+            const key = (raw?.key ?? raw?.Key ?? '').toString();
+            const value = (raw?.value ?? raw?.Value ?? '').toString();
+            if (!key) continue;
+            const lowerKey = key.toLowerCase();
+
+            if (lowerKey === 'reservation.timeslots') {
+                const parsed = value
+                    .split(/[,\s]+/)
+                    .map((v: string) => v.trim())
+                    .filter(Boolean);
+                if (parsed.length) timeSlots = parsed;
+            }
+
+            if (lowerKey === 'reservation.maxguests') {
+                const n = parseInt(value, 10);
+                if (!Number.isNaN(n) && n > 0) {
+                    maxGuestsOverride = n;
+                }
+            }
+        }
+    }
+
+    return { timeSlots, maxGuestsOverride };
+};
 
 interface ReservationSectionProps {
     tenant: TenantConfig | null;
 }
 
-const StepIndicator: React.FC<{ active: number }> = ({ active }) => (
+const StepIndicator: React.FC<{ active: number; t: (key: string, options?: any) => string }> = ({ active, t }) => (
     <div className="flex items-center gap-3 justify-center mb-8">
         {[1, 2, 3].map((s) => (
             <React.Fragment key={s}>
                 <div className={`flex items-center gap-2 ${active === s ? 'text-[var(--text-inverse)]' : 'text-[var(--text-inverse)] opacity-40'}`}>
                     <span
+                        className={`w-8 h-8 rounded-full grid place-items-center text-sm font-serif border-2 leading-none`}
                         style={{
                             backgroundColor: active === s ? 'var(--primary)' : 'transparent',
                             borderColor: active === s ? 'var(--primary)' : 'rgba(255,255,255,0.2)',
-                            boxShadow: active === s ? '0 0 15px var(--primary-glow)' : 'none'
+                            boxShadow: active === s ? '0 0 15px var(--primary-glow)' : 'none',
+                            lineHeight: 1,
                         }}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-serif border-2`}
                     >
                         {s}
                     </span>
                     <span className={`text-xs uppercase tracking-widest hidden sm:inline ${active === s ? 'font-bold' : 'font-medium'}`}>
-                        {s === 1 ? 'Schedule' : s === 2 ? 'Location' : 'Confirm'}
+                        {s === 1 ? t('landing.booking.step.schedule') : s === 2 ? t('landing.booking.step.location') : t('landing.booking.step.confirm')}
                     </span>
                 </div>
                 {s < 3 && <div className="w-8 md:w-16 h-px bg-[var(--text-inverse)] opacity-20" />}
@@ -42,15 +118,30 @@ const StepIndicator: React.FC<{ active: number }> = ({ active }) => (
 );
 
 const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
+    const { t } = useTranslation();
+    const { user } = useAuth();
     const [step, setStep] = useState<ReservationStep>(ReservationStep.SEARCH);
+    const autoFilledRef = useRef(false);
+
+    const { timeSlots, maxGuestsOverride } = useMemo(
+        () => getTenantReservationConfig(tenant),
+        [tenant],
+    );
+
+    const getTodayLocalDate = () => {
+        const now = new Date();
+        const tzOffset = now.getTimezoneOffset() * 60000;
+        return new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
+    };
+
     const [booking, setBooking] = useState<BookingData>({
-        date: new Date().toISOString().split('T')[0],
+        date: getTodayLocalDate(),
         time: '19:00',
         guests: 4
     });
 
-    const [tables, setTables] = useState<TableItem[]>([]);
     const [layout, setLayout] = useState<Layout | null>(null);
+    const [isLayoutLoading, setIsLayoutLoading] = useState(false);
     const [selectedTable, setSelectedTable] = useState<Table | null>(null);
     const [userDetails, setUserDetails] = useState<UserDetails>({
         name: '',
@@ -63,10 +154,90 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [confirmationCode, setConfirmationCode] = useState<string>('');
+    const [maxCapacity, setMaxCapacity] = useState<number>(maxGuestsOverride ?? 20); // default fallback
+
+    // Load max table capacity early so the guest input knows its upper bound
+    useEffect(() => {
+        const applyMax = (maxFromTables: number) => {
+            let finalMax = maxFromTables;
+            if (maxGuestsOverride && maxGuestsOverride > 0) {
+                finalMax = Math.min(finalMax, maxGuestsOverride);
+            }
+            if (finalMax > 1) {
+                setMaxCapacity(finalMax);
+            }
+        };
+
+        const loadMaxCapacity = async () => {
+            try {
+                const allFloors = await floorService.getAllFloors();
+                const activeFloors = allFloors.filter(f => f.isActive !== false);
+                if (activeFloors.length > 0) {
+                    const layoutResults = await Promise.allSettled(
+                        activeFloors.map(f => floorService.getFloorLayout(f.id))
+                    );
+                    let max = 1;
+                    layoutResults.forEach(r => {
+                        if (r.status === 'fulfilled' && r.value?.tables) {
+                            r.value.tables.forEach((tb: { seatingCapacity?: number }) => {
+                                if ((tb.seatingCapacity ?? 0) > max) max = tb.seatingCapacity!;
+                            });
+                        }
+                    });
+                    if (max > 1) { applyMax(max); return; }
+                }
+            } catch { /* ignore, try fallback */ }
+            try {
+                const items = await tableService.getAllTables();
+                const max = items
+                    .filter(t => t.isActive)
+                    .reduce((m, t) => Math.max(m, t.seatingCapacity ?? 1), 1);
+                if (max > 1) applyMax(max);
+            } catch { /* keep default 20 */ }
+        };
+        loadMaxCapacity();
+    }, [maxGuestsOverride]);
+
+    useEffect(() => {
+        const today = getTodayLocalDate();
+        const currentDate = booking.date < today ? today : booking.date;
+
+        const availableSlots = timeSlots.filter((slot) => {
+            if (currentDate !== today) return true;
+
+            const [h, m] = slot.split(':').map(Number);
+            const slotDate = new Date();
+            slotDate.setHours(h, m, 0, 0);
+            return slotDate.getTime() > Date.now();
+        });
+
+        const nextTime = availableSlots.includes(booking.time)
+            ? booking.time
+            : (availableSlots[0] || timeSlots[0]);
+
+        if (currentDate !== booking.date || nextTime !== booking.time) {
+            setBooking(prev => ({ ...prev, date: currentDate, time: nextTime }));
+        }
+    }, [booking.date, booking.time]);
+
+    // Auto-fill user info when logged in (only once, first time CONFIRMATION is opened)
+    useEffect(() => {
+        if (step === ReservationStep.CONFIRMATION && user && !autoFilledRef.current) {
+            autoFilledRef.current = true;
+            setUserDetails(prev => ({
+                ...prev,
+                name: prev.name || user.name || user.fullName || '',
+                phone: prev.phone || user.phoneNumber || '',
+                email: prev.email || user.email || '',
+            }));
+        }
+    }, [step, user]);
 
     useEffect(() => {
         if (step === ReservationStep.TABLE_SELECTION) {
             const loadTables = async () => {
+                setIsLayoutLoading(true);
+                const finishLoading = () => setIsLayoutLoading(false);
 
                 /** Convert BE shape string to TableData shape union */
                 const normalizeShape = (s: string): 'Circle' | 'Rectangle' | 'Square' | 'Oval' => {
@@ -133,28 +304,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             activeFloorId: floors[0]?.id || '',
                             floors,
                         });
-                        // Flatten all tables for local reference
-                        const allTableItems: TableItem[] = floors.flatMap(f =>
-                            f.tables.map(td => ({
-                                id: td.id,
-                                code: td.name,
-                                type: td.area,
-                                seatingCapacity: td.seats,
-                                shape: td.shape,
-                                positionX: td.position.x,
-                                positionY: td.position.y,
-                                width: td.width ?? 100,
-                                height: td.height ?? 100,
-                                rotation: td.rotation ?? 0,
-                                isActive: true,
-                                tableStatusId: td.status === 'OCCUPIED'
-                                    ? TableStatus.Occupied
-                                    : td.status === 'RESERVED'
-                                        ? TableStatus.Reserved
-                                        : TableStatus.Available,
-                            } as TableItem))
-                        );
-                        setTables(allTableItems);
+                        finishLoading();
                         return;
                     }
                 } catch (err) {
@@ -209,9 +359,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                         activeFloorId: floors[0]?.id || '',
                         floors,
                     });
-                    setTables(activeTables);
+                    finishLoading();
                 } catch (error) {
                     console.error('[ReservationSection] Failed to load tables:', error);
+                } finally {
+                    finishLoading();
                 }
             };
             loadTables();
@@ -330,7 +482,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
         // Basic validation
         if (!userDetails.name || !userDetails.phone || !userDetails.email) {
-            setSubmitError("Please fill in all required fields.");
+            setSubmitError(t('landing.booking.confirm.error_required'));
             return;
         }
 
@@ -345,20 +497,21 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 tableIds: [selectedTable.id],
                 reservationDateTime,
                 numberOfGuests: booking.guests,
-                guestName: userDetails.name,
-                guestPhone: userDetails.phone,
-                guestEmail: userDetails.email,
+                name: userDetails.name,
+                phone: userDetails.phone,
+                email: userDetails.email,
                 specialRequests: userDetails.requests || undefined,
             });
 
-            setConfirmationCode(result.confirmationCode);
+            const fallbackCode = (result as any)?.confirmation_code || (result as any)?.code || (result as any)?.bookingCode;
+            setConfirmationCode(result.confirmationCode || fallbackCode || '');
             setStep(ReservationStep.SUCCESS);
         } catch (error: unknown) {
             console.error("Failed to create reservation:", error);
             // Hiển thị message lỗi từ BE nếu có
             const axiosError = error as { response?: { data?: { message?: string } } };
             const beMessage = axiosError?.response?.data?.message;
-            setSubmitError(beMessage || "Unable to complete reservation. Please try again later.");
+            setSubmitError(beMessage || t('landing.booking.confirm.error_generic'));
         } finally {
             setIsSubmitting(false);
         }
@@ -378,91 +531,126 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
             <main className={`relative z-10 mx-auto px-4 py-8 md:py-20 min-h-screen flex flex-col items-center justify-center ${step === ReservationStep.TABLE_SELECTION ? 'w-full max-w-[98vw]' : 'container'}`}>
 
+                {/* Language Switcher — top right corner */}
+                <div className="absolute top-4 right-4 z-20">
+                    <LanguageSwitcher
+                        style={{
+                            color: 'white',
+                            background: 'rgba(255,255,255,0.12)',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            backdropFilter: 'blur(8px)',
+                        }}
+                    />
+                </div>
+
                 {step === ReservationStep.SEARCH && (
                     <div className="w-full max-w-5xl fade-in">
                         <div className="text-center mb-12">
                             <div className="inline-block px-4 py-1.5 rounded-full border border-[var(--primary-border)] bg-black/30 backdrop-blur-md text-[var(--primary)] text-xs font-bold tracking-[0.2em] uppercase mb-6 shadow-xl">
-                                Fine Dining Reservations
+                                {t('landing.booking.hero.badge')}
                             </div>
                             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight font-serif" style={{ color: 'var(--text-inverse)' }}>
-                                Reserve Your <br />
+                                {t('landing.booking.hero.title_prefix')} <br />
                                 <span style={{ color: 'var(--primary)' }}>
-                                    Culinary Experience
+                                    {t('landing.booking.hero.title_highlight')}
                                 </span>
                             </h1>
                             <p className="text-lg md:text-xl text-[var(--text-muted)] mb-8 max-w-2xl mx-auto font-light leading-relaxed">
-                                Immerse yourself in flavors crafted with passion. Select your preferred date and time to view real-time table availability.
+                                {t('landing.booking.hero.description')}
                             </p>
                         </div>
 
                         <div className="bg-[var(--card)] rounded-[2rem] shadow-2xl p-6 md:p-10 border border-white/10 relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--primary)] via-[var(--primary-soft)] to-[var(--primary)]"></div>
 
-                            <form onSubmit={handleSearchSubmit} className="flex flex-col lg:flex-row gap-6 items-end">
-                                <div className="flex-1 w-full">
-                                    <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-[0.2em] pl-1">Arrival Date</label>
-                                    <div className="relative group">
-                                        <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--primary)] z-10">calendar_month</span>
-                                        <input
-                                            type="date"
-                                            className="w-full pl-12 pr-4 py-3.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition-all shadow-sm text-[var(--text)] font-semibold cursor-pointer group-hover:bg-[var(--card)]"
-                                            value={booking.date}
-                                            onChange={(e) => setBooking({ ...booking, date: e.target.value })}
+                            <form onSubmit={handleSearchSubmit} className="reservation-pill">
+                                <div className="pill-segment">
+                                    <span className="pill-label">{t('landing.booking.form.arrival_date')}</span>
+                                        <DatePicker
+                                        className="reservation-date-picker pill-control"
+                                        classNames={{ popup: { root: 'reservation-date-popup' } }}
+                                            value={dayjs(booking.date, 'YYYY-MM-DD')}
+                                            format="DD/MM/YYYY"
+                                            allowClear={false}
+                                            suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">calendar_month</span>}
+                                            prefix={<span className="material-symbols-outlined text-[var(--primary)]">calendar_month</span>}
+                                            disabledDate={(current) => !!current && current.startOf('day').isBefore(dayjs().startOf('day'))}
+                                            onChange={(value) => {
+                                                if (!value) return;
+                                                const selectedDate = value.format('YYYY-MM-DD');
+                                                const today = getTodayLocalDate();
+                                                const safeDate = selectedDate < today ? today : selectedDate;
+                                                setBooking({ ...booking, date: safeDate });
+                                            }}
                                         />
-                                    </div>
                                 </div>
 
-                                <div className="flex-1 w-full">
-                                    <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-[0.2em] pl-1">Preferred Time</label>
-                                    <div className="relative group">
-                                        <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--primary)] z-10">schedule</span>
-                                        <select
-                                            className="w-full pl-12 pr-10 py-3.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none appearance-none cursor-pointer text-[var(--text)] font-semibold shadow-sm group-hover:bg-[var(--card)] transition-all"
+                                <div className="pill-divider" />
+
+                                <div className="pill-segment">
+                                    <span className="pill-label">{t('landing.booking.form.preferred_time')}</span>
+                                        <Select
+                                        className="reservation-time-select pill-control"
+                                        classNames={{ popup: { root: 'reservation-time-popup' } }}
                                             value={booking.time}
-                                            onChange={(e) => setBooking({ ...booking, time: e.target.value })}
+                                            onChange={(value) => setBooking({ ...booking, time: value })}
+                                            options={timeSlots
+                                                .filter((slot) => {
+                                                    const today = getTodayLocalDate();
+                                                    if (booking.date !== today) return true;
+
+                                                    const [h, m] = slot.split(':').map(Number);
+                                                    const slotDate = new Date();
+                                                    slotDate.setHours(h, m, 0, 0);
+
+                                                    return slotDate.getTime() > Date.now();
+                                                })
+                                                .map((slot) => ({ label: slot, value: slot }))}
+                                            prefix={<span className="material-symbols-outlined text-[var(--primary)]">schedule</span>}
+                                            suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">expand_more</span>}
+                                        />
+                                </div>
+
+                                <div className="pill-divider" />
+
+                                <div className="pill-segment pill-guests">
+                                    <span className="pill-label">
+                                        {t('landing.booking.form.party_size')}
+                                        <span className="pill-meta">(max {maxCapacity})</span>
+                                        </span>
+                                    <div className="pill-guest-row">
+                                        <span className="material-symbols-outlined text-[var(--primary)] text-lg">person</span>
+                                        <span className="pill-guest-count">{booking.guests}</span>
+                                        <div className="pill-guest-actions">
+                                        <button
+                                            type="button"
+                                            onClick={() => setBooking(b => ({ ...b, guests: Math.max(1, b.guests - 1) }))}
+                                                className="pill-step-btn"
                                         >
-                                            <option>17:30</option>
-                                            <option>18:00</option>
-                                            <option>18:30</option>
-                                            <option>19:00</option>
-                                            <option>19:30</option>
-                                            <option>20:00</option>
-                                        </select>
-                                        <span className="material-symbols-outlined absolute right-4 top-3.5 text-[var(--text-muted)] pointer-events-none">expand_more</span>
+                                            −
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBooking(b => ({ ...b, guests: Math.min(maxCapacity, b.guests + 1) }))}
+                                                className="pill-step-btn"
+                                        >
+                                            +
+                                        </button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="flex-1 w-full">
-                                    <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-[0.2em] pl-1">Party Size</label>
-                                    <div className="relative group">
-                                        <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--primary)] z-10">person</span>
-                                        <select
-                                            className="w-full pl-12 pr-10 py-3.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none appearance-none cursor-pointer text-[var(--text)] font-semibold shadow-sm group-hover:bg-[var(--card)] transition-all"
-                                            value={booking.guests}
-                                            onChange={(e) => setBooking({ ...booking, guests: parseInt(e.target.value) })}
-                                        >
-                                            <option value={1}>1 Person</option>
-                                            <option value={2}>2 People</option>
-                                            <option value={3}>3 People</option>
-                                            <option value={4}>4 People</option>
-                                            <option value={6}>6 People</option>
-                                            <option value={8}>8+ Group</option>
-                                        </select>
-                                        <span className="material-symbols-outlined absolute right-4 top-3.5 text-[var(--text-muted)] pointer-events-none">expand_more</span>
-                                    </div>
-                                </div>
-
-                                <button type="submit" className="w-full lg:w-auto px-10 py-3.5 bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] font-bold rounded-xl shadow-[0_4px_14px_0_var(--primary-glow)] transition-all transform hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3 h-[54px] text-lg whitespace-nowrap">
-                                    <span>Choose Table</span>
+                                <button type="submit" className="pill-submit">
+                                    <span>{t('landing.booking.form.choose_table')}</span>
                                     <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
                                 </button>
                             </form>
 
                             <div className="mt-10 pt-8 border-t border-[var(--border)] flex flex-wrap justify-between gap-6">
                                 {[
-                                    { icon: 'restaurant', label: 'Fine Dining', desc: 'Multi-course experience' },
-                                    { icon: 'check_circle', label: 'Instant Confirm', desc: 'No waiting needed' },
-                                    { icon: 'local_parking', label: 'Valet Available', desc: 'Complimentary service' }
+                                    { icon: 'restaurant', label: t('landing.booking.features.fine_dining.label'), desc: t('landing.booking.features.fine_dining.desc') },
+                                    { icon: 'check_circle', label: t('landing.booking.features.instant_confirm.label'), desc: t('landing.booking.features.instant_confirm.desc') },
+                                    { icon: 'local_parking', label: t('landing.booking.features.valet.label'), desc: t('landing.booking.features.valet.desc') }
                                 ].map((item, idx) => (
                                     <div key={idx} className="flex items-center gap-4 group cursor-default">
                                         <div className="w-12 h-12 rounded-full bg-[var(--primary-faint)] flex items-center justify-center group-hover:bg-[var(--primary)] group-hover:text-[var(--on-primary)] transition-all duration-300 transform group-hover:scale-110">
@@ -481,21 +669,21 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                 {step === ReservationStep.TABLE_SELECTION && (
                     <div className="w-full fade-in">
-                        <StepIndicator active={2} />
+                        <StepIndicator active={2} t={t} />
 
                         <div className="flex justify-between items-center mb-6 text-[var(--text-inverse)] px-2">
                             <button onClick={() => setStep(ReservationStep.SEARCH)} className="flex items-center gap-2 text-[var(--text-inverse)] opacity-70 hover:opacity-100 group">
                                 <span className="material-symbols-outlined text-lg p-2 bg-white/10 rounded-full group-hover:bg-white/20">arrow_back</span>
-                                <span className="font-medium text-sm">Change Schedule</span>
+                                <span className="font-medium text-sm">{t('landing.booking.table_map.change_schedule')}</span>
                             </button>
                             <div className="text-right">
-                                <div className="text-[10px] opacity-60 uppercase tracking-widest font-bold mb-1">Reservation For</div>
+                                <div className="text-[10px] opacity-60 uppercase tracking-widest font-bold mb-1">{t('landing.booking.table_map.reservation_for')}</div>
                                 <div className="text-sm font-bold flex items-center gap-2">
                                     <span>{new Date(booking.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                                     <span className="w-1 h-1 bg-[var(--text-inverse)] opacity-30 rounded-full" />
                                     <span>{booking.time}</span>
                                     <span className="w-1 h-1 bg-[var(--text-inverse)] opacity-30 rounded-full" />
-                                    <span className="text-[var(--primary)]">{booking.guests} Guests</span>
+                                    <span className="text-[var(--primary)]">{booking.guests} {t('landing.booking.table_map.guests')}</span>
                                 </div>
                             </div>
                         </div>
@@ -503,7 +691,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                         <div className="bg-[var(--card)] rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row h-[85vh]">
                             {/* Sidebar */}
                             <div className="hidden lg:flex w-80 bg-[var(--surface)] p-8 flex-col border-r border-[var(--border)]">
-                                <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-4">Floor Map</h3>
+                                <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-4">{t('landing.booking.table_map.title')}</h3>
 
                                 <div className="space-y-5 mb-8">
                                     {[
@@ -523,7 +711,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     <div className="p-6 bg-gradient-to-br from-[var(--primary-faint)] to-[var(--card)] rounded-2xl border border-[var(--primary-border)] shadow-sm relative overflow-hidden">
                                         <div className="flex items-center gap-2 mb-3">
                                             <span className="material-symbols-outlined text-[var(--primary)] text-base">auto_awesome</span>
-                                            <p className="text-[var(--primary-hover)] text-xs font-bold uppercase tracking-widest">Dining Assistant</p>
+                                            <p className="text-[var(--primary-hover)] text-xs font-bold uppercase tracking-widest">{t('landing.booking.table_map.ai_assistant')}</p>
                                         </div>
                                         {isAiThinking ? (
                                             <div className="flex items-center gap-2">
@@ -532,7 +720,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                 <div className="w-2 h-2 bg-[var(--primary-soft)] rounded-full animate-bounce delay-200" />
                                             </div>
                                         ) : (
-                                            <p className="text-sm text-[var(--text-muted)] italic leading-relaxed">&ldquo;{recommendation || 'Selecting our premium window tables offers an unmatched view of the harbor.'}&rdquo;</p>
+                                            <p className="text-sm text-[var(--text-muted)] italic leading-relaxed">&ldquo;{recommendation || t('landing.booking.table_map.ai_default')}&rdquo;</p>
                                         )}
                                     </div>
                                 </div>
@@ -540,6 +728,14 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                             {/* Floor Plan Canvas */}
                             <div className="flex-1 relative bg-[var(--surface-subtle)] overflow-auto p-0">
+                                {isLayoutLoading && (
+                                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--card)]/70 backdrop-blur-sm">
+                                        <div className="flex flex-col items-center gap-3 text-[var(--text-muted)]">
+                                            <div className="mini-loader" />
+                                            <span className="text-xs font-semibold uppercase tracking-[0.2em]">{t('landing.booking.table_map.loading', 'Đang tải sơ đồ...')}</span>
+                                        </div>
+                                    </div>
+                                )}
                                 {layout ? (
                                     <div className="w-full h-full p-6">
                                         <TableMap2D
@@ -552,15 +748,15 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         />
                                     </div>
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--primary)]"></div>
+                                    <div className="w-full h-full flex items-center justify-center text-sm text-[var(--text-muted)]">
+                                        {t('landing.booking.table_map.no_map')}
                                     </div>
                                 )}
                             </div>
 
                             {/* Right Summary Panel */}
                             <div className="hidden lg:flex w-80 bg-[var(--card)] p-10 flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.02)]">
-                                <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-5">Booking</h3>
+                                <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-5">{t('landing.booking.table_map.booking_title')}</h3>
 
                                 <div className="flex-1 space-y-6">
                                     {selectedTable ? (
@@ -571,19 +767,19 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             </div>
                                             <div className="space-y-3">
                                                 <div className="flex justify-between text-sm">
-                                                    <span className="text-[var(--text-muted)]">Floor</span>
+                                                    <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.floor')}</span>
                                                     <span className={`font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider bg-[var(--surface-subtle)] text-[var(--text)]`}>
                                                         {selectedTable.zone}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between text-sm">
-                                                    <span className="text-[var(--text-muted)]">Capacity</span>
-                                                    <span className="font-bold text-[var(--text)]">{selectedTable.capacity} Guests</span>
+                                                    <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.capacity')}</span>
+                                                    <span className="font-bold text-[var(--text)]">{selectedTable.capacity} {t('landing.booking.table_map.guests')}</span>
                                                 </div>
                                                 <div className="flex justify-between text-sm pt-3 border-t border-[var(--primary-border)]/40">
-                                                    <span className="text-[var(--text-muted)]">Status</span>
+                                                    <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.status')}</span>
                                                     <span className="text-[var(--success)] font-bold flex items-center gap-1.5">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" /> Available
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" /> {t('landing.booking.table_map.status_available')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -591,13 +787,13 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     ) : (
                                         <div className="text-center py-10 opacity-30">
                                             <span className="material-symbols-outlined text-5xl mb-3 text-[var(--text-muted)]">touch_app</span>
-                                            <p className="text-sm font-medium text-[var(--text)]">Please select a table from the floor map</p>
+                                            <p className="text-sm font-medium text-[var(--text)]">{t('landing.booking.table_map.no_table_selected')}</p>
                                         </div>
                                     )}
 
                                     <div className="flex gap-4 p-2">
                                         <span className="material-symbols-outlined text-[var(--primary)] shrink-0">info</span>
-                                        <p className="text-xs text-[var(--text-muted)] italic leading-relaxed">You have 15 minutes to complete this reservation once a table is selected.</p>
+                                        <p className="text-xs text-[var(--text-muted)] italic leading-relaxed">{t('landing.booking.table_map.info_timer')}</p>
                                     </div>
                                 </div>
 
@@ -609,22 +805,22 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     ${selectedTable ? 'bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] shadow-[0_4px_14px_0_var(--primary-glow)]' : 'bg-[var(--surface-subtle)] text-[var(--text-muted)] cursor-not-allowed'}
                   `}
                                 >
-                                    Confirm Table
+                                    {t('landing.booking.table_map.confirm_table')}
                                 </button>
                             </div>
 
                             {/* Mobile Sticky Footer */}
                             <div className="lg:hidden p-4 bg-[var(--card)] border-t border-[var(--border)] flex items-center justify-between">
                                 <div>
-                                    <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Selected</p>
-                                    <p className="font-bold text-[var(--text)]">{selectedTable ? `Table ${selectedTable.label}` : 'None'}</p>
+                                    <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">{t('landing.booking.table_map.mobile_selected')}</p>
+                                    <p className="font-bold text-[var(--text)]">{selectedTable ? `Table ${selectedTable.label}` : t('landing.booking.table_map.mobile_none')}</p>
                                 </div>
                                 <button
                                     disabled={!selectedTable}
                                     onClick={() => setStep(ReservationStep.CONFIRMATION)}
                                     className="px-8 py-3 bg-[var(--primary)] text-[var(--on-primary)] rounded-xl font-bold text-sm disabled:opacity-50"
                                 >
-                                    Confirm
+                                    {t('landing.booking.table_map.mobile_confirm')}
                                 </button>
                             </div>
                         </div>
@@ -633,7 +829,18 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                 {step === ReservationStep.CONFIRMATION && (
                     <div className="w-full max-w-5xl fade-in">
-                        <StepIndicator active={3} />
+                        <StepIndicator active={3} t={t} />
+
+                        {/* Back button */}
+                        <div className="mb-6 px-2">
+                            <button
+                                onClick={() => setStep(ReservationStep.TABLE_SELECTION)}
+                                className="flex items-center gap-2 text-[var(--text-inverse)] opacity-70 hover:opacity-100 group transition-opacity"
+                            >
+                                <span className="material-symbols-outlined text-lg p-2 bg-white/10 rounded-full group-hover:bg-white/20">arrow_back</span>
+                                <span className="font-medium text-sm">{t('landing.booking.confirm.change_table')}</span>
+                            </button>
+                        </div>
 
                         <div className="bg-[var(--card)] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[560px]">
                             {/* Left Summary Panel */}
@@ -644,13 +851,13 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 </div>
 
                                 <div className="relative z-10 h-full flex flex-col">
-                                    <h2 className="text-4xl font-serif mb-10 border-b border-white/20 pb-5">Summary</h2>
+                                    <h2 className="text-4xl font-serif mb-10 border-b border-white/20 pb-5">{t('landing.booking.confirm.title')}</h2>
 
                                     <div className="space-y-10 flex-1">
                                         {[
-                                            { icon: 'calendar_today', label: 'Date & Time', value: new Date(booking.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }), sub: booking.time },
-                                            { icon: 'table_restaurant', label: 'Selected Table', value: `Table ${selectedTable?.label}`, sub: `${selectedTable?.zone} Zone` },
-                                            { icon: 'group', label: 'Party Size', value: `${booking.guests} Guests`, sub: 'Standard Seating' }
+                                            { icon: 'calendar_today', label: t('landing.booking.confirm.date_time'), value: new Date(booking.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }), sub: booking.time },
+                                            { icon: 'table_restaurant', label: t('landing.booking.confirm.selected_table'), value: `Table ${selectedTable?.label}`, sub: `${selectedTable?.zone} ${t('landing.booking.confirm.zone_label')}` },
+                                            { icon: 'group', label: t('landing.booking.confirm.party_size'), value: `${booking.guests} ${t('landing.booking.table_map.guests')}`, sub: t('landing.booking.confirm.standard_seating') }
                                         ].map((item, idx) => (
                                             <div key={idx} className="flex gap-5">
                                                 <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
@@ -680,19 +887,25 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             {/* Right Form Panel */}
                             <div className="md:w-[65%] p-10 md:p-14 bg-[var(--card)]">
                                 <div className="mb-10">
-                                    <h3 className="text-3xl font-serif text-[var(--text)] mb-3">Finalize Details</h3>
-                                    <p className="text-[var(--text-muted)] font-medium">Please provide your contact information to secure your table.</p>
+                                    <h3 className="text-3xl font-serif text-[var(--text)] mb-3">{t('landing.booking.confirm.finalize_title')}</h3>
+                                    <p className="text-[var(--text-muted)] font-medium">{t('landing.booking.confirm.finalize_desc')}</p>
+                                    {user && (
+                                        <div className="mt-3 flex items-center gap-2 text-xs text-[var(--primary)] font-semibold">
+                                            <span className="material-symbols-outlined text-sm">verified_user</span>
+                                            <span>{t('landing.booking.confirm.logged_in_hint', { name: user.name || user.fullName || user.email })}</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <form className="space-y-8">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="group">
-                                            <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">Full Name</label>
+                                            <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.full_name')}</label>
                                             <div className="relative">
                                                 <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">person</span>
                                                 <input
                                                     type="text"
-                                                    placeholder="Eleanor Rigby"
+                                                    placeholder={t('landing.booking.confirm.name_placeholder')}
                                                     className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                                                     value={userDetails.name}
                                                     onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })}
@@ -700,12 +913,12 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             </div>
                                         </div>
                                         <div className="group">
-                                            <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">Phone Number</label>
+                                            <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.phone_number')}</label>
                                             <div className="relative">
                                                 <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">call</span>
                                                 <input
                                                     type="tel"
-                                                    placeholder="+1 (555) 000-0000"
+                                                    placeholder={t('landing.booking.confirm.phone_placeholder')}
                                                     className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                                                     value={userDetails.phone}
                                                     onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
@@ -715,12 +928,12 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     </div>
 
                                     <div className="group">
-                                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">Email Address</label>
+                                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.email')}</label>
                                         <div className="relative">
                                             <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">mail</span>
                                             <input
                                                 type="email"
-                                                placeholder="eleanor@example.com"
+                                                placeholder={t('landing.booking.confirm.email_placeholder')}
                                                 className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                                                 value={userDetails.email}
                                                 onChange={(e) => setUserDetails({ ...userDetails, email: e.target.value })}
@@ -729,9 +942,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     </div>
 
                                     <div className="group">
-                                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">Special Requests <span className="text-[var(--text-muted)] font-normal ml-1">(Optional)</span></label>
+                                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.special_requests')} <span className="text-[var(--text-muted)] font-normal ml-1">{t('landing.booking.confirm.special_requests_optional')}</span></label>
                                         <textarea
-                                            placeholder="Dietary restrictions, anniversary, window preference confirmed..."
+                                            placeholder={t('landing.booking.confirm.requests_placeholder')}
                                             className="w-full p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none h-28"
                                             value={userDetails.requests}
                                             onChange={(e) => setUserDetails({ ...userDetails, requests: e.target.value })}
@@ -754,18 +967,17 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             {isSubmitting ? (
                                                 <>
                                                     <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                    <span>Processing...</span>
+                                                    <span>{t('landing.booking.confirm.processing')}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span>Complete Reservation</span>
+                                                    <span>{t('landing.booking.confirm.complete_btn')}</span>
                                                     <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">check_circle</span>
                                                 </>
                                             )}
                                         </button>
                                         <p className="text-center text-[10px] text-[var(--text-muted)] mt-6 leading-relaxed">
-                                            By proceeding, you agree to our <a href="#" className="underline">Terms of Service</a>.
-                                            A confirmation email will be sent immediately upon booking.
+                                            {t('landing.booking.confirm.terms').replace('<a>', '').replace('</a>', '')}
                                         </p>
                                     </div>
                                 </form>
@@ -784,25 +996,30 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             <span className="material-symbols-outlined text-[var(--success)] text-5xl">verified</span>
                         </div>
 
-                        <h2 className="text-3xl font-serif font-bold text-[var(--text)] mb-3">Confirmed!</h2>
+                        <h2 className="text-3xl font-serif font-bold text-[var(--text)] mb-3">{t('landing.booking.success.title')}</h2>
                         <p className="text-[var(--text-muted)] text-sm mb-8 leading-relaxed px-2">
-                            Thank you,{' '}
+                            {t('landing.booking.success.thank_you')}{' '}
                             <span className="text-[var(--text)] font-semibold">{userDetails.name}</span>.{' '}
-                            Table <span className="text-[var(--primary)] font-bold">
+                            {t('landing.booking.success.table_label')}{' '}
+                            <span className="text-[var(--primary)] font-bold">
                                 {selectedTable?.label ? `#${selectedTable.label}` : ''}
                             </span>
-                            {selectedTable?.zone ? ` (${selectedTable.zone})` : ''} is reserved for{' '}
-                            <span className="text-[var(--text)] font-semibold">{booking.guests} guests</span> on{' '}
+                            {selectedTable?.zone ? ` (${selectedTable.zone})` : ''} {t('landing.booking.success.reserved_for')}{' '}
+                            <span className="text-[var(--text)] font-semibold">
+                                {booking.guests} {t('landing.booking.success.guests')}
+                            </span>{' '}
+                            {t('landing.booking.success.on')}{' '}
                             <span className="text-[var(--text)] font-semibold">
                                 {new Date(booking.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })}
                             </span>{' '}
-                            at <span className="text-[var(--text)] font-semibold">{booking.time}</span>.
+                            {t('landing.booking.success.at')}{' '}
+                            <span className="text-[var(--text)] font-semibold">{booking.time}</span>.
                         </p>
 
                         {/* Info block */}
                         <div className="bg-[var(--surface)] rounded-2xl p-5 mb-8 text-left border border-[var(--border)] space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold">Booking Reference</span>
+                                <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold">{t('landing.booking.success.booking_ref')}</span>
                                 <span className="text-sm font-bold text-[var(--primary)] font-mono tracking-wider">
                                     #{confirmationCode || 'RX-XXXXX'}
                                 </span>
@@ -810,7 +1027,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             <div className="h-px bg-[var(--border)]" />
                             <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                                 <span className="material-symbols-outlined text-base text-[var(--text-muted)]">mail</span>
-                                <span className="truncate">Confirmation sent to <span className="text-[var(--text)]">{userDetails.email}</span></span>
+                                <span className="truncate">{t('landing.booking.success.confirmation_sent')} <span className="text-[var(--text)]">{userDetails.email}</span></span>
                             </div>
                             {userDetails.phone && (
                                 <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
@@ -824,19 +1041,329 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             onClick={() => window.location.reload()}
                             className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm"
                         >
-                            Make Another Booking
+                            {t('landing.booking.success.make_another')}
                         </button>
                     </div>
                 )}
 
             </main>
 
+            <style jsx global>{`
+                .reservation-date-picker.ant-picker {
+                    width: 100% !important;
+                    height: 54px !important;
+                    min-height: 54px !important;
+                    border-radius: 12px !important;
+                    border: 1px solid var(--border) !important;
+                    background: var(--surface) !important;
+                    color: var(--text) !important;
+                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+                    padding: 0 12px !important;
+                    gap: 10px !important;
+                }
+
+                .reservation-date-picker .ant-picker-input > input {
+                    color: var(--text) !important;
+                    font-weight: 600 !important;
+                }
+
+                .reservation-date-picker.ant-picker-focused {
+                    border-color: var(--primary) !important;
+                    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 22%, transparent) !important;
+                }
+
+                .reservation-date-popup {
+                    z-index: 1200 !important;
+                    background: var(--card) !important;
+                    border: 1px solid var(--border) !important;
+                    border-radius: 12px !important;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
+                }
+
+                .reservation-date-popup .ant-picker-panel-container,
+                .reservation-date-popup .ant-picker-panel,
+                .reservation-date-popup .ant-picker-date-panel,
+                .reservation-date-popup .ant-picker-content {
+                    background: var(--card) !important;
+                    color: var(--text) !important;
+                }
+
+                .reservation-date-popup .ant-picker-header,
+                .reservation-date-popup .ant-picker-footer {
+                    color: var(--text) !important;
+                    border-color: var(--border) !important;
+                }
+
+                .reservation-date-popup .ant-picker-header button,
+                .reservation-date-popup .ant-picker-header-view,
+                .reservation-date-popup .ant-picker-content th,
+                .reservation-date-popup .ant-picker-content td,
+                .reservation-date-popup .ant-picker-cell .ant-picker-cell-inner,
+                .reservation-date-popup .ant-picker-now-btn,
+                .reservation-date-popup .ant-picker-today-btn {
+                    color: var(--text) !important;
+                }
+
+                .reservation-date-popup .ant-picker-cell-disabled .ant-picker-cell-inner {
+                    color: var(--text-muted) !important;
+                    opacity: 0.45;
+                }
+
+                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
+                    border-color: var(--primary) !important;
+                }
+
+                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner,
+                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-range-start .ant-picker-cell-inner,
+                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-range-end .ant-picker-cell-inner {
+                    background: color-mix(in srgb, var(--primary) 24%, transparent) !important;
+                    color: var(--text) !important;
+                }
+
+                .reservation-date-popup .ant-picker-cell:hover .ant-picker-cell-inner {
+                    background: var(--surface-subtle) !important;
+                }
+
+                .reservation-pill {
+                    display: flex;
+                    align-items: stretch;
+                    background: color-mix(in srgb, var(--card) 92%, transparent);
+                    border: 1px solid var(--border);
+                    border-radius: 999px;
+                    padding: 8px;
+                    gap: 6px;
+                    backdrop-filter: blur(26px);
+                    -webkit-backdrop-filter: blur(26px);
+                    box-shadow: var(--shadow-lg);
+                }
+
+                .pill-segment {
+                    flex: 1;
+                    min-width: 0;
+                    padding: 12px 20px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    gap: 6px;
+                    border-radius: 999px;
+                    transition: background 0.2s ease, box-shadow 0.2s ease;
+                }
+
+                .pill-segment:hover {
+                    background: color-mix(in srgb, var(--text) 6%, transparent);
+                    box-shadow: inset 0 0 0 1px var(--stroke-subtle);
+                }
+
+                .pill-label {
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 0.22em;
+                    text-transform: uppercase;
+                    color: var(--primary);
+                }
+
+                .pill-meta {
+                    margin-left: 6px;
+                    font-weight: 500;
+                    letter-spacing: 0.08em;
+                    font-size: 9px;
+                    color: var(--text-muted);
+                }
+
+                .pill-divider {
+                    width: 1px;
+                    margin: 12px 0;
+                    background: var(--stroke-subtle);
+                    border-radius: 999px;
+                }
+
+                .pill-control .ant-select-selector,
+                .pill-control .ant-picker,
+                .pill-control.ant-picker {
+                    height: 42px !important;
+                    min-height: 42px !important;
+                    padding-left: 0 !important;
+                    padding-right: 0 !important;
+                    background: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                }
+
+                .pill-control .ant-select-selector {
+                    align-items: center !important;
+                }
+
+                .pill-control .ant-select-selection-item,
+                .pill-control .ant-picker-input > input {
+                    color: var(--text) !important;
+                    font-weight: 600;
+                    font-size: 15px;
+                }
+
+                .pill-control .ant-select-selection-placeholder {
+                    color: var(--text-muted) !important;
+                }
+
+                .pill-control .ant-picker-input > input {
+                    padding-left: 4px;
+                }
+
+                .pill-control .ant-select-arrow,
+                .pill-control .ant-picker-suffix {
+                    color: var(--text-muted) !important;
+                }
+
+                .pill-control .ant-picker-prefix,
+                .pill-control .ant-select-prefix {
+                    color: var(--primary) !important;
+                }
+
+                .pill-guest-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .pill-guest-count {
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: var(--text);
+                }
+
+                .pill-guest-actions {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .pill-step-btn {
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 999px;
+                    border: 1px solid var(--stroke-subtle);
+                    background: transparent;
+                    color: var(--text);
+                    font-size: 16px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s ease;
+                }
+
+                .pill-step-btn:hover {
+                    border-color: var(--primary);
+                    color: var(--primary);
+                    background: color-mix(in srgb, var(--primary) 12%, transparent);
+                }
+
+                .pill-submit {
+                    padding: 0 30px;
+                    background: var(--primary);
+                    color: var(--on-primary);
+                    border: none;
+                    border-radius: 999px;
+                    font-weight: 700;
+                    font-size: 14px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    white-space: nowrap;
+                    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+                    transition: all 0.2s ease;
+                }
+
+                .pill-submit:hover {
+                    filter: brightness(1.08);
+                    transform: translateY(-1px);
+                }
+
+                .mini-loader {
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 999px;
+                    border: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
+                    border-top-color: var(--primary);
+                    animation: miniSpin 0.8s linear infinite;
+                }
+
+                @keyframes miniSpin {
+                    to { transform: rotate(360deg); }
+                }
+
+                @media (max-width: 1024px) {
+                    .reservation-pill {
+                        flex-direction: column;
+                        border-radius: 24px;
+                    }
+
+                    .pill-divider {
+                        width: 100%;
+                        height: 1px;
+                        margin: 0;
+                    }
+
+                    .pill-submit {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                }
+
+                .reservation-time-popup,
+                .reservation-guest-popup {
+                    z-index: 1200 !important;
+                    background: var(--card) !important;
+                    border: 1px solid var(--border) !important;
+                    border-radius: 12px !important;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
+                    padding: 6px !important;
+                    overscroll-behavior: contain;
+                }
+
+                .reservation-time-popup .rc-virtual-list-holder,
+                .reservation-guest-popup .rc-virtual-list-holder {
+                    overscroll-behavior: contain;
+                }
+
+                .reservation-time-popup .ant-select-item,
+                .reservation-guest-popup .ant-select-item {
+                    color: var(--text) !important;
+                    border-radius: 8px !important;
+                    font-weight: 600 !important;
+                }
+
+                .reservation-time-popup .ant-select-item-option-active,
+                .reservation-guest-popup .ant-select-item-option-active {
+                    background: var(--surface-subtle) !important;
+                }
+
+                .reservation-time-popup .ant-select-item-option-selected,
+                .reservation-guest-popup .ant-select-item-option-selected {
+                    background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
+                    color: var(--text) !important;
+                }
+
+                /* Guest stepper InputNumber */
+                .reservation-guest-stepper .ant-input-number {
+                    border: none !important;
+                    box-shadow: none !important;
+                    background: transparent !important;
+                }
+                .reservation-guest-stepper .ant-input-number-input {
+                    text-align: center !important;
+                    font-weight: 700 !important;
+                    font-size: 1.1rem !important;
+                    padding: 0 !important;
+                    color: var(--text) !important;
+                    background: transparent !important;
+                }
+            `}</style>
+
             {/* Footer Branding */}
             <footer className="relative z-10 py-10 text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
                     <span className="text-[var(--primary)] text-2xl font-serif font-bold italic tracking-widest">{tenant?.businessName || 'Lumière'}</span>
                 </div>
-                <p className="text-[10px] uppercase tracking-[0.4em]" style={{ color: '#ffffff' }}>The Pinnacle of Fine Dining</p>
+                <p className="text-[10px] uppercase tracking-[0.4em]" style={{ color: '#ffffff' }}>{t('landing.booking.footer.tagline')}</p>
             </footer>
         </div>
     );

@@ -62,11 +62,23 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
         setUser(null);
         return;
       }
+
+      const localUser = authService.getCurrentUser();
+      if (localUser) {
+        setUser(localUser);
+      }
+
       try {
         const serverUser = await authService.getCurrentUserFromServer();
-        setUser(serverUser);
+        if (serverUser) {
+          setUser(serverUser);
+        } else if (localUser) {
+          setUser(localUser);
+        }
       } catch {
-        setUser(authService.getCurrentUser());
+        if (localUser) {
+          setUser(localUser);
+        }
       }
     };
 
@@ -202,55 +214,62 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
             <LanguageSwitcher style={{ color: headerContentColor }} />
             <ThemeToggle style={{ color: headerContentColor }} />
 
-            <Dropdown
-              menu={{
-                className: 'restaurant-user-dropdown-menu',
-                style: { minWidth: 180 },
-                items: user
-                  ? [
-                      {
-                        key: 'logout',
-                        label: t('staff.user_menu.logout'),
-                        danger: true,
-                      },
-                    ]
-                  : [
-                      {
-                        key: 'login',
-                        label: t('homepage.header.login'),
-                      },
-                    ],
-                onClick: async ({ key }) => {
-                  if (key === 'logout') {
-                    await authService.logoutServer();
-                    authService.logout();
-                    setUser(null);
-                    window.location.href = '/login';
-                  }
-                  if (key === 'login') {
-                    window.location.href = '/login';
-                  }
-                },
-              }}
-              trigger={['click']}>
-              <Space size={8} style={{ cursor: 'pointer' }}>
-                <UserOutlined style={{ fontSize: 20, color: headerContentColor }} />
-                {user && !isMobile && (
-                  <span
-                    style={{
-                      maxWidth: 140,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      color: headerContentColor,
-                      fontWeight: 600,
-                      fontSize: 14,
-                    }}>
-                    {user.fullName || user.name || user.email}
-                  </span>
-                )}
-              </Space>
-            </Dropdown>
+            {user ? (
+              <Dropdown
+                menu={{
+                  className: 'restaurant-user-dropdown-menu',
+                  style: { minWidth: 180 },
+                  items: [
+                    {
+                      key: 'logout',
+                      label: t('staff.user_menu.logout'),
+                      danger: true,
+                    },
+                  ],
+                  onClick: async ({ key }) => {
+                    if (key === 'logout') {
+                      await authService.logoutServer();
+                      authService.logout();
+                      setUser(null);
+                      window.location.href = '/login';
+                    }
+                  },
+                }}
+                trigger={['click']}>
+                <Space size={8} style={{ cursor: 'pointer' }}>
+                  <UserOutlined style={{ fontSize: 20, color: headerContentColor }} />
+                  {!isMobile && (
+                    <span
+                      style={{
+                        maxWidth: 140,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        color: headerContentColor,
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}>
+                      {user.fullName || user.name || user.email}
+                    </span>
+                  )}
+                </Space>
+              </Dropdown>
+            ) : (
+              <Button
+                type="text"
+                href="/login"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.22)',
+                  color: headerContentColor,
+                  borderRadius: 8,
+                  fontWeight: 600,
+                  height: 40,
+                  padding: '0 18px',
+                }}>
+                {t('homepage.header.login')}
+              </Button>
+            )}
             <Button
               type="primary"
               href="#reservation"

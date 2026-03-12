@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AntdProvider";
@@ -8,12 +8,19 @@ import { message } from "antd";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { HeroSection } from "@/components/auth/HeroSection";
 import { GlassInput } from "@/components/ui/GlassInput";
-import { MailOutlined, LockOutlined, PhoneOutlined, EyeInvisibleOutlined, EyeOutlined, LoginOutlined } from "@ant-design/icons";
+import {
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  LockOutlined,
+  LoginOutlined,
+  MailOutlined,
+  PhoneOutlined,
+} from "@ant-design/icons";
 import RememberCheckbox from "@/components/auth/RememberCheckbox";
 
 const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
-export default function LoginEmailPage() {
+function LoginEmailPageContent() {
   const { t } = useTranslation('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -294,5 +301,13 @@ export default function LoginEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginEmailPage() {
+  return (
+    <Suspense fallback={<div className="auth-page-bg min-h-screen" />}>
+      <LoginEmailPageContent />
+    </Suspense>
   );
 }

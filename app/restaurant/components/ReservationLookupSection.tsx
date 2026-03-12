@@ -1,18 +1,27 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import reservationService, { ReservationDetail } from '@/lib/services/reservationService';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export default function ReservationLookupSection() {
+    const { t } = useTranslation();
+    const { user } = useAuth();
     const [code, setCode] = useState('');
-    const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<ReservationDetail | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const handleLookup = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!code.trim() || !phone.trim()) return;
+        if (!code.trim()) return;
+
+        // Nếu chưa đăng nhập thì hiện cảnh báo rõ ràng
+        if (!user) {
+            setError(t('landing.lookup.auth_required', 'Bạn cần đăng nhập với tài khoản nhân viên để tra cứu đặt bàn.'));
+            return;
+        }
 
         setLoading(true);
         setError(null);
@@ -21,18 +30,22 @@ export default function ReservationLookupSection() {
         try {
             const data = await reservationService.lookupReservation({
                 code: code.trim().toUpperCase(),
-                phone: phone.trim(),
             });
             setResult(data);
-        } catch {
-            setError('Không tìm thấy đặt bàn. Vui lòng kiểm tra lại mã đặt bàn và số điện thoại.');
+        } catch (err: any) {
+            const status = err?.response?.status as number | undefined;
+            if (status === 401 || status === 403) {
+                setError(t('landing.lookup.auth_required', 'Bạn cần đăng nhập với tài khoản nhân viên để tra cứu đặt bàn.'));
+            } else {
+                setError(t('landing.lookup.error'));
+            }
         } finally {
             setLoading(false);
         }
     };
 
     const statusColor: Record<string, string> = {
-        PENDING: '#FFA500',
+        PENDING: '#f59e0b',
         CONFIRMED: '#3b82f6',
         CHECKED_IN: '#8b5cf6',
         COMPLETED: '#22c55e',
@@ -40,81 +53,68 @@ export default function ReservationLookupSection() {
     };
 
     return (
-        <section className="py-20 px-4" style={{ background: 'var(--surface)' }}>
-            <div className="max-w-2xl mx-auto">
-                {/* Header */}
+        <section className="relative py-24 px-4 bg-[var(--surface)] overflow-hidden">
+            <div className="pointer-events-none absolute inset-0 opacity-30">
+                <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-[var(--primary)] blur-3xl" />
+                <div className="absolute -bottom-24 -right-20 h-72 w-72 rounded-full bg-orange-300 blur-3xl" />
+            </div>
+
+            <div className="relative max-w-3xl mx-auto">
                 <div className="text-center mb-10">
                     <div
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold tracking-[0.2em] uppercase mb-5"
+                        className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold tracking-[0.22em] uppercase mb-6"
                         style={{
-                            borderColor: 'var(--primary-border)',
-                            background: 'rgba(0,0,0,0.2)',
+                            background: 'color-mix(in srgb, var(--primary) 12%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--primary) 35%, transparent)',
                             color: 'var(--primary)',
                         }}
                     >
-                        Tra cứu đặt bàn
+                        {t('landing.lookup.badge')}
                     </div>
+
                     <h2
-                        className="text-3xl md:text-4xl font-bold mb-3"
+                        className="text-4xl md:text-5xl font-black mb-4"
                         style={{ color: 'var(--text)', fontFamily: 'var(--font-display, serif)' }}
                     >
-                        Kiểm tra đặt bàn của bạn
+                        {t('landing.lookup.title')}
                     </h2>
-                    <p style={{ color: 'var(--text-muted)' }} className="text-sm leading-relaxed">
-                        Nhập mã xác nhận và số điện thoại để xem trạng thái đặt bàn
+
+                    <p className="text-base md:text-lg" style={{ color: 'var(--text-muted)' }}>
+                        {t('landing.lookup.description')}
                     </p>
                 </div>
 
-                {/* Form */}
                 <form
                     onSubmit={handleLookup}
-                    className="rounded-2xl p-6 md:p-8 mb-6"
-                    style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+                    className="rounded-3xl p-5 md:p-7 mb-7 backdrop-blur-md"
+                    style={{
+                        background: 'color-mix(in srgb, var(--card) 88%, transparent)',
+                        border: '1px solid var(--border)',
+                        boxShadow: '0 20px 50px rgba(0,0,0,0.08)',
+                    }}
                 >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-                        <div>
-                            <label
-                                className="block text-xs font-bold uppercase tracking-widest mb-2"
-                                style={{ color: 'var(--text-muted)' }}
-                            >
-                                Mã đặt bàn
-                            </label>
+                    <div className="mb-5">
+                        <label
+                            className="block text-xs font-bold uppercase tracking-[0.18em] mb-2"
+                            style={{ color: 'var(--text-muted)' }}
+                        >
+                            {t('landing.lookup.code_label')}
+                        </label>
+                        <div
+                            className="flex items-center gap-3 rounded-2xl px-4 py-2"
+                            style={{
+                                background: 'var(--surface)',
+                                border: '1px solid var(--border)',
+                            }}
+                        >
+                            <span className="text-lg" style={{ color: 'var(--primary)' }}>#</span>
                             <input
                                 type="text"
-                                placeholder="VD: RX-B17F1B"
+                                placeholder={t('landing.lookup.placeholder')}
                                 value={code}
                                 onChange={(e) => setCode(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl font-mono text-sm outline-none transition-all"
-                                style={{
-                                    background: 'var(--surface)',
-                                    border: '1px solid var(--border)',
-                                    color: 'var(--text)',
-                                }}
-                                onFocus={(e) => (e.target.style.borderColor = 'var(--primary)')}
-                                onBlur={(e) => (e.target.style.borderColor = 'var(--border)')}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label
-                                className="block text-xs font-bold uppercase tracking-widest mb-2"
-                                style={{ color: 'var(--text-muted)' }}
-                            >
-                                Số điện thoại
-                            </label>
-                            <input
-                                type="tel"
-                                placeholder="VD: 0901234567"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
-                                style={{
-                                    background: 'var(--surface)',
-                                    border: '1px solid var(--border)',
-                                    color: 'var(--text)',
-                                }}
-                                onFocus={(e) => (e.target.style.borderColor = 'var(--primary)')}
-                                onBlur={(e) => (e.target.style.borderColor = 'var(--border)')}
+                                className="w-full bg-transparent py-2 font-mono text-base outline-none"
+                                style={{ color: 'var(--text)' }}
                                 required
                             />
                         </div>
@@ -122,51 +122,46 @@ export default function ReservationLookupSection() {
 
                     <button
                         type="submit"
-                        disabled={loading || !code.trim() || !phone.trim()}
-                        className="w-full py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-60"
+                        disabled={loading}
+                        className="w-full py-3.5 rounded-2xl text-base font-bold transition-all"
                         style={{
                             background: 'var(--primary)',
-                            color: 'var(--on-primary, white)',
-                            boxShadow: '0 4px 12px var(--primary-glow)',
+                            color: 'var(--on-primary)',
+                            boxShadow: '0 8px 20px var(--primary-glow)',
+                            opacity: loading ? 0.7 : 1,
                         }}
                     >
-                        {loading ? (
-                            <span className="flex items-center justify-center gap-2">
-                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                Đang tìm kiếm...
-                            </span>
-                        ) : (
-                            'Tra cứu ngay'
-                        )}
+                        {loading ? t('landing.lookup.searching') : t('landing.lookup.search_btn')}
                     </button>
+
+                    {error && (
+                        <div
+                            className="mt-4 text-sm font-medium rounded-xl px-4 py-3"
+                            style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}
+                        >
+                            {error}
+                        </div>
+                    )}
                 </form>
 
-                {/* Error */}
-                {error && (
-                    <div
-                        className="rounded-xl p-4 flex items-start gap-3 mb-4"
-                        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
-                    >
-                        <p className="text-sm" style={{ color: '#ef4444' }}>{error}</p>
-                    </div>
-                )}
-
-                {/* Result */}
                 {result && (
                     <div
-                        className="rounded-2xl overflow-hidden"
-                        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+                        className="rounded-3xl overflow-hidden"
+                        style={{
+                            background: 'var(--card)',
+                            border: '1px solid var(--border)',
+                            boxShadow: '0 20px 50px rgba(0,0,0,0.08)',
+                        }}
                     >
-                        {/* Result header */}
                         <div
-                            className="px-6 py-4 flex items-center justify-between"
+                            className="px-6 py-5 flex items-center justify-between"
                             style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}
                         >
                             <div>
-                                <p className="text-xs uppercase tracking-widest font-bold mb-1" style={{ color: 'var(--text-muted)' }}>
-                                    Mã xác nhận
+                                <p className="text-xs uppercase tracking-[0.18em] font-bold mb-1" style={{ color: 'var(--text-muted)' }}>
+                                    {t('landing.lookup.result.confirmation_code')}
                                 </p>
-                                <span className="text-lg font-mono font-bold" style={{ color: 'var(--primary)' }}>
+                                <span className="text-xl font-mono font-bold" style={{ color: 'var(--primary)' }}>
                                     #{result.confirmationCode}
                                 </span>
                             </div>
@@ -174,8 +169,8 @@ export default function ReservationLookupSection() {
                                 className="px-3 py-1.5 rounded-full text-xs font-bold border"
                                 style={{
                                     color: statusColor[result.status.code] ?? 'var(--text)',
-                                    background: `${statusColor[result.status.code] ?? '#888'}18`,
-                                    borderColor: `${statusColor[result.status.code] ?? '#888'}33`,
+                                    background: `${statusColor[result.status.code] ?? '#888'}1A`,
+                                    borderColor: `${statusColor[result.status.code] ?? '#888'}55`,
                                 }}
                             >
                                 {result.status.name}
@@ -183,55 +178,43 @@ export default function ReservationLookupSection() {
                         </div>
 
                         <div className="p-6 space-y-4">
-                            {/* Contact */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <InfoCard label="Tên" value={result.contact.name} icon="👤" />
-                                <InfoCard label="Số điện thoại" value={result.contact.phone} icon="📞" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <InfoCard label={t('landing.lookup.result.guest_name')} value={result.contact.name} icon="person" />
+                                <InfoCard label={t('landing.lookup.result.phone')} value={result.contact.phone} icon="call" />
                             </div>
 
-                            {/* Booking */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <InfoCard
-                                    label="Ngày & Giờ"
-                                    value={new Date(result.reservationDateTime).toLocaleString('vi-VN', {
+                                    label={t('landing.lookup.result.date_time')}
+                                    value={new Date(result.reservationDateTime).toLocaleString(undefined, {
                                         day: '2-digit', month: '2-digit', year: 'numeric',
                                         hour: '2-digit', minute: '2-digit',
                                     })}
-                                    icon="📅"
+                                    icon="event"
                                 />
-                                <InfoCard label="Số khách" value={`${result.numberOfGuests} người`} icon="👥" />
+                                <InfoCard
+                                    label={t('landing.lookup.result.guests')}
+                                    value={`${result.numberOfGuests} ${t('landing.lookup.result.guests_suffix')}`}
+                                    icon="group"
+                                />
                             </div>
 
-                            {/* Tables */}
                             <InfoCard
-                                label="Bàn đặt"
+                                label={t('landing.lookup.result.table')}
                                 value={result.tables.map(t => `${t.code} (${t.floorName})`).join(', ')}
-                                icon="🪑"
+                                icon="table_restaurant"
                             />
 
-                            {/* Special requests */}
                             {result.specialRequests && (
                                 <div
-                                    className="rounded-xl p-4"
-                                    style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+                                    className="rounded-2xl p-4"
+                                    style={{ background: 'var(--surface)', border: '1px dashed var(--border)' }}
                                 >
-                                    <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
-                                        Yêu cầu đặc biệt
+                                    <p className="text-xs font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--text-muted)' }}>
+                                        {t('landing.lookup.result.special_requests')}
                                     </p>
                                     <p className="text-sm italic" style={{ color: 'var(--text)' }}>
                                         &ldquo;{result.specialRequests}&rdquo;
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Cancelled state */}
-                            {result.status.code === 'CANCELLED' && (
-                                <div
-                                    className="rounded-xl p-3 text-center"
-                                    style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}
-                                >
-                                    <p className="text-sm font-medium" style={{ color: '#ef4444' }}>
-                                        Đặt bàn này đã bị huỷ
                                     </p>
                                 </div>
                             )}
@@ -246,15 +229,14 @@ export default function ReservationLookupSection() {
 function InfoCard({ label, value, icon }: { label: string; value: string; icon: string }) {
     return (
         <div
-            className="rounded-xl p-3"
+            className="flex items-start gap-3 rounded-2xl p-4"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
         >
-            <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
-                {icon} {label}
-            </p>
-            <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
-                {value}
-            </p>
+            <span className="material-symbols-outlined text-base" style={{ color: 'var(--primary)' }}>{icon}</span>
+            <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)' }}>{label}</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{value || '—'}</p>
+            </div>
         </div>
     );
 }

@@ -1,5 +1,132 @@
 {
   "staff": {
+    "reservations": {
+      "title": "Đặt bàn",
+      "subtitle": "Quản lý đặt bàn và thao tác",
+      "refresh": "Làm mới",
+      "search_placeholder": "Tìm theo tên, SĐT, mã...",
+      "filter_status": "Lọc theo trạng thái",
+      "status_all": "Tất cả trạng thái",
+      "empty": "Không có đặt bàn",
+      "load_error": "Không tải được danh sách",
+      "action_error": "Thao tác thất bại",
+      "confirm_success": "Xác nhận đặt bàn thành công",
+      "checkin_success": "Check-in thành công",
+      "complete_success": "Hoàn tất đặt bàn",
+      "cancel_success": "Hủy đặt bàn thành công",
+      "columns": {
+        "code": "Mã",
+        "customer": "Khách hàng",
+        "table": "Bàn",
+        "date_time": "Ngày & Giờ",
+        "guests": "Số khách",
+        "status": "Trạng thái",
+        "actions": "Thao tác"
+      },
+      "actions": {
+        "confirm": "Xác nhận",
+        "checkin": "Check-in",
+        "complete": "Hoàn tất",
+        "cancel": "Hủy"
+      },
+      "status": {
+        "pending": "Chờ xác nhận",
+        "confirmed": "Đã xác nhận",
+        "checkin": "Check-in",
+        "checked_in": "Đã check-in",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
+      }
+    }
+  },
+  "admin": {
+    "reservations": {
+      "title": "Quản lý đặt bàn",
+      "total_count": "Tổng {{total}} lượt đặt bàn",
+      "refresh": "Làm mới",
+      "stats": {
+        "total": "Tổng",
+        "pending": "Chờ xác nhận",
+        "confirmed": "Đã xác nhận",
+        "checkin": "Check-in"
+      },
+      "filter": {
+        "search_placeholder": "Tìm theo tên, SĐT, mã đặt bàn...",
+        "all_status": "Tất cả trạng thái",
+        "clear": "Xóa lọc"
+      },
+      "status": {
+        "pending": "Chờ xác nhận",
+        "confirmed": "Đã xác nhận",
+        "checkin": "Check-in",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
+      },
+      "table_headers": {
+        "code": "Mã đặt bàn",
+        "customer": "Khách hàng",
+        "table_floor": "Bàn / Tầng",
+        "date_time": "Ngày & Giờ",
+        "guests": "Số khách",
+        "status": "Trạng thái",
+        "walk_in": "Khách vãng lai",
+        "actions": "Thao tác"
+      },
+      "empty": "Không có đặt bàn",
+      "pagination": {
+        "page_info": "Trang {{page}} / {{total}} · {{count}} kết quả",
+        "prev": "Trước",
+        "next": "Sau"
+      },
+      "actions": {
+        "confirm": "Xác nhận",
+        "cancel": "Hủy",
+        "checkin": "Check-in",
+        "complete": "Hoàn tất",
+        "quick_cancel": "Hủy nhanh",
+        "view_detail": "Xem chi tiết & thao tác"
+      },
+      "side_effects": {
+        "CONFIRMED": "Bàn sẽ chuyển sang trạng thái Đặt trước",
+        "CHECKED_IN": "Bàn chuyển sang Đang phục vụ, tạo TableSession",
+        "COMPLETED": "Bàn về Trống, đóng TableSession",
+        "CANCELLED": "Bàn về Trống"
+      },
+      "modal": {
+        "title": "Chi tiết đặt bàn",
+        "load_error": "Không tải được dữ liệu",
+        "status_label": "Trạng thái:",
+        "confirm_action": "Xác nhận: {{action}}?",
+        "processing": "Đang xử lý...",
+        "cancel_btn": "Hủy",
+        "contact_title": "Thông tin liên hệ",
+        "booking_title": "Thông tin đặt bàn",
+        "contact": {
+          "name": "Tên",
+          "phone": "SĐT",
+          "email": "Email",
+          "type": "Loại",
+          "level": "Hạng",
+          "guest": "🏷️ Khách vãng lai",
+          "member": "👤 Thành viên"
+        },
+        "booking": {
+          "date_time": "Ngày & Giờ",
+          "guests": "Số khách",
+          "guests_suffix": "khách",
+          "table": "Bàn",
+          "deposit": "Đặt cọc",
+          "deposit_paid": "Đã cọc",
+          "deposit_yes": "Có",
+          "deposit_no": "Không"
+        },
+        "special_requests": "Yêu cầu đặc biệt",
+        "created_at": "Tạo lúc:",
+        "checked_in_at": "Check-in lúc:"
+      }
+    }
+  },
+  "staff": {
     "dashboard": {
       "greeting": {
         "morning": "Chào buổi sáng",

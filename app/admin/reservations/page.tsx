@@ -1,37 +1,35 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import reservationService, {
     ReservationListItem,
     ReservationDetail,
     PaginatedReservations,
 } from "@/lib/services/reservationService";
 
-// ─── Status config ────────────────────────────────────────────────────────────
-const STATUS_ACTIONS: Record<
+// ─── Status actions (keys mapped to i18n) ────────────────────────────────────
+const STATUS_ACTIONS_KEYS: Record<
     string,
-    { label: string; nextStatusId: number; color: string }[]
+    { actionKey: string; nextStatusId: number; color: string }[]
 > = {
     PENDING: [
-        { label: "Xác nhận", nextStatusId: 2, color: "var(--primary)" },
-        { label: "Huỷ", nextStatusId: 5, color: "#ef4444" },
+        { actionKey: "confirm", nextStatusId: 2, color: "var(--primary)" },
+        { actionKey: "cancel", nextStatusId: 5, color: "#ef4444" },
     ],
     CONFIRMED: [
-        { label: "Check-in", nextStatusId: 3, color: "#3b82f6" },
-        { label: "Huỷ", nextStatusId: 5, color: "#ef4444" },
-    ],
-    CHECKED_IN: [
-        { label: "Hoàn thành", nextStatusId: 4, color: "#22c55e" },
+        { actionKey: "complete", nextStatusId: 4, color: "#22c55e" },
+        { actionKey: "cancel", nextStatusId: 5, color: "#ef4444" },
     ],
     COMPLETED: [],
     CANCELLED: [],
 };
 
-const STATUS_SIDE_EFFECTS: Record<string, string> = {
-    CONFIRMED: "Bàn sẽ được đánh dấu Reserved",
-    CHECKED_IN: "Bàn chuyển sang Occupied, tạo TableSession",
-    COMPLETED: "Bàn trả về Available, đóng TableSession",
-    CANCELLED: "Bàn trả về Available",
+// Map nextStatusId → status code key for side effects lookup
+const STATUS_ID_TO_CODE: Record<number, string> = {
+    2: "CONFIRMED",
+    4: "COMPLETED",
+    5: "CANCELLED",
 };
 
 // ─── Badge component ──────────────────────────────────────────────────────────
@@ -57,10 +55,15 @@ function ReservationDetailModal({
     onClose: () => void;
     onStatusUpdated: () => void;
 }) {
+    const { t } = useTranslation();
     const [detail, setDetail] = useState<ReservationDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
-    const [confirmAction, setConfirmAction] = useState<{ label: string; nextStatusId: number; color: string } | null>(null);
+    const [confirmAction, setConfirmAction] = useState<{
+        actionKey: string;
+        nextStatusId: number;
+        color: string;
+    } | null>(null);
 
     useEffect(() => {
         reservationService.getReservationById(reservationId)
@@ -84,7 +87,7 @@ function ReservationDetailModal({
     };
 
     const handleDelete = async () => {
-        if (!confirm("Huỷ nhanh reservation này?")) return;
+        if (!confirm(t('admin.reservations.actions.quick_cancel') + "?")) return;
         setActionLoading(true);
         try {
             await reservationService.deleteReservation(reservationId);
@@ -97,7 +100,7 @@ function ReservationDetailModal({
         }
     };
 
-    const actions = detail ? STATUS_ACTIONS[detail.status.code] ?? [] : [];
+    const actions = detail ? STATUS_ACTIONS_KEYS[detail.status.code] ?? [] : [];
 
     return (
         <div
@@ -116,7 +119,7 @@ function ReservationDetailModal({
                 >
                     <div>
                         <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
-                            Chi tiết Đặt bàn
+                            {t('admin.reservations.modal.title')}
                         </h2>
                         {detail && (
                             <span className="text-sm font-mono" style={{ color: "var(--primary)" }}>
@@ -142,7 +145,9 @@ function ReservationDetailModal({
                             <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--primary)", borderTopColor: "transparent" }} />
                         </div>
                     ) : !detail ? (
-                        <p className="text-center" style={{ color: "var(--text-muted)" }}>Không tải được dữ liệu</p>
+                        <p className="text-center" style={{ color: "var(--text-muted)" }}>
+                            {t('admin.reservations.modal.load_error')}
+                        </p>
                     ) : (
                         <div className="space-y-6">
                             {/* Status + Actions */}
@@ -151,7 +156,9 @@ function ReservationDetailModal({
                                 style={{ background: "var(--surface)" }}
                             >
                                 <div className="flex items-center gap-3">
-                                    <span className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>Trạng thái:</span>
+                                    <span className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
+                                        {t('admin.reservations.modal.status_label')}
+                                    </span>
                                     <StatusBadge {...detail.status} />
                                 </div>
                                 <div className="flex flex-wrap gap-2">
@@ -163,7 +170,7 @@ function ReservationDetailModal({
                                             className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50"
                                             style={{ background: action.color }}
                                         >
-                                            {action.label}
+                                            {t(`admin.reservations.actions.${action.actionKey}`)}
                                         </button>
                                     ))}
                                     {(detail.status.code === "PENDING" || detail.status.code === "CONFIRMED") && (
@@ -173,7 +180,7 @@ function ReservationDetailModal({
                                             className="px-4 py-1.5 rounded-lg text-sm font-semibold border transition-all disabled:opacity-50"
                                             style={{ borderColor: "#ef4444", color: "#ef4444" }}
                                         >
-                                            Huỷ nhanh
+                                            {t('admin.reservations.actions.quick_cancel')}
                                         </button>
                                     )}
                                 </div>
@@ -186,11 +193,13 @@ function ReservationDetailModal({
                                     style={{ background: "var(--surface)", borderColor: confirmAction.color }}
                                 >
                                     <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>
-                                        Xác nhận: <strong>{confirmAction.label}</strong>?
+                                        {t('admin.reservations.modal.confirm_action', {
+                                            action: t(`admin.reservations.actions.${confirmAction.actionKey}`)
+                                        })}
                                     </p>
-                                    {STATUS_SIDE_EFFECTS[Object.keys(reservationService.STATUS_ID).find(k => reservationService.STATUS_ID[k as keyof typeof reservationService.STATUS_ID] === confirmAction.nextStatusId) ?? ""] && (
+                                    {STATUS_ID_TO_CODE[confirmAction.nextStatusId] && (
                                         <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-                                            ⚡ {STATUS_SIDE_EFFECTS[Object.keys(reservationService.STATUS_ID).find(k => reservationService.STATUS_ID[k as keyof typeof reservationService.STATUS_ID] === confirmAction.nextStatusId) ?? ""]}
+                                            {t(`admin.reservations.side_effects.${STATUS_ID_TO_CODE[confirmAction.nextStatusId]}`)}
                                         </p>
                                     )}
                                     <div className="flex gap-2">
@@ -200,14 +209,16 @@ function ReservationDetailModal({
                                             className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white"
                                             style={{ background: confirmAction.color }}
                                         >
-                                            {actionLoading ? "Đang xử lý..." : "Xác nhận"}
+                                            {actionLoading
+                                                ? t('admin.reservations.modal.processing')
+                                                : t(`admin.reservations.actions.${confirmAction.actionKey}`)}
                                         </button>
                                         <button
                                             onClick={() => setConfirmAction(null)}
                                             className="px-4 py-1.5 rounded-lg text-sm font-medium border"
                                             style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}
                                         >
-                                            Huỷ bỏ
+                                            {t('admin.reservations.modal.cancel_btn')}
                                         </button>
                                     </div>
                                 </div>
@@ -218,33 +229,49 @@ function ReservationDetailModal({
                                 {/* Contact */}
                                 <div className="rounded-xl p-4 space-y-2" style={{ background: "var(--surface)" }}>
                                     <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "var(--text-muted)" }}>
-                                        Thông tin liên hệ
+                                        {t('admin.reservations.modal.contact_title')}
                                     </p>
-                                    <InfoRow label="Tên" value={detail.contact.name} />
-                                    <InfoRow label="SĐT" value={detail.contact.phone} />
-                                    <InfoRow label="Email" value={detail.contact.email ?? "—"} />
-                                    <InfoRow label="Loại" value={detail.contact.isGuest ? "🏷️ Khách vãng lai" : "👤 Thành viên"} />
+                                    <InfoRow label={t('admin.reservations.modal.contact.name')} value={detail.contact.name} />
+                                    <InfoRow label={t('admin.reservations.modal.contact.phone')} value={detail.contact.phone} />
+                                    <InfoRow label={t('admin.reservations.modal.contact.email')} value={detail.contact.email ?? "—"} />
+                                    <InfoRow
+                                        label={t('admin.reservations.modal.contact.type')}
+                                        value={detail.contact.isGuest
+                                            ? t('admin.reservations.modal.contact.guest')
+                                            : t('admin.reservations.modal.contact.member')}
+                                    />
                                     {detail.contact.membershipLevel && (
-                                        <InfoRow label="Hạng" value={detail.contact.membershipLevel} />
+                                        <InfoRow label={t('admin.reservations.modal.contact.level')} value={detail.contact.membershipLevel} />
                                     )}
                                 </div>
 
                                 {/* Booking info */}
                                 <div className="rounded-xl p-4 space-y-2" style={{ background: "var(--surface)" }}>
                                     <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "var(--text-muted)" }}>
-                                        Thông tin đặt bàn
+                                        {t('admin.reservations.modal.booking_title')}
                                     </p>
                                     <InfoRow
-                                        label="Ngày giờ"
-                                        value={new Date(detail.reservationDateTime).toLocaleString("vi-VN")}
+                                        label={t('admin.reservations.modal.booking.date_time')}
+                                        value={new Date(detail.reservationDateTime).toLocaleString()}
                                     />
-                                    <InfoRow label="Số khách" value={`${detail.numberOfGuests} người`} />
                                     <InfoRow
-                                        label="Bàn"
+                                        label={t('admin.reservations.modal.booking.guests')}
+                                        value={`${detail.numberOfGuests} ${t('admin.reservations.modal.booking.guests_suffix')}`}
+                                    />
+                                    <InfoRow
+                                        label={t('admin.reservations.modal.booking.table')}
                                         value={detail.tables.map(t => `${t.code} (${t.floorName})`).join(", ")}
                                     />
-                                    <InfoRow label="Đặt cọc" value={`${detail.depositAmount.toLocaleString("vi-VN")}đ`} />
-                                    <InfoRow label="Đã cọc" value={detail.depositPaid ? "✅ Có" : "❌ Chưa"} />
+                                    <InfoRow
+                                        label={t('admin.reservations.modal.booking.deposit')}
+                                        value={`${detail.depositAmount.toLocaleString()}đ`}
+                                    />
+                                    <InfoRow
+                                        label={t('admin.reservations.modal.booking.deposit_paid')}
+                                        value={detail.depositPaid
+                                            ? t('admin.reservations.modal.booking.deposit_yes')
+                                            : t('admin.reservations.modal.booking.deposit_no')}
+                                    />
                                 </div>
                             </div>
 
@@ -252,7 +279,7 @@ function ReservationDetailModal({
                             {detail.specialRequests && (
                                 <div className="rounded-xl p-4" style={{ background: "var(--surface)" }}>
                                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)" }}>
-                                        Yêu cầu đặc biệt
+                                        {t('admin.reservations.modal.special_requests')}
                                     </p>
                                     <p className="text-sm italic" style={{ color: "var(--text)" }}>
                                         &ldquo;{detail.specialRequests}&rdquo;
@@ -262,10 +289,7 @@ function ReservationDetailModal({
 
                             {/* Timestamps */}
                             <div className="flex flex-wrap gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
-                                <span>Tạo lúc: {new Date(detail.createdAt).toLocaleString("vi-VN")}</span>
-                                {detail.checkedInAt && (
-                                    <span>Check-in: {new Date(detail.checkedInAt).toLocaleString("vi-VN")}</span>
-                                )}
+                                <span>{t('admin.reservations.modal.created_at')} {new Date(detail.createdAt).toLocaleString()}</span>
                             </div>
                         </div>
                     )}
@@ -286,6 +310,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ReservationsPage() {
+    const { t } = useTranslation();
     const [data, setData] = useState<PaginatedReservations | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -318,28 +343,23 @@ export default function ReservationsPage() {
         }
     }, [page, search, statusId, date]);
 
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-    // Reset page khi filter thay đổi
-    useEffect(() => {
-        setPage(1);
-    }, [search, statusId, date]);
+    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => { setPage(1); }, [search, statusId, date]);
 
     const statusOptions = [
-        { id: 1, label: "Chờ xác nhận", color: "#FFA500" },
-        { id: 2, label: "Đã xác nhận", color: "#3b82f6" },
-        { id: 3, label: "Check-in", color: "#8b5cf6" },
-        { id: 4, label: "Hoàn thành", color: "#22c55e" },
-        { id: 5, label: "Đã huỷ", color: "#ef4444" },
+        { id: 1, labelKey: "pending", color: "#FFA500" },
+        { id: 2, labelKey: "confirmed", color: "#3b82f6" },
+        { id: 3, labelKey: "checkin", color: "#8b5cf6" },
+        { id: 4, labelKey: "completed", color: "#22c55e" },
+        { id: 5, labelKey: "cancelled", color: "#ef4444" },
     ];
 
-    // Summary counts from current page (rough indicator)
     const pendingCount = data?.items.filter(i => i.status.code === "PENDING").length ?? 0;
     const confirmedCount = data?.items.filter(i => i.status.code === "CONFIRMED").length ?? 0;
     const checkinCount = data?.items.filter(i => i.status.code === "CHECKED_IN").length ?? 0;
     const totalCount = data?.totalCount ?? 0;
+
+    const tableHeaderKeys = ["code", "customer", "table_floor", "date_time", "guests", "status", "walk_in", "actions"] as const;
 
     return (
         <main className="flex-1 p-6 lg:p-8">
@@ -348,10 +368,10 @@ export default function ReservationsPage() {
                 <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
                         <h2 className="text-3xl font-bold mb-1" style={{ color: "var(--text)" }}>
-                            Quản lý Đặt bàn
+                            {t('admin.reservations.title')}
                         </h2>
                         <p style={{ color: "var(--text-muted)" }}>
-                            Tổng cộng {totalCount.toLocaleString("vi-VN")} reservation
+                            {t('admin.reservations.total_count', { total: totalCount.toLocaleString() })}
                         </p>
                     </div>
                     <button
@@ -362,25 +382,27 @@ export default function ReservationsPage() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        Làm mới
+                        {t('admin.reservations.refresh')}
                     </button>
                 </div>
 
                 {/* ── Stats ── */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { label: "Tổng", value: totalCount, color: "var(--primary)", bg: "var(--primary-soft)" },
-                        { label: "Chờ XN", value: pendingCount, color: "#FFA500", bg: "rgba(255,165,0,0.1)" },
-                        { label: "Đã XN", value: confirmedCount, color: "#3b82f6", bg: "rgba(59,130,246,0.1)" },
-                        { label: "Check-in", value: checkinCount, color: "#8b5cf6", bg: "rgba(139,92,246,0.1)" },
+                        { labelKey: "total", value: totalCount, color: "var(--primary)", bg: "var(--primary-soft)" },
+                        { labelKey: "pending", value: pendingCount, color: "#FFA500", bg: "rgba(255,165,0,0.1)" },
+                        { labelKey: "confirmed", value: confirmedCount, color: "#3b82f6", bg: "rgba(59,130,246,0.1)" },
+                        { labelKey: "checkin", value: checkinCount, color: "#8b5cf6", bg: "rgba(139,92,246,0.1)" },
                     ].map((stat) => (
                         <div
-                            key={stat.label}
+                            key={stat.labelKey}
                             className="rounded-xl p-4 flex items-center justify-between"
                             style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                         >
                             <div>
-                                <p className="text-sm" style={{ color: "var(--text-muted)" }}>{stat.label}</p>
+                                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                                    {t(`admin.reservations.stats.${stat.labelKey}`)}
+                                </p>
                                 <p className="text-2xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}</p>
                             </div>
                             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: stat.bg }}>
@@ -397,63 +419,49 @@ export default function ReservationsPage() {
                     className="rounded-xl p-4 flex flex-wrap gap-3"
                     style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                 >
-                    {/* Search */}
                     <div className="relative flex-1 min-w-[200px]">
                         <svg className="absolute left-3 top-2.5 w-4 h-4" style={{ color: "var(--text-muted)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <input
                             type="text"
-                            placeholder="Tìm tên, SĐT, mã đặt bàn..."
+                            placeholder={t('admin.reservations.filter.search_placeholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-9 pr-4 py-2 rounded-lg text-sm outline-none"
-                            style={{
-                                background: "var(--surface)",
-                                border: "1px solid var(--border)",
-                                color: "var(--text)",
-                            }}
+                            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                         />
                     </div>
 
-                    {/* Status filter */}
                     <select
                         value={statusId}
                         onChange={(e) => setStatusId(e.target.value === "" ? "" : Number(e.target.value))}
                         className="px-3 py-2 rounded-lg text-sm outline-none min-w-[160px]"
-                        style={{
-                            background: "var(--surface)",
-                            border: "1px solid var(--border)",
-                            color: "var(--text)",
-                        }}
+                        style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                     >
-                        <option value="">Tất cả trạng thái</option>
+                        <option value="">{t('admin.reservations.filter.all_status')}</option>
                         {statusOptions.map((s) => (
-                            <option key={s.id} value={s.id}>{s.label}</option>
+                            <option key={s.id} value={s.id}>
+                                {t(`admin.reservations.status.${s.labelKey}`)}
+                            </option>
                         ))}
                     </select>
 
-                    {/* Date filter */}
                     <input
                         type="date"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
                         className="px-3 py-2 rounded-lg text-sm outline-none"
-                        style={{
-                            background: "var(--surface)",
-                            border: "1px solid var(--border)",
-                            color: "var(--text)",
-                        }}
+                        style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                     />
 
-                    {/* Clear filters */}
                     {(search || statusId !== "" || date) && (
                         <button
                             onClick={() => { setSearch(""); setStatusId(""); setDate(""); }}
                             className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                             style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}
                         >
-                            Xoá filter
+                            {t('admin.reservations.filter.clear')}
                         </button>
                     )}
                 </div>
@@ -467,13 +475,13 @@ export default function ReservationsPage() {
                         <table className="w-full">
                             <thead style={{ background: "var(--surface)" }}>
                                 <tr>
-                                    {["Mã đặt bàn", "Khách hàng", "Bàn / Tầng", "Ngày & Giờ", "Số khách", "Trạng thái", "Khách vãng lai", "Thao tác"].map((col) => (
+                                    {tableHeaderKeys.map((key) => (
                                         <th
-                                            key={col}
+                                            key={key}
                                             className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap"
                                             style={{ color: "var(--text-muted)" }}
                                         >
-                                            {col}
+                                            {t(`admin.reservations.table_headers.${key}`)}
                                         </th>
                                     ))}
                                 </tr>
@@ -497,7 +505,7 @@ export default function ReservationsPage() {
                                                 <svg className="w-12 h-12 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                 </svg>
-                                                <p className="text-sm">Không có reservation nào</p>
+                                                <p className="text-sm">{t('admin.reservations.empty')}</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -508,17 +516,15 @@ export default function ReservationsPage() {
                                             className="transition-colors hover:bg-[var(--surface)]"
                                             style={{ borderBottom: "1px solid var(--border)" }}
                                         >
-                                            {/* Confirmation code */}
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <span className="font-mono text-sm font-bold" style={{ color: "var(--primary)" }}>
                                                     #{item.confirmationCode}
                                                 </span>
                                                 <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                                                    {new Date(item.createdAt).toLocaleDateString("vi-VN")}
+                                                    {new Date(item.createdAt).toLocaleDateString()}
                                                 </p>
                                             </td>
 
-                                            {/* Contact */}
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2">
                                                     <div
@@ -534,7 +540,6 @@ export default function ReservationsPage() {
                                                 </div>
                                             </td>
 
-                                            {/* Tables */}
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <div className="space-y-0.5">
                                                     {item.tables.map((t, i) => (
@@ -546,21 +551,19 @@ export default function ReservationsPage() {
                                                 </div>
                                             </td>
 
-                                            {/* DateTime */}
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
-                                                    {new Date(item.reservationDateTime).toLocaleDateString("vi-VN", {
+                                                    {new Date(item.reservationDateTime).toLocaleDateString(undefined, {
                                                         day: "2-digit", month: "2-digit", year: "numeric"
                                                     })}
                                                 </p>
                                                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                                                    {new Date(item.reservationDateTime).toLocaleTimeString("vi-VN", {
+                                                    {new Date(item.reservationDateTime).toLocaleTimeString(undefined, {
                                                         hour: "2-digit", minute: "2-digit"
                                                     })}
                                                 </p>
                                             </td>
 
-                                            {/* Guests */}
                                             <td className="px-4 py-3 whitespace-nowrap text-center">
                                                 <span
                                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
@@ -573,25 +576,22 @@ export default function ReservationsPage() {
                                                 </span>
                                             </td>
 
-                                            {/* Status */}
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <StatusBadge {...item.status} />
                                             </td>
 
-                                            {/* isGuest */}
                                             <td className="px-4 py-3 whitespace-nowrap text-center">
-                                                <span className="text-sm">
-                                                    {item.isGuest ? "🏷️" : "👤"}
-                                                </span>
+                                                <span className="material-symbols-outlined text-base" style={{ color: 'var(--text-muted)' }}>
+                                                {item.isGuest ? 'sell' : 'person'}
+                                            </span>
                                             </td>
 
-                                            {/* Actions */}
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <button
                                                     onClick={() => setSelectedId(item.id)}
                                                     className="p-2 rounded-lg transition-all"
                                                     style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
-                                                    title="Xem chi tiết & thao tác"
+                                                    title={t('admin.reservations.actions.view_detail')}
                                                 >
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -613,7 +613,11 @@ export default function ReservationsPage() {
                             style={{ borderTop: "1px solid var(--border)" }}
                         >
                             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                                Trang {data.pageNumber} / {data.totalPages} · {data.totalCount} kết quả
+                                {t('admin.reservations.pagination.page_info', {
+                                    page: data.pageNumber,
+                                    total: data.totalPages,
+                                    count: data.totalCount,
+                                })}
                             </p>
                             <div className="flex items-center gap-2">
                                 <button
@@ -622,9 +626,8 @@ export default function ReservationsPage() {
                                     className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
                                     style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                                 >
-                                    ← Trước
+                                    {t('admin.reservations.pagination.prev')}
                                 </button>
-                                {/* Page numbers */}
                                 {Array.from({ length: Math.min(5, data.totalPages) }, (_, i) => {
                                     const p = Math.max(1, Math.min(data.totalPages - 4, data.pageNumber - 2)) + i;
                                     return (
@@ -647,7 +650,7 @@ export default function ReservationsPage() {
                                     className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
                                     style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                                 >
-                                    Sau →
+                                    {t('admin.reservations.pagination.next')}
                                 </button>
                             </div>
                         </div>

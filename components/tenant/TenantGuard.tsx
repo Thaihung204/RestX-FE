@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useTenant } from "@/lib/contexts/TenantContext";
-import { TenantError, TenantLoading } from "./TenantError";
+import { TenantError } from "./TenantError";
 
 interface TenantGuardProps {
     children: React.ReactNode;
@@ -47,9 +47,9 @@ export function TenantGuard({ children, strict = true }: TenantGuardProps) {
         return <>{children}</>;
     }
 
-    // Show loading state
+    // While tenant is loading, defer to global system loader
     if (loading) {
-        return <TenantLoading />;
+        return null;
     }
 
     // In development mode, allow rendering even without tenant config

@@ -1,80 +1,64 @@
 'use client';
 
-import { LanguageContext } from '@/lib/contexts/LanguageContext';
+import { LanguageContext, SupportedLanguage } from '@/lib/contexts/LanguageContext';
 import '@/lib/i18n/i18n';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export { useLanguage } from '@/lib/contexts/LanguageContext';
 
 export default function I18nProvider({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
-  console.log('I18nProvider initializing', { language: i18n.language });
-  // Initialize state from localStorage if available (client-side only)
-  const getInitialLanguage = (): string => {
-    if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('language');
-      if (savedLang === 'en' || savedLang === 'vi') {
-        return savedLang;
-      }
-    }
-    return i18n.language || 'vi';
+  const initialized = useRef(false);
+
+  const normalizeLanguage = (lang?: string): SupportedLanguage => {
+    if (lang?.toLowerCase().startsWith('en')) return 'en';
+    return 'vi';
   };
 
-  const [language, setLanguage] = useState(getInitialLanguage);
-  const [isLoaded, setIsLoaded] = useState(false);
+  // Get initial language from localStorage or i18n — only once
+  const getInitialLanguage = (): SupportedLanguage => {
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('language');
+      if (savedLang === 'en' || savedLang === 'vi') return savedLang;
+    }
+    return normalizeLanguage(i18n.language);
+  };
 
+  const [language, setLanguage] = useState<SupportedLanguage>(getInitialLanguage);
+
+  // On mount: sync i18n to the saved language (one-time only)
   useEffect(() => {
-    // Get the correct language from localStorage or i18n
-    const savedLang = typeof window !== 'undefined'
-      ? localStorage.getItem('language')
-      : null;
-    const targetLang = (savedLang === 'en' || savedLang === 'vi')
-      ? savedLang
-      : (i18n.language || 'vi');
+    if (initialized.current) return;
+    initialized.current = true;
 
-    // Ensure i18n and state are synchronized
-    if (i18n.language !== targetLang) {
-      i18n.changeLanguage(targetLang).then(() => {
-        setLanguage(targetLang);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('language', targetLang);
-        }
-        setIsLoaded(true);
-      });
-    } else {
-      setLanguage(targetLang);
-      if (typeof window !== 'undefined' && targetLang) {
-        localStorage.setItem('language', targetLang);
-      }
-      setIsLoaded(true);
+    const initial = getInitialLanguage();
+    if (i18n.language !== initial) {
+      i18n.changeLanguage(initial);
     }
 
-    // Listen for language changes from i18n
+    // Listen for external language changes (e.g. from i18n itself)
     const handleLanguageChange = (lng: string) => {
-      setLanguage(lng);
+      const normalized = normalizeLanguage(lng);
+      setLanguage(normalized);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('language', lng);
+        localStorage.setItem('language', normalized);
       }
     };
 
     i18n.on('languageChanged', handleLanguageChange);
-
     return () => {
       i18n.off('languageChanged', handleLanguageChange);
     };
-  }, [i18n]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const changeLanguage = (lang: string) => {
-    i18n.changeLanguage(lang).then(() => {
-      // Language will be updated via the languageChanged event
-    });
+  const changeLanguage = (lang: SupportedLanguage | string) => {
+    const normalized = normalizeLanguage(lang);
+    // i18n.changeLanguage will trigger the 'languageChanged' event
+    // which will update state and localStorage via the listener above
+    i18n.changeLanguage(normalized);
   };
-
-  // Don't render children until i18n is loaded to prevent hydration mismatch
-  if (!isLoaded) {
-    return null; // Or a loading spinner
-  }
 
   return (
     <LanguageContext.Provider value={{ language, changeLanguage }}>
