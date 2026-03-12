@@ -450,10 +450,30 @@ export function PageTransitionLoader() {
 
     // ── Trigger 1: Hard refresh (F5 / Ctrl+R) ──
     useEffect(() => {
-        if (isHardRefresh()) {
-            show();
-            hideTimer.current = setTimeout(() => { loadingRef.current = false; setLoading(false); }, T_TOTAL);
+        if (!isHardRefresh()) return;
+
+        show();
+        const startedAt = Date.now();
+
+        const finishWhenReady = () => {
+            const elapsed = Date.now() - startedAt;
+            const remaining = Math.max(0, T_TOTAL - elapsed);
+
+            if (hideTimer.current) clearTimeout(hideTimer.current);
+            hideTimer.current = setTimeout(() => {
+                hide(FADEOUT);
+            }, remaining);
+        };
+
+        if (document.readyState === 'complete') {
+            finishWhenReady();
+        } else {
+            window.addEventListener('load', finishWhenReady, { once: true });
         }
+
+        return () => {
+            window.removeEventListener('load', finishWhenReady);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

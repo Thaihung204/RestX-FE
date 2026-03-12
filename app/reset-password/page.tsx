@@ -1,18 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { message } from "antd";
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from "next/navigation";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 import authService from "@/lib/services/authService";
 import { HeroSection } from "@/components/auth/HeroSection";
 import { GlassInput } from "@/components/ui/GlassInput";
-import { LockOutlined, EyeInvisibleOutlined, EyeOutlined, CheckCircleOutlined, KeyOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  KeyOutlined,
+  LockOutlined,
+} from "@ant-design/icons";
 
 const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const { t } = useTranslation('auth');
   const { mode } = useThemeMode();
   const searchParams = useSearchParams();
@@ -288,5 +294,13 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="auth-page-bg min-h-screen" />}>
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }

@@ -9,8 +9,9 @@ import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
-import { tableService, TableStatus, TableItem, floorService, FloorSummary } from "@/lib/services/tableService";
+import { tableService, TableStatus, floorService, FloorSummary } from "@/lib/services/tableService";
 import { usePageLoading } from "@/components/PageTransitionLoader";
+import { App } from "antd";
 
 interface Table {
   id: string;
@@ -40,6 +41,7 @@ type ViewMode = "grid" | "map";
 
 export default function TablesPage() {
   const { t } = useTranslation();
+  const { message } = App.useApp();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -77,7 +79,7 @@ export default function TablesPage() {
   /* Add Area Modal State */
   const [addAreaModalOpen, setAddAreaModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   usePageLoading(loading);
 
   // Fetch tables + floors from BE API
@@ -501,9 +503,7 @@ export default function TablesPage() {
         setSelectedTable(null);
       } catch (err) {
         console.error("Delete failed", err);
-        alert(
-          t("dashboard.tables.errors.delete_failed"),
-        );
+        message.error(t("dashboard.tables.errors.cannot_delete_due_to_booking"));
       }
       setDeleteConfirmOpen(false);
     }
