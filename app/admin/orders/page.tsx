@@ -7,9 +7,10 @@ import menuService from "@/lib/services/menuService";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import { tableService, type TableItem } from "@/lib/services/tableService";
+import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { type OrderDetailModalItem } from "@/lib/types/order";
 import { HubConnectionState } from "@microsoft/signalr";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 type OrderStatusUi =
@@ -46,6 +47,7 @@ export default function OrdersPage() {
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<
     OrderDetailModalItem[] | null
   >(null);
+  const [tenant, setTenant] = useState<TenantConfig | null>(null);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
 
@@ -84,12 +86,58 @@ export default function OrdersPage() {
     }
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchTenant = async () => {
+      try {
+        const host = window.location.host;
+        const hostWithoutPort = host.includes(":") ? host.split(":")[0] : host;
+
+        if (hostWithoutPort === "admin.restx.food") return;
+
+        if (
+          hostWithoutPort === "admin.localhost" ||
+          hostWithoutPort === "localhost" ||
+          hostWithoutPort === "127.0.0.1"
+        ) {
+          const data = await tenantService.getTenantConfig("demo.restx.food");
+          if (isMounted) setTenant(data || null);
+          return;
+        }
+
+        if (hostWithoutPort.endsWith(".localhost")) {
+          const subdomain = hostWithoutPort.replace(".localhost", "");
+          const tenantHost = subdomain && subdomain !== "admin"
+            ? `${subdomain}.restx.food`
+            : "demo.restx.food";
+          const data = await tenantService.getTenantConfig(tenantHost);
+          if (isMounted) setTenant(data || null);
+          return;
+        }
+
+        if (!hostWithoutPort.startsWith("admin.")) {
+          const data = await tenantService.getTenantConfig(hostWithoutPort);
+          if (isMounted) setTenant(data || null);
+        }
+      } catch (error) {
+        console.error("Failed to resolve tenant for admin orders:", error);
+      }
+    };
+
+    fetchTenant();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const loadOrders = useCallback(
-    async (tablesDict?: Record<string, TableItem>) => {
+    async (tablesDict?: Record<string, TableItem>, showLoading = true) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       try {
-        setLoading(true);
+        if (showLoading) setLoading(true);
         const data = await orderService.getAllOrders();
         // Pre-fetch unique customers referenced by orders to show name/avatar
         const uniqueCustomerIds = Array.from(
@@ -145,20 +193,23 @@ export default function OrdersPage() {
       } catch (error) {
         console.error("Failed to load orders:", error);
       } finally {
-        setLoading(false);
+        if (showLoading) setLoading(false);
         inFlightRef.current = false;
       }
     },
     [tablesById, t],
   );
 
-  const refreshOrders = useCallback(async () => {
-    const now = Date.now();
-    if (lastRefreshRef.current && now - lastRefreshRef.current < 2000) return;
-    lastRefreshRef.current = now;
-    const tablesDict = await loadTables();
-    await loadOrders(tablesDict);
-  }, [loadTables, loadOrders]);
+  const refreshOrders = useCallback(
+    async (showLoading = true) => {
+      const now = Date.now();
+      if (lastRefreshRef.current && now - lastRefreshRef.current < 2000) return;
+      lastRefreshRef.current = now;
+      const tablesDict = await loadTables();
+      await loadOrders(tablesDict, showLoading);
+    },
+    [loadTables, loadOrders],
+  );
 
   useEffect(() => {
     // Load tables first, then orders so we can map table code
@@ -166,15 +217,19 @@ export default function OrdersPage() {
   }, [refreshOrders]);
 
   useEffect(() => {
+    if (!tenant?.id) return;
+
     let isMounted = true;
     let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const handleOrderChange = () => {
+    const handleOrderChange = (payload: any) => {
       if (!isMounted) return;
+      const changedTenantId = payload?.tenantId || payload?.order?.tenantId;
+      if (changedTenantId && changedTenantId !== tenant.id) return;
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         if (!isMounted) return;
-        refreshOrders();
+        refreshOrders(false);
       }, 300);
     };
 
@@ -186,6 +241,7 @@ export default function OrdersPage() {
 
         const conn = orderSignalRService.getConnection();
         if (conn.state === HubConnectionState.Connected) {
+          await orderSignalRService.invoke("JoinTenantGroup", tenant.id);
           events.forEach((event) =>
             orderSignalRService.on(event, handleOrderChange),
           );
@@ -203,8 +259,9 @@ export default function OrdersPage() {
       events.forEach((event) =>
         orderSignalRService.off(event, handleOrderChange),
       );
+      orderSignalRService.invoke("LeaveTenantGroup", tenant.id).catch(() => {});
     };
-  }, [refreshOrders]);
+  }, [refreshOrders, tenant?.id]);
 
   const statusConfig = {
     pending: {
@@ -240,16 +297,6 @@ export default function OrdersPage() {
     },
   };
 
-  const stats = useMemo(
-    () => ({
-      pending: orders.filter((o) => o.status === "pending").length,
-      preparing: orders.filter((o) => o.status === "preparing").length,
-      ready: orders.filter((o) => o.status === "ready").length,
-      served: orders.filter((o) => o.status === "served").length,
-      completed: orders.filter((o) => o.status === "completed").length,
-    }),
-    [orders],
-  );
 
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -265,174 +312,6 @@ export default function OrdersPage() {
             <p style={{ color: "var(--text-muted)" }}>
               {t("dashboard.orders.subtitle")}
             </p>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "var(--card)",
-              border: "1px solid rgba(234, 179, 8, 0.2)",
-            }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                  {t("dashboard.orders.stats.pending")}
-                </p>
-                <p className="text-3xl font-bold text-yellow-500 mt-1">
-                  {stats.pending}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-500/10 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-yellow-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "var(--card)",
-              border: "1px solid rgba(59, 130, 246, 0.2)",
-            }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                  {t("dashboard.orders.stats.preparing")}
-                </p>
-                <p className="text-3xl font-bold text-blue-500 mt-1">
-                  {stats.preparing}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-blue-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "var(--card)",
-              border: "1px solid rgba(168, 85, 247, 0.2)",
-            }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                  {t("dashboard.orders.stats.ready")}
-                </p>
-                <p className="text-3xl font-bold text-purple-500 mt-1">
-                  {stats.ready}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-purple-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "var(--card)",
-              border: "1px solid rgba(255, 56, 11, 0.2)",
-            }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                  {t("dashboard.orders.stats.served")}
-                </p>
-                <p
-                  className="text-3xl font-bold mt-1"
-                  style={{ color: "var(--primary)" }}>
-                  {stats.served}
-                </p>
-              </div>
-              <div
-                className="w-12 h-12 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "var(--primary-soft)" }}>
-                <svg
-                  className="w-6 h-6"
-                  style={{ color: "var(--primary)" }}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "var(--card)",
-              border: "1px solid rgba(34, 197, 94, 0.2)",
-            }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                  {t("dashboard.orders.stats.completed")}
-                </p>
-                <p className="text-3xl font-bold text-green-500 mt-1">
-                  {stats.completed}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-green-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-            </div>
           </div>
         </div>
 
