@@ -7,9 +7,9 @@ import { TenantProvider } from "@/lib/contexts/TenantContext";
 import { ToastProvider } from "@/lib/contexts/ToastContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import AntdProvider from "./theme/AntdProvider";
-import PageTransitionLoader from "@/components/PageTransitionLoader";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
@@ -113,7 +113,9 @@ export default function RootLayout({
         <I18nProvider>
           <TenantProvider>
             <TenantFavicon />
-            <PageTransitionLoader />
+            <Suspense fallback={null}>
+              <PageTransitionLoader />
+            </Suspense>
             <AuthProvider>
               <CartProvider>
                 <ToastProvider>

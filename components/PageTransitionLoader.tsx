@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 // ─── CSS — only things RAF can't do ───────────────────────────────────────────
 const CSS = `
@@ -397,7 +397,6 @@ const MIN_VISIBLE_MS = 250;
 
 export function PageTransitionLoader() {
     const pathname = usePathname();
-    const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
 
     // Ref to avoid stale closures in event listeners
@@ -556,7 +555,7 @@ export function PageTransitionLoader() {
 
     // ── Trigger 3: Any route navigation (fallback + auto-hide) ──
     useEffect(() => {
-        const current = `${pathname}?${searchParams?.toString() ?? ''}`;
+        const current = pathname;
         if (prevPath.current === null) { prevPath.current = current; return; }
         if (prevPath.current === current) return;
 
@@ -564,7 +563,7 @@ export function PageTransitionLoader() {
         show();
         if (hideTimer.current) clearTimeout(hideTimer.current);
         hideTimer.current = setTimeout(() => { hide(FADEOUT); }, T_TOTAL);
-    }, [pathname, searchParams]);
+    }, [pathname]);
 
     // ── Trigger 3: Slow page content (via usePageLoading hook) ──
     useEffect(() => {
