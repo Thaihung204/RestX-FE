@@ -1,10 +1,10 @@
 "use client";
 
+import { getTypeTranslation, type SupportedLocale } from "@/lib/i18n/dynamicTypeTranslations";
 import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getTypeTranslation, type SupportedLocale } from "@/lib/i18n/dynamicTypeTranslations";
 
 function getStatus(item: IngredientItem): "active" | "inactive" {
   return item.isActive ? "active" : "inactive";
@@ -27,6 +27,7 @@ export default function IngredientList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterActive, setFilterActive] = useState("all");
+  const [savingRow, setSavingRow] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -49,6 +50,30 @@ export default function IngredientList() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateIngredient = async (
+    id: string,
+    patch: Partial<IngredientItem>,
+  ) => {
+    const current = ingredients.find((ingredient) => ingredient.id === id);
+    if (!current) return;
+
+    const next = { ...current, ...patch };
+    setSavingRow(id);
+    setIngredients((prev) =>
+      prev.map((ingredient) => (ingredient.id === id ? next : ingredient)),
+    );
+
+    try {
+      await ingredientService.update(id, next);
+    } catch (err) {
+      setIngredients((prev) =>
+        prev.map((ingredient) => (ingredient.id === id ? current : ingredient)),
+      );
+    } finally {
+      setSavingRow(null);
     }
   };
 
@@ -189,6 +214,9 @@ export default function IngredientList() {
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 70 }}>
                   {t("dashboard.ingredients.list.col_unit")}
                 </th>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 140 }}>
+                  {t("dashboard.ingredients.list.col_quantity")}
+                </th>
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden xl:table-cell" style={{ color: "var(--text)", width: 120 }}>
                   {t("dashboard.ingredients.list.col_min_max")}
                 </th>
@@ -198,7 +226,7 @@ export default function IngredientList() {
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text)", width: 90 }}>
                   {t("dashboard.ingredients.list.col_type")}
                 </th>
-                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 110 }}>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 120 }}>
                   {t("dashboard.ingredients.list.col_status")}
                 </th>
                 <th className="text-center px-3 py-3 font-semibold" style={{ color: "var(--text)", width: 60 }}>
@@ -234,6 +262,38 @@ export default function IngredientList() {
                       {item.unit}
                     </td>
 
+                    <td className="px-3 py-3 text-center">
+                      <input
+                        type="number"
+                        value={item.currentQuantity ?? 0}
+                        onChange={(e) =>
+                          setIngredients((prev) =>
+                            prev.map((ingredient) =>
+                              ingredient.id === item.id
+                                ? {
+                                    ...ingredient,
+                                    currentQuantity: Number(e.target.value),
+                                  }
+                                : ingredient,
+                            ),
+                          )
+                        }
+                        onBlur={() =>
+                          handleUpdateIngredient(item.id as string, {
+                            currentQuantity: item.currentQuantity ?? 0,
+                          })
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                        className="w-20 px-2 py-1 rounded border text-sm text-center"
+                        style={{
+                          background: "var(--bg-base)",
+                          color: "var(--text)",
+                          borderColor: "var(--border)",
+                        }}
+                        disabled={savingRow === item.id}
+                      />
+                    </td>
+
                     <td className="px-3 py-3 text-center text-xs hidden xl:table-cell" style={{ color: "var(--text-secondary)" }}>
                       {item.minStockLevel} / {item.maxStockLevel}
                     </td>
@@ -260,14 +320,22 @@ export default function IngredientList() {
                     </td>
 
                     <td className="px-3 py-3 text-center">
-                      <span
-                        className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleUpdateIngredient(item.id as string, {
+                            isActive: !item.isActive,
+                          });
+                        }}
+                        className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
                         style={STATUS_BADGE[status]}
+                        disabled={savingRow === item.id}
                       >
                         {item.isActive
                           ? t("dashboard.ingredients.list.badge_active")
                           : t("dashboard.ingredients.list.badge_inactive")}
-                      </span>
+                      </button>
                     </td>
 
                     <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
@@ -308,14 +376,59 @@ export default function IngredientList() {
                     <p className="font-semibold truncate" style={{ color: "var(--text)" }}>{item.name}</p>
                     <p className="text-xs font-mono mt-0.5" style={{ color: "var(--text-muted)" }}>{item.code}</p>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold shrink-0" style={STATUS_BADGE[status]}>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleUpdateIngredient(item.id as string, {
+                        isActive: !item.isActive,
+                      });
+                    }}
+                    className="px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 transition-all"
+                    style={STATUS_BADGE[status]}
+                    disabled={savingRow === item.id}
+                  >
                     {item.isActive
                       ? t("dashboard.ingredients.list.badge_active")
                       : t("dashboard.ingredients.list.badge_inactive_short")}
-                  </span>
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mt-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+                  <div>
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.ingredients.list.col_quantity")}
+                    </span>
+                    <input
+                      type="number"
+                      value={item.currentQuantity ?? 0}
+                      onChange={(e) =>
+                        setIngredients((prev) =>
+                          prev.map((ingredient) =>
+                            ingredient.id === item.id
+                              ? {
+                                  ...ingredient,
+                                  currentQuantity: Number(e.target.value),
+                                }
+                              : ingredient,
+                          ),
+                        )
+                      }
+                      onBlur={() =>
+                        handleUpdateIngredient(item.id as string, {
+                          currentQuantity: item.currentQuantity ?? 0,
+                        })
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                      className="mt-1 w-full px-2 py-1 rounded border text-sm text-center"
+                      style={{
+                        background: "var(--bg-base)",
+                        color: "var(--text)",
+                        borderColor: "var(--border)",
+                      }}
+                      disabled={savingRow === item.id}
+                    />
+                  </div>
                   <div>
                     <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.ingredients.list.mobile_unit")}

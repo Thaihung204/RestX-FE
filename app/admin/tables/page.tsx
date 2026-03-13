@@ -598,7 +598,7 @@ export default function TablesPage() {
               <button
                 onClick={() => setAddAreaModalOpen(true)}
                 className="px-4 py-2 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium transition-all hover:bg-[var(--bg-base)]">
-                + {t("dashboard.tables.add_floor", "Add Floor")}
+                + {t("dashboard.tables.add_floor")}
               </button>
               <button
                 onClick={() => setAddModalOpen(true)}
@@ -698,7 +698,7 @@ export default function TablesPage() {
                     <p
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}>
-                      {table.area} {t("dashboard.tables.card.floor", "Floor")}
+                      {table.area} {t("dashboard.tables.card.floor")}
                     </p>
                   </div>
                   <span
