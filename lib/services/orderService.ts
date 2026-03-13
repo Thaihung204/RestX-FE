@@ -81,6 +81,17 @@ class OrderService {
     await axiosInstance.put(`/orders/${id}/status`, statusId);
   }
 
+  async updateOrderDetailStatus(
+    orderId: string,
+    detailId: string,
+    statusId: number,
+  ): Promise<void> {
+    await axiosInstance.put(
+      `/orders/${orderId}/order-details-status/${detailId}`,
+      statusId,
+    );
+  }
+
   async getAllOrders(): Promise<OrderDto[]> {
     const response = await axiosInstance.get("/orders");
     return extractOrders(response.data);

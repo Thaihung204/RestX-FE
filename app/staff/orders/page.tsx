@@ -2,6 +2,9 @@
 
 import { useTenant } from "@/lib/contexts/TenantContext";
 import menuService from "@/lib/services/menuService";
+import orderDetailStatusService, {
+  OrderDetailStatus,
+} from "@/lib/services/orderDetailStatusService";
 import orderService, {
   OrderDto,
   OrderRequestDto,
@@ -13,7 +16,6 @@ import {
   MinusOutlined,
   PlusOutlined,
   SearchOutlined,
-  SendOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
@@ -41,7 +43,7 @@ import { useThemeMode } from "../../theme/AntdProvider";
 const { Text } = Typography;
 const { Search } = Input;
 
-type OrderItemStatus = "pending" | "preparing" | "ready" | "served";
+type OrderItemStatus = string;
 
 type OrderStatusId = 0 | 1 | 2 | 3 | 4;
 
@@ -76,15 +78,6 @@ interface Order {
   orderStatus: OrderStatusUi;
   raw?: OrderDto;
 }
-
-const mapOrderItemStatus = (status?: string | null): OrderItemStatus => {
-  const normalized = (status ?? "").toLowerCase();
-  if (normalized === "served" || normalized === "completed") return "served";
-  if (normalized === "ready") return "ready";
-  if (normalized === "preparing" || normalized === "processing")
-    return "preparing";
-  return "pending";
-};
 
 const mapOrderStatus = (statusId?: number | null): OrderStatusUi => {
   switch (statusId) {
@@ -177,15 +170,19 @@ export default function OrderManagement() {
           order.tableId;
 
         const items: OrderItem[] = (order.orderDetails ?? []).map(
-          (detail, index) => ({
-            id: detail.id || `${order.id || "order"}-${index}`,
-            dishId: detail.dishId,
-            name: dishNameMap[detail.dishId] || detail.dishId,
-            quantity: detail.quantity ?? 0,
-            price: 0,
-            note: detail.note || undefined,
-            status: mapOrderItemStatus(detail.status),
-          }),
+          (detail, index) => {
+            const statusValue = detail.status || "";
+            const normalizedStatus = normalizeStatusValue(statusValue);
+            return {
+              id: detail.id || `${order.id || "order"}-${index}`,
+              dishId: detail.dishId,
+              name: dishNameMap[detail.dishId] || detail.dishId,
+              quantity: detail.quantity ?? 0,
+              price: 0,
+              note: detail.note || undefined,
+              status: normalizedStatus,
+            };
+          },
         );
 
         const summaryItems = aggregateOrderItems(items);
@@ -227,6 +224,7 @@ export default function OrderManagement() {
   }, [fetchOrders, ordersRefreshKey]);
 
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
+  const [orderDetailStatuses, setOrderDetailStatuses] = useState<OrderDetailStatus[]>([]);
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -242,26 +240,83 @@ export default function OrderManagement() {
     fetchMenu();
   }, []);
 
-    const itemStatusConfig: Record<
-    OrderItemStatus,
-    { color: string; text: string }
-  > = {
-    pending: { color: "orange", text: t("staff.orders.status.pending") },
-    preparing: { color: "blue", text: t("staff.orders.status.preparing") },
-    ready: { color: "green", text: t("staff.orders.status.ready") },
-    served: { color: "default", text: t("staff.orders.status.served") },
+  useEffect(() => {
+    const fetchOrderDetailStatuses = async () => {
+      try {
+        const data = await orderDetailStatusService.getAllStatuses();
+        setOrderDetailStatuses(data ?? []);
+      } catch (error) {
+        console.error("Failed to fetch order detail statuses:", error);
+        setOrderDetailStatuses([]);
+      }
+    };
+
+    fetchOrderDetailStatuses();
+  }, []);
+
+  const statusNameMap = orderDetailStatuses.reduce<Record<string, string>>(
+    (acc, status) => {
+      const codeKey = status.code?.toLowerCase();
+      const nameKey = status.name?.toLowerCase();
+      if (codeKey) acc[codeKey] = status.name;
+      if (nameKey) acc[nameKey] = status.name;
+      acc[status.id] = status.name;
+      return acc;
+    },
+    {},
+  );
+
+  const statusValueMap = orderDetailStatuses.reduce<Record<string, string>>(
+    (acc, status) => {
+      const codeKey = status.code?.toLowerCase();
+      const nameKey = status.name?.toLowerCase();
+      const value = codeKey || status.id;
+      if (codeKey) acc[codeKey] = value;
+      if (nameKey) acc[nameKey] = value;
+      acc[status.id] = value;
+      return acc;
+    },
+    {},
+  );
+
+  const normalizeStatusValue = (status: OrderItemStatus) => {
+    const key = status?.toLowerCase?.() ?? String(status ?? "");
+    return statusValueMap[key] || statusValueMap[status] || status;
   };
 
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const getStatusLabel = (status: OrderItemStatus) => {
+    const key = status?.toLowerCase?.() ?? String(status ?? "");
+    return statusNameMap[key] || statusNameMap[status] || status;
+  };
+
+  const statusOptions = orderDetailStatuses.map((status) => ({
+    value: status.code?.toLowerCase() || status.id,
+    label: (
+      <Space size={8}>
+        <span
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            backgroundColor: status.color || "#8c8c8c",
+            display: "inline-block",
+          }}
+        />
+        <span style={{ color: status.color || "inherit" }}>{status.name}</span>
+      </Space>
+    ),
+    className: "order-detail-status-option",
+  }));
+
+  const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] = useState<string>("");
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [cart, setCart] = useState<{ item: DishItem; quantity: number }[]>([]);
-  const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] = useState<string>("");
   const [activeMenuCategory, setActiveMenuCategory] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const [isUpdatingOrderStatus, setIsUpdatingOrderStatus] = useState(false);
+  const [isUpdatingDetailStatus, setIsUpdatingDetailStatus] = useState(false);
 
   useEffect(() => {
     if (!activeMenuCategory && menuCategories.length > 0) {
@@ -331,29 +386,6 @@ export default function OrderManagement() {
   });
 
 
-  const handleOrderClick = (order: Order) => {
-    setSelectedOrder(order);
-    setIsDetailModalOpen(true);
-  };
-
-  const handleUpdateItemStatus = (
-    orderId: string,
-    itemId: string,
-    newStatus: OrderItemStatus,
-  ) => {
-    setOrders((prev) =>
-      prev.map((order) => {
-        if (order.id === orderId) {
-          const updatedItems = order.items.map((item) =>
-            item.id === itemId ? { ...item, status: newStatus } : item,
-          );
-          return { ...order, items: updatedItems };
-        }
-        return order;
-      }),
-    );
-    message.success(t("staff.orders.messages.status_updated"));
-  };
 
   const handleUpdateOrderStatus = async (
     orderId: string,
@@ -383,6 +415,59 @@ export default function OrderManagement() {
     }
   };
 
+  const handleUpdateDetailStatus = async (
+    orderId: string,
+    detailId: string,
+    statusValue: string,
+  ) => {
+    const previousOrders = orders;
+    const normalizedValue = normalizeStatusValue(statusValue);
+    const matchedStatus = orderDetailStatuses.find(
+      (status) =>
+        status.id === normalizedValue ||
+        status.code?.toLowerCase() === normalizedValue.toLowerCase(),
+    );
+
+    if (!matchedStatus) {
+      message.error(t("staff.orders.messages.order_status_update_failed"));
+      return;
+    }
+
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (order.id !== orderId) return order;
+        return {
+          ...order,
+          detailItems: order.detailItems.map((item) =>
+            item.id === detailId
+              ? { ...item, status: normalizedValue }
+              : item,
+          ),
+          items: order.items.map((item) =>
+            item.id === detailId
+              ? { ...item, status: normalizedValue }
+              : item,
+          ),
+        };
+      }),
+    );
+
+    setIsUpdatingDetailStatus(true);
+    try {
+      await orderService.updateOrderDetailStatus(
+        orderId,
+        detailId,
+        Number(matchedStatus.id),
+      );
+      message.success(t("staff.orders.messages.status_updated"));
+    } catch (error) {
+      console.error("Failed to update order detail status:", error);
+      setOrders(previousOrders);
+      message.error(t("staff.orders.messages.order_status_update_failed"));
+    } finally {
+      setIsUpdatingDetailStatus(false);
+    }
+  };
 
   const addToCart = (item: DishItem) => {
     setCart((prev) => {
@@ -462,15 +547,16 @@ export default function OrderManagement() {
   };
 
   const renderOrderCard = (order: Order) => {
-    const pendingItems = order.items.filter(
-      (i) => i.status === "pending" || i.status === "preparing",
-    ).length;
+    const pendingItems = order.items.filter((i) => {
+      const statusKey = (i.status || "").toLowerCase();
+      const statusLabel = getStatusLabel(statusKey);
+      const normalized = statusLabel.toLowerCase();
+      return normalized === "pending" || normalized === "preparing";
+    }).length;
 
     return (
       <div>
         <Card
-          hoverable
-          onClick={() => handleOrderClick(order)}
           style={{
             borderRadius: 12,
             border:
@@ -478,7 +564,6 @@ export default function OrderManagement() {
                 ? "1px solid rgba(255, 255, 255, 0.1)"
                 : "1px solid #E5E5E5",
             marginBottom: isMobile ? 12 : 16,
-            cursor: "pointer",
             overflow: "hidden",
             background:
               mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFFFF",
@@ -526,6 +611,7 @@ export default function OrderManagement() {
                         value={order.orderStatusId}
                         size="small"
                         style={{ minWidth: 130 }}
+                        className="order-status-select"
                         onChange={(value) =>
                           handleUpdateOrderStatus(
                             order.id,
@@ -537,22 +623,27 @@ export default function OrderManagement() {
                           {
                             value: 0,
                             label: t("staff.orders.status.pending"),
+                            className: "order-status-option",
                           },
                           {
                             value: 1,
                             label: t("staff.orders.status.confirmed"),
+                            className: "order-status-option",
                           },
                           {
                             value: 2,
                             label: t("staff.orders.status.serving"),
+                            className: "order-status-option",
                           },
                           {
                             value: 3,
                             label: t("staff.orders.status.completed"),
+                            className: "order-status-option",
                           },
                           {
                             value: 4,
                             label: t("staff.orders.status.cancelled"),
+                            className: "order-status-option",
                           },
                         ]}
                       />
@@ -572,30 +663,84 @@ export default function OrderManagement() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: isMobile ? 10 : 12 }}>
-                {order.items.slice(0, isMobile ? 2 : 3).map((item) => (
-                  <Tag
-                    key={item.id}
-                    color={itemStatusConfig[item.status].color}
+              <div style={{ marginBottom: isMobile ? 12 : 16 }}>
+                {order.detailItems.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {order.detailItems.map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                          padding: isMobile ? "6px 0" : "8px 0",
+                          borderBottom:
+                            mode === "dark"
+                              ? "1px dashed rgba(255, 255, 255, 0.08)"
+                              : "1px dashed #EDEDED",
+                        }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <Text
+                            style={{
+                              fontSize: isMobile ? 13 : 14,
+                              fontWeight: 500,
+                              display: "block",
+                            }}>
+                            {item.name}
+                          </Text>
+                          {item.note && (
+                            <Text
+                              style={{
+                                fontSize: isMobile ? 11 : 12,
+                                color:
+                                  mode === "dark"
+                                    ? "rgba(255, 255, 255, 0.45)"
+                                    : "rgba(0, 0, 0, 0.45)",
+                                display: "block",
+                              }}>
+                              {item.note}
+                            </Text>
+                          )}
+                        </div>
+                        <Space size={8} style={{ alignItems: "center" }}>
+                          <Tag
+                            style={{
+                              margin: 0,
+                              borderRadius: 8,
+                              fontSize: isMobile ? 12 : 13,
+                            }}>
+                            x{item.quantity}
+                          </Tag>
+                          <Select
+                            value={normalizeStatusValue(item.status)}
+                            size="small"
+                            style={{ minWidth: isMobile ? 110 : 130 }}
+                            onChange={(value) =>
+                              handleUpdateDetailStatus(
+                                order.id,
+                                item.id,
+                                String(value),
+                              )
+                            }
+                            disabled={isUpdatingDetailStatus}
+                            options={statusOptions}
+                          />
+                        </Space>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <Text
                     style={{
-                      marginBottom: 4,
-                      borderRadius: 8,
                       fontSize: isMobile ? 12 : 13,
-                      fontWeight: 400,
+                      color:
+                        mode === "dark"
+                          ? "rgba(255, 255, 255, 0.5)"
+                          : "rgba(0, 0, 0, 0.45)",
                     }}>
-                    {item.name} x{item.quantity}
-                  </Tag>
-                ))}
-                {order.items.length > (isMobile ? 2 : 3) && (
-                  <Tag
-                    style={{
-                      borderRadius: 8,
-                      fontSize: isMobile ? 12 : 13,
-                      fontWeight: 400,
-                    }}>
-                    +{order.items.length - (isMobile ? 2 : 3)}{" "}
-                    {t("staff.orders.order.more_items")}
-                  </Tag>
+                    {t("staff.orders.empty")}
+                  </Text>
                 )}
               </div>
 
@@ -603,6 +748,7 @@ export default function OrderManagement() {
                 style={{
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: "space-between",
                   gap: isMobile ? 8 : 16,
                   flexWrap: "wrap",
                 }}>
@@ -611,25 +757,23 @@ export default function OrderManagement() {
                   style={{ color: "var(--primary)", fontSize: isMobile ? 15 : 16 }}>
                   {order.total.toLocaleString("vi-VN")}đ
                 </Text>
-                {pendingItems > 0 && (
-                  <Badge
-                    count={
-                      isMobile
-                        ? `${pendingItems} ${t("staff.orders.order.not_done")}`
-                        : `${pendingItems} ${t("staff.orders.order.items_not_done")}`
-                    }
-                    style={{
-                      backgroundColor:
-                        mode === "dark"
-                          ? "rgba(255, 56, 11, 0.2)"
-                          : "rgba(255, 56, 11, 0.1)",
-                      color: "var(--primary)",
-                      fontSize: isMobile ? 12 : 13,
-                      fontWeight: 500,
-                      border: `1px solid ${mode === "dark" ? "rgba(255, 56, 11, 0.3)" : "rgba(255, 56, 11, 0.2)"}`,
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Button
+                    icon={<PlusOutlined />}
+                    size="small"
+                    onClick={() => {
+                      setSelectedOrderIdForAdd(order.id);
+                      setIsAddItemModalOpen(true);
                     }}
-                  />
-                )}
+                    style={{
+                      borderRadius: 6,
+                      minWidth: isMobile ? 110 : 130,
+                      height: 24,
+                      padding: "0 8px",
+                    }}>
+                    {t("staff.orders.modal.add_item")}
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -641,7 +785,6 @@ export default function OrderManagement() {
 
   return (
     <div>
-
       {/* Search & Filter */}
       <Card
         style={{
@@ -728,247 +871,6 @@ export default function OrderManagement() {
         )}
       </Card>
 
-      {/* Order Detail Modal */}
-      <Modal
-        title={
-          <Space>
-            <ShoppingCartOutlined />
-            <span>
-              {t("staff.orders.modal.order_detail")} {selectedOrder?.reference}
-            </span>
-          </Space>
-        }
-        open={isDetailModalOpen}
-        onCancel={() => setIsDetailModalOpen(false)}
-        footer={null}
-        width={isMobile ? "95%" : 600}
-        centered
-        style={{
-          backgroundColor: mode === "dark" ? "#1A1A1A" : "#FFFFFF",
-          border:
-            mode === "dark"
-              ? "1px solid rgba(255, 56, 11, 0.2)"
-              : "1px solid #E5E7EB",
-          borderRadius: 12,
-        }}
-        styles={{
-          body: { padding: isMobile ? 20 : 28 },
-          header: {
-            backgroundColor: mode === "dark" ? "#1A1A1A" : "#FFFFFF",
-            borderBottom:
-              mode === "dark"
-                ? "1px solid rgba(255, 56, 11, 0.2)"
-                : "1px solid #E5E7EB",
-            borderRadius: "12px 12px 0 0",
-            padding: "20px 28px",
-            position: "relative",
-            paddingRight: "56px",
-          },
-          footer: {
-            borderRadius: "0 0 12px 12px",
-          },
-          mask: {
-            background:
-              mode === "dark" ? "rgba(0, 0, 0, 0.92)" : "rgba(0, 0, 0, 0.45)",
-            backdropFilter: "none",
-            WebkitBackdropFilter: "none",
-            filter: "none",
-          },
-        }}>
-        {selectedOrder && (
-          <div>
-            {/* Order Info */}
-            <Card
-              size="small"
-              style={{
-                borderRadius: 12,
-                background:
-                  mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFFFF",
-                marginBottom: isMobile ? 16 : 20,
-                border:
-                  mode === "dark"
-                    ? "1px solid rgba(255, 255, 255, 0.1)"
-                    : "1px solid #E5E7EB",
-                boxShadow:
-                  mode === "dark"
-                    ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-                    : "0 2px 8px rgba(0, 0, 0, 0.08)",
-              }}
-              styles={{
-                body: { padding: isMobile ? "18px 20px" : "24px 28px" },
-              }}>
-              <Row gutter={[16, 0]}>
-                <Col xs={8}>
-                  <Text
-                    type="secondary"
-                    style={{
-                      fontSize: isMobile ? 11 : 12,
-                      display: "block",
-                      marginBottom: 8,
-                      fontWeight: 500,
-                    }}>
-                    {t("staff.orders.order.table")}
-                  </Text>
-                  <Text
-                    strong
-                    style={{ fontSize: isMobile ? 15 : 17, display: "block" }}>
-                    {selectedOrder.tableName}
-                  </Text>
-                </Col>
-                <Col xs={8}>
-                  <Text
-                    type="secondary"
-                    style={{
-                      fontSize: isMobile ? 11 : 12,
-                      display: "block",
-                      marginBottom: 8,
-                      fontWeight: 500,
-                    }}>
-                    {t("staff.orders.order.time")}
-                  </Text>
-                  <Text
-                    strong
-                    style={{ fontSize: isMobile ? 15 : 17, display: "block" }}>
-                    {selectedOrder.createdAt}
-                  </Text>
-                </Col>
-                <Col xs={8}>
-                  <Text
-                    type="secondary"
-                    style={{
-                      fontSize: isMobile ? 11 : 12,
-                      display: "block",
-                      marginBottom: 8,
-                      fontWeight: 500,
-                    }}>
-                    {t("staff.orders.order.status")}
-                  </Text>
-                  <Select
-                    value={selectedOrder.orderStatusId}
-                    size="small"
-                    style={{ width: "100%" }}
-                    onChange={(value) =>
-                      handleUpdateOrderStatus(
-                        selectedOrder.id,
-                        value as OrderStatusId,
-                      )
-                    }
-                    disabled={isUpdatingOrderStatus}
-                    options={[
-                      { value: 0, label: t("staff.orders.status.pending") },
-                      { value: 1, label: t("staff.orders.status.confirmed") },
-                      { value: 2, label: t("staff.orders.status.serving") },
-                      { value: 3, label: t("staff.orders.status.completed") },
-                      { value: 4, label: t("staff.orders.status.cancelled") },
-                    ]}
-                  />
-                </Col>
-              </Row>
-            </Card>
-
-            {/* Items List */}
-            <div>
-              {selectedOrder.detailItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: isMobile ? "10px 0" : "14px 0",
-                    borderBottom:
-                      index < selectedOrder.items.length - 1
-                        ? mode === "dark"
-                          ? "1px solid var(--border)"
-                          : "1px solid #E5E7EB"
-                        : "none",
-                  }}>
-                  <div style={{ flex: 1 }}>
-                    <Space size={isMobile ? 4 : 8}>
-                      <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>
-                        {item.name}
-                      </Text>
-                      <Tag style={{ fontSize: isMobile ? 12 : 13 }}>
-                        x{item.quantity}
-                      </Tag>
-                    </Space>
-                    {/* price hidden in order details per request */}
-                  </div>
-                  <Select
-                    value={item.status}
-                    size="small"
-                    style={{ width: isMobile ? 90 : 110 }}
-                    onChange={(value) =>
-                      handleUpdateItemStatus(selectedOrder.id, item.id, value)
-                    }
-                    options={[
-                      { value: "pending", label: t("common.status.pending") },
-                      {
-                        value: "preparing",
-                        label: t("common.status.preparing"),
-                      },
-                      { value: "ready", label: t("common.status.ready") },
-                      { value: "served", label: t("common.status.served") },
-                    ]}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <Divider style={{ margin: isMobile ? "12px 0" : "16px 0" }} />
-
-            {/* Total */}
-            {/* <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}>
-              <Text style={{ fontSize: isMobile ? 14 : 16 }}>
-                {t("staff.orders.order.total")}
-              </Text>
-              <Text
-                strong
-                style={{ fontSize: isMobile ? 20 : 24, color: "var(--primary)" }}>
-                {selectedOrder.total.toLocaleString("vi-VN")}đ
-              </Text>
-            </div> */}
-
-            {/* Actions */}
-            <Row gutter={[8, 8]} style={{ marginTop: isMobile ? 16 : 24 }}>
-
-              <Col xs={12} sm={6}>
-                <Button
-                  icon={<PlusOutlined />}
-                  size={isMobile ? "middle" : "large"}
-                  block
-                  onClick={() => {
-                    setSelectedOrderIdForAdd(selectedOrder.id);
-                    setIsDetailModalOpen(false);
-                    setIsAddItemModalOpen(true);
-                  }}
-                  style={{ borderRadius: 12 }}>
-                  {t("staff.orders.modal.add_item")}
-                </Button>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Button
-                  type="primary"
-                  icon={<SendOutlined />}
-                  size={isMobile ? "middle" : "large"}
-                  block
-                  style={{
-                    borderRadius: 12,
-                    background: "#52c41a",
-                    border: "none",
-                  }}>
-                  {t("staff.orders.modal.send_to_kitchen")}
-                </Button>
-              </Col>
-            </Row>
-          </div>
-        )}
-      </Modal>
 
       {/* Add Item To Existing Order Modal */}
       <Modal
@@ -1252,40 +1154,23 @@ export default function OrderManagement() {
       </Modal>
 
       <style jsx global>{`
-        /* Modal border radius */
-        .ant-modal-content {
-          border-radius: 12px !important;
-          overflow: hidden !important;
+        .order-detail-status-option,
+        .order-status-option {
+          padding: 2px 3px !important;
+          border-bottom: 1px solid ${mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "#EDEDED"};
+          display: flex;
+          align-items: center;
         }
-
-        /* Modal close button positioning - inside header */
-        .ant-modal-close {
-          top: 16px !important;
-          right: 20px !important;
-          width: 32px !important;
-          height: 32px !important;
-          border-radius: 8px !important;
-          background: ${mode === "dark"
-            ? "rgba(255, 255, 255, 0.1)"
-            : "rgba(0, 0, 0, 0.04)"} !important;
-          transition: all 0.2s ease !important;
+        .order-detail-status-option:last-child,
+        .order-status-option:last-child {
+          border-bottom: none;
         }
-        .ant-modal-close:hover {
-          background: ${mode === "dark"
-            ? "rgba(255, 56, 11, 0.2)"
-            : "rgba(255, 56, 11, 0.15)"} !important;
+        .order-detail-status-option.ant-select-item-option-selected,
+        .order-status-option.ant-select-item-option-selected {
+          background: ${mode === "dark" ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.03)"};
         }
-        .ant-modal-close-x {
-          width: 32px !important;
-          height: 32px !important;
-          line-height: 32px !important;
-          font-size: 16px !important;
-          color: ${mode === "dark"
-            ? "rgba(255, 255, 255, 0.85)"
-            : "rgba(0, 0, 0, 0.65)"} !important;
-        }
-        .ant-modal-close:hover .ant-modal-close-x {
-          color: ${mode === "dark" ? "#fff" : "rgba(0, 0, 0, 0.85)"} !important;
+        .order-status-select .ant-select-selector {
+          border-radius: 6px !important;
         }
       `}</style>
     </div>
