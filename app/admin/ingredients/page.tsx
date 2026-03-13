@@ -2,12 +2,10 @@
 
 import IngredientList from "@/components/admin/ingredients/IngredientList";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 
 export default function IngredientsPage() {
   const { t } = useTranslation("common");
-  const router = useRouter();
 
   return (
     <main
@@ -18,24 +16,24 @@ export default function IngredientsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold" style={{ color: "var(--text)" }}>
-            {t("dashboard.ingredients.title", "Nguyên liệu")}
+            {t("dashboard.ingredients.title")}
           </h1>
           <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
-            {t("dashboard.ingredients.subtitle", "Quản lý danh sách nguyên liệu, thêm mới, chỉnh sửa, xoá.")}
+            {t("dashboard.ingredients.subtitle")}
           </p>
         </div>
 
         <Link href="/admin/ingredients/new">
               <button
                 className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-                style={{ background: "var(--primary)", color: "var(--text)" }}
+                style={{ background: "var(--primary)", color: "white" }}
                 onMouseEnter={(e) =>
                 (e.currentTarget.style.background =
-                  "linear-gradient(to right, #CC2D08, #B32607)")
+                  "linear-gradient(to right, #B32607)")
                 }
                 onMouseLeave={(e) =>
                 (e.currentTarget.style.background =
-                  "linear-gradient(to right, var(--primary), #CC2D08)")
+                  "linear-gradient(to right, var(--primary))")
                 }
                 suppressHydrationWarning> 
                 <svg

@@ -264,14 +264,14 @@ export default function StaffPage() {
             <Link href="/admin/staff/new">
               <button
                 className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-                style={{ background: "var(--primary)", color: "var(--text)" }}
+                style={{ background: "var(--primary)", color: "white" }}
                 onMouseEnter={(e) =>
                 (e.currentTarget.style.background =
-                  "linear-gradient(to right, #CC2D08, #B32607)")
+                  "linear-gradient(to right, #B32607)")
                 }
                 onMouseLeave={(e) =>
                 (e.currentTarget.style.background =
-                  "linear-gradient(to right, var(--primary), #CC2D08)")
+                  "linear-gradient(to right, var(--primary))")
                 }
                 suppressHydrationWarning> 
                 <svg

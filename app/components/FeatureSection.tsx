@@ -189,7 +189,7 @@ const FeatureSection: React.FC = () => {
             >
               {t('homepage.features.title_prefix')}
               <span style={{
-                background: 'linear-gradient(135deg, var(--primary) 0%, #CC2D08 100%)',
+                background: 'linear-gradient(135deg, var(--primary) 0% 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}>

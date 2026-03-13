@@ -5,6 +5,7 @@ export interface IngredientItem {
   name: string;
   code: string;
   unit: string;
+  currentQuantity?: number;
   minStockLevel: number;
   maxStockLevel: number;
   supplierId?: string | null;
@@ -28,6 +29,7 @@ const normalize = (data: any): IngredientItem => {
     name: data.name ?? data.Name ?? '',
     code: data.code ?? data.Code ?? '',
     unit: data.unit ?? data.Unit ?? '',
+    currentQuantity: data.currentQuantity ?? data.CurrentQuantity ?? 0,
     minStockLevel: data.minStockLevel ?? data.MinStockLevel ?? 0,
     maxStockLevel: data.maxStockLevel ?? data.MaxStockLevel ?? 0,
     supplierId: data.supplierId ?? data.SupplierId ?? null,

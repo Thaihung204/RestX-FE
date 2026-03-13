@@ -82,7 +82,7 @@ export default function DishCard({
         {item.isBestSeller && (
           <div
             className="absolute top-3 right-3 px-3 py-1 rounded-full text-white text-xs font-bold flex items-center gap-1"
-            style={{ backgroundColor: "var(--primary)" }}>
+            style={{ backgroundColor: "var(--primary)", color: "white" }}>
             <svg
               className="w-3 h-3"
               fill="currentColor"
