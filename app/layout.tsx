@@ -1,4 +1,5 @@
 import I18nProvider from "@/components/I18nProvider";
+import PageTransitionLoader from "@/components/PageTransitionLoader";
 import TenantFavicon from "@/components/TenantFavicon";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { CartProvider } from "@/lib/contexts/CartContext";
@@ -100,6 +101,7 @@ export default function RootLayout({
         <I18nProvider>
           <TenantProvider>
             <TenantFavicon />
+            <PageTransitionLoader />
             <AuthProvider>
               <CartProvider>
                 <ToastProvider>

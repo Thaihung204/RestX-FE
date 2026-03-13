@@ -2,6 +2,7 @@
 
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { useLanguage } from "@/components/I18nProvider";
+import { Dropdown } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -359,38 +360,50 @@ export default function DashboardHeader() {
             </button>
 
             {/* User Profile */}
-            <button
-              className="flex items-center gap-3 p-2 rounded-lg transition-colors"
-              style={{ background: "var(--surface)", color: "var(--text)" }}>
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                style={{ background: "var(--primary)" }}>
-                A
-              </div>
-              <div className="hidden lg:block text-left">
-                <p
-                  className="font-medium text-sm"
-                  style={{ color: "var(--text)" }}>
-                  Admin User
-                </p>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                  {t("dashboard.header.user_role")}
-                </p>
-              </div>
-              <svg
-                className="w-4 h-4 hidden lg:block"
-                style={{ color: "var(--text-muted)" }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: "user-info",
+                    label: (
+                      <div style={{ padding: "4px 0", maxWidth: 200 }}>
+                        <div style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: "bold" }}>Admin User</div>
+                        <div style={{ fontSize: 12, display: "block", opacity: 0.6 }}>{t("dashboard.header.user_role")}</div>
+                      </div>
+                    ),
+                    disabled: true,
+                    style: { cursor: "default" }
+                  },
+                  { type: "divider" },
+                  { key: "logout", label: t("staff.user_menu.logout"), danger: true }
+                ],
+                style: {
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }
+              }}
+              styles={{
+                root: {
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 12,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                  overflow: "hidden",
+                },
+              }}
+              placement="bottomRight"
+              trigger={["click"]}>
+              <button
+                className="flex items-center justify-center p-1 rounded-full transition-colors"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", width: 36, height: 36 }}>
+                <div
+                  className="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{ background: "var(--primary)" }}>
+                  A
+                </div>
+              </button>
+            </Dropdown>
           </div>
         </div>
       </div>
