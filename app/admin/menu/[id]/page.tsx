@@ -847,7 +847,7 @@ export default function MenuItemFormPage() {
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.background =
-                    "linear-gradient(to right, #CC2D08, #B32607)")
+                    "linear-gradient(to right, #B32607)")
                 }
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.background =

@@ -21,7 +21,6 @@ import {
 import { HubConnectionState } from "@microsoft/signalr";
 import {
   App,
-  Badge,
   Button,
   Card,
   Col,
@@ -254,18 +253,6 @@ export default function OrderManagement() {
     fetchOrderDetailStatuses();
   }, []);
 
-  const statusNameMap = orderDetailStatuses.reduce<Record<string, string>>(
-    (acc, status) => {
-      const codeKey = status.code?.toLowerCase();
-      const nameKey = status.name?.toLowerCase();
-      if (codeKey) acc[codeKey] = status.name;
-      if (nameKey) acc[nameKey] = status.name;
-      acc[status.id] = status.name;
-      return acc;
-    },
-    {},
-  );
-
   const statusValueMap = orderDetailStatuses.reduce<Record<string, string>>(
     (acc, status) => {
       const codeKey = status.code?.toLowerCase();
@@ -282,11 +269,6 @@ export default function OrderManagement() {
   const normalizeStatusValue = (status: OrderItemStatus) => {
     const key = status?.toLowerCase?.() ?? String(status ?? "");
     return statusValueMap[key] || statusValueMap[status] || status;
-  };
-
-  const getStatusLabel = (status: OrderItemStatus) => {
-    const key = status?.toLowerCase?.() ?? String(status ?? "");
-    return statusNameMap[key] || statusNameMap[status] || status;
   };
 
   const statusOptions = orderDetailStatuses.map((status) => ({
@@ -307,6 +289,32 @@ export default function OrderManagement() {
     ),
     className: "order-detail-status-option",
   }));
+
+  const orderStatusStyleMap: Record<
+    OrderStatusUi,
+    { bg: string; border: string; }
+  > = {
+    pending: {
+      bg: "#FFFBEB",
+      border: "#FDE68A",
+    },
+    confirmed: {
+      bg: "#EFF6FF",
+      border: "#BFDBFE",
+    },
+    serving: {
+      bg: "#FAF5FF",
+      border: "#E9D5FF",
+    },
+    completed: {
+      bg: "#F0FDF4",
+      border: "#BBF7D0",
+    },
+    cancelled: {
+      bg: "#FEF2F2",
+      border: "#FECACA",
+    }
+  };
 
   const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] = useState<string>("");
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
@@ -547,26 +555,17 @@ export default function OrderManagement() {
   };
 
   const renderOrderCard = (order: Order) => {
-    const pendingItems = order.items.filter((i) => {
-      const statusKey = (i.status || "").toLowerCase();
-      const statusLabel = getStatusLabel(statusKey);
-      const normalized = statusLabel.toLowerCase();
-      return normalized === "pending" || normalized === "preparing";
-    }).length;
+    const orderStyle = orderStatusStyleMap[order.orderStatus];
 
     return (
       <div>
         <Card
           style={{
             borderRadius: 12,
-            border:
-              mode === "dark"
-                ? "1px solid rgba(255, 255, 255, 0.1)"
-                : "1px solid #E5E5E5",
+            border: `1px solid ${orderStyle.border}`,
             marginBottom: isMobile ? 12 : 16,
             overflow: "hidden",
-            background:
-              mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFFFF",
+            background: orderStyle.bg,
             boxShadow:
               mode === "dark"
                 ? "0 2px 8px rgba(0, 0, 0, 0.3)"
@@ -601,7 +600,10 @@ export default function OrderManagement() {
                     }}>
                     <Text
                       strong
-                      style={{ fontSize: isMobile ? 15 : 17, fontWeight: 500 }}>
+                      style={{
+                        fontSize: isMobile ? 15 : 17,
+                        fontWeight: 500,
+                      }}>
                       {t("staff.orders.order.table")} {order.tableName}
                     </Text>
                     <div
