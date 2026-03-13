@@ -1,9 +1,9 @@
 "use client";
 
 import IngredientList from "@/components/admin/ingredients/IngredientList";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import Link from "next/link";
 
 export default function IngredientsPage() {
   const { t } = useTranslation("common");
@@ -35,7 +35,7 @@ export default function IngredientsPage() {
                 }
                 onMouseLeave={(e) =>
                 (e.currentTarget.style.background =
-                  "linear-gradient(to right, #FF380B, #CC2D08)")
+                  "linear-gradient(to right, var(--primary), #CC2D08)")
                 }
                 suppressHydrationWarning> 
                 <svg

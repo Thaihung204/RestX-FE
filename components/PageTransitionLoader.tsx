@@ -93,7 +93,7 @@ function lerpColor(a: string, b: string, t: number) {
 function getLiquidColor(pct: number) {
     if (pct < 33) return lerpColor('#60a5fa', '#fb923c', pct / 33);
     if (pct < 66) return lerpColor('#fb923c', '#ef4444', (pct - 33) / 33);
-    return lerpColor('#ef4444', '#FF380B', (pct - 66) / 34);
+    return lerpColor('#ef4444', 'var(--primary)', (pct - 66) / 34);
 }
 
 function getGlowColor(pct: number) {
@@ -336,7 +336,7 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                 }}>
                     <div ref={barRef} style={{
                         height: '100%', width: '0%', borderRadius: 99,
-                        background: 'linear-gradient(90deg,#60a5fa,#fb923c,#ef4444,#FF380B)',
+                        background: 'linear-gradient(90deg,#60a5fa,#fb923c,#ef4444,var(--primary))',
                         backgroundSize: '150px 100%',
                     }} />
                 </div>

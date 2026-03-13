@@ -205,6 +205,8 @@
       },
       "status": {
         "pending": "Chờ xử lý",
+        "confirmed": "Đã xác nhận",
+        "serving": "Đang phục vụ",
         "preparing": "Đang nấu",
         "ready": "Sẵn sàng",
         "served": "Đã phục vụ",
@@ -230,7 +232,9 @@
       "messages": {
         "select_table_and_items": "Vui lòng chọn bàn và thêm món",
         "order_created": "Đã tạo order mới",
-        "status_updated": "Đã cập nhật trạng thái món"
+        "status_updated": "Đã cập nhật trạng thái món",
+        "order_status_updated": "Đã cập nhật trạng thái order",
+        "order_status_update_failed": "Cập nhật trạng thái order thất bại"
       }
     },
     "tables": {

@@ -290,8 +290,9 @@ export default function CartModal() {
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
-                                  justifyContent: "center",
-                                  minWidth: 118,
+                                  gap: 4,
+                                  background: "var(--surface)",
+                                  padding: "4px 6px",
                                 }}>
                                 <Button
                                   type="text"

@@ -417,7 +417,7 @@ export default function CategorySettings() {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                     style={{
                       background: "var(--bg-base)",
                       borderColor: "var(--border)",
@@ -440,7 +440,7 @@ export default function CategorySettings() {
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none resize-none"
+                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none"
                     rows={3}
                     style={{
                       background: "var(--bg-base)",
@@ -494,7 +494,7 @@ export default function CategorySettings() {
                         htmlFor="category-image-upload"
                         className={`
                                                 relative w-full aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all
-                                                ${((!removeImage && formData.imageUrl) || localPreviewUrl) ? "border-transparent" : "border-[var(--border)] hover:border-[#FF380B] hover:bg-[#FF380B]/5"}
+                                                ${((!removeImage && formData.imageUrl) || localPreviewUrl) ? "border-transparent" : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"}
                                             `}
                         style={{
                           background: ((!removeImage && formData.imageUrl) || localPreviewUrl)
@@ -533,7 +533,7 @@ export default function CategorySettings() {
                           </>
                         ) : (
                           <div className="text-center p-6">
-                            <div className="w-12 h-12 rounded-full bg-[#FF380B]/10 text-[#FF380B] flex items-center justify-center mx-auto mb-3">
+                            <div className="w-12 h-12 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center mx-auto mb-3">
                               <svg
                                 className="w-6 h-6"
                                 fill="none"
@@ -606,8 +606,8 @@ export default function CategorySettings() {
                 <button
                   onClick={handleSave}
                   disabled={!formData.name?.trim()}
-                  className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[#FF380B]/20 hover:shadow-[#FF380B]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ background: "#FF380B" }}>
+                  className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[var(--primary)]/20 hover:shadow-[var(--primary)]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "var(--primary)" }}>
                   {t("dashboard.settings.buttons.save_changes")}
                 </button>
               </div>

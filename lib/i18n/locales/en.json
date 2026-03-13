@@ -205,6 +205,8 @@
       },
       "status": {
         "pending": "Pending",
+        "confirmed": "Confirmed",
+        "serving": "Serving",
         "preparing": "Preparing",
         "ready": "Ready",
         "served": "Served",
@@ -230,7 +232,9 @@
       "messages": {
         "select_table_and_items": "Please select a table and add items",
         "order_created": "New order created successfully",
-        "status_updated": "Item status updated"
+        "status_updated": "Item status updated",
+        "order_status_updated": "Order status updated",
+        "order_status_update_failed": "Failed to update order status"
       }
     },
     "tables": {

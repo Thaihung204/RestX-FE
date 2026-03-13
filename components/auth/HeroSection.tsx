@@ -30,7 +30,7 @@ export const HeroSection: React.FC = () => {
 
                 {/* Decorative Slider Indicators */}
                 <div className="mt-8 flex gap-2">
-                    <div className="h-1 w-8 bg-[#FF380B] rounded-full shadow-[0_0_10px_rgba(255,56,11,0.5)]"></div>
+                    <div className="h-1 w-8 bg-[var(--primary)] rounded-full shadow-[0_0_10px_rgba(255,56,11,0.5)]"></div>
                     <div className="h-1 w-2 bg-white/30 rounded-full"></div>
                     <div className="h-1 w-2 bg-white/30 rounded-full"></div>
                 </div>

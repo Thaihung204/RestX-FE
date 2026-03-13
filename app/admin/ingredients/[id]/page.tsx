@@ -184,7 +184,7 @@ export default function IngredientFormPage() {
   if (loadingData) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: "#FF380B" }} />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: "var(--primary)" }} />
         <span className="ml-4 text-lg font-medium" style={{ color: "var(--text-muted)" }}>{t("dashboard.ingredients.loading")}</span>
       </div>
     );
@@ -249,14 +249,14 @@ export default function IngredientFormPage() {
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                 >
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
-                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
+                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
                     {t("dashboard.ingredients.basic_info", "Thông tin cơ bản")}
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.name", "Tên nguyên liệu")} <span style={{ color: "#FF380B" }}>*</span>
+                        {t("dashboard.ingredients.name", "Tên nguyên liệu")} <span style={{ color: "var(--primary)" }}>*</span>
                       </label>
                       <input
                         type="text" name="name" value={form.name} onChange={handleChange} required
@@ -269,7 +269,7 @@ export default function IngredientFormPage() {
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.code", "Mã")} <span style={{ color: "#FF380B" }}>*</span>{" "}
+                        {t("dashboard.ingredients.code", "Mã")} <span style={{ color: "var(--primary)" }}>*</span>{" "}
                         <span className="text-xs opacity-50">{t("dashboard.ingredients.code_max_length", "(max 20 ký tự)")}</span>
                       </label>
                       <input
@@ -284,7 +284,7 @@ export default function IngredientFormPage() {
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.unit", "Đơn vị")} <span style={{ color: "#FF380B" }}>*</span>
+                        {t("dashboard.ingredients.unit", "Đơn vị")} <span style={{ color: "var(--primary)" }}>*</span>
                       </label>
                       <select
                         name="unit" value={form.unit} onChange={handleChange}
@@ -298,7 +298,7 @@ export default function IngredientFormPage() {
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.supplier", "Nhà cung cấp")} <span style={{ color: "#FF380B" }}>*</span>
+                        {t("dashboard.ingredients.supplier", "Nhà cung cấp")} <span style={{ color: "var(--primary)" }}>*</span>
                       </label>
                       {loadingSuppliers ? (
                         <div
@@ -373,7 +373,7 @@ export default function IngredientFormPage() {
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                 >
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
-                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
+                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
                     {t("dashboard.ingredients.stock_levels", "Mức tồn kho")}
                   </h3>
 
@@ -421,7 +421,7 @@ export default function IngredientFormPage() {
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                 >
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
-                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
+                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
                     {t("dashboard.ingredients.actions_section", "Thao tác")}
                   </h3>
 
@@ -432,9 +432,9 @@ export default function IngredientFormPage() {
                       title={cannotSave ? t("dashboard.ingredients.need_supplier_tooltip", "Cần có ít nhất một nhà cung cấp trước khi thêm nguyên liệu") : undefined}
                       className="w-full py-2.5 rounded-lg font-bold text-white transition-all
                         hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                      style={{ background: loading || cannotSave ? "#aaa" : "#FF380B" }}
+                      style={{ background: loading || cannotSave ? "#aaa" : "var(--primary)" }}
                       onMouseEnter={(e) => { if (!loading && !cannotSave) e.currentTarget.style.background = "#CC2D08"; }}
-                      onMouseLeave={(e) => { if (!loading && !cannotSave) e.currentTarget.style.background = "#FF380B"; }}
+                      onMouseLeave={(e) => { if (!loading && !cannotSave) e.currentTarget.style.background = "var(--primary)"; }}
                     >
                       {loading
                         ? t("dashboard.ingredients.saving", "Đang lưu…")
@@ -501,7 +501,7 @@ export default function IngredientFormPage() {
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                 >
                   <h3 className="text-base font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--text)" }}>
-                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
+                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
                     {t("dashboard.ingredients.status_section", "Trạng thái")}
                   </h3>
 
@@ -532,7 +532,7 @@ export default function IngredientFormPage() {
                           peer-checked:after:translate-x-full peer-checked:after:border-white
                           after:content-[''] after:absolute after:top-[2px] after:left-[2px]
                           after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
-                        style={{ background: form.isActive ? "#FF380B" : "#4b5563" }}
+                        style={{ background: form.isActive ? "var(--primary)" : "#4b5563" }}
                       />
                     </label>
                   </div>

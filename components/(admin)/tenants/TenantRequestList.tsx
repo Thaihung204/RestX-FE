@@ -190,7 +190,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
           <Avatar
             shape="square"
             size="large"
-            className="bg-[#FF380B] text-white">
+            className="bg-[var(--primary)] text-white">
             {record.name.charAt(0)}
           </Avatar>
           <div className="flex flex-col">

@@ -42,7 +42,7 @@ export default function OrdersBarChart() {
                   <div
                     className="w-full rounded-t-lg transition-all duration-500 group relative"
                     style={{
-                      background: 'linear-gradient(to top, #FF380B, #FF380B)',
+                      background: 'linear-gradient(to top, var(--primary), var(--primary))',
                       height: `${height}%`
                     }}>
                     <div
@@ -70,7 +70,7 @@ export default function OrdersBarChart() {
         className="mt-4 pt-4 flex justify-center"
         style={{ borderTop: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ background: 'linear-gradient(to bottom right, #FF380B, #FF380B)' }}></div>
+          <div className="w-3 h-3 rounded" style={{ background: 'linear-gradient(to bottom right, var(--primary), var(--primary))' }}></div>
           <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {t('charts.orders.total_orders')}
           </span>

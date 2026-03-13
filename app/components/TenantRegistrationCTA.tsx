@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Button, Typography, Space, Row, Col } from 'antd';
-import { RocketOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, RocketOutlined } from '@ant-design/icons';
+import { Button, Col, Row, Space, Typography } from 'antd';
 import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import TenantRequestForm from './TenantRequestForm';
 
@@ -84,7 +84,7 @@ export const TenantRegistrationCTA: React.FC = () => {
                       fontSize: 'clamp(32px, 5vw, 48px)',
                       fontWeight: 800,
                       lineHeight: 1.2,
-                      background: 'linear-gradient(135deg, #FF6B3B 0%, #FF380B 100%)',
+                      background: 'linear-gradient(135deg, #FF6B3B 0%, var(--primary) 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
@@ -186,7 +186,7 @@ export const TenantRegistrationCTA: React.FC = () => {
                     fontWeight: 600,
                     borderRadius: '12px',
                     padding: '0 48px',
-                    background: 'linear-gradient(135deg, #FF6B3B 0%, #FF380B 100%)',
+                    background: 'linear-gradient(135deg, #FF6B3B 0%, var(--primary) 100%)',
                     border: 'none',
                     boxShadow: '0 8px 24px rgba(255, 107, 59, 0.3)',
                   }}

@@ -31,6 +31,10 @@ export interface OrderDetailDto {
   status?: string | null;
 }
 
+export interface OrderStatusUpdateRequest {
+  statusId: number;
+}
+
 export interface OrderDto {
   id?: string;
   reference?: string | null;
@@ -71,6 +75,10 @@ class OrderService {
 
   async updateOrder(id: string, payload: OrderRequestDto): Promise<void> {
     await axiosInstance.put(`/orders/${id}`, payload);
+  }
+
+  async updateOrderStatus(id: string, statusId: number): Promise<void> {
+    await axiosInstance.put(`/orders/${id}/status`, statusId);
   }
 
   async getAllOrders(): Promise<OrderDto[]> {

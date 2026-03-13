@@ -1,13 +1,13 @@
 "use client";
 
 import DishCard from "@/components/admin/menu/DishCard";
+import { usePageLoading } from "@/components/PageTransitionLoader";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import { message, Modal } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { usePageLoading } from "@/components/PageTransitionLoader";
 
 interface MenuItem {
   id: string;
@@ -178,7 +178,7 @@ export default function MenuPage() {
               }
               onMouseLeave={(e) =>
               (e.currentTarget.style.background =
-                "linear-gradient(to right, #FF380B, #CC2D08)")
+                "linear-gradient(to right, var(--primary), #CC2D08)")
               }
               suppressHydrationWarning>
               <svg
@@ -279,7 +279,7 @@ export default function MenuPage() {
                 </p>
                 <p
                   className="text-3xl font-bold mt-1"
-                  style={{ color: "#FF380B" }}>
+                  style={{ color: "var(--primary)" }}>
                   {menuItems.filter((i) => i.isBestSeller).length}
                 </p>
               </div>
@@ -288,7 +288,7 @@ export default function MenuPage() {
                 style={{ backgroundColor: "rgba(255,56,11,0.1)" }}>
                 <svg
                   className="w-6 h-6"
-                  style={{ color: "#FF380B" }}
+                  style={{ color: "var(--primary)" }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24">
@@ -341,7 +341,7 @@ export default function MenuPage() {
           <div className="flex items-center justify-center py-12">
             <div
               className="animate-spin rounded-full h-12 w-12 border-b-2"
-              style={{ borderColor: "#FF380B" }}></div>
+              style={{ borderColor: "var(--primary)" }}></div>
             <p className="ml-4" style={{ color: "var(--text-muted)" }}>
               {t("dashboard.menu.loading")}
             </p>
@@ -350,9 +350,28 @@ export default function MenuPage() {
 
         {/* Error State */}
         {error && !loading && (
-          <div className="rounded-xl p-4 bg-red-500/10 border border-red-500/20">
-            <p className="text-red-500 font-medium">{error}</p>
-            <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
+          <div className="flex flex-col items-center justify-center py-12">
+            <svg
+              className="w-16 h-16 mb-4"
+              style={{ color: "var(--text-muted)" }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+              />
+            </svg>
+            <p
+              className="text-lg font-medium"
+              style={{ color: "var(--text)" }}>
+              {t("dashboard.menu.no_items")}
+            </p>
+            <p
+              className="text-sm mt-2"
+              style={{ color: "var(--text-muted)" }}>
               {t("dashboard.menu.errors.retry_hint")}
             </p>
           </div>
@@ -372,7 +391,7 @@ export default function MenuPage() {
                     selectedCategoryId === category.id
                       ? {
                         background:
-                          "linear-gradient(to right, #FF380B, #CC2D08)",
+                          "linear-gradient(to right, var(--primary), #CC2D08)",
                         color: "white",
                       }
                       : {

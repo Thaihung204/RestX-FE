@@ -20,7 +20,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({
                  transition-all duration-300 shadow-lg hover:shadow-xl
                  disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none
                  focus:outline-none focus:ring-2 focus:ring-offset-2"
-      style={{ background: loading ? undefined : '#FF380B', '--tw-ring-color': '#FF380B' } as React.CSSProperties}
+      style={{ background: loading ? undefined : 'var(--primary)', '--tw-ring-color': 'var(--primary)' } as React.CSSProperties}
       suppressHydrationWarning>
       {loading ? (
         <span className="flex items-center justify-center">

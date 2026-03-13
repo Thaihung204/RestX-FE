@@ -4,30 +4,30 @@ import ThemeToggle from "@/app/components/ThemeToggle";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import { useLanguage } from "@/components/I18nProvider";
 import {
-  CheckCircleOutlined,
-  EyeOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  RiseOutlined,
-  SearchOutlined,
-  ShopOutlined,
+    CheckCircleOutlined,
+    EyeOutlined,
+    MailOutlined,
+    PhoneOutlined,
+    PlusOutlined,
+    ReloadOutlined,
+    RiseOutlined,
+    SearchOutlined,
+    ShopOutlined,
 } from "@ant-design/icons";
 import {
-  App,
-  Avatar,
-  Breadcrumb,
-  Button,
-  Card,
-  DatePicker,
-  Input,
-  Radio,
-  Select,
-  Statistic,
-  Table,
-  Tabs,
-  Typography,
+    App,
+    Avatar,
+    Breadcrumb,
+    Button,
+    Card,
+    DatePicker,
+    Input,
+    Radio,
+    Select,
+    Statistic,
+    Table,
+    Tabs,
+    Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
@@ -126,7 +126,7 @@ const TenantPage: React.FC = () => {
           <Avatar
             shape="square"
             size="large"
-            className="shadow-sm rounded-lg bg-[#FF380B] text-white">
+            className="shadow-sm rounded-lg bg-[var(--primary)] text-white">
             {record.name.charAt(0)}
           </Avatar>
           <div className="flex flex-col">
@@ -473,7 +473,7 @@ const TenantPage: React.FC = () => {
                   </span>
                 }
                 value={stats.total}
-                prefix={<ShopOutlined style={{ color: "#FF380B" }} />}
+                prefix={<ShopOutlined style={{ color: "var(--primary)" }} />}
                 styles={{ content: { color: "var(--text)" } }}
               />
             </Card>

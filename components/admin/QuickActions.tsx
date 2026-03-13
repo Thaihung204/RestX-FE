@@ -187,7 +187,7 @@ export default function QuickActions() {
                 action.color ? `bg-gradient-to-br ${action.color}` : ''
               }`}
               style={action.id === 'add-table' ? {
-                background: 'linear-gradient(to right, #FF380B, #FF380B)'
+                background: 'linear-gradient(to right, var(--primary), var(--primary))'
               } : undefined}>
               {action.icon}
             </div>

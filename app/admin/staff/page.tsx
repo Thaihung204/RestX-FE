@@ -1,11 +1,11 @@
 "use client";
 
+import { usePageLoading } from "@/components/PageTransitionLoader";
 import employeeService from "@/lib/services/employeeService";
 import { App, Button, Modal } from "antd";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { usePageLoading } from "@/components/PageTransitionLoader";
 
 interface Staff {
   id: string;
@@ -261,7 +261,7 @@ export default function StaffPage() {
                 {t("dashboard.staff.subtitle")}
               </p>
             </div>
-            <Link href="/admin/menu/new">
+            <Link href="/admin/staff/new">
               <button
                 className="px-4 py-2 text-white rounded-lg font-medium transition-all"
                 style={{ background: "var(--primary)", color: "var(--text)" }}
@@ -271,7 +271,7 @@ export default function StaffPage() {
                 }
                 onMouseLeave={(e) =>
                 (e.currentTarget.style.background =
-                  "linear-gradient(to right, #FF380B, #CC2D08)")
+                  "linear-gradient(to right, var(--primary), #CC2D08)")
                 }
                 suppressHydrationWarning> 
                 <svg

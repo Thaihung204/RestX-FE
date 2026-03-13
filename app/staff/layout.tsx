@@ -17,13 +17,13 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import {
-  Avatar,
-  Badge,
-  Button,
-  Dropdown,
-  Layout,
-  Menu,
-  Typography,
+    Avatar,
+    Badge,
+    Button,
+    Dropdown,
+    Layout,
+    Menu,
+    Typography,
 } from "antd";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -272,7 +272,7 @@ export default function StaffLayout({
             <Avatar
               size={44}
               style={{
-                background: "linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)",
+                background: "linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)",
                 fontSize: 18,
                 fontWeight: 600,
               }}>
@@ -397,7 +397,7 @@ export default function StaffLayout({
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 4,
-                    color: isActive ? "#FF380B" : "var(--text-muted)",
+                    color: isActive ? "var(--primary)" : "var(--text-muted)",
                     cursor: "pointer",
                     width: "20%",
                     transition: "all 0.3s ease",
@@ -624,7 +624,7 @@ export default function StaffLayout({
                     size={28}
                     style={{
                       background:
-                        "linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)",
+                        "linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)",
                       fontWeight: 600,
                       fontSize: 12,
                     }}>
@@ -666,7 +666,7 @@ export default function StaffLayout({
             rgba(255, 56, 11, 0.2) 0%,
             rgba(255, 56, 11, 0.1) 100%
           ) !important;
-          border-left: 3px solid #ff380b !important;
+          border-left: 3px solid var(--primary) !important;
         }
         .ant-menu-dark .ant-menu-item:hover {
           background: rgba(255, 255, 255, 0.05) !important;
@@ -682,8 +682,8 @@ export default function StaffLayout({
             rgba(255, 56, 11, 0.15) 0%,
             rgba(255, 56, 11, 0.05) 100%
           ) !important;
-          border-left: 3px solid #ff380b !important;
-          color: #ff380b !important;
+          border-left: 3px solid var(--primary) !important;
+          color: var(--primary) !important;
         }
         .ant-menu-light .ant-menu-item:hover {
           background: rgba(0, 0, 0, 0.04) !important;
