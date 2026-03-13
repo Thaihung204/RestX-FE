@@ -142,7 +142,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
     const [layout, setLayout] = useState<Layout | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(false);
-    const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+    const [selectedTables, setSelectedTables] = useState<Table[]>([]);
     const [userDetails, setUserDetails] = useState<UserDetails>({
         name: '',
         phone: '',
@@ -260,9 +260,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     const activeFloors = allFloors.filter(f => f.isActive !== false);
 
                     if (activeFloors.length > 0) {
+                        const selectedAt = `${booking.date}T${booking.time}:00`;
                         // Fetch layout for each floor in parallel
                         const layoutResults = await Promise.allSettled(
-                            activeFloors.map(f => floorService.getFloorLayout(f.id))
+                            activeFloors.map(f => floorService.getFloorLayout(f.id, selectedAt))
                         );
 
                         const floors = activeFloors.map((floorSummary, idx) => {
@@ -373,20 +374,13 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const handleMapTableClick = (table: TableData) => {
         if (table.status === 'OCCUPIED' || table.status === 'RESERVED' || table.status === 'DISABLED') return;
 
-        // Toggle selection: if clicking same table, unselect it
-        const isAlreadySelected = selectedTable?.id === table.id;
+        const isAlreadySelected = selectedTables.some(t => t.id === table.id);
 
         if (layout) {
             const updatedFloors = layout.floors.map(f => {
                 const updatedTables = f.tables.map(t => {
-                    if (isAlreadySelected) {
-                        // Unselect all — restore to AVAILABLE
-                        return t.status === 'SELECTED' ? { ...t, status: 'AVAILABLE' as const } : t;
-                    }
                     if (t.id === table.id) {
-                        return { ...t, status: 'SELECTED' as const };
-                    } else if (t.status === 'SELECTED') {
-                        return { ...t, status: 'AVAILABLE' as const };
+                        return { ...t, status: isAlreadySelected ? 'AVAILABLE' as const : 'SELECTED' as const };
                     }
                     return t;
                 });
@@ -400,11 +394,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         }
 
         if (isAlreadySelected) {
-            // Unselect
-            setSelectedTable(null);
+            setSelectedTables(prev => prev.filter(t => t.id !== table.id));
         } else {
-            // Select new table
-            setSelectedTable({
+            setSelectedTables(prev => [...prev, {
                 id: table.id,
                 label: table.name,
                 capacity: table.seats,
@@ -417,7 +409,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 height: table.height || 80,
                 shape: table.shape === 'Circle' ? 'Round' : 'Rectangle',
                 rotation: table.rotation || 0
-            });
+            }]);
         }
     };
 
@@ -478,7 +470,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     };
 
     const handleCompleteReservation = async () => {
-        if (!selectedTable) return;
+        if (selectedTables.length === 0) return;
 
         // Basic validation
         if (!userDetails.name || !userDetails.phone || !userDetails.email) {
@@ -494,7 +486,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             const reservationDateTime = `${booking.date}T${booking.time}:00`;
 
             const result = await reservationService.createReservation({
-                tableIds: [selectedTable.id],
+                tableIds: selectedTables.map(t => t.id),
                 reservationDateTime,
                 numberOfGuests: booking.guests,
                 name: userDetails.name,
@@ -574,7 +566,22 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             allowClear={false}
                                             suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">calendar_month</span>}
                                             prefix={<span className="material-symbols-outlined text-[var(--primary)]">calendar_month</span>}
-                                            disabledDate={(current) => !!current && current.startOf('day').isBefore(dayjs().startOf('day'))}
+                                            disabledDate={(current) => {
+                                                if (!current) return false;
+                                                // Disable past days
+                                                if (current.startOf('day').isBefore(dayjs().startOf('day'))) return true;
+                                                // Disable today if all time slots have already passed
+                                                if (current.startOf('day').isSame(dayjs().startOf('day'))) {
+                                                    const hasAvailableSlot = timeSlots.some((slot) => {
+                                                        const [h, m] = slot.split(':').map(Number);
+                                                        const slotDate = new Date();
+                                                        slotDate.setHours(h, m, 0, 0);
+                                                        return slotDate.getTime() > Date.now();
+                                                    });
+                                                    return !hasAvailableSlot;
+                                                }
+                                                return false;
+                                            }}
                                             onChange={(value) => {
                                                 if (!value) return;
                                                 const selectedDate = value.format('YYYY-MM-DD');
@@ -594,18 +601,19 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         classNames={{ popup: { root: 'reservation-time-popup' } }}
                                             value={booking.time}
                                             onChange={(value) => setBooking({ ...booking, time: value })}
-                                            options={timeSlots
-                                                .filter((slot) => {
-                                                    const today = getTodayLocalDate();
-                                                    if (booking.date !== today) return true;
-
-                                                    const [h, m] = slot.split(':').map(Number);
-                                                    const slotDate = new Date();
-                                                    slotDate.setHours(h, m, 0, 0);
-
-                                                    return slotDate.getTime() > Date.now();
-                                                })
-                                                .map((slot) => ({ label: slot, value: slot }))}
+                                            notFoundContent={<div className="text-center py-4 text-sm" style={{color: 'var(--text-muted)'}}>{t('landing.booking.form.no_slots')}</div>}
+                                            options={(() => {
+                                                const today = getTodayLocalDate();
+                                                return timeSlots
+                                                    .filter((slot) => {
+                                                        if (booking.date !== today) return true;
+                                                        const [h, m] = slot.split(':').map(Number);
+                                                        const slotDate = new Date();
+                                                        slotDate.setHours(h, m, 0, 0);
+                                                        return slotDate.getTime() > Date.now();
+                                                    })
+                                                    .map((slot) => ({ label: slot, value: slot }));
+                                            })()}
                                             prefix={<span className="material-symbols-outlined text-[var(--primary)]">schedule</span>}
                                             suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">expand_more</span>}
                                         />
@@ -616,11 +624,30 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 <div className="pill-segment pill-guests">
                                     <span className="pill-label">
                                         {t('landing.booking.form.party_size')}
-                                        <span className="pill-meta">(max {maxCapacity})</span>
                                         </span>
                                     <div className="pill-guest-row">
                                         <span className="material-symbols-outlined text-[var(--primary)] text-lg">person</span>
-                                        <span className="pill-guest-count">{booking.guests}</span>
+                                        <input
+                                            type="number"
+                                            value={booking.guests || ''}
+                                            min="1"
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value, 10);
+                                                if (e.target.value === '') {
+                                                    // Allow temporary empty state while typing
+                                                    setBooking(b => ({ ...b, guests: '' as any }));
+                                                } else if (!isNaN(val) && val >= 1) {
+                                                    setBooking(b => ({ ...b, guests: val }));
+                                                }
+                                            }}
+                                            onBlur={(e) => {
+                                                const val = parseInt(e.target.value, 10);
+                                                if (isNaN(val) || val < 1) {
+                                                    setBooking(b => ({ ...b, guests: 1 }));
+                                                }
+                                            }}
+                                            className="pill-guest-count w-10 text-center bg-transparent border-none outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        />
                                         <div className="pill-guest-actions">
                                         <button
                                             type="button"
@@ -631,7 +658,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => setBooking(b => ({ ...b, guests: Math.min(maxCapacity, b.guests + 1) }))}
+                                            onClick={() => setBooking(b => ({ ...b, guests: b.guests + 1 }))}
                                                 className="pill-step-btn"
                                         >
                                             +
@@ -640,7 +667,21 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     </div>
                                 </div>
 
-                                <button type="submit" className="pill-submit">
+                                <button
+                                    type="submit"
+                                    disabled={(() => {
+                                        const today = getTodayLocalDate();
+                                        const available = timeSlots.filter((slot) => {
+                                            if (booking.date !== today) return true;
+                                            const [h, m] = slot.split(':').map(Number);
+                                            const slotDate = new Date();
+                                            slotDate.setHours(h, m, 0, 0);
+                                            return slotDate.getTime() > Date.now();
+                                        });
+                                        return available.length === 0;
+                                    })()}
+                                    className="pill-submit disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                                >
                                     <span>{t('landing.booking.form.choose_table')}</span>
                                     <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
                                 </button>
@@ -744,7 +785,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             onTableClick={handleMapTableClick}
                                             onTablePositionChange={() => { }}
                                             readOnly={true}
-                                            selectedTableId={selectedTable?.id}
+                                            selectedTableId={selectedTables.length > 0 ? selectedTables[selectedTables.length - 1].id : undefined}
                                         />
                                     </div>
                                 ) : (
@@ -759,30 +800,28 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-5">{t('landing.booking.table_map.booking_title')}</h3>
 
                                 <div className="flex-1 space-y-6">
-                                    {selectedTable ? (
-                                        <div className="bg-[var(--primary-faint)] rounded-2xl p-6 border border-[var(--primary-border)]">
-                                            <div className="flex justify-between items-center mb-4">
-                                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Selected Table</span>
-                                                <span className="text-2xl font-bold font-serif text-[var(--primary)]">{selectedTable.label}</span>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.floor')}</span>
-                                                    <span className={`font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider bg-[var(--surface-subtle)] text-[var(--text)]`}>
-                                                        {selectedTable.zone}
-                                                    </span>
+                                    {selectedTables.length > 0 ? (
+                                        <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                                            {selectedTables.map(table => (
+                                                <div key={table.id} className="bg-[var(--primary-faint)] rounded-2xl p-6 border border-[var(--primary-border)]">
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Selected Table</span>
+                                                        <span className="text-2xl font-bold font-serif text-[var(--primary)]">{table.label}</span>
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.floor')}</span>
+                                                            <span className={`font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider bg-[var(--surface-subtle)] text-[var(--text)]`}>
+                                                                {table.zone}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.capacity')}</span>
+                                                            <span className="font-bold text-[var(--text)]">{table.capacity} {t('landing.booking.table_map.guests')}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.capacity')}</span>
-                                                    <span className="font-bold text-[var(--text)]">{selectedTable.capacity} {t('landing.booking.table_map.guests')}</span>
-                                                </div>
-                                                <div className="flex justify-between text-sm pt-3 border-t border-[var(--primary-border)]/40">
-                                                    <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.status')}</span>
-                                                    <span className="text-[var(--success)] font-bold flex items-center gap-1.5">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" /> {t('landing.booking.table_map.status_available')}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                            ))}
                                         </div>
                                     ) : (
                                         <div className="text-center py-10 opacity-30">
@@ -798,11 +837,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 </div>
 
                                 <button
-                                    disabled={!selectedTable}
+                                    disabled={selectedTables.length === 0}
                                     onClick={() => setStep(ReservationStep.CONFIRMATION)}
                                     className={`
                     w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all transform hover:-translate-y-1 active:translate-y-0
-                    ${selectedTable ? 'bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] shadow-[0_4px_14px_0_var(--primary-glow)]' : 'bg-[var(--surface-subtle)] text-[var(--text-muted)] cursor-not-allowed'}
+                    ${selectedTables.length > 0 ? 'bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] shadow-[0_4px_14px_0_var(--primary-glow)]' : 'bg-[var(--surface-subtle)] text-[var(--text-muted)] cursor-not-allowed'}
                   `}
                                 >
                                     {t('landing.booking.table_map.confirm_table')}
@@ -813,10 +852,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             <div className="lg:hidden p-4 bg-[var(--card)] border-t border-[var(--border)] flex items-center justify-between">
                                 <div>
                                     <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">{t('landing.booking.table_map.mobile_selected')}</p>
-                                    <p className="font-bold text-[var(--text)]">{selectedTable ? `Table ${selectedTable.label}` : t('landing.booking.table_map.mobile_none')}</p>
+                                    <p className="font-bold text-[var(--text)]">{selectedTables.length > 0 ? `Selected ${selectedTables.length} tables` : t('landing.booking.table_map.mobile_none')}</p>
                                 </div>
                                 <button
-                                    disabled={!selectedTable}
+                                    disabled={selectedTables.length === 0}
                                     onClick={() => setStep(ReservationStep.CONFIRMATION)}
                                     className="px-8 py-3 bg-[var(--primary)] text-[var(--on-primary)] rounded-xl font-bold text-sm disabled:opacity-50"
                                 >
@@ -856,7 +895,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     <div className="space-y-10 flex-1">
                                         {[
                                             { icon: 'calendar_today', label: t('landing.booking.confirm.date_time'), value: new Date(booking.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }), sub: booking.time },
-                                            { icon: 'table_restaurant', label: t('landing.booking.confirm.selected_table'), value: `Table ${selectedTable?.label}`, sub: `${selectedTable?.zone} ${t('landing.booking.confirm.zone_label')}` },
+                                            { icon: 'table_restaurant', label: t('landing.booking.confirm.selected_table'), value: selectedTables.map(t => `Table ${t.label}`).join(', '), sub: `${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')}` },
                                             { icon: 'group', label: t('landing.booking.confirm.party_size'), value: `${booking.guests} ${t('landing.booking.table_map.guests')}`, sub: t('landing.booking.confirm.standard_seating') }
                                         ].map((item, idx) => (
                                             <div key={idx} className="flex gap-5">
@@ -1002,9 +1041,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             <span className="text-[var(--text)] font-semibold">{userDetails.name}</span>.{' '}
                             {t('landing.booking.success.table_label')}{' '}
                             <span className="text-[var(--primary)] font-bold">
-                                {selectedTable?.label ? `#${selectedTable.label}` : ''}
+                                {selectedTables.length > 0 ? selectedTables.map(t => `#${t.label}`).join(', ') : ''}
                             </span>
-                            {selectedTable?.zone ? ` (${selectedTable.zone})` : ''} {t('landing.booking.success.reserved_for')}{' '}
+                            {selectedTables.length > 0 ? ` (${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')})` : ''} {t('landing.booking.success.reserved_for')}{' '}
                             <span className="text-[var(--text)] font-semibold">
                                 {booking.guests} {t('landing.booking.success.guests')}
                             </span>{' '}

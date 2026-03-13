@@ -1,44 +1,4 @@
 {
-  "staff": {
-    "reservations": {
-      "title": "Reservations",
-      "subtitle": "Manage reservations and actions",
-      "refresh": "Refresh",
-      "search_placeholder": "Search by name, phone, code...",
-      "filter_status": "Filter by status",
-      "status_all": "All statuses",
-      "empty": "No reservations found",
-      "load_error": "Failed to load reservations",
-      "action_error": "Action failed",
-      "confirm_success": "Reservation confirmed",
-      "checkin_success": "Checked in successfully",
-      "complete_success": "Reservation completed",
-      "cancel_success": "Reservation cancelled",
-      "columns": {
-        "code": "Code",
-        "customer": "Customer",
-        "table": "Table",
-        "date_time": "Date & Time",
-        "guests": "Guests",
-        "status": "Status",
-        "actions": "Actions"
-      },
-      "actions": {
-        "confirm": "Confirm",
-        "checkin": "Check-in",
-        "complete": "Complete",
-        "cancel": "Cancel"
-      },
-      "status": {
-        "pending": "Pending",
-        "confirmed": "Confirmed",
-        "checkin": "Check-in",
-        "checked_in": "Checked in",
-        "completed": "Completed",
-        "cancelled": "Cancelled"
-      }
-    }
-  },
   "admin": {
     "reservations": {
       "title": "Reservation Management",
@@ -48,7 +8,7 @@
         "total": "Total",
         "pending": "Pending",
         "confirmed": "Confirmed",
-        "checkin": "Check-in"
+        "completed": "Completed"
       },
       "filter": {
         "search_placeholder": "Search by name, phone, booking code...",
@@ -107,8 +67,8 @@
           "email": "Email",
           "type": "Type",
           "level": "Level",
-          "guest": "🏷️ Walk-in Guest",
-          "member": "👤 Member"
+          "guest": "Walk-in Guest",
+          "member": "Member"
         },
         "booking": {
           "date_time": "Date & Time",
@@ -127,6 +87,50 @@
     }
   },
   "staff": {
+    "reservations": {
+      "title": "Reservations",
+      "subtitle": "Manage reservations and actions",
+      "refresh": "Refresh",
+      "search_placeholder": "Search by name, phone, code...",
+      "filter_status": "Filter by status",
+      "status_all": "All statuses",
+      "empty": "No reservations found",
+      "load_error": "Failed to load reservations",
+      "action_error": "Action failed",
+      "confirm_success": "Reservation confirmed",
+      "checkin_success": "Checked in successfully",
+      "complete_success": "Reservation completed",
+      "cancel_success": "Reservation cancelled",
+      "stats": {
+        "total": "Total",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed"
+      },
+      "columns": {
+        "code": "Code",
+        "customer": "Customer",
+        "table": "Table",
+        "date_time": "Date & Time",
+        "guests": "Guests",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "confirm": "Confirm",
+        "checkin": "Check-in",
+        "complete": "Complete",
+        "cancel": "Cancel"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "checkin": "Check-in",
+        "checked_in": "Checked in",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
     "dashboard": {
       "greeting": {
         "morning": "Good morning",
@@ -297,7 +301,8 @@
       "orders": "Order Management",
       "orders_short": "Orders",
       "checkout": "Checkout",
-      "attendance": "Attendance"
+      "attendance": "Attendance",
+      "reservations": "Reservations"
     },
     "user_menu": {
       "profile": "Profile",
@@ -502,6 +507,7 @@
         "dashboard": "Dashboard",
         "analytics": "Analytics",
         "tables": "Tables",
+        "reservations": "Reservations",
         "menu": "Menu",
         "ingredients": "Ingredients",
         "orders": "Orders",
@@ -521,7 +527,7 @@
         "ingredient_categories": "Ingredient Categories",
         "suppliers": "Suppliers",
         "loyalty": "Loyalty Bands",
-        "order_status": "Order Status"
+        "order_status": "Dish Status"
       },
       "ingredient_categories": {
         "title": "Ingredient Categories",
@@ -645,11 +651,11 @@
         }
       },
       "order_status": {
-        "title": "Order Detail Status Management",
-        "subtitle": "Manage order detail statuses, codes, and colors",
+        "title": "Dish Status Management",
+        "subtitle": "Manage dish statuses, codes, and colors",
         "add_status": "Add Status",
-        "edit_status": "Edit Order Detail Status",
-        "name": "No status order yet",
+        "edit_status": "Edit Dish Status",
+        "name": "No dish status yet",
         "name_placeholder": "Enter status name",
         "name_required": "Please enter status name",
         "code": "Code",
@@ -661,7 +667,7 @@
         "is_active": "Active Status",
         "is_active_desc": "Enable or disable this status",
         "is_default": "Set as Default",
-        "is_default_desc": "Set this as the default status for new orders",
+        "is_default_desc": "Set this as the default status for new dishes",
         "default_note": "Only one status can be set as default. This will replace the current default.",
         "tooltip": {
           "current_default": "Current Default",
@@ -1853,9 +1859,9 @@
     "login_email_page": {
       "title": "Login with Email",
       "email_label": "Email",
-      "email_placeholder": "your.email@example.com",
+      "email_placeholder": "",
       "password_label": "Password",
-      "password_placeholder": "Enter your password",
+      "password_placeholder": "",
       "forgot_password": "Forgot password?",
       "login_btn": "LOGIN",
       "terms_text": "By continuing, you agree to RestX's",
@@ -1877,9 +1883,9 @@
       "title": "Admin Portal",
       "subtitle": "Restaurant Management System",
       "email_label": "Email",
-      "email_placeholder": "admin@restx.com",
+      "email_placeholder": "",
       "password_label": "Password",
-      "password_placeholder": "Enter your password",
+      "password_placeholder": "",
       "forgot_password": "Forgot password?",
       "login_btn": "LOGIN",
       "terms_text": "By continuing, you agree to RestX's",
@@ -1905,7 +1911,7 @@
       "title": "Forgot Password",
       "subtitle": "Enter your email address and we will send you a link to reset your password.",
       "email_label": "Email Address",
-      "email_placeholder": "your.email@example.com",
+      "email_placeholder": "",
       "send_btn": "SEND RESET LINK",
       "back_to_login": "Back to Login",
       "validation": {
@@ -2425,6 +2431,129 @@
         "4": "4 people",
         "6": "6 people",
         "more": "6+ people"
+      }
+    },
+    "booking": {
+      "step": {
+        "schedule": "Schedule",
+        "location": "Location",
+        "confirm": "Confirm"
+      },
+      "confirm": {
+        "error_required": "Please fill in all required fields",
+        "error_generic": "An error occurred, please try again",
+        "change_table": "Change Table",
+        "title": "Confirm Reservation",
+        "date_time": "Date & Time",
+        "selected_table": "Selected Table",
+        "contact": "Contact Info",
+        "change": "Change",
+        "name": "Full Name",
+        "phone": "Phone Number",
+        "special_requests": "Special Requests",
+        "submit": "Complete Booking",
+        "submitting": "Processing...",
+        "success_title": "Booking Successful!",
+        "success_desc": "Thank you for choosing us. A confirmation code has been sent to your phone.",
+        "new_booking": "New Booking",
+        "finalize_title": "Finalize Your Reservation",
+        "finalize_desc": "Please provide your contact details so we can send you a confirmation.",
+        "logged_in_hint": "You are signed in as: {{name}}",
+        "full_name": "Full Name",
+        "name_placeholder": "John Smith",
+        "phone_number": "Phone Number",
+        "phone_placeholder": "09xxxxxxxx",
+        "email": "Email",
+        "email_placeholder": "",
+        "special_requests_optional": "(Optional)",
+        "requests_placeholder": "Seating preference, allergies, etc...",
+        "complete_btn": "Complete Booking",
+        "processing": "Processing...",
+        "terms": "By continuing, you agree to our Terms of Service and Privacy Policy.",
+        "party_size": "{{count}} guests",
+        "standard_seating": "Standard Seating"
+      },
+      "success": {
+        "title": "Booking Confirmed!",
+        "thank_you": "Thank you,",
+        "table_label": "Table",
+        "reserved_for": "reserved for",
+        "guests": "guests",
+        "on": "on",
+        "at": "at",
+        "booking_ref": "Booking Ref",
+        "confirmation_sent": "Confirmation email sent to:",
+        "make_another": "Make Another Booking"
+      },
+      "hero": {
+        "badge": "ONLINE BOOKING",
+        "title_prefix": "Experience",
+        "title_highlight": "Fine Dining",
+        "description": "Reserve your table in advance to secure the best spot for your wonderful dinner."
+      },
+      "form": {
+        "arrival_date": "Arrival Date",
+        "preferred_time": "Time",
+        "party_size": "Party Size",
+        "choose_table": "Choose Table",
+        "no_slots": "No available time slots"
+      },
+      "features": {
+        "fine_dining": {
+          "label": "Fine Dining",
+          "desc": "Diverse & rich menu"
+        },
+        "instant_confirm": {
+          "label": "Instant Confirm",
+          "desc": "No waiting required"
+        },
+        "valet": {
+          "label": "Valet Parking",
+          "desc": "Safe parking available"
+        }
+      },
+      "table_map": {
+        "change_schedule": "Change Schedule",
+        "reservation_for": "Reservation for",
+        "guests": "guests",
+        "title": "Restaurant Map",
+        "ai_assistant": "AI Assistant",
+        "ai_default": "Let me find the best table for you...",
+        "loading": "Loading map...",
+        "no_map": "No active map for this time.",
+        "booking_title": "Selected Table",
+        "floor": "Floor",
+        "capacity": "Capacity",
+        "no_table_selected": "No table selected",
+        "info_timer": "Please select a table on the map",
+        "confirm_table": "Confirm Table",
+        "mobile_selected": "Selected",
+        "mobile_none": "None",
+        "mobile_confirm": "Done"
+      },
+      "footer": {
+        "tagline": "World-class Dining Experience"
+      }
+    },
+    "lookup": {
+      "auth_required": "You must log in with a staff account to look up reservations.",
+      "error": "Failed to look up reservation or not found.",
+      "badge": "LOOKUP",
+      "title": "Reservation Status",
+      "description": "Enter your confirmation code to track your reservation status.",
+      "code_label": "Confirmation Code",
+      "placeholder": "E.g., RX-12345",
+      "searching": "Searching...",
+      "search_btn": "Look Up",
+      "result": {
+        "confirmation_code": "Confirmation Code",
+        "guest_name": "Guest Name",
+        "phone": "Phone Number",
+        "date_time": "Date & Time",
+        "guests": "Party Size",
+        "guests_suffix": "guests",
+        "table": "Table",
+        "special_requests": "Special Requests"
       }
     },
     "about": {

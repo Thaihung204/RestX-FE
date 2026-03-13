@@ -370,7 +370,7 @@ export default function CustomerFooter({
                   color: activeTab === tab ? "white" : "var(--text-muted)",
                 }}
               >
-                {tab === "profile" ? "👤 Hồ sơ" : "📅 Đặt bàn"}
+                {tab === "profile" ? "Hồ sơ" : "Đặt bàn"}
               </button>
             ))}
           </div>
