@@ -1,36 +1,36 @@
 'use client';
 
 import {
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  CreditCardOutlined,
-  DollarOutlined,
-  GiftOutlined,
-  PrinterOutlined,
-  QrcodeOutlined,
-  SearchOutlined,
-  TableOutlined,
-  UserOutlined,
-  WalletOutlined
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CreditCardOutlined,
+    DollarOutlined,
+    GiftOutlined,
+    PrinterOutlined,
+    QrcodeOutlined,
+    SearchOutlined,
+    TableOutlined,
+    UserOutlined,
+    WalletOutlined
 } from '@ant-design/icons';
 import {
-  Avatar,
-  Button,
-  Card,
-  Col,
-  Divider,
-  Flex,
-  Input,
-  InputNumber,
-  message,
-  Modal,
-  Radio,
-  Result,
-  Row,
-  Space,
-  Statistic,
-  Tag,
-  Typography
+    Avatar,
+    Button,
+    Card,
+    Col,
+    Divider,
+    Flex,
+    Input,
+    InputNumber,
+    message,
+    Modal,
+    Radio,
+    Result,
+    Row,
+    Space,
+    Statistic,
+    Tag,
+    Typography
 } from 'antd';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -241,7 +241,7 @@ export default function CheckoutPage() {
           <Avatar
             size={isMobile ? 44 : 56}
             style={{
-              background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+              background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
               fontSize: isMobile ? 14 : 18,
               fontWeight: 500,
             }}
@@ -274,7 +274,7 @@ export default function CheckoutPage() {
           <div>
             <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>{t('staff.checkout.bill.total_payment')}</Text>
             <br />
-            <Text strong style={{ fontSize: isMobile ? 18 : 24, color: '#FF380B' }}>
+            <Text strong style={{ fontSize: isMobile ? 18 : 24, color: 'var(--primary)' }}>
               {bill.total.toLocaleString('vi-VN')}đ
             </Text>
           </div>
@@ -307,7 +307,7 @@ export default function CheckoutPage() {
           <Card
             style={{
               borderRadius: isMobile ? 12 : 16,
-              background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+              background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
               border: 'none',
             }}
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
@@ -335,7 +335,7 @@ export default function CheckoutPage() {
               value={bills.filter(b => b.status === 'pending').length}
               suffix={t('staff.checkout.stats.tables')}
               styles={{ content: { color: 'var(--text)', fontSize: isMobile ? 24 : 32, fontWeight: 500 } }}
-              prefix={<TableOutlined style={{ color: '#FF380B' }} />}
+              prefix={<TableOutlined style={{ color: 'var(--primary)' }} />}
             />
           </Card>
         </Col>
@@ -452,7 +452,7 @@ export default function CheckoutPage() {
                 {paymentMethod === 'cash' && cashReceived > calculateFinalTotal() && (
                   <div style={{ marginTop: 12 }}>
                     <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.change')}: </Text>
-                    <Text strong style={{ color: '#FF380B', fontSize: isMobile ? 15 : 16 }}>
+                    <Text strong style={{ color: 'var(--primary)', fontSize: isMobile ? 15 : 16 }}>
                       {(cashReceived - calculateFinalTotal()).toLocaleString('vi-VN')}đ
                     </Text>
                   </div>
@@ -491,7 +491,7 @@ export default function CheckoutPage() {
                 <Avatar
                   size={isMobile ? 52 : 64}
                   style={{
-                    background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+                    background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
                     fontSize: isMobile ? 18 : 24,
                     fontWeight: 500,
                   }}
@@ -516,6 +516,7 @@ export default function CheckoutPage() {
                 {/* Bill Details */}
                 <Col xs={24} lg={14} style={{ display: 'flex', width: '100%' }}>
                   <Card
+                    className="payment-static-card"
                     size="small"
                     title={<span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>{t('staff.checkout.payment.bill_detail')}</span>}
                     style={{
@@ -560,7 +561,7 @@ export default function CheckoutPage() {
                     {/* Discount - moved inside the card */}
                     <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexWrap: 'wrap' }}>
-                      <GiftOutlined style={{ fontSize: isMobile ? 16 : 20, color: '#FF380B' }} />
+                      <GiftOutlined style={{ fontSize: isMobile ? 16 : 20, color: 'var(--primary)' }} />
                       <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.discount')}</Text>
                       <InputNumber
                         min={0}
@@ -614,7 +615,7 @@ export default function CheckoutPage() {
                         borderTop: mode === 'dark' ? '2px solid rgba(255, 255, 255, 0.12)' : '2px solid #E5E7EB',
                       }}>
                         <Text strong style={{ fontSize: isMobile ? 15 : 17, fontWeight: 600 }}>{t('staff.checkout.payment.total')}</Text>
-                        <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B', fontWeight: 500 }}>
+                        <Text strong style={{ fontSize: isMobile ? 20 : 24, color: 'var(--primary)', fontWeight: 500 }}>
                           {calculateFinalTotal().toLocaleString('vi-VN')}đ
                         </Text>
                       </div>
@@ -767,6 +768,14 @@ export default function CheckoutPage() {
         }
         .ant-modal-close:hover .ant-modal-close-x {
           color: ${mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.85)'} !important;
+        }
+
+        /* Keep bill details card border static on hover */
+        .payment-static-card.ant-card-hoverable:hover,
+        .payment-static-card.ant-card-hoverable:hover .ant-card-head,
+        .payment-static-card.ant-card-hoverable:hover .ant-card-body {
+          border-color: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#E5E7EB'} !important;
+          box-shadow: ${mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)'} !important;
         }
       `}</style>
     </div>

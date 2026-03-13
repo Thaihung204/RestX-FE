@@ -36,33 +36,19 @@ export default function OrderDetailStatusSettings() {
     null,
   );
   const [form] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
 
-  // Default values for new status
   const defaultValues = {
     name: "",
     code: "",
-    color: "var(--primary)",
-    isActive: true,
+    color: "#ff0000",
     isDefault: false,
   };
 
-  // Predefined colors for ColorPicker
-  const presettedColors = [
-    "var(--primary)",
-    "#FFA500",
-    "#1890FF",
-    "#52C41A",
-    "#FF4D4F",
-    "#722ED1",
-    "#13C2C2",
-    "#FA8C16",
-    "#2F54EB",
-    "#F5222D",
-    "#EB2F96",
-    "#A0D911",
-  ];
+  const dbColors = Array.from(
+    new Set(statuses.map((s) => s.color).filter(Boolean)),
+  );
 
-  // Fetch statuses from service
   const fetchStatuses = async () => {
     setLoading(true);
     try {
@@ -70,11 +56,7 @@ export default function OrderDetailStatusSettings() {
       setStatuses(data);
     } catch (error) {
       console.error("Failed to fetch order detail statuses:", error);
-      message.error(
-        t("dashboard.manage.errors.fetch_failed", {
-          defaultValue: "Failed to fetch order detail statuses",
-        }),
-      );
+      messageApi.error(t("dashboard.manage.errors.fetch_failed"));
     } finally {
       setLoading(false);
     }
@@ -84,7 +66,6 @@ export default function OrderDetailStatusSettings() {
     fetchStatuses();
   }, []);
 
-  // Prepare form when modal opens
   useEffect(() => {
     if (modalVisible) {
       if (editingStatus) {
@@ -111,19 +92,11 @@ export default function OrderDetailStatusSettings() {
   const handleDelete = async (id: string) => {
     try {
       await orderDetailStatusService.deleteStatus(id);
-      message.success(
-        t("dashboard.manage.notifications.delete_success", {
-          defaultValue: "Deleted successfully",
-        }),
-      );
+      messageApi.success(t("dashboard.manage.notifications.delete_success"));
       fetchStatuses();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to delete order detail status:", error);
-      message.error(
-        t("dashboard.manage.errors.delete_failed", {
-          defaultValue: "Failed to delete",
-        }),
-      );
+      messageApi.error(t("dashboard.manage.errors.delete_failed"));
     }
   };
 
@@ -131,15 +104,16 @@ export default function OrderDetailStatusSettings() {
     try {
       const values = await form.validateFields();
 
-      // Convert color to hex string if it's a Color object
       const colorValue =
         typeof values.color === "string"
           ? values.color
-          : values.color?.toHexString();
+          : (values.color?.toHexString?.() ?? values.color);
 
       const statusData = {
-        ...values,
+        name: values.name,
+        code: values.code,
         color: colorValue,
+        isDefault: values.isDefault ?? false,
       };
 
       if (editingStatus) {
@@ -147,82 +121,38 @@ export default function OrderDetailStatusSettings() {
           ...statusData,
           id: editingStatus.id,
         });
-        message.success(
-          t("dashboard.manage.notifications.update_success", {
-            defaultValue: "Updated successfully",
-          }),
-        );
+        messageApi.success(t("dashboard.manage.notifications.update_success"));
       } else {
         await orderDetailStatusService.createStatus(statusData);
-        message.success(
-          t("dashboard.manage.notifications.create_success", {
-            defaultValue: "Created successfully",
-          }),
-        );
+        messageApi.success(t("dashboard.manage.notifications.create_success"));
       }
 
       setModalVisible(false);
       fetchStatuses();
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.response) {
+        messageApi.error(t("dashboard.manage.errors.save_failed"));
+      }
       console.error("Failed to save order detail status:", error);
     }
   };
 
-  const handleToggleActive = async (
-    record: OrderDetailStatus,
-    checked: boolean,
-  ) => {
-    try {
-      // Optimistic update
-      const newStatuses = statuses.map((s) =>
-        s.id === record.id ? { ...s, isActive: checked } : s,
-      );
-      setStatuses(newStatuses);
-
-      await orderDetailStatusService.toggleActive(record.id);
-      message.success(
-        t("dashboard.manage.notifications.update_success", {
-          defaultValue: "Updated successfully",
-        }),
-      );
-      fetchStatuses(); // Refresh to be sure
-    } catch (error) {
-      console.error("Failed to update status:", error);
-      message.error(
-        t("dashboard.manage.errors.update_failed", {
-          defaultValue: "Failed to update status",
-        }),
-      );
-      fetchStatuses(); // Revert on error
-    }
-  };
-
   const handleSetDefault = async (record: OrderDetailStatus) => {
-    if (record.isDefault) return; // Already default
+    if (record.isDefault) return;
 
     try {
-      await orderDetailStatusService.setAsDefault(record.id);
-      message.success(
-        t("dashboard.manage.notifications.update_success", {
-          defaultValue: "Updated successfully",
-        }),
-      );
+      await orderDetailStatusService.setAsDefault(record);
+      messageApi.success(t("dashboard.manage.notifications.update_success"));
       fetchStatuses();
     } catch (error) {
       console.error("Failed to update default status:", error);
-      message.error(
-        t("dashboard.manage.errors.update_failed", {
-          defaultValue: "Failed to update default status",
-        }),
-      );
+      messageApi.error(t("dashboard.manage.errors.update_failed"));
     }
   };
 
   const columns: ColumnsType<OrderDetailStatus> = [
     {
-      title: t("dashboard.manage.order_status.table.name", {
-        defaultValue: "Status Name",
-      }),
+      title: t("dashboard.manage.order_status.table.name"),
       dataIndex: "name",
       key: "name",
       render: (text, record) => (
@@ -249,9 +179,7 @@ export default function OrderDetailStatusSettings() {
       ),
     },
     {
-      title: t("dashboard.manage.order_status.table.code", {
-        defaultValue: "Code",
-      }),
+      title: t("dashboard.manage.order_status.table.code"),
       dataIndex: "code",
       key: "code",
       render: (text) => (
@@ -267,9 +195,7 @@ export default function OrderDetailStatusSettings() {
       ),
     },
     {
-      title: t("dashboard.manage.order_status.table.default", {
-        defaultValue: "Default",
-      }),
+      title: t("dashboard.manage.order_status.table.default"),
       key: "isDefault",
       align: "center",
       width: 100,
@@ -277,12 +203,8 @@ export default function OrderDetailStatusSettings() {
         <Tooltip
           title={
             record.isDefault
-              ? t("dashboard.manage.order_status.tooltip.current_default", {
-                  defaultValue: "Mặc định hiện tại",
-                })
-              : t("dashboard.manage.order_status.tooltip.set_default", {
-                  defaultValue: "Đặt làm mặc định",
-                })
+              ? t("dashboard.manage.order_status.tooltip.current_default")
+              : t("dashboard.manage.order_status.tooltip.set_default")
           }>
           <Button
             type="text"
@@ -301,23 +223,7 @@ export default function OrderDetailStatusSettings() {
       ),
     },
     {
-      title: t("dashboard.manage.order_status.table.status", {
-        defaultValue: "Status",
-      }),
-      key: "isActive",
-      width: 120,
-      render: (_, record) => (
-        <Switch
-          checked={record.isActive}
-          onChange={(checked) => handleToggleActive(record, checked)}
-          className={record.isActive ? "bg-green-500" : ""}
-        />
-      ),
-    },
-    {
-      title: t("dashboard.manage.order_status.table.actions", {
-        defaultValue: "Actions",
-      }),
+      title: t("dashboard.manage.order_status.table.actions"),
       key: "actions",
       align: "right",
       width: 150,
@@ -330,17 +236,16 @@ export default function OrderDetailStatusSettings() {
             className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
           />
           <Popconfirm
-            title={t("dashboard.manage.confirm_delete", {
-              defaultValue: "Are you sure?",
-            })}
+            title={t("dashboard.manage.confirm_delete")}
             onConfirm={() => handleDelete(record.id)}
-            okText={t("common.yes", { defaultValue: "Yes" })}
-            cancelText={t("common.no", { defaultValue: "No" })}
+            okText={t("common.yes")}
+            cancelText={t("common.no")}
             okButtonProps={{ danger: true }}>
             <Button
               type="text"
               icon={<DeleteOutlined className="text-red-500" />}
               className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              style={{ color: "var(--primary)" }}
             />
           </Popconfirm>
         </div>
@@ -350,6 +255,7 @@ export default function OrderDetailStatusSettings() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
+      {contextHolder}
       <style jsx global>{`
         .modern-table .ant-table {
           background: transparent;
@@ -407,21 +313,47 @@ export default function OrderDetailStatusSettings() {
           top: 24px !important;
         }
 
-        /* Dark mode specific fine-tuning if needed, relying on var variables usually handles it */
+        .modern-modal .ant-color-picker {
+          width: 100% !important;
+        }
+        .modern-modal .ant-color-picker-trigger {
+          width: 100% !important;
+          background: var(--input-bg, var(--card)) !important;
+          border: 1px solid var(--border) !important;
+          height: 44px !important;
+          padding: 0 16px !important;
+          border-radius: 12px !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+        .modern-modal .ant-color-picker-trigger .ant-color-picker-color-block {
+          width: 24px !important;
+          height: 24px !important;
+          border-radius: 6px !important;
+        }
+        .modern-modal .ant-color-picker-trigger .ant-color-picker-trigger-text {
+          color: var(--text) !important;
+          margin-left: 12px !important;
+        }
+
+        /* Input fields styling */
+        .modern-modal .ant-input {
+          background: var(--input-bg, var(--card)) !important;
+          border-color: var(--border) !important;
+          color: var(--text) !important;
+        }
+        .modern-modal .ant-input::placeholder {
+          color: var(--text-muted) !important;
+        }
       `}</style>
 
-      {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h3 className="text-2xl font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] bg-clip-text text-transparent">
-            {t("dashboard.manage.order_status.title", {
-              defaultValue: "Order Detail Status Management",
-            })}
+            {t("dashboard.manage.order_status.title")}
           </h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {t("dashboard.manage.order_status.subtitle", {
-              defaultValue: "Manage order detail statuses, codes, and colors",
-            })}
+          <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
+            {t("dashboard.manage.order_status.subtitle")}
           </p>
         </div>
         <Button
@@ -430,13 +362,10 @@ export default function OrderDetailStatusSettings() {
           icon={<PlusOutlined />}
           size="large"
           className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] border-none hover:shadow-lg hover:scale-105 active:scale-95 transition-all rounded-xl h-11 px-6 font-medium">
-          {t("dashboard.manage.order_status.add_status", {
-            defaultValue: "Add Status",
-          })}
+          {t("dashboard.manage.order_status.add_status")}
         </Button>
       </div>
 
-      {/* Table Section */}
       <div className="modern-table">
         <Table
           columns={columns}
@@ -446,7 +375,7 @@ export default function OrderDetailStatusSettings() {
           pagination={{
             pageSize: 10,
             showSizeChanger: false,
-            position: ["bottomCenter"],
+            placement: ["bottomCenter"],
           }}
           locale={{
             emptyText: (
@@ -455,18 +384,14 @@ export default function OrderDetailStatusSettings() {
                 style={{ color: "var(--text-muted)" }}>
                 <div
                   className="mb-4 w-20 h-20 rounded-full flex items-center justify-center mx-auto"
-                  style={{ backgroundColor: "var(--bg-hover)" }}>
+                  style={{ backgroundColor: "var(--surface-subtle)" }}>
                   <StarOutlined className="text-3xl opacity-50" />
                 </div>
                 <p className="text-lg font-medium">
-                  {t("dashboard.manage.menu.no_items", {
-                    defaultValue: "No items found",
-                  })}
+                  {t("dashboard.manage.order_status.name")}
                 </p>
                 <p className="text-sm opacity-60">
-                  {t("dashboard.manage.order_status.empty_state_desc", {
-                    defaultValue: "Tạo trạng thái mới để bắt đầu",
-                  })}
+                  {t("dashboard.manage.order_status.empty_state_desc")}
                 </p>
               </div>
             ),
@@ -474,12 +399,10 @@ export default function OrderDetailStatusSettings() {
         />
       </div>
 
-      {/* Modal Form */}
       <Modal
         title={
           <div className="flex items-center gap-3">
-            <div
-              className={`w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)] flex items-center justify-center text-white shadow-lg`}>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)] flex items-center justify-center text-white shadow-lg">
               {editingStatus ? (
                 <EditOutlined className="text-lg" />
               ) : (
@@ -487,23 +410,19 @@ export default function OrderDetailStatusSettings() {
               )}
             </div>
             <div>
-              <span className="text-lg font-bold block leading-tight">
+              <span
+                className="text-lg font-bold block leading-tight"
+                style={{ color: "var(--text)" }}>
                 {editingStatus
-                  ? t("dashboard.manage.order_status.edit_status", {
-                      defaultValue: "Edit Order Detail Status",
-                    })
-                  : t("dashboard.manage.order_status.add_status", {
-                      defaultValue: "Add Order Detail Status",
-                    })}
+                  ? t("dashboard.manage.order_status.edit_status")
+                  : t("dashboard.manage.order_status.add_status")}
               </span>
-              <span className="text-xs font-normal opacity-60">
+              <span
+                className="text-sm font-normal block"
+                style={{ color: "var(--text-muted)" }}>
                 {editingStatus
-                  ? t("dashboard.manage.order_status.modal_subtitle_edit", {
-                      defaultValue: "Cập nhật thông tin trạng thái",
-                    })
-                  : t("dashboard.manage.order_status.modal_subtitle_create", {
-                      defaultValue: "Tạo mới trạng thái",
-                    })}
+                  ? t("dashboard.manage.order_status.modal_subtitle_edit")
+                  : t("dashboard.manage.order_status.modal_subtitle_create")}
               </span>
             </div>
           </div>
@@ -511,8 +430,8 @@ export default function OrderDetailStatusSettings() {
         open={modalVisible}
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
-        okText={t("common.save", { defaultValue: "Save" })}
-        cancelText={t("common.cancel", { defaultValue: "Cancel" })}
+        okText={t("common.save")}
+        cancelText={t("common.cancel")}
         okButtonProps={{
           className:
             "bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] border-none text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all",
@@ -522,12 +441,16 @@ export default function OrderDetailStatusSettings() {
         cancelButtonProps={{
           size: "large",
           shape: "round",
-          className:
-            "hover:bg-gray-100 dark:hover:bg-zinc-800 border-gray-200 dark:border-zinc-700",
+          style: {
+            background: "var(--surface)",
+            borderColor: "var(--border)",
+            color: "var(--text)",
+          },
         }}
         className="modern-modal"
         width={500}
-        centered>
+        centered
+        forceRender>
         <Form
           form={form}
           layout="vertical"
@@ -537,24 +460,18 @@ export default function OrderDetailStatusSettings() {
           <Form.Item
             name="name"
             label={
-              <span className="font-medium text-gray-700 dark:text-gray-300">
-                {t("dashboard.manage.order_status.name", {
-                  defaultValue: "Name",
-                })}
+              <span className="font-medium" style={{ color: "var(--text)" }}>
+                {t("dashboard.manage.order_status.name")}
               </span>
             }
             rules={[
               {
                 required: true,
-                message: t("dashboard.manage.order_status.name_required", {
-                  defaultValue: "Please enter status name",
-                }),
+                message: t("dashboard.manage.order_status.name_required"),
               },
             ]}>
             <Input
-              placeholder={t("dashboard.manage.order_status.name_placeholder", {
-                defaultValue: "Enter status name",
-              })}
+              placeholder={t("dashboard.manage.order_status.name_placeholder")}
               size="large"
               className="rounded-xl px-4 py-2.5"
             />
@@ -564,93 +481,76 @@ export default function OrderDetailStatusSettings() {
             <Form.Item
               name="code"
               label={
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  {t("dashboard.manage.order_status.code", {
-                    defaultValue: "Code",
-                  })}
+                <span className="font-medium" style={{ color: "var(--text)" }}>
+                  {t("dashboard.manage.order_status.code")}
                 </span>
               }
               rules={[
                 {
                   required: true,
-                  message: t("dashboard.manage.order_status.code_required", {
-                    defaultValue: "Please enter status code",
-                  }),
+                  message: t("dashboard.manage.order_status.code_required"),
                 },
                 {
                   pattern: /^[A-Z_]+$/,
-                  message: t("dashboard.manage.order_status.code_format", {
-                    defaultValue:
-                      "Code must be uppercase letters and underscores only",
-                  }),
+                  message: t("dashboard.manage.order_status.code_format"),
                 },
               ]}>
               <Input
                 placeholder={t(
                   "dashboard.manage.order_status.code_placeholder",
-                  { defaultValue: "e.g., PENDING" },
                 )}
                 size="large"
                 className="font-mono rounded-xl uppercase px-4 py-2.5"
-                prefix={<span className="text-gray-400 font-bold mr-1">#</span>}
+                prefix={
+                  <span
+                    className="font-bold mr-1"
+                    style={{ color: "var(--text-muted)" }}>
+                    #
+                  </span>
+                }
               />
             </Form.Item>
 
             <Form.Item
               name="color"
               label={
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  {t("dashboard.manage.order_status.color", {
-                    defaultValue: "Color",
-                  })}
+                <span className="font-medium" style={{ color: "var(--text)" }}>
+                  {t("dashboard.manage.order_status.color")}
                 </span>
               }
               rules={[
                 {
                   required: true,
-                  message: t("dashboard.manage.order_status.color_required", {
-                    defaultValue: "Please select a color",
-                  }),
+                  message: t("dashboard.manage.order_status.color_required"),
                 },
               ]}>
               <ColorPicker
                 showText
                 size="large"
                 format="hex"
-                presets={[{ label: "Recommended", colors: presettedColors }]}
+                presets={
+                  dbColors.length > 0
+                    ? [
+                        {
+                          label: t(
+                            "dashboard.manage.order_status.color_from_db",
+                          ),
+                          colors: dbColors,
+                        },
+                      ]
+                    : []
+                }
                 className="w-full justify-start rounded-xl"
               />
             </Form.Item>
           </div>
 
-          <div className="bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-xl space-y-4 border border-gray-100 dark:border-zinc-800">
-            <Form.Item name="isActive" valuePropName="checked" noStyle>
-              <div
-                className="flex items-center justify-between cursor-pointer group"
-                onClick={() =>
-                  form.setFieldValue(
-                    "isActive",
-                    !form.getFieldValue("isActive"),
-                  )
-                }>
-                <div className="flex flex-col">
-                  <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-500 transition-colors">
-                    {t("dashboard.manage.order_status.is_active", {
-                      defaultValue: "Active Status",
-                    })}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {t("dashboard.manage.order_status.is_active_desc", {
-                      defaultValue: "Bật hoặc tắt trạng thái này",
-                    })}
-                  </span>
-                </div>
-                <Switch checked={form.getFieldValue("isActive")} />
-              </div>
-            </Form.Item>
-
-            <div className="h-px bg-gray-200 dark:bg-zinc-800 w-full" />
-
+          <div
+            className="p-4 rounded-xl space-y-4 border"
+            style={{
+              background: "var(--card)",
+              borderColor: "var(--border)",
+            }}>
             <Form.Item name="isDefault" valuePropName="checked" noStyle>
               <div
                 className="flex items-center justify-between cursor-pointer group"
@@ -661,15 +561,15 @@ export default function OrderDetailStatusSettings() {
                   )
                 }>
                 <div className="flex flex-col">
-                  <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-500 transition-colors">
-                    {t("dashboard.manage.order_status.is_default", {
-                      defaultValue: "Set as Default",
-                    })}
+                  <span
+                    className="font-medium transition-colors"
+                    style={{ color: "var(--text)" }}>
+                    {t("dashboard.manage.order_status.is_default")}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {t("dashboard.manage.order_status.is_default_desc", {
-                      defaultValue: "Đặt làm trạng thái mặc định cho đơn mới",
-                    })}
+                  <span
+                    className="text-sm"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.manage.order_status.is_default_desc")}
                   </span>
                 </div>
                 <Switch checked={form.getFieldValue("isDefault")} />
@@ -677,12 +577,15 @@ export default function OrderDetailStatusSettings() {
             </Form.Item>
 
             {(form.getFieldValue("isDefault") || editingStatus?.isDefault) && (
-              <div className="text-xs text-amber-500 flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg">
+              <div
+                className="text-sm flex items-center gap-2 p-2 rounded-lg"
+                style={{
+                  color: "var(--warning)",
+                  background: "var(--warning-soft)",
+                  border: "1px solid var(--warning-border)",
+                }}>
                 <StarFilled />
-                {t("dashboard.manage.order_status.default_note", {
-                  defaultValue:
-                    "Only one status can be set as default. This will replace the current default.",
-                })}
+                {t("dashboard.manage.order_status.default_note")}
               </div>
             )}
           </div>

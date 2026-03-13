@@ -1,18 +1,30 @@
 "use client";
 
+import { HeroSection } from "@/components/auth/HeroSection";
+import { GlassInput } from "@/components/ui/GlassInput";
+import { LoginOutlined, MailOutlined, PhoneOutlined, UserOutlined } from "@ant-design/icons";
+import { message } from "antd";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AntdProvider";
-import { message } from "antd";
-import { HeroSection } from "@/components/auth/HeroSection";
-import { GlassInput } from "@/components/ui/GlassInput";
-import { PhoneOutlined, UserOutlined, LoginOutlined, MailOutlined } from "@ant-design/icons";
 
 const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
 export default function LoginPage() {
   const { t } = useTranslation('auth');
   const { mode } = useThemeMode();
+
+  const redirectPath = (() => {
+    if (typeof window === 'undefined') return '/restaurant';
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    if (!redirect) return '/restaurant';
+    try {
+      const decoded = decodeURIComponent(redirect);
+      return decoded.startsWith('/') ? decoded : '/restaurant';
+    } catch {
+      return '/restaurant';
+    }
+  })();
 
   // State
   const [phone, setPhone] = useState("");
@@ -26,6 +38,14 @@ export default function LoginPage() {
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [nameError, setNameError] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
+  const [phoneCheckMessage, setPhoneCheckMessage] = useState("");
+
+  // Helper: set auth cookie so Next middleware sees login state
+  const setAuthCookie = (token: string) => {
+    if (typeof document === "undefined") return;
+    const maxAge = 8 * 60 * 60; // 8 hours in seconds
+    document.cookie = `accessToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  };
 
   // Validation Logic
   const validatePhone = (phone: string) => {
@@ -68,13 +88,24 @@ export default function LoginPage() {
       setPhoneChecked(true);
       setIsNewUser(!result.exists);
 
-      if (result.exists && result.name) {
-        setName(result.name);
+      if (result.exists) {
+        if (result.name) {
+          setName(result.name);
+          setPhoneCheckMessage(`${t('login_page.welcome_back')}, ${result.name}!`);
+        } else {
+          setName("");
+          setPhoneCheckMessage(t('login_page.status.registered') || 'Số điện thoại đã đăng ký');
+        }
       } else {
         setName("");
+        setPhoneCheckMessage(t('login_page.status.not_registered') || 'Số điện thoại chưa đăng ký');
       }
     } catch (err) {
       console.error(err);
+      setPhoneChecked(false);
+      setIsNewUser(false);
+      setName("");
+      setPhoneCheckMessage(t('login_page.status.check_failed') || 'Không thể kiểm tra số điện thoại');
     } finally {
       setCheckingPhone(false);
     }
@@ -84,17 +115,37 @@ export default function LoginPage() {
     const value = e.target.value.replace(/\D/g, "");
     if (value.length <= 11) {
       setPhone(value);
-      if (phoneChecked) {
-        setPhoneChecked(false);
-        setIsNewUser(false);
-        setName("");
-      }
-      if (phoneTouched && value.length === 10) {
-        setPhoneError("");
-        checkPhoneNumber(value);
+      setPhoneChecked(false);
+      setIsNewUser(false);
+      setName("");
+      setPhoneCheckMessage("");
+
+      if (phoneTouched) {
+        if (value.length === 10) {
+          setPhoneError("");
+        } else if (value.length > 0) {
+          setPhoneError(t('login_page.validation.phone_length'));
+        } else {
+          setPhoneError("");
+        }
       }
     }
   };
+
+  useEffect(() => {
+    const digits = phone.replace(/\D/g, '');
+
+    if (digits.length !== 10 || phoneError) {
+      setCheckingPhone(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      checkPhoneNumber(digits);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [phone, phoneError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +177,13 @@ export default function LoginPage() {
         });
 
         if (result.user || !result.requireLogin) {
-          window.location.href = '/customer';
+          // Nếu backend trả token và đã được authService.register lưu vào localStorage,
+          // cố gắng đọc và sync sang cookie để middleware nhận diện.
+          const token = localStorage.getItem("accessToken");
+          if (token) {
+            setAuthCookie(token);
+          }
+          window.location.href = redirectPath;
         } else {
           message.info(result.message || 'Registration successful. Please login.');
         }
@@ -137,7 +194,11 @@ export default function LoginPage() {
 
         if (response.data?.success && response.data?.data) {
           const data = response.data.data;
-          if (data.accessToken) localStorage.setItem('accessToken', data.accessToken);
+          if (data.accessToken) {
+            localStorage.setItem('accessToken', data.accessToken);
+            // Sync token vào cookie cho middleware
+            setAuthCookie(data.accessToken);
+          }
           if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
           if (data.user) localStorage.setItem('userInfo', JSON.stringify(data.user));
 
@@ -149,7 +210,7 @@ export default function LoginPage() {
           } else if (hasRole('Admin') || hasRole('System Admin')) {
             window.location.href = '/admin';
           } else {
-            window.location.href = '/customer';
+            window.location.href = redirectPath;
           }
         } else {
           throw new Error(response.data?.message || 'Login failed');
@@ -195,7 +256,7 @@ export default function LoginPage() {
 
           {/* Mobile Logo */}
           <div className="md:hidden w-full flex flex-col items-center mb-8">
-            <div className="w-20 h-20 bg-[#FF380B]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[#FF380B]/20 p-4">
+            <div className="w-20 h-20 bg-[var(--primary)]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[var(--primary)]/20 p-4">
               <img
                 src="/images/logo/restx-removebg-preview.png"
                 alt="RestX Logo"
@@ -230,13 +291,19 @@ export default function LoginPage() {
                 )}
                 {checkingPhone && (
                   <div className="absolute right-3 top-9">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-[#FF380B]"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-[var(--primary)]"></div>
                   </div>
                 )}
               </div>
 
+              {phoneCheckMessage && phone.length === 10 && (
+                <div className={`text-xs ml-1 font-medium ${isNewUser ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  {phoneCheckMessage}
+                </div>
+              )}
+
               {/* Tên Input - Chỉ hiện khi New User */}
-              {(isNewUser) && (
+              {(isNewUser && phoneChecked && !checkingPhone) && (
                 <div className="animate-fade-in-down">
                   <GlassInput
                     id="name"
@@ -259,14 +326,6 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {/* Welcome message */}
-              {phoneChecked && !isNewUser && name && (
-                <div className="auth-welcome-banner auth-fade-in">
-                  <p className="auth-welcome-text text-sm">
-                    {t('login_page.welcome_back')}, <span className="font-bold text-[var(--primary)]">{name}</span>!
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* Remember Me & Terms */}
@@ -280,7 +339,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[#FF380B] hover:bg-[#ff5722] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a100e] focus:ring-[#FF380B] transition-all duration-300 shadow-[0_4px_14px_0_rgba(255,56,11,0.39)] hover:shadow-[0_6px_20px_rgba(255,56,11,0.23)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
+                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[var(--primary)] hover:bg-[#ff5722] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a100e] focus:ring-[var(--primary)] transition-all duration-300 shadow-[0_4px_14px_0_rgba(255,56,11,0.39)] hover:shadow-[0_6px_20px_rgba(255,56,11,0.23)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
               >
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                   {loading ? (

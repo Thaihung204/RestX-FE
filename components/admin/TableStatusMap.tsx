@@ -67,7 +67,7 @@ export default function TableStatusMap() {
     const config = statusConfig[table.status];
     const getStatusStyle = () => {
       if (table.status === 'serving') {
-        return { backgroundColor: '#FF380B', borderColor: '#FF380B' };
+        return { backgroundColor: 'var(--primary)', borderColor: 'var(--primary)' };
       }
       if (table.status === 'reserved') {
         return { backgroundColor: '#FF6B3B', borderColor: '#FF6B3B' };
@@ -119,7 +119,7 @@ export default function TableStatusMap() {
         <div
           className="rounded-lg p-4"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide" style={{ color: '#FF380B' }}>
+          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide" style={{ color: 'var(--primary)' }}>
             {t("dashboard.table_status.areas.vip")}
           </h4>
           <div className="flex gap-4 flex-wrap">
@@ -131,7 +131,7 @@ export default function TableStatusMap() {
         <div
           className="rounded-lg p-4"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide" style={{ color: '#FF380B' }}>
+          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide" style={{ color: 'var(--primary)' }}>
             {t("dashboard.table_status.areas.indoor")}
           </h4>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
@@ -143,7 +143,7 @@ export default function TableStatusMap() {
         <div
           className="rounded-lg p-4"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide" style={{ color: '#FF380B' }}>
+          <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide" style={{ color: 'var(--primary)' }}>
             {t("dashboard.table_status.areas.outdoor")}
           </h4>
           <div className="flex gap-4 flex-wrap">
@@ -157,7 +157,7 @@ export default function TableStatusMap() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Object.entries(statusConfig).map(([status, config]) => {
             const getLegendStyle = () => {
-              if (status === 'serving') return { backgroundColor: '#FF380B' };
+              if (status === 'serving') return { backgroundColor: 'var(--primary)' };
               if (status === 'reserved') return { backgroundColor: '#FF6B3B' };
               return {};
             };

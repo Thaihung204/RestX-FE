@@ -19,17 +19,13 @@ export interface ITenant {
 export interface TenantCreateInput {
   name: string;
   hostName?: string;
-  networkIp?: string;
   businessName: string;
   phoneNumber: string;
   addressLine1: string;
   addressLine2: string;
   addressLine3: string;
   addressLine4: string;
-  ownerEmail: string;
-  ownerPassword?: string;
   mailRestaurant: string;
-  plan: "basic" | "pro" | "enterprise";
 }
 
 // Full tenant update input (all fields from backend)

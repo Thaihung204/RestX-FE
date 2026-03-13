@@ -12,6 +12,9 @@ export default function CategorySettings() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<Partial<Category>>({
@@ -42,6 +45,24 @@ export default function CategorySettings() {
     fetchCategories();
   }, [t]);
 
+  useEffect(() => {
+    if (!selectedImageFile) {
+      if (localPreviewUrl) {
+        URL.revokeObjectURL(localPreviewUrl);
+        setLocalPreviewUrl(null);
+      }
+      return;
+    }
+
+    const url = URL.createObjectURL(selectedImageFile);
+    setLocalPreviewUrl(url);
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedImageFile]);
+
   const handleOpenModal = (category?: Category) => {
     if (category) {
       setEditingCategory(category);
@@ -50,6 +71,8 @@ export default function CategorySettings() {
         imageUrl: category.imageUrl || "",
         description: category.description || "",
       });
+      setSelectedImageFile(null);
+      setRemoveImage(false);
     } else {
       setEditingCategory(null);
       setFormData({
@@ -57,6 +80,8 @@ export default function CategorySettings() {
         imageUrl: "",
         description: "",
       });
+      setSelectedImageFile(null);
+      setRemoveImage(false);
     }
     setIsModalOpen(true);
   };
@@ -64,6 +89,8 @@ export default function CategorySettings() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingCategory(null);
+    setSelectedImageFile(null);
+    setRemoveImage(false);
   };
 
   const handleSave = async () => {
@@ -83,8 +110,8 @@ export default function CategorySettings() {
           ...editingCategory,
           name: formData.name,
           description: formData.description || "",
-          imageUrl: formData.imageUrl,
-        });
+          imageUrl: removeImage ? "" : (formData.imageUrl || ""),
+        }, selectedImageFile);
         message.success(
           t("dashboard.settings.notifications.success_update", {
             defaultValue: "Category updated successfully",
@@ -95,8 +122,8 @@ export default function CategorySettings() {
         await categoryService.createCategory({
           name: formData.name,
           description: formData.description || "",
-          imageUrl: formData.imageUrl,
-        });
+          imageUrl: removeImage ? "" : (formData.imageUrl || ""),
+        }, selectedImageFile);
         message.success(
           t("dashboard.settings.notifications.success_create", {
             defaultValue: "Category created successfully",
@@ -269,8 +296,8 @@ export default function CategorySettings() {
                           "dashboard.settings.categories.confirm_delete",
                         )}
                         onConfirm={() => handleDelete(cat.id)}
-                        okText={t("common.yes", { defaultValue: "Yes" })}
-                        cancelText={t("common.no", { defaultValue: "No" })}
+                        okText={t("common.actions.yes", { defaultValue: "Yes" })}
+                        cancelText={t("common.actions.no", { defaultValue: "No" })}
                         okButtonProps={{ danger: true }}>
                         <button
                           className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-red-500 hover:text-red-600"
@@ -390,7 +417,7 @@ export default function CategorySettings() {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                     style={{
                       background: "var(--bg-base)",
                       borderColor: "var(--border)",
@@ -413,7 +440,7 @@ export default function CategorySettings() {
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none resize-none"
+                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none"
                     rows={3}
                     style={{
                       background: "var(--bg-base)",
@@ -452,21 +479,12 @@ export default function CategorySettings() {
                           return;
                         }
 
-                        try {
-                          setLoading(true); // Re-use main loading or add specific uploading state
-                          const url = await categoryService.uploadImage(file);
-                          setFormData({ ...formData, imageUrl: url });
-                          message.success("Image uploaded successfully");
-                        } catch (error) {
-                          console.error("Upload failed", error);
-                          message.error(
-                            "Failed to upload image. Please try again.",
-                          );
-                        } finally {
-                          setLoading(false);
-                          // Reset file input value to allow re-selecting same file if needed
-                          e.target.value = "";
-                        }
+                        // Upload will be performed on Save via /api/categories (Cloudinary on BE).
+                        setSelectedImageFile(file);
+                        setRemoveImage(false);
+
+                        // Reset file input value to allow re-selecting same file if needed
+                        e.target.value = "";
                       }}
                     />
 
@@ -476,24 +494,18 @@ export default function CategorySettings() {
                         htmlFor="category-image-upload"
                         className={`
                                                 relative w-full aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all
-                                                ${formData.imageUrl ? "border-transparent" : "border-[var(--border)] hover:border-[#FF380B] hover:bg-[#FF380B]/5"}
+                                                ${((!removeImage && formData.imageUrl) || localPreviewUrl) ? "border-transparent" : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"}
                                             `}
                         style={{
-                          background: formData.imageUrl
+                          background: ((!removeImage && formData.imageUrl) || localPreviewUrl)
                             ? "black"
                             : "var(--bg-base)",
                         }}>
-                        {loading ? (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                          </div>
-                        ) : null}
-
-                        {formData.imageUrl ? (
+                        {((!removeImage && formData.imageUrl) || localPreviewUrl) ? (
                           <>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={formData.imageUrl}
+                              src={localPreviewUrl || (formData.imageUrl as string)}
                               alt="Preview"
                               className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity"
                               onError={(e) => {
@@ -521,7 +533,7 @@ export default function CategorySettings() {
                           </>
                         ) : (
                           <div className="text-center p-6">
-                            <div className="w-12 h-12 rounded-full bg-[#FF380B]/10 text-[#FF380B] flex items-center justify-center mx-auto mb-3">
+                            <div className="w-12 h-12 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center mx-auto mb-3">
                               <svg
                                 className="w-6 h-6"
                                 fill="none"
@@ -551,13 +563,14 @@ export default function CategorySettings() {
                         )}
                       </label>
 
-                      {formData.imageUrl && !loading && (
+                      {((!removeImage && formData.imageUrl) || localPreviewUrl) && (
                         <button
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setFormData({ ...formData, imageUrl: "" });
+                            setSelectedImageFile(null);
+                            setRemoveImage(true);
                           }}
                           className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600 z-20"
                           title="Remove Image">
@@ -593,8 +606,8 @@ export default function CategorySettings() {
                 <button
                   onClick={handleSave}
                   disabled={!formData.name?.trim()}
-                  className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[#FF380B]/20 hover:shadow-[#FF380B]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ background: "#FF380B" }}>
+                  className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[var(--primary)]/20 hover:shadow-[var(--primary)]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "var(--primary)" }}>
                   {t("dashboard.settings.buttons.save_changes")}
                 </button>
               </div>

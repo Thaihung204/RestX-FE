@@ -1,5 +1,6 @@
 "use client";
 
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CartModal from "@/components/customer/CartModal";
 import CustomerFooter from "@/components/customer/CustomerFooter";
 import NotificationSystem from "@/components/notifications/NotificationSystem";
@@ -7,40 +8,40 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useTheme } from "@/lib/hooks/useTheme";
 import customerService, {
-    CustomerResponseDto,
+  CustomerResponseDto,
 } from "@/lib/services/customerService";
 import menuService from "@/lib/services/menuService";
 import type {
-    CartItem,
-    Category,
-    CategoryWithDishes,
-    MenuItem,
+  CartItem,
+  Category,
+  CategoryWithDishes,
+  MenuItem,
 } from "@/lib/types/menu";
 import {
-    ArrowLeftOutlined,
-    CloseOutlined,
-    FireOutlined,
-    HeartFilled,
-    MinusOutlined,
-    PlusOutlined,
-    SearchOutlined,
-    StarFilled,
+  ArrowLeftOutlined,
+  CloseOutlined,
+  FireOutlined,
+  HeartFilled,
+  MinusOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  StarFilled,
 } from "@ant-design/icons";
 import {
-    Affix,
-    Button,
-    Card,
-    Col,
-    ConfigProvider,
-    Input,
-    Modal,
-    Row,
-    Spin,
-    Typography,
-    message,
-    theme,
+  Affix,
+  Button,
+  Card,
+  Col,
+  ConfigProvider,
+  Input,
+  Modal,
+  Row,
+  Spin,
+  Typography,
+  message,
+  theme,
 } from "antd";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -49,6 +50,20 @@ const { Title, Text } = Typography;
 export default function MenuPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
+  const params = useParams();
+  
+  const rawTableId = params?.tableId;
+  const tableId = Array.isArray(rawTableId) ? rawTableId[0] : rawTableId || "";
+
+  function isValidGuid(id: string) {
+    return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+  }
+
+  useEffect(() => {
+    if (!isValidGuid(tableId)) {
+      router.replace("/404");
+    }
+  }, [tableId]);
   const { mode: themeMode } = useTheme();
   const { user } = useAuth();
   const {
@@ -57,6 +72,7 @@ export default function MenuPage() {
     updateQuantity,
     openCartModal,
     cartModalOpen,
+    setOrderContext,
   } = useCart();
 
   // Ref to track if data has been fetched
@@ -107,21 +123,41 @@ export default function MenuPage() {
     }
   }, [user]);
 
+  const toBoolean = (value: unknown): boolean => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === "true") return true;
+      if (normalized === "false") return false;
+    }
+    if (typeof value === "number") return value === 1;
+    return false;
+  };
+
+  const buildDishTags = (dish: {
+    isSpicy?: boolean;
+    isVegetarian?: boolean;
+    isBestSeller?: boolean;
+  }) => {
+    const tags: string[] = [];
+    if (dish.isBestSeller) tags.push("best");
+    if (dish.isSpicy) tags.push("spicy");
+    if (dish.isVegetarian) tags.push("vegan");
+    return tags;
+  };
+
   const fetchMenuData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch menu data using service
       const menuData = await menuService.getMenu();
 
       if (menuData && Array.isArray(menuData)) {
-        // Extract all dishes from all categories
         const allDishes: MenuItem[] = [];
         const extractedCategories: Category[] = [];
 
         menuData.forEach((categoryGroup) => {
-          // Add category to the list
           if (categoryGroup.categoryId && categoryGroup.categoryName) {
             extractedCategories.push({
               id: categoryGroup.categoryId,
@@ -129,7 +165,6 @@ export default function MenuPage() {
             });
           }
 
-          // Map dishes from this category
           if (categoryGroup.items && Array.isArray(categoryGroup.items)) {
             categoryGroup.items.forEach((item) => {
               allDishes.push({
@@ -143,26 +178,14 @@ export default function MenuPage() {
                 categoryName:
                   item.categoryName || categoryGroup.categoryName || "",
                 isPopular: item.isPopular || false,
-                isBestSeller:
-                  item.isBestSeller ||
-                  item.name === "Bún bò Huế" ||
-                  item.name === "Cà phê sữa đá",
-                // item.isBestSeller || false,
-                isSpicy:
-                  item.isSpicy ||
-                  item.name?.toLowerCase().includes("bún bò") ||
-                  item.name?.toLowerCase().includes("cay") ||
-                  false,
-                isVegetarian:
-                  item.isVegetarian ||
-                  item.name?.toLowerCase().includes("chay") ||
-                  item.name?.toLowerCase().includes("rau") ||
-                  false,
-                tags: [
-                  item.isSpicy && "spicy",
-                  item.isVegetarian && "vegan",
-                  item.isBestSeller && "best",
-                ].filter(Boolean) as string[],
+                isBestSeller: toBoolean(item.isBestSeller),
+                isSpicy: toBoolean(item.isSpicy),
+                isVegetarian: toBoolean(item.isVegetarian),
+                tags: buildDishTags({
+                  isBestSeller: toBoolean(item.isBestSeller),
+                  isSpicy: toBoolean(item.isSpicy),
+                  isVegetarian: toBoolean(item.isVegetarian),
+                }),
                 note: item.isBestSeller
                   ? t("menu_page.best_seller")
                   : undefined,
@@ -182,7 +205,6 @@ export default function MenuPage() {
     }
   }, [t]);
 
-  // Fetch data from API
   useEffect(() => {
     // Only fetch once on mount
     if (!hasFetchedData.current) {
@@ -190,14 +212,26 @@ export default function MenuPage() {
       fetchMenuData();
       loadCustomerProfile();
     }
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
+
+  useEffect(() => {
+    if (!isValidGuid(tableId)) return;
+
+    const customerId =
+      customerProfile?.id || user?.customerId || undefined;
+
+    setOrderContext({
+      tableId: tableId as string,
+      customerId,
+    });
+  }, [tableId, customerProfile?.id, user?.customerId, setOrderContext]);
 
   // Re-fetch customer profile when user changes (login/logout)
   useEffect(() => {
     if (hasFetchedData.current && user) {
       loadCustomerProfile();
     }
-  }, [user?.customerId, user?.email]); // Only when user ID or email changes
+  }, [user?.customerId, user?.email]);
 
   // Group dishes by category for display
   const categoriesWithDishes = useMemo<CategoryWithDishes[]>(() => {
@@ -218,6 +252,11 @@ export default function MenuPage() {
       }))
       .filter((group) => group.dishes.length > 0);
   }, [dishes, categories, searchText]);
+
+  const handleOpenFoodDetail = (item: MenuItem) => {
+    setSelectedFood(item);
+    setFoodDetailModalOpen(true);
+  };
 
   const handleAddToCart = (item: MenuItem) => {
     const cartItem: CartItem = {
@@ -312,7 +351,8 @@ export default function MenuPage() {
   }
 
   return (
-    <>
+    <ProtectedRoute>
+      <>
       {contextHolder}
       <ConfigProvider
         theme={{
@@ -325,7 +365,7 @@ export default function MenuPage() {
             fontFamily:
               "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
             borderRadius: 12,
-            controlHeight: 45, // Increase input/select height for easier tap
+            controlHeight: 45,
           },
           components: {
             Modal: {
@@ -388,7 +428,7 @@ export default function MenuPage() {
             {/* Back Button */}
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => router.push("/customer")}
+              onClick={() => router.push(`/customer/${tableId}`)}
               style={{
                 position: "absolute",
                 top: 16,
@@ -513,8 +553,7 @@ export default function MenuPage() {
                           hoverable
                           variant="borderless"
                           onClick={() => {
-                            setSelectedFood(item);
-                            setFoodDetailModalOpen(true);
+                            handleOpenFoodDetail(item);
                           }}
                           style={{
                             background: "var(--card)",
@@ -641,21 +680,88 @@ export default function MenuPage() {
                               </div>
                             </div>
 
-                            {/* Quick Add Button */}
-                            <Button
-                              type="primary"
-                              shape="circle"
-                              icon={<PlusOutlined />}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddToCart(item);
-                              }}
-                              style={{
-                                background: "var(--primary)",
-                                border: "none",
-                                boxShadow: "0 4px 10px var(--primary-glow)",
-                              }}
-                            />
+                            {/* Quick Add / Quantity Controls */}
+                            {(() => {
+                              const cartItem = cartItems.find(
+                                (cart) => cart.id === item.id,
+                              );
+
+                              if (cartItem) {
+                                return (
+                                  <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 4,
+                                      background: "var(--card)",
+                                      padding: "4px 6px",
+                                    }}>
+                                    <Button
+                                      type="text"
+                                      icon={<MinusOutlined />}
+                                      onClick={() =>
+                                        updateQuantity(item.id, cartItem.quantity - 1)
+                                      }
+                                      style={{
+                                        color: "var(--text)",
+                                        border: "1px solid var(--border)",
+                                        width: 32,
+                                        height: 32,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                      size="small"
+                                    />
+                                    <Text
+                                      style={{
+                                        color: "var(--text)",
+                                        fontSize: 14,
+                                        fontWeight: 600,
+                                        width: 20,
+                                        textAlign: "center",
+                                      }}>
+                                      {cartItem.quantity}
+                                    </Text>
+                                    <Button
+                                      type="text"
+                                      icon={<PlusOutlined />}
+                                      onClick={() =>
+                                        updateQuantity(item.id, cartItem.quantity + 1)
+                                      }
+                                      style={{
+                                        color: "var(--text)",
+                                        border: "1px solid var(--border)",
+                                        width: 32,
+                                        height: 32,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                      size="small"
+                                    />
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <Button
+                                  type="primary"
+                                  shape="circle"
+                                  icon={<PlusOutlined />}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddToCart(item);
+                                  }}
+                                  style={{
+                                    background: "var(--primary)",
+                                    border: "none",
+                                    // boxShadow: "0 4px 10px var(--primary-glow)",
+                                  }}
+                                />
+                              );
+                            })()}
                           </div>
                         </Card>
                       </Col>
@@ -743,7 +849,7 @@ export default function MenuPage() {
                     <div
                       style={{
                         width: "100%",
-                        aspectRatio: "4/3", // Better image aspect ratio
+                        aspectRatio: "4/3",
                         borderRadius: 16,
                         overflow: "hidden",
                         marginBottom: 20,
@@ -816,170 +922,74 @@ export default function MenuPage() {
                         {selectedFood.name}
                       </Title>
 
-                      {/* Additional Info Tags */}
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 8,
-                          flexWrap: "wrap",
-                          marginBottom: 8,
-                        }}>
-                        {selectedFood.isSpicy && (
-                          <span
-                            style={{
-                              background: "var(--danger-soft)",
-                              color: "var(--danger)",
-                              padding: "6px 12px",
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              border: "1px solid var(--danger-border)",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 5,
-                            }}>
-                            <FireOutlined />
-                            {t("menu_page.tags.spicy", { defaultValue: "Spicy" })}
-                          </span>
-                        )}
-                        {selectedFood.isVegetarian && (
-                          <span
-                            style={{
-                              background: "var(--success-soft)",
-                              color: "var(--success)",
-                              padding: "6px 12px",
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              border: "1px solid var(--success-border)",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 5,
-                            }}>
-                            <HeartFilled />
-                            {t("menu_page.tags.vegan", { defaultValue: "Vegetarian" })}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Tags */}
-                      {selectedFood.tags && selectedFood.tags.length > 0 && (
+                      {/* Info Tags */}
+                      {(selectedFood.isBestSeller ||
+                        selectedFood.isSpicy ||
+                        selectedFood.isVegetarian) && (
                         <div
                           style={{
                             display: "flex",
-                            gap: 6,
+                            gap: 8,
                             flexWrap: "wrap",
+                            marginBottom: 8,
                           }}>
-                          {selectedFood.tags.map((tag, idx) => {
-                            let icon = <StarFilled />;
-                            let color = "var(--primary)";
-                            let bg = "var(--primary-soft)";
-                            let label = t("menu_page.tags." + tag, {
-                              defaultValue: tag,
-                            });
-
-                            if (tag === "spicy") {
-                              icon = <FireOutlined />;
-                              color = "var(--danger)";
-                              bg = "var(--danger-soft)";
-                            } else if (tag === "vegan") {
-                              icon = <HeartFilled />;
-                              color = "var(--success)";
-                              bg = "var(--success-soft)";
-                            } else if (tag === "best") {
-                              icon = <StarFilled />;
-                              color = "var(--warning)";
-                              bg = "var(--warning-soft)";
-                            }
-
-                            return (
-                              <span
-                                key={idx}
-                                style={{
-                                  background: bg,
-                                  color: color,
-                                  padding: "4px 10px",
-                                  borderRadius: 8,
-                                  fontSize: 11,
-                                  fontWeight: 600,
-                                  border: `1px solid ${color}`,
-                                  textTransform: "capitalize",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 5,
-                                }}>
-                                {icon}
-                                {label}
-                              </span>
-                            );
-                          })}
+                          {selectedFood.isBestSeller && (
+                            <span
+                              style={{
+                                background: "var(--warning-soft)",
+                                color: "var(--warning)",
+                                padding: "6px 12px",
+                                borderRadius: 8,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                border: "1px solid var(--warning-border)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                              }}>
+                              <StarFilled />
+                              {t("menu_page.best_seller")}
+                            </span>
+                          )}
+                          {selectedFood.isSpicy && (
+                            <span
+                              style={{
+                                background: "var(--danger-soft)",
+                                color: "var(--danger)",
+                                padding: "6px 12px",
+                                borderRadius: 8,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                border: "1px solid var(--danger-border)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                              }}>
+                              <FireOutlined />
+                              {t("menu_page.tags.spicy")}
+                            </span>
+                          )}
+                          {selectedFood.isVegetarian && (
+                            <span
+                              style={{
+                                background: "var(--success-soft)",
+                                color: "var(--success)",
+                                padding: "6px 12px",
+                                borderRadius: 8,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                border: "1px solid var(--success-border)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                              }}>
+                              <HeartFilled />
+                              {t("menu_page.tags.vegan")}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
-
-                    {/* Additional Fields */}
-                    {(selectedFood.isSpicy ||
-                      selectedFood.isVegetarian ||
-                      selectedFood.isBestSeller) && (
-                      <div
-                        style={{
-                          marginBottom: 16,
-                          display: "flex",
-                          gap: 12,
-                        }}>
-                        {selectedFood.isBestSeller && (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                              color: "#faad14",
-                              background: "rgba(250, 173, 20, 0.1)",
-                              padding: "4px 8px",
-                              borderRadius: 6,
-                            }}>
-                            <StarFilled />
-                            <Text style={{ color: "inherit", fontWeight: 600 }}>
-                              {t("menu_page.best_seller", "Best Seller")}
-                            </Text>
-                          </div>
-                        )}
-                        {selectedFood.isSpicy && (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                              color: "#ff4d4f",
-                              background: "rgba(255, 77, 79, 0.1)",
-                              padding: "4px 8px",
-                              borderRadius: 6,
-                            }}>
-                            <FireOutlined />
-                            <Text style={{ color: "inherit", fontWeight: 600 }}>
-                              {t("menu_page.tags.spicy", "Spicy")}
-                            </Text>
-                          </div>
-                        )}
-                        {selectedFood.isVegetarian && (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                              color: "#52c41a",
-                              background: "rgba(82, 196, 26, 0.1)",
-                              padding: "4px 8px",
-                              borderRadius: 6,
-                            }}>
-                            <HeartFilled />
-                            <Text style={{ color: "inherit", fontWeight: 600 }}>
-                              {t("menu_page.tags.vegan", "Vegetarian")}
-                            </Text>
-                          </div>
-                        )}
-                      </div>
-                    )}
 
                     {/* Description */}
                     <div
@@ -1050,59 +1060,58 @@ export default function MenuPage() {
                               style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 12,
-                                background: "var(--surface)",
-                                padding: "4px 6px",
-                                borderRadius: 12,
-                                border: "1px solid var(--border)",
+                                justifyContent: "center",
+                                minWidth: 118,
                               }}>
                               <Button
-                                icon={
-                                  <MinusOutlined style={{ fontSize: 12 }} />
-                                }
+                                type="text"
+                                icon={<MinusOutlined />}
                                 onClick={() =>
                                   updateQuantity(
                                     selectedFood.id,
                                     cartItem.quantity - 1,
                                   )
                                 }
-                                size="small"
                                 style={{
-                                  background: "transparent",
-                                  border: "none",
                                   color: "var(--text)",
-                                  width: 28,
-                                  height: 28,
+                                  border: "1px solid var(--border)",
+                                  width: 32,
+                                  height: 32,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
                                 }}
+                                size="small"
                               />
                               <Text
                                 style={{
-                                  color: "var(--primary)",
-                                  fontSize: 16,
-                                  fontWeight: 700,
-                                  minWidth: 20,
+                                  color: "var(--text)",
+                                  fontSize: 14,
+                                  fontWeight: 600,
+                                  width: 20,
                                   textAlign: "center",
                                 }}>
                                 {cartItem.quantity}
                               </Text>
                               <Button
-                                icon={<PlusOutlined style={{ fontSize: 12 }} />}
+                                type="text"
+                                icon={<PlusOutlined />}
                                 onClick={() =>
                                   updateQuantity(
                                     selectedFood.id,
                                     cartItem.quantity + 1,
                                   )
                                 }
-                                size="small"
                                 style={{
-                                  background: "var(--primary)",
-                                  border: "none",
                                   color: "var(--text)",
-                                  width: 28,
-                                  height: 28,
-                                  borderRadius: 8,
-                                  boxShadow: "0 4px 10px var(--primary-glow)",
+                                  border: "1px solid var(--border)",
+                                  width: 32,
+                                  height: 32,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
                                 }}
+                                size="small"
                               />
                             </div>
                           );
@@ -1147,5 +1156,6 @@ export default function MenuPage() {
       </ConfigProvider>
       <NotificationSystem />
     </>
+    </ProtectedRoute>
   );
 }

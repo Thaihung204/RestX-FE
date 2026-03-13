@@ -2,11 +2,11 @@
 
 import { App as AntdApp, ConfigProvider, theme } from "antd";
 import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
+    createContext,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from "react";
 import { darkTheme, lightTheme, ThemeMode } from "./themeConfig";
 
@@ -50,6 +50,22 @@ export default function AntdProvider({
     const theme = mode === "dark" ? darkTheme : lightTheme;
     const root = document.documentElement;
     root.setAttribute("data-theme", mode);
+    if (mode === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+
+    const bodyEl = document.body;
+    if (bodyEl) {
+      bodyEl.setAttribute("data-theme", mode);
+      if (mode === "dark") {
+        bodyEl.classList.add("dark");
+      } else {
+        bodyEl.classList.remove("dark");
+      }
+    }
+
     const vars = theme.customColors;
     Object.entries(vars).forEach(([key, value]) => {
       root.style.setProperty(`--${key}`, value);
@@ -117,7 +133,7 @@ export default function AntdProvider({
           rowHoverBg: "var(--surface-subtle)",
         },
         Badge: {
-          colorError: "#FF380B",
+          colorError: "var(--primary)",
         },
         Descriptions: {
           labelBg: "var(--surface)",
@@ -126,16 +142,21 @@ export default function AntdProvider({
           colorTextLabel: "var(--text)",
           colorBorder: "var(--border)",
         },
+        Popover: {
+          colorBgElevated: "var(--card)",
+          colorText: "var(--text)",
+          colorTextHeading: "var(--text)",
+        },
         Tabs: {
-          itemSelectedColor: "#FF380B",
-          itemHoverColor: "#FF380B",
-          itemActiveColor: "#FF380B",
-          inkBarColor: "#FF380B",
+          itemSelectedColor: "var(--primary)",
+          itemHoverColor: "var(--primary)",
+          itemActiveColor: "var(--primary)",
+          inkBarColor: "var(--primary)",
           titleFontSize: 15,
         },
         Layout: {
-          colorBgBody: "var(--bg-base)",
-          colorBgHeader: "var(--card)",
+          bodyBg: "var(--bg-base)",
+          headerBg: "var(--card)",
         },
         Message: {
           contentBg: "#FFFFFF",
@@ -182,11 +203,11 @@ export default function AntdProvider({
         }
 
         /* Override hardcoded colors with CSS variables */
-        .ant-btn-primary {
+        .ant-btn-primary:not(.ant-btn-dangerous) {
           background: var(--primary) !important;
           border-color: var(--primary) !important;
         }
-        .ant-btn-primary:hover {
+        .ant-btn-primary:not(.ant-btn-dangerous):hover {
           background: var(--primary-hover) !important;
           border-color: var(--primary-hover) !important;
         }
@@ -269,13 +290,13 @@ export default function AntdProvider({
 
         /* Tabs - Orange active state */
         .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #FF380B !important;
+          color: var(--primary) !important;
         }
         .ant-tabs-tab:hover .ant-tabs-tab-btn {
-          color: #FF380B !important;
+          color: var(--primary) !important;
         }
         .ant-tabs-ink-bar {
-          background: #FF380B !important;
+          background: var(--primary) !important;
         }
         .ant-tabs-tab-btn {
           color: var(--text-muted) !important;
@@ -283,20 +304,20 @@ export default function AntdProvider({
 
         /* Pagination - Orange theme */
         .ant-pagination-item-active {
-          background: #FF380B !important;
-          border-color: #FF380B !important;
+          background: var(--primary) !important;
+          border-color: var(--primary) !important;
         }
         .ant-pagination-item-active a {
           color: #ffffff !important;
         }
         .ant-pagination-item:hover {
-          border-color: #FF380B !important;
+          border-color: var(--primary) !important;
         }
         .ant-pagination-item:hover a {
-          color: #FF380B !important;
+          color: var(--primary) !important;
         }
         .ant-select-selector:hover {
-          border-color: var(--primary) !important;
+          border-color: var(--primary-border) !important;
         }
 
         /* Admin Tenants Table - Consistent styling */
@@ -437,14 +458,41 @@ export default function AntdProvider({
         }
         
         .ant-btn-default:hover {
-          border-color: var(--primary) !important;
+          border-color: var(--primary-border) !important;
           color: var(--primary) !important;
         }
-        
+
+        /* Soften hover border/shadow in light mode */
+        .ant-card-hoverable:hover {
+          border-color: var(--primary-border) !important;
+          box-shadow: var(--shadow-sm) !important;
+        }
+
         /* Modal styling */
         .ant-modal-content {
           background: var(--card) !important;
           border-color: var(--border) !important;
+        }
+
+        /* Popconfirm/Popover - force follow current CSS variables */
+        .ant-popover,
+        .ant-popconfirm {
+          --ant-popover-bg: var(--card) !important;
+        }
+
+        .ant-popover .ant-popover-inner {
+          background: var(--card) !important;
+          border: 1px solid var(--border) !important;
+          box-shadow: var(--shadow-md) !important;
+        }
+
+        .ant-popover .ant-popover-inner,
+        .ant-popover .ant-popover-inner-content,
+        .ant-popover .ant-popover-message,
+        .ant-popover .ant-popover-message-title,
+        .ant-popover .ant-popover-title,
+        .ant-popover .ant-popover-description {
+          color: var(--text) !important;
         }
         
         .ant-modal-header {
@@ -486,6 +534,11 @@ export default function AntdProvider({
         /* Tag styling */
         .ant-tag {
           border-color: transparent !important;
+        }
+        .ant-tag:not(.ant-tag-has-color) {
+          background: var(--surface) !important;
+          color: var(--text) !important;
+          border: 1px solid var(--border) !important;
         }
         
         /* Empty state */

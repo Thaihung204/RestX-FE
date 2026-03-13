@@ -30,7 +30,7 @@ const MenuCTA: React.FC<MenuCTAProps> = ({ onViewMenu }) => {
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(90deg, var(--card) 0%, var(--surface) 50%, transparent 100%), url('/images/customer/menu-bg.jpg')",
+          background: "linear-gradient(90deg, var(--card) 0%, var(--surface) 50%, transparent 100%)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           transition: "transform 0.5s ease",

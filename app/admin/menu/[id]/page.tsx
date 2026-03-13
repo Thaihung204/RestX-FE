@@ -122,8 +122,10 @@ export default function MenuItemFormPage() {
           },
         ]);
       }
-    } catch (err: any) {
-      setError("Failed to load menu item");
+    } catch {
+      setError(
+        t("dashboard.menu.errors.detail_load_failed"),
+      );
       message.error(t("dashboard.menu.toasts.detail_error_message"));
     } finally {
       setLoading(false);
@@ -139,14 +141,18 @@ export default function MenuItemFormPage() {
 
       // Validation
       if (!formData.name.trim()) {
-        setError("Name is required");
+        setError(
+          t("dashboard.menu.errors.name_required"),
+        );
         message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
       }
 
       if (!formData.categoryId) {
-        setError("Please select a category");
+        setError(
+          t("dashboard.menu.errors.category_required"),
+        );
         message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
@@ -157,7 +163,9 @@ export default function MenuItemFormPage() {
         formData.price.replace(/\./g, "").replace(/,/g, "."),
       );
       if (!formData.price || priceValue <= 0 || isNaN(priceValue)) {
-        setError("Price must be greater than 0");
+        setError(
+          t("dashboard.menu.errors.price_invalid"),
+        );
         message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
@@ -365,7 +373,7 @@ export default function MenuItemFormPage() {
               <div className="flex items-center justify-center py-8">
                 <div
                   className="animate-spin rounded-full h-8 w-8 border-b-2"
-                  style={{ borderColor: "#FF380B" }}></div>
+                  style={{ borderColor: "var(--primary)" }}></div>
                 <p className="ml-4" style={{ color: "var(--text-muted)" }}>
                   Loading...
                 </p>
@@ -408,7 +416,7 @@ export default function MenuItemFormPage() {
                         }}
                         onFocus={(e) =>
                           (e.currentTarget.style.boxShadow =
-                            "0 0 0 2px #FF380B")
+                            "0 0 0 2px var(--primary)")
                         }
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
@@ -438,7 +446,7 @@ export default function MenuItemFormPage() {
                         }}
                         onFocus={(e) =>
                           (e.currentTarget.style.boxShadow =
-                            "0 0 0 2px #FF380B")
+                            "0 0 0 2px var(--primary)")
                         }
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
@@ -473,7 +481,7 @@ export default function MenuItemFormPage() {
                         }}
                         onFocus={(e) =>
                           (e.currentTarget.style.boxShadow =
-                            "0 0 0 2px #FF380B")
+                            "0 0 0 2px var(--primary)")
                         }
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
@@ -511,7 +519,7 @@ export default function MenuItemFormPage() {
                           }}
                           onFocus={(e) =>
                             (e.currentTarget.style.boxShadow =
-                              "0 0 0 2px #FF380B")
+                              "0 0 0 2px var(--primary)")
                           }
                           onBlur={(e) =>
                             (e.currentTarget.style.boxShadow = "none")
@@ -547,7 +555,7 @@ export default function MenuItemFormPage() {
                         }}
                         onFocus={(e) =>
                           (e.currentTarget.style.boxShadow =
-                            "0 0 0 2px #FF380B")
+                            "0 0 0 2px var(--primary)")
                         }
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
@@ -578,7 +586,7 @@ export default function MenuItemFormPage() {
                         }}
                         onFocus={(e) =>
                           (e.currentTarget.style.boxShadow =
-                            "0 0 0 2px #FF380B")
+                            "0 0 0 2px var(--primary)")
                         }
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
@@ -626,7 +634,7 @@ export default function MenuItemFormPage() {
                           className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
                           style={{
                             backgroundColor: formData.isVegetarian
-                              ? "#FF380B"
+                              ? "var(--primary)"
                               : "#4b5563",
                           }}></div>
                       </label>
@@ -657,7 +665,7 @@ export default function MenuItemFormPage() {
                           className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
                           style={{
                             backgroundColor: formData.isSpicy
-                              ? "#FF380B"
+                              ? "var(--primary)"
                               : "#4b5563",
                           }}></div>
                       </label>
@@ -688,7 +696,7 @@ export default function MenuItemFormPage() {
                           className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
                           style={{
                             backgroundColor: formData.isBestSeller
-                              ? "#FF380B"
+                              ? "var(--primary)"
                               : "#4b5563",
                           }}></div>
                       </label>
@@ -733,7 +741,7 @@ export default function MenuItemFormPage() {
                           className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
                           style={{
                             backgroundColor: formData.isActive
-                              ? "#FF380B"
+                              ? "var(--primary)"
                               : "#4b5563",
                           }}></div>
                       </label>
@@ -764,7 +772,7 @@ export default function MenuItemFormPage() {
                           className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
                           style={{
                             backgroundColor: formData.autoDisableByStock
-                              ? "#FF380B"
+                              ? "var(--primary)"
                               : "#4b5563",
                           }}></div>
                       </label>
@@ -833,17 +841,17 @@ export default function MenuItemFormPage() {
                 style={{
                   background: loading
                     ? "#999"
-                    : "linear-gradient(to right, #FF380B, #FF380BF0)",
+                    : "linear-gradient(to right, var(--primary), var(--primary)F0)",
                   boxShadow:
-                    "0 10px 15px -3px #FF380B33, 0 4px 6px -4px #FF380B33",
+                    "0 10px 15px -3px var(--primary)33, 0 4px 6px -4px var(--primary)33",
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.background =
-                    "linear-gradient(to right, #CC2D08, #B32607)")
+                    "linear-gradient(to right, #B32607)")
                 }
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.background =
-                    "linear-gradient(to right, #FF380B, #FF380BF0)")
+                    "linear-gradient(to right, var(--primary), var(--primary)F0)")
                 }>
                 {isNewItem ? "Create Menu Item" : "Update Menu Item"}
               </button>

@@ -62,40 +62,71 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ style, className })
   const CurrentFlag = language === 'vi' ? FlagVN : FlagEN;
 
   return (
-    <Dropdown
-      menu={{
-        items,
-        selectedKeys: [language],
-        onClick: ({ key }) => changeLanguage(key),
-      }}
-      trigger={['click']}
-      placement="bottomRight"
-      styles={{ root: { minWidth: 160 } }}
-    >
-      <Space
-        className={className}
-        style={{
-          cursor: 'pointer',
-          padding: '6px 10px',
-          borderRadius: 8,
-          transition: 'all 0.2s',
-          border: '1px solid transparent',
-          ...style,
+    <>
+      <Dropdown
+        menu={{
+          className: 'language-switcher-dropdown-menu',
+          style: { minWidth: 180 },
+          items,
+          selectedKeys: [language],
+          onClick: ({ key }) => changeLanguage(String(key)),
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.04)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
+        trigger={['click']}
+        placement="bottomRight"
       >
-        <CurrentFlag style={{ width: 24, height: 16, borderRadius: 2, objectFit: 'cover', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
-        <span style={{ fontSize: 14, fontWeight: 500, color: style?.color || 'var(--text)' }}>
-          {language.toUpperCase()}
-        </span>
-        <DownOutlined style={{ fontSize: 10, color: style?.color ? 'rgba(255,255,255,0.7)' : 'var(--text-muted)', marginLeft: 2 }} />
-      </Space>
-    </Dropdown>
+        <Space
+          className={`language-switcher-trigger ${className || ''}`}
+          style={{
+            cursor: 'pointer',
+            padding: '6px 10px',
+            borderRadius: 8,
+            transition: 'all 0.2s',
+            border: '1px solid transparent',
+            ...style,
+          }}
+        >
+          <CurrentFlag style={{ width: 24, height: 16, borderRadius: 2, objectFit: 'cover', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
+          <span style={{ fontSize: 14, fontWeight: 500, color: style?.color || 'var(--text)' }}>
+            {language.toUpperCase()}
+          </span>
+          <DownOutlined style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 2 }} />
+        </Space>
+      </Dropdown>
+
+      <style jsx global>{`
+        .language-switcher-trigger:hover {
+          background: color-mix(in srgb, var(--text) 10%, transparent);
+        }
+
+        .language-switcher-dropdown-menu {
+          background: var(--card) !important;
+          border: 1px solid var(--border) !important;
+          border-radius: 12px !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
+          padding: 8px !important;
+        }
+
+        .language-switcher-dropdown-menu .ant-dropdown-menu-item {
+          color: var(--text) !important;
+          border-radius: 8px !important;
+        }
+
+        .language-switcher-dropdown-menu .ant-dropdown-menu-item:hover {
+          background: var(--surface-subtle) !important;
+        }
+
+        .language-switcher-dropdown-menu .ant-dropdown-menu-item-selected,
+        .language-switcher-dropdown-menu .ant-dropdown-menu-item-active {
+          background: color-mix(in srgb, var(--primary) 18%, transparent) !important;
+          color: var(--text) !important;
+        }
+
+        .language-switcher-dropdown-menu .ant-dropdown-menu-item-selected:hover,
+        .language-switcher-dropdown-menu .ant-dropdown-menu-item-active:hover {
+          background: color-mix(in srgb, var(--primary) 24%, transparent) !important;
+        }
+      `}</style>
+    </>
   );
 };
 

@@ -24,7 +24,7 @@ const LoginHeader: React.FC<LoginHeaderProps> = ({ title }) => {
           />
         </div>
         <div>
-          <h2 className="text-3xl font-bold" style={{ background: `linear-gradient(to right, #FF380B, #FF380B)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' } as React.CSSProperties}>{displayTitle}</h2>
+          <h2 className="text-3xl font-bold" style={{ background: `linear-gradient(to right, var(--primary), var(--primary))`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' } as React.CSSProperties}>{displayTitle}</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('login_header.welcome_to')} {restaurantName}</p>
         </div>
       </div>

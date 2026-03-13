@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AntdProvider from "./theme/AntdProvider";
+import PageTransitionLoader from "@/components/PageTransitionLoader";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
@@ -45,6 +46,17 @@ export default function RootLayout({
                     root.classList.add('dark');
                   } else {
                     root.classList.remove('dark');
+                  }
+                  
+                  // Keep AntD portal popups synced (they render under body)
+                  var bodyEl = document.body;
+                  if (bodyEl) {
+                    bodyEl.setAttribute('data-theme', mode);
+                    if (mode === 'dark') {
+                      bodyEl.classList.add('dark');
+                    } else {
+                      bodyEl.classList.remove('dark');
+                    }
                   }
                   
                   // 2. Preload tenant colors from localStorage (prevents FOUC)
@@ -105,7 +117,10 @@ export default function RootLayout({
             <AuthProvider>
               <CartProvider>
                 <ToastProvider>
-                  <AntdProvider>{children}</AntdProvider>
+                  <AntdProvider>
+                    <PageTransitionLoader />
+                    {children}
+                  </AntdProvider>
                 </ToastProvider>
               </CartProvider>
             </AuthProvider>

@@ -5,22 +5,29 @@ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
+interface FloorOption {
+  id: string;
+  name: string;
+}
+
 interface AddTableModalProps {
   open: boolean;
   onClose: () => void;
   onAdd: (e: React.FormEvent<HTMLFormElement>) => void;
+  floors?: FloorOption[];
 }
 
 export const AddTableModal: React.FC<AddTableModalProps> = ({
   open,
   onClose,
   onAdd,
+  floors = [],
 }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     number: "",
     capacity: "4",
-    area: "Indoor",
+    area: floors[0]?.id || "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -48,7 +55,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
     }
 
     onAdd(e);
-    setFormData({ number: "", capacity: "4", area: "Indoor" });
+    setFormData({ number: "", capacity: "4", area: floors[0]?.id || "" });
     setErrors({});
   };
 
@@ -235,9 +242,9 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                           (e.target.style.borderColor = "var(--primary)")
                         }
                         onBlur={(e) =>
-                          (e.target.style.borderColor = errors.number
-                            ? "#ff4d4f"
-                            : "var(--border)")
+                        (e.target.style.borderColor = errors.number
+                          ? "#ff4d4f"
+                          : "var(--border)")
                         }
                       />
                       {errors.number && (
@@ -310,9 +317,9 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                           (e.target.style.borderColor = "var(--primary)")
                         }
                         onBlur={(e) =>
-                          (e.target.style.borderColor = errors.capacity
-                            ? "#ff4d4f"
-                            : "var(--border)")
+                        (e.target.style.borderColor = errors.capacity
+                          ? "#ff4d4f"
+                          : "var(--border)")
                         }
                       />
                       {errors.capacity && (
@@ -378,17 +385,27 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                           onBlur={(e) =>
                             (e.target.style.borderColor = "var(--border)")
                           }>
-                          <option value="VIP">
-                            {t("dashboard.tables.add_table_modal.areas.vip")}
-                          </option>
-                          <option value="Indoor">
-                            {t("dashboard.tables.add_table_modal.areas.indoor")}
-                          </option>
-                          <option value="Outdoor">
-                            {t(
-                              "dashboard.tables.add_table_modal.areas.outdoor",
-                            )}
-                          </option>
+                          {floors.length > 0 ? (
+                            floors.map(f => (
+                              <option key={f.id} value={f.id}>
+                                {f.name}
+                              </option>
+                            ))
+                          ) : (
+                            <>
+                              <option value="VIP">
+                                {t("dashboard.tables.add_table_modal.areas.vip")}
+                              </option>
+                              <option value="Indoor">
+                                {t("dashboard.tables.add_table_modal.areas.indoor")}
+                              </option>
+                              <option value="Outdoor">
+                                {t(
+                                  "dashboard.tables.add_table_modal.areas.outdoor",
+                                )}
+                              </option>
+                            </>
+                          )}
                         </select>
                         <svg
                           style={{

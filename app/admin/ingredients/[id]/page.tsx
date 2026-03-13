@@ -1,6 +1,6 @@
 "use client";
 
-import ingredientService, { IngredientItem } from "@/lib/services/ingredientService";
+import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
 import supplierService, { SupplierItem } from "@/lib/services/supplierService";
 import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
@@ -43,7 +43,9 @@ export default function IngredientFormPage() {
   });
 
   const [suppliers, setSuppliers] = useState<SupplierItem[]>([]);
+  const [ingredientCategories, setIngredientCategories] = useState<IngredientCategory[]>([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(!isNew);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -51,8 +53,28 @@ export default function IngredientFormPage() {
   const hasNoSuppliers = !loadingSuppliers && suppliers.length === 0;
   const cannotSave = isNew && hasNoSuppliers;
 
+  const normalizeTypeCode = (value?: string | null) => {
+    if (!value) return "";
+    const trimmed = value.trim();
+    const found = ingredientCategories.find((c) => c.code === trimmed || c.name === trimmed);
+    return found?.code || trimmed;
+  };
+
+  const toTypeTranslationKey = (value?: string | null) => {
+    if (!value) return "";
+    return value.trim().toLowerCase().replace(/\s+/g, "_");
+  };
+
+  const getCategoryLabel = (category: IngredientCategory) => {
+    const normalizedCode = normalizeTypeCode(category.code || category.name);
+    return t(`dashboard.ingredients.type_codes.${toTypeTranslationKey(normalizedCode)}`, {
+      defaultValue: category.name,
+    });
+  };
+
   useEffect(() => {
     fetchSuppliers();
+    fetchIngredientCategories();
     if (!isNew) fetchIngredient();
   }, [id, isNew]);
 
@@ -62,9 +84,21 @@ export default function IngredientFormPage() {
       const data = await supplierService.getAll();
       setSuppliers(data.filter((s) => s.isActive));
     } catch {
-      message.warning(t("dashboard.ingredients.fetch_suppliers_failed", { defaultValue: "Không tải được danh sách nhà cung cấp" }));
+      message.warning(t("dashboard.ingredients.fetch_suppliers_failed"));
     } finally {
       setLoadingSuppliers(false);
+    }
+  };
+
+  const fetchIngredientCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const data = await ingredientService.getAllCategories();
+      setIngredientCategories(data.filter((c) => c.isActive !== false));
+    } catch {
+      message.warning(t("dashboard.ingredients.fetch_categories_failed"));
+    } finally {
+      setLoadingCategories(false);
     }
   };
 
@@ -79,11 +113,11 @@ export default function IngredientFormPage() {
         minStockLevel: data.minStockLevel ?? 0,
         maxStockLevel: data.maxStockLevel ?? 0,
         supplierId:    data.supplierId    ?? null,
-        type:          data.type          ?? "",
+        type:          normalizeTypeCode(data.type),
         isActive:      data.isActive      ?? true,
       });
     } catch {
-      message.error(t("dashboard.ingredients.fetch_ingredient_failed", { defaultValue: "Không tải được thông tin nguyên liệu" }));
+      message.error(t("dashboard.ingredients.fetch_ingredient_failed"));
     } finally {
       setLoadingData(false);
     }
@@ -106,24 +140,29 @@ export default function IngredientFormPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim())        { message.error(t("dashboard.ingredients.name_required", { defaultValue: "Tên không được để trống" })); return; }
-    if (!form.code.trim())        { message.error(t("dashboard.ingredients.code_required", { defaultValue: "Mã nguyên liệu không được để trống" })); return; }
-    if (form.code.length > 20)    { message.error(t("dashboard.ingredients.code_max_length", { defaultValue: "Mã tối đa 20 ký tự" })); return; }
-    if (form.unit.length > 20)    { message.error(t("dashboard.ingredients.unit_max_length", { defaultValue: "Đơn vị tối đa 20 ký tự" })); return; }
-    if (isNew && !form.supplierId){ message.error(t("dashboard.ingredients.supplier_required", { defaultValue: "Vui lòng chọn nhà cung cấp" })); return; }
+    if (!form.name.trim())        { message.error(t("dashboard.ingredients.name_required")); return; }
+    if (!form.code.trim())        { message.error(t("dashboard.ingredients.code_required")); return; }
+    if (form.code.length > 20)    { message.error(t("dashboard.ingredients.code_max_length")); return; }
+    if (form.unit.length > 20)    { message.error(t("dashboard.ingredients.unit_max_length")); return; }
+    if (isNew && !form.supplierId){ message.error(t("dashboard.ingredients.supplier_required")); return; }
+
+    const normalizedPayload = {
+      ...form,
+      type: normalizeTypeCode(form.type),
+    };
 
     try {
       setLoading(true);
       if (isNew) {
-        await ingredientService.create(form);
-        message.success(t("dashboard.ingredients.create_success", { defaultValue: "Tạo nguyên liệu thành công" }));
+        await ingredientService.create(normalizedPayload);
+        message.success(t("dashboard.ingredients.create_success"));
       } else {
-        await ingredientService.update(id, { ...form, id });
-        message.success(t("dashboard.ingredients.update_success", { defaultValue: "Cập nhật nguyên liệu thành công" }));
+        await ingredientService.update(id, { ...normalizedPayload, id });
+        message.success(t("dashboard.ingredients.update_success"));
       }
       router.push("/admin/ingredients");
     } catch (err: any) {
-      message.error(err?.response?.data?.message || err?.message || t("dashboard.ingredients.save_failed", { defaultValue: "Lưu thất bại, thử lại sau" }));
+      message.error(t("dashboard.ingredients.save_failed"));
     } finally {
       setLoading(false);
     }
@@ -133,10 +172,10 @@ export default function IngredientFormPage() {
     try {
       setLoading(true);
       await ingredientService.delete(id);
-      message.success(t("dashboard.ingredients.delete_success", { defaultValue: "Đã xoá nguyên liệu" }));
+      message.success(t("dashboard.ingredients.delete_success"));
       router.push("/admin/ingredients");
     } catch (err: any) {
-      message.error(err?.response?.data?.message || t("dashboard.ingredients.delete_failed", { defaultValue: "Xoá thất bại" }));
+      message.error(t("dashboard.ingredients.delete_failed"));
     } finally {
       setLoading(false);
     }
@@ -145,8 +184,8 @@ export default function IngredientFormPage() {
   if (loadingData) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: "#FF380B" }} />
-        <span className="ml-4 text-lg font-medium" style={{ color: "var(--text-muted)" }}>{t("dashboard.ingredients.loading", { defaultValue: "Đang tải thông tin nguyên liệu..." })}</span>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: "var(--primary)" }} />
+        <span className="ml-4 text-lg font-medium" style={{ color: "var(--text-muted)" }}>{t("dashboard.ingredients.loading")}</span>
       </div>
     );
   }
@@ -165,10 +204,10 @@ export default function IngredientFormPage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              {t("dashboard.ingredients.back_to_list", "Quay lại danh sách")}
+              {t("dashboard.ingredients.back_to_list")}
             </button>
             <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: "var(--text)" }}>
-              {isNew ? t("dashboard.ingredients.add_title", "Thêm nguyên liệu") : t("dashboard.ingredients.edit_title", "Chỉnh sửa nguyên liệu")}
+              {isNew ? t("dashboard.ingredients.add_title") : t("dashboard.ingredients.edit_title")}
             </h2>
           </div>
 
@@ -183,18 +222,18 @@ export default function IngredientFormPage() {
               </svg>
               <div>
                 <p className="font-semibold text-sm" style={{ color: "#ca8a04" }}>
-                  {t("dashboard.ingredients.no_suppliers", "Chưa có nhà cung cấp nào")}
+                  {t("dashboard.ingredients.no_suppliers")}
                 </p>
                 <p className="text-sm mt-0.5" style={{ color: "#ca8a04", opacity: 0.85 }}>
-                  {t("dashboard.ingredients.no_supplier_warning", "Không thể thêm nguyên liệu. Vui lòng")}{" "}
+                  {t("dashboard.ingredients.no_supplier_warning")}{" "}
                   <button
                     type="button"
                     onClick={() => router.push("/admin/manage?tab=suppliers")}
                     className="underline font-medium hover:opacity-80"
                   >
-                    {t("dashboard.ingredients.create_supplier", "tạo nhà cung cấp")}
+                    {t("dashboard.ingredients.create_supplier")}
                   </button>{" "}
-                  {t("dashboard.ingredients.no_supplier_warning_after", "trước.")}
+                  {t("dashboard.ingredients.no_supplier_warning_after")}
                 </p>
               </div>
             </div>
@@ -210,19 +249,19 @@ export default function IngredientFormPage() {
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                 >
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
-                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
-                    {t("dashboard.ingredients.basic_info", "Thông tin cơ bản")}
+                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
+                    {t("dashboard.ingredients.basic_info")}
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.name", "Tên nguyên liệu")} <span style={{ color: "#FF380B" }}>*</span>
+                        {t("dashboard.ingredients.name")} 
                       </label>
                       <input
                         type="text" name="name" value={form.name} onChange={handleChange} required
                         disabled={cannotSave}
-                        placeholder="VD: Cá hồi tươi"
+                        placeholder={t("dashboard.ingredients.name")}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                         style={cannotSave ? disabledFieldStyle : fieldStyle}
                       />
@@ -230,14 +269,14 @@ export default function IngredientFormPage() {
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.code", "Mã")} <span style={{ color: "#FF380B" }}>*</span>{" "}
-                        <span className="text-xs opacity-50">{t("dashboard.ingredients.code_max_length", "(max 20 ký tự)")}</span>
+                        {t("dashboard.ingredients.code")} {" "}
+                        <span className="text-xs opacity-50">{t("dashboard.ingredients.code_max_length")}</span>
                       </label>
                       <input
                         type="text" name="code" value={form.code} onChange={handleChange}
                         required maxLength={20}
                         disabled={cannotSave}
-                        placeholder="VD: CA_HOI"
+                        placeholder={t("dashboard.ingredients.code")}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20 font-mono"
                         style={cannotSave ? disabledFieldStyle : fieldStyle}
                       />
@@ -245,7 +284,7 @@ export default function IngredientFormPage() {
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.unit", "Đơn vị")} <span style={{ color: "#FF380B" }}>*</span>
+                        {t("dashboard.ingredients.unit")} 
                       </label>
                       <select
                         name="unit" value={form.unit} onChange={handleChange}
@@ -259,14 +298,14 @@ export default function IngredientFormPage() {
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.supplier", "Nhà cung cấp")} <span style={{ color: "#FF380B" }}>*</span>
+                        {t("dashboard.ingredients.supplier")} 
                       </label>
                       {loadingSuppliers ? (
                         <div
                           className="w-full px-3 py-2.5 rounded-lg border text-sm"
                           style={disabledFieldStyle}
                         >
-                          {t("dashboard.ingredients.loading_suppliers", "Đang tải…")}
+                          {t("dashboard.ingredients.loading_suppliers")}
                         </div>
                       ) : hasNoSuppliers ? (
                         <div
@@ -277,7 +316,7 @@ export default function IngredientFormPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                               d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                           </svg>
-                          {t("dashboard.ingredients.no_suppliers", "Không có nhà cung cấp nào")}
+                          {t("dashboard.ingredients.no_suppliers")}
                         </div>
                       ) : (
                         <select
@@ -288,7 +327,7 @@ export default function IngredientFormPage() {
                           className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                           style={fieldStyle}
                         >
-                          <option value="" disabled>{t("dashboard.ingredients.select_supplier", "— Chọn nhà cung cấp —")}</option>
+                          <option value="" disabled>{t("dashboard.ingredients.select_supplier")}</option>
                           {suppliers.map((s) => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                           ))}
@@ -298,19 +337,32 @@ export default function IngredientFormPage() {
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.type", "Loại / Danh mục")}
-                        <span className="ml-1 text-xs opacity-50">{t("dashboard.ingredients.type_optional", "(tuỳ chọn)")}</span>
+                        {t("dashboard.ingredients.type")}
+                        <span className="ml-1 text-xs opacity-50">{t("dashboard.ingredients.type_optional")}</span>
                       </label>
-                      <input
-                        type="text" name="type"
-                        value={form.type ?? ""}
-                        onChange={handleChange}
-                        maxLength={50}
-                        disabled={cannotSave}
-                        placeholder="VD: Seafood, Grains…"
-                        className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
-                        style={cannotSave ? disabledFieldStyle : fieldStyle}
-                      />
+                      {loadingCategories ? (
+                        <div
+                          className="w-full px-3 py-2.5 rounded-lg border text-sm"
+                          style={disabledFieldStyle}
+                        >
+                          {t("dashboard.ingredients.loading_categories")}
+                        </div>
+                      ) : (
+                        <select
+                          name="type"
+                          value={form.type ?? ""}
+                          onChange={handleChange}
+                          disabled={cannotSave}
+                          className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
+                          style={cannotSave ? disabledFieldStyle : fieldStyle}
+                        >
+                          {ingredientCategories.map((c) => (
+                            <option key={c.id} value={c.code ?? c.name}>
+                              {getCategoryLabel(c)}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </div>
                 </section>
@@ -320,14 +372,14 @@ export default function IngredientFormPage() {
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                 >
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
-                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
-                    {t("dashboard.ingredients.stock_levels", "Mức tồn kho")}
+                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
+                    {t("dashboard.ingredients.stock_levels")}
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.min_stock", "Mức tối thiểu (Min)")}
+                        {t("dashboard.ingredients.min_stock")}
                       </label>
                       <input
                         type="number" name="minStockLevel"
@@ -341,7 +393,7 @@ export default function IngredientFormPage() {
                     </div>
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.max_stock", "Mức tối đa (Max)")}
+                        {t("dashboard.ingredients.max_stock")}
                       </label>
                       <input
                         type="number" name="maxStockLevel"
@@ -356,7 +408,7 @@ export default function IngredientFormPage() {
                   </div>
 
                   <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                    {t("dashboard.ingredients.stock_unit_note", "Đơn vị tính theo {{unit}}. Tồn kho thực tế quản lý qua module Inventory Stock.", { unit: form.unit || "—" })}
+                    {t("dashboard.ingredients.stock_unit_note", { unit: form.unit || "—" })}
                   </p>
                 </section>
               </div>
@@ -368,26 +420,26 @@ export default function IngredientFormPage() {
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                 >
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
-                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
-                    {t("dashboard.ingredients.actions_section", "Thao tác")}
+                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
+                    {t("dashboard.ingredients.actions_section")}
                   </h3>
 
                   <div className="space-y-3">
                     <button
                       type="submit"
                       disabled={loading || cannotSave}
-                      title={cannotSave ? t("dashboard.ingredients.need_supplier_tooltip", "Cần có ít nhất một nhà cung cấp trước khi thêm nguyên liệu") : undefined}
+                      title={cannotSave ? t("dashboard.ingredients.need_supplier_tooltip") : undefined}
                       className="w-full py-2.5 rounded-lg font-bold text-white transition-all
                         hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                      style={{ background: loading || cannotSave ? "#aaa" : "#FF380B" }}
+                      style={{ background: loading || cannotSave ? "#aaa" : "var(--primary)", color: "white" }}
                       onMouseEnter={(e) => { if (!loading && !cannotSave) e.currentTarget.style.background = "#CC2D08"; }}
-                      onMouseLeave={(e) => { if (!loading && !cannotSave) e.currentTarget.style.background = "#FF380B"; }}
+                      onMouseLeave={(e) => { if (!loading && !cannotSave) e.currentTarget.style.background = "var(--primary)"; }}
                     >
                       {loading
-                        ? t("dashboard.ingredients.saving", "Đang lưu…")
+                        ? t("dashboard.ingredients.saving")
                         : isNew
-                          ? t("dashboard.ingredients.create_btn", "Tạo nguyên liệu")
-                          : t("dashboard.ingredients.update_btn", "Cập nhật")}
+                          ? t("dashboard.ingredients.create_btn")
+                          : t("dashboard.ingredients.update_btn")}
                     </button>
 
                     <button
@@ -398,7 +450,7 @@ export default function IngredientFormPage() {
                       onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface)")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
-                      {t("dashboard.ingredients.cancel", "Huỷ")}
+                      {t("dashboard.ingredients.cancel")}
                     </button>
 
                     {!isNew && !showDeleteConfirm && (
@@ -410,7 +462,7 @@ export default function IngredientFormPage() {
                         onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.2)")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.1)")}
                       >
-                        {t("dashboard.ingredients.delete_btn_label", "Xoá nguyên liệu")}
+                        {t("dashboard.ingredients.delete_btn_label")}
                       </button>
                     )}
                   </div>
@@ -421,7 +473,7 @@ export default function IngredientFormPage() {
                       style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}
                     >
                       <p className="text-sm font-medium mb-3" style={{ color: "#dc2626" }}>
-                        {t("dashboard.ingredients.delete_btn", "Xoá")} &quot;{form.name}&quot;? {t("dashboard.ingredients.delete_confirm_msg", "Không thể hoàn tác.")}
+                        {t("dashboard.ingredients.delete_btn")} &quot;{form.name}&quot;? {t("dashboard.ingredients.delete_confirm_msg")}
                       </p>
                       <div className="flex gap-2">
                         <button
@@ -429,14 +481,14 @@ export default function IngredientFormPage() {
                           className="flex-1 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
                           style={{ background: "#dc2626" }}
                         >
-                          {t("dashboard.ingredients.delete_btn", "Xoá")}
+                          {t("dashboard.ingredients.delete_btn")}
                         </button>
                         <button
                           type="button" onClick={() => setShowDeleteConfirm(false)}
                           className="flex-1 py-2 rounded-lg text-sm font-medium"
                           style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                         >
-                          {t("dashboard.ingredients.cancel", "Huỷ")}
+                          {t("dashboard.ingredients.cancel")}
                         </button>
                       </div>
                     </div>
@@ -448,8 +500,8 @@ export default function IngredientFormPage() {
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                 >
                   <h3 className="text-base font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--text)" }}>
-                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "#FF380B" }} />
-                    {t("dashboard.ingredients.status_section", "Trạng thái")}
+                    <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
+                    {t("dashboard.ingredients.status_section")}
                   </h3>
 
                   <div
@@ -459,13 +511,13 @@ export default function IngredientFormPage() {
                     <div>
                       <p className="font-semibold text-sm" style={{ color: "var(--text)" }}>
                         {form.isActive
-                          ? t("dashboard.ingredients.status_active", "Đang sử dụng")
-                          : t("dashboard.ingredients.status_inactive", "Ngừng sử dụng")}
+                          ? t("dashboard.ingredients.status_active")
+                          : t("dashboard.ingredients.status_inactive")}
                       </p>
                       <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                         {form.isActive
-                          ? t("dashboard.ingredients.status_desc_active", "Nguyên liệu đang hoạt động")
-                          : t("dashboard.ingredients.status_desc_inactive", "Nguyên liệu bị vô hiệu hoá")}
+                          ? t("dashboard.ingredients.status_desc_active")
+                          : t("dashboard.ingredients.status_desc_inactive")}
                       </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
@@ -479,7 +531,7 @@ export default function IngredientFormPage() {
                           peer-checked:after:translate-x-full peer-checked:after:border-white
                           after:content-[''] after:absolute after:top-[2px] after:left-[2px]
                           after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
-                        style={{ background: form.isActive ? "#FF380B" : "#4b5563" }}
+                        style={{ background: form.isActive ? "var(--primary)" : "#4b5563" }}
                       />
                     </label>
                   </div>
@@ -491,7 +543,7 @@ export default function IngredientFormPage() {
                     style={{ background: "var(--card)", border: "1px solid var(--border)" }}
                   >
                     <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.ingredients.system_info", "Thông tin hệ thống")}
+                      {t("dashboard.ingredients.system_info")}
                     </p>
                     <p className="text-xs break-all" style={{ color: "var(--text-muted)" }}>ID: {id}</p>
                   </section>

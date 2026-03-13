@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Button, Typography, Tag, Row, Col, Card, Flex, Grid } from 'antd';
-import { PlayCircleOutlined, FileTextOutlined } from '@ant-design/icons';
+import { FileTextOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { Button, Card, Col, Flex, Grid, Row, Tag, Typography } from 'antd';
 import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePageTransition } from './PageTransition';
 import TenantRequestForm from './TenantRequestForm';
@@ -134,7 +134,7 @@ const HeroSection: React.FC = () => {
             right: '-15%',
             width: '60%',
             height: '120%',
-            background: 'linear-gradient(135deg, #FF6B3B 0%, #FF380B 50%, #CC2D08 100%)',
+            background: 'linear-gradient(135deg, #FF6B3B 0%, var(--primary) 50%, #CC2D08 100%)',
             borderRadius: '40% 30% 50% 40%',
             transform: 'rotate(-15deg)',
             zIndex: 0,
@@ -218,7 +218,7 @@ const HeroSection: React.FC = () => {
                         fontSize: isMobile ? 14 : 16,
                         fontWeight: 600,
                         borderRadius: 50,
-                        background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
+                        background: 'linear-gradient(135deg, var(--primary) 0%, #CC2D08 100%)',
                         border: 'none',
                         boxShadow: '0 8px 24px rgba(255, 56, 11, 0.35)',
                       }}
@@ -269,7 +269,7 @@ const HeroSection: React.FC = () => {
                             gap: 2
                           }}
                         >
-                          <span style={{ color: '#FF380B', fontSize: isMobile ? 20 : 28, fontWeight: 700 }}>{stat.value}</span>
+                          <span style={{ color: 'var(--primary)', fontSize: isMobile ? 20 : 28, fontWeight: 700 }}>{stat.value}</span>
                           <span style={{ color: 'var(--text-muted)', fontSize: isMobile ? 11 : 13, textAlign: 'center' }}>{stat.label}</span>
                         </motion.div>
                       </Col>
@@ -304,7 +304,7 @@ const HeroSection: React.FC = () => {
                       style={{
                         width: 32,
                         height: 32,
-                        background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
+                        background: 'linear-gradient(135deg, var(--primary) 0%, #CC2D08 100%)',
                         borderRadius: 8,
                       }}
                     />
@@ -329,7 +329,7 @@ const HeroSection: React.FC = () => {
                             height: `${h}%`,
                             minHeight: 20,
                             borderRadius: 8,
-                            background: 'linear-gradient(180deg, #FF6B3B 0%, #FF380B 100%)',
+                            background: 'linear-gradient(180deg, #FF6B3B 0%, var(--primary) 100%)',
                             boxShadow: '0 6px 18px rgba(255, 56, 11, 0.25)',
                           }}
                         />
@@ -347,7 +347,7 @@ const HeroSection: React.FC = () => {
                         <Text style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                           {t('homepage.hero.dashboard.revenue')}
                         </Text>
-                        <Title level={4} style={{ margin: '8px 0 0', color: '#FF380B' }}>
+                        <Title level={4} style={{ margin: '8px 0 0', color: 'var(--primary)' }}>
                           ₫2.4M
                         </Title>
                       </Card>
@@ -357,7 +357,7 @@ const HeroSection: React.FC = () => {
                         <Text style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                           {t('homepage.hero.dashboard.orders')}
                         </Text>
-                        <Title level={4} style={{ margin: '8px 0 0', color: '#FF380B' }}>
+                        <Title level={4} style={{ margin: '8px 0 0', color: 'var(--primary)' }}>
                           148
                         </Title>
                       </Card>
@@ -371,7 +371,7 @@ const HeroSection: React.FC = () => {
                     </Text>
                     <Flex vertical gap={12} style={{ width: '100%' }}>
                       {[
-                        { table: 'A02', total: 'đ750.000', status: t('staff.orders.status.preparing'), color: '#FF380B', bar: 88 },
+                        { table: 'A02', total: 'đ750.000', status: t('staff.orders.status.preparing'), color: 'var(--primary)', bar: 88 },
                         { table: 'B01', total: 'đ1.25M', status: t('staff.orders.status.ready'), color: '#52c41a', bar: 72 },
                         { table: 'VIP01', total: 'đ3.48M', status: t('staff.tables.status.reserved'), color: '#1890ff', bar: 64 },
                       ].map((order, i) => (

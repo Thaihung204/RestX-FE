@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AddAreaModal } from "./components/AddAreaModal";
 import { AddTableModal } from "./components/AddTableModal";
@@ -9,14 +9,17 @@ import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
-import { tableService, TableStatus, TableItem, LayoutResponse } from "@/lib/services/tableService";
+import { tableService, TableStatus, floorService, FloorSummary } from "@/lib/services/tableService";
+import { usePageLoading } from "@/components/PageTransitionLoader";
+import { App } from "antd";
 
 interface Table {
   id: string;
   number: number;
   capacity: number;
   status: "available" | "occupied" | "reserved" | "cleaning";
-  area: "VIP" | "Indoor" | "Outdoor";
+  area: string; // floorName from BE
+  floorId?: string; // BE floor GUID
   currentOrder?: string;
   reservationTime?: string;
   // Backend fields to preserve
@@ -32,19 +35,20 @@ interface Table {
   viewDescription?: string;
   defaultViewUrl?: string;
   qrCodeUrl?: string;
-
 }
 
 type ViewMode = "grid" | "map";
 
 export default function TablesPage() {
   const { t } = useTranslation();
+  const { message } = App.useApp();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [tables, setTables] = useState<Table[]>([]);
+  const [qrModal, setQrModal] = useState<{ url: string; number: number } | null>(null);
 
   const statusConfig = {
     available: {
@@ -70,28 +74,28 @@ export default function TablesPage() {
     },
   };
 
-  /* State for Map Layout - Added availableAreas */
-  const [availableAreas, setAvailableAreas] = useState<string[]>([
-    "VIP",
-    "Indoor",
-    "Outdoor",
-  ]);
+  /* BE floors state */
+  const [beFloors, setBeFloors] = useState<FloorSummary[]>([]);
   /* Add Area Modal State */
   const [addAreaModalOpen, setAddAreaModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
+  usePageLoading(loading);
 
-  // Fetch tables from API
+  // Fetch tables + floors from BE API
   const fetchTables = async () => {
     try {
-      setLoading(true);
-      const items = await tableService.getAllTables();
+      const [items, floors] = await Promise.all([
+        tableService.getAllTables(),
+        floorService.getAllFloors(),
+      ]);
+
+      setBeFloors(floors);
 
       const mappedTables: Table[] = items.map(item => {
         let status: Table['status'] = 'available';
         if (item.tableStatusId === TableStatus.Reserved) status = 'reserved';
         if (item.tableStatusId === TableStatus.Occupied) status = 'occupied';
-        // Handle cleaning if statusName provided or extended enum in future
         if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
 
         return {
@@ -99,7 +103,8 @@ export default function TablesPage() {
           number: parseInt(item.code) || 0,
           capacity: item.seatingCapacity,
           status: status,
-          area: (item.type as any) || 'Indoor',
+          area: item.floorName || item.type || 'Indoor',
+          floorId: item.floorId,
           shape: (item.shape as any) || 'Square',
           positionX: Number(item.positionX) || 0,
           positionY: Number(item.positionY) || 0,
@@ -107,25 +112,18 @@ export default function TablesPage() {
           height: Number(item.height) || 80,
           rotation: Number(item.rotation) || 0,
           isActive: item.isActive,
-          // Map optional backend fields
           has3DView: item.has3DView,
           viewDescription: item.viewDescription,
           defaultViewUrl: item.defaultViewUrl,
           qrCodeUrl: item.qrCodeUrl,
         };
       });
+      // DEBUG: show BE positions
+      console.log('[Admin] Tables from BE:', mappedTables.map(t => ({ id: t.id, code: t.number, floorId: t.floorId, x: t.positionX, y: t.positionY })));
       setTables(mappedTables);
-
-      // Update available areas
-      const areas = Array.from(new Set(mappedTables.map(t => t.area)));
-      const defaultAreas = ["VIP", "Indoor", "Outdoor"];
-      const uniqueAreas = Array.from(new Set([...defaultAreas, ...areas]));
-      setAvailableAreas(uniqueAreas);
-
     } catch (error) {
       console.error("Failed to fetch tables:", error);
     } finally {
-      setLoading(false);
     }
   };
 
@@ -136,100 +134,98 @@ export default function TablesPage() {
   // Layout State for Map Mode
   const [layout, setLayout] = useState<Layout | null>(null);
 
-  // Sync Layout with Tables
+  // Upload floor background image directly to BE
+  const handleFloorImageUpload = async (floorId: string, file: File) => {
+    try {
+      const floor = beFloors.find(f => f.id === floorId);
+      await floorService.updateFloor(floorId, {
+        name: floor?.name ?? 'Floor',
+        width: floor?.width ?? 1400,
+        height: floor?.height ?? 900,
+        image: file,
+      });
+      // Refresh floors to get Cloudinary URL
+      const updatedFloors = await floorService.getAllFloors();
+      setBeFloors(updatedFloors);
+    } catch (err) {
+      console.error('Failed to upload floor background to BE:', err);
+    }
+  };
+
+  // Sync Layout with Tables using real BE floors
   useEffect(() => {
-    if (tables.length === 0) return;
+    if (beFloors.length === 0 && tables.length === 0) return;
 
-    // Load saved layout config (backgrounds, dimensions) from local storage
-    const savedLayoutStr = localStorage.getItem('restaurant_layout');
-    const savedLayout = savedLayoutStr ? JSON.parse(savedLayoutStr) : null;
-
-    // Group tables by area -> Floors
-    const areas = Array.from(new Set(tables.map(t => t.area)));
-    // Ensure we have at least the default areas or the saved floors
-    const floorIds = new Set([...areas, ...availableAreas]);
-
-    const floors: Floor[] = Array.from(floorIds).map(areaId => {
-      const savedFloor = savedLayout?.floors?.find((f: any) => f.id === areaId);
+    // Build floors from BE floor data
+    const floors: Floor[] = beFloors.map(bf => {
       const floorTables = tables
-        .filter(table => table.area === areaId && table.isActive)
+        .filter(table => table.floorId === bf.id && table.isActive)
         .map(table => ({
           id: table.id,
-          tenantId: "tenant-1", // Placeholder
-          name: t("dashboard.tables.card.table_name", { number: table.number }),
+          tenantId: 'tenant-1',
+          name: t('dashboard.tables.card.table_name', { number: table.number }),
           seats: table.capacity,
-          status: table.status === "available" ? "AVAILABLE" : table.status === "occupied" ? "OCCUPIED" : table.status === "reserved" ? "RESERVED" : "DISABLED",
+          status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
           area: table.area,
           position: { x: table.positionX, y: table.positionY },
           shape: table.shape as any,
           width: table.width || 80,
           height: table.height || 80,
-          rotation: table.rotation
+          rotation: table.rotation,
         } as Map2DTableData));
 
       return {
-        id: areaId,
-        name: t(`dashboard.table_status.areas.${areaId.toLowerCase()}`, { defaultValue: areaId }),
-        width: savedFloor?.width || 1000,
-        height: savedFloor?.height || 800,
-        backgroundImage: savedFloor?.backgroundImage || undefined,
-
-        tables: floorTables
+        id: bf.id,
+        name: bf.name,
+        width: Number(bf.width) || 1400,
+        height: Number(bf.height) || 900,
+        backgroundImage: bf.imageUrl || undefined,
+        tables: floorTables,
       };
     });
 
-    setLayout({
-      id: savedLayout?.id || 'default-layout',
-      name: savedLayout?.name || 'My Restaurant',
-      activeFloorId: layout?.activeFloorId && floorIds.has(layout.activeFloorId as any) ? layout.activeFloorId : (floors[0]?.id || 'Indoor'),
-      floors: floors
-    });
+    // Also add tables that have no matching BE floor (orphaned — group by area name)
+    const assignedTableIds = new Set(floors.flatMap(f => f.tables.map(t => t.id)));
+    const orphanedTables = tables.filter(t => t.isActive && !assignedTableIds.has(t.id));
+    if (orphanedTables.length > 0) {
+      const orphanAreas = Array.from(new Set(orphanedTables.map(t => t.area)));
+      for (const areaName of orphanAreas) {
+        const areaTables = orphanedTables.filter(t => t.area === areaName);
+        floors.push({
+          id: `orphan-${areaName}`,
+          name: areaName,
+          width: 1400,
+          height: 900,
+          tables: areaTables.map(table => ({
+            id: table.id,
+            tenantId: 'tenant-1',
+            name: t('dashboard.tables.card.table_name', { number: table.number }),
+            seats: table.capacity,
+            status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
+            area: table.area,
+            position: { x: table.positionX, y: table.positionY },
+            shape: table.shape as any,
+            width: table.width || 80,
+            height: table.height || 80,
+            rotation: table.rotation,
+          } as Map2DTableData)),
+        });
+      }
+    }
 
-  }, [tables, t, availableAreas]); // dependency on tables ensures updates propagate
+    if (floors.length === 0) return;
 
+    setLayout(prev => ({
+      id: 'be-layout',
+      name: 'My Restaurant',
+      activeFloorId: prev?.activeFloorId && floors.some(f => f.id === prev.activeFloorId) ? prev.activeFloorId : floors[0].id,
+      floors,
+    }));
+  }, [tables, beFloors, t]);
+
+  // When layout changes in TableMap2D (table dragged, etc.)
   const handleLayoutChange = async (newLayout: Layout) => {
     setLayout(newLayout);
-
-    try {
-      const layoutPayload: LayoutResponse = {
-        id: newLayout.id,
-        name: newLayout.name,
-        activeFloorId: newLayout.activeFloorId,
-        floors: newLayout.floors.map(f => ({
-          id: f.id,
-          name: f.name,
-          width: f.width,
-          height: f.height,
-          backgroundImage: f.backgroundImage,
-          zones: [],
-          tables: f.tables.map(t => {
-            const fullTable = tables.find(ft => ft.id === t.id);
-            return {
-              id: t.id,
-              code: t.name,
-              type: t.area,
-              seatingCapacity: t.seats,
-              shape: t.shape,
-              positionX: t.position.x,
-              positionY: t.position.y,
-              width: t.width,
-              height: t.height,
-              rotation: t.rotation,
-              isActive: fullTable?.isActive ?? true,
-              tableStatusId: fullTable?.status === 'occupied' ? TableStatus.Occupied : (fullTable?.status === 'reserved' ? TableStatus.Reserved : TableStatus.Available),
-              has3DView: fullTable?.has3DView,
-              viewDescription: fullTable?.viewDescription,
-              defaultViewUrl: fullTable?.defaultViewUrl,
-              qrCodeUrl: fullTable?.qrCodeUrl
-            } as TableItem;
-          })
-        }))
-      };
-
-      await tableService.saveLayout(layoutPayload);
-    } catch (error) {
-      console.error("Failed to save layout:", error);
-    }
   };
 
   const handleMap2DTablePositionChange = async (tableId: string, position: { x: number; y: number; zoneId?: string }) => {
@@ -253,11 +249,15 @@ export default function TablesPage() {
       const tableToUpdate = tables.find(t => t.id === tableId);
       if (!tableToUpdate) return;
 
+      // Use layout.activeFloorId as fallback if table has no floorId
+      const effectiveFloorId = tableToUpdate.floorId || layout.activeFloorId;
+
       const apiData: any = {
         id: tableToUpdate.id,
         code: tableToUpdate.number.toString(),
         seatingCapacity: tableToUpdate.capacity,
         type: tableToUpdate.area,
+        floorId: effectiveFloorId,
         shape: tableToUpdate.shape,
         positionX: position.x,
         positionY: position.y,
@@ -271,10 +271,12 @@ export default function TablesPage() {
       if (tableToUpdate.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
       else if (tableToUpdate.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
 
+      console.log('[Admin] Saving table position:', { tableId, x: position.x, y: position.y, floorId: effectiveFloorId });
       await tableService.updateTable(tableId, apiData);
+      console.log('[Admin] Table position saved successfully');
 
       setTables(prev => prev.map(t =>
-        t.id === tableId ? { ...t, positionX: position.x, positionY: position.y } : t
+        t.id === tableId ? { ...t, positionX: position.x, positionY: position.y, floorId: effectiveFloorId } : t
       ));
     } catch (err) {
       console.error("Failed to move table:", err);
@@ -310,6 +312,7 @@ export default function TablesPage() {
         code: tableToUpdate.number.toString(),
         seatingCapacity: tableToUpdate.capacity,
         type: tableToUpdate.area,
+        floorId: tableToUpdate.floorId || layout.activeFloorId,
         shape: tableToUpdate.shape,
         positionX: tableToUpdate.positionX,
         positionY: tableToUpdate.positionY,
@@ -358,8 +361,8 @@ export default function TablesPage() {
     );
 
     try {
-      await tableService.updateTable(targetTableId, { seatingCapacity: newCapacity });
-      await tableService.updateTable(sourceTableId, { isActive: false });
+      await tableService.updateTable(targetTableId, { seatingCapacity: newCapacity, floorId: targetTable.floorId });
+      await tableService.updateTable(sourceTableId, { isActive: false, floorId: sourceTable.floorId });
     } catch (err) {
       console.error("Merge failed:", err);
       fetchTables();
@@ -388,11 +391,16 @@ export default function TablesPage() {
     const formData = new FormData(e.currentTarget);
 
     try {
-      const area = formData.get('area') as string;
+      const selectedFloorId = formData.get('area') as string;
+      // Find floor name from beFloors to set as type
+      const selectedFloor = beFloors.find(f => f.id === selectedFloorId);
+      const floorName = selectedFloor?.name || 'Indoor';
+
       const newTableData = {
         code: (formData.get('number') as string),
         seatingCapacity: parseInt(formData.get('capacity') as string),
-        type: area,
+        type: floorName,
+        floorId: selectedFloorId,
         tableStatusId: TableStatus.Available,
         isActive: true,
         shape: 'Square',
@@ -408,7 +416,9 @@ export default function TablesPage() {
       setAddModalOpen(false);
     } catch (err) {
       console.error("Failed to add table:", err);
-      alert(t("dashboard.tables.errors.add_failed"));
+      alert(
+        t("dashboard.tables.errors.add_failed"),
+      );
     }
   };
 
@@ -435,6 +445,7 @@ export default function TablesPage() {
             code: selectedTable.number.toString(),
             seatingCapacity: selectedTable.capacity,
             type: selectedTable.area,
+            floorId: selectedTable.floorId || layout?.activeFloorId,
             shape: selectedTable.shape,
             positionX: selectedTable.positionX,
             positionY: selectedTable.positionY,
@@ -492,7 +503,7 @@ export default function TablesPage() {
         setSelectedTable(null);
       } catch (err) {
         console.error("Delete failed", err);
-        alert("Failed to delete table");
+        message.error(t("dashboard.tables.errors.cannot_delete_due_to_booking"));
       }
       setDeleteConfirmOpen(false);
     }
@@ -500,31 +511,47 @@ export default function TablesPage() {
 
   const confirmDeleteZone = async () => {
     if (zoneToDelete) {
-      // Remove area logic - simple implementation
-      setAvailableAreas(prev => prev.filter(area => area !== zoneToDelete));
+      try {
+        // Delete floor from BE
+        await floorService.deleteFloor(zoneToDelete);
 
-      // Move tables to default
-      const fallbackArea = availableAreas.find(a => a !== zoneToDelete) || 'Indoor';
-      const tablesToUpdate = tables.filter(t => t.area === zoneToDelete);
+        // Move tables in that floor to the first available floor
+        const fallbackFloor = beFloors.find(f => f.id !== zoneToDelete);
+        const fallbackArea = fallbackFloor?.name || 'Indoor';
+        const tablesToUpdate = tables.filter(t => t.floorId === zoneToDelete);
 
-      for (const t of tablesToUpdate) {
-        try {
-          await tableService.updateTable(t.id, { type: fallbackArea });
-        } catch (e) { console.error(e); }
+        for (const t of tablesToUpdate) {
+          try {
+            if (fallbackFloor) {
+              await tableService.updateTable(t.id, { type: fallbackArea, floorId: fallbackFloor.id } as any);
+            }
+          } catch (e) { console.error(e); }
+        }
+
+        // Refresh data from BE
+        await fetchTables();
+      } catch (err) {
+        console.error('Failed to delete floor:', err);
       }
-
-      setTables(prev => prev.map(t =>
-        t.area === zoneToDelete ? { ...t, area: fallbackArea as any } : t
-      ));
 
       setZoneToDelete(null);
     }
   };
 
-  const handleAddArea = (name: string) => {
-    if (!availableAreas.includes(name)) {
-      setAvailableAreas([...availableAreas, name]);
+  const handleAddArea = async (name: string) => {
+    // Create a real floor on the BE
+    try {
+      await floorService.createFloor({ name, width: 1400, height: 900 });
+      // Refresh floors from BE
+      const updatedFloors = await floorService.getAllFloors();
+      setBeFloors(updatedFloors);
       setAddAreaModalOpen(false);
+    } catch (err) {
+      console.error('Failed to create floor on BE:', err);
+      // Fallback: show error
+      alert(
+        t("dashboard.tables.errors.create_floor_failed"),
+      );
     }
   };
 
@@ -571,7 +598,7 @@ export default function TablesPage() {
               <button
                 onClick={() => setAddAreaModalOpen(true)}
                 className="px-4 py-2 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium transition-all hover:bg-[var(--bg-base)]">
-                + {t("dashboard.tables.add_floor", "Add Floor")}
+                + {t("dashboard.tables.add_floor")}
               </button>
               <button
                 onClick={() => setAddModalOpen(true)}
@@ -629,6 +656,7 @@ export default function TablesPage() {
                 onTablePositionChange={handleMap2DTablePositionChange}
                 onTableMerge={handleMap2DTableMerge}
                 onTableResize={handleMap2DTableResize}
+                onBackgroundImageUpload={handleFloorImageUpload}
 
                 readOnly={false}
                 selectedTableId={selectedTable?.id}
@@ -670,7 +698,7 @@ export default function TablesPage() {
                     <p
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}>
-                      {table.area} {t("dashboard.tables.card.floor", "Floor")}
+                      {table.area} {t("dashboard.tables.card.floor")}
                     </p>
                   </div>
                   <span
@@ -764,6 +792,39 @@ export default function TablesPage() {
                     suppressHydrationWarning>
                     {t("dashboard.tables.card.view_details")}
                   </button>
+
+                  {/* QR Button — only show if qrCodeUrl exists */}
+                  {table.qrCodeUrl && (
+                    <button
+                      title="Xem QR Code"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setQrModal({ url: table.qrCodeUrl!, number: table.number });
+                      }}
+                      className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                      style={{
+                        background: "var(--surface)",
+                        color: "var(--text-muted)",
+                        border: "1px solid var(--border)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = "var(--primary)";
+                        e.currentTarget.style.borderColor = "var(--primary)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = "var(--text-muted)";
+                        e.currentTarget.style.borderColor = "var(--border)";
+                      }}
+                      suppressHydrationWarning>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <path d="M14 14h2v2h-2zM18 14h3M14 18v3M18 18h3v3h-3z" />
+                      </svg>
+                    </button>
+                  )}
                   <button
                     className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                     style={{
@@ -811,6 +872,7 @@ export default function TablesPage() {
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         onAdd={handleAddTable}
+        floors={beFloors.map(f => ({ id: f.id, name: f.name }))}
       />
 
       {/* Add Area Modal */}
@@ -837,6 +899,141 @@ export default function TablesPage() {
         onClose={() => setZoneToDelete(null)}
         onConfirm={confirmDeleteZone}
       />
+
+      {/* ── QR Code Modal ── */}
+      {qrModal && (
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setQrModal(null)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1100,
+              background: 'rgba(0,0,0,0.65)',
+              backdropFilter: 'blur(6px)',
+            }}
+          />
+
+          {/* Card */}
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1101,
+            background: 'var(--card)',
+            borderRadius: 20,
+            border: '1px solid var(--border)',
+            boxShadow: '0 32px 64px -12px rgba(0,0,0,0.5)',
+            width: 280,
+            overflow: 'hidden',
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '18px 20px 14px',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <path d="M14 14h2v2h-2zM18 14h3M14 18v3M18 18h3v3h-3z" />
+                </svg>
+                <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+                  QR — Bàn {qrModal.number}
+                </span>
+              </div>
+              <button
+                onClick={() => setQrModal(null)}
+                style={{
+                  background: 'var(--surface)', border: '1px solid var(--border)',
+                  borderRadius: 8, padding: '4px 6px', cursor: 'pointer',
+                  display: 'flex', color: 'var(--text-muted)',
+                }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* QR Image */}
+            <div style={{
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: 16, padding: '20px',
+            }}>
+              <div style={{
+                padding: 12, background: '#fff',
+                borderRadius: 14,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              }}>
+                <img
+                  src={qrModal.url}
+                  alt={`QR Code bàn ${qrModal.number}`}
+                  width={160} height={160}
+                  style={{ display: 'block', borderRadius: 4 }}
+                />
+              </div>
+
+              <p style={{
+                margin: 0, fontSize: 11,
+                color: 'var(--text-muted)',
+                textAlign: 'center',
+                letterSpacing: '0.04em',
+              }}>
+                Khách hàng quét để đặt món
+              </p>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(qrModal.url);
+                  }}
+                  style={{
+                    flex: 1, padding: '9px 0', borderRadius: 10,
+                    border: '1.5px solid var(--border)',
+                    background: 'var(--surface)', color: 'var(--text)',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                  Copy link
+                </button>
+                <button
+                  onClick={() => {
+                    const a = document.createElement('a');
+                    a.href = qrModal.url;
+                    a.download = `table-${qrModal.number}-qr.png`;
+                    a.target = '_blank';
+                    a.click();
+                  }}
+                  style={{
+                    flex: 1, padding: '9px 0', borderRadius: 10,
+                    border: 'none',
+                    background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)',
+                    color: '#fff',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                    boxShadow: '0 2px 10px var(--primary-glow)',
+                  }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Tải QR
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div >
   );
 }

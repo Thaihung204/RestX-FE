@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
-import { Typography, Row, Col, Space, Button, Card } from 'antd';
-import { ArrowRightOutlined, GlobalOutlined, RocketOutlined, HeartOutlined, UsergroupAddOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, GlobalOutlined, HeartOutlined, RocketOutlined, UsergroupAddOutlined } from '@ant-design/icons';
+import { Button, Card, Col, Row, Space, Typography } from 'antd';
 import { motion } from 'framer-motion';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
@@ -87,7 +87,7 @@ const AboutUsSection: React.FC = () => {
                                         padding: '8px 16px',
                                         background: 'rgba(255, 56, 11, 0.08)',
                                         borderRadius: 50,
-                                        color: '#FF380B',
+                                        color: 'var(--primary)',
                                         fontWeight: 600,
                                         fontSize: 14,
                                         marginBottom: 24,
@@ -107,7 +107,7 @@ const AboutUsSection: React.FC = () => {
                                 >
                                     {t('homepage.about.title_prefix', 'Revolutionizing the')} <br />
                                     <span style={{
-                                        background: 'linear-gradient(135deg, #FF380B 0%, #F59E0B 100%)',
+                                        background: 'linear-gradient(135deg, var(--primary) 0%, #F59E0B 100%)',
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
                                         display: 'inline-block',
@@ -135,7 +135,7 @@ const AboutUsSection: React.FC = () => {
                                 </Paragraph>
 
                                 <Space size={24} wrap style={{ marginBottom: 48 }}>
-                                    <div style={{ paddingLeft: 16, borderLeft: '4px solid #FF380B' }}>
+                                    <div style={{ paddingLeft: 16, borderLeft: '4px solid var(--primary)' }}>
                                         <Text strong style={{ display: 'block', fontSize: 16, color: 'var(--text)' }}>{t('homepage.about.mission.title', 'Mission Driven')}</Text>
                                         <Text type="secondary">{t('homepage.about.mission.desc', 'Dedicated to your growth')}</Text>
                                     </div>
@@ -152,7 +152,7 @@ const AboutUsSection: React.FC = () => {
                                         height: 52,
                                         padding: '0 32px',
                                         borderRadius: 26,
-                                        background: '#FF380B',
+                                        background: 'var(--primary)',
                                         fontSize: 16,
                                         fontWeight: 600,
                                         boxShadow: '0 10px 25px rgba(255, 56, 11, 0.25)'
@@ -197,7 +197,7 @@ const AboutUsSection: React.FC = () => {
                                                     <div style={{
                                                         fontSize: 32,
                                                         marginBottom: 16,
-                                                        color: idx % 2 === 0 ? '#FF380B' : '#6366F1',
+                                                        color: idx % 2 === 0 ? 'var(--primary)' : '#6366F1',
                                                         background: idx % 2 === 0 ? 'rgba(255, 56, 11, 0.1)' : 'rgba(99, 102, 241, 0.1)',
                                                         width: 64,
                                                         height: 64,
@@ -223,7 +223,7 @@ const AboutUsSection: React.FC = () => {
                                         right: 0,
                                         width: '80%',
                                         height: '80%',
-                                        background: 'linear-gradient(135deg, #FF380B 0%, #FF8A00 100%)',
+                                        background: 'linear-gradient(135deg, var(--primary) 0%, #FF8A00 100%)',
                                         opacity: 0.05,
                                         zIndex: -1,
                                         borderRadius: 40,

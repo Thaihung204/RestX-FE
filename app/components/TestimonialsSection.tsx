@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Typography, Row, Col, Card, Space, Avatar, Rate } from 'antd';
+import { Avatar, Card, Col, Rate, Row, Space, Typography } from 'antd';
 import { motion } from 'framer-motion';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
@@ -150,7 +150,7 @@ const TestimonialsSection: React.FC = () => {
                           <Avatar
                             size={56}
                             style={{
-                              background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+                              background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
                               fontWeight: 700,
                               fontSize: 22,
                             }}

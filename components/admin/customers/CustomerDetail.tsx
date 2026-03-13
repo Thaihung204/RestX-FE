@@ -1,18 +1,16 @@
 "use client";
 
 import customerService, { Customer } from "@/lib/services/customerService";
+import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
 import {
     Cake,
     Cancel,
     CheckCircle,
     Close,
-    Diamond,
     Email,
-    EmojiEvents,
     History,
     Phone,
     Star,
-    WorkspacePremium
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
@@ -27,7 +25,7 @@ interface CustomerDetailProps {
 export default function CustomerDetail({ customer, onClose }: CustomerDetailProps) {
   const { t } = useTranslation('common');
   const isBirthday = customerService.isBirthday(customer.birthday);
-  const primaryColor = "#FF380B";
+  const primaryColor = "var(--primary)";
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -44,21 +42,15 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
   };
 
   const getVipIcon = (tier?: string) => {
-    const commonProps = { sx: { fontSize: 20 } };
-    switch(tier) {
-      case 'platinum': return <Diamond sx={{ ...commonProps.sx, color: '#E5E7EB' }} />;
-      case 'gold': return <EmojiEvents sx={{ ...commonProps.sx, color: '#EAB308' }} />;
-      case 'silver': return <Star sx={{ ...commonProps.sx, color: '#9CA3AF' }} />;
-      default: return <WorkspacePremium sx={{ ...commonProps.sx, color: '#FB923C' }} />;
-    }
+    return <LoyaltyBandIcon color={getVipBadgeColor(tier)} size={20} />;
   };
 
   const getVipBadgeColor = (tier?: string) => {
      switch(tier) {
-      case 'platinum': return '#E5E7EB'; // Platinum
-      case 'gold': return '#EAB308';     // Gold
-      case 'silver': return '#9CA3AF';   // Silver
-      default: return '#FB923C';         // Bronze
+      case 'platinum': return '#E5E7EB'; 
+      case 'gold': return '#EAB308';    
+      case 'silver': return '#9CA3AF';   
+      default: return '#FB923C';         
     }
   };
 
@@ -191,8 +183,8 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
           
           {/* Birthday Banner */}
           {isBirthday && (
-            <div className="mt-6 p-3 rounded-xl bg-[#27272a] border border-[#FF380B]/30 flex items-center gap-3">
-              <div className="p-2 rounded-full bg-[#FF380B]/10 text-[#FF380B]">
+            <div className="mt-6 p-3 rounded-xl bg-[#27272a] border border-[var(--primary)]/30 flex items-center gap-3">
+              <div className="p-2 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
                 <Cake sx={{ fontSize: 20 }} />
               </div>
               <div>

@@ -6,7 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const ROLES = ["Kitchen Staff", "Waiter"];
+const ROLES = ["Manager", "Staff"];
+const POSITIONS = ["Waiter", "Kitchen"];
 const SALARY_TYPES = ["Monthly", "Hourly", "Daily"];
 
 export default function StaffFormPage() {
@@ -22,12 +23,12 @@ export default function StaffFormPage() {
     fullName: "",
     phoneNumber: "",
     address: "",
-    position: "",
+    position: "Waiter",
     hireDate: new Date().toISOString().split("T")[0],
     terminationDate: "",
     salary: 0,
     salaryType: "Monthly",
-    role: "Kitchen Staff",
+    role: "Staff",
     roles: [] as string[],
     isActive: true,
   });
@@ -63,7 +64,7 @@ export default function StaffFormPage() {
           : "",
         salary: employee.salary ?? 0,
         salaryType: employee.salaryType || "Monthly",
-        role: employee.roles?.[0] || "Kitchen Staff",
+        role: employee.roles?.[0] || "Staff",
         roles: employee.roles || [],
         isActive: employee.isActive !== undefined ? employee.isActive : true,
       });
@@ -168,9 +169,7 @@ export default function StaffFormPage() {
       }
       setTimeout(() => router.push("/admin/staff"), 1500);
     } catch (err: any) {
-      message.error(
-        err.response?.data?.message || t("dashboard.staff.errors.save_failed"),
-      );
+      message.error(t("dashboard.staff.errors.save_failed"));
     } finally {
       setLoading(false);
     }
@@ -311,8 +310,7 @@ export default function StaffFormPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.staff.form.position")}
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="position"
                       value={formData.position}
                       onChange={handleChange}
@@ -322,8 +320,16 @@ export default function StaffFormPage() {
                         background: "var(--surface)",
                         borderColor: "var(--border)",
                         color: "var(--text)",
-                      }}
-                    />
+                      }}>
+                      <option value="" disabled>
+                        {t("dashboard.staff.form.select_position", { defaultValue: "Select position" })}
+                      </option>
+                      {POSITIONS.map((position) => (
+                        <option key={position} value={position}>
+                          {position}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
@@ -347,31 +353,29 @@ export default function StaffFormPage() {
                     />
                   </div>
 
-                  {isNewStaff && (
-                    <div className="md:col-span-2">
-                      <label
-                        className="block mb-1.5 text-sm font-medium"
-                        style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.staff.form.role")}
-                      </label>
-                      <select
-                        name="role"
-                        value={formData.role}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
-                        style={{
-                          background: "var(--surface)",
-                          borderColor: "var(--border)",
-                          color: "var(--text)",
-                        }}>
-                        {ROLES.map((role) => (
-                          <option key={role} value={role}>
-                            {role}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                  <div className="md:col-span-2">
+                    <label
+                      className="block mb-1.5 text-sm font-medium"
+                      style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.staff.form.role")}
+                    </label>
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                      style={{
+                        background: "var(--surface)",
+                        borderColor: "var(--border)",
+                        color: "var(--text)",
+                      }}>
+                      {ROLES.map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
                   <div className="md:col-span-2">
                     <label
@@ -485,36 +489,6 @@ export default function StaffFormPage() {
                     />
                   </div>
 
-                  {/* Roles (read-only for edit, always populated from API) */}
-                  {!isNewStaff && formData.roles.length > 0 && (
-                    <div>
-                      <label
-                        className="block mb-1.5 text-sm font-medium"
-                        style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.staff.employment_details.roles")}
-                      </label>
-                      <div className="flex flex-wrap gap-2 px-4 py-2.5 rounded-lg border min-h-[42px] items-center"
-                        style={{
-                          background: "var(--surface)",
-                          borderColor: "var(--border)",
-                        }}>
-                        {formData.roles.map((role) => (
-                          <span
-                            key={role}
-                            className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                            style={{
-                              background: "var(--primary-soft)",
-                              color: "var(--primary)",
-                            }}>
-                            {t(
-                              `dashboard.staff.roles.${role.toLowerCase()}`,
-                              { defaultValue: role },
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 

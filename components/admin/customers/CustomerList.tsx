@@ -1,7 +1,8 @@
 "use client";
 
 import customerService, { Customer } from "@/lib/services/customerService";
-import { Cake, Cancel, CheckCircle, Diamond, EmojiEvents, Star, WorkspacePremium } from "@mui/icons-material";
+import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
+import { Cake, Cancel, CheckCircle } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CustomerDetail from "./CustomerDetail";
@@ -210,10 +211,10 @@ export default function CustomerList() {
                     {/* VIP Tier (Rank) - Icons */}
                     <td className="px-6 py-4 text-center">
                       <div className="flex justify-center items-center" title={customerService.getVipTierName(customer.vipTier)}>
-                         {customer.vipTier === 'platinum' ? <Diamond sx={{ fontSize: 24, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
-                          customer.vipTier === 'gold' ? <EmojiEvents sx={{ fontSize: 24, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
-                          customer.vipTier === 'silver' ? <Star sx={{ fontSize: 24, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
-                          <WorkspacePremium sx={{ fontSize: 24, color: customerService.getVipTierColor(customer.vipTier) }} />}
+                        <LoyaltyBandIcon
+                          color={customerService.getVipTierColor(customer.vipTier)}
+                          size={24}
+                        />
                       </div>
                     </td>
 
@@ -293,12 +294,15 @@ export default function CustomerList() {
                         </p>
                       </div>
                   </div>
-                   <div className="flex flex-col items-end flex-shrink-0 ml-2" title={customerService.getVipTierName(customer.vipTier)}>
-                      {customer.vipTier === 'platinum' ? <Diamond sx={{ fontSize: 32, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
-                       customer.vipTier === 'gold' ? <EmojiEvents sx={{ fontSize: 32, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
-                       customer.vipTier === 'silver' ? <Star sx={{ fontSize: 32, color: customerService.getVipTierColor(customer.vipTier) }} /> : 
-                       <WorkspacePremium sx={{ fontSize: 32, color: customerService.getVipTierColor(customer.vipTier) }} />}
-                   </div>
+                  <div
+                    className="flex flex-col items-end flex-shrink-0 ml-2"
+                    title={customerService.getVipTierName(customer.vipTier)}
+                  >
+                    <LoyaltyBandIcon
+                      color={customerService.getVipTierColor(customer.vipTier)}
+                      size={32}
+                    />
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2 text-sm mt-3 pt-3 border-t" style={{ borderColor: "var(--border)" }}>

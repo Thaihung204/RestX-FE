@@ -3,6 +3,7 @@
 import StaffAuthGuard from '@/components/auth/StaffAuthGuard';
 import {
   BellOutlined,
+  CalendarOutlined,
   ClockCircleOutlined,
   DashboardOutlined,
   HomeOutlined,
@@ -16,18 +17,20 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import {
-  Avatar,
-  Badge,
-  Button,
-  Dropdown,
-  Layout,
-  Menu,
-  Typography,
+    Avatar,
+    Badge,
+    Button,
+    Dropdown,
+    Layout,
+    Menu,
+    Typography,
 } from "antd";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import authService from "../../lib/services/authService";
+import { useAuth } from "../../lib/contexts/AuthContext";
 import { useLanguage } from "../../components/I18nProvider";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import ThemeToggle from "../components/ThemeToggle";
@@ -41,15 +44,26 @@ export default function StaffLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { t, i18n } = useTranslation();
-  const { language } = useLanguage();
+  const { t } = useTranslation();
+  useLanguage();
+  const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false); // e.g. iPad widths
+  const [isTablet, setIsTablet] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { mode } = useThemeMode();
+
+  // Derive display info from real user
+  const displayName = user?.fullName || user?.name || user?.email || "Staff";
+  const displayRole = user?.role || t("staff.sidebar.staff_role");
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w: string) => w[0].toUpperCase())
+    .join("");
 
   // Menu items with translations
   const menuItems = [
@@ -80,6 +94,11 @@ export default function StaffLayout({
       label: t("staff.menu.checkout"),
     },
     {
+      key: "/staff/reservations",
+      icon: <CalendarOutlined />,
+      label: t("staff.menu.reservations"),
+    },
+    {
       key: "/staff/attendance",
       icon: <ClockCircleOutlined />,
       label: t("staff.menu.attendance"),
@@ -88,6 +107,20 @@ export default function StaffLayout({
 
   // User menu items with translations
   const userMenuItems = [
+    {
+      key: "user-info",
+      label: (
+        <div style={{ padding: "4px 0", maxWidth: 200 }}>
+          <Text strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</Text>
+          <Text type="secondary" style={{ fontSize: 12, display: "block" }}>{displayRole}</Text>
+        </div>
+      ),
+      disabled: true,
+      style: { cursor: "default" }
+    },
+    {
+      type: "divider" as const,
+    },
     {
       key: "profile",
       icon: <UserOutlined />,
@@ -142,9 +175,38 @@ export default function StaffLayout({
 
   const isDrawerDevice = isMobile || isTablet;
 
+  const triggerPageLoading = () => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new CustomEvent("restx:page-loading"));
+  };
+
   const handleMenuClick = (e: { key: string }) => {
+    if (pathname !== e.key) {
+      triggerPageLoading();
+    }
     router.push(e.key);
     if (isDrawerDevice) setDrawerOpen(false);
+  };
+
+  const handleUserMenuClick = async (e: { key: string }) => {
+    if (e.key === "logout") {
+      triggerPageLoading();
+      await authService.logoutServer();
+      authService.logout();
+      router.replace("/login");
+      return;
+    }
+
+    if (e.key === "profile") {
+      if (pathname !== "/staff") triggerPageLoading();
+      router.push("/staff");
+      return;
+    }
+
+    if (e.key === "settings") {
+      if (pathname !== "/staff") triggerPageLoading();
+      router.push("/staff");
+    }
   };
 
   // Sidebar content component for reuse
@@ -187,16 +249,11 @@ export default function StaffLayout({
             />
           </div>
           {(!collapsed || inDrawer) && (
-            <span
-              style={{
-                marginLeft: 12,
-                fontSize: 22,
-                fontWeight: 700,
-                color: mode === "dark" ? "#fff" : "#1a1a2e",
-                letterSpacing: "-0.5px",
-              }}>
-              Rest<span style={{ color: "#FF380B" }}>X</span>
-            </span>
+            <h2
+              className="font-bold text-lg"
+              style={{ color: "var(--text)" }}>
+              Rest<span style={{ color: "var(--primary)" }}>X</span>
+            </h2>
           )}
         </Link>
       </div>
@@ -215,31 +272,28 @@ export default function StaffLayout({
             <Avatar
               size={44}
               style={{
-                background: "linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)",
+                background: "linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)",
                 fontSize: 18,
                 fontWeight: 600,
               }}>
-              NV
+              {initials || "S"}
             </Avatar>
             <div>
               <Text
                 style={{
-                  color: mode === "dark" ? "#fff" : "#1a1a2e",
+                  color: 'var(--text)',
                   fontWeight: 600,
                   fontSize: 14,
                   display: "block",
                 }}>
-                Nguyễn Văn A
+                {displayName}
               </Text>
               <Text
                 style={{
-                  color:
-                    mode === "dark"
-                      ? "rgba(255, 255, 255, 0.5)"
-                      : "rgba(0, 0, 0, 0.45)",
+                  color: 'var(--text-muted)',
                   fontSize: 12,
                 }}>
-                {t("staff.sidebar.staff_role")}
+                {displayRole}
               </Text>
             </div>
           </div>
@@ -295,10 +349,7 @@ export default function StaffLayout({
           </div>
           <Text
             style={{
-              color:
-                mode === "dark"
-                  ? "rgba(255, 255, 255, 0.7)"
-                  : "rgba(0, 0, 0, 0.6)",
+              color: "var(--text-muted)",
               fontSize: 12,
             }}>
             {t("staff.sidebar.started")}: 08:00 - {t("staff.sidebar.today")}
@@ -310,7 +361,7 @@ export default function StaffLayout({
 
   return (
     <StaffAuthGuard>
-      <Layout style={{ minHeight: "100vh" }}>
+      <Layout style={{ height: "100dvh", display: "flex", flexDirection: "row", overflow: "hidden" }}>
         {/* Mobile Bottom Navigation */}
         {isDrawerDevice && (
           <div
@@ -339,14 +390,14 @@ export default function StaffLayout({
               return (
                 <div
                   key={item.key}
-                  onClick={() => router.push(item.key)}
+                  onClick={() => handleMenuClick({ key: item.key })}
                   style={{
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 4,
-                    color: isActive ? "#FF380B" : "var(--text-muted)",
+                    color: isActive ? "var(--primary)" : "var(--text-muted)",
                     cursor: "pointer",
                     width: "20%",
                     transition: "all 0.3s ease",
@@ -394,10 +445,12 @@ export default function StaffLayout({
               background: "var(--card)",
               boxShadow: "4px 0 20px rgba(0, 0, 0, 0.15)",
               borderRight: mode === "dark" ? "none" : "1px solid var(--border)",
-              position: "fixed",
-              height: "100vh",
-              left: 0,
+              position: "sticky",
               top: 0,
+              height: "100vh",
+              overflowY: "auto",
+              overflowX: "hidden",
+              flexShrink: 0,
               zIndex: 100,
             }}>
             <SidebarContent />
@@ -407,10 +460,12 @@ export default function StaffLayout({
         {/* Main Layout */}
         <Layout
           style={{
-            marginLeft: isDrawerDevice ? 0 : collapsed ? 80 : 260,
-            transition: "margin-left 0.2s",
-            minHeight: "100vh",
-            width: "100%",
+            flex: 1,
+            minWidth: 0,
+            height: "100%",
+            overflowY: "auto",
+            overflowX: "hidden",
+            WebkitOverflowScrolling: "touch",
           }}>
           {/* Header */}
           <Header
@@ -549,44 +604,32 @@ export default function StaffLayout({
 
               {/* User Menu */}
               <Dropdown
-                menu={{ items: userMenuItems }}
+                menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
                 placement="bottomRight"
                 trigger={["click"]}>
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: isMobile ? 4 : 8,
-                    padding: isMobile ? "4px" : "4px 8px 4px 4px",
+                    justifyContent: "center",
+                    width: 36,
+                    height: 36,
                     background: "var(--card)",
-                    borderRadius: 24,
+                    borderRadius: "50%",
                     cursor: "pointer",
                     border: "1px solid var(--border)",
                     transition: "all 0.2s",
-                    maxWidth: isMobile ? 34 : "auto",
-                    justifyContent: "center",
                   }}>
                   <Avatar
-                    size={isMobile ? 24 : 28}
+                    size={28}
                     style={{
                       background:
-                        "linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)",
+                        "linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)",
                       fontWeight: 600,
-                      fontSize: isMobile ? 10 : 12,
+                      fontSize: 12,
                     }}>
-                    NV
+                    {initials || "S"}
                   </Avatar>
-                  {!isMobile && (
-                    <Text
-                      style={{
-                        fontWeight: 500,
-                        fontSize: 13,
-                        color: "var(--text)",
-                        paddingRight: 4,
-                      }}>
-                      Nguyễn Văn A
-                    </Text>
-                  )}
                 </div>
               </Dropdown>
             </div>
@@ -595,10 +638,14 @@ export default function StaffLayout({
           {/* Content */}
           <Content
             style={{
-              margin: isMobile ? 12 : 24,
-              marginBottom: isDrawerDevice ? 130 : 24,
+              marginTop: isMobile ? 12 : 24,
+              marginRight: isMobile ? 12 : 24,
+              marginLeft: isMobile ? 12 : 24,
+              marginBottom: 0,
               padding: 0,
-              minHeight: "calc(100vh - 120px)",
+              paddingBottom: isDrawerDevice
+                ? "calc(100px + env(safe-area-inset-bottom, 0px))"
+                : 24,
             }}>
             {children}
           </Content>
@@ -619,7 +666,7 @@ export default function StaffLayout({
             rgba(255, 56, 11, 0.2) 0%,
             rgba(255, 56, 11, 0.1) 100%
           ) !important;
-          border-left: 3px solid #ff380b !important;
+          border-left: 3px solid var(--primary) !important;
         }
         .ant-menu-dark .ant-menu-item:hover {
           background: rgba(255, 255, 255, 0.05) !important;
@@ -635,8 +682,8 @@ export default function StaffLayout({
             rgba(255, 56, 11, 0.15) 0%,
             rgba(255, 56, 11, 0.05) 100%
           ) !important;
-          border-left: 3px solid #ff380b !important;
-          color: #ff380b !important;
+          border-left: 3px solid var(--primary) !important;
+          color: var(--primary) !important;
         }
         .ant-menu-light .ant-menu-item:hover {
           background: rgba(0, 0, 0, 0.04) !important;
@@ -644,6 +691,44 @@ export default function StaffLayout({
         .ant-menu-light .ant-menu-item .ant-menu-item-icon {
           font-size: 18px !important;
         }
+
+        /* User dropdown menu theme fix */
+        [data-theme="light"] .ant-dropdown .ant-dropdown-menu,
+        [data-theme="light"] .ant-dropdown-menu {
+          background: #ffffff !important;
+          border: 1px solid #e5e7eb !important;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+        }
+        [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item {
+          color: #111827 !important;
+        }
+        [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item:hover {
+          background: #f3f4f6 !important;
+        }
+        [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item .ant-dropdown-menu-title-content,
+        [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item .anticon {
+          color: inherit !important;
+        }
+
+        [data-theme="dark"] .ant-dropdown .ant-dropdown-menu,
+        [data-theme="dark"] .ant-dropdown-menu {
+          background: #0f1419 !important;
+          border: 1px solid var(--border) !important;
+        }
+        [data-theme="dark"] .ant-dropdown-menu .ant-dropdown-menu-item {
+          color: var(--text) !important;
+        }
+
+        /* Keep logout red in both themes */
+        .ant-dropdown-menu .ant-dropdown-menu-item-danger,
+        .ant-dropdown-menu .ant-dropdown-menu-item-danger .ant-dropdown-menu-title-content,
+        .ant-dropdown-menu .ant-dropdown-menu-item-danger .anticon {
+          color: #ff4d4f !important;
+        }
+        .ant-dropdown-menu .ant-dropdown-menu-item-danger:hover {
+          background: rgba(255, 77, 79, 0.08) !important;
+        }
+
         /* Disable blur/backdrop on all masks (drawer + modal) */
         .ant-drawer-mask,
         .ant-modal-mask {

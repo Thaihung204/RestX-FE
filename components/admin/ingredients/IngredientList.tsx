@@ -1,8 +1,9 @@
 "use client";
 
-import ingredientService, { IngredientItem } from "@/lib/services/ingredientService";
+import { getTypeTranslation, type SupportedLocale } from "@/lib/i18n/dynamicTypeTranslations";
+import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function getStatus(item: IngredientItem): "active" | "inactive" {
@@ -15,24 +16,33 @@ const STATUS_BADGE: Record<string, React.CSSProperties> = {
 };
 
 export default function IngredientList() {
-  const { t } = useTranslation("common");
+  const { t, i18n } = useTranslation("common");
   const router = useRouter();
+  const locale: SupportedLocale = i18n.language?.startsWith("en") ? "en" : "vi";
 
   const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
+  const [ingredientCategories, setIngredientCategories] = useState<IngredientCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterActive, setFilterActive] = useState("all");
+  const [savingRow, setSavingRow] = useState<string | null>(null);
 
-  useEffect(() => { fetchIngredients(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const fetchIngredients = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await ingredientService.getAll();
-      setIngredients(data);
+      const [ingredientData, categoryData] = await Promise.all([
+        ingredientService.getAll(),
+        ingredientService.getAllCategories(),
+      ]);
+      setIngredients(ingredientData);
+      setIngredientCategories(categoryData.filter((c) => c.isActive !== false));
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
@@ -43,7 +53,62 @@ export default function IngredientList() {
     }
   };
 
-  const types = Array.from(new Set(ingredients.map((i) => i.type).filter(Boolean))) as string[];
+  const handleUpdateIngredient = async (
+    id: string,
+    patch: Partial<IngredientItem>,
+  ) => {
+    const current = ingredients.find((ingredient) => ingredient.id === id);
+    if (!current) return;
+
+    const next = { ...current, ...patch };
+    setSavingRow(id);
+    setIngredients((prev) =>
+      prev.map((ingredient) => (ingredient.id === id ? next : ingredient)),
+    );
+
+    try {
+      await ingredientService.update(id, next);
+    } catch (err) {
+      setIngredients((prev) =>
+        prev.map((ingredient) => (ingredient.id === id ? current : ingredient)),
+      );
+    } finally {
+      setSavingRow(null);
+    }
+  };
+
+  const typeToLabelMap = useMemo(() => {
+    return ingredientCategories.reduce<Record<string, string>>((acc, c) => {
+      const label = c.name?.trim();
+      if (!label) return acc;
+      if (c.code?.trim()) acc[c.code.trim()] = label;
+      acc[label] = label;
+      return acc;
+    }, {});
+  }, [ingredientCategories]);
+
+  const normalizeTypeCode = (value?: string | null) => {
+    if (!value) return "";
+    const trimmed = value.trim();
+    const found = ingredientCategories.find((c) => c.code === trimmed || c.name === trimmed);
+    return found?.code || trimmed;
+  };
+
+  const toTypeTranslationKey = (value?: string | null) => {
+    if (!value) return "";
+    return value.trim().toLowerCase().replace(/\s+/g, "_");
+  };
+
+  const getTypeLabel = (value?: string | null) => {
+    if (!value) return "";
+    const raw = value.trim();
+    const normalizedCode = normalizeTypeCode(raw);
+    const fallback = typeToLabelMap[raw] || typeToLabelMap[normalizedCode] || raw;
+    const dynamicValue = getTypeTranslation(normalizedCode, locale, fallback);
+    return t(`dashboard.ingredients.type_codes.${toTypeTranslationKey(normalizedCode)}`, { defaultValue: dynamicValue || fallback });
+  };
+
+  const types = Array.from(new Set(ingredients.map((i) => normalizeTypeCode(i.type)).filter(Boolean))) as string[];
 
   const filtered = ingredients.filter((i) => {
     const q = searchTerm.toLowerCase();
@@ -51,7 +116,8 @@ export default function IngredientList() {
       i.name.toLowerCase().includes(q) ||
       i.code.toLowerCase().includes(q) ||
       (i.supplierName ?? "").toLowerCase().includes(q);
-    const matchType   = filterType   === "all" || i.type === filterType;
+    const matchTypeCode = normalizeTypeCode(i.type);
+    const matchType   = filterType   === "all" || matchTypeCode === filterType;
     const matchActive = filterActive === "all" ||
       (filterActive === "active"   && i.isActive) ||
       (filterActive === "inactive" && !i.isActive);
@@ -64,13 +130,13 @@ export default function IngredientList() {
     { id: "inactive", label: t("dashboard.ingredients.tab_inactive") },
   ];
 
-  const activeTabStyle: React.CSSProperties  = { background: "#FF380B", color: "white" };
+  const activeTabStyle: React.CSSProperties  = { background: "var(--primary)", color: "white" };
   const normalTabStyle: React.CSSProperties  = { background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: "#FF380B" }} />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: "var(--primary)" }} />
       </div>
     );
   }
@@ -79,7 +145,7 @@ export default function IngredientList() {
     return (
       <div className="rounded-xl p-6 text-center" style={{ background: "var(--card)", border: "1px solid rgba(239,68,68,0.3)" }}>
         <p className="text-sm mb-3" style={{ color: "#dc2626" }}>{error}</p>
-        <button onClick={fetchIngredients} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "#FF380B" }}>
+        <button onClick={fetchData} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "var(--primary)" }}>
           {t("dashboard.ingredients.retry", "Thử lại")}
         </button>
       </div>
@@ -112,7 +178,7 @@ export default function IngredientList() {
               <option value="all">
                 {t("dashboard.ingredients.list.filter_all_types")}
               </option>
-              {types.map((tp) => <option key={tp} value={tp}>{tp}</option>)}
+              {types.map((tp) => <option key={tp} value={tp}>{getTypeLabel(tp)}</option>)}
             </select>
           )}
         </div>
@@ -148,6 +214,9 @@ export default function IngredientList() {
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 70 }}>
                   {t("dashboard.ingredients.list.col_unit")}
                 </th>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 140 }}>
+                  {t("dashboard.ingredients.list.col_quantity")}
+                </th>
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden xl:table-cell" style={{ color: "var(--text)", width: 120 }}>
                   {t("dashboard.ingredients.list.col_min_max")}
                 </th>
@@ -157,7 +226,7 @@ export default function IngredientList() {
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text)", width: 90 }}>
                   {t("dashboard.ingredients.list.col_type")}
                 </th>
-                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 110 }}>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 120 }}>
                   {t("dashboard.ingredients.list.col_status")}
                 </th>
                 <th className="text-center px-3 py-3 font-semibold" style={{ color: "var(--text)", width: 60 }}>
@@ -193,6 +262,38 @@ export default function IngredientList() {
                       {item.unit}
                     </td>
 
+                    <td className="px-3 py-3 text-center">
+                      <input
+                        type="number"
+                        value={item.currentQuantity ?? 0}
+                        onChange={(e) =>
+                          setIngredients((prev) =>
+                            prev.map((ingredient) =>
+                              ingredient.id === item.id
+                                ? {
+                                    ...ingredient,
+                                    currentQuantity: Number(e.target.value),
+                                  }
+                                : ingredient,
+                            ),
+                          )
+                        }
+                        onBlur={() =>
+                          handleUpdateIngredient(item.id as string, {
+                            currentQuantity: item.currentQuantity ?? 0,
+                          })
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                        className="w-20 px-2 py-1 rounded border text-sm text-center"
+                        style={{
+                          background: "var(--bg-base)",
+                          color: "var(--text)",
+                          borderColor: "var(--border)",
+                        }}
+                        disabled={savingRow === item.id}
+                      />
+                    </td>
+
                     <td className="px-3 py-3 text-center text-xs hidden xl:table-cell" style={{ color: "var(--text-secondary)" }}>
                       {item.minStockLevel} / {item.maxStockLevel}
                     </td>
@@ -211,7 +312,7 @@ export default function IngredientList() {
                           className="px-2 py-0.5 rounded-full text-xs"
                           style={{ background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
                         >
-                          {item.type}
+                          {getTypeLabel(item.type)}
                         </span>
                       ) : (
                         <span style={{ color: "var(--text-muted)" }}>—</span>
@@ -219,21 +320,29 @@ export default function IngredientList() {
                     </td>
 
                     <td className="px-3 py-3 text-center">
-                      <span
-                        className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleUpdateIngredient(item.id as string, {
+                            isActive: !item.isActive,
+                          });
+                        }}
+                        className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
                         style={STATUS_BADGE[status]}
+                        disabled={savingRow === item.id}
                       >
                         {item.isActive
                           ? t("dashboard.ingredients.list.badge_active")
                           : t("dashboard.ingredients.list.badge_inactive")}
-                      </span>
+                      </button>
                     </td>
 
                     <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => router.push(`/admin/ingredients/${item.id}`)}
                         className="inline-flex items-center justify-center w-8 h-8 rounded-lg transition-all"
-                        style={{ background: "rgba(255,56,11,0.1)", color: "#FF380B" }}
+                        style={{ background: "rgba(255,56,11,0.1)", color: "var(--primary)" }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,56,11,0.2)")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,56,11,0.1)")}
                         title={t("dashboard.ingredients.list.edit_tooltip")}
@@ -267,14 +376,59 @@ export default function IngredientList() {
                     <p className="font-semibold truncate" style={{ color: "var(--text)" }}>{item.name}</p>
                     <p className="text-xs font-mono mt-0.5" style={{ color: "var(--text-muted)" }}>{item.code}</p>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold shrink-0" style={STATUS_BADGE[status]}>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleUpdateIngredient(item.id as string, {
+                        isActive: !item.isActive,
+                      });
+                    }}
+                    className="px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 transition-all"
+                    style={STATUS_BADGE[status]}
+                    disabled={savingRow === item.id}
+                  >
                     {item.isActive
                       ? t("dashboard.ingredients.list.badge_active")
                       : t("dashboard.ingredients.list.badge_inactive_short")}
-                  </span>
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mt-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+                  <div>
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.ingredients.list.col_quantity")}
+                    </span>
+                    <input
+                      type="number"
+                      value={item.currentQuantity ?? 0}
+                      onChange={(e) =>
+                        setIngredients((prev) =>
+                          prev.map((ingredient) =>
+                            ingredient.id === item.id
+                              ? {
+                                  ...ingredient,
+                                  currentQuantity: Number(e.target.value),
+                                }
+                              : ingredient,
+                          ),
+                        )
+                      }
+                      onBlur={() =>
+                        handleUpdateIngredient(item.id as string, {
+                          currentQuantity: item.currentQuantity ?? 0,
+                        })
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                      className="mt-1 w-full px-2 py-1 rounded border text-sm text-center"
+                      style={{
+                        background: "var(--bg-base)",
+                        color: "var(--text)",
+                        borderColor: "var(--border)",
+                      }}
+                      disabled={savingRow === item.id}
+                    />
+                  </div>
                   <div>
                     <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.ingredients.list.mobile_unit")}
@@ -298,7 +452,7 @@ export default function IngredientList() {
                       <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.list.mobile_type")}
                       </span>
-                      <span style={{ color: "var(--text)" }}>{item.type}</span>
+                      <span style={{ color: "var(--text)" }}>{getTypeLabel(item.type)}</span>
                     </div>
                   )}
                 </div>

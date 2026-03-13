@@ -751,28 +751,11 @@ textarea::placeholder {
   contain-intrinsic-size: auto 100px;
 }
 
-/* Optimize expensive gradients with GPU acceleration */
-.gradient-bg,
-.primary-gradient,
-[style*="linear-gradient"] {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
 /* Prevent layout shifts during image load */
 img {
   max-width: 100%;
   height: auto;
   display: block;
-}
-
-/* Reduce repaint for fixed/sticky elements */
-.fixed,
-.sticky,
-[class*="fixed"],
-[class*="sticky"] {
-  will-change: transform;
-  transform: translateZ(0);
 }
 
 /* Font loading optimization - prevent FOIT */
@@ -865,4 +848,173 @@ img {
 
 .admin-loyalty-table .ant-pagination .ant-pagination-item-active a {
   color: #fff !important;
+}
+
+/* Loyalty rank selector in modal */
+.loyalty-rank-radio-group .ant-radio-button-wrapper {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.loyalty-rank-radio-group .ant-radio-button-wrapper:hover {
+  color: var(--text) !important;
+  border-color: var(--primary) !important;
+}
+
+.loyalty-rank-radio-group .ant-radio-button-wrapper-checked {
+  background: var(--surface-subtle) !important;
+  color: var(--text) !important;
+  border-color: var(--primary) !important;
+}
+
+.loyalty-rank-radio-group .ant-radio-button-wrapper-checked::before,
+.loyalty-rank-radio-group .ant-radio-button-wrapper::before {
+  background-color: var(--border) !important;
+}
+
+/* Popconfirm / Popover theme consistency */
+/* Default (light) first to avoid black popup before theme attr hydration */
+.ant-popover,
+.ant-popconfirm {
+  --ant-popover-bg: #ffffff !important;
+}
+
+.ant-popover .ant-popover-inner {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-popover .ant-popover-title,
+.ant-popover .ant-popover-inner-content,
+.ant-popover .ant-popover-message-title,
+.ant-popover .ant-popover-message,
+.ant-popover .ant-popover-description,
+.ant-popover .ant-popover-inner-content * {
+  color: #111111 !important;
+}
+
+.ant-popover .ant-popover-arrow::before,
+.ant-popover .ant-popover-arrow::after {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Dark mode override */
+[data-theme="dark"] .ant-popover,
+[data-theme="dark"] .ant-popconfirm {
+  --ant-popover-bg: #ffffff !important;
+}
+
+[data-theme="dark"] .ant-popover .ant-popover-inner {
+  background: var(--card) !important;
+  background-color: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .ant-popover .ant-popover-title,
+[data-theme="dark"] .ant-popover .ant-popover-inner-content,
+[data-theme="dark"] .ant-popover .ant-popover-message-title,
+[data-theme="dark"] .ant-popover .ant-popover-message,
+[data-theme="dark"] .ant-popover .ant-popover-description,
+[data-theme="dark"] .ant-popover .ant-popover-inner-content * {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .ant-popover .ant-popover-arrow::before,
+[data-theme="dark"] .ant-popover .ant-popover-arrow::after {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+.ant-popconfirm .ant-popover-message .anticon {
+  color: var(--warning) !important;
+}
+
+.ant-popconfirm .ant-btn-default {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.ant-popconfirm .ant-btn-default:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+/* =========================================================
+ * Ant Design Dropdown dark mode
+ * ========================================================= */
+.ant-dropdown .ant-dropdown-menu {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item {
+  color: var(--text) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item:hover {
+  background: var(--surface) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item-disabled,
+.ant-dropdown .ant-dropdown-menu-item-disabled:hover {
+  background: transparent !important;
+  color: var(--text) !important;
+  opacity: 1 !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item-divider {
+  background: var(--border) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item-danger {
+  color: var(--danger) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item-danger:hover {
+  background: var(--danger-soft) !important;
+}
+
+/* =========================================================
+ * Ant Design Select dropdown dark mode
+ * ========================================================= */
+.ant-select-dropdown {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-select-item {
+  color: var(--text) !important;
+}
+
+.ant-select-item:hover,
+.ant-select-item-option-active {
+  background: var(--surface) !important;
+}
+
+.ant-select-item-option-selected {
+  background: var(--primary-faint) !important;
+  color: var(--text) !important;
+  font-weight: 600 !important;
+}
+
+.ant-select-item-option-disabled {
+  color: var(--text-muted) !important;
+  opacity: 0.5 !important;
+}
+
+.ant-select:not(.ant-select-disabled) .ant-select-selector {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.ant-select-arrow {
+  color: var(--text-muted) !important;
 }

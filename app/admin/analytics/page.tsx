@@ -37,7 +37,7 @@ export default function AnalyticsPage() {
             style={{ background: "rgba(255,56,11,0.12)" }}>
             <svg
               className="w-10 h-10"
-              style={{ color: "#FF380B" }}
+              style={{ color: "var(--primary)" }}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24">
@@ -59,10 +59,10 @@ export default function AnalyticsPage() {
           </p>
           <div
             className="inline-flex items-center gap-2 text-sm"
-            style={{ color: "#FF380B" }}>
+            style={{ color: "var(--primary)" }}>
             <div
               className="w-2 h-2 rounded-full animate-pulse"
-              style={{ background: "#FF380B" }}></div>
+              style={{ background: "var(--primary)" }}></div>
             {t("dashboard.analytics.under_development")}
           </div>
         </div>

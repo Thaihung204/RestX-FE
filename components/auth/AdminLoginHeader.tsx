@@ -13,15 +13,14 @@ const AdminLoginHeader: React.FC = () => {
           />
         </div>
         <div>
-          <h2 className="text-3xl font-bold" style={{ background: `linear-gradient(to right, #FF380B, #FF380B)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } as React.CSSProperties}>{t('admin_login_header.title')}</h2>
-          <p className="text-sm text-gray-600 mt-1">{t('admin_login_header.subtitle')}</p>
+          <h2 className="text-3xl font-bold" style={{ color: 'var(--text-muted)' }}>{t('admin_login_header.title')}</h2>
         </div>
       </div>
       <div className="flex flex-col gap-2">
         <a
           href="/forgot-password"
           className="text-sm font-semibold transition-colors w-fit"
-          style={{ color: '#FF380B' }}
+          style={{ color: 'var(--primary)' }}
         >
           {t('admin_login_header.forgot_password')}
         </a>

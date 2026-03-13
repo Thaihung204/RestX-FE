@@ -11,10 +11,12 @@ import RestaurantLandingHero from './components/RestaurantLandingHero';
 import AboutSection from './components/AboutSection';
 import MenuSection, { MenuSectionCategory } from './components/MenuSection';
 import ReservationSection from './components/ReservationSection';
+import ReservationLookupSection from './components/ReservationLookupSection';
 import NewsSection from './components/NewsSection';
 import FeaturedCategories from './components/FeaturedCategories';
 import OverviewSection from './components/OverviewSection';
 import categoryService, { Category } from '@/lib/services/categoryService';
+import { usePageLoading } from '@/components/PageTransitionLoader';
 
 // Services & Context
 import { useTenant } from '@/lib/contexts/TenantContext';
@@ -38,6 +40,7 @@ export default function RestaurantPage() {
   const [menu, setMenu] = useState<MenuSectionCategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  usePageLoading(loading || tenantLoading);
 
   // Debug logs
   useEffect(() => {
@@ -84,13 +87,6 @@ export default function RestaurantPage() {
   // We now use the fetched categories state directly
   // const categories = ... (removed derived logic)
 
-  if (loading || tenantLoading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)' }}>
-        <div className="animate-pulse">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <TenantGuard>
@@ -126,6 +122,8 @@ export default function RestaurantPage() {
           <NewsSection tenant={tenant} />
 
           <ReservationSection tenant={tenant} />
+
+          <ReservationLookupSection />
         </main>
 
         <Footer />

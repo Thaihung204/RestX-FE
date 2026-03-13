@@ -1,9 +1,9 @@
 'use client';
 
 import {
-    ArrowLeftOutlined,
-    CoffeeOutlined,
-    HomeOutlined,
+  ArrowLeftOutlined,
+  CoffeeOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { Button, Card, Space, Typography } from 'antd';
 import { motion } from 'framer-motion';
@@ -129,7 +129,7 @@ export default function NotFound() {
                 style={{
                   fontSize: '120px',
                   fontWeight: 700,
-                  background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
+                  background: 'linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -157,7 +157,7 @@ export default function NotFound() {
                 <CoffeeOutlined
                   style={{
                     fontSize: '48px',
-                    color: '#FF380B',
+                    color: 'var(--primary)',
                   }}
                 />
               </div>
@@ -205,7 +205,7 @@ export default function NotFound() {
                   paddingLeft: '24px',
                   paddingRight: '24px',
                   borderRadius: '24px',
-                  background: 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
+                  background: 'linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)',
                   border: 'none',
                   fontWeight: 600,
                   boxShadow: '0 4px 16px rgba(255, 56, 11, 0.3)',
@@ -249,7 +249,7 @@ export default function NotFound() {
               <Link
                 href="/restaurant"
                 style={{
-                  color: '#FF380B',
+                  color: 'var(--primary)',
                   textDecoration: 'none',
                   fontSize: '14px',
                   fontWeight: 500,
@@ -260,7 +260,7 @@ export default function NotFound() {
                   e.currentTarget.style.textDecoration = 'underline';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#FF380B';
+                  e.currentTarget.style.color = 'var(--primary)';
                   e.currentTarget.style.textDecoration = 'none';
                 }}>
                 {t('not_found.restaurant')}
@@ -269,7 +269,7 @@ export default function NotFound() {
               <Link
                 href="/login"
                 style={{
-                  color: '#FF380B',
+                  color: 'var(--primary)',
                   textDecoration: 'none',
                   fontSize: '14px',
                   fontWeight: 500,
@@ -280,16 +280,16 @@ export default function NotFound() {
                   e.currentTarget.style.textDecoration = 'underline';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#FF380B';
+                  e.currentTarget.style.color = 'var(--primary)';
                   e.currentTarget.style.textDecoration = 'none';
                 }}>
                 {t('not_found.login')}
               </Link>
               <span style={{ color: isDark ? '#4B5563' : '#D1D5DB' }}>•</span>
               <Link
-                href="/customer"
+                href="/"
                 style={{
-                  color: '#FF380B',
+                  color: 'var(--primary)',
                   textDecoration: 'none',
                   fontSize: '14px',
                   fontWeight: 500,
@@ -300,7 +300,7 @@ export default function NotFound() {
                   e.currentTarget.style.textDecoration = 'underline';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#FF380B';
+                  e.currentTarget.style.color = 'var(--primary)';
                   e.currentTarget.style.textDecoration = 'none';
                 }}>
                 {t('not_found.customer')}

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageLoading } from "@/components/PageTransitionLoader";
 import employeeService from "@/lib/services/employeeService";
 import { App, Button, Modal } from "antd";
 import Link from "next/link";
@@ -26,6 +27,7 @@ export default function StaffPage() {
   const { message } = App.useApp();
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
+  usePageLoading(loading);
   const [error, setError] = useState<string | null>(null);
 
   // Pagination state
@@ -139,25 +141,11 @@ export default function StaffPage() {
 
         setError(null);
       } else {
-        setError("Data structure not supported");
+        setError(t("dashboard.staff.errors.load_failed"));
       }
-    } catch (err: any) {
-      if (err.response) {
-        const msg = `API Error: ${err.response?.status} - ${err.response?.data?.message || err.message}`;
-        setError(msg);
-        message.error(msg || t("dashboard.toasts.staff.load_error_message"));
-      } else if (err.request) {
-        const msg = t("dashboard.toasts.staff.load_error_message");
-        setError(msg);
-        message.error(msg);
-      } else {
-        const msg =
-          err instanceof Error
-            ? err.message
-            : t("dashboard.toasts.staff.load_error_message");
-        setError(msg);
-        message.error(msg);
-      }
+    } catch {
+      setError(t("dashboard.staff.errors.load_failed"));
+      message.error(t("dashboard.toasts.staff.load_error_message"));
     } finally {
       setLoading(false);
     }
@@ -202,15 +190,22 @@ export default function StaffPage() {
         isActive: newStatus,
       });
 
-      const action = newStatus ? "activated" : "deactivated";
-      message.success(`${itemToToggle.name} has been ${action} successfully`);
+      message.success(
+        newStatus
+          ? t("dashboard.staff.modal.activate_success", {
+              name: itemToToggle.name,
+              defaultValue: `${itemToToggle.name} has been activated successfully`,
+            })
+          : t("dashboard.staff.modal.deactivate_success", {
+              name: itemToToggle.name,
+              defaultValue: `${itemToToggle.name} has been deactivated successfully`,
+            }),
+      );
       setShowStatusConfirm(false);
       setItemToToggle(null);
       await fetchStaffList(currentPage);
     } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || err.message || "Unknown error";
-      message.error(errorMsg);
+      message.error(t("dashboard.staff.errors.update_failed"));
       setShowStatusConfirm(false);
       setItemToToggle(null);
     }
@@ -266,12 +261,21 @@ export default function StaffPage() {
                 {t("dashboard.staff.subtitle")}
               </p>
             </div>
-            <Link
-              href="/admin/staff/new"
-              className="px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-orange-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-orange-500/30 active:translate-y-0 flex items-center gap-2"
-              style={{ background: "var(--primary)", color: "var(--text)" }}>
-              <svg
-                className="w-5 h-5"
+            <Link href="/admin/staff/new">
+              <button
+                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                style={{ background: "var(--primary)", color: "white" }}
+                onMouseEnter={(e) =>
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, #B32607)")
+                }
+                onMouseLeave={(e) =>
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, var(--primary))")
+                }
+                suppressHydrationWarning> 
+                <svg
+                className="w-5 h-5 inline-block mr-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24">
@@ -279,10 +283,11 @@ export default function StaffPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 4v16m8-8H4"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                 />
               </svg>
-              {t("dashboard.staff.add_staff")}
+                {t("dashboard.staff.add_staff")}
+              </button>
             </Link>
           </div>
 
@@ -523,15 +528,14 @@ export default function StaffPage() {
                           {member.name}
                         </h3>
                         <span
-                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${
-                            member.role === "Manager"
+                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${member.role === "Manager"
                               ? "bg-purple-500/10 text-purple-500"
                               : member.role === "Kitchen Chef"
                                 ? "bg-orange-500/10 text-orange-500"
                                 : member.role === "Waiter"
                                   ? "bg-blue-500/10 text-blue-500"
                                   : "bg-gray-500/10 text-gray-500"
-                          }`}>
+                            }`}>
                           {t(
                             `dashboard.staff.roles.${member.role.toLowerCase()}`,
                           )}
@@ -539,11 +543,10 @@ export default function StaffPage() {
                       </div>
                     </div>
                     <span
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                        member.status === "active"
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${member.status === "active"
                           ? "bg-green-500/10 text-green-500"
                           : "bg-gray-500/10 text-gray-500"
-                      }`}>
+                        }`}>
                       {member.status === "active"
                         ? t("dashboard.staff.status.active")
                         : t("dashboard.staff.status.inactive")}
@@ -776,15 +779,15 @@ export default function StaffPage() {
                       style={
                         currentPage === p
                           ? {
-                              background: "var(--primary)",
-                              color: "white",
-                              border: "1px solid var(--primary)",
-                            }
+                            background: "var(--primary)",
+                            color: "white",
+                            border: "1px solid var(--primary)",
+                          }
                           : {
-                              background: "var(--surface)",
-                              border: "1px solid var(--border)",
-                              color: "var(--text)",
-                            }
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }
                       }>
                       {p}
                     </button>

@@ -35,10 +35,7 @@ export default function SupplierSettings() {
       const data = await supplierService.getAll();
       setSuppliers(data as Supplier[]);
     } catch (err: any) {
-      message.error(
-        err?.response?.data?.message ||
-          t("dashboard.manage.suppliers.fetch_failed"),
-      );
+      message.error(t("dashboard.manage.suppliers.fetch_failed"));
     } finally {
       setLoading(false);
     }
@@ -88,10 +85,7 @@ export default function SupplierSettings() {
       await fetchSuppliers();
       handleCloseModal();
     } catch (err: any) {
-      message.error(
-        err?.response?.data?.message ||
-          t("dashboard.manage.suppliers.save_failed"),
-      );
+      message.error(t("dashboard.manage.suppliers.save_failed"));
     } finally {
       setSaving(false);
     }
@@ -103,10 +97,7 @@ export default function SupplierSettings() {
       message.success(t("dashboard.manage.suppliers.deleted", { defaultValue: "Đã xoá" }));
       setSuppliers((prev) => prev.filter((s) => s.id !== id));
     } catch (err: any) {
-      message.error(
-        err?.response?.data?.message ||
-          t("dashboard.manage.suppliers.delete_failed"),
-      );
+      message.error(t("dashboard.manage.suppliers.delete_failed"));
     }
   };
 
@@ -321,8 +312,8 @@ export default function SupplierSettings() {
                       <Popconfirm
                         title={t("dashboard.manage.suppliers.confirm_delete")}
                         onConfirm={() => supplier.id && handleDelete(supplier.id)}
-                        okText={t("common.yes")}
-                        cancelText={t("common.no")}
+                        okText={t("common.actions.yes", { defaultValue: "Yes" })}
+                        cancelText={t("common.actions.no", { defaultValue: "No" })}
                         okButtonProps={{ danger: true }}>
                         <button
                           className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-red-500 hover:text-red-600"

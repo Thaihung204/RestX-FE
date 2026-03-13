@@ -1,21 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { HeroSection } from "@/components/auth/HeroSection";
+import RememberCheckbox from "@/components/auth/RememberCheckbox";
+import { GlassInput } from "@/components/ui/GlassInput";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import {
+    EyeInvisibleOutlined,
+    EyeOutlined,
+    LockOutlined,
+    LoginOutlined,
+    MailOutlined,
+    PhoneOutlined,
+} from "@ant-design/icons";
+import { message } from "antd";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AntdProvider";
-import { message } from "antd";
-import { useAuth } from "@/lib/contexts/AuthContext";
-import { HeroSection } from "@/components/auth/HeroSection";
-import { GlassInput } from "@/components/ui/GlassInput";
-import { MailOutlined, LockOutlined, PhoneOutlined, EyeInvisibleOutlined, EyeOutlined, LoginOutlined } from "@ant-design/icons";
-import RememberCheckbox from "@/components/auth/RememberCheckbox";
 
 const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
-export default function LoginEmailPage() {
+function LoginEmailPageContent() {
   const { t } = useTranslation('auth');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect');
   const { login } = useAuth();
   const { mode } = useThemeMode();
   const [mounted, setMounted] = useState(false);
@@ -109,12 +118,15 @@ export default function LoginEmailPage() {
       const userRoles: string[] = user.roles || (user.role ? [user.role] : []);
       const hasRole = (role: string) => userRoles.some(r => r.toLowerCase() === role.toLowerCase());
 
-      if (hasRole('Admin') || hasRole('System Admin')) {
+      // If middleware saved a redirect path (e.g. /admin/tables), go there
+      if (redirectPath) {
+        router.push(redirectPath);
+      } else if (hasRole('Admin') || hasRole('System Admin')) {
         router.push('/admin');
       } else if (hasRole('Waiter') || hasRole('Kitchen Staff')) {
         router.push('/staff');
       } else {
-        router.push('/customer');
+        router.push('/');
       }
 
     } catch (error: any) {
@@ -155,7 +167,7 @@ export default function LoginEmailPage() {
         <div className="auth-form-card w-full max-w-md p-8 lg:p-10 relative z-20 transition-colors duration-300">
 
           <div className="md:hidden w-full flex flex-col items-center mb-8">
-            <div className="w-20 h-20 bg-[#FF380B]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[#FF380B]/20 p-4">
+            <div className="w-20 h-20 bg-[var(--primary)]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[var(--primary)]/20 p-4">
               <img
                 src="/images/logo/restx-removebg-preview.png"
                 alt="RestX Logo"
@@ -217,7 +229,7 @@ export default function LoginEmailPage() {
                 <div className="text-right mt-1">
                   <a
                     href="/forgot-password"
-                    className="text-xs text-[#FF380B] hover:text-[#ff5c35] hover:underline"
+                    className="text-xs text-[var(--primary)] hover:text-[#ff5c35] hover:underline"
                   >
                     {t('login_email_page.forgot_password')}
                   </a>
@@ -233,7 +245,7 @@ export default function LoginEmailPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[#FF380B] hover:bg-[#ff5722] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a100e] focus:ring-[#FF380B] transition-all duration-300 shadow-[0_4px_14px_0_rgba(255,56,11,0.39)] hover:shadow-[0_6px_20px_rgba(255,56,11,0.23)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
+                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[var(--primary)] hover:bg-[#ff5722] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a100e] focus:ring-[var(--primary)] transition-all duration-300 shadow-[0_4px_14px_0_rgba(255,56,11,0.39)] hover:shadow-[0_6px_20px_rgba(255,56,11,0.23)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
               >
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                   {loading ? (
@@ -289,5 +301,13 @@ export default function LoginEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginEmailPage() {
+  return (
+    <Suspense fallback={<div className="auth-page-bg min-h-screen" />}>
+      <LoginEmailPageContent />
+    </Suspense>
   );
 }

@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Typography, Row, Col, Card, Flex } from 'antd';
 import {
-  TableOutlined,
-  FileTextOutlined,
-  InboxOutlined,
-  BarChartOutlined,
-  ShopOutlined,
-  ApiOutlined,
+    ApiOutlined,
+    BarChartOutlined,
+    FileTextOutlined,
+    InboxOutlined,
+    ShopOutlined,
+    TableOutlined,
 } from '@ant-design/icons';
+import { Card, Col, Flex, Row, Typography } from 'antd';
 import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
@@ -33,7 +33,7 @@ const FeatureSection: React.FC = () => {
       icon: <TableOutlined style={{ fontSize: 36 }} />,
       title: t('homepage.features.items.table_management.title'),
       description: t('homepage.features.items.table_management.description'),
-      color: '#FF380B',
+      color: 'var(--primary)',
     },
     {
       icon: <FileTextOutlined style={{ fontSize: 36 }} />,
@@ -189,7 +189,7 @@ const FeatureSection: React.FC = () => {
             >
               {t('homepage.features.title_prefix')}
               <span style={{
-                background: 'linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)',
+                background: 'linear-gradient(135deg, var(--primary) 0% 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}>

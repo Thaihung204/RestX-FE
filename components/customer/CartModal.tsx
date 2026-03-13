@@ -3,7 +3,6 @@
 import { useCart } from "@/lib/contexts/CartContext";
 import {
   CloseOutlined,
-  DeleteOutlined,
   MinusOutlined,
   PlusOutlined,
   ShoppingCartOutlined,
@@ -22,9 +21,7 @@ export default function CartModal() {
     cartModalOpen,
     activeCartTab,
     cartItemCount,
-    totalCartAmount,
     totalOrderAmount,
-    removeFromCart,
     updateQuantity,
     confirmOrder,
     requestPayment,
@@ -32,31 +29,16 @@ export default function CartModal() {
     setActiveCartTab,
   } = useCart();
 
-  // Group items by category
-  const cartCategories = useMemo(() => {
-    const categoryMap = new Map<string, { id: string; name: string }>();
-    cartItems.forEach((item) => {
-      if (item.categoryId && item.categoryName) {
-        categoryMap.set(item.categoryId, {
-          id: item.categoryId,
-          name: item.categoryName,
-        });
-      }
-    });
-    return Array.from(categoryMap.values());
-  }, [cartItems]);
+  const orderedItemsByStatus = useMemo(() => {
+    const grouped = new Map<string, typeof orderedItems>();
 
-  const orderedCategories = useMemo(() => {
-    const categoryMap = new Map<string, { id: string; name: string }>();
     orderedItems.forEach((item) => {
-      if (item.categoryId && item.categoryName) {
-        categoryMap.set(item.categoryId, {
-          id: item.categoryId,
-          name: item.categoryName,
-        });
-      }
+      const key = (item.status || "Pending").toLowerCase();
+      const existing = grouped.get(key) || [];
+      grouped.set(key, [...existing, item]);
     });
-    return Array.from(categoryMap.values());
+
+    return Array.from(grouped.entries());
   }, [orderedItems]);
 
   const formatPrice = (price: string | number) => {
@@ -66,6 +48,14 @@ export default function CartModal() {
 
   const formatVND = (amount: number) => {
     return new Intl.NumberFormat("vi-VN").format(amount) + "đ";
+  };
+
+  const getStatusColor = (status?: string) => {
+    const normalized = (status || "pending").toLowerCase();
+    if (normalized === "ready") return "green";
+    if (normalized === "served") return "blue";
+    if (normalized === "cancelled") return "red";
+    return "orange";
   };
 
   return (
@@ -103,7 +93,6 @@ export default function CartModal() {
           maxHeight: "80vh",
           display: "flex",
           flexDirection: "column",
-          gap: 10,
         }}>
         {/* Decorative blur */}
         <div
@@ -206,7 +195,6 @@ export default function CartModal() {
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
                       flex: 1,
                       minHeight: 0,
                       overflowY: "auto",
@@ -239,171 +227,117 @@ export default function CartModal() {
                       </div>
                     ) : (
                       <>
-                        {cartCategories.map((cat) => {
-                          const items = cartItems.filter(
-                            (item) => item.categoryId === cat.id,
-                          );
-                          if (items.length === 0) return null;
-                          return (
-                            <div key={cat.id}>
-                              <Text
-                                style={{
-                                  color: "var(--primary)",
-                                  fontSize: 16,
-                                  fontWeight: 700,
-                                  display: "block",
-                                  marginBottom: 10,
-                                  textTransform: "uppercase",
-                                  letterSpacing: 1,
-                                  marginTop: 10,
-                                }}>
-                                {cat.name}
-                              </Text>
-                              {items.map((item) => (
-                                <Card
-                                  key={item.id}
+                        {cartItems.map((item) => (
+                          <Card
+                            key={item.id}
+                            style={{
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              borderRadius: 12,
+                              marginBottom: 8,
+                            }}
+                            styles={{ body: { padding: 10 } }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: 8,
+                                alignItems: "center",
+                              }}>
+                              {item.image && (
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
                                   style={{
-                                    background: "var(--surface)",
-                                    border: "1px solid var(--border)",
-                                    borderRadius: 12,
-                                    marginBottom: 8,
+                                    width: 56,
+                                    height: 56,
+                                    objectFit: "cover",
+                                    borderRadius: 8,
+                                    border: "1px solid var(--stroke-subtle)",
+                                    flexShrink: 0,
                                   }}
-                                  styles={{ body: { padding: 10 } }}>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      gap: 10,
-                                      marginBottom: 6,
-                                    }}>
-                                    {item.image && (
-                                      <img
-                                        src={item.image}
-                                        alt={item.name}
-                                        style={{
-                                          width: 56,
-                                          height: 56,
-                                          objectFit: "cover",
-                                          borderRadius: 8,
-                                          border:
-                                            "1px solid var(--stroke-subtle)",
-                                          flexShrink: 0,
-                                        }}
-                                      />
-                                    )}
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "flex-start",
-                                        flex: 1,
-                                      }}>
-                                      <div style={{ flex: 1 }}>
-                                        <Text
-                                          style={{
-                                            color: "var(--text)",
-                                            fontSize: 14,
-                                            fontWeight: 600,
-                                            display: "block",
-                                            marginBottom: 2,
-                                          }}>
-                                          {item.name}
-                                        </Text>
-                                        <Text
-                                          style={{
-                                            color: "var(--primary)",
-                                            fontSize: 13,
-                                            fontWeight: 600,
-                                          }}>
-                                          {formatPrice(item.price)}đ
-                                        </Text>
-                                      </div>
-                                      <Button
-                                        type="text"
-                                        icon={<DeleteOutlined />}
-                                        onClick={() => removeFromCart(item.id)}
-                                        style={{
-                                          color: "var(--danger)",
-                                          flexShrink: 0,
-                                        }}
-                                        size="small"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 10,
-                                      justifyContent: "space-between",
-                                    }}>
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 6,
-                                      }}>
-                                      <Button
-                                        type="text"
-                                        icon={<MinusOutlined />}
-                                        onClick={() =>
-                                          updateQuantity(
-                                            item.id,
-                                            item.quantity - 1,
-                                          )
-                                        }
-                                        style={{
-                                          color: "var(--text)",
-                                          border:
-                                            "1px solid var(--border)",
-                                        }}
-                                        size="small"
-                                      />
-                                      <Text
-                                        style={{
-                                          color: "var(--text)",
-                                          fontSize: 14,
-                                          fontWeight: 600,
-                                          minWidth: 30,
-                                          textAlign: "center",
-                                        }}>
-                                        {item.quantity}
-                                      </Text>
-                                      <Button
-                                        type="text"
-                                        icon={<PlusOutlined />}
-                                        onClick={() =>
-                                          updateQuantity(
-                                            item.id,
-                                            item.quantity + 1,
-                                          )
-                                        }
-                                        style={{
-                                          color: "var(--text)",
-                                          border:
-                                            "1px solid var(--border)",
-                                        }}
-                                        size="small"
-                                      />
-                                    </div>
-                                    <Text
-                                      style={{
-                                        color: "var(--text)",
-                                        fontSize: 14,
-                                        fontWeight: 600,
-                                      }}>
-                                      {formatPrice(
-                                        (
-                                          parseFloat(item.price) * item.quantity
-                                        ).toString(),
-                                      )}
-                                      đ
-                                    </Text>
-                                  </div>
-                                </Card>
-                              ))}
+                                />
+                              )}
+
+                              <div
+                                style={{
+                                  flex: 1,
+                                  minWidth: 0,
+                                }}>
+                                <Text
+                                  style={{
+                                    color: "var(--text)",
+                                    fontSize: 14,
+                                    fontWeight: 600,
+                                    display: "block",
+                                    marginBottom: 2,
+                                  }}>
+                                  {item.name}
+                                </Text>
+                                <Text
+                                  style={{
+                                    color: "var(--text)",
+                                    fontSize: 14,
+                                    fontWeight: 600,
+                                  }}>
+                                  {formatPrice(
+                                    (parseFloat(item.price) * item.quantity).toString(),
+                                  )}
+                                  đ
+                                </Text>
+                              </div>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  background: "var(--surface)",
+                                  padding: "4px 6px",
+                                }}>
+                                <Button
+                                  type="text"
+                                  icon={<MinusOutlined />}
+                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  style={{
+                                    color: "var(--text)",
+                                    border: "1px solid var(--border)",
+                                    width: 32,
+                                    height: 32,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                  size="small"
+                                />
+                                <Text
+                                  style={{
+                                    color: "var(--text)",
+                                    fontSize: 14,
+                                    fontWeight: 600,
+                                    width: 20,
+                                    textAlign: "center",
+                                  }}>
+                                  {item.quantity}
+                                </Text>
+                                <Button
+                                  type="text"
+                                  icon={<PlusOutlined />}
+                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  style={{
+                                    color: "var(--text)",
+                                    border: "1px solid var(--border)",
+                                    width: 32,
+                                    height: 32,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                  size="small"
+                                />
+                              </div>
                             </div>
-                          );
-                        })}
+                          </Card>
+                        ))}
                       </>
                     )}
                   </div>
@@ -437,7 +371,6 @@ export default function CartModal() {
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: 10,
                       flex: 1,
                       minHeight: 0,
                       overflowY: "auto",
@@ -470,13 +403,10 @@ export default function CartModal() {
                       </div>
                     ) : (
                       <>
-                        {orderedCategories.map((cat) => {
-                          const items = orderedItems.filter(
-                            (item) => item.categoryId === cat.id,
-                          );
+                        {orderedItemsByStatus.map(([status, items]) => {
                           if (items.length === 0) return null;
                           return (
-                            <div key={cat.id}>
+                            <div key={status}>
                               <Text
                                 style={{
                                   color: "var(--primary)",
@@ -488,11 +418,11 @@ export default function CartModal() {
                                   letterSpacing: 1,
                                   marginTop: 10,
                                 }}>
-                                {cat.name}
+                                {status}
                               </Text>
-                              {items.map((item) => (
+                              {items.map((item, index) => (
                                 <Card
-                                  key={item.id}
+                                  key={item.lineId || `${item.id}-${status}-${index}`}
                                   style={{
                                     background: "var(--surface)",
                                     border: "1px solid var(--border)",
@@ -503,7 +433,7 @@ export default function CartModal() {
                                   <div
                                     style={{
                                       display: "flex",
-                                      gap: 10,
+                                      gap: 8,
                                     }}>
                                     {item.image && (
                                       <img
@@ -526,7 +456,6 @@ export default function CartModal() {
                                         justifyContent: "space-between",
                                         alignItems: "center",
                                         flex: 1,
-                                        gap: 8,
                                       }}>
                                       <div style={{ flex: 1 }}>
                                         <Text
@@ -541,7 +470,7 @@ export default function CartModal() {
                                         </Text>
                                         <Text
                                           style={{
-                                            color: "var(--primary)",
+                                            color: "var(--text)",
                                             fontSize: 13,
                                             fontWeight: 600,
                                           }}>
@@ -557,11 +486,9 @@ export default function CartModal() {
                                           gap: 4,
                                         }}>
                                         <Tag
-                                          color="orange"
+                                          color={getStatusColor(item.status)}
                                           style={{ margin: 0, fontSize: 11 }}>
-                                          {t(
-                                            "customer_page.cart_modal.status_preparing",
-                                          )}
+                                          {item.status || "Pending"}
                                         </Tag>
                                         <Text
                                           style={{
@@ -613,7 +540,7 @@ export default function CartModal() {
                         </Text>
                         <div
                           style={{
-                            color: "var(--primary)",
+                            color: "var(--text)",
                             fontSize: 22,
                             fontWeight: 800,
                           }}>
@@ -621,15 +548,18 @@ export default function CartModal() {
                         </div>
                       </div>
                       <Button
-                        block
-                        danger
-                        size="large"
-                        onClick={requestPayment}
-                        style={{
-                          height: 48,
-                          fontWeight: 700,
-                          fontSize: 16,
-                        }}>
+                      block
+                      type="primary"
+                      size="large"
+                      onClick={confirmOrder}
+                      style={{
+                        background: "var(--primary)",
+                        border: "none",
+                        height: 48,
+                        fontWeight: 700,
+                        fontSize: 16,
+                        boxShadow: "0 10px 25px var(--primary-glow)",
+                      }}>
                         {t("customer_page.cart_modal.request_payment")}
                       </Button>
                     </div>

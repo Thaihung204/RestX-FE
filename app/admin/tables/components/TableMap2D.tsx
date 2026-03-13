@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { DraggableTable, TableData } from "./DraggableTable";
 import { useTranslation } from "react-i18next";
 
@@ -30,6 +30,7 @@ interface TableMap2DProps {
   ) => void;
   onTableMerge?: (sourceTableId: string, targetTableId: string) => void;
   onTableResize?: (tableId: string, size: { width: number; height: number }) => void;
+  onBackgroundImageUpload?: (floorId: string, file: File) => void;
   renderTableContent?: (table: TableData) => React.ReactNode;
   readOnly?: boolean;
   selectedTableId?: string;
@@ -45,6 +46,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   onTablePositionChange,
   onTableMerge,
   onTableResize,
+  onBackgroundImageUpload,
   renderTableContent,
   readOnly = false,
   selectedTableId,
@@ -53,8 +55,33 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
   const floorRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
 
   const activeFloor = layout.floors.find((f) => f.id === layout.activeFloorId);
+
+  // ── Auto-fit: scale canvas to fit container ──
+  useEffect(() => {
+    if (!containerRef.current || !activeFloor) return;
+
+    const updateScale = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      // Available space minus padding (p-4 = 16px each side)
+      const availW = container.clientWidth - 32;
+      const availH = container.clientHeight - 32;
+      if (availW <= 0 || availH <= 0) return;
+      const scaleX = availW / activeFloor.width;
+      const scaleY = availH / activeFloor.height;
+      // Fit within container; cap at 1 so we never upscale
+      setScale(Math.min(scaleX, scaleY, 1));
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [activeFloor?.width, activeFloor?.height, activeFloor?.id]);
 
   if (!activeFloor) {
     return <div>No active floor selected</div>;
@@ -70,6 +97,11 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   const handleBackgroundImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && activeFloor) {
+      // Notify parent about the file for BE upload
+      if (onBackgroundImageUpload) {
+        onBackgroundImageUpload(activeFloor.id, file);
+      }
+
       const reader = new FileReader();
       reader.onload = () => {
         const base64Url = reader.result as string;
@@ -195,20 +227,15 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[var(--primary)] bg-[var(--primary-soft)] rounded-md hover:opacity-80 transition-all"
+                className="flex items-center gap-1 text-sm text-[var(--primary)] hover:underline"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
+                <span className="material-symbols-outlined text-base">cloud_upload</span>
                 {t("dashboard.tables.map.upload_floorplan")}
               </button>
             </>
           )}
-
           {/* Grid Toggle */}
-          <label className="flex items-center gap-2 cursor-pointer select-none">
+          <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={showGrid}
@@ -221,50 +248,65 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
       </div>
 
       {/* Canvas Container */}
-      <div className="flex-1 overflow-auto bg-[var(--bg-base)] border border-[var(--border)] rounded-xl relative p-8 flex justify-center items-start">
-        {/* The Floor Canvas */}
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-auto bg-[var(--bg-base)] border border-[var(--border)] rounded-xl relative p-4 flex justify-center items-start"
+      >
+        {/* Scaled wrapper — preserves canvas coordinate system */}
         <div
-          ref={floorRef}
-          className="relative shadow-lg transition-all duration-300"
           style={{
-            width: activeFloor.width,
-            height: activeFloor.height,
-            backgroundColor: "white",
-            backgroundImage: activeFloor.backgroundImage ? `url(${activeFloor.backgroundImage})` : undefined,
-            backgroundSize: "contain",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            border: activeFloor.backgroundImage ? "none" : "1px solid var(--border)",
-            borderRadius: 8,
+            width: activeFloor.width * scale,
+            height: activeFloor.height * scale,
+            flexShrink: 0,
           }}
         >
-          {/* Grid Overlay */}
-          {showGrid && (
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundSize: "20px 20px",
-                backgroundImage: `
+          {/* The Floor Canvas — always renders at native resolution via transform */}
+          <div
+            ref={floorRef}
+            className="relative shadow-lg"
+            style={{
+              width: activeFloor.width,
+              height: activeFloor.height,
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+              backgroundColor: "white",
+              backgroundImage: activeFloor.backgroundImage ? `url(${activeFloor.backgroundImage})` : undefined,
+              backgroundSize: "contain",
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "center",
+              border: activeFloor.backgroundImage ? "none" : "1px solid var(--border)",
+              borderRadius: 8,
+            }}
+          >
+            {/* Grid Overlay */}
+            {showGrid && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundSize: "20px 20px",
+                  backgroundImage: `
                             linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
                             linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px)
                         `,
-                zIndex: 0
-              }}
-            />
-          )}
+                  zIndex: 0
+                }}
+              />
+            )}
 
-          {/* Tables */}
-          {activeFloor.tables.map((table) => (
-            <DraggableTable
-              key={table.id}
-              table={table}
-              onDragEnd={handleTableDragEnd}
-              onClick={onTableClick}
-              onResize={!readOnly ? onTableResize : undefined}
-              draggable={!readOnly}
-              renderContent={renderTableContent}
-            />
-          ))}
+            {/* Tables */}
+            {activeFloor.tables.map((table) => (
+              <DraggableTable
+                key={table.id}
+                table={table}
+                onDragEnd={handleTableDragEnd}
+                onClick={onTableClick}
+                onResize={!readOnly ? onTableResize : undefined}
+                draggable={!readOnly}
+                renderContent={renderTableContent}
+                scale={scale}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
