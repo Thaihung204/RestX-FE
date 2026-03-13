@@ -142,7 +142,7 @@ const Footer: React.FC = () => {
                       />
                     </div>
                     <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
-                      {tenant?.name || <>Rest<span style={{ color: '#FF380B' }}>X</span></>}
+                      {tenant?.name || <>Rest<span style={{ color: 'var(--primary)' }}>X</span></>}
                     </Title>
                   </div>
 

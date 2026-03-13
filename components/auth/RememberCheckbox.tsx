@@ -18,7 +18,7 @@ const RememberCheckbox: React.FC<RememberCheckboxProps> = ({ checked, onChange }
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         className="w-4 h-4 rounded focus:ring-2 cursor-pointer auth-checkbox"
-        style={{ color: '#FF380B', '--tw-ring-color': '#FF380B' } as React.CSSProperties}
+        style={{ color: 'var(--primary)', '--tw-ring-color': 'var(--primary)' } as React.CSSProperties}
       />
       <label 
         htmlFor="remember" 

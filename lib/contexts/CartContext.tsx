@@ -327,7 +327,6 @@ useEffect(() => {
 
   // Modal actions
   const openCartModal = useCallback(() => {
-    setActiveCartTab("1");
     setCartModalOpen(true);
   }, []);
 

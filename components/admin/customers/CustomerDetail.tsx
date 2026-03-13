@@ -25,7 +25,7 @@ interface CustomerDetailProps {
 export default function CustomerDetail({ customer, onClose }: CustomerDetailProps) {
   const { t } = useTranslation('common');
   const isBirthday = customerService.isBirthday(customer.birthday);
-  const primaryColor = "#FF380B";
+  const primaryColor = "var(--primary)";
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -183,8 +183,8 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
           
           {/* Birthday Banner */}
           {isBirthday && (
-            <div className="mt-6 p-3 rounded-xl bg-[#27272a] border border-[#FF380B]/30 flex items-center gap-3">
-              <div className="p-2 rounded-full bg-[#FF380B]/10 text-[#FF380B]">
+            <div className="mt-6 p-3 rounded-xl bg-[#27272a] border border-[var(--primary)]/30 flex items-center gap-3">
+              <div className="p-2 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
                 <Cake sx={{ fontSize: 20 }} />
               </div>
               <div>

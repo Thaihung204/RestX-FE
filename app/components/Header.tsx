@@ -160,7 +160,7 @@ const Header: React.FC = () => {
                 fontWeight: 700,
                 color: mode === "dark" ? "#ECECEC" : "#111111",
               }}>
-              Rest<span style={{ color: "#FF380B" }}>X</span>
+              Rest<span style={{ color: "var(--primary)" }}>X</span>
             </span>
           </div>
 
@@ -195,7 +195,7 @@ const Header: React.FC = () => {
                     fontSize: 15,
                     height: 40,
                     padding: "0 16px",
-                    color: "#FF380B",
+                    color: "var(--primary)",
                     background: "rgba(255, 56, 11, 0.08)",
                     borderRadius: 20,
                   }}>
@@ -239,7 +239,7 @@ const Header: React.FC = () => {
                         height: 40,
                         padding: "0 24px",
                         background:
-                          "linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)",
+                          "linear-gradient(135deg, var(--primary) 0%, #CC2D08 100%)",
                         border: "none",
                         boxShadow: "0 4px 14px rgba(255, 56, 11, 0.35)",
                       }}>
@@ -269,7 +269,7 @@ const Header: React.FC = () => {
                       fontWeight: 600,
                       fontSize: 14,
                       height: 40,
-                      color: "#FF380B",
+                      color: "var(--primary)",
                     }}>
                     {t("staff.user_menu.logout")}
                   </Button>
@@ -321,7 +321,7 @@ const Header: React.FC = () => {
                 fontSize: 18,
                 color: mode === "dark" ? "#ECECEC" : "#111111",
               }}>
-              Rest<span style={{ color: "#FF380B" }}>X</span>
+              Rest<span style={{ color: "var(--primary)" }}>X</span>
             </span>
           </div>
         }
@@ -393,7 +393,7 @@ const Header: React.FC = () => {
                   fontWeight: 600,
                   height: 48,
                   borderRadius: 50,
-                  background: "linear-gradient(135deg, #FF380B 0%, #CC2D08 100%)",
+                  background: "linear-gradient(135deg, var(--primary) 0%, #CC2D08 100%)",
                   border: "none",
                   boxShadow: "0 4px 14px rgba(255, 56, 11, 0.35)",
                 }}>

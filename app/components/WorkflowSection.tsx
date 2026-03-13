@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
-import { Typography, Row, Col, Card, Space, Tag } from 'antd';
 import {
-  SettingOutlined,
-  SyncOutlined,
-  RiseOutlined,
+    RiseOutlined,
+    SettingOutlined,
+    SyncOutlined,
 } from '@ant-design/icons';
+import { Card, Col, Row, Space, Tag, Typography } from 'antd';
 import { motion } from 'framer-motion';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph, Text } = Typography;
@@ -29,19 +29,19 @@ const WorkflowSection: React.FC = () => {
       number: '01',
       title: t('homepage.workflow.steps.setup.title'),
       description: t('homepage.workflow.steps.setup.description'),
-      icon: <SettingOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
+      icon: <SettingOutlined style={{ fontSize: 36, color: 'var(--primary)' }} />,
     },
     {
       number: '02',
       title: t('homepage.workflow.steps.operation.title'),
       description: t('homepage.workflow.steps.operation.description'),
-      icon: <SyncOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
+      icon: <SyncOutlined style={{ fontSize: 36, color: 'var(--primary)' }} />,
     },
     {
       number: '03',
       title: t('homepage.workflow.steps.analysis.title'),
       description: t('homepage.workflow.steps.analysis.description'),
-      icon: <RiseOutlined style={{ fontSize: 36, color: '#FF380B' }} />,
+      icon: <RiseOutlined style={{ fontSize: 36, color: 'var(--primary)' }} />,
     },
   ];
   const headerVariants = {
@@ -144,7 +144,7 @@ const WorkflowSection: React.FC = () => {
                     <Space orientation="vertical" size={20}>
                       <Tag
                         style={{
-                          background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+                          background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
                           border: 'none',
                           color: 'white',
                           fontWeight: 700,

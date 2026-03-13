@@ -109,7 +109,7 @@ export default function HelpPage() {
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                 }}
-                onFocus={(e) => e.currentTarget.style.borderColor = '#FF380B'}
+                onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
                 onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                 suppressHydrationWarning
               />
@@ -125,7 +125,7 @@ export default function HelpPage() {
                 className={`p-4 rounded-xl border-2 transition-all`}
                 style={
                   selectedCategory === category.id
-                    ? { background: '#FF380B', borderColor: '#FF380B', color: 'white' }
+                    ? { background: 'var(--primary)', borderColor: 'var(--primary)', color: 'white' }
                     : {
                       background: 'var(--card)',
                       border: '1px solid var(--border)',
@@ -247,9 +247,9 @@ export default function HelpPage() {
               </p>
               <button
                 className="font-medium text-sm transition-colors"
-                style={{ color: '#FF380B' }}
+                style={{ color: 'var(--primary)' }}
                 onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--primary)'}
                 suppressHydrationWarning>
                 {t("dashboard.help.quick_links.view_docs")} →
               </button>
@@ -283,9 +283,9 @@ export default function HelpPage() {
               </p>
               <button
                 className="font-medium text-sm transition-colors"
-                style={{ color: '#FF380B' }}
+                style={{ color: 'var(--primary)' }}
                 onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--primary)'}
                 suppressHydrationWarning>
                 {t("dashboard.help.quick_links.watch_videos")} →
               </button>
@@ -319,9 +319,9 @@ export default function HelpPage() {
               </p>
               <button
                 className="font-medium text-sm transition-colors"
-                style={{ color: '#FF380B' }}
+                style={{ color: 'var(--primary)' }}
                 onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--primary)'}
                 suppressHydrationWarning>
                 {t("dashboard.help.quick_links.contact_us")} →
               </button>
@@ -338,7 +338,7 @@ export default function HelpPage() {
             <h3 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
               <svg
                 className="w-6 h-6"
-                style={{ color: '#FF380B' }}
+                style={{ color: 'var(--primary)' }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24">

@@ -256,7 +256,7 @@ export default function LoginPage() {
 
           {/* Mobile Logo */}
           <div className="md:hidden w-full flex flex-col items-center mb-8">
-            <div className="w-20 h-20 bg-[#FF380B]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[#FF380B]/20 p-4">
+            <div className="w-20 h-20 bg-[var(--primary)]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[var(--primary)]/20 p-4">
               <img
                 src="/images/logo/restx-removebg-preview.png"
                 alt="RestX Logo"
@@ -291,7 +291,7 @@ export default function LoginPage() {
                 )}
                 {checkingPhone && (
                   <div className="absolute right-3 top-9">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-[#FF380B]"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-[var(--primary)]"></div>
                   </div>
                 )}
               </div>
@@ -339,7 +339,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[#FF380B] hover:bg-[#ff5722] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a100e] focus:ring-[#FF380B] transition-all duration-300 shadow-[0_4px_14px_0_rgba(255,56,11,0.39)] hover:shadow-[0_6px_20px_rgba(255,56,11,0.23)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
+                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[var(--primary)] hover:bg-[#ff5722] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a100e] focus:ring-[var(--primary)] transition-all duration-300 shadow-[0_4px_14px_0_rgba(255,56,11,0.39)] hover:shadow-[0_6px_20px_rgba(255,56,11,0.23)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
               >
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                   {loading ? (

@@ -1,8 +1,12 @@
 "use client";
 
+import { useTenant } from "@/lib/contexts/TenantContext";
 import menuService from "@/lib/services/menuService";
+import orderService, {
+  OrderDto,
+  OrderRequestDto,
+} from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
-import orderService, { OrderDto, OrderRequestDto } from "@/lib/services/orderService";
 import { tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import {
@@ -30,15 +34,23 @@ import {
   Tag,
   Typography,
 } from "antd";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
-import { useTenant } from "@/lib/contexts/TenantContext";
 
 const { Text } = Typography;
 const { Search } = Input;
 
 type OrderItemStatus = "pending" | "preparing" | "ready" | "served";
+
+type OrderStatusId = 0 | 1 | 2 | 3 | 4;
+
+type OrderStatusUi =
+  | "pending"
+  | "confirmed"
+  | "serving"
+  | "completed"
+  | "cancelled";
 
 interface OrderItem {
   id: string;
@@ -56,9 +68,12 @@ interface Order {
   tableId: string;
   tableName: string;
   items: OrderItem[];
+  detailItems: OrderItem[];
   createdAt: string;
   total: number;
   notes?: string;
+  orderStatusId: OrderStatusId;
+  orderStatus: OrderStatusUi;
   raw?: OrderDto;
 }
 
@@ -69,6 +84,41 @@ const mapOrderItemStatus = (status?: string | null): OrderItemStatus => {
   if (normalized === "preparing" || normalized === "processing")
     return "preparing";
   return "pending";
+};
+
+const mapOrderStatus = (statusId?: number | null): OrderStatusUi => {
+  switch (statusId) {
+    case 1:
+      return "confirmed";
+    case 2:
+      return "serving";
+    case 3:
+      return "completed";
+    case 4:
+      return "cancelled";
+    case 0:
+    default:
+      return "pending";
+  }
+};
+
+const aggregateOrderItems = (items: OrderItem[]): OrderItem[] => {
+  const aggregated = new Map<string, OrderItem>();
+
+  items.forEach((item) => {
+    const existing = aggregated.get(item.dishId);
+    if (existing) {
+      aggregated.set(item.dishId, {
+        ...existing,
+        quantity: existing.quantity + item.quantity,
+      });
+      return;
+    }
+
+    aggregated.set(item.dishId, { ...item });
+  });
+
+  return Array.from(aggregated.values());
 };
 
 // Status configs will be created inside the component to use translations
@@ -98,6 +148,7 @@ export default function OrderManagement() {
     try {
       const data = await orderService.getAllOrders();
 
+
       const uniqueDishIds = Array.from(
         new Set(
           data
@@ -125,34 +176,21 @@ export default function OrderManagement() {
           tables.find((table) => table.id === order.tableId)?.name ||
           order.tableId;
 
-        const aggregatedItems = new Map<string, OrderItem>();
-        (order.orderDetails ?? []).forEach((detail, index) => {
-          const status = mapOrderItemStatus(detail.status);
-          const key = `${detail.dishId}__${status}`;
-          const existing = aggregatedItems.get(key);
-          const quantity = detail.quantity ?? 0;
-
-          if (existing) {
-            aggregatedItems.set(key, {
-              ...existing,
-              quantity: existing.quantity + quantity,
-              note: existing.note || detail.note || undefined,
-            });
-            return;
-          }
-
-          aggregatedItems.set(key, {
+        const items: OrderItem[] = (order.orderDetails ?? []).map(
+          (detail, index) => ({
             id: detail.id || `${order.id || "order"}-${index}`,
             dishId: detail.dishId,
             name: dishNameMap[detail.dishId] || detail.dishId,
-            quantity,
+            quantity: detail.quantity ?? 0,
             price: 0,
             note: detail.note || undefined,
-            status,
-          });
-        });
+            status: mapOrderItemStatus(detail.status),
+          }),
+        );
 
-        const items = Array.from(aggregatedItems.values());
+        const summaryItems = aggregateOrderItems(items);
+
+        const status = mapOrderStatus(order.orderStatusId);
 
         return {
           id: order.id || "",
@@ -162,7 +200,8 @@ export default function OrderManagement() {
               : order.id || "",
           tableId: order.tableId,
           tableName,
-          items,
+          items: summaryItems,
+          detailItems: items,
           createdAt: order.completedAt
             ? new Date(order.completedAt).toLocaleTimeString("vi-VN", {
                 hour: "2-digit",
@@ -171,6 +210,8 @@ export default function OrderManagement() {
             : "",
           total: Number(order.totalAmount || 0),
           notes: undefined,
+          orderStatusId: (order.orderStatusId ?? 0) as OrderStatusId,
+          orderStatus: status,
           raw: order,
         };
       });
@@ -205,11 +246,12 @@ export default function OrderManagement() {
     OrderItemStatus,
     { color: string; text: string }
   > = {
-    pending: { color: "orange", text: t("common.status.pending") },
-    preparing: { color: "blue", text: t("common.status.preparing") },
-    ready: { color: "green", text: t("common.status.ready") },
-    served: { color: "default", text: t("common.status.served") },
+    pending: { color: "orange", text: t("staff.orders.status.pending") },
+    preparing: { color: "blue", text: t("staff.orders.status.preparing") },
+    ready: { color: "green", text: t("staff.orders.status.ready") },
+    served: { color: "default", text: t("staff.orders.status.served") },
   };
+
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
@@ -219,6 +261,7 @@ export default function OrderManagement() {
   const [activeMenuCategory, setActiveMenuCategory] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  const [isUpdatingOrderStatus, setIsUpdatingOrderStatus] = useState(false);
 
   useEffect(() => {
     if (!activeMenuCategory && menuCategories.length > 0) {
@@ -311,6 +354,35 @@ export default function OrderManagement() {
     );
     message.success(t("staff.orders.messages.status_updated"));
   };
+
+  const handleUpdateOrderStatus = async (
+    orderId: string,
+    statusId: OrderStatusId,
+  ) => {
+    const previousOrders = orders;
+    const nextStatus = mapOrderStatus(statusId);
+
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId
+          ? { ...order, orderStatusId: statusId, orderStatus: nextStatus }
+          : order,
+      ),
+    );
+
+    setIsUpdatingOrderStatus(true);
+    try {
+      await orderService.updateOrderStatus(orderId, statusId);
+      message.success(t("staff.orders.messages.order_status_updated"));
+    } catch (error) {
+      console.error("Failed to update order status:", error);
+      setOrders(previousOrders);
+      message.error(t("staff.orders.messages.order_status_update_failed"));
+    } finally {
+      setIsUpdatingOrderStatus(false);
+    }
+  };
+
 
   const addToCart = (item: DishItem) => {
     setCart((prev) => {
@@ -439,12 +511,52 @@ export default function OrderManagement() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
+                      gap: 8,
+                      flexWrap: "wrap",
                     }}>
                     <Text
                       strong
                       style={{ fontSize: isMobile ? 15 : 17, fontWeight: 500 }}>
                       {t("staff.orders.order.table")} {order.tableName}
                     </Text>
+                    <div
+                      onClick={(event) => event.stopPropagation()}
+                      onMouseDown={(event) => event.stopPropagation()}>
+                      <Select
+                        value={order.orderStatusId}
+                        size="small"
+                        style={{ minWidth: 130 }}
+                        onChange={(value) =>
+                          handleUpdateOrderStatus(
+                            order.id,
+                            value as OrderStatusId,
+                          )
+                        }
+                        disabled={isUpdatingOrderStatus}
+                        options={[
+                          {
+                            value: 0,
+                            label: t("staff.orders.status.pending"),
+                          },
+                          {
+                            value: 1,
+                            label: t("staff.orders.status.confirmed"),
+                          },
+                          {
+                            value: 2,
+                            label: t("staff.orders.status.serving"),
+                          },
+                          {
+                            value: 3,
+                            label: t("staff.orders.status.completed"),
+                          },
+                          {
+                            value: 4,
+                            label: t("staff.orders.status.cancelled"),
+                          },
+                        ]}
+                      />
+                    </div>
                   </div>
                   <Text
                     style={{
@@ -496,7 +608,7 @@ export default function OrderManagement() {
                 }}>
                 <Text
                   strong
-                  style={{ color: "#FF380B", fontSize: isMobile ? 15 : 16 }}>
+                  style={{ color: "var(--primary)", fontSize: isMobile ? 15 : 16 }}>
                   {order.total.toLocaleString("vi-VN")}đ
                 </Text>
                 {pendingItems > 0 && (
@@ -511,7 +623,7 @@ export default function OrderManagement() {
                         mode === "dark"
                           ? "rgba(255, 56, 11, 0.2)"
                           : "rgba(255, 56, 11, 0.1)",
-                      color: "#FF380B",
+                      color: "var(--primary)",
                       fontSize: isMobile ? 12 : 13,
                       fontWeight: 500,
                       border: `1px solid ${mode === "dark" ? "rgba(255, 56, 11, 0.3)" : "rgba(255, 56, 11, 0.2)"}`,
@@ -572,7 +684,7 @@ export default function OrderManagement() {
                 borderRadius: 12,
                 height: isMobile ? 40 : 48,
                 fontWeight: 600,
-                background: "linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)",
+                background: "linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)",
                 border: "none",
                 width: "100%",
               }}>
@@ -720,12 +832,43 @@ export default function OrderManagement() {
                     {selectedOrder.createdAt}
                   </Text>
                 </Col>
+                <Col xs={8}>
+                  <Text
+                    type="secondary"
+                    style={{
+                      fontSize: isMobile ? 11 : 12,
+                      display: "block",
+                      marginBottom: 8,
+                      fontWeight: 500,
+                    }}>
+                    {t("staff.orders.order.status")}
+                  </Text>
+                  <Select
+                    value={selectedOrder.orderStatusId}
+                    size="small"
+                    style={{ width: "100%" }}
+                    onChange={(value) =>
+                      handleUpdateOrderStatus(
+                        selectedOrder.id,
+                        value as OrderStatusId,
+                      )
+                    }
+                    disabled={isUpdatingOrderStatus}
+                    options={[
+                      { value: 0, label: t("staff.orders.status.pending") },
+                      { value: 1, label: t("staff.orders.status.confirmed") },
+                      { value: 2, label: t("staff.orders.status.serving") },
+                      { value: 3, label: t("staff.orders.status.completed") },
+                      { value: 4, label: t("staff.orders.status.cancelled") },
+                    ]}
+                  />
+                </Col>
               </Row>
             </Card>
 
             {/* Items List */}
             <div>
-              {selectedOrder.items.map((item, index) => (
+              {selectedOrder.detailItems.map((item, index) => (
                 <div
                   key={item.id}
                   style={{
@@ -786,7 +929,7 @@ export default function OrderManagement() {
               </Text>
               <Text
                 strong
-                style={{ fontSize: isMobile ? 20 : 24, color: "#FF380B" }}>
+                style={{ fontSize: isMobile ? 20 : 24, color: "var(--primary)" }}>
                 {selectedOrder.total.toLocaleString("vi-VN")}đ
               </Text>
             </div> */}
@@ -1068,7 +1211,7 @@ export default function OrderManagement() {
                       strong
                       style={{
                         fontSize: isMobile ? 16 : 18,
-                        color: "#FF380B",
+                        color: "var(--primary)",
                       }}>
                       {cartTotal.toLocaleString("vi-VN")}đ
                     </Text>
@@ -1084,7 +1227,7 @@ export default function OrderManagement() {
                       height: isMobile ? 44 : 48,
                       fontWeight: 600,
                       background:
-                        "linear-gradient(135deg, #FF380B 0%, #FF380B 100%)",
+                        "linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)",
                       border: "none",
                     }}>
                     {t("staff.orders.modal.add_item")}

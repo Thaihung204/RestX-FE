@@ -47,7 +47,7 @@ export default function StaffAuthGuard({
                 <div className="text-center">
                     <div
                         className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
-                        style={{ borderColor: "#FF380B" }}
+                        style={{ borderColor: "var(--primary)" }}
                     />
                     <p style={{ color: "var(--text-muted, #888)" }}>
                         Checking staff authentication...

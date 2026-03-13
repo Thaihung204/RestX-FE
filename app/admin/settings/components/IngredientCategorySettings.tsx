@@ -1,11 +1,11 @@
 "use client";
 
+import { getTypeTranslation, upsertTypeTranslations, type SupportedLocale } from "@/lib/i18n/dynamicTypeTranslations";
+import ingredientService, { IngredientCategory } from "@/lib/services/ingredientService";
 import { Popconfirm } from "antd";
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import ingredientService, { IngredientCategory } from "@/lib/services/ingredientService";
-import { getTypeTranslation, upsertTypeTranslations, type SupportedLocale } from "@/lib/i18n/dynamicTypeTranslations";
 
 const toTypeTranslationKey = (value?: string | null) => (value || "").trim().toLowerCase().replace(/\s+/g, "_");
 
@@ -156,7 +156,7 @@ export default function IngredientCategorySettings() {
         <button
           onClick={() => handleOpenModal()}
           className="px-4 py-2 text-white rounded-lg font-medium transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 shadow-lg hover:shadow-xl"
-          style={{ background: "linear-gradient(135deg, #FF380B 0%, #ff5e3a 100%)" }}
+          style={{ background: "linear-gradient(135deg, var(--primary) 0%, #ff5e3a 100%)" }}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -187,7 +187,7 @@ export default function IngredientCategorySettings() {
                   <tr key={cat.id} className="group transition-colors hover:bg-black/5 dark:hover:bg-white/5">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: "linear-gradient(135deg, #FF380B 0%, #ff5e3a 100%)", opacity: 0.9 }}>
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: "linear-gradient(135deg, var(--primary) 0%, #ff5e3a 100%)", opacity: 0.9 }}>
                           {getCategoryLabel(cat)?.charAt(0).toUpperCase()}
                         </div>
                         <span className="font-semibold" style={{ color: "var(--text)" }}>
@@ -265,7 +265,7 @@ export default function IngredientCategorySettings() {
                     type="text"
                     value={formData.name ?? ""}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                     style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }}
                     placeholder={t("dashboard.manage.ingredient_categories.name_placeholder", { defaultValue: "Ví dụ: Hải sản" })}
                   />
@@ -279,7 +279,7 @@ export default function IngredientCategorySettings() {
                     type="text"
                     value={formData.code ?? ""}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                     style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }}
                     placeholder="seafood"
                   />
@@ -292,7 +292,7 @@ export default function IngredientCategorySettings() {
                   <textarea
                     value={formData.description ?? ""}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[#FF380B]/10 focus:border-[#FF380B] transition-all outline-none resize-none"
+                    className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none"
                     rows={3}
                     style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }}
                     placeholder={t("dashboard.manage.ingredient_categories.description_placeholder")}
@@ -307,8 +307,8 @@ export default function IngredientCategorySettings() {
                 <button
                   onClick={handleSave}
                   disabled={!formData.name?.trim() || isSaving}
-                  className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[#FF380B]/20 hover:shadow-[#FF380B]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ background: "#FF380B" }}
+                  className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl shadow-[var(--primary)]/20 hover:shadow-[var(--primary)]/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "var(--primary)" }}
                 >
                   {isSaving ? t("common.saving", { defaultValue: "Saving..." }) : t("dashboard.settings.buttons.save_changes")}
                 </button>

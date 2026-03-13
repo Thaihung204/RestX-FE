@@ -105,13 +105,13 @@ export default function IngredientList() {
     { id: "inactive", label: t("dashboard.ingredients.tab_inactive") },
   ];
 
-  const activeTabStyle: React.CSSProperties  = { background: "#FF380B", color: "white" };
+  const activeTabStyle: React.CSSProperties  = { background: "var(--primary)", color: "white" };
   const normalTabStyle: React.CSSProperties  = { background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: "#FF380B" }} />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: "var(--primary)" }} />
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default function IngredientList() {
     return (
       <div className="rounded-xl p-6 text-center" style={{ background: "var(--card)", border: "1px solid rgba(239,68,68,0.3)" }}>
         <p className="text-sm mb-3" style={{ color: "#dc2626" }}>{error}</p>
-        <button onClick={fetchData} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "#FF380B" }}>
+        <button onClick={fetchData} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "var(--primary)" }}>
           {t("dashboard.ingredients.retry", "Thử lại")}
         </button>
       </div>
@@ -274,7 +274,7 @@ export default function IngredientList() {
                       <button
                         onClick={() => router.push(`/admin/ingredients/${item.id}`)}
                         className="inline-flex items-center justify-center w-8 h-8 rounded-lg transition-all"
-                        style={{ background: "rgba(255,56,11,0.1)", color: "#FF380B" }}
+                        style={{ background: "rgba(255,56,11,0.1)", color: "var(--primary)" }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,56,11,0.2)")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,56,11,0.1)")}
                         title={t("dashboard.ingredients.list.edit_tooltip")}

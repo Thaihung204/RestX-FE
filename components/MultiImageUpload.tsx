@@ -121,7 +121,7 @@ export default function MultiImageUpload({ value = [], onChange, maxCount = 5 }:
               key={img.uid}
               className="relative group rounded-lg overflow-hidden border-2"
               style={{
-                borderColor: img.isMain ? '#FF380B' : 'var(--border)',
+                borderColor: img.isMain ? 'var(--primary)' : 'var(--border)',
                 aspectRatio: '4/3',
               }}
             >

@@ -193,10 +193,10 @@ export default function AdminLoginPage() {
         {/* Decorative elements */}
         <div
           className="absolute top-10 right-10 w-64 h-64 rounded-full filter blur-3xl opacity-20 animate-pulse"
-          style={{ background: "#FF380B" }}></div>
+          style={{ background: "var(--primary)" }}></div>
         <div
           className="absolute bottom-10 left-10 w-64 h-64 rounded-full filter blur-3xl opacity-10"
-          style={{ background: "#FF380B" }}></div>
+          style={{ background: "var(--primary)" }}></div>
 
         {/* Login Form Container */}
         <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 relative z-10">
@@ -258,12 +258,12 @@ export default function AdminLoginPage() {
                     <a
                       href="/forgot-password"
                       className="text-sm font-medium transition-colors"
-                      style={{ color: "#FF380B" }}
+                      style={{ color: "var(--primary)" }}
                       onMouseEnter={(e) =>
                         (e.currentTarget.style.color = "#CC2D08")
                       }
                       onMouseLeave={(e) =>
-                        (e.currentTarget.style.color = "#FF380B")
+                        (e.currentTarget.style.color = "var(--primary)")
                       }>
                       {t('login_admin_page.forgot_password')}
                     </a>
@@ -362,12 +362,12 @@ export default function AdminLoginPage() {
                   <a
                     href="/terms"
                     className="font-medium"
-                    style={{ color: "#FF380B" }}
+                    style={{ color: "var(--primary)" }}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.color = "#CC2D08")
                     }
                     onMouseLeave={(e) =>
-                      (e.currentTarget.style.color = "#FF380B")
+                      (e.currentTarget.style.color = "var(--primary)")
                     }>
                     {t('login_admin_page.terms_of_service')}
                   </a>{" "}
@@ -375,12 +375,12 @@ export default function AdminLoginPage() {
                   <a
                     href="/privacy"
                     className="font-medium"
-                    style={{ color: "#FF380B" }}
+                    style={{ color: "var(--primary)" }}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.color = "#CC2D08")
                     }
                     onMouseLeave={(e) =>
-                      (e.currentTarget.style.color = "#FF380B")
+                      (e.currentTarget.style.color = "var(--primary)")
                     }>
                     {t('login_admin_page.privacy_policy')}
                   </a>
@@ -397,12 +397,12 @@ export default function AdminLoginPage() {
                   <a
                     href="/register"
                     className="font-semibold transition-colors"
-                    style={{ color: "#FF380B" }}
+                    style={{ color: "var(--primary)" }}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.color = "#CC2D08")
                     }
                     onMouseLeave={(e) =>
-                      (e.currentTarget.style.color = "#FF380B")
+                      (e.currentTarget.style.color = "var(--primary)")
                     }>
                     {t('login_admin_page.sign_up_here')}
                   </a>

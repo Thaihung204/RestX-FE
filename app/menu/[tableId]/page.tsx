@@ -693,53 +693,53 @@ export default function MenuPage() {
                                     style={{
                                       display: "flex",
                                       alignItems: "center",
-                                      gap: 8,
-                                      background: "var(--surface)",
+                                      gap: 4,
+                                      background: "var(--card)",
                                       padding: "4px 6px",
-                                      borderRadius: 10,
-                                      border: "1px solid var(--border)",
                                     }}>
                                     <Button
-                                      icon={<MinusOutlined style={{ fontSize: 12 }} />}
+                                      type="text"
+                                      icon={<MinusOutlined />}
                                       onClick={() =>
                                         updateQuantity(item.id, cartItem.quantity - 1)
                                       }
-                                      size="small"
                                       style={{
-                                        background: "transparent",
-                                        border: "none",
                                         color: "var(--text)",
-                                        width: 24,
-                                        height: 24,
-                                        minWidth: 24,
+                                        border: "1px solid var(--border)",
+                                        width: 32,
+                                        height: 32,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
                                       }}
+                                      size="small"
                                     />
                                     <Text
                                       style={{
-                                        color: "var(--primary)",
+                                        color: "var(--text)",
                                         fontSize: 14,
-                                        fontWeight: 700,
-                                        minWidth: 18,
+                                        fontWeight: 600,
+                                        width: 20,
                                         textAlign: "center",
                                       }}>
                                       {cartItem.quantity}
                                     </Text>
                                     <Button
-                                      icon={<PlusOutlined style={{ fontSize: 12 }} />}
+                                      type="text"
+                                      icon={<PlusOutlined />}
                                       onClick={() =>
                                         updateQuantity(item.id, cartItem.quantity + 1)
                                       }
-                                      size="small"
                                       style={{
-                                        background: "var(--primary)",
-                                        border: "none",
                                         color: "var(--text)",
-                                        width: 24,
-                                        height: 24,
-                                        minWidth: 24,
-                                        borderRadius: 8,
-                                        boxShadow: "0 4px 10px var(--primary-glow)",
+                                        border: "1px solid var(--border)",
+                                        width: 32,
+                                        height: 32,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
                                       }}
+                                      size="small"
                                     />
                                   </div>
                                 );
@@ -757,7 +757,7 @@ export default function MenuPage() {
                                   style={{
                                     background: "var(--primary)",
                                     border: "none",
-                                    boxShadow: "0 4px 10px var(--primary-glow)",
+                                    // boxShadow: "0 4px 10px var(--primary-glow)",
                                   }}
                                 />
                               );
@@ -1060,59 +1060,58 @@ export default function MenuPage() {
                               style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 12,
-                                background: "var(--surface)",
-                                padding: "4px 6px",
-                                borderRadius: 12,
-                                border: "1px solid var(--border)",
+                                justifyContent: "center",
+                                minWidth: 118,
                               }}>
                               <Button
-                                icon={
-                                  <MinusOutlined style={{ fontSize: 12 }} />
-                                }
+                                type="text"
+                                icon={<MinusOutlined />}
                                 onClick={() =>
                                   updateQuantity(
                                     selectedFood.id,
                                     cartItem.quantity - 1,
                                   )
                                 }
-                                size="small"
                                 style={{
-                                  background: "transparent",
-                                  border: "none",
                                   color: "var(--text)",
-                                  width: 28,
-                                  height: 28,
+                                  border: "1px solid var(--border)",
+                                  width: 32,
+                                  height: 32,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
                                 }}
+                                size="small"
                               />
                               <Text
                                 style={{
-                                  color: "var(--primary)",
-                                  fontSize: 16,
-                                  fontWeight: 700,
-                                  minWidth: 20,
+                                  color: "var(--text)",
+                                  fontSize: 14,
+                                  fontWeight: 600,
+                                  width: 20,
                                   textAlign: "center",
                                 }}>
                                 {cartItem.quantity}
                               </Text>
                               <Button
-                                icon={<PlusOutlined style={{ fontSize: 12 }} />}
+                                type="text"
+                                icon={<PlusOutlined />}
                                 onClick={() =>
                                   updateQuantity(
                                     selectedFood.id,
                                     cartItem.quantity + 1,
                                   )
                                 }
-                                size="small"
                                 style={{
-                                  background: "var(--primary)",
-                                  border: "none",
                                   color: "var(--text)",
-                                  width: 28,
-                                  height: 28,
-                                  borderRadius: 8,
-                                  boxShadow: "0 4px 10px var(--primary-glow)",
+                                  border: "1px solid var(--border)",
+                                  width: 32,
+                                  height: 32,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
                                 }}
+                                size="small"
                               />
                             </div>
                           );
