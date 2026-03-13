@@ -77,7 +77,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "reservations",
-      label: "Reservations",
+      label: t("dashboard.sidebar.items.reservations"),
       path: "/admin/reservations",
       icon: (
         <svg

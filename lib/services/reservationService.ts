@@ -217,10 +217,6 @@ export const reservationService = {
         await axiosInstance.put(`/reservations/${id}`, data);
     },
 
-    updateReservationStatus: async (id: string, statusId: number): Promise<void> => {
-        await axiosInstance.patch(`/reservations/${id}/status`, { statusId });
-    },
-
     confirmReservation: async (id: string): Promise<void> => {
         await axiosInstance.post(`/reservations/${id}/confirm`);
     },
@@ -236,6 +232,21 @@ export const reservationService = {
     /** DELETE /api/reservations/{id} — cancel reservation */
     deleteReservation: async (id: string): Promise<void> => {
         await axiosInstance.delete(`/reservations/${id}`);
+    },
+
+    /** GET /api/statuses/reservation — all available reservation statuses */
+    getReservationStatuses: async (): Promise<ReservationStatus[]> => {
+        const response = await axiosInstance.get<any>('/statuses/reservation');
+        const raw = response.data;
+        // Handle both bare array and ApiEnvelope<ReservationStatus[]>
+        if (Array.isArray(raw)) return raw;
+        if (Array.isArray(raw?.data)) return raw.data;
+        return [];
+    },
+
+    /** PUT /api/reservations/{id}/status — change status by statusId */
+    updateReservationStatus: async (id: string, statusId: number): Promise<void> => {
+        await axiosInstance.put(`/reservations/${id}/status`, { statusId });
     },
 
     /** GET /api/reservations/my — Customer xem đặt bàn của chính họ */

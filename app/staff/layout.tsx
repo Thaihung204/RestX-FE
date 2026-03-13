@@ -2,18 +2,19 @@
 
 import StaffAuthGuard from '@/components/auth/StaffAuthGuard';
 import {
-    BellOutlined,
-    ClockCircleOutlined,
-    DashboardOutlined,
-    HomeOutlined,
-    LogoutOutlined,
-    MenuFoldOutlined,
-    MenuUnfoldOutlined,
-    SettingOutlined,
-    ShoppingCartOutlined,
-    TableOutlined,
-    UserOutlined,
-    WalletOutlined,
+  BellOutlined,
+  CalendarOutlined,
+  ClockCircleOutlined,
+  DashboardOutlined,
+  HomeOutlined,
+  LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  SettingOutlined,
+  ShoppingCartOutlined,
+  TableOutlined,
+  UserOutlined,
+  WalletOutlined,
 } from "@ant-design/icons";
 import {
     Avatar,
@@ -28,9 +29,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import authService from "../../lib/services/authService";
+import { useAuth } from "../../lib/contexts/AuthContext";
 import { useLanguage } from "../../components/I18nProvider";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
-import authService from "../../lib/services/authService";
 import ThemeToggle from "../components/ThemeToggle";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 
@@ -44,13 +46,24 @@ export default function StaffLayout({
 }) {
   const { t } = useTranslation();
   useLanguage();
+  const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false); // e.g. iPad widths
+  const [isTablet, setIsTablet] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { mode } = useThemeMode();
+
+  // Derive display info from real user
+  const displayName = user?.fullName || user?.name || user?.email || "Staff";
+  const displayRole = user?.role || t("staff.sidebar.staff_role");
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w: string) => w[0].toUpperCase())
+    .join("");
 
   // Menu items with translations
   const menuItems = [
@@ -81,6 +94,11 @@ export default function StaffLayout({
       label: t("staff.menu.checkout"),
     },
     {
+      key: "/staff/reservations",
+      icon: <CalendarOutlined />,
+      label: t("staff.menu.reservations"),
+    },
+    {
       key: "/staff/attendance",
       icon: <ClockCircleOutlined />,
       label: t("staff.menu.attendance"),
@@ -89,6 +107,20 @@ export default function StaffLayout({
 
   // User menu items with translations
   const userMenuItems = [
+    {
+      key: "user-info",
+      label: (
+        <div style={{ padding: "4px 0", maxWidth: 200 }}>
+          <Text strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</Text>
+          <Text type="secondary" style={{ fontSize: 12, display: "block" }}>{displayRole}</Text>
+        </div>
+      ),
+      disabled: true,
+      style: { cursor: "default" }
+    },
+    {
+      type: "divider" as const,
+    },
     {
       key: "profile",
       icon: <UserOutlined />,
@@ -244,7 +276,7 @@ export default function StaffLayout({
                 fontSize: 18,
                 fontWeight: 600,
               }}>
-              NV
+              {initials || "S"}
             </Avatar>
             <div>
               <Text
@@ -254,14 +286,14 @@ export default function StaffLayout({
                   fontSize: 14,
                   display: "block",
                 }}>
-                Nguyễn Văn A
+                {displayName}
               </Text>
               <Text
                 style={{
-                  color: 'var(--text)',
+                  color: 'var(--text-muted)',
                   fontSize: 12,
                 }}>
-                {t("staff.sidebar.staff_role")}
+                {displayRole}
               </Text>
             </div>
           </div>
@@ -317,10 +349,7 @@ export default function StaffLayout({
           </div>
           <Text
             style={{
-              color:
-                mode === "dark"
-                  ? "rgba(255, 255, 255, 0.7)"
-                  : "rgba(0, 0, 0, 0.6)",
+              color: "var(--text-muted)",
               fontSize: 12,
             }}>
             {t("staff.sidebar.started")}: 08:00 - {t("staff.sidebar.today")}
@@ -332,7 +361,7 @@ export default function StaffLayout({
 
   return (
     <StaffAuthGuard>
-      <Layout style={{ height: "100vh", overflow: "hidden", display: "flex", flexDirection: "row" }}>
+      <Layout style={{ height: "100dvh", display: "flex", flexDirection: "row", overflow: "hidden" }}>
         {/* Mobile Bottom Navigation */}
         {isDrawerDevice && (
           <div
@@ -433,9 +462,10 @@ export default function StaffLayout({
           style={{
             flex: 1,
             minWidth: 0,
-            height: "100vh",
+            height: "100%",
             overflowY: "auto",
             overflowX: "hidden",
+            WebkitOverflowScrolling: "touch",
           }}>
           {/* Header */}
           <Header
@@ -581,39 +611,25 @@ export default function StaffLayout({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: isMobile ? 4 : 8,
-                    padding: isMobile ? "4px" : "4px 8px 4px 4px",
+                    justifyContent: "center",
+                    width: 36,
+                    height: 36,
                     background: "var(--card)",
-                    borderRadius: 24,
+                    borderRadius: "50%",
                     cursor: "pointer",
                     border: "1px solid var(--border)",
                     transition: "all 0.2s",
-                    maxWidth: isMobile ? 34 : "auto",
-                    justifyContent: "center",
                   }}>
                   <Avatar
-                    size={isMobile ? 24 : 28}
+                    size={28}
                     style={{
                       background:
                         "linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)",
                       fontWeight: 600,
-                      fontSize: isMobile ? 10 : 12,
+                      fontSize: 12,
                     }}>
-                    NV
+                    {initials || "S"}
                   </Avatar>
-                  {!isMobile && !isTablet && (
-                    <Text
-                      style={{
-                        fontWeight: 500,
-                        fontSize: 13,
-                        color: "var(--text)",
-                        paddingRight: 4,
-                        whiteSpace: "nowrap",
-                        wordBreak: "keep-all",
-                      }}>
-                      Nguyễn Văn A
-                    </Text>
-                  )}
                 </div>
               </Dropdown>
             </div>
@@ -625,8 +641,11 @@ export default function StaffLayout({
               marginTop: isMobile ? 12 : 24,
               marginRight: isMobile ? 12 : 24,
               marginLeft: isMobile ? 12 : 24,
-              marginBottom: isDrawerDevice ? 130 : 24,
+              marginBottom: 0,
               padding: 0,
+              paddingBottom: isDrawerDevice
+                ? "calc(100px + env(safe-area-inset-bottom, 0px))"
+                : 24,
             }}>
             {children}
           </Content>

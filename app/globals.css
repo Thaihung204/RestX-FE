@@ -943,3 +943,78 @@ img {
   border-color: var(--primary) !important;
   color: var(--primary) !important;
 }
+
+/* =========================================================
+ * Ant Design Dropdown dark mode
+ * ========================================================= */
+.ant-dropdown .ant-dropdown-menu {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item {
+  color: var(--text) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item:hover {
+  background: var(--surface) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item-disabled,
+.ant-dropdown .ant-dropdown-menu-item-disabled:hover {
+  background: transparent !important;
+  color: var(--text) !important;
+  opacity: 1 !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item-divider {
+  background: var(--border) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item-danger {
+  color: var(--danger) !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item-danger:hover {
+  background: var(--danger-soft) !important;
+}
+
+/* =========================================================
+ * Ant Design Select dropdown dark mode
+ * ========================================================= */
+.ant-select-dropdown {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-select-item {
+  color: var(--text) !important;
+}
+
+.ant-select-item:hover,
+.ant-select-item-option-active {
+  background: var(--surface) !important;
+}
+
+.ant-select-item-option-selected {
+  background: var(--primary-faint) !important;
+  color: var(--text) !important;
+  font-weight: 600 !important;
+}
+
+.ant-select-item-option-disabled {
+  color: var(--text-muted) !important;
+  opacity: 0.5 !important;
+}
+
+.ant-select:not(.ant-select-disabled) .ant-select-selector {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.ant-select-arrow {
+  color: var(--text-muted) !important;
+}
