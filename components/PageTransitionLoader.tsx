@@ -74,7 +74,7 @@ const CSS = `
 `;
 
 const DURATION = 2000;
-const FADEOUT = 280;
+const FADEOUT = 500;
 const T_TOTAL = DURATION + FADEOUT;
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ function lerpColor(a: string, b: string, t: number) {
 function getLiquidColor(pct: number) {
     if (pct < 33) return lerpColor('#60a5fa', '#fb923c', pct / 33);
     if (pct < 66) return lerpColor('#fb923c', '#ef4444', (pct - 33) / 33);
-    return lerpColor('#ef4444', 'var(--primary)', (pct - 66) / 34);
+    return lerpColor('#ef4444', '#FF380B', (pct - 66) / 34);
 }
 
 function getGlowColor(pct: number) {
@@ -114,7 +114,6 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
     const [mounted, setMounted] = useState(false);
     const [exiting, setExiting] = useState(false);
     const [showLogo, setShowLogo] = useState(false);
-    const [logoExit, setLogoExit] = useState(false);
     const [isWild, setIsWild] = useState(false);
 
     const liquidRef = useRef<SVGRectElement>(null);
@@ -139,7 +138,6 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                 setMounted(false);
                 setExiting(false);
                 setShowLogo(false);
-                setLogoExit(false);
                 setIsWild(false);
             }, FADEOUT);
             ts.current.push(t);
@@ -147,7 +145,7 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
         }
 
         setMounted(true); setExiting(false);
-        setShowLogo(false); setLogoExit(false); setIsWild(false);
+        setShowLogo(false); setIsWild(false);
         startRef.current = null;
 
         const tick = (now: number) => {
@@ -187,11 +185,10 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
 
         at(() => setShowLogo(true), DURATION * 0.3);
         at(() => setIsWild(true), DURATION * 0.75);
-        at(() => setLogoExit(true), DURATION - 200);
         at(() => setExiting(true), DURATION);
         at(() => {
             setMounted(false); setExiting(false);
-            setShowLogo(false); setLogoExit(false); setIsWild(false);
+            setShowLogo(false); setIsWild(false);
         }, T_TOTAL);
 
         return () => { clr(); if (rafRef.current) cancelAnimationFrame(rafRef.current); };
@@ -344,9 +341,7 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                 {showLogo && (
                     <div style={{
                         marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                        animation: logoExit
-                            ? 'logoOut 200ms ease forwards'
-                            : 'logoIn 300ms cubic-bezier(0.34,1.56,0.64,1) forwards',
+                        animation: 'logoIn 300ms cubic-bezier(0.34,1.56,0.64,1) forwards',
                         pointerEvents: 'none',
                     }}>
                         <p style={{

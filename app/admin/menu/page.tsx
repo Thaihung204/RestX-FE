@@ -4,7 +4,7 @@ import DishCard from "@/components/admin/menu/DishCard";
 import { usePageLoading } from "@/components/PageTransitionLoader";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
-import { message, Modal } from "antd";
+import { App } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,6 +23,7 @@ interface MenuItem {
 
 export default function MenuPage() {
   const { t } = useTranslation();
+  const { message, modal } = App.useApp();
 
   const formatPrice = (price: number) => {
     return price.toLocaleString("vi-VN");
@@ -110,7 +111,7 @@ export default function MenuPage() {
   }, []);
 
   const handleDelete = async (id: string, name: string) => {
-    Modal.confirm({
+    modal.confirm({
       title: t("dashboard.menu.modal.delete_title"),
       content: (
         <>

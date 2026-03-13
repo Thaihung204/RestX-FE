@@ -1773,8 +1773,12 @@
     }
   },
   "auth": {
+    "hero_section": {
+      "title": "Taste the extraordinary.",
+      "description": "Reserve your table, manage your bookings, and experience culinary excellence defined by passion."
+    },
     "admin_login_header": {
-      "title": "Admin Portal",
+      "title": "Admin RestX",
       "subtitle": "Restaurant Management System",
       "forgot_password": "Forgot your password?"
     },

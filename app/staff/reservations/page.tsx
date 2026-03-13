@@ -93,16 +93,26 @@ function ReservationDetailModal({
         setSelectedStatusId(newStatusId);
         setActionLoading(true);
         try {
-            if (newStatusId === reservationService.STATUS_ID?.CHECKED_IN) {
-                await reservationService.checkInReservation(detail.confirmationCode);
-            } else {
-                await reservationService.updateReservationStatus(reservationId, newStatusId);
-            }
+            await reservationService.updateReservationStatus(reservationId, newStatusId);
             onStatusUpdated();
             onClose();
         } catch (e) {
             console.error(e);
             setSelectedStatusId(detail.status.id);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleCheckin = async () => {
+        if (!detail) return;
+        setActionLoading(true);
+        try {
+            await reservationService.checkInReservation(detail.confirmationCode);
+            onStatusUpdated();
+            onClose();
+        } catch (e) {
+            console.error(e);
         } finally {
             setActionLoading(false);
         }
@@ -197,6 +207,20 @@ function ReservationDetailModal({
                                         </div>
                                     )}
                                 />
+                                {/* Dedicated Check-in button — opens table session + sets table occupied */}
+                                {detail.status.code === "CONFIRMED" && (
+                                    <button
+                                        onClick={handleCheckin}
+                                        disabled={actionLoading}
+                                        className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 flex items-center gap-1.5"
+                                        style={{ background: "#8b5cf6" }}
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {t('admin.reservations.actions.checkin')}
+                                    </button>
+                                )}
                             </div>
 
                             {/* Info grid */}
@@ -265,7 +289,7 @@ function ReservationDetailModal({
                             {/* Timestamps */}
                             <div className="flex flex-wrap gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
                                 <span>{t('admin.reservations.modal.created_at')} {new Date(detail.createdAt).toLocaleString()}</span>
-                                {detail.checkedInAt && (
+                                {detail.checkedInAt && ["CHECKED_IN", "COMPLETED"].includes(detail.status.code) && (
                                     <span style={{ color: "#8b5cf6" }}>
                                         ✓ Checked in: {new Date(detail.checkedInAt).toLocaleString()}
                                     </span>
