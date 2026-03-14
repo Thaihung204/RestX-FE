@@ -4,6 +4,7 @@ import {
   TenantApiResponse,
   TenantCreateInput,
   TenantRequestInput,
+  TenantUpdateInput,
 } from "../types/tenant";
 import adminAxiosInstance from "./adminAxiosInstance";
 
@@ -390,7 +391,7 @@ export const tenantService = {
    * Backend endpoint: POST /api/tenants OR PUT /api/tenants/{id}
    */
   upsertTenant: async (
-    tenant: TenantConfig,
+    tenant: TenantUpdateInput | TenantConfig,
     files?: {
       logo?: File | null;
       background?: File | null;

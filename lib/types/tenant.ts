@@ -76,6 +76,13 @@ export interface TenantUpdateInput {
   businessEmailAddress?: string;
   businessCompanyNumber?: string;
   businessOpeningHours?: string;
+  tenantSettings?: unknown[] | string;
+
+  // System Fields (read-only)
+  createdDate?: string;
+  modifiedDate?: string;
+  createdBy?: string;
+  modifiedBy?: string;
 
   // Meta
   plan?: "basic" | "pro" | "enterprise";
@@ -118,6 +125,7 @@ export interface TenantApiResponse {
   businessEmailAddress?: string;
   businessCompanyNumber?: string;
   businessOpeningHours?: string;
+  tenantSettings?: unknown[];
   createdDate?: string;
   modifiedDate?: string;
   createdBy?: string;

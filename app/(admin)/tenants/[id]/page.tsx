@@ -196,6 +196,11 @@ const TenantEditPage: React.FC = () => {
         businessEmailAddress: data.businessEmailAddress,
         businessCompanyNumber: data.businessCompanyNumber,
         businessOpeningHours: data.businessOpeningHours,
+        tenantSettings: JSON.stringify(data.tenantSettings ?? [], null, 2),
+        createdDate: data.createdDate,
+        modifiedDate: data.modifiedDate,
+        createdBy: data.createdBy,
+        modifiedBy: data.modifiedBy,
       };
 
       form.setFieldsValue(formValues);
@@ -232,6 +237,11 @@ const TenantEditPage: React.FC = () => {
         connectionString: formData.connectionString,
         expiredAt: formData.expiredAt,
         status: tenantStatus,
+        tenantSettings: undefined,
+        createdDate: undefined,
+        modifiedDate: undefined,
+        createdBy: undefined,
+        modifiedBy: undefined,
       };
 
       await tenantService.upsertTenant(requestData);
@@ -807,6 +817,70 @@ const TenantEditPage: React.FC = () => {
                         <span
                           className="text-sm font-semibold"
                           style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.county")}
+                        </span>
+                      }
+                      name="businessCounty">
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.edit.fields.county_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.post_code")}
+                        </span>
+                      }
+                      name="businessPostCode">
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.edit.fields.post_code_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.country")}
+                        </span>
+                      }
+                      name="businessCountry">
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.edit.fields.country_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.fields.company_number")}
+                        </span>
+                      }
+                      name="businessCompanyNumber">
+                      <Input
+                        size="large"
+                        placeholder={t(
+                          "tenants.edit.fields.company_number_placeholder",
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
                           {t("tenants.edit.fields.secondary_phone")}
                         </span>
                       }
@@ -855,6 +929,86 @@ const TenantEditPage: React.FC = () => {
                           "tenants.edit.fields.about_us_placeholder",
                         )}
                       />
+                    </Form.Item>
+                  </div>
+                </Card>
+
+                <Card
+                  style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "16px",
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                  }}
+                  title={
+                    <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
+                      {t("tenants.edit.tenant_settings.title")}
+                    </Title>
+                  }>
+                  <Form.Item name="tenantSettings">
+                    <TextArea
+                      rows={4}
+                      placeholder={t("tenants.edit.tenant_settings.placeholder")}
+                    />
+                  </Form.Item>
+                </Card>
+
+                <Card
+                  style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "16px",
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                  }}
+                  title={
+                    <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
+                      {t("tenants.edit.system_fields.title")}
+                    </Title>
+                  }>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.system_fields.created_date")}
+                        </span>
+                      }
+                      name="createdDate">
+                      <Input size="large" disabled />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.system_fields.modified_date")}
+                        </span>
+                      }
+                      name="modifiedDate">
+                      <Input size="large" disabled />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.system_fields.created_by")}
+                        </span>
+                      }
+                      name="createdBy">
+                      <Input size="large" disabled />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.system_fields.modified_by")}
+                        </span>
+                      }
+                      name="modifiedBy">
+                      <Input size="large" disabled />
                     </Form.Item>
                   </div>
                 </Card>

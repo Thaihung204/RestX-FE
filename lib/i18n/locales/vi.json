@@ -2263,9 +2263,28 @@
         "about_us_placeholder": "Nhập mô tả hoặc giới thiệu nhà hàng",
         "overview": "Tổng quan",
         "overview_placeholder": "Nhập mô tả ngắn hoặc khẩu hiệu",
+        "company_number": "Mã số thuế/Mã số doanh nghiệp",
+        "company_number_placeholder": "Nhập mã số thuế hoặc mã số doanh nghiệp",
+        "county": "Quận/Huyện",
+        "county_placeholder": "Nhập quận/huyện",
+        "post_code": "Mã bưu điện",
+        "post_code_placeholder": "Nhập mã bưu điện",
+        "country": "Quốc gia",
+        "country_placeholder": "Nhập quốc gia",
         "status": "Trạng thái nhà hàng",
         "status_active": "Đang hoạt động — Nhà hàng đang mở",
         "status_inactive": "Ngưng hoạt động — Nhà hàng đang tắt"
+      },
+      "tenant_settings": {
+        "title": "Cấu hình riêng của tenant",
+        "placeholder": "JSON cấu hình cho tenant"
+      },
+      "system_fields": {
+        "title": "Thông tin hệ thống",
+        "created_date": "Ngày tạo",
+        "modified_date": "Ngày cập nhật",
+        "created_by": "Người tạo",
+        "modified_by": "Người cập nhật"
       },
       "buttons": {
         "update": "Lưu thay đổi",
