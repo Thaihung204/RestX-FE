@@ -804,20 +804,20 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
                                             {selectedTables.map(table => (
                                                 <div key={table.id} className="bg-[var(--primary-faint)] rounded-2xl p-6 border border-[var(--primary-border)]">
-                                                    <div className="flex justify-between items-center mb-4">
-                                                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Selected Table</span>
-                                                        <span className="text-2xl font-bold font-serif text-[var(--primary)]">{table.label}</span>
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-[0.2em]">Selected Table</span>
+                                                        <span className="text-2xl font-bold text-[var(--primary)] leading-none">{table.label}</span>
                                                     </div>
                                                     <div className="space-y-3">
-                                                        <div className="flex justify-between text-sm">
+                                                        <div className="flex items-center justify-between text-sm">
                                                             <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.floor')}</span>
-                                                            <span className={`font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider bg-[var(--surface-subtle)] text-[var(--text)]`}>
+                                                            <span className="font-semibold px-2.5 py-1 rounded-lg text-[11px] uppercase tracking-wider bg-[var(--surface-subtle)] text-[var(--text)]">
                                                                 {table.zone}
                                                             </span>
                                                         </div>
-                                                        <div className="flex justify-between text-sm">
+                                                        <div className="flex items-center justify-between text-sm">
                                                             <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.capacity')}</span>
-                                                            <span className="font-bold text-[var(--text)]">{table.capacity} {t('landing.booking.table_map.guests')}</span>
+                                                            <span className="font-semibold text-[var(--text)]">{table.capacity} {t('landing.booking.table_map.guests')}</span>
                                                         </div>
                                                     </div>
                                                 </div>

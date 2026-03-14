@@ -463,6 +463,91 @@
     }
   },
   "dashboard": {
+    "tables": {
+      "title": "Table management",
+      "subtitle": "Manage tables and reservations",
+      "add_floor": "Add area",
+      "add_table": "Add table",
+      "status": {
+        "available": "Available",
+        "occupied": "Occupied",
+        "reserved": "Reserved",
+        "cleaning": "Cleaning"
+      },
+      "stats": {
+        "total_tables": "Total tables",
+        "available": "Available",
+        "occupied": "Occupied",
+        "reserved": "Reserved"
+      },
+      "card": {
+        "table_name": "Table {{number}}",
+        "floor": "Floor",
+        "capacity": "Capacity: {{count}} seats",
+        "order": "Order",
+        "reserved_at": "Reserved at",
+        "view_details": "View details"
+      },
+      "view": {
+        "grid": "Grid",
+        "map": "Map"
+      },
+      "zones": {
+        "all": "All",
+        "zone_a": "Zone A",
+        "zone_b": "Zone B",
+        "zone_vip": "VIP",
+        "zone": "Zone"
+      },
+      "table": {
+        "seats": "seats",
+        "guests": "guests",
+        "dishes": "dishes",
+        "from": "From",
+        "booked_at": "Booked at",
+        "capacity": "Capacity"
+      },
+      "modal": {
+        "detail": "Details",
+        "open_table": "Open table",
+        "zone": "Area",
+        "guests_count": "Guest count",
+        "start_time": "Start time",
+        "total_amount": "Total amount",
+        "reservation_name": "Reserved by",
+        "reservation_time": "Reservation time",
+        "phone": "Phone",
+        "confirm_open": "Confirm open",
+        "guest_count": "Guests",
+        "capacity": "Capacity",
+        "total": "Total",
+        "reserved_by": "Reserved by"
+      },
+      "actions": {
+        "open_table": "Open table",
+        "add_dish": "Add dish",
+        "transfer_table": "Transfer table",
+        "checkout": "Checkout",
+        "close_table": "Close table",
+        "guest_arrived": "Guest arrived - Open table",
+        "edit_reservation": "Edit reservation",
+        "finish_cleaning": "Finish cleaning"
+      },
+      "messages": {
+        "table_opened": "Opened {table} for {guests} guests",
+        "table_closed": "Closed {table}",
+        "table_ready": "{table} is ready",
+        "enter_guests": "Please enter guest count",
+        "max_guests": "Max {capacity} guests"
+      },
+      "errors": {
+        "cannot_delete_last_area": "Cannot delete the last area.",
+        "cannot_delete_due_to_booking": "Cannot delete because there is a reservation.",
+        "add_failed": "Failed to add table",
+        "create_floor_failed": "Failed to create area"
+      },
+      "confirm_merge": "Merge tables? This will combine capacity and hide the source table."
+    },
     "toasts": {
       "staff": {
         "load_error_title": "Error",
@@ -2134,7 +2219,7 @@
     "stats": {
       "total_tenants": "Total Tenants",
       "active_tenants": "Active Tenants",
-      "monthly_revenue": "Monthly Revenue (mock)"
+      "monthly_revenue": "Monthly Revenue"
     },
     "tabs": {
       "restaurant_list": "Restaurant List",

@@ -23,7 +23,7 @@ const TenantRequestsPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen font-sans"
       style={{ background: "var(--bg-base)", color: "var(--text)" }}
     >
       {/* Header */}

@@ -38,6 +38,23 @@ if (typeof window !== 'undefined') {
     adminAxiosInstance.defaults.baseURL = getAdminBaseUrl();
 }
 
+adminAxiosInstance.interceptors.request.use(
+    (config) => {
+        // Doc adminAccessToken tu ca hai storage (rememberMe=true -> localStorage, rememberMe=false -> sessionStorage)
+        if (typeof window !== 'undefined') {
+            const token = localStorage.getItem('adminAccessToken') || sessionStorage.getItem('adminAccessToken');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        }
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
 adminAxiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {

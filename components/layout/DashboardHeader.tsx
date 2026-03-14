@@ -3,14 +3,42 @@
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { useLanguage } from "@/components/I18nProvider";
 import { Dropdown } from "antd";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import adminAuthService from "@/lib/services/adminAuthService";
 
 export default function DashboardHeader() {
   const { t } = useTranslation("common");
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const { language, changeLanguage } = useLanguage();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [adminName, setAdminName] = useState("Admin");
+  const [adminRole, setAdminRole] = useState("Super Admin");
+
+  useEffect(() => {
+    const admin = adminAuthService.getCurrentAdmin();
+    if (admin) {
+      setAdminName(admin.fullName || admin.email || "Admin");
+      const roles = admin.roles || [];
+      setAdminRole(roles.length ? roles.join(", ") : "Super Admin");
+    }
+  }, []);
+
+  const initials = useMemo(() => {
+    return adminName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "A";
+  }, [adminName]);
+
+  const handleLogout = () => {
+    adminAuthService.logout();
+    router.replace("/login");
+  };
 
   return (
     <header
@@ -367,8 +395,8 @@ export default function DashboardHeader() {
                     key: "user-info",
                     label: (
                       <div style={{ padding: "4px 0", maxWidth: 200 }}>
-                        <div style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: "bold" }}>Admin User</div>
-                        <div style={{ fontSize: 12, display: "block", opacity: 0.6 }}>{t("dashboard.header.user_role")}</div>
+                        <div style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: "bold" }}>{adminName}</div>
+                        <div style={{ fontSize: 12, display: "block", opacity: 0.6 }}>{adminRole}</div>
                       </div>
                     ),
                     disabled: true,
@@ -381,6 +409,11 @@ export default function DashboardHeader() {
                   background: "var(--card)",
                   border: "1px solid var(--border)",
                   color: "var(--text)",
+                },
+                onClick: ({ key }) => {
+                  if (key === "logout") {
+                    handleLogout();
+                  }
                 }
               }}
               styles={{
@@ -400,7 +433,7 @@ export default function DashboardHeader() {
                 <div
                   className="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-sm"
                   style={{ background: "var(--primary)" }}>
-                  A
+                  {initials}
                 </div>
               </button>
             </Dropdown>

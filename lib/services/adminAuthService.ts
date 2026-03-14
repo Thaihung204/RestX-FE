@@ -26,10 +26,15 @@ export interface AdminAuthResponse {
 }
 
 // Cookie helpers for super admin
-function setAdminAuthCookie(token: string) {
+function setAdminAuthCookie(token: string, rememberMe: boolean) {
   if (typeof document === 'undefined') return;
-  const maxAge = 8 * 60 * 60; // 8 hours
-  document.cookie = `adminAccessToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  if (rememberMe) {
+    const maxAge = 8 * 60 * 60; // 8 hours
+    document.cookie = `adminAccessToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    return;
+  }
+  // Session cookie (cleared when browser closes)
+  document.cookie = `adminAccessToken=${token}; path=/; SameSite=Lax`;
 }
 
 function clearAdminAuthCookie() {
@@ -57,13 +62,22 @@ const adminAuthService = {
         throw new Error('User has no roles assigned.');
       }
 
-      localStorage.setItem('adminAccessToken', accessToken);
-      if (refreshToken) {
-        localStorage.setItem('adminRefreshToken', refreshToken);
-      }
-      localStorage.setItem('adminUserInfo', JSON.stringify(admin));
+      const shouldRemember = !!credentials.rememberMe;
+      const storage = shouldRemember ? localStorage : sessionStorage;
 
-      setAdminAuthCookie(accessToken);
+      storage.setItem('adminAccessToken', accessToken);
+      if (refreshToken) {
+        storage.setItem('adminRefreshToken', refreshToken);
+      }
+      storage.setItem('adminUserInfo', JSON.stringify(admin));
+
+      if (!shouldRemember) {
+        localStorage.removeItem('adminAccessToken');
+        localStorage.removeItem('adminRefreshToken');
+        localStorage.removeItem('adminUserInfo');
+      }
+
+      setAdminAuthCookie(accessToken, shouldRemember);
 
       return admin;
     } catch (error: any) {
@@ -85,18 +99,21 @@ const adminAuthService = {
     localStorage.removeItem('adminAccessToken');
     localStorage.removeItem('adminRefreshToken');
     localStorage.removeItem('adminUserInfo');
+    sessionStorage.removeItem('adminAccessToken');
+    sessionStorage.removeItem('adminRefreshToken');
+    sessionStorage.removeItem('adminUserInfo');
     clearAdminAuthCookie();
   },
 
   getCurrentAdmin(): AdminUser | null {
     if (typeof window === 'undefined') return null;
-    const userInfo = localStorage.getItem('adminUserInfo');
+    const userInfo = localStorage.getItem('adminUserInfo') || sessionStorage.getItem('adminUserInfo');
     return userInfo ? JSON.parse(userInfo) : null;
   },
   
   getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('adminAccessToken');
+    return localStorage.getItem('adminAccessToken') || sessionStorage.getItem('adminAccessToken');
   }
 };
 

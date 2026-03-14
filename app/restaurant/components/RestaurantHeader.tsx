@@ -190,10 +190,9 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
           </div>
           <span
             style={{
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: 700,
               color: headerContentColor,
-              fontFamily: 'serif',
             }}>
             {tenant?.businessName || tenant?.name || t('restaurant.header.title')}
           </span>
