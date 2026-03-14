@@ -194,15 +194,23 @@ const TenantPage: React.FC = () => {
       title: t("tenants.table.hostname"),
       dataIndex: "hostName",
       key: "hostName",
-      width: 200,
-      render: (hostName: string) => (
-        <span
-          className="text-[11px] font-mono truncate max-w-[180px] block"
-          style={{ color: "var(--text-muted)" }}
-          title={hostName}>
-          {hostName}
-        </span>
-      ),
+      width: 220,
+      render: (hostName: string) => {
+        const url = hostName.startsWith("http")
+          ? hostName
+          : `https://${hostName}`;
+        return (
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[11px] font-mono truncate max-w-[200px] block hover:underline"
+            style={{ color: "var(--text-muted)" }}
+            title={url}>
+            {url}
+          </a>
+        );
+      },
     },
     {
       title: t("tenants.table.status"),
@@ -231,7 +239,7 @@ const TenantPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen font-sans"
       style={{ background: "var(--bg-base)", color: "var(--text)" }}>
       <main
         className="px-6 lg:px-8 py-8"

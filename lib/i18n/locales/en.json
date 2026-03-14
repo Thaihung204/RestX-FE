@@ -2148,7 +2148,7 @@
     "stats": {
       "total_tenants": "Total Tenants",
       "active_tenants": "Active Tenants",
-      "monthly_revenue": "Monthly Revenue (mock)"
+      "monthly_revenue": "Monthly Revenue"
     },
     "tabs": {
       "restaurant_list": "Restaurant List",
