@@ -4,7 +4,6 @@ import { tenantService } from "@/lib/services/tenantService";
 import { TenantRequestInput } from "@/lib/types/tenant";
 import {
   EnvironmentOutlined,
-  GlobalOutlined,
   MailOutlined,
   PhoneOutlined,
   ShopOutlined,
@@ -14,6 +13,50 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const { TextArea } = Input;
+
+const customStyles = `
+  .tenant-request-form .url-bar {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--ant-color-border, #d9d9d9);
+    border-radius: 6px;
+    height: 40px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    padding: 0 12px;
+    gap: 2px;
+    cursor: text;
+  }
+
+  .tenant-request-form .url-bar:focus-within {
+    border-color: #f97316 !important;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1) !important;
+  }
+
+  .tenant-request-form .url-bar .ant-input {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    height: 100%;
+    border-radius: 0 !important;
+    font-size: 14px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tenant-request-form .url-bar .url-segment {
+    font-size: 14px;
+    white-space: nowrap;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .tenant-request-form .url-bar .url-scheme,
+  .tenant-request-form .url-bar .url-suffix {
+    color: #6b7280;
+  }
+`;
 
 interface TenantRequestFormProps {
   visible: boolean;
@@ -30,6 +73,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
   const { message } = App.useApp();
   const [form] = Form.useForm<TenantRequestInput>();
   const [loading, setLoading] = useState(false);
+  const [hostNameValue, setHostNameValue] = useState("");
 
   const handleSubmit = async (values: TenantRequestInput) => {
     setLoading(true);
@@ -37,8 +81,18 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
     try {
       console.log("[TenantRequestForm] Submitting request:", values);
 
+      const normalizedHostname = values.hostname?.trim().toLowerCase();
+      const requestData: TenantRequestInput = {
+        ...values,
+        hostname: normalizedHostname
+          ? normalizedHostname.endsWith(".restx.food")
+            ? normalizedHostname
+            : `${normalizedHostname}.restx.food`
+          : normalizedHostname,
+      };
+
       // Call real API
-      const requestId = await tenantService.addTenantRequest(values);
+      const requestId = await tenantService.addTenantRequest(requestData);
 
       console.log(
         "[TenantRequestForm] Request created successfully, ID:",
@@ -115,7 +169,8 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
         },
       }}
       destroyOnHidden>
-      <div className="py-2">
+      <style>{customStyles}</style>
+      <div className="py-2 tenant-request-form">
         <p className="mb-4 text-sm" style={{ color: "var(--text-muted)" }}>
           {t("tenant_requests.form.description")}
         </p>
@@ -135,14 +190,14 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
                 ]}>
                 <Input
                   prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />}
-                  placeholder={t("tenant_requests.form.restaurant_name_placeholder")}
+                  placeholder={t("tenant_requests.form.restaurant_name")}
                 />
               </Form.Item>
             </Col>
 
             <Col xs={24} md={12}>
               <Form.Item
-                label={t("tenant_requests.form.hostname")}
+                label={t("tenants.create.fields.host_name")}
                 name="hostname"
                 rules={[
                   { required: true, message: t("tenant_requests.form.hostname_required") },
@@ -150,10 +205,22 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
                 ]}
                 tooltip={t("tenant_requests.form.hostname_tooltip")}
               >
-                <Input
-                  prefix={<GlobalOutlined style={{ color: "var(--text-muted)" }} />}
-                  placeholder={t("tenant_requests.form.hostname_placeholder")}
-                />
+                <div className="url-bar">
+                  <span className="url-segment url-scheme">https://</span>
+                  <Input
+                    placeholder={t("tenants.create.fields.host_name")}
+                    value={hostNameValue}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")
+                        .replace(/[^a-z0-9-]/g, "");
+                      form.setFieldValue("hostname", value);
+                      setHostNameValue(value);
+                    }}
+                  />
+                  <span className="url-segment url-suffix">.restx.food</span>
+                </div>
               </Form.Item>
             </Col>
           </Row>
@@ -161,7 +228,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
           <Form.Item label={t("tenant_requests.form.business_name")} name="businessName">
             <Input
               prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />}
-              placeholder={t("tenant_requests.form.business_name_placeholder")}
+              placeholder={t("tenant_requests.form.business_name")}
             />
           </Form.Item>
 
@@ -175,7 +242,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
                 ]}>
                 <Input
                   prefix={<MailOutlined style={{ color: "var(--text-muted)" }} />}
-                  placeholder={t("tenant_requests.form.business_email_placeholder")}
+                  placeholder={t("tenant_requests.form.business_email")}
                   type="email"
                 />
               </Form.Item>
@@ -191,7 +258,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
             </Col>
           </Row>
 
-          <Form.Item label={t("tenant_requests.form.address_line_1")} name="businessAddressLine1">
+          <Form.Item label={t("tenant_requests.form.address_line_1_placeholder")} name="businessAddressLine1">
             <Input
               prefix={<EnvironmentOutlined style={{ color: "var(--text-muted)" }} />}
               placeholder={t("tenant_requests.form.address_line_1_placeholder")}
@@ -200,19 +267,19 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
 
           <Row gutter={16}>
             <Col xs={24} md={8}>
-              <Form.Item label={t("tenant_requests.form.address_line_2")} name="businessAddressLine2">
+              <Form.Item label={t("tenant_requests.form.address_line_2_placeholder")} name="businessAddressLine2">
                 <Input placeholder={t("tenant_requests.form.address_line_2_placeholder")}/>
               </Form.Item>
             </Col>
 
             <Col xs={24} md={8}>
-              <Form.Item label={t("tenant_requests.form.address_line_3")} name="businessAddressLine3">
+              <Form.Item label={t("tenant_requests.form.address_line_3_placeholder")} name="businessAddressLine3">
                 <Input placeholder={t("tenant_requests.form.address_line_3_placeholder")}/>
               </Form.Item>
             </Col>
 
             <Col xs={24} md={8}>
-              <Form.Item label={t("tenant_requests.form.country")} name="businessCountry">
+              <Form.Item label={t("tenant_requests.form.country_placeholder")} name="businessCountry">
                 <Input placeholder={t("tenant_requests.form.country_placeholder")}/>
               </Form.Item>
             </Col>

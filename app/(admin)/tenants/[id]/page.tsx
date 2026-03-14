@@ -153,8 +153,8 @@ const TenantEditPage: React.FC = () => {
         return;
       }
 
-      const displayValue = data.networkIp || data.hostname;
-      const cleanHostname = displayValue?.replace(/\.restx\.food$/i, "") || "";
+      const cleanHostname =
+        data.hostname?.replace(/\.restx\.food$/i, "") || "";
 
       const formValues: Partial<TenantUpdateInput> = {
         name: data.name,
@@ -196,6 +196,11 @@ const TenantEditPage: React.FC = () => {
         businessEmailAddress: data.businessEmailAddress,
         businessCompanyNumber: data.businessCompanyNumber,
         businessOpeningHours: data.businessOpeningHours,
+        tenantSettings: JSON.stringify(data.tenantSettings ?? [], null, 2),
+        createdDate: data.createdDate,
+        modifiedDate: data.modifiedDate,
+        createdBy: data.createdBy,
+        modifiedBy: data.modifiedBy,
       };
 
       form.setFieldsValue(formValues);
@@ -224,13 +229,19 @@ const TenantEditPage: React.FC = () => {
         ? `${values.hostname}.restx.food`
         : undefined;
 
-      const requestData: any = {
+      const requestData: TenantUpdateInput = {
         ...values,
         id: tenantId,
         hostname,
         networkIp: formData.networkIp || hostname,
+        connectionString: formData.connectionString,
         expiredAt: formData.expiredAt,
         status: tenantStatus,
+        tenantSettings: undefined,
+        createdDate: undefined,
+        modifiedDate: undefined,
+        createdBy: undefined,
+        modifiedBy: undefined,
       };
 
       await tenantService.upsertTenant(requestData);
@@ -587,34 +598,51 @@ const TenantEditPage: React.FC = () => {
                     />
                   </Form.Item>
 
-                  <Form.Item
-                    label={
-                      <span
-                        className="text-sm font-semibold"
-                        style={{ color: "var(--text)" }}>
-                        {t("tenants.create.fields.host_name")}
-                      </span>
-                    }
-                    name="hostname"
-                    extra={
-                      <span
-                        className="text-[11px]"
-                        style={{ color: "var(--text-muted)" }}>
-                        {t("tenants.create.fields.hostname_disabled_text")}
-                      </span>
-                    }>
-                    <div className="url-bar url-bar-disabled">
-                      <span className="url-segment">https://</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.create.fields.prefix")}
+                        </span>
+                      }
+                      name="prefix">
                       <Input
-                        disabled
-                        value={formData.hostname || ""}
-                        placeholder={t(
-                          "tenants.create.fields.host_name_placeholder",
-                        )}
+                        size="large"
+                        placeholder={t("tenants.create.fields.prefix_placeholder")}
                       />
-                      <span className="url-segment">.restx.food</span>
-                    </div>
-                  </Form.Item>
+                    </Form.Item>
+
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.create.fields.host_name")}
+                        </span>
+                      }
+                      name="hostname"
+                      extra={
+                        <span
+                          className="text-[11px]"
+                          style={{ color: "var(--text-muted)" }}>
+                          {t("tenants.create.fields.hostname_disabled_text")}
+                        </span>
+                      }>
+                      <div className="url-bar url-bar-disabled">
+                        <span className="url-segment">https://</span>
+                        <Input
+                          disabled
+                          value={formData.hostname || ""}
+                          placeholder={t(
+                            "tenants.create.fields.host_name_placeholder",
+                          )}
+                        />
+                        <span className="url-segment">.restx.food</span>
+                      </div>
+                    </Form.Item>
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Form.Item
@@ -905,6 +933,86 @@ const TenantEditPage: React.FC = () => {
                   </div>
                 </Card>
 
+                <Card
+                  style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "16px",
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                  }}
+                  title={
+                    <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
+                      {t("tenants.edit.tenant_settings.title")}
+                    </Title>
+                  }>
+                  <Form.Item name="tenantSettings">
+                    <TextArea
+                      rows={4}
+                      placeholder={t("tenants.edit.tenant_settings.placeholder")}
+                    />
+                  </Form.Item>
+                </Card>
+
+                <Card
+                  style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "16px",
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                  }}
+                  title={
+                    <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
+                      {t("tenants.edit.system_fields.title")}
+                    </Title>
+                  }>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.system_fields.created_date")}
+                        </span>
+                      }
+                      name="createdDate">
+                      <Input size="large" disabled />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.system_fields.modified_date")}
+                        </span>
+                      }
+                      name="modifiedDate">
+                      <Input size="large" disabled />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.system_fields.created_by")}
+                        </span>
+                      }
+                      name="createdBy">
+                      <Input size="large" disabled />
+                    </Form.Item>
+                    <Form.Item
+                      label={
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--text)" }}>
+                          {t("tenants.edit.system_fields.modified_by")}
+                        </span>
+                      }
+                      name="modifiedBy">
+                      <Input size="large" disabled />
+                    </Form.Item>
+                  </div>
+                </Card>
+
                 {/* Branding & Theme */}
                 <Card
                   style={{
@@ -917,7 +1025,7 @@ const TenantEditPage: React.FC = () => {
                     <Title
                       level={5}
                       style={{ margin: 0, color: "var(--text)" }}>
-                      Branding &amp; Theme
+                      {t("tenants.edit.branding.title")}
                     </Title>
                   }>
                   <div className="grid grid-cols-1 gap-4">
@@ -926,7 +1034,7 @@ const TenantEditPage: React.FC = () => {
                         <span
                           className="text-sm font-semibold"
                           style={{ color: "var(--text)" }}>
-                          Logo URL
+                          {t("tenants.edit.branding.logo_url")}
                         </span>
                       }
                       name="logoUrl">
@@ -937,7 +1045,7 @@ const TenantEditPage: React.FC = () => {
                         <span
                           className="text-sm font-semibold"
                           style={{ color: "var(--text)" }}>
-                          Favicon URL
+                          {t("tenants.edit.branding.favicon_url")}
                         </span>
                       }
                       name="faviconUrl">
@@ -948,7 +1056,7 @@ const TenantEditPage: React.FC = () => {
                         <span
                           className="text-sm font-semibold"
                           style={{ color: "var(--text)" }}>
-                          Background URL
+                          {t("tenants.edit.branding.background_url")}
                         </span>
                       }
                       name="backgroundUrl">
@@ -960,7 +1068,7 @@ const TenantEditPage: React.FC = () => {
                           <span
                             className="text-sm font-semibold"
                             style={{ color: "var(--text)" }}>
-                            Primary Color
+                            {t("tenants.edit.branding.primary_color")}
                           </span>
                         }
                         name="primaryColor">
@@ -971,7 +1079,7 @@ const TenantEditPage: React.FC = () => {
                           <span
                             className="text-sm font-semibold"
                             style={{ color: "var(--text)" }}>
-                            Light Base
+                            {t("tenants.edit.branding.light_base_color")}
                           </span>
                         }
                         name="lightBaseColor">
@@ -982,7 +1090,7 @@ const TenantEditPage: React.FC = () => {
                           <span
                             className="text-sm font-semibold"
                             style={{ color: "var(--text)" }}>
-                            Light Surface
+                            {t("tenants.edit.branding.light_surface_color")}
                           </span>
                         }
                         name="lightSurfaceColor">
@@ -993,7 +1101,7 @@ const TenantEditPage: React.FC = () => {
                           <span
                             className="text-sm font-semibold"
                             style={{ color: "var(--text)" }}>
-                            Light Card
+                            {t("tenants.edit.branding.light_card_color")}
                           </span>
                         }
                         name="lightCardColor">
@@ -1004,7 +1112,7 @@ const TenantEditPage: React.FC = () => {
                           <span
                             className="text-sm font-semibold"
                             style={{ color: "var(--text)" }}>
-                            Dark Base
+                            {t("tenants.edit.branding.dark_base_color")}
                           </span>
                         }
                         name="darkBaseColor">
@@ -1015,7 +1123,7 @@ const TenantEditPage: React.FC = () => {
                           <span
                             className="text-sm font-semibold"
                             style={{ color: "var(--text)" }}>
-                            Dark Surface
+                            {t("tenants.edit.branding.dark_surface_color")}
                           </span>
                         }
                         name="darkSurfaceColor">
@@ -1026,7 +1134,7 @@ const TenantEditPage: React.FC = () => {
                           <span
                             className="text-sm font-semibold"
                             style={{ color: "var(--text)" }}>
-                            Dark Card
+                            {t("tenants.edit.branding.dark_card_color")}
                           </span>
                         }
                         name="darkCardColor">
