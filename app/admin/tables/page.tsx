@@ -41,6 +41,8 @@ type ViewMode = "grid" | "map";
 
 export default function TablesPage() {
   const { t } = useTranslation();
+
+  const tDashboard = (key: string, options?: any) => String(t(`dashboard.${key}`, options));
   const { message } = App.useApp();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
@@ -48,28 +50,28 @@ export default function TablesPage() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [tables, setTables] = useState<Table[]>([]);
-  const [qrModal, setQrModal] = useState<{ url: string; number: number } | null>(null);
+  const [qrModal, setQrModal] = useState<{ url: string; number: number; tableId: string } | null>(null);
 
   const statusConfig = {
     available: {
       color: "bg-green-500",
-      text: t("dashboard.tables.status.available"),
+      text: tDashboard("tables.status.available"),
       badge: "bg-green-500/10 text-green-500 border-green-500/20",
     },
     occupied: {
       color: "bg-[var(--primary)]",
-      text: t("dashboard.tables.status.occupied"),
+      text: tDashboard("tables.status.occupied"),
       badge:
         "bg-[var(--primary-soft)] text-[var(--primary)] border-[var(--primary-border)]",
     },
     reserved: {
       color: "bg-blue-500",
-      text: t("dashboard.tables.status.reserved"),
+      text: tDashboard("tables.status.reserved"),
       badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
     },
     cleaning: {
       color: "bg-red-500",
-      text: t("dashboard.tables.status.cleaning"),
+      text: tDashboard("tables.status.cleaning"),
       badge: "bg-red-500/10 text-red-500 border-red-500/20",
     },
   };
@@ -163,7 +165,7 @@ export default function TablesPage() {
         .map(table => ({
           id: table.id,
           tenantId: 'tenant-1',
-          name: t('dashboard.tables.card.table_name', { number: table.number }),
+          name: tDashboard('tables.card.table_name', { number: table.number }),
           seats: table.capacity,
           status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
           area: table.area,
@@ -199,7 +201,7 @@ export default function TablesPage() {
           tables: areaTables.map(table => ({
             id: table.id,
             tenantId: 'tenant-1',
-            name: t('dashboard.tables.card.table_name', { number: table.number }),
+            name: tDashboard('tables.card.table_name', { number: table.number }),
             seats: table.capacity,
             status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
             area: table.area,
@@ -345,7 +347,7 @@ export default function TablesPage() {
 
     if (!sourceTable || !targetTable) return;
 
-    if (!confirm(t("dashboard.tables.confirm_merge", { defaultValue: "Merge tables? This will combine capacity and hide the source table." }))) {
+    if (!confirm(tDashboard("tables.confirm_merge", { defaultValue: "Merge tables? This will combine capacity and hide the source table." }))) {
       return;
     }
 
@@ -417,7 +419,7 @@ export default function TablesPage() {
     } catch (err) {
       console.error("Failed to add table:", err);
       alert(
-        t("dashboard.tables.errors.add_failed"),
+        tDashboard("tables.errors.add_failed"),
       );
     }
   };
@@ -503,7 +505,7 @@ export default function TablesPage() {
         setSelectedTable(null);
       } catch (err) {
         console.error("Delete failed", err);
-        message.error(t("dashboard.tables.errors.cannot_delete_due_to_booking"));
+        message.error(tDashboard("tables.errors.cannot_delete_due_to_booking"));
       }
       setDeleteConfirmOpen(false);
     }
@@ -550,7 +552,7 @@ export default function TablesPage() {
       console.error('Failed to create floor on BE:', err);
       // Fallback: show error
       alert(
-        t("dashboard.tables.errors.create_floor_failed"),
+        tDashboard("tables.errors.create_floor_failed"),
       );
     }
   };
@@ -562,10 +564,10 @@ export default function TablesPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold mb-2" style={{ color: "var(--text)" }}>
-                {t("dashboard.tables.title")}
+                {tDashboard("tables.title")}
               </h2>
               <p style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.tables.subtitle")}
+                {tDashboard("tables.subtitle")}
               </p>
             </div>
 
@@ -598,14 +600,14 @@ export default function TablesPage() {
               <button
                 onClick={() => setAddAreaModalOpen(true)}
                 className="px-4 py-2 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium transition-all hover:bg-[var(--bg-base)]">
-                + {t("dashboard.tables.add_floor")}
+                + {tDashboard("tables.add_floor")}
               </button>
               <button
                 onClick={() => setAddModalOpen(true)}
                 className="px-4 py-2 text-white rounded-lg font-medium transition-all"
                 style={{ background: "var(--primary)" }}
                 suppressHydrationWarning>
-                + {t("dashboard.tables.add_table")}
+                + {tDashboard("tables.add_table")}
               </button>
             </div>
           </div>
@@ -615,7 +617,7 @@ export default function TablesPage() {
             <div className="rounded-xl p-4 bg-[var(--card)] border border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm mt-1 text-[var(--text-muted)]">{t("dashboard.tables.stats.total_tables")}</p>
+                  <p className="text-sm mt-1 text-[var(--text-muted)]">{tDashboard("tables.stats.total_tables")}</p>
                   <p className="text-3xl font-bold mt-1 text-[var(--text)]">{tables.length}</p>
                 </div>
               </div>
@@ -623,7 +625,7 @@ export default function TablesPage() {
             <div className="rounded-xl p-4 bg-[var(--card)] border border-green-500/20">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[var(--text-muted)]">{t("dashboard.tables.stats.available")}</p>
+                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.available")}</p>
                   <p className="text-3xl font-bold text-green-500 mt-1">{tables.filter(t => t.status === 'available').length}</p>
                 </div>
               </div>
@@ -631,7 +633,7 @@ export default function TablesPage() {
             <div className="rounded-xl p-4 bg-[var(--card)] border border-[var(--primary)]/20">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[var(--text-muted)]">{t("dashboard.tables.stats.occupied")}</p>
+                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.occupied")}</p>
                   <p className="text-3xl font-bold text-[var(--primary)] mt-1">{tables.filter(t => t.status === 'occupied').length}</p>
                 </div>
               </div>
@@ -639,7 +641,7 @@ export default function TablesPage() {
             <div className="rounded-xl p-4 bg-[var(--card)] border border-blue-500/20">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[var(--text-muted)]">{t("dashboard.tables.stats.reserved")}</p>
+                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.reserved")}</p>
                   <p className="text-3xl font-bold text-blue-500 mt-1">{tables.filter(t => t.status === 'reserved').length}</p>
                 </div>
               </div>
@@ -673,7 +675,7 @@ export default function TablesPage() {
           <h3
             className="text-xl font-bold mb-6"
             style={{ color: "var(--text)" }}>
-            {t("dashboard.tables.title")}
+            {tDashboard("tables.title")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {tables.map((table) => (
@@ -691,14 +693,14 @@ export default function TablesPage() {
                     <h4
                       className="text-lg font-bold"
                       style={{ color: "var(--text)" }}>
-                      {t("dashboard.tables.card.table_name", {
+                      {tDashboard("tables.card.table_name", {
                         number: table.number,
                       })}
                     </h4>
                     <p
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}>
-                      {table.area} {t("dashboard.tables.card.floor")}
+                      {table.area}
                     </p>
                   </div>
                   <span
@@ -725,7 +727,7 @@ export default function TablesPage() {
                       />
                     </svg>
                     <span>
-                      {t("dashboard.tables.card.capacity", {
+                      {tDashboard("tables.card.capacity", {
                         count: table.capacity,
                       })}
                     </span>
@@ -747,7 +749,7 @@ export default function TablesPage() {
                         />
                       </svg>
                       <span>
-                        {t("dashboard.tables.card.order")}:{" "}
+                        {tDashboard("tables.card.order")}:{" "}
                         {table.currentOrder}
                       </span>
                     </div>
@@ -767,7 +769,7 @@ export default function TablesPage() {
                         />
                       </svg>
                       <span>
-                        {t("dashboard.tables.card.reserved_at")}{" "}
+                        {tDashboard("tables.card.reserved_at")}{" "}
                         {table.reservationTime}
                       </span>
                     </div>
@@ -790,7 +792,7 @@ export default function TablesPage() {
                         "rgba(255, 56, 11, 0.1)";
                     }}
                     suppressHydrationWarning>
-                    {t("dashboard.tables.card.view_details")}
+                    {tDashboard("tables.card.view_details")}
                   </button>
 
                   {/* QR Button — only show if qrCodeUrl exists */}
@@ -799,7 +801,7 @@ export default function TablesPage() {
                       title="Xem QR Code"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setQrModal({ url: table.qrCodeUrl!, number: table.number });
+                        setQrModal({ url: table.qrCodeUrl!, number: table.number, tableId: table.id });
                       }}
                       className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                       style={{
@@ -988,7 +990,12 @@ export default function TablesPage() {
               <div style={{ display: 'flex', gap: 8, width: '100%' }}>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(qrModal.url);
+                    const tableLink = typeof window !== "undefined"
+                      ? `${window.location.origin}/customer/${qrModal.tableId}`
+                      : `/customer/${qrModal.tableId}`;
+                    navigator.clipboard.writeText(tableLink).then(() => {
+                      message.success("Đã copy link đặt món");
+                    });
                   }}
                   style={{
                     flex: 1, padding: '9px 0', borderRadius: 10,

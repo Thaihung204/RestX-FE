@@ -64,10 +64,15 @@ export interface GenericResponse {
 }
 
 // ── Cookie helpers (middleware runs server-side, needs cookie not localStorage) ──
-function setAuthCookie(token: string) {
+function setAuthCookie(token: string, rememberMe: boolean) {
   if (typeof document === 'undefined') return;
-  const maxAge = 8 * 60 * 60; // 8 hours in seconds
-  document.cookie = `accessToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  if (rememberMe) {
+    const maxAge = 8 * 60 * 60; // 8 hours in seconds
+    document.cookie = `accessToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    return;
+  }
+  // Session cookie (cleared when browser closes)
+  document.cookie = `accessToken=${token}; path=/; SameSite=Lax`;
 }
 
 function clearAuthCookie() {
@@ -178,15 +183,24 @@ const authService = {
         roles: user.roles || (user.role ? [user.role] : ['Customer']),
       };
 
-      // Lưu thông tin vào localStorage
-      localStorage.setItem('accessToken', tokens.accessToken);
+      const shouldRemember = !!credentials.rememberMe;
+      const storage = shouldRemember ? localStorage : sessionStorage;
+
+      // Lưu thông tin vào storage theo rememberMe
+      storage.setItem('accessToken', tokens.accessToken);
       if (tokens.refreshToken) {
-        localStorage.setItem('refreshToken', tokens.refreshToken);
+        storage.setItem('refreshToken', tokens.refreshToken);
       }
-      localStorage.setItem('userInfo', JSON.stringify(normalizedUser));
+      storage.setItem('userInfo', JSON.stringify(normalizedUser));
+
+      if (!shouldRemember) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userInfo');
+      }
 
       // Lưu token vào cookie để middleware có thể đọc (server-side auth check)
-      setAuthCookie(tokens.accessToken);
+      setAuthCookie(tokens.accessToken, shouldRemember);
 
       console.log('Login successful, user:', normalizedUser);
       return normalizedUser;
@@ -381,6 +395,9 @@ const authService = {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userInfo');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('userInfo');
     // Xóa cookie để middleware biết user đã logout
     clearAuthCookie();
   },
@@ -388,7 +405,7 @@ const authService = {
   // Get current user
   getCurrentUser(): User | null {
     if (typeof window === 'undefined') return null;
-    const userInfo = localStorage.getItem('userInfo');
+    const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
     return userInfo ? JSON.parse(userInfo) : null;
   },
 
@@ -414,12 +431,12 @@ const authService = {
 
   getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('accessToken');
+    return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
   },
 
   getRefreshToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('refreshToken');
+    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
   },
 
   // Change Password (requires authentication)
