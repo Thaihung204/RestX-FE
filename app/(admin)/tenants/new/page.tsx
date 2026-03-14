@@ -455,7 +455,7 @@ const TenantCreatePage: React.FC = () => {
                     <span className="url-segment url-scheme">https://</span>
                     <Input
                       placeholder={t(
-                        "tenants.create.fields.host_name_placeholder",
+                        "tenants.create.fields.host_name",
                       )}
                       value={hostNameValue}
                       onChange={(e) => {

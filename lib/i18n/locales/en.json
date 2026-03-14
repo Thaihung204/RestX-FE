@@ -2179,7 +2179,7 @@
       "total_filtered": "Total: {{total}} | Filtered: {{filtered}}"
     },
     "actions": {
-      "view_details": "View Details",
+      "view_details": "View",
       "configure_domain": "Configure Domain",
       "suspend_tenant": "Delete Tenant",
       "delete_confirm_title": "Delete Tenant",
@@ -2271,6 +2271,8 @@
         "phone_placeholder": "Contact number",
         "mail_restaurant": "Mail Restaurant",
         "mail_restaurant_placeholder": "Restaurant contact email",
+        "prefix": "Prefix",
+        "prefix_placeholder": "e.g., NHS",
         "address": "Restaurant Address",
         "address_line1_placeholder": "Street number",
         "address_line2_placeholder": "Ward/District",
@@ -2324,15 +2326,20 @@
       "back": "Back",
       "extended_business_info": "Extended Business Information",
       "about_overview": "About & Overview",
+      "branding": {
+        "title": "Branding & Theme",
+        "logo_url": "Logo URL",
+        "favicon_url": "Favicon URL",
+        "background_url": "Background URL",
+        "primary_color": "Brand Color",
+        "light_base_color": "Primary Background (Light)",
+        "light_surface_color": "Secondary Background (Light)",
+        "light_card_color": "Component Background (Light)",
+        "dark_base_color": "Primary Background (Dark)",
+        "dark_surface_color": "Secondary Background (Dark)",
+        "dark_card_color": "Component Background (Dark)"
+      },
       "fields": {
-        "county": "County / Province",
-        "county_placeholder": "Enter county or province",
-        "post_code": "Post Code",
-        "post_code_placeholder": "Enter post code",
-        "country": "Country",
-        "country_placeholder": "Enter country",
-        "company_number": "Company Number",
-        "company_number_placeholder": "Enter company registration number",
         "secondary_phone": "Secondary Phone",
         "secondary_phone_placeholder": "Enter secondary phone number",
         "opening_hours": "Opening Hours",
@@ -2341,9 +2348,28 @@
         "about_us_placeholder": "Enter restaurant description or about us content",
         "overview": "Overview",
         "overview_placeholder": "Enter brief overview or tagline",
+        "company_number": "Tax ID / Company Number",
+        "company_number_placeholder": "Enter tax ID or company number",
+        "county": "County / District",
+        "county_placeholder": "Enter county or district",
+        "post_code": "Postal Code",
+        "post_code_placeholder": "Enter postal code",
+        "country": "Country",
+        "country_placeholder": "Enter country",
         "status": "Tenant Status",
         "status_active": "Active — Restaurant is live and accessible",
         "status_inactive": "Inactive — Restaurant is disabled"
+      },
+      "tenant_settings": {
+        "title": "Tenant Settings",
+        "placeholder": "JSON configuration for tenant settings"
+      },
+      "system_fields": {
+        "title": "System Fields",
+        "created_date": "Created Date",
+        "modified_date": "Modified Date",
+        "created_by": "Created By",
+        "modified_by": "Modified By"
       },
       "buttons": {
         "update": "Save Changes",
