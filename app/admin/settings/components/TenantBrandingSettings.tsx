@@ -302,7 +302,12 @@ export default function TenantBrandingSettings() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-40 rounded-xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-        <Spin size="large" tip="Loading tenant branding..." />
+        <div className="flex flex-col items-center gap-2">
+          <Spin size="large" />
+          <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+            Loading tenant branding...
+          </span>
+        </div>
       </div>
     );
   }
@@ -346,7 +351,7 @@ export default function TenantBrandingSettings() {
       {/* Show which tenant is being edited */}
       {tenant && (
         <Alert
-          message={`Editing branding for: ${tenant.businessName || tenant.name} (${tenant.hostname})`}
+          title={`Editing branding for: ${tenant.businessName || tenant.name} (${tenant.hostname})`}
           type="info"
           showIcon
           className="mb-6"

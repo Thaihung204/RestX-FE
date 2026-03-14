@@ -74,7 +74,7 @@ const CSS = `
 `;
 
 const DURATION = 2000;
-const FADEOUT = 280;
+const FADEOUT = 500;
 const T_TOTAL = DURATION + FADEOUT;
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ function lerpColor(a: string, b: string, t: number) {
 function getLiquidColor(pct: number) {
     if (pct < 33) return lerpColor('#60a5fa', '#fb923c', pct / 33);
     if (pct < 66) return lerpColor('#fb923c', '#ef4444', (pct - 33) / 33);
-    return lerpColor('#ef4444', 'var(--primary)', (pct - 66) / 34);
+    return lerpColor('#ef4444', '#FF380B', (pct - 66) / 34);
 }
 
 function getGlowColor(pct: number) {
@@ -114,7 +114,6 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
     const [mounted, setMounted] = useState(false);
     const [exiting, setExiting] = useState(false);
     const [showLogo, setShowLogo] = useState(false);
-    const [logoExit, setLogoExit] = useState(false);
     const [isWild, setIsWild] = useState(false);
 
     const liquidRef = useRef<SVGRectElement>(null);
@@ -139,7 +138,6 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                 setMounted(false);
                 setExiting(false);
                 setShowLogo(false);
-                setLogoExit(false);
                 setIsWild(false);
             }, FADEOUT);
             ts.current.push(t);
@@ -147,7 +145,7 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
         }
 
         setMounted(true); setExiting(false);
-        setShowLogo(false); setLogoExit(false); setIsWild(false);
+        setShowLogo(false); setIsWild(false);
         startRef.current = null;
 
         const tick = (now: number) => {
@@ -187,12 +185,6 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
 
         at(() => setShowLogo(true), DURATION * 0.3);
         at(() => setIsWild(true), DURATION * 0.75);
-        at(() => setLogoExit(true), DURATION - 200);
-        at(() => setExiting(true), DURATION);
-        at(() => {
-            setMounted(false); setExiting(false);
-            setShowLogo(false); setLogoExit(false); setIsWild(false);
-        }, T_TOTAL);
 
         return () => { clr(); if (rafRef.current) cancelAnimationFrame(rafRef.current); };
     }, [visible]);
@@ -344,9 +336,7 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                 {showLogo && (
                     <div style={{
                         marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                        animation: logoExit
-                            ? 'logoOut 200ms ease forwards'
-                            : 'logoIn 300ms cubic-bezier(0.34,1.56,0.64,1) forwards',
+                        animation: 'logoIn 300ms cubic-bezier(0.34,1.56,0.64,1) forwards',
                         pointerEvents: 'none',
                     }}>
                         <p style={{
@@ -370,10 +360,6 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
 }
 
 // ─── Trigger helpers ──────────────────────────────────────────────────────────
-
-function getSection(path: string): string {
-    return path.split('/').filter(Boolean)[0] ?? '';
-}
 
 function isHardRefresh(): boolean {
     if (typeof window === 'undefined') return false;
@@ -405,9 +391,9 @@ export function usePageLoading(isLoading: boolean) {
 }
 
 // ─── Route watcher (3 triggers) ───────────────────────────────────────────────
-const SHOW_DELAY = 600;
-const MAX_WAIT = 12000;
-const MIN_VISIBLE_MS = 900;
+const SHOW_DELAY = 350;
+const MAX_WAIT = 8000;
+const MIN_VISIBLE_MS = 250;
 
 export function PageTransitionLoader() {
     const pathname = usePathname();
@@ -418,6 +404,7 @@ export function PageTransitionLoader() {
     const prevPath = useRef<string | null>(null);
     const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const forceHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const visibleSinceRef = useRef<number | null>(null);
 
     const show = () => {
@@ -425,11 +412,17 @@ export function PageTransitionLoader() {
         loadingRef.current = true;
         visibleSinceRef.current = Date.now();
         setLoading(true);
+
+        if (forceHideTimer.current) clearTimeout(forceHideTimer.current);
+        forceHideTimer.current = setTimeout(() => {
+            if (loadingRef.current) hide(FADEOUT);
+        }, MAX_WAIT);
     };
 
     const hide = (afterMs = 0) => {
         if (showTimer.current) { clearTimeout(showTimer.current); showTimer.current = null; }
         if (hideTimer.current) clearTimeout(hideTimer.current);
+        if (forceHideTimer.current) { clearTimeout(forceHideTimer.current); forceHideTimer.current = null; }
 
         const visibleFor = visibleSinceRef.current ? Date.now() - visibleSinceRef.current : 0;
         const minDelay = Math.max(0, MIN_VISIBLE_MS - visibleFor);
@@ -473,6 +466,47 @@ export function PageTransitionLoader() {
 
         return () => {
             window.removeEventListener('load', finishWhenReady);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // ── Trigger 1b: Initial load (non-hard refresh) ──
+    useEffect(() => {
+        if (isHardRefresh()) return;
+        if (document.readyState === 'complete') return;
+
+        show();
+
+        const finish = () => {
+            if (hideTimer.current) clearTimeout(hideTimer.current);
+            hide(FADEOUT);
+        };
+
+        let fontReady = false;
+        if (document.fonts?.ready) {
+            document.fonts.ready
+                .then(() => { fontReady = true; })
+                .catch(() => { fontReady = true; });
+        } else {
+            fontReady = true;
+        }
+
+        const onLoad = () => {
+            if (fontReady) {
+                finish();
+                return;
+            }
+            const t = setInterval(() => {
+                if (fontReady) {
+                    clearInterval(t);
+                    finish();
+                }
+            }, 50);
+        };
+
+        window.addEventListener('load', onLoad, { once: true });
+        return () => {
+            window.removeEventListener('load', onLoad);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -521,13 +555,14 @@ export function PageTransitionLoader() {
 
     // ── Trigger 3: Any route navigation (fallback + auto-hide) ──
     useEffect(() => {
-        if (prevPath.current === null) { prevPath.current = pathname; return; }
-        if (prevPath.current === pathname) return;
+        const current = pathname;
+        if (prevPath.current === null) { prevPath.current = current; return; }
+        if (prevPath.current === current) return;
 
-        prevPath.current = pathname;
+        prevPath.current = current;
         show();
         if (hideTimer.current) clearTimeout(hideTimer.current);
-        hideTimer.current = setTimeout(() => { hide(); }, T_TOTAL);
+        hideTimer.current = setTimeout(() => { hide(FADEOUT); }, T_TOTAL);
     }, [pathname]);
 
     // ── Trigger 3: Slow page content (via usePageLoading hook) ──
@@ -538,14 +573,14 @@ export function PageTransitionLoader() {
             // Only show after SHOW_DELAY — cancels if page loads in time
             showTimer.current = setTimeout(() => {
                 show();
-                if (hideTimer.current) clearTimeout(hideTimer.current);
-                hideTimer.current = setTimeout(() => { loadingRef.current = false; setLoading(false); }, MAX_WAIT);
             }, SHOW_DELAY);
         };
 
         const handleLoaded = () => {
             // Page finished before threshold → cancel pending show, no overlay
             if (showTimer.current) { clearTimeout(showTimer.current); showTimer.current = null; }
+            if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; }
+            if (forceHideTimer.current) { clearTimeout(forceHideTimer.current); forceHideTimer.current = null; }
             // Page finished after overlay appeared → fade out
             if (loadingRef.current) hide(FADEOUT);
         };

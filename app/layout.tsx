@@ -1,4 +1,5 @@
 import I18nProvider from "@/components/I18nProvider";
+import PageTransitionLoader from "@/components/PageTransitionLoader";
 import TenantFavicon from "@/components/TenantFavicon";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { CartProvider } from "@/lib/contexts/CartContext";
@@ -6,9 +7,9 @@ import { TenantProvider } from "@/lib/contexts/TenantContext";
 import { ToastProvider } from "@/lib/contexts/ToastContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import AntdProvider from "./theme/AntdProvider";
-import PageTransitionLoader from "@/components/PageTransitionLoader";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
@@ -112,6 +113,9 @@ export default function RootLayout({
         <I18nProvider>
           <TenantProvider>
             <TenantFavicon />
+            <Suspense fallback={null}>
+              <PageTransitionLoader />
+            </Suspense>
             <AuthProvider>
               <CartProvider>
                 <ToastProvider>

@@ -98,59 +98,22 @@ function ReservationDetailModal({
         setSelectedStatusId(newStatusId);
         setActionLoading(true);
         try {
-            // Special-case: checkin still uses dedicated POST endpoint
-            if (newStatusId === reservationService.STATUS_ID.CHECKED_IN) {
-                await reservationService.checkInReservation(detail.confirmationCode);
-            } else {
-                await reservationService.updateReservationStatus(reservationId, newStatusId);
-            }
+            await reservationService.updateReservationStatus(reservationId, newStatusId);
             onStatusUpdated();
             onClose();
         } catch (e) {
             console.error(e);
-            // Revert on error
             setSelectedStatusId(detail.status.id);
         } finally {
             setActionLoading(false);
         }
     };
 
-    // Keep old handleAction for the confirm-dialog flow
-    const handleAction = async (nextStatusId: number) => {
+    const handleCheckin = async () => {
         if (!detail) return;
         setActionLoading(true);
         try {
-            if (nextStatusId === 2) {
-                await reservationService.confirmReservation(reservationId);
-                onStatusUpdated();
-                onClose();
-            } else if (nextStatusId === 3) {
-                await reservationService.checkInReservation(detail.confirmationCode);
-                const updated = await reservationService.getReservationById(reservationId);
-                setDetail(updated);
-                onStatusUpdated();
-            } else if (nextStatusId === 4) {
-                await reservationService.completeReservation(reservationId);
-                onStatusUpdated();
-                onClose();
-            } else if (nextStatusId === 5) {
-                await reservationService.deleteReservation(reservationId);
-                onStatusUpdated();
-                onClose();
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setActionLoading(false);
-            setConfirmAction(null);
-        }
-    };
-
-    const handleDelete = async () => {
-        if (!confirm(t('admin.reservations.actions.quick_cancel') + "?")) return;
-        setActionLoading(true);
-        try {
-            await reservationService.deleteReservation(reservationId);
+            await reservationService.checkInReservation(detail.confirmationCode);
             onStatusUpdated();
             onClose();
         } catch (e) {
@@ -160,10 +123,6 @@ function ReservationDetailModal({
         }
     };
 
-    let actions = detail ? STATUS_ACTIONS_KEYS[detail.status.code] ?? [] : [];
-    if (detail?.checkedInAt) {
-        actions = actions.filter(a => a.actionKey !== "checkin");
-    }
 
     return (
         <div
@@ -254,6 +213,20 @@ function ReservationDetailModal({
                                         </div>
                                     )}
                                 />
+                                {/* Dedicated Check-in button — opens table session + sets table occupied */}
+                                {detail.status.code === "CONFIRMED" && (
+                                    <button
+                                        onClick={handleCheckin}
+                                        disabled={actionLoading}
+                                        className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 flex items-center gap-1.5"
+                                        style={{ background: "#8b5cf6" }}
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {t('admin.reservations.actions.checkin')}
+                                    </button>
+                                )}
                             </div>
 
                             {/* Info grid */}
@@ -322,7 +295,7 @@ function ReservationDetailModal({
                             {/* Timestamps */}
                             <div className="flex flex-wrap gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
                                 <span>{t('admin.reservations.modal.created_at')} {new Date(detail.createdAt).toLocaleString()}</span>
-                                {detail.checkedInAt && (
+                                {detail.checkedInAt && ["CHECKED_IN", "COMPLETED"].includes(detail.status.code) && (
                                     <span style={{ color: "#8b5cf6" }}>
                                         ✓ Checked in: {new Date(detail.checkedInAt).toLocaleString()}
                                     </span>

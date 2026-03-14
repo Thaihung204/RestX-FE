@@ -69,16 +69,32 @@ export function middleware(req: NextRequest) {
   // ── Auth token check (read cookie set by authService on login) ──
   const accessToken = req.cookies.get('accessToken')?.value;
   const hasAuthToken = !!accessToken;
+  
+  const adminAccessToken = req.cookies.get('adminAccessToken')?.value;
+  const hasAdminAuthToken = !!adminAccessToken;
 
-  // Super Admin domain (admin.restx.food or admin.localhost) → /tenants
+  // Super Admin domain (admin.restx.food or admin.localhost)
   if (isAdminDomain) {
-    if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/tenants', req.url));
-    }
-    if (pathname.startsWith('/tenants')) {
+    // Allow login page without auth check
+    if (pathname === '/login-admin') {
+      // If already logged in, go to home (which will redirect to /tenants)
+      if (hasAdminAuthToken) {
+        return NextResponse.redirect(new URL('/tenants', req.url));
+      }
       return NextResponse.next();
     }
-    return NextResponse.rewrite(new URL(`/tenants${pathname}`, req.url));
+
+    // Require admin token for all other paths on the admin domain
+    if (!hasAdminAuthToken) {
+      return NextResponse.redirect(new URL('/login-admin', req.url));
+    }
+
+    // Redirect root to /tenants
+    if (pathname === '/') {
+      return NextResponse.redirect(new URL('/tenants', req.url));
+    }
+    
+    return NextResponse.next();
   }
 
   // Tenant domains:

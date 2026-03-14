@@ -383,12 +383,14 @@ export default function DashboardHeader() {
                   color: "var(--text)",
                 }
               }}
-              overlayStyle={{
-                background: "var(--card)",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-                overflow: "hidden",
+              styles={{
+                root: {
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 12,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                  overflow: "hidden",
+                },
               }}
               placement="bottomRight"
               trigger={["click"]}>

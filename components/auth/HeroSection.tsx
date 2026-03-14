@@ -1,7 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 export const HeroSection: React.FC = () => {
+    const { t } = useTranslation('auth');
+
     return (
         <div className="hidden md:block md:w-1/2 relative overflow-hidden auth-hero-panel z-10 h-full min-h-screen">
             <img
@@ -21,11 +24,11 @@ export const HeroSection: React.FC = () => {
                 </div>
 
                 <h2 className="text-4xl lg:text-5xl font-bold leading-tight mb-4 drop-shadow-lg">
-                    Taste the extraordinary.
+                    {t('hero_section.title')}
                 </h2>
 
                 <p className="text-gray-300 text-lg max-w-md drop-shadow-md">
-                    Reserve your table, manage your bookings, and experience culinary excellence defined by passion.
+                    {t('hero_section.description')}
                 </p>
 
                 {/* Decorative Slider Indicators */}
