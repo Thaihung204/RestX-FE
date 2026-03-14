@@ -2089,7 +2089,7 @@
     "stats": {
       "total_tenants": "Tổng nhà hàng",
       "active_tenants": "Đang hoạt động",
-      "monthly_revenue": "Doanh thu tháng (giả lập)"
+      "monthly_revenue": "Doanh thu tháng"
     },
     "tabs": {
       "restaurant_list": "Danh sách nhà hàng",
