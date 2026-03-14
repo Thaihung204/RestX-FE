@@ -69,12 +69,15 @@ const SHAPE_OPTIONS = [
 ];
 
 // ─── QR Code Section ───────────────────────────────────────────────────────────
-function QRCodeSection({ qrCodeUrl, tableNumber }: { qrCodeUrl: string; tableNumber: number }) {
+function QRCodeSection({ qrCodeUrl, tableNumber, tableId }: { qrCodeUrl: string; tableNumber: number; tableId: string }) {
   const [copied, setCopied] = useState(false);
   const [imgError, setImgError] = useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(qrCodeUrl).then(() => {
+    const tableLink = typeof window !== "undefined"
+      ? `${window.location.origin}/customer/${tableId}`
+      : `/customer/${tableId}`;
+    navigator.clipboard.writeText(tableLink).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -515,7 +518,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
 
                   {/* QR Code Section */}
                   {table.qrCodeUrl && (
-                    <QRCodeSection qrCodeUrl={table.qrCodeUrl} tableNumber={table.number} />
+                    <QRCodeSection qrCodeUrl={table.qrCodeUrl} tableNumber={table.number} tableId={table.id} />
                   )}
 
                   {/* Form Fields */}

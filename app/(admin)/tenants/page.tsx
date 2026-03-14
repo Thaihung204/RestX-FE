@@ -3,6 +3,7 @@
 import ThemeToggle from "@/app/components/ThemeToggle";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import { useLanguage } from "@/components/I18nProvider";
+import adminAuthService from "@/lib/services/adminAuthService";
 import {
     CheckCircleOutlined,
     EyeOutlined,
@@ -13,6 +14,7 @@ import {
     RiseOutlined,
     SearchOutlined,
     ShopOutlined,
+    UserOutlined,
 } from "@ant-design/icons";
 import {
     App,
@@ -21,9 +23,11 @@ import {
     Button,
     Card,
     DatePicker,
+    Dropdown,
     Input,
     Radio,
     Select,
+    Space,
     Statistic,
     Table,
     Tabs,
@@ -47,6 +51,8 @@ const TenantPage: React.FC = () => {
   const { language, changeLanguage } = useLanguage();
   const { message } = App.useApp();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [adminName, setAdminName] = useState("Admin");
+  const [adminRole, setAdminRole] = useState("Super Admin");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [activeRevenueRange, setActiveRevenueRange] = useState<
@@ -58,6 +64,15 @@ const TenantPage: React.FC = () => {
   // Fetch tenants from API
   useEffect(() => {
     fetchTenants();
+  }, []);
+
+  useEffect(() => {
+    const admin = adminAuthService.getCurrentAdmin();
+    if (admin) {
+      setAdminName(admin.fullName || admin.email || "Admin");
+      const roles = admin.roles || [];
+      setAdminRole(roles.length ? roles.join(", ") : "Super Admin");
+    }
   }, []);
 
   const fetchTenants = async () => {
@@ -444,6 +459,47 @@ const TenantPage: React.FC = () => {
               </div>
 
               <ThemeToggle />
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: "user-info",
+                      label: (
+                        <div style={{ padding: "4px 0", maxWidth: 200 }}>
+                          <div style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: "bold" }}>{adminName}</div>
+                          <div style={{ fontSize: 12, display: "block", opacity: 0.6 }}>{adminRole}</div>
+                        </div>
+                      ),
+                      disabled: true,
+                      style: { cursor: "default" },
+                    },
+                    { type: "divider" },
+                    { key: "logout", label: t("staff.user_menu.logout"), danger: true },
+                  ],
+                  style: {
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text)",
+                  },
+                  onClick: ({ key }) => {
+                    if (key === "logout") {
+                      adminAuthService.logout();
+                      router.replace("/login");
+                    }
+                  },
+                }}
+                placement="bottomRight"
+                trigger={["click"]}>
+                <button
+                  className="flex items-center justify-center rounded-full transition-colors"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)", width: 36, height: 36 }}>
+                  <Avatar
+                    size={32}
+                    icon={<UserOutlined />}
+                    style={{ background: "var(--primary)", color: "white" }}
+                  />
+                </button>
+              </Dropdown>
               <Link href="/tenants/new">
                 <Button
                   type="primary"

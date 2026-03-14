@@ -239,11 +239,28 @@
     },
     "tables": {
       "title": "Quản lý bàn",
+      "subtitle": "Quản lý bàn và đặt bàn",
+      "add_floor": "Thêm khu vực",
+      "add_table": "Thêm bàn",
       "status": {
         "available": "Trống",
         "occupied": "Đang phục vụ",
         "reserved": "Đã đặt",
         "cleaning": "Đang dọn"
+      },
+      "stats": {
+        "total_tables": "Tổng số bàn",
+        "available": "Trống",
+        "occupied": "Có khách",
+        "reserved": "Đã đặt"
+      },
+      "card": {
+        "table_name": "Bàn {{number}}",
+        "floor": "Tầng",
+        "capacity": "Sức chứa: {{count}} ghế",
+        "order": "Đơn",
+        "reserved_at": "Đặt lúc",
+        "view_details": "Xem chi tiết"
       },
       "view": {
         "grid": "Lưới",
@@ -296,7 +313,14 @@
         "table_ready": "{table} đã sẵn sàng",
         "enter_guests": "Vui lòng nhập số khách",
         "max_guests": "Tối đa {capacity} khách"
-      }
+      },
+      "errors": {
+        "cannot_delete_last_area": "Không thể xóa khu vực cuối cùng.",
+        "cannot_delete_due_to_booking": "Không thể xóa vì đang có đặt bàn.",
+        "add_failed": "Thêm bàn thất bại",
+        "create_floor_failed": "Tạo khu vực thất bại"
+      },
+      "confirm_merge": "Gộp bàn? Thao tác này sẽ cộng sức chứa và ẩn bàn nguồn."
     },
     "menu": {
       "dashboard": "Tổng quan",
@@ -815,6 +839,7 @@
     "tables": {
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
+      "add_floor": "Thêm khu vực",
       "add_table": "Thêm bàn",
       "add_area": "Thêm khu vực",
       "add_zone": "Vẽ vùng",
@@ -854,6 +879,7 @@
       },
       "card": {
         "area": "Khu vực",
+        "floor": "Tầng",
         "capacity": "Sức chứa: {{count}} ghế",
         "order": "Đơn",
         "reserved_at": "Đặt lúc",
