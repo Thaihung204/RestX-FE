@@ -56,35 +56,8 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
       setUser(localUser);
     };
 
-    const syncUserFromApi = async () => {
-      const token = authService.getAccessToken();
-      if (!token) {
-        setUser(null);
-        return;
-      }
-
-      const localUser = authService.getCurrentUser();
-      if (localUser) {
-        setUser(localUser);
-      }
-
-      try {
-        const serverUser = await authService.getCurrentUserFromServer();
-        if (serverUser) {
-          setUser(serverUser);
-        } else if (localUser) {
-          setUser(localUser);
-        }
-      } catch {
-        if (localUser) {
-          setUser(localUser);
-        }
-      }
-    };
-
     handleResize();
     syncUserFromStorage();
-    void syncUserFromApi();
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleResize);
     window.addEventListener('focus', syncUserFromStorage);
@@ -159,17 +132,31 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
         style={{
           maxWidth: 1400,
           margin: '0 auto',
-          padding: '16px 24px',
+          padding: '12px 24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'nowrap',
+          gap: 16,
         }}>
         {/* Logo */}
-        <Link href="/restaurant" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+        <Link
+          href="/restaurant"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            textDecoration: 'none',
+            flexShrink: 0,
+            maxWidth: 280,
+            minWidth: 0,
+          }}
+        >
           <div
             style={{
-              width: 48,
-              height: 48,
+              width: 40,
+              height: 40,
+              flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -190,16 +177,20 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
           </div>
           <span
             style={{
-              fontSize: 18,
+              fontSize: 15,
               fontWeight: 700,
               color: headerContentColor,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              lineHeight: 1.2,
             }}>
             {tenant?.businessName || tenant?.name || t('restaurant.header.title')}
           </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
           <div style={{ display: isMobile ? 'none' : 'block' }}>
             <Navbar
               items={menuItems}

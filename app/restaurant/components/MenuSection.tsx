@@ -84,6 +84,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ menu = [] }) => {
                             src={dish.imageUrl || dish.mainImageUrl || (dish.images && dish.images[0]?.imageUrl) || "https://placehold.co/100x100"}
                             alt={dish.name}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
+                            onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100?text=No+Image'; }}
                           />
                         </div>
                         <div style={{ flexGrow: 1 }}>
@@ -136,6 +137,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ menu = [] }) => {
                             src={dish.imageUrl || dish.mainImageUrl || (dish.images && dish.images[0]?.imageUrl) || "https://placehold.co/100x100"}
                             alt={dish.name}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
+                            onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100?text=No+Image'; }}
                           />
                         </div>
                         <div style={{ flexGrow: 1 }}>
