@@ -22,7 +22,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
         router.push(`/login?redirect=${redirect}`);
       } else if (requiredRole && user.role !== requiredRole) {
         if (requiredRole === 'admin' || requiredRole === 'shop') {
-          router.push('/login-admin');
+          router.push('/login');
         } else {
           const query = searchParams?.toString();
           const fullPath = `${pathname}${query ? `?${query}` : ''}`;

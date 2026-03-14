@@ -20,7 +20,6 @@ export function middleware(req: NextRequest) {
   const PUBLIC_ROUTES = new Set([
     "/login",
     "/login-email",
-    "/login-admin",
     "/register",
     "/forgot-password",
     "/restaurant",
@@ -35,15 +34,6 @@ export function middleware(req: NextRequest) {
     pathname.startsWith('/favicon.ico') ||
     pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|eot|otf)$/)
   ) {
-    return NextResponse.next();
-  }
-
-  // Allow public routes on any domain
-  const isPublicRoute =
-    PUBLIC_ROUTES.has(pathname) ||
-    pathname.startsWith('/restaurant');
-
-  if (isPublicRoute) {
     return NextResponse.next();
   }
 
@@ -75,18 +65,23 @@ export function middleware(req: NextRequest) {
 
   // Super Admin domain (admin.restx.food or admin.localhost)
   if (isAdminDomain) {
-    // Allow login page without auth check
-    if (pathname === '/login-admin') {
+    // Canonical login path: /login (rewrite to admin login page)
+    if (pathname === '/login') {
       // If already logged in, go to home (which will redirect to /tenants)
       if (hasAdminAuthToken) {
         return NextResponse.redirect(new URL('/tenants', req.url));
       }
-      return NextResponse.next();
+      return NextResponse.rewrite(new URL('/login-admin', req.url));
+    }
+
+    // Backward compatibility: redirect /login-admin to /login
+    if (pathname === '/login-admin') {
+      return NextResponse.redirect(new URL('/login', req.url));
     }
 
     // Require admin token for all other paths on the admin domain
     if (!hasAdminAuthToken) {
-      return NextResponse.redirect(new URL('/login-admin', req.url));
+      return NextResponse.redirect(new URL('/login', req.url));
     }
 
     // Redirect root to /tenants
@@ -94,6 +89,15 @@ export function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL('/tenants', req.url));
     }
     
+    return NextResponse.next();
+  }
+
+  // Allow public routes on any domain
+  const isPublicRoute =
+    PUBLIC_ROUTES.has(pathname) ||
+    pathname.startsWith('/restaurant');
+
+  if (isPublicRoute) {
     return NextResponse.next();
   }
 
@@ -109,6 +113,19 @@ export function middleware(req: NextRequest) {
       hostWithoutPort !== 'admin.localhost');
 
   if (isTenantDomain) {
+    // Block admin tenants routes on tenant domains
+    if (pathname === '/tenants' || pathname.startsWith('/tenants/')) {
+      const port = host.includes(':') ? host.split(':')[1] : '';
+      const adminHost = hostWithoutPort.endsWith('localhost')
+        ? `admin.localhost${port ? `:${port}` : ''}`
+        : ADMIN_DOMAIN;
+      const adminLoginUrl = new URL(req.nextUrl);
+      adminLoginUrl.host = adminHost;
+      adminLoginUrl.pathname = '/login';
+      adminLoginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(adminLoginUrl);
+    }
+
     // Root path → restaurant landing page
     if (pathname === '/') {
       return NextResponse.rewrite(new URL('/restaurant', req.url));
