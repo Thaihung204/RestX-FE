@@ -235,6 +235,31 @@
         "status_updated": "Item status updated",
         "order_status_updated": "Order status updated",
         "order_status_update_failed": "Failed to update order status"
+      },
+      "payment": {
+        "actions": {
+          "pay": "Pay",
+          "confirm": "Confirm payment"
+        },
+        "modal": {
+          "title": "Payment",
+          "order_label": "Order",
+          "total_label": "Total",
+          "method_label": "Payment method",
+          "cash_label": "Cash received",
+          "change_label": "Change",
+          "missing_label": "Amount due"
+        },
+        "methods": {
+          "cash": "Cash",
+          "bank": "Bank transfer"
+        },
+        "messages": {
+          "cash_insufficient": "Cash received is not enough",
+          "cash_success": "Cash payment successful",
+          "link_created": "Payment link created",
+          "payment_failed": "Payment failed"
+        }
       }
     },
     "tables": {
@@ -339,6 +364,14 @@
         "total_payment": "Total Payment",
         "pay": "Pay"
       },
+      "payments": {
+        "title": "All payments",
+        "count": "{{count}} transactions",
+        "loading": "Loading payments...",
+        "empty": "No payment transactions yet",
+        "no_transaction": "Cash payment",
+        "status_na": "Unknown"
+      },
       "payment": {
         "title": "Payment",
         "bill_detail": "Bill Details",
@@ -363,7 +396,8 @@
       },
       "messages": {
         "insufficient_cash": "Insufficient cash received",
-        "payment_success": "Payment successful!"
+        "payment_success": "Payment successful!",
+        "payments_load_failed": "Failed to load payments"
       }
     },
     "attendance": {
@@ -809,6 +843,31 @@
         "columns": {
           "dish": "Dish",
           "qty": "Qty"
+        }
+      },
+      "payment": {
+        "actions": {
+          "pay": "Pay",
+          "confirm": "Confirm payment"
+        },
+        "modal": {
+          "title": "Payment",
+          "order_label": "Order",
+          "total_label": "Total",
+          "method_label": "Payment method",
+          "cash_label": "Cash received",
+          "change_label": "Change",
+          "missing_label": "Amount due"
+        },
+        "methods": {
+          "cash": "Cash",
+          "bank": "Bank transfer"
+        },
+        "messages": {
+          "cash_insufficient": "Cash received is not enough",
+          "cash_success": "Cash payment successful",
+          "link_created": "Payment link created",
+          "payment_failed": "Payment failed"
         }
       }
     },
@@ -1341,6 +1400,18 @@
       "api_error": "API Error: {{status}} - {{message}}",
       "network_error": "Network Error: {{message}}",
       "unknown_error": "An unexpected error occurred"
+    }
+  },
+  "payment": {
+    "success": {
+      "title": "Payment successful",
+      "message": "Your order has been paid. You can return to the order management screen to continue.",
+      "back": "Back"
+    },
+    "cancel": {
+      "title": "Payment cancelled",
+      "message": "You cancelled the payment. You can return to the order management screen to continue.",
+      "back": "Back"
     }
   },
   "charts": {

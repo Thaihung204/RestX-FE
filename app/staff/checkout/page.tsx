@@ -1,38 +1,38 @@
 'use client';
 
+import paymentService, { PaymentDetail } from '@/lib/services/paymentService';
 import {
-    CheckCircleOutlined,
-    ClockCircleOutlined,
-    CreditCardOutlined,
-    DollarOutlined,
-    GiftOutlined,
-    PrinterOutlined,
-    QrcodeOutlined,
-    SearchOutlined,
-    TableOutlined,
-    UserOutlined,
-    WalletOutlined
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CreditCardOutlined,
+  DollarOutlined,
+  GiftOutlined,
+  PrinterOutlined,
+  QrcodeOutlined,
+  TableOutlined,
+  UserOutlined,
+  WalletOutlined
 } from '@ant-design/icons';
 import {
-    Avatar,
-    Button,
-    Card,
-    Col,
-    Divider,
-    Flex,
-    Input,
-    InputNumber,
-    message,
-    Modal,
-    Radio,
-    Result,
-    Row,
-    Space,
-    Statistic,
-    Tag,
-    Typography
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Divider,
+  Flex,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Radio,
+  Result,
+  Row,
+  Space,
+  Statistic,
+  Tag,
+  Typography
 } from 'antd';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../../components/I18nProvider';
 import { useThemeMode } from '../../theme/AntdProvider';
@@ -146,6 +146,8 @@ export default function CheckoutPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [bills, setBills] = useState<Bill[]>(initialBills);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [payments, setPayments] = useState<PaymentDetail[]>([]);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [cashReceived, setCashReceived] = useState<number>(0);
@@ -167,11 +169,34 @@ export default function CheckoutPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    const fetchPayments = async () => {
+      setIsLoadingPayments(true);
+      try {
+        const data = await paymentService.getAllPayments();
+        setPayments(data ?? []);
+      } catch (error) {
+        console.error('Failed to fetch payments:', error);
+        messageApi.error(t('staff.checkout.messages.payments_load_failed'));
+      } finally {
+        setIsLoadingPayments(false);
+      }
+    };
+
+    fetchPayments();
+  }, [messageApi]);
+
   const paymentMethods = [
     { key: 'cash', label: t('staff.checkout.methods.cash'), icon: <WalletOutlined />, color: '#52c41a' },
     { key: 'transfer', label: t('staff.checkout.methods.transfer'), icon: <CreditCardOutlined />, color: '#1890ff' },
     { key: 'momo', label: t('staff.checkout.methods.momo'), icon: <QrcodeOutlined />, color: '#cf1322' },
   ];
+
+  const getPaymentStatusColor = (statusId: number) => {
+    if (statusId === 1) return '#52c41a';
+    if (statusId === 2) return '#faad14';
+    return '#ff4d4f';
+  };
 
   const filteredBills = bills.filter(
     bill =>
@@ -359,8 +384,80 @@ export default function CheckoutPage() {
         </Col>
       </Row>
 
-      {/* Search */}
+      {/* Payments List */}
       <Card
+        style={{
+          borderRadius: 12,
+          marginBottom: isMobile ? 16 : 24,
+          border: '1px solid var(--border)',
+        }}
+        styles={{ body: { padding: isMobile ? 12 : 16 } }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <Title level={5} style={{ margin: 0 }}>
+            {t('staff.checkout.payments.title')}
+          </Title>
+          <Text type="secondary">
+            {t('staff.checkout.payments.count', { count: payments.length })}
+          </Text>
+        </div>
+        {isLoadingPayments ? (
+          <Text>{t('staff.checkout.payments.loading')}</Text>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {payments.length === 0 ? (
+              <Text type="secondary">{t('staff.checkout.payments.empty')}</Text>
+            ) : (
+              payments.map((payment) => (
+                <Card
+                  key={payment.id}
+                  size="small"
+                  style={{
+                    borderRadius: 10,
+                    border: '1px solid var(--border)',
+                  }}
+                  styles={{ body: { padding: isMobile ? 12 : 16 } }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <Text strong style={{ display: 'block' }}>
+                        {payment.transactionId || t('staff.checkout.payments.no_transaction')}
+                      </Text>
+                      <Text type="secondary">
+                        {new Date(payment.paymentDate).toLocaleString('vi-VN')}
+                      </Text>
+                    </div>
+                    <div>
+                      <Tag color={getPaymentStatusColor(payment.paymentStatusId)}>
+                        {payment.paymentStatusName || payment.paymentStatusCode || t('staff.checkout.payments.status_na')}
+                      </Tag>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <Text strong style={{ color: 'var(--primary)', fontSize: 16 }}>
+                        {Number(payment.amount).toLocaleString('vi-VN')}đ
+                      </Text>
+                      <Text type="secondary" style={{ display: 'block' }}>
+                        {payment.paymentMethodId}
+                      </Text>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+      </Card>
+
+      {/* Search */}
+      {/* <Card
         style={{
           borderRadius: 12,
           marginBottom: isMobile ? 16 : 24,
@@ -376,16 +473,16 @@ export default function CheckoutPage() {
           prefix={<SearchOutlined style={{ color: '#bbb' }} />}
           onChange={(e) => setSearchText(e.target.value)}
         />
-      </Card>
+      </Card> */}
 
       {/* Bills List */}
-      <Row gutter={[24, 24]}>
+      {/* <Row gutter={[24, 24]}>
         {filteredBills.map(bill => (
           <Col xs={24} md={12} lg={8} key={bill.id}>
             {renderBillCard(bill)}
           </Col>
         ))}
-      </Row>
+      </Row> */}
 
       {/* Payment Modal */}
       <Modal
@@ -447,7 +544,7 @@ export default function CheckoutPage() {
                 <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.bill')}: {selectedBill?.id}</Text>
                 <br />
                 <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#52c41a' }}>
-                  {calculateFinalTotal().toLocaleString('vi-VN')}đ
+                  {calculateFinalTotal().toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
                 </Text>
                 {paymentMethod === 'cash' && cashReceived > calculateFinalTotal() && (
                   <div style={{ marginTop: 12 }}>
@@ -603,7 +700,7 @@ export default function CheckoutPage() {
                         </div>
                       )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 12, borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #F0F0F0' }}>
-                        <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>VAT (10%)</Text>
+                        <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{t('staff.checkout.payment.vat')}</Text>
                         <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{selectedBill.tax.toLocaleString('vi-VN')}đ</Text>
                       </div>
                       <div style={{
@@ -676,7 +773,7 @@ export default function CheckoutPage() {
                         {cashReceived >= calculateFinalTotal() && cashReceived > 0 && (
                           <div style={{ marginTop: 8, padding: isMobile ? '6px 10px' : '8px 12px', background: '#f6ffed', borderRadius: 8 }}>
                             <Text style={{ color: '#52c41a', fontSize: isMobile ? 12 : 14 }}>
-                              {t('staff.checkout.payment.change')}: <strong>{(cashReceived - calculateFinalTotal()).toLocaleString('vi-VN')}đ</strong>
+                              {t('staff.checkout.payment.change')}: <strong>{(cashReceived - calculateFinalTotal()).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ</strong>
                             </Text>
                           </div>
                         )}

@@ -235,6 +235,31 @@
         "status_updated": "Đã cập nhật trạng thái món",
         "order_status_updated": "Đã cập nhật trạng thái order",
         "order_status_update_failed": "Cập nhật trạng thái order thất bại"
+      },
+      "payment": {
+        "actions": {
+          "pay": "Thanh toán",
+          "confirm": "Xác nhận thanh toán"
+        },
+        "modal": {
+          "title": "Thanh toán",
+          "order_label": "Đơn hàng",
+          "total_label": "Tổng tiền",
+          "method_label": "Phương thức thanh toán",
+          "cash_label": "Số tiền khách đưa",
+          "change_label": "Tiền thối",
+          "missing_label": "Còn thiếu"
+        },
+        "methods": {
+          "cash": "Tiền mặt",
+          "bank": "Chuyển khoản"
+        },
+        "messages": {
+          "cash_insufficient": "Số tiền khách đưa không đủ",
+          "cash_success": "Thanh toán tiền mặt thành công",
+          "link_created": "Đã tạo link thanh toán",
+          "payment_failed": "Thanh toán thất bại"
+        }
       }
     },
     "tables": {
@@ -339,6 +364,14 @@
         "total_payment": "Tổng thanh toán",
         "pay": "Thanh toán"
       },
+      "payments": {
+        "title": "Tất cả thanh toán",
+        "count": "{{count}} giao dịch",
+        "loading": "Đang tải danh sách thanh toán...",
+        "empty": "Chưa có giao dịch thanh toán",
+        "no_transaction": "Thanh toán tiền mặt",
+        "status_na": "Không xác định"
+      },
       "payment": {
         "title": "Thanh toán",
         "bill_detail": "Chi tiết hóa đơn",
@@ -363,7 +396,8 @@
       },
       "messages": {
         "insufficient_cash": "Số tiền nhận chưa đủ",
-        "payment_success": "Thanh toán thành công!"
+        "payment_success": "Thanh toán thành công!",
+        "payments_load_failed": "Không thể tải danh sách thanh toán"
       }
     },
     "attendance": {
@@ -809,6 +843,31 @@
         "columns": {
           "dish": "Món ăn",
           "qty": "SL"
+        }
+      },
+      "payment": {
+        "actions": {
+          "pay": "Thanh toán",
+          "confirm": "Xác nhận thanh toán"
+        },
+        "modal": {
+          "title": "Thanh toán",
+          "order_label": "Đơn hàng",
+          "total_label": "Tổng tiền",
+          "method_label": "Phương thức thanh toán",
+          "cash_label": "Số tiền khách đưa",
+          "change_label": "Tiền thối",
+          "missing_label": "Còn thiếu"
+        },
+        "methods": {
+          "cash": "Tiền mặt",
+          "bank": "Chuyển khoản"
+        },
+        "messages": {
+          "cash_insufficient": "Số tiền khách đưa không đủ",
+          "cash_success": "Thanh toán tiền mặt thành công",
+          "link_created": "Đã tạo link thanh toán",
+          "payment_failed": "Thanh toán thất bại"
         }
       }
     },
@@ -1341,6 +1400,18 @@
       "api_error": "Lỗi API: {{status}} - {{message}}",
       "network_error": "Lỗi mạng: {{message}}",
       "unknown_error": "Đã xảy ra lỗi không mong muốn"
+    }
+  },
+  "payment": {
+    "success": {
+      "title": "Thanh toán thành công",
+      "message": "Đơn hàng đã được thanh toán. Bạn có thể quay lại màn hình quản lý đơn hàng để tiếp tục thao tác.",
+      "back": "Quay lại"
+    },
+    "cancel": {
+      "title": "Hủy thanh toán",
+      "message": "Bạn đã hủy thanh toán. Bạn có thể quay lại màn hình quản lý đơn hàng để tiếp tục thao tác.",
+      "back": "Quay lại"
     }
   },
   "charts": {
