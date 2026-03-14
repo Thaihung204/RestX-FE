@@ -4,7 +4,6 @@ import { tenantService } from "@/lib/services/tenantService";
 import { ITenantRequest, TenantRequestStatus } from "@/lib/types/tenant";
 import {
   CheckCircleOutlined,
-  ClockCircleOutlined,
   CloseCircleOutlined,
   EyeOutlined,
   MailOutlined,
@@ -91,10 +90,18 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
         item.name.toLowerCase().includes(query) ||
         (item.businessName &&
           item.businessName.toLowerCase().includes(query)) ||
-        (item.businessEmailAddress &&
-          item.businessEmailAddress.toLowerCase().includes(query)) ||
         (item.businessPrimaryPhone &&
           item.businessPrimaryPhone.includes(query)) ||
+        (item.businessEmailAddress &&
+          item.businessEmailAddress.toLowerCase().includes(query)) ||
+        (item.businessAddressLine1 &&
+          item.businessAddressLine1.toLowerCase().includes(query)) ||
+        (item.businessAddressLine2 &&
+          item.businessAddressLine2.toLowerCase().includes(query)) ||
+        (item.businessAddressLine3 &&
+          item.businessAddressLine3.toLowerCase().includes(query)) ||
+        (item.businessAddressLine4 &&
+          item.businessAddressLine4.toLowerCase().includes(query)) ||
         item.hostname.toLowerCase().includes(query);
       return matchesSearch;
     });
@@ -180,142 +187,119 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
 
   const columns: ColumnsType<ITenantRequest> = [
     {
-      title: t("tenant_requests.list.column_restaurant"),
+      title: t("tenants.table.tenant_info"),
       dataIndex: "name",
       key: "name",
-      width: 200,
+      width: 280,
       fixed: "left",
       render: (_, record) => (
         <div className="flex items-center gap-3">
           <Avatar
             shape="square"
             size="large"
-            className="bg-[var(--primary)] text-white">
+            className="shadow-sm rounded-lg bg-[var(--primary)] text-white">
             {record.name.charAt(0)}
           </Avatar>
           <div className="flex flex-col">
-            <div
-              className="font-medium text-sm"
+            <span
+              className="font-semibold text-sm"
               style={{ color: "var(--text)" }}>
               {record.name}
-            </div>
-            <Text type="secondary" className="text-xs">
-              {record.hostname}
-            </Text>
+            </span>
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {record.businessName || "-"}
+            </span>
           </div>
         </div>
       ),
     },
     {
-      title: t("tenant_requests.list.column_business_name"),
-      dataIndex: "businessName",
-      key: "businessName",
-      width: 150,
-      responsive: ["xl"] as any,
-      render: (text) => (
-        <Text type="secondary" className="text-sm">
-          {text || "-"}
-        </Text>
-      ),
-    },
-    {
-      title: t("tenant_requests.list.column_contact"),
+      title: t("tenants.table.contact"),
       key: "contact",
-      width: 200,
-      responsive: ["lg"] as any,
+      width: 220,
       render: (_, record) => (
-        <div className="space-y-1">
-          {record.businessEmailAddress && (
-            <div className="flex items-center gap-1">
-              <MailOutlined
-                className="text-xs"
-                style={{ color: "var(--text-muted)" }}
-              />
-              <Text type="secondary" className="text-xs truncate max-w-[180px]">
-                {record.businessEmailAddress}
-              </Text>
-            </div>
-          )}
-          {record.businessPrimaryPhone && (
-            <div className="flex items-center gap-1">
-              <PhoneOutlined
-                className="text-xs"
-                style={{ color: "var(--text-muted)" }}
-              />
-              <Text type="secondary" className="text-xs">
-                {record.businessPrimaryPhone}
-              </Text>
-            </div>
-          )}
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+            <PhoneOutlined className="mr-1" />
+            {record.businessPrimaryPhone || "-"}
+          </span>
+          <span
+            className="text-[11px] truncate max-w-[200px]"
+            style={{ color: "var(--text-muted)" }}
+            title={record.businessEmailAddress || ""}>
+            <MailOutlined className="mr-1" />
+            {record.businessEmailAddress || "-"}
+          </span>
         </div>
       ),
     },
     {
-      title: t("tenant_requests.list.column_address"),
+      title: t("tenants.table.address"),
       key: "address",
-      width: 180,
-      responsive: ["xl"] as any,
+      width: 240,
       render: (_, record) => (
-        <div className="text-xs">
-          {record.businessAddressLine1 && (
-            <div className="truncate">{record.businessAddressLine1}</div>
-          )}
-          {record.businessAddressLine2 && (
-            <div className="opacity-60 truncate">
-              {record.businessAddressLine2}
-            </div>
-          )}
-          {record.businessAddressLine3 && (
-            <div className="opacity-60 truncate">
-              {record.businessAddressLine3}
-            </div>
-          )}
-          {!record.businessAddressLine1 && <Text type="secondary">-</Text>}
+        <div className="flex flex-col">
+          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+            {record.businessAddressLine1 || "-"} {record.businessAddressLine2 || ""}
+          </span>
+          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+            {record.businessAddressLine3 || ""}{record.businessAddressLine3 && record.businessAddressLine4 ? ", " : ""}{record.businessAddressLine4 || ""}
+          </span>
         </div>
       ),
-      ellipsis: true,
     },
     {
-      title: t("tenant_requests.list.column_status"),
-      key: "status",
-      width: 110,
-      render: () => (
-        <Tag color="orange" icon={<ClockCircleOutlined />}>
-          {t("tenant_requests.list.status_pending")}
-        </Tag>
+      title: t("tenants.table.hostname"),
+      dataIndex: "hostname",
+      key: "hostname",
+      width: 200,
+      render: (hostname: string) => (
+        <span
+          className="text-[11px] font-mono truncate max-w-[180px] block"
+          style={{ color: "var(--text-muted)" }}
+          title={hostname}>
+          {hostname}
+        </span>
       ),
     },
     {
       title: t("tenant_requests.list.column_actions"),
       key: "actions",
       fixed: "right",
-      width: 280,
+      width: 200,
       render: (_, record) => (
-        <Space size="small" wrap>
-          <Button
-            type="link"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}>
-            {t("tenant_requests.list.action_view")}
-          </Button>
-          <Button
-            type="primary"
-            size="small"
-            icon={<CheckCircleOutlined />}
-            loading={actionLoading === record.id}
-            onClick={() => handleApprove(record)}>
-            {t("tenant_requests.list.action_approve")}
-          </Button>
-          <Button
-            danger
-            size="small"
-            icon={<CloseCircleOutlined />}
-            loading={actionLoading === record.id}
-            onClick={() => handleReject(record)}>
-            {t("tenant_requests.list.action_reject")}
-          </Button>
-        </Space>
+        <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-2 w-full items-start">
+          <div className="flex items-start justify-center">
+            <Button
+              type="text"
+              shape="circle"
+              icon={<EyeOutlined style={{ color: "var(--text-muted)" }} />}
+              onClick={() => handleViewDetails(record)}
+              title={t("tenant_requests.list.action_view")}
+              aria-label={t("tenant_requests.list.action_view")}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Button
+              type="primary"
+              size="small"
+              icon={<CheckCircleOutlined />}
+              loading={actionLoading === record.id}
+              onClick={() => handleApprove(record)}
+              className="w-full justify-center">
+              {t("tenant_requests.list.action_approve")}
+            </Button>
+            <Button
+              danger
+              size="small"
+              icon={<CloseCircleOutlined />}
+              loading={actionLoading === record.id}
+              onClick={() => handleReject(record)}
+              className="w-full justify-center">
+              {t("tenant_requests.list.action_reject")}
+            </Button>
+          </div>
+        </div>
       ),
     },
   ];
@@ -505,7 +489,7 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
               </Descriptions.Item>
             )}
             <Descriptions.Item label={t("tenant_requests.list.detail_status")}>
-              <Tag color="orange" icon={<ClockCircleOutlined />}>
+              <Tag color="orange" icon={<CheckCircleOutlined />}>
                 {t("tenant_requests.list.status_pending_approval")}
               </Tag>
             </Descriptions.Item>
