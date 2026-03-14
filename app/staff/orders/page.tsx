@@ -35,7 +35,7 @@ import {
   Tag,
   Typography,
 } from "antd";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
 
@@ -122,7 +122,45 @@ export default function OrderManagement() {
   const { tenant } = useTenant();
   const [orders, setOrders] = useState<Order[]>([]);
   const [tables, setTables] = useState<{ id: string; name: string }[]>([]);
-  const [ordersRefreshKey, setOrdersRefreshKey] = useState(0);
+  const inFlightRef = useRef(false);
+  const lastRefreshRef = useRef<number | null>(null);
+  const [orderDetailStatuses, setOrderDetailStatuses] = useState<OrderDetailStatus[]>([]);
+
+  useEffect(() => {
+    const fetchOrderDetailStatuses = async () => {
+      try {
+        const data = await orderDetailStatusService.getAllStatuses();
+        setOrderDetailStatuses(data ?? []);
+      } catch (error) {
+        console.error("Failed to fetch order detail statuses:", error);
+        setOrderDetailStatuses([]);
+      }
+    };
+
+    fetchOrderDetailStatuses();
+  }, []);
+
+  const statusValueMap = useMemo(
+    () =>
+      orderDetailStatuses.reduce<Record<string, string>>((acc, status) => {
+        const codeKey = status.code?.toLowerCase();
+        const nameKey = status.name?.toLowerCase();
+        const value = codeKey || status.id;
+        if (codeKey) acc[codeKey] = value;
+        if (nameKey) acc[nameKey] = value;
+        acc[status.id] = value;
+        return acc;
+      }, {}),
+    [orderDetailStatuses],
+  );
+
+  const normalizeStatusValue = useCallback(
+    (status: OrderItemStatus) => {
+      const key = status?.toLowerCase?.() ?? String(status ?? "");
+      return statusValueMap[key] || statusValueMap[status] || status;
+    },
+    [statusValueMap],
+  );
 
   useEffect(() => {
     const fetchTables = async () => {
@@ -137,9 +175,10 @@ export default function OrderManagement() {
   }, []);
 
   const fetchOrders = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     try {
       const data = await orderService.getAllOrders();
-
 
       const uniqueDishIds = Array.from(
         new Set(
@@ -215,15 +254,26 @@ export default function OrderManagement() {
       setOrders(mappedOrders);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
+    } finally {
+      inFlightRef.current = false;
     }
-  }, [tables]);
+  }, [tables, normalizeStatusValue]);
+
+  const refreshOrders = useCallback(
+    async () => {
+      const now = Date.now();
+      if (lastRefreshRef.current && now - lastRefreshRef.current < 2000) return;
+      lastRefreshRef.current = now;
+      await fetchOrders();
+    },
+    [fetchOrders],
+  );
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders, ordersRefreshKey]);
+    refreshOrders();
+  }, [refreshOrders]);
 
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
-  const [orderDetailStatuses, setOrderDetailStatuses] = useState<OrderDetailStatus[]>([]);
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -239,37 +289,6 @@ export default function OrderManagement() {
     fetchMenu();
   }, []);
 
-  useEffect(() => {
-    const fetchOrderDetailStatuses = async () => {
-      try {
-        const data = await orderDetailStatusService.getAllStatuses();
-        setOrderDetailStatuses(data ?? []);
-      } catch (error) {
-        console.error("Failed to fetch order detail statuses:", error);
-        setOrderDetailStatuses([]);
-      }
-    };
-
-    fetchOrderDetailStatuses();
-  }, []);
-
-  const statusValueMap = orderDetailStatuses.reduce<Record<string, string>>(
-    (acc, status) => {
-      const codeKey = status.code?.toLowerCase();
-      const nameKey = status.name?.toLowerCase();
-      const value = codeKey || status.id;
-      if (codeKey) acc[codeKey] = value;
-      if (nameKey) acc[nameKey] = value;
-      acc[status.id] = value;
-      return acc;
-    },
-    {},
-  );
-
-  const normalizeStatusValue = (status: OrderItemStatus) => {
-    const key = status?.toLowerCase?.() ?? String(status ?? "");
-    return statusValueMap[key] || statusValueMap[status] || status;
-  };
 
   const statusOptions = orderDetailStatuses.map((status) => ({
     value: status.code?.toLowerCase() || status.id,
@@ -338,11 +357,17 @@ export default function OrderManagement() {
     const tenantId = tenant.id;
     let isMounted = true;
 
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
     const handleOrderChange = (payload: any) => {
       if (!isMounted) return;
       const changedTenantId = payload?.tenantId || payload?.order?.tenantId;
       if (changedTenantId && changedTenantId !== tenantId) return;
-      fetchOrders();
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (!isMounted) return;
+        refreshOrders();
+      }, 300);
     };
 
     const events = ["orders.created", "orders.updated", "orders.deleted"];
@@ -367,12 +392,13 @@ export default function OrderManagement() {
 
     return () => {
       isMounted = false;
+      if (debounceTimer) clearTimeout(debounceTimer);
       events.forEach((event) =>
         orderSignalRService.off(event, handleOrderChange),
       );
       orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
     };
-  }, [tenant?.id, fetchOrders]);
+  }, [tenant?.id, refreshOrders]);
 
   // Check viewport
   React.useEffect(() => {
@@ -547,7 +573,7 @@ export default function OrderManagement() {
       setIsAddItemModalOpen(false);
       setCart([]);
       setSelectedOrderIdForAdd("");
-      setOrdersRefreshKey((prev) => prev + 1);
+      refreshOrders();
     } catch (error) {
       console.error("Update order failed:", error);
       message.error(t("staff.orders.messages.order_create_failed"));
