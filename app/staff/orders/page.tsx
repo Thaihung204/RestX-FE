@@ -10,9 +10,11 @@ import orderService, {
   OrderRequestDto,
 } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
+import paymentService from "@/lib/services/paymentService";
 import { tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import {
+  DollarOutlined,
   MinusOutlined,
   PlusOutlined,
   SearchOutlined,
@@ -27,13 +29,14 @@ import {
   Divider,
   Empty,
   Input,
+  InputNumber,
   Modal,
   Row,
   Select,
   Space,
   Tabs,
   Tag,
-  Typography,
+  Typography
 } from "antd";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -344,6 +347,11 @@ export default function OrderManagement() {
   const [isTablet, setIsTablet] = useState(false);
   const [isUpdatingOrderStatus, setIsUpdatingOrderStatus] = useState(false);
   const [isUpdatingDetailStatus, setIsUpdatingDetailStatus] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "bank">("cash");
+  const [cashReceived, setCashReceived] = useState<number>(0);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     if (!activeMenuCategory && menuCategories.length > 0) {
@@ -535,27 +543,27 @@ export default function OrderManagement() {
       return;
     }
 
-    const selectedOrder = orders.find((o) => o.id === selectedOrderIdForAdd);
-    if (!selectedOrder?.raw) {
+    const targetOrder = orders.find((o) => o.id === selectedOrderIdForAdd);
+    if (!targetOrder?.raw) {
       message.error(t("staff.orders.messages.order_create_failed"));
       return;
     }
 
     try {
       const payload: OrderRequestDto = {
-        tableId: selectedOrder.raw.tableId,
+        tableId: targetOrder.raw.tableId,
         customerId:
-          selectedOrder.raw.customerId ||
+          targetOrder.raw.customerId ||
           "00000000-0000-0000-0000-000000000000",
-        orderStatusId: selectedOrder.raw.orderStatusId,
-        paymentStatusId: selectedOrder.raw.paymentStatusId,
-        reservationId: selectedOrder.raw.reservationId ?? null,
-        discountAmount: selectedOrder.raw.discountAmount ?? 0,
-        taxAmount: selectedOrder.raw.taxAmount ?? 0,
-        serviceCharge: selectedOrder.raw.serviceCharge ?? 0,
-        tableIds: selectedOrder.raw.tableIds,
+        orderStatusId: targetOrder.raw.orderStatusId,
+        paymentStatusId: targetOrder.raw.paymentStatusId,
+        reservationId: targetOrder.raw.reservationId ?? null,
+        discountAmount: targetOrder.raw.discountAmount ?? 0,
+        taxAmount: targetOrder.raw.taxAmount ?? 0,
+        serviceCharge: targetOrder.raw.serviceCharge ?? 0,
+        tableIds: targetOrder.raw.tableIds,
         orderDetails: [
-          ...(selectedOrder.raw.orderDetails ?? []).map((d) => ({
+          ...(targetOrder.raw.orderDetails ?? []).map((d) => ({
             dishId: d.dishId,
             quantity: d.quantity,
             note: d.note ?? undefined,
@@ -579,6 +587,50 @@ export default function OrderManagement() {
       message.error(t("staff.orders.messages.order_create_failed"));
     }
   };
+
+  const openPaymentModal = (order: Order) => {
+    setSelectedOrder(order);
+    setCashReceived(order.total);
+    setPaymentMethod("cash");
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePayment = async () => {
+    if (!selectedOrder) return;
+
+    setIsProcessingPayment(true);
+    try {
+      if (paymentMethod === "cash") {
+        if (cashReceived < selectedOrder.total) {
+          message.error(t("staff.orders.payment.messages.cash_insufficient"));
+          return;
+        }
+
+        await paymentService.payByCash(selectedOrder.id, cashReceived);
+        message.success(t("staff.orders.payment.messages.cash_success"));
+      } else {
+        const response = await paymentService.createPaymentLink(selectedOrder.id);
+        if (response.checkoutUrl) {
+          window.open(response.checkoutUrl, "_blank", "noopener,noreferrer");
+        }
+        message.success(t("staff.orders.payment.messages.link_created"));
+      }
+
+      setIsPaymentModalOpen(false);
+      setSelectedOrder(null);
+      refreshOrders();
+    } catch (error) {
+      console.error("Payment failed:", error);
+      message.error(t("staff.orders.payment.messages.payment_failed"));
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const paymentOptions: Array<{ id: "cash" | "bank"; label: string }> = [
+    { id: "cash", label: t("staff.orders.payment.methods.cash") },
+    { id: "bank", label: t("staff.orders.payment.methods.bank") },
+  ];
 
   const renderOrderCard = (order: Order) => {
     const orderStyle = orderStatusStyleMap[order.orderStatus];
@@ -786,6 +838,21 @@ export default function OrderManagement() {
                   {order.total.toLocaleString("vi-VN")}đ
                 </Text>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {order.raw?.paymentStatusId !== 1 && (
+                    <Button
+                      icon={<DollarOutlined />}
+                      size="small"
+                      type="primary"
+                      onClick={() => openPaymentModal(order)}
+                      style={{
+                        borderRadius: 6,
+                        minWidth: isMobile ? 110 : 130,
+                        height: 24,
+                        padding: "0 8px",
+                      }}>
+                      Thanh toán
+                    </Button>
+                  )}
                   <Button
                     icon={<PlusOutlined />}
                     size="small"
@@ -899,6 +966,178 @@ export default function OrderManagement() {
         )}
       </Card>
 
+
+      {/* Payment Modal */}
+      <Modal
+        title={
+          <span style={{ fontSize: 18, fontWeight: 700 }}>
+            {t("staff.orders.payment.modal.title")}
+          </span>
+        }
+        open={isPaymentModalOpen}
+        onCancel={() => {
+          setIsPaymentModalOpen(false);
+          setSelectedOrder(null);
+          setCashReceived(0);
+        }}
+        footer={null}
+        centered
+        width={480}
+        styles={{ body: { padding: "20px 24px 32px" } }}>
+        {selectedOrder && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <div
+              style={{
+                padding: 16,
+                background: "var(--primary-5, #f0f7ff)",
+                borderRadius: 12,
+                border: "1px solid var(--primary-20, #bae7ff)",
+              }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 8,
+                }}>
+                <div>
+                  <Text type="secondary">
+                    {t("staff.orders.payment.modal.order_label")}
+                  </Text>
+                  <Text strong style={{ display: "block", fontSize: 16 }}>
+                    {selectedOrder.reference}
+                  </Text>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <Text type="secondary">
+                    {t("staff.orders.payment.modal.total_label")}
+                  </Text>
+                  <Text
+                    strong
+                    style={{ display: "block", fontSize: 20, color: "var(--primary)" }}>
+                    {selectedOrder.total.toLocaleString("vi-VN")}đ
+                  </Text>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Text strong style={{ display: "block", marginBottom: 12 }}>
+                {t("staff.orders.payment.modal.method_label")}
+              </Text>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 12,
+                }}>
+                {paymentOptions.map((method) => (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setPaymentMethod(method.id)}
+                    style={{
+                      padding: 12,
+                      textAlign: "center",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      border:
+                        paymentMethod === method.id
+                          ? "2px solid var(--primary)"
+                          : "1px solid #E5E7EB",
+                      background: paymentMethod === method.id ? "#fff" : "#FAFAFA",
+                      transition: "all 0.2s",
+                    }}>
+                    <Text strong>{method.label}</Text>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {paymentMethod === "cash" && (
+              <div>
+                <Text strong>{t("staff.orders.payment.modal.cash_label")}</Text>
+                <InputNumber
+                  autoFocus
+                  value={cashReceived}
+                  onChange={(value) => setCashReceived(value || 0)}
+                  min={0}
+                  size="large"
+                  style={{ width: "100%", marginTop: 8, fontSize: 18, fontWeight: 600 }}
+                  formatter={(value) =>
+                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
+                  parser={(value) => Number(value?.replace(/,/g, "") || 0)}
+                />
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    marginTop: 12,
+                    flexWrap: "wrap",
+                  }}>
+                  {[ 50000, 100000, 200000, 500000].map((amount) => (
+                    <Button
+                      key={amount}
+                      size="small"
+                      onClick={() => setCashReceived(amount)}
+                      style={{ borderRadius: 6 }}>
+                      {amount.toLocaleString("vi-VN")}
+                    </Button>
+                  ))}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 20,
+                    padding: 12,
+                    borderRadius: 8,
+                    background:
+                      cashReceived >= selectedOrder.total ? "#F6FFED" : "#FFF1F0",
+                    textAlign: "center",
+                  }}>
+                  {cashReceived < selectedOrder.total ? (
+                    <Text type="danger" strong style={{ fontSize: 16 }}>
+                      {t("staff.orders.payment.modal.missing_label")}: {(
+                        selectedOrder.total - cashReceived
+                      ).toLocaleString("vi-VN")}đ
+                    </Text>
+                  ) : (
+                    <div>
+                      <div style={{ color: "#52C41A", fontSize: 14 }}>
+                        {t("staff.orders.payment.modal.change_label")}
+                      </div>
+                      <div
+                        style={{ color: "#52C41A", fontSize: 24, fontWeight: 700 }}>
+                        {(cashReceived - selectedOrder.total).toLocaleString("vi-VN")}đ
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <Button
+              type="primary"
+              size="large"
+              loading={isProcessingPayment}
+              onClick={handlePayment}
+              disabled={paymentMethod === "cash" && cashReceived < selectedOrder.total}
+              style={{
+                width: "100%",
+                height: 50,
+                borderRadius: 12,
+                fontSize: 16,
+                fontWeight: 600,
+                marginTop: 8,
+                boxShadow: "0 4px 12px rgba(24, 144, 255, 0.3)",
+              }}>
+              {t("staff.orders.payment.actions.confirm")}
+            </Button>
+          </div>
+        )}
+      </Modal>
 
       {/* Add Item To Existing Order Modal */}
       <Modal

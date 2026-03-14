@@ -648,6 +648,9 @@ export default function StaffLayout({
                 : 24,
             }}>
             {children}
+            {isDrawerDevice && (
+              <div style={{ height: "calc(90px + env(safe-area-inset-bottom, 0px))" }} />
+            )}
           </Content>
         </Layout>
       </Layout>
