@@ -41,6 +41,14 @@ export default function ReservationLookupSection() {
         CANCELLED: '#ef4444',
     };
 
+    const statusI18nKey: Record<string, string> = {
+        PENDING: 'landing.lookup.status.pending',
+        CONFIRMED: 'landing.lookup.status.confirmed',
+        CHECKED_IN: 'landing.lookup.status.checked_in',
+        COMPLETED: 'landing.lookup.status.completed',
+        CANCELLED: 'landing.lookup.status.cancelled',
+    };
+
     return (
         <section className="relative py-24 px-4 bg-[var(--surface)] overflow-hidden">
             <div className="pointer-events-none absolute inset-0 opacity-30">
@@ -162,7 +170,7 @@ export default function ReservationLookupSection() {
                                     borderColor: `${statusColor[result.status.code] ?? '#888'}55`,
                                 }}
                             >
-                                {result.status.name}
+                                {t(statusI18nKey[result.status.code] || '', { defaultValue: result.status.name })}
                             </span>
                         </div>
 

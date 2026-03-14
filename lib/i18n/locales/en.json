@@ -2735,7 +2735,7 @@
       "title": "Reservation Status",
       "description": "Enter your confirmation code to track your reservation status.",
       "code_label": "Confirmation Code",
-      "placeholder": "E.g., RX-12345",
+      "placeholder": "E.g., 8F86D7",
       "searching": "Searching...",
       "search_btn": "Look Up",
       "result": {
@@ -2747,6 +2747,13 @@
         "guests_suffix": "guests",
         "table": "Table",
         "special_requests": "Special Requests"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "checked_in": "Checked In",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
       }
     },
     "about": {

@@ -2688,7 +2688,7 @@
       "title": "Thông tin đặt bàn",
       "description": "Nhập mã xác nhận để kiểm tra trạng thái đặt bàn của bạn.",
       "code_label": "Mã xác nhận",
-      "placeholder": "Ví dụ: RX-12345",
+      "placeholder": "Ví dụ: 8F86D7",
       "searching": "Đang tra cứu...",
       "search_btn": "Tra cứu",
       "result": {
@@ -2700,6 +2700,13 @@
         "guests_suffix": "khách",
         "table": "Bàn",
         "special_requests": "Yêu cầu đặc biệt"
+      },
+      "status": {
+        "pending": "Chờ xác nhận",
+        "confirmed": "Đã xác nhận",
+        "checked_in": "Đã đến",
+        "completed": "Hoàn thành",
+        "cancelled": "Đã hủy"
       }
     },
     "about": {

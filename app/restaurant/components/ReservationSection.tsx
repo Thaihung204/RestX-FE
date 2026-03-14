@@ -154,6 +154,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [confirmationCode, setConfirmationCode] = useState<string>('');
+    const [reservationId, setReservationId] = useState<string>('');
     const [maxCapacity, setMaxCapacity] = useState<number>(maxGuestsOverride ?? 20); // default fallback
 
     // Load max table capacity early so the guest input knows its upper bound
@@ -495,8 +496,17 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 specialRequests: userDetails.requests || undefined,
             });
 
-            const fallbackCode = (result as any)?.confirmation_code || (result as any)?.code || (result as any)?.bookingCode;
-            setConfirmationCode(result.confirmationCode || fallbackCode || '');
+            const raw = result as any;
+            // BE returns only `id` (UUID). Derive short display code from first 6 chars (uppercase).
+            const rawId: string = raw?.id || raw?.Id || raw?.reservationId || '';
+            const resolvedCode =
+                raw?.confirmationCode ||
+                raw?.ConfirmationCode ||
+                raw?.confirmation_code ||
+                raw?.bookingCode ||
+                (rawId ? rawId.replace(/-/g, '').slice(0, 6).toUpperCase() : '');
+            setConfirmationCode(resolvedCode);
+            setReservationId(rawId);
             setStep(ReservationStep.SUCCESS);
         } catch (error: unknown) {
             console.error("Failed to create reservation:", error);
@@ -1060,7 +1070,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             <div className="flex items-center justify-between">
                                 <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold">{t('landing.booking.success.booking_ref')}</span>
                                 <span className="text-sm font-bold text-[var(--primary)] font-mono tracking-wider">
-                                    #{confirmationCode || 'RX-XXXXX'}
+                                    #{confirmationCode || reservationId || '---'}
                                 </span>
                             </div>
                             <div className="h-px bg-[var(--border)]" />
