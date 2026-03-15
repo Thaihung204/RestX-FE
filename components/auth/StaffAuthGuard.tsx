@@ -25,7 +25,7 @@ export default function StaffAuthGuard({
         if (!loading) {
             if (!user) {
                 // Not logged in → redirect to phone login (staff usually use phone)
-                router.replace("/login");
+                router.replace("/login-email");
             } else if (!isStaff) {
                 // Logged in but not staff
                 if (userRoles.some(r => r === 'Admin' || r === 'System Admin')) {
