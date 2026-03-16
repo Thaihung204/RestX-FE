@@ -537,17 +537,6 @@ export default function IngredientFormPage() {
                   </div>
                 </section>
 
-                {!isNew && (
-                  <section
-                    className="rounded-xl p-4"
-                    style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.ingredients.system_info")}
-                    </p>
-                    <p className="text-xs break-all" style={{ color: "var(--text-muted)" }}>ID: {id}</p>
-                  </section>
-                )}
               </div>
 
             </div>
