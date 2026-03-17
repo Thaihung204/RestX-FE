@@ -40,6 +40,8 @@ export default function IngredientFormPage() {
     supplierId: null,
     type: "",
     isActive: true,
+    currentQuantity: 0,
+    status: 0,
   });
 
   const [suppliers, setSuppliers] = useState<SupplierItem[]>([]);
@@ -107,14 +109,16 @@ export default function IngredientFormPage() {
       setLoadingData(true);
       const data = await ingredientService.getById(id);
       setForm({
-        name:          data.name          ?? "",
-        code:          data.code          ?? "",
-        unit:          data.unit          ?? "kg",
+        name: data.name?? "",
+        code: data.code ?? "",
+        unit: data.unit ?? "kg",
         minStockLevel: data.minStockLevel ?? 0,
         maxStockLevel: data.maxStockLevel ?? 0,
-        supplierId:    data.supplierId    ?? null,
-        type:          normalizeTypeCode(data.type),
-        isActive:      data.isActive      ?? true,
+        supplierId: data.supplierId ?? null,
+        type: normalizeTypeCode(data.type),
+        isActive: data.isActive ?? true,
+        currentQuantity: data.currentQuantity ?? 0,
+        status: data.status ?? 0,
       });
     } catch {
       message.error(t("dashboard.ingredients.fetch_ingredient_failed"));
@@ -404,6 +408,23 @@ export default function IngredientFormPage() {
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                         style={cannotSave ? disabledFieldStyle : fieldStyle}
                       />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
+                        {t("dashboard.ingredients.stock_status_label")}
+                      </label>
+                      <select
+                        name="status"
+                        value={form.status ?? 0}
+                        onChange={handleChange}
+                        disabled={cannotSave}
+                        className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
+                        style={cannotSave ? disabledFieldStyle : fieldStyle}
+                      >
+                        <option value={0}>{t("dashboard.ingredients.status_values.in_stock")}</option>
+                        <option value={1}>{t("dashboard.ingredients.status_values.low_stock")}</option>
+                        <option value={2}>{t("dashboard.ingredients.status_values.out_of_stock")}</option>
+                      </select>
                     </div>
                   </div>
 
