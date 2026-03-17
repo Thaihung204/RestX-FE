@@ -12,6 +12,7 @@ export interface IngredientItem {
   supplierName?: string;
   type?: string | null;
   isActive: boolean;
+  status?: number;
 }
 
 export interface IngredientCategory {
@@ -36,6 +37,7 @@ const normalize = (data: any): IngredientItem => {
     supplierName: data.supplierName ?? data.SupplierName ?? '',
     type: data.type ?? data.Type ?? null,
     isActive: data.isActive ?? data.IsActive ?? true,
+    status: data.status ?? data.Status,
   };
 };
 
