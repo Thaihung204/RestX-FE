@@ -2224,7 +2224,79 @@
     "tabs": {
       "restaurant_list": "Restaurant List",
       "tenant_requests": "Restaurant Requests",
-      "system_revenue": "System Revenue"
+      "system_revenue": "System Revenue",
+      "business_tools": "Business Tools"
+    },
+    "business_tools": {
+      "title": "Business Tools",
+      "subtitle": "Auto switch tenant status based on schedules and preset rules.",
+      "new_rule": "New Rule",
+      "refresh": "Refresh",
+      "search_placeholder": "Search tenant, business, email...",
+      "sync_tenants": "Sync Tenants",
+      "summary": "Total: {{total}} tenants · Showing: {{showing}}",
+      "stats": {
+        "active_rules": "Active Rules",
+        "scheduled_jobs": "Scheduled Jobs",
+        "maintenance_queue": "Maintenance Queue"
+      },
+      "tags": {
+        "auto": "Auto",
+        "schedule": "Schedule",
+        "manual_trigger": "Manual Trigger"
+      },
+      "table": {
+        "live": "Live",
+        "trigger": "Trigger",
+        "auto_status": "Auto Status",
+        "schedule": "Schedule",
+        "current_status": "Current Status",
+        "next_status": "Next Status",
+        "actions": "Actions",
+        "apply": "Apply",
+        "tooltip_auto_switch": "Auto switch status"
+      },
+      "quick_actions": {
+        "title": "Quick Actions",
+        "subtitle": "Templates to enable or pause tenants in bulk.",
+        "view_all": "View All",
+        "items": {
+          "bulk_activation": {
+            "title": "Bulk activation",
+            "desc": "Enable tenants that meet weekly KPIs."
+          },
+          "scheduled_pause": {
+            "title": "Scheduled pause",
+            "desc": "Move to maintenance at 00:00 daily."
+          },
+          "inactive_reminder": {
+            "title": "Inactive reminder",
+            "desc": "Alert if inactive for more than 7 days."
+          }
+        }
+      },
+      "rule_preview": {
+        "title": "Rule Preview",
+        "subtitle": "Sample workflow for status transitions.",
+        "create": "Create",
+        "items": {
+          "new_signup": "New Signup",
+          "payment_failure": "Payment Failure",
+          "scheduled_downtime": "Scheduled Downtime"
+        },
+        "condition_label": "Condition: {{value}}",
+        "action_label": "Action: {{value}}",
+        "conditions": {
+          "new_tenant": "New tenant within 24h",
+          "failed_payment": "Failed payment twice",
+          "scheduled_maintenance": "Scheduled maintenance"
+        },
+        "actions": {
+          "auto_active": "Auto Active",
+          "switch_inactive": "Switch to inactive",
+          "schedule_maintenance": "Schedule maintenance"
+        }
+      }
     },
     "table": {
       "tenant_info": "Tenant Info",
