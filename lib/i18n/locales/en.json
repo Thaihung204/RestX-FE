@@ -870,6 +870,52 @@
         "save_error_message": "Failed to save dish. Please try again.",
         "detail_error_message": "Failed to load dish details.",
         "validation_error_message": "Invalid data. Please check your input."
+      },
+      "ingredients": {
+        "actions": {
+          "ingredients": "Ingredients",
+          "add": "Add",
+          "save": "Save",
+          "delete": "Delete",
+          "activate": "Activate",
+          "deactivate": "Deactivate",
+          "status_icon_label": "Dish status"
+        },
+        "modal": {
+          "title": "Ingredients: {{name}}",
+          "title_empty": "Ingredients",
+          "select_placeholder": "Select ingredient",
+          "quantity_placeholder": "Quantity",
+          "loading_recipes": "Loading ingredients...",
+          "empty_recipes": "No ingredients yet."
+        },
+        "status": {
+          "activate_title": "Activate dish",
+          "deactivate_title": "Deactivate dish",
+          "activate_confirm": "Are you sure you want to activate {{name}}?",
+          "deactivate_confirm": "Are you sure you want to deactivate {{name}}?",
+          "activate_action": "Activate",
+          "deactivate_action": "Deactivate",
+          "activate_success": "{{name}} activated",
+          "deactivate_success": "{{name}} deactivated",
+          "update_failed": "Failed to update status"
+        },
+        "validation": {
+          "select_ingredient": "Please select an ingredient",
+          "invalid_quantity": "Invalid quantity"
+        },
+        "toasts": {
+          "add_success": "Ingredient added",
+          "add_error": "Failed to add ingredient",
+          "update_success": "Ingredient updated",
+          "update_error": "Failed to update ingredient",
+          "delete_success": "Ingredient deleted",
+          "delete_error": "Failed to delete ingredient"
+        },
+        "errors": {
+          "fetch_ingredients": "Failed to load ingredients",
+          "fetch_recipes": "Failed to load dish ingredients"
+        }
       }
     },
     "orders": {
@@ -1203,10 +1249,15 @@
       "stock_levels": "Stock Levels",
       "min_stock": "Minimum Stock (Min)",
       "max_stock": "Maximum Stock (Max)",
+      "stock_status_label": "Stock status",
+      "status_values": {
+        "in_stock": "In stock",
+        "low_stock": "Low stock",
+        "out_of_stock": "Out of stock"
+      },
       "stock_unit_note": "Measured in {{unit}}. Actual stock managed via the Inventory Stock module.",
       "actions_section": "Actions",
       "status_section": "Status",
-      "system_info": "System Information",
       "saving": "Saving…",
       "create_btn": "Create Ingredient",
       "update_btn": "Update",
@@ -1230,11 +1281,13 @@
         "col_supplier": "Supplier",
         "col_type": "Type",
         "col_status": "Status",
+        "col_stock_status": "Stock status",
         "badge_active": "Active",
         "badge_inactive": "Inactive",
         "badge_inactive_short": "Off",
         "mobile_unit": "Unit: ",
         "mobile_min_max": "Min/Max: ",
+        "mobile_stock_status": "Stock: ",
         "mobile_supplier": "Supplier: ",
         "mobile_type": "Type: ",
         "edit_tooltip": "Edit",

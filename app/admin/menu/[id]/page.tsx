@@ -273,27 +273,43 @@ export default function MenuItemFormPage() {
     }
   };
 
-  const handleDelete = () => {
+  const handleToggleStatus = () => {
+    const nextStatus = !formData.isActive;
     Modal.confirm({
-      title: t("dashboard.menu.modal.delete_title"),
+      title: nextStatus
+        ? t("dashboard.menu.ingredients.status.activate_title")
+        : t("dashboard.menu.ingredients.status.deactivate_title"),
       content: (
         <>
-          {t("dashboard.menu.modal.delete_confirm")}{" "}
-          <strong>&quot;{formData.name}&quot;</strong>?
-          <br />
-          {t("dashboard.menu.modal.cannot_undo")}
+          {nextStatus
+            ? t("dashboard.menu.ingredients.status.activate_confirm", {
+                name: formData.name,
+              })
+            : t("dashboard.menu.ingredients.status.deactivate_confirm", {
+                name: formData.name,
+              })}
         </>
       ),
-      okText: t("dashboard.menu.modal.delete"),
-      okType: "danger",
+      okText: nextStatus
+        ? t("dashboard.menu.ingredients.status.activate_action")
+        : t("dashboard.menu.ingredients.status.deactivate_action"),
+      okType: nextStatus ? "primary" : "danger",
       cancelText: t("dashboard.menu.modal.cancel"),
       onOk: async () => {
         try {
-          await dishService.deleteDish(id);
-          message.success(t("dashboard.menu.toasts.delete_success_message"));
-          router.push("/admin/menu");
+          await dishService.toggleDishStatus(id, nextStatus);
+          message.success(
+            nextStatus
+              ? t("dashboard.menu.ingredients.status.activate_success", {
+                  name: formData.name,
+                })
+              : t("dashboard.menu.ingredients.status.deactivate_success", {
+                  name: formData.name,
+                }),
+          );
+          setFormData((prev) => ({ ...prev, isActive: nextStatus }));
         } catch (err: any) {
-          message.error(t("dashboard.menu.toasts.delete_error_message"));
+          message.error(t("dashboard.menu.ingredients.status.update_failed"));
         }
       },
     });
@@ -816,22 +832,29 @@ export default function MenuItemFormPage() {
               {!isNewItem && (
                 <button
                   type="button"
-                  onClick={handleDelete}
+                  onClick={handleToggleStatus}
                   className="flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-all shadow-lg"
                   style={{
-                    background: "linear-gradient(to right, #EF4444, #DC2626)",
-                    boxShadow:
-                      "0 10px 15px -3px rgba(239, 68, 68, 0.2), 0 4px 6px -4px rgba(239, 68, 68, 0.2)",
+                    background: formData.isActive
+                      ? "linear-gradient(to right, #EF4444, #DC2626)"
+                      : "linear-gradient(to right, #16A34A, #22C55E)",
+                    boxShadow: formData.isActive
+                      ? "0 10px 15px -3px rgba(239, 68, 68, 0.2), 0 4px 6px -4px rgba(239, 68, 68, 0.2)"
+                      : "0 10px 15px -3px rgba(34, 197, 94, 0.2), 0 4px 6px -4px rgba(34, 197, 94, 0.2)",
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.background =
-                      "linear-gradient(to right, #DC2626, #B91C1C)")
+                    (e.currentTarget.style.background = formData.isActive
+                      ? "linear-gradient(to right, #DC2626, #B91C1C)"
+                      : "linear-gradient(to right, #15803D, #16A34A)")
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.background =
-                      "linear-gradient(to right, #EF4444, #DC2626)")
+                    (e.currentTarget.style.background = formData.isActive
+                      ? "linear-gradient(to right, #EF4444, #DC2626)"
+                      : "linear-gradient(to right, #16A34A, #22C55E)")
                   }>
-                  Delete Dish
+                  {formData.isActive
+                    ? t("dashboard.menu.ingredients.actions.deactivate")
+                    : t("dashboard.menu.ingredients.actions.activate")}
                 </button>
               )}
               <button
@@ -839,20 +862,9 @@ export default function MenuItemFormPage() {
                 disabled={loading}
                 className="flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: loading
-                    ? "#999"
-                    : "linear-gradient(to right, var(--primary), var(--primary)F0)",
-                  boxShadow:
-                    "0 10px 15px -3px var(--primary)33, 0 4px 6px -4px var(--primary)33",
+                  background: "var(--primary)", color: "white"
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background =
-                    "linear-gradient(to right, #B32607)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background =
-                    "linear-gradient(to right, var(--primary), var(--primary)F0)")
-                }>
+                >
                 {isNewItem ? "Create Menu Item" : "Update Menu Item"}
               </button>
             </div>

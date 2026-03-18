@@ -809,6 +809,52 @@
         "save_error_message": "Không thể lưu món ăn. Vui lòng thử lại.",
         "detail_error_message": "Không thể tải thông tin món ăn.",
         "validation_error_message": "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại."
+      },
+      "ingredients": {
+        "actions": {
+          "ingredients": "Nguyên liệu",
+          "add": "Thêm",
+          "save": "Lưu",
+          "delete": "Xóa",
+          "activate": "Kích hoạt",
+          "deactivate": "Ngừng kích hoạt",
+          "status_icon_label": "Trạng thái món"
+        },
+        "modal": {
+          "title": "Nguyên liệu: {{name}}",
+          "title_empty": "Nguyên liệu",
+          "select_placeholder": "Chọn nguyên liệu",
+          "quantity_placeholder": "Số lượng",
+          "loading_recipes": "Đang tải nguyên liệu...",
+          "empty_recipes": "Chưa có nguyên liệu nào."
+        },
+        "status": {
+          "activate_title": "Kích hoạt món",
+          "deactivate_title": "Ngừng kích hoạt món",
+          "activate_confirm": "Bạn có chắc chắn muốn kích hoạt {{name}}?",
+          "deactivate_confirm": "Bạn có chắc chắn muốn ngừng kích hoạt {{name}}?",
+          "activate_action": "Kích hoạt",
+          "deactivate_action": "Ngừng kích hoạt",
+          "activate_success": "Đã kích hoạt {{name}}",
+          "deactivate_success": "Đã ngừng kích hoạt {{name}}",
+          "update_failed": "Cập nhật trạng thái thất bại"
+        },
+        "validation": {
+          "select_ingredient": "Vui lòng chọn nguyên liệu",
+          "invalid_quantity": "Số lượng không hợp lệ"
+        },
+        "toasts": {
+          "add_success": "Đã thêm nguyên liệu",
+          "add_error": "Thêm nguyên liệu thất bại",
+          "update_success": "Đã cập nhật nguyên liệu",
+          "update_error": "Cập nhật nguyên liệu thất bại",
+          "delete_success": "Đã xóa nguyên liệu",
+          "delete_error": "Xóa nguyên liệu thất bại"
+        },
+        "errors": {
+          "fetch_ingredients": "Không thể tải danh sách nguyên liệu",
+          "fetch_recipes": "Không thể tải nguyên liệu của món"
+        }
       }
     },
     "orders": {
@@ -1144,10 +1190,15 @@
       "stock_levels": "Mức tồn kho",
       "min_stock": "Mức tối thiểu (Min)",
       "max_stock": "Mức tối đa (Max)",
+      "stock_status_label": "Trạng thái tồn kho",
+      "status_values": {
+        "in_stock": "Còn hàng",
+        "low_stock": "Sắp hết",
+        "out_of_stock": "Hết hàng"
+      },
       "stock_unit_note": "Đơn vị tính theo {{unit}}. Tồn kho thực tế quản lý qua module Inventory Stock.",
       "actions_section": "Thao tác",
       "status_section": "Trạng thái",
-      "system_info": "Thông tin hệ thống",
       "saving": "Đang lưu…",
       "create_btn": "Tạo nguyên liệu",
       "update_btn": "Cập nhật",
@@ -1171,11 +1222,13 @@
         "col_supplier": "Nhà cung cấp",
         "col_type": "Loại",
         "col_status": "Trạng thái",
+        "col_stock_status": "Tồn kho",
         "badge_active": "Đang dùng",
         "badge_inactive": "Ngừng dùng",
         "badge_inactive_short": "Ngừng",
         "mobile_unit": "Đơn vị: ",
         "mobile_min_max": "Min/Max: ",
+        "mobile_stock_status": "Tồn kho: ",
         "mobile_supplier": "Nhà CC: ",
         "mobile_type": "Loại: ",
         "edit_tooltip": "Chỉnh sửa",

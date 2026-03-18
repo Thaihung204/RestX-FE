@@ -108,6 +108,19 @@ export default function IngredientList() {
     return t(`dashboard.ingredients.type_codes.${toTypeTranslationKey(normalizedCode)}`, { defaultValue: dynamicValue || fallback });
   };
 
+  const getStatusLabel = (status?: number | null) => {
+    switch (status) {
+      case 0:
+        return t("dashboard.ingredients.status_values.in_stock");
+      case 1:
+        return t("dashboard.ingredients.status_values.low_stock");
+      case 2:
+        return t("dashboard.ingredients.status_values.out_of_stock");
+      default:
+        return "—";
+    }
+  };
+
   const types = Array.from(new Set(ingredients.map((i) => normalizeTypeCode(i.type)).filter(Boolean))) as string[];
 
   const filtered = ingredients.filter((i) => {
@@ -229,6 +242,9 @@ export default function IngredientList() {
                 <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 120 }}>
                   {t("dashboard.ingredients.list.col_status")}
                 </th>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden xl:table-cell" style={{ color: "var(--text)", width: 140 }}>
+                  {t("dashboard.ingredients.list.col_stock_status")}
+                </th>
                 <th className="text-center px-3 py-3 font-semibold" style={{ color: "var(--text)", width: 60 }}>
                   &nbsp;
                 </th>
@@ -336,6 +352,15 @@ export default function IngredientList() {
                           ? t("dashboard.ingredients.list.badge_active")
                           : t("dashboard.ingredients.list.badge_inactive")}
                       </button>
+                    </td>
+
+                    <td className="px-3 py-3 text-center hidden xl:table-cell">
+                      <span
+                        className="px-2 py-0.5 rounded-full text-xs"
+                        style={{ background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+                      >
+                        {getStatusLabel(item.status)}
+                      </span>
                     </td>
 
                     <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
