@@ -898,8 +898,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         <div className="flex items-start gap-4 opacity-70">
                                             <span className="material-symbols-outlined text-lg mt-1">location_on</span>
                                             <p className="text-sm font-medium leading-relaxed">
-                                                {tenant?.businessAddressLine1 || '123 Lumière Plaza, Food District'}<br />
-                                                {tenant?.businessAddressLine2 || 'Manhattan, NY 10012'}
+                                                {tenant?.businessAddressLine1 || '—'}<br />
+                                                {tenant?.businessAddressLine2 || ''}
                                             </p>
                                         </div>
                                     </div>
@@ -1415,7 +1415,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             {/* Footer Branding */}
             <footer className="relative z-10 py-10 text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="text-[var(--primary)] text-2xl font-serif font-bold italic tracking-widest">{tenant?.businessName || 'Lumière'}</span>
+                    <span className="text-[var(--primary)] text-2xl font-serif font-bold italic tracking-widest">{tenant?.businessName || tenant?.name || t('restaurant.header.title')}</span>
                 </div>
                 <p className="text-[10px] uppercase tracking-[0.4em]" style={{ color: '#ffffff' }}>{t('landing.booking.footer.tagline')}</p>
             </footer>

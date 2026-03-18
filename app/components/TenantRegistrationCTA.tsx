@@ -18,6 +18,8 @@ const features = [
 
 export const TenantRegistrationCTA: React.FC = () => {
   const { t } = useTranslation();
+  const { tenant } = useTenant();
+  const tenantName = tenant?.businessName || tenant?.name;
   const [modalVisible, setModalVisible] = useState(false);
 
   const containerVariants = {
@@ -101,7 +103,7 @@ export const TenantRegistrationCTA: React.FC = () => {
                       lineHeight: 1.6,
                     }}
                   >
-                    Join hundreds of restaurants already using RestX to streamline operations and boost revenue.
+                    {t('homepage.cta.description', { defaultValue: `Join hundreds of restaurants already using ${tenantName || 'our platform'} to streamline operations and boost revenue.` })}
                   </Paragraph>
                 </div>
 

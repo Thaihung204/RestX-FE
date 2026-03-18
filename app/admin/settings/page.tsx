@@ -103,7 +103,7 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue="RestX Premium Restaurant"
+                    defaultValue={t("dashboard.settings.general.restaurant_name_placeholder", "Restaurant")}
                     className="w-full px-4 py-2 rounded-lg focus:outline-none"
                     style={{
                       background: "var(--surface)",

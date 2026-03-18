@@ -5,11 +5,14 @@ import { Button, Card, Col, Row, Space, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTenant } from '@/lib/contexts/TenantContext';
 
 const { Title, Paragraph, Text } = Typography;
 
 const AboutUsSection: React.FC = () => {
     const { t } = useTranslation();
+  const { tenant } = useTenant();
+  const tenantName = tenant?.businessName || tenant?.name;
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -131,7 +134,7 @@ const AboutUsSection: React.FC = () => {
                                         maxWidth: 500,
                                     }}
                                 >
-                                    {t('homepage.about.description', 'RestX was born from a simple mission: to empower restaurateurs with technology that feels as natural as their craft. We bridge the gap between traditional hospitality and modern efficiency, helping you focus on what matters most—great food and happy customers.')}
+                                    {t('homepage.about.description', `Welcome to ${tenantName || 'our restaurant'} — where tradition meets innovation to elevate every dining experience.`)}
                                 </Paragraph>
 
                                 <Space size={24} wrap style={{ marginBottom: 48 }}>

@@ -26,6 +26,8 @@ interface Feature {
 
 const FeatureSection: React.FC = () => {
   const { t } = useTranslation();
+  const { tenant } = useTenant();
+  const tenantName = tenant?.businessName || tenant?.name;
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const features: Feature[] = [
@@ -193,7 +195,7 @@ const FeatureSection: React.FC = () => {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}>
-                RestX
+                {tenantName || t('homepage.features.brand', { defaultValue: 'Restaurant' })}
               </span>
             </Title>
             <Paragraph
