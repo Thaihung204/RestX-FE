@@ -15,6 +15,7 @@ const STATUS_COLORS: Record<TableData["status"], string> = {
   AVAILABLE: "#52c41a",
   RESERVED: "#1890ff",
   OCCUPIED: "#ff4d4f",
+  CLEANING: "#faad14",
   DISABLED: "#d9d9d9",
   SELECTED: "#52c41a",
 };
@@ -23,12 +24,14 @@ const STATUS_EMISSIVE: Partial<Record<TableData["status"], string>> = {
   AVAILABLE: "#0a2000",
   RESERVED: "#001830",
   OCCUPIED: "#200000",
+  CLEANING: "#2b1b00",
 };
 
 const STATUS_LABELS: Record<TableData["status"], string> = {
   AVAILABLE: "Available",
   RESERVED: "Reserved",
   OCCUPIED: "Occupied",
+  CLEANING: "Cleaning",
   DISABLED: "Disabled",
   SELECTED: "Selected",
 };
