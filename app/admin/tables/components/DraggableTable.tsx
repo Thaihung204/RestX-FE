@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useRef } from "react";
 
-type TableStatus = "AVAILABLE" | "OCCUPIED" | "RESERVED" | "DISABLED" | "SELECTED";
+type TableStatus = "AVAILABLE" | "OCCUPIED" | "RESERVED" | "CLEANING" | "DISABLED" | "SELECTED";
 
 export interface TableData {
   id: string;
@@ -15,6 +15,7 @@ export interface TableData {
   height: number;
   rotation: number;
   zoneId?: string;
+  photo360Url?: string;
 }
 
 interface DraggableTableProps {
@@ -42,6 +43,11 @@ const STATUS_CONFIG = {
     stroke: "#1890ff",
     fill: "#e6f7ff",
     text: "#1890ff",
+  },
+  CLEANING: {
+    stroke: "#faad14",
+    fill: "#fff7e6",
+    text: "#faad14",
   },
   DISABLED: {
     stroke: "#d9d9d9",

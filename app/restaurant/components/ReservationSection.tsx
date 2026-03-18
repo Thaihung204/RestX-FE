@@ -8,6 +8,7 @@ import { tableService, floorService, TableStatus, FloorLayoutTableItem } from '@
 import reservationService from '@/lib/services/reservationService';
 import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
+import TablePreview3DModal from './TablePreview3DModal';
 import { DatePicker, Select } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
@@ -122,8 +123,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const { user } = useAuth();
     const [step, setStep] = useState<ReservationStep>(ReservationStep.SEARCH);
     const autoFilledRef = useRef(false);
+    const [selectedTableForReservation, setSelectedTableForReservation] = useState<TableData | null>(null);
+    const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
 
-    const { timeSlots, maxGuestsOverride } = useMemo(
+    const { timeSlots } = useMemo(
         () => getTenantReservationConfig(tenant),
         [tenant],
     );
@@ -155,49 +158,12 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [confirmationCode, setConfirmationCode] = useState<string>('');
     const [reservationId, setReservationId] = useState<string>('');
-    const [maxCapacity, setMaxCapacity] = useState<number>(maxGuestsOverride ?? 20); // default fallback
 
-    // Load max table capacity early so the guest input knows its upper bound
-    useEffect(() => {
-        const applyMax = (maxFromTables: number) => {
-            let finalMax = maxFromTables;
-            if (maxGuestsOverride && maxGuestsOverride > 0) {
-                finalMax = Math.min(finalMax, maxGuestsOverride);
-            }
-            if (finalMax > 1) {
-                setMaxCapacity(finalMax);
-            }
-        };
+    const totalSelectedCapacity = useMemo(
+        () => selectedTables.reduce((sum, table) => sum + (table.capacity || 0), 0),
+        [selectedTables],
+    );
 
-        const loadMaxCapacity = async () => {
-            try {
-                const allFloors = await floorService.getAllFloors();
-                const activeFloors = allFloors.filter(f => f.isActive !== false);
-                if (activeFloors.length > 0) {
-                    const layoutResults = await Promise.allSettled(
-                        activeFloors.map(f => floorService.getFloorLayout(f.id))
-                    );
-                    let max = 1;
-                    layoutResults.forEach(r => {
-                        if (r.status === 'fulfilled' && r.value?.tables) {
-                            r.value.tables.forEach((tb: { seatingCapacity?: number }) => {
-                                if ((tb.seatingCapacity ?? 0) > max) max = tb.seatingCapacity!;
-                            });
-                        }
-                    });
-                    if (max > 1) { applyMax(max); return; }
-                }
-            } catch { /* ignore, try fallback */ }
-            try {
-                const items = await tableService.getAllTables();
-                const max = items
-                    .filter(t => t.isActive)
-                    .reduce((m, t) => Math.max(m, t.seatingCapacity ?? 1), 1);
-                if (max > 1) applyMax(max);
-            } catch { /* keep default 20 */ }
-        };
-        loadMaxCapacity();
-    }, [maxGuestsOverride]);
 
     useEffect(() => {
         const today = getTodayLocalDate();
@@ -249,9 +215,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 };
 
                 /** Convert numeric-string status from BE floor layout to TableData status */
-                const parseLayoutStatus = (s: string): 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' => {
-                    if (s === '2' || s?.toLowerCase() === 'occupied') return 'OCCUPIED';
-                    if (s === '1' || s?.toLowerCase() === 'reserved') return 'RESERVED';
+                const parseLayoutStatus = (s: string): 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'CLEANING' => {
+                    const normalized = s?.toLowerCase();
+                    if (s === '3' || normalized === 'cleaning') return 'CLEANING';
+                    if (s === '2' || normalized === 'occupied') return 'OCCUPIED';
+                    if (s === '1' || normalized === 'reserved') return 'RESERVED';
                     return 'AVAILABLE';
                 };
 
@@ -285,6 +253,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     height: Number(t.layout.height) || 100,
                                     rotation: Number(t.layout.rotation) || 0,
                                     zoneId: floorSummary.name,
+                                    photo360Url: floorSummary.name?.toLowerCase().includes('vip')
+                                        ? "/images/restaurant/warm_restaurant.webp"
+                                        : "/images/restaurant/bush_restaurant.webp",
                                 })
                             );
                             // DEBUG: show BE positions
@@ -325,8 +296,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                         const maxX = Math.max(...floorTables.map(t => (t.positionX ?? 0) + (t.width ?? 100)), 800);
                         const maxY = Math.max(...floorTables.map(t => (t.positionY ?? 0) + (t.height ?? 100)), 600);
                         const tableDataList: TableData[] = floorTables.map(t => {
-                            let status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' = 'AVAILABLE';
-                            if (t.tableStatusId === TableStatus.Occupied) status = 'OCCUPIED';
+                            let status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'CLEANING' = 'AVAILABLE';
+                            if (t.tableStatusName?.toLowerCase() === 'cleaning') status = 'CLEANING';
+                            else if (t.tableStatusId === TableStatus.Occupied) status = 'OCCUPIED';
                             else if (t.tableStatusId === TableStatus.Reserved) status = 'RESERVED';
                             return {
                                 id: t.id,
@@ -344,6 +316,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 height: t.height ?? 100,
                                 rotation: t.rotation ?? 0,
                                 zoneId: typeName,
+                                photo360Url: typeName?.toLowerCase().includes('vip')
+                                    ? "/images/restaurant/warm_restaurant.webp"
+                                    : "/images/restaurant/bush_restaurant.webp",
                             };
                         });
                         return {
@@ -372,46 +347,27 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         }
     }, [step, tenant]);
 
+    const buildSelectedTable = (table: TableData): Table => ({
+        id: table.id,
+        label: table.name,
+        capacity: table.seats,
+        isOccupied: false,
+        isPremium: table.area === 'Window' || table.area === 'VIP',
+        zone: table.area,
+        x: table.position.x,
+        y: table.position.y,
+        width: table.width || 80,
+        height: table.height || 80,
+        shape: table.shape === 'Circle' ? 'Round' : 'Rectangle',
+        rotation: table.rotation || 0,
+    });
+
     const handleMapTableClick = (table: TableData) => {
-        if (table.status === 'OCCUPIED' || table.status === 'RESERVED' || table.status === 'DISABLED') return;
-
-        const isAlreadySelected = selectedTables.some(t => t.id === table.id);
-
-        if (layout) {
-            const updatedFloors = layout.floors.map(f => {
-                const updatedTables = f.tables.map(t => {
-                    if (t.id === table.id) {
-                        return { ...t, status: isAlreadySelected ? 'AVAILABLE' as const : 'SELECTED' as const };
-                    }
-                    return t;
-                });
-                return { ...f, tables: updatedTables };
-            });
-
-            setLayout({
-                ...layout,
-                floors: updatedFloors
-            });
-        }
-
-        if (isAlreadySelected) {
-            setSelectedTables(prev => prev.filter(t => t.id !== table.id));
-        } else {
-            setSelectedTables(prev => [...prev, {
-                id: table.id,
-                label: table.name,
-                capacity: table.seats,
-                isOccupied: false,
-                isPremium: table.area === 'Window' || table.area === 'VIP',
-                zone: table.area,
-                x: table.position.x,
-                y: table.position.y,
-                width: table.width || 80,
-                height: table.height || 80,
-                shape: table.shape === 'Circle' ? 'Round' : 'Rectangle',
-                rotation: table.rotation || 0
-            }]);
-        }
+        setSelectedTables(prev => {
+            const exists = prev.some(t => t.id === table.id);
+            if (exists) return prev.filter(t => t.id !== table.id);
+            return [...prev, buildSelectedTable(table)];
+        });
     };
 
     // --- Gemini Integration ---
@@ -469,6 +425,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         getSmartRecommendation(booking.guests, booking.time);
         setStep(ReservationStep.TABLE_SELECTION);
     };
+
 
     const handleCompleteReservation = async () => {
         if (selectedTables.length === 0) return;
@@ -749,7 +706,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         { bg: 'bg-[#f6ffed]', border: 'border-[#52c41a]', label: 'Available' },
                                         { bg: 'bg-[var(--primary-soft)]', border: 'border-[var(--primary)] shadow-md shadow-[var(--primary-glow)]', label: 'Selected' },
                                         { bg: 'bg-[#fff1f0]', border: 'border-[#ff4d4f] diagonal-stripe opacity-60', label: 'Occupied' },
-                                        { bg: 'bg-[#e6f7ff]', border: 'border-[#1890ff]', label: 'Reserved' }
+                                        { bg: 'bg-[#e6f7ff]', border: 'border-[#1890ff]', label: 'Reserved' },
+                                        { bg: 'bg-[#fff7e6]', border: 'border-[#faad14]', label: 'Cleaning' }
                                     ].map((legend, i) => (
                                         <div key={i} className="flex items-center gap-4">
                                             <div className={`w-6 h-6 rounded-lg border-2 ${legend.bg} ${legend.border}`} />
@@ -793,9 +751,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             layout={layout}
                                             onLayoutChange={setLayout}
                                             onTableClick={handleMapTableClick}
-                                            onTablePositionChange={() => { }}
-                                            readOnly={true}
-                                            selectedTableId={selectedTables.length > 0 ? selectedTables[selectedTables.length - 1].id : undefined}
+                                            onTablePositionChange={() => undefined}
+                                            readOnly
+                                            selectedTableIds={selectedTables.map(t => t.id)}
                                         />
                                     </div>
                                 ) : (
@@ -812,6 +770,12 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 <div className="flex-1 space-y-6">
                                     {selectedTables.length > 0 ? (
                                         <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                                            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-xs text-[var(--text-muted)] flex items-center justify-between gap-4">
+                                                <span className="uppercase tracking-[0.2em] font-semibold">Tổng sức chứa</span>
+                                                <span className="inline-flex items-center justify-center text-[var(--primary)] font-bold text-sm px-3 py-1 rounded-full bg-[var(--primary-faint)] border border-[var(--primary-border)] leading-none text-center whitespace-nowrap min-h-[28px]">
+                                                    {totalSelectedCapacity} {t('landing.booking.table_map.guests')}
+                                                </span>
+                                            </div>
                                             {selectedTables.map(table => (
                                                 <div key={table.id} className="bg-[var(--primary-faint)] rounded-2xl p-6 border border-[var(--primary-border)]">
                                                     <div className="flex items-center justify-between mb-4">
@@ -830,20 +794,29 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                             <span className="font-semibold text-[var(--text)]">{table.capacity} {t('landing.booking.table_map.guests')}</span>
                                                         </div>
                                                     </div>
+                                                    <div className="mt-4 flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const found = layout?.floors.flatMap(f => f.tables).find(t => t.id === table.id) ?? null;
+                                                                if (!found) return;
+                                                                setSelectedTableForReservation(found);
+                                                                setIsReservationModalOpen(true);
+                                                            }}
+                                                            className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--primary-border)] text-[var(--primary)] hover:bg-[var(--primary-faint)] transition"
+                                                        >
+                                                            Xem 360°
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="text-center py-10 opacity-30">
-                                            <span className="material-symbols-outlined text-5xl mb-3 text-[var(--text-muted)]">touch_app</span>
-                                            <p className="text-sm font-medium text-[var(--text)]">{t('landing.booking.table_map.no_table_selected')}</p>
+                                        <div className="reservation-empty-warning">
+                                            <span className="material-symbols-outlined">info</span>
+                                            <span>{t('landing.booking.table_map.no_table_selected')}</span>
                                         </div>
                                     )}
-
-                                    <div className="flex gap-4 p-2">
-                                        <span className="material-symbols-outlined text-[var(--primary)] shrink-0">info</span>
-                                        <p className="text-xs text-[var(--text-muted)] italic leading-relaxed">{t('landing.booking.table_map.info_timer')}</p>
-                                    </div>
                                 </div>
 
                                 <button
@@ -1097,6 +1070,27 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
             </main>
 
+            <TablePreview3DModal
+                open={isReservationModalOpen}
+                table={selectedTableForReservation}
+                tableImageUrl={selectedTableForReservation?.photo360Url}
+                onClose={() => {
+                    setIsReservationModalOpen(false);
+                    setSelectedTableForReservation(null);
+                }}
+                onBookNow={() => {
+                    if (!selectedTableForReservation) return;
+                    setSelectedTables([buildSelectedTable(selectedTableForReservation)]);
+                    setIsReservationModalOpen(false);
+                    setStep(ReservationStep.CONFIRMATION);
+                }}
+                onSuccess={(result) => {
+                    setConfirmationCode(result.confirmationCode ?? '');
+                    setReservationId(result.id ?? '');
+                    setStep(ReservationStep.SUCCESS);
+                }}
+            />
+
             <style jsx global>{`
                 .reservation-date-picker.ant-picker {
                     width: 100% !important;
@@ -1109,6 +1103,25 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
                     padding: 0 12px !important;
                     gap: 10px !important;
+                }
+
+                .reservation-empty-warning {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    border-radius: 16px;
+                    border: 1px solid var(--warning-border);
+                    background: var(--warning-soft);
+                    padding: 12px 16px;
+                    color: var(--warning);
+                }
+
+                .reservation-empty-warning .material-symbols-outlined {
+                    font-size: 16px;
+                }
+
+                .reservation-empty-warning span:last-child {
+                    font-weight: 600;
                 }
 
                 .reservation-date-picker .ant-picker-input > input {
@@ -1395,14 +1408,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 .reservation-guest-stepper .ant-input-number {
                     border: none !important;
                     box-shadow: none !important;
-                    background: transparent !important;
-                }
-                .reservation-guest-stepper .ant-input-number-input {
-                    text-align: center !important;
-                    font-weight: 700 !important;
-                    font-size: 1.1rem !important;
-                    padding: 0 !important;
-                    color: var(--text) !important;
                     background: transparent !important;
                 }
             `}</style>
