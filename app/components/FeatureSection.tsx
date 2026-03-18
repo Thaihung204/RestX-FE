@@ -12,6 +12,7 @@ import { Card, Col, Flex, Row, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTenant } from '@/lib/contexts/TenantContext';
 
 const { Title, Paragraph, Text } = Typography;
 

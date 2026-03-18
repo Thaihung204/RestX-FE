@@ -5,6 +5,7 @@ import { Button, Col, Row, Space, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTenant } from '@/lib/contexts/TenantContext';
 import TenantRequestForm from './TenantRequestForm';
 
 const { Title, Paragraph } = Typography;
