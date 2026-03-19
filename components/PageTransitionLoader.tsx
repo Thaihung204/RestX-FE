@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useTenant } from '@/lib/contexts/TenantContext';
 
 // ─── CSS — only things RAF can't do ───────────────────────────────────────────
 const CSS = `
@@ -110,7 +111,7 @@ function getHeatLabel(pct: number) {
 }
 
 // ─── Inner overlay ────────────────────────────────────────────────────────────
-function PotBubbleOverlay({ visible }: { visible: boolean }) {
+function PotBubbleOverlay({ visible, brandName }: { visible: boolean; brandName?: string }) {
     const [mounted, setMounted] = useState(false);
     const [exiting, setExiting] = useState(false);
     const [showLogo, setShowLogo] = useState(false);
@@ -344,13 +345,13 @@ function PotBubbleOverlay({ visible }: { visible: boolean }) {
                             letterSpacing: '0.05em', textTransform: 'uppercase',
                             fontFamily: "'DM Sans','Barlow Condensed',sans-serif", color: 'var(--text)',
                         }}>
-                            rest<span style={{ color: 'var(--primary)' }}>X</span>
+                            {brandName || 'Restaurant'}
                         </p>
                         <p style={{
                             margin: 0, fontSize: 9, letterSpacing: '0.24em', textTransform: 'uppercase',
                             color: 'var(--text-muted)', fontFamily: "'DM Sans',sans-serif",
                         }}>
-                            Restaurant Platform
+                            {brandName ? 'Welcome back' : 'Restaurant Platform'}
                         </p>
                     </div>
                 )}
@@ -373,8 +374,8 @@ function isHardRefresh(): boolean {
 }
 
 // ─── Custom events (namespaced) ───────────────────────────────────────────────
-const EV_LOADING = 'restx:page-loading';
-const EV_LOADED = 'restx:page-loaded';
+const EV_LOADING = 'app:page-loading';
+const EV_LOADED = 'app:page-loaded';
 
 /**
  * Hook để báo cho loader biết trang đang fetch dữ liệu chậm.
@@ -397,6 +398,8 @@ const MIN_VISIBLE_MS = 250;
 
 export function PageTransitionLoader() {
     const pathname = usePathname();
+    const { tenant } = useTenant();
+    const brandName = tenant?.businessName || tenant?.name;
     const [loading, setLoading] = useState(false);
 
     // Ref to avoid stale closures in event listeners
@@ -594,7 +597,7 @@ export function PageTransitionLoader() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    return <PotBubbleOverlay visible={loading} />;
+    return <PotBubbleOverlay visible={loading} brandName={brandName} />;
 }
 
 export default PageTransitionLoader;

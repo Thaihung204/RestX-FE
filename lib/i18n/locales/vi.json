@@ -1564,7 +1564,7 @@
     },
     "hero": {
       "tag": "Nền tảng vận hành nhà hàng toàn diện",
-      "title": "Tối ưu vận hành nhà hàng với RestX",
+      "title": "Tối ưu vận hành nhà hàng với Nền tảng Nhà hàng",
       "description": "Quản lý đặt bàn, order, bếp, kho và báo cáo trên một nền tảng duy nhất.",
       "get_started": "Bắt đầu ngay",
       "watch_demo": "Xem Demo",
@@ -1586,7 +1586,7 @@
       "tag": "Câu chuyện của chúng tôi",
       "title_prefix": "Cách mạng hóa ",
       "title_highlight": "Ngành Ẩm thực",
-      "description": "RestX ra đời với sứ mệnh đơn giản: trao quyền cho các chủ nhà hàng bằng công nghệ cho cảm giác tự nhiên như tay nghề của họ. Chúng tôi thu hẹp khoảng cách giữa lòng hiếu khách truyền thống và hiệu quả hiện đại, giúp bạn tập trung vào điều quan trọng nhất—món ăn ngon và khách hàng hài lòng.",
+      "description": "Nền tảng Nhà hàng ra đời với sứ mệnh đơn giản: trao quyền cho các chủ nhà hàng bằng công nghệ cho cảm giác tự nhiên như tay nghề của họ. Chúng tôi thu hẹp khoảng cách giữa lòng hiếu khách truyền thống và hiệu quả hiện đại, giúp bạn tập trung vào điều quan trọng nhất—món ăn ngon và khách hàng hài lòng.",
       "mission": {
         "title": "Sứ mệnh Dẫn lối",
         "desc": "Tận tâm vì sự phát triển của bạn"
@@ -1636,8 +1636,8 @@
       }
     },
     "workflow": {
-      "title": "Cách RestX vận hành trong nhà hàng của bạn",
-      "description": "Từ lúc khách đặt bàn đến khi chốt bill, mọi bước đều được RestX hỗ trợ.",
+      "title": "Cách Nền tảng Nhà hàng vận hành trong nhà hàng của bạn",
+      "description": "Từ lúc khách đặt bàn đến khi chốt bill, mọi bước đều được Nền tảng Nhà hàng hỗ trợ.",
       "steps": {
         "setup": {
           "title": "Thiết lập nhà hàng & menu",
@@ -1654,16 +1654,16 @@
       }
     },
     "testimonials": {
-      "title": "Nhà hàng nói gì về RestX?",
-      "description": "Hàng trăm chủ nhà hàng và quản lý đã tin tưởng RestX để tối ưu vận hành của họ.",
+      "title": "Nhà hàng nói gì về Nền tảng Nhà hàng?",
+      "description": "Hàng trăm chủ nhà hàng và quản lý đã tin tưởng Nền tảng Nhà hàng để tối ưu vận hành của họ.",
       "items": {
         "nam": {
           "role": "Owner, Nhà hàng Hải Sản 123",
-          "quote": "RestX đã thay đổi hoàn toàn cách chúng tôi vận hành. Từ việc đặt bàn đến quản lý kho, mọi thứ đều được tự động hóa và chính xác hơn rất nhiều."
+          "quote": "Nền tảng Nhà hàng đã thay đổi hoàn toàn cách chúng tôi vận hành. Từ việc đặt bàn đến quản lý kho, mọi thứ đều được tự động hóa và chính xác hơn rất nhiều."
         },
         "huong": {
           "role": "Manager, Chuỗi Phở 24h",
-          "quote": "Trước đây tôi phải mất hàng giờ để tổng hợp báo cáo từ 5 chi nhánh. Giờ với RestX, tất cả dữ liệu đều có sẵn trên dashboard trong vài cú click."
+          "quote": "Trước đây tôi phải mất hàng giờ để tổng hợp báo cáo từ 5 chi nhánh. Giờ với Nền tảng Nhà hàng, tất cả dữ liệu đều có sẵn trên dashboard trong vài cú click."
         },
         "tuan": {
           "role": "Owner, Quán Cơm Tấm Sài Gòn",
@@ -1676,7 +1676,7 @@
       }
     },
     "footer": {
-      "tagline": "RestX – Nền tảng vận hành nhà hàng thế hệ mới. Giúp bạn quản lý mọi khía cạnh của nhà hàng trên một hệ thống duy nhất.",
+      "tagline": "Nền tảng vận hành nhà hàng thế hệ mới. Giúp bạn quản lý mọi khía cạnh của nhà hàng trên một hệ thống duy nhất.",
       "columns": {
         "product": {
           "title": "Sản phẩm",
@@ -1707,7 +1707,7 @@
           "gdpr": "GDPR"
         }
       },
-      "copyright": "© {year} RestX. All rights reserved.",
+      "copyright": "© {year} Nền tảng Nhà hàng. All rights reserved.",
       "privacy": "Bảo mật",
       "terms": "Điều khoản",
       "cookies": "Cookies"
@@ -1738,8 +1738,8 @@
     },
     "about": {
       "title": "Về Chúng Tôi",
-      "restaurant_name": "RestX Restaurant",
-      "description": "Tại RestX Restaurant, chúng tôi đặt khách hàng lên hàng đầu. Với đội ngũ nhân viên tận tâm và những công thức nấu ăn độc đáo, chúng tôi cam kết mang đến trải nghiệm ẩm thực tuyệt vời nhất. Mỗi món ăn được chế biến cẩn thận với nguyên liệu tươi ngon nhất, tạo nên hương vị đặc biệt không thể tìm thấy ở đâu khác. Chúng tôi xin chân thành cảm ơn sự ủng hộ của quý khách.",
+      "restaurant_name": "Nhà hàng",
+      "description": "Tại Nhà hàng, chúng tôi đặt khách hàng lên hàng đầu. Với đội ngũ nhân viên tận tâm và những công thức nấu ăn độc đáo, chúng tôi cam kết mang đến trải nghiệm ẩm thực tuyệt vời nhất. Mỗi món ăn được chế biến cẩn thận với nguyên liệu tươi ngon nhất, tạo nên hương vị đặc biệt không thể tìm thấy ở đâu khác. Chúng tôi xin chân thành cảm ơn sự ủng hộ của quý khách.",
       "see_more": "Xem Thêm"
     },
     "categories": {
@@ -1815,7 +1815,7 @@
     }
   },
   "points_card": {
-    "title": "RestX Rewards",
+    "title": "Ưu đãi Thành viên",
     "points": "điểm",
     "gold_progress": "Tiến độ hạng Vàng",
     "remaining_points": "Còn {{count}} điểm",
@@ -1916,7 +1916,7 @@
     },
     "sections": {
       "all_title": "Tất cả món ăn",
-      "all_desc": "Khám phá toàn bộ thực đơn tinh hoa của RestX.",
+      "all_desc": "Khám phá toàn bộ thực đơn tinh hoa của Nền tảng Nhà hàng.",
       "special_title": "Special Bowls",
       "special_desc": "Signature poke bowls với cá tươi, rau củ muối và sốt đậm đà.",
       "sushi_title": "Honi Sushi",
@@ -1928,10 +1928,10 @@
   "auth": {
     "hero_section": {
       "title": "Trải nghiệm ẩm thực tuyệt đỉnh.",
-      "description": "Đặt bàn, quản lý đặt chỗ và thưởng thức hương vị tuyệt hảo chỉ có tại RestX."
+      "description": "Đặt bàn, quản lý đặt chỗ và thưởng thức hương vị tuyệt hảo chỉ có tại Nền tảng Nhà hàng."
     },
     "admin_login_header": {
-      "title": "Admin RestX",
+      "title": "Cổng quản trị",
       "subtitle": "Hệ thống Quản lý Nhà hàng",
       "forgot_password": "Quên mật khẩu?"
     },
@@ -1976,7 +1976,7 @@
     },
     "register_page": {
       "title": "Tạo tài khoản",
-      "subtitle": "Tham gia RestX ngay hôm nay",
+      "subtitle": "Tham gia ngay hôm nay",
       "first_name": "Họ",
       "last_name": "Tên",
       "email": "Email",
@@ -2041,7 +2041,7 @@
       }
     },
     "login_admin_page": {
-      "title": "Admin RestX",
+      "title": "Cổng quản trị",
       "subtitle": "Hệ thống Quản lý Nhà hàng",
       "email_label": "Email",
       "email_placeholder": "",
@@ -2208,7 +2208,7 @@
       "tenants": "Nhà hàng"
     },
     "title": "Quản lý nhà hàng",
-    "subtitle": "Quản lý các nhà hàng trong hệ thống RestX, theo dõi số lượng và tổng doanh thu.",
+    "subtitle": "Quản lý các nhà hàng trong hệ thống Nền tảng Nhà hàng, theo dõi số lượng và tổng doanh thu.",
     "add_tenant": "Thêm nhà hàng",
     "stats": {
       "total_tenants": "Tổng nhà hàng",
@@ -2318,7 +2318,7 @@
     "create": {
       "breadcrumb_create": "Tạo mới",
       "title": "Tạo nhà hàng mới",
-      "subtitle": "Thêm nhà hàng mới vào hệ thống RestX.",
+      "subtitle": "Thêm nhà hàng mới vào hệ thống Nền tảng Nhà hàng.",
       "back": "Quay lại",
       "restaurant_info": "Thông tin nhà hàng",
       "owner_info": "Thông tin chủ sở hữu",
@@ -2387,7 +2387,7 @@
     "edit": {
       "breadcrumb_edit": "Chỉnh sửa",
       "title": "Chỉnh sửa nhà hàng",
-      "subtitle": "Cập nhật thông tin nhà hàng trong hệ thống RestX.",
+      "subtitle": "Cập nhật thông tin nhà hàng trong hệ thống Nền tảng Nhà hàng.",
       "back": "Quay lại",
       "extended_business_info": "Thông tin doanh nghiệp mở rộng",
       "about_overview": "Giới thiệu & Tổng quan",
@@ -2765,7 +2765,7 @@
     "about": {
       "subtitle": "Câu chuyện của chúng tôi",
       "title": "Di sản ẩm thực kết tinh từ đam mê",
-      "default_description": "Tại RestX Restaurant, chúng tôi đặt khách hàng lên hàng đầu. Với đội ngũ nhân viên tận tâm và những công thức nấu ăn độc đáo, chúng tôi cam kết mang đến trải nghiệm ẩm thực tuyệt vời nhất.",
+      "default_description": "Tại Nhà hàng, chúng tôi đặt khách hàng lên hàng đầu. Với đội ngũ nhân viên tận tâm và những công thức nấu ăn độc đáo, chúng tôi cam kết mang đến trải nghiệm ẩm thực tuyệt vời nhất.",
       "secondary_description": "Mỗi món ăn được chế biến cẩn thận với nguyên liệu tươi ngon nhất, tạo nên hương vị đặc biệt không thể tìm thấy ở đâu khác. Chúng tôi xin chân thành cảm ơn sự ủng hộ của quý khách.",
       "chef": "Bếp trưởng điều hành"
     },

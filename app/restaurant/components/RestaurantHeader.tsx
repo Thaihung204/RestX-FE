@@ -163,8 +163,8 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
               overflow: 'hidden',
             }}>
             <img
-              src={(tenant?.logoUrl && tenant.logoUrl.trim() !== '') ? tenant.logoUrl : "/images/logo/restx-removebg-preview.png"}
-              alt="Restaurant Logo"
+              src={tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png"}
+              alt={tenant?.businessName || tenant?.name || "Restaurant Logo"}
               className="app-logo-img"
               style={{
                 width: '100%',

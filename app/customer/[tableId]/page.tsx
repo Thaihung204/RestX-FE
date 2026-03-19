@@ -216,7 +216,7 @@ export default function CustomerHomePageByTable() {
                   textTransform: "uppercase",
                 }}
               >
-                Powered by RestX Experience
+                {tenant?.businessName || tenant?.name || "Restaurant Experience"}
               </Text>
             </div>
           </div>

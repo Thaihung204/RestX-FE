@@ -724,7 +724,7 @@ textarea::placeholder {
   border: none !important;
 }
 
-/* RestX Logo Dark Mode - Invert colors for better visibility */
+/* Logo Dark Mode - Invert colors for better visibility */
 [data-theme="dark"] .app-logo-img {
   filter: invert(1) hue-rotate(180deg) brightness(1.1);
 }
