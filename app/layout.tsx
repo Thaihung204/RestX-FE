@@ -14,9 +14,9 @@ import AntdProvider from "./theme/AntdProvider";
 const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
 export const metadata: Metadata = {
-  title: "RestX - All-in-one Restaurant Operations Platform",
+  title: "Restaurant Platform",
   description:
-    "Tối ưu vận hành nhà hàng với RestX. Quản lý đặt bàn, order, bếp, kho và báo cáo trên một nền tảng duy nhất.",
+    "Tối ưu vận hành nhà hàng với một nền tảng quản lý thống nhất.",
 };
 
 export default function RootLayout({

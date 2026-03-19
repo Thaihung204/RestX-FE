@@ -1,5 +1,5 @@
 /**
- * RestX Animation Configuration
+ * Animation Configuration
  * Shared animation variants for Homepage and Staff Dashboard
  */
 

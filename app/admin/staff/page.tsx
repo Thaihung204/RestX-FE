@@ -49,7 +49,7 @@ export default function StaffPage() {
     currentStatus: "active" | "inactive";
   } | null>(null);
 
-  const roles = ["Manager", "Staff" ];
+  const roles = ["Manager", "Staff"];
 
   const fetchStaffStats = async () => {
     try {
@@ -531,8 +531,8 @@ export default function StaffPage() {
                           className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${member.role === "Manager"
                               ? "bg-purple-500/10 text-purple-500"
                               : member.role === "Staff"
-                                ? "bg-orange-500/10 text-orange-500"
-                                  : "bg-gray-500/10 text-gray-500"
+                                ? "bg-blue-500/10 text-blue-500"
+                                : "bg-gray-500/10 text-gray-500"
                             }`}>
                           {t(
                             `dashboard.staff.roles.${member.role.toLowerCase()}`,

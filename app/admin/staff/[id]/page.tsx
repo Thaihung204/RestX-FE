@@ -3,10 +3,71 @@
 import employeeService from "@/lib/services/employeeService";
 import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const ROLES = ["Staff", "Manager"];
+type ImagePosition = { x: number; y: number };
+
+function DraggableImagePreview({
+  src,
+  alt,
+  position,
+  onPositionChange,
+  hintText,
+}: {
+  src: string;
+  alt: string;
+  position: ImagePosition;
+  onPositionChange: (next: ImagePosition) => void;
+  hintText: string;
+}) {
+  const dragRef = useRef<{ dragging: boolean; lastX: number; lastY: number }>({
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+  });
+  const clamp = (v: number) => Math.max(0, Math.min(100, v));
+
+  return (
+    <div
+      className="absolute inset-0 touch-none select-none cursor-grab active:cursor-grabbing"
+      onPointerDown={(e) => {
+        dragRef.current.dragging = true;
+        dragRef.current.lastX = e.clientX;
+        dragRef.current.lastY = e.clientY;
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        if (!dragRef.current.dragging) return;
+        const dx = e.clientX - dragRef.current.lastX;
+        const dy = e.clientY - dragRef.current.lastY;
+        dragRef.current.lastX = e.clientX;
+        dragRef.current.lastY = e.clientY;
+        onPositionChange({
+          x: clamp(position.x + dx * 0.2),
+          y: clamp(position.y + dy * 0.2),
+        });
+      }}
+      onPointerUp={() => { dragRef.current.dragging = false; }}
+      onPointerCancel={() => { dragRef.current.dragging = false; }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-full pointer-events-none"
+        style={{ objectFit: "cover", objectPosition: `${position.x}% ${position.y}%` }}
+      />
+      <div
+        className="absolute bottom-2 right-2 rounded-md px-2 py-1 text-[10px] font-medium pointer-events-none"
+        style={{ color: "#fff", background: "rgba(0,0,0,0.55)" }}
+      >
+        {hintText}
+      </div>
+    </div>
+  );
+}
+
+const ROLES = ["Staff"];
 const POSITIONS = ["Waiter", "Kitchen"];
 const SALARY_TYPES = ["Monthly", "Hourly", "Daily"];
 
@@ -39,6 +100,7 @@ export default function StaffFormPage() {
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [shouldRemoveAvatar, setShouldRemoveAvatar] = useState(false);
+  const [avatarPosition, setAvatarPosition] = useState<ImagePosition>({ x: 50, y: 50 });
 
   useEffect(() => {
     if (!isNewStaff) {
@@ -105,6 +167,7 @@ export default function StaffFormPage() {
     }
     setAvatarFile(file);
     setShouldRemoveAvatar(false);
+    setAvatarPosition({ x: 50, y: 50 });
     const reader = new FileReader();
     reader.onload = () => setAvatarPreview(reader.result as string);
     reader.readAsDataURL(file);
@@ -137,6 +200,7 @@ export default function StaffFormPage() {
     setAvatarPreview(null);
     setCurrentAvatarUrl(null);
     setShouldRemoveAvatar(true);
+    setAvatarPosition({ x: 50, y: 50 });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -622,7 +686,7 @@ export default function StaffFormPage() {
                       /* Image Preview State */
                       <div className="relative group">
                         <div
-                          className="w-full aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-300"
+                          className="w-full aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-300 relative"
                           style={{
                             borderColor: isDragging
                               ? "var(--primary)"
@@ -631,10 +695,12 @@ export default function StaffFormPage() {
                               ? "0 0 20px rgba(255,107,0,0.3)"
                               : "none",
                           }}>
-                          <img
+                          <DraggableImagePreview
                             src={avatarPreview || currentAvatarUrl || ""}
                             alt="Avatar Preview"
-                            className="w-full h-full object-cover"
+                            position={avatarPosition}
+                            onPositionChange={setAvatarPosition}
+                            hintText={t("dashboard.settings.appearance.drag_to_adjust", { defaultValue: "Drag to adjust" })}
                           />
                         </div>
 

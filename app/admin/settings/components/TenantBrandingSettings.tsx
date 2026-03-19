@@ -99,6 +99,93 @@ function ColorPickerField({
   );
 }
 
+type ImagePosition = { x: number; y: number };
+
+function DraggableImagePreview({
+  src,
+  alt,
+  className,
+  position,
+  onPositionChange,
+  objectFit = "cover",
+  onError,
+  hintText,
+}: {
+  src: string;
+  alt: string;
+  className: string;
+  position: ImagePosition;
+  onPositionChange: (next: ImagePosition) => void;
+  objectFit?: "cover" | "contain";
+  onError?: React.ReactEventHandler<HTMLImageElement>;
+  hintText: string;
+}) {
+  const dragRef = useRef<{ dragging: boolean; lastX: number; lastY: number }>({
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+  });
+
+  const clamp = (v: number) => Math.max(0, Math.min(100, v));
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragRef.current.dragging = true;
+    dragRef.current.lastX = e.clientX;
+    dragRef.current.lastY = e.clientY;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current.dragging) return;
+
+    const dx = e.clientX - dragRef.current.lastX;
+    const dy = e.clientY - dragRef.current.lastY;
+
+    dragRef.current.lastX = e.clientX;
+    dragRef.current.lastY = e.clientY;
+
+    onPositionChange({
+      x: clamp(position.x + dx * 0.2),
+      y: clamp(position.y + dy * 0.2),
+    });
+  };
+
+  const handlePointerUp = () => {
+    dragRef.current.dragging = false;
+  };
+
+  return (
+    <div
+      className={`${className} relative touch-none select-none cursor-grab active:cursor-grabbing`}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-full"
+        style={{
+          objectFit,
+          objectPosition: `${position.x}% ${position.y}%`,
+          pointerEvents: "none",
+        }}
+        onError={onError}
+      />
+      <div
+        className="absolute bottom-2 right-2 rounded-md px-2 py-1 text-[10px] font-medium pointer-events-none"
+        style={{
+          color: "#fff",
+          background: "rgba(0,0,0,0.55)",
+        }}
+      >
+        {hintText}
+      </div>
+    </div>
+  );
+}
+
 /** Resolve tenant ID from various API response shapes */
 function resolveTenantId(tenant: TenantConfig): string | undefined {
   return (
@@ -158,7 +245,12 @@ export default function TenantBrandingSettings() {
       return;
     }
     if (file.size > maxMB * 1024 * 1024) {
-      message.error(t("dashboard.settings.appearance.file_too_large", { defaultValue: `File size must be less than ${maxMB}MB` }));
+      message.error(
+        t("dashboard.settings.appearance.file_too_large", {
+          defaultValue: `File size must be less than ${maxMB}MB`,
+          maxMB,
+        }),
+      );
       return;
     }
     setFormData((prev) => ({ ...prev, [field]: file }));
@@ -171,6 +263,11 @@ export default function TenantBrandingSettings() {
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [bannerPreview, setBannerPreview] = useState<string>("");
   const [faviconPreview, setFaviconPreview] = useState<string>("");
+
+  // Preview positioning (client-side visual adjustment)
+  const [logoPosition, setLogoPosition] = useState<ImagePosition>({ x: 50, y: 50 });
+  const [bannerPosition, setBannerPosition] = useState<ImagePosition>({ x: 50, y: 50 });
+  const [faviconPosition, setFaviconPosition] = useState<ImagePosition>({ x: 50, y: 50 });
 
   /** Populate form fields from a tenant config object */
   const populateFromTenant = useCallback((tenantData: TenantConfig) => {
@@ -194,6 +291,9 @@ export default function TenantBrandingSettings() {
     setLogoPreview(tenantData.logoUrl || "");
     setBannerPreview(tenantData.backgroundUrl || "");
     setFaviconPreview(tenantData.faviconUrl || "");
+    setLogoPosition({ x: 50, y: 50 });
+    setBannerPosition({ x: 50, y: 50 });
+    setFaviconPosition({ x: 50, y: 50 });
   }, []);
 
   /** Fetch tenant by hostname for self-load mode */
@@ -305,7 +405,9 @@ export default function TenantBrandingSettings() {
         <div className="flex flex-col items-center gap-2">
           <Spin size="large" />
           <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Loading tenant branding...
+            {t("dashboard.settings.appearance.loading_tenant_branding", {
+              defaultValue: "Loading tenant branding...",
+            })}
           </span>
         </div>
       </div>
@@ -329,11 +431,15 @@ export default function TenantBrandingSettings() {
       {needsTenantPicker && (
         <div className="mb-6 p-4 rounded-lg" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-muted)" }}>
-            Select Tenant to Edit
+            {t("dashboard.settings.appearance.select_tenant_to_edit", {
+              defaultValue: "Select Tenant to Edit",
+            })}
           </label>
           <Select
             showSearch
-            placeholder="Choose a tenant..."
+            placeholder={t("dashboard.settings.appearance.choose_tenant_placeholder", {
+              defaultValue: "Choose a tenant...",
+            })}
             options={allTenants}
             value={selectedHostname}
             onChange={async (hostname) => {
@@ -351,7 +457,11 @@ export default function TenantBrandingSettings() {
       {/* Show which tenant is being edited */}
       {tenant && (
         <Alert
-          title={`Editing branding for: ${tenant.businessName || tenant.name} (${tenant.hostname})`}
+          title={t("dashboard.settings.appearance.editing_branding_for", {
+            defaultValue: "Editing branding for: {{name}} ({{hostname}})",
+            name: tenant.businessName || tenant.name,
+            hostname: tenant.hostname,
+          })}
           type="info"
           showIcon
           className="mb-6"
@@ -362,7 +472,9 @@ export default function TenantBrandingSettings() {
       {/* No tenant loaded yet (super admin hasn't picked one) */}
       {!tenant && needsTenantPicker && (
         <Alert
-          message="Please select a tenant above to edit its branding."
+          message={t("dashboard.settings.appearance.select_tenant_warning", {
+            defaultValue: "Please select a tenant above to edit its branding.",
+          })}
           type="warning"
           showIcon
           className="mb-6"
@@ -380,21 +492,27 @@ export default function TenantBrandingSettings() {
           <div className="flex gap-4 items-start">
             {/* Logo Preview */}
             <div
-              className="w-24 h-24 rounded-lg border-2 border-dashed flex items-center justify-center overflow-hidden cursor-pointer transition-all hover:border-[var(--primary)] group"
+              className={`w-24 h-24 rounded-lg border-2 border-dashed flex items-center justify-center overflow-hidden transition-all group ${logoPreview ? "cursor-grab" : "cursor-pointer hover:border-[var(--primary)]"}`}
               style={{
                 borderColor: "var(--border)",
                 background: "var(--surface)",
               }}
-              onClick={() => logoInputRef.current?.click()}>
+              onClick={!logoPreview ? () => logoInputRef.current?.click() : undefined}>
               {logoPreview ? (
-                <img
+                <DraggableImagePreview
                   src={logoPreview}
                   alt="Logo Preview"
-                  className="w-full h-full object-contain p-2"
+                  className="w-full h-full"
+                  objectFit="contain"
+                  position={logoPosition}
+                  onPositionChange={setLogoPosition}
                   onError={(e) =>
-                  (e.currentTarget.src =
-                    "/images/logo/restx-removebg-preview.png")
+                    (e.currentTarget.src =
+                      "/images/logo/restx-removebg-preview.png")
                   }
+                  hintText={t("dashboard.settings.appearance.drag_to_adjust", {
+                    defaultValue: "Drag to adjust",
+                  })}
                 />
               ) : (
                 <div className="text-center p-2">
@@ -428,6 +546,22 @@ export default function TenantBrandingSettings() {
             />
 
             <div className="flex-1">
+              {logoPreview && (
+                <button
+                  type="button"
+                  onClick={() => logoInputRef.current?.click()}
+                  className="mb-2 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors hover:opacity-90"
+                  style={{
+                    color: "var(--text)",
+                    borderColor: "var(--border)",
+                    background: "var(--surface)",
+                  }}
+                >
+                  {t("dashboard.settings.appearance.click_change", {
+                    defaultValue: "Change image",
+                  })}
+                </button>
+              )}
               <p className="text-sm mb-2" style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.appearance.logo_help", {
                   defaultValue: "Upload your restaurant logo",
@@ -459,26 +593,32 @@ export default function TenantBrandingSettings() {
           <div className="space-y-3">
             {/* Banner Preview */}
             <div
-              className="w-full h-40 rounded-lg border-2 border-dashed overflow-hidden relative cursor-pointer transition-all hover:border-[var(--primary)] group"
+              className={`w-full h-40 rounded-lg border-2 border-dashed overflow-hidden relative transition-all group ${bannerPreview ? "cursor-grab" : "cursor-pointer hover:border-[var(--primary)]"}`}
               style={{
                 borderColor: "var(--border)",
                 background: "var(--surface)",
               }}
-              onClick={() => bannerInputRef.current?.click()}>
+              onClick={!bannerPreview ? () => bannerInputRef.current?.click() : undefined}>
               {bannerPreview ? (
                 <>
-                  <img
+                  <DraggableImagePreview
                     src={bannerPreview}
                     alt="Banner Preview"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full"
+                    objectFit="cover"
+                    position={bannerPosition}
+                    onPositionChange={setBannerPosition}
                     onError={(e) =>
                       (e.currentTarget.src = "/images/restaurant/banner.png")
                     }
+                    hintText={t("dashboard.settings.appearance.drag_to_adjust", {
+                      defaultValue: "Drag to adjust",
+                    })}
                   />
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     <span className="text-white text-sm font-medium">
-                      {t("dashboard.settings.appearance.click_change", {
-                        defaultValue: "Click to change",
+                      {t("dashboard.settings.appearance.drag_to_adjust", {
+                        defaultValue: "Drag to adjust",
                       })}
                     </span>
                   </div>
@@ -514,18 +654,36 @@ export default function TenantBrandingSettings() {
               className="hidden"
             />
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-3">
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 {t("dashboard.settings.appearance.banner_format", {
                   defaultValue:
                     "Recommended: 1920x600px, JPG or PNG. Max 10MB.",
                 })}
               </p>
-              {formData.bannerFile && (
-                <p className="text-xs text-green-500">
-                  ✓ {formData.bannerFile.name}
-                </p>
-              )}
+              <div className="flex items-center gap-3">
+                {bannerPreview && (
+                  <button
+                    type="button"
+                    onClick={() => bannerInputRef.current?.click()}
+                    className="px-3 py-1.5 rounded-md text-xs font-medium border transition-colors hover:opacity-90"
+                    style={{
+                      color: "var(--text)",
+                      borderColor: "var(--border)",
+                      background: "var(--surface)",
+                    }}
+                  >
+                    {t("dashboard.settings.appearance.click_change", {
+                      defaultValue: "Change image",
+                    })}
+                  </button>
+                )}
+                {formData.bannerFile && (
+                  <p className="text-xs text-green-500 whitespace-nowrap">
+                    ✓ {formData.bannerFile.name}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -540,18 +698,24 @@ export default function TenantBrandingSettings() {
           <div className="flex gap-4 items-start">
             {/* Favicon Preview */}
             <div
-              className="w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center overflow-hidden cursor-pointer transition-all hover:border-[var(--primary)] group"
+              className={`w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center overflow-hidden transition-all group ${faviconPreview ? "cursor-grab" : "cursor-pointer hover:border-[var(--primary)]"}`}
               style={{
                 borderColor: "var(--border)",
                 background: "var(--surface)",
               }}
-              onClick={() => faviconInputRef.current?.click()}>
+              onClick={!faviconPreview ? () => faviconInputRef.current?.click() : undefined}>
               {faviconPreview ? (
-                <img
+                <DraggableImagePreview
                   src={faviconPreview}
                   alt="Favicon Preview"
-                  className="w-full h-full object-contain p-1"
+                  className="w-full h-full"
+                  objectFit="contain"
+                  position={faviconPosition}
+                  onPositionChange={setFaviconPosition}
                   onError={(e) => (e.currentTarget.style.display = "none")}
+                  hintText={t("dashboard.settings.appearance.drag_to_adjust", {
+                    defaultValue: "Drag to adjust",
+                  })}
                 />
               ) : (
                 <div className="text-center p-1">
@@ -580,6 +744,22 @@ export default function TenantBrandingSettings() {
             />
 
             <div className="flex-1">
+              {faviconPreview && (
+                <button
+                  type="button"
+                  onClick={() => faviconInputRef.current?.click()}
+                  className="mb-2 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors hover:opacity-90"
+                  style={{
+                    color: "var(--text)",
+                    borderColor: "var(--border)",
+                    background: "var(--surface)",
+                  }}
+                >
+                  {t("dashboard.settings.appearance.click_change", {
+                    defaultValue: "Change image",
+                  })}
+                </button>
+              )}
               <p className="text-sm mb-2" style={{ color: "var(--text)" }}>
                 {t("dashboard.settings.appearance.favicon_help", {
                   defaultValue: "Browser tab icon for your restaurant site",
@@ -662,7 +842,12 @@ export default function TenantBrandingSettings() {
                     key={field}
                     label={t(
                       `dashboard.settings.appearance.${camelToSnake(field)}`,
-                      { defaultValue: THEME_COLOR_MAP[field].label },
+                      {
+                        defaultValue: t(
+                          `tenants.edit.branding.${camelToSnake(field)}`,
+                          { defaultValue: THEME_COLOR_MAP[field].label },
+                        ),
+                      },
                     )}
                     value={colors[field]}
                     fallback={THEME_COLOR_MAP[field].fallback}
@@ -707,7 +892,9 @@ export default function TenantBrandingSettings() {
               <div
                 className="px-4 py-2 rounded-lg font-medium text-white"
                 style={{ background: colors.primaryColor }}>
-                Primary Button
+                {t("dashboard.settings.appearance.preview_primary_button", {
+                  defaultValue: "Primary Button",
+                })}
               </div>
               <div
                 className="px-4 py-2 rounded-lg border-2 font-medium"
@@ -715,7 +902,9 @@ export default function TenantBrandingSettings() {
                   borderColor: colors.primaryColor,
                   color: colors.primaryColor,
                 }}>
-                Outlined Button
+                {t("dashboard.settings.appearance.preview_outlined_button", {
+                  defaultValue: "Outlined Button",
+                })}
               </div>
               <div
                 className="px-4 py-2 rounded-lg font-medium"
@@ -723,7 +912,9 @@ export default function TenantBrandingSettings() {
                   background: `${colors.primaryColor}15`,
                   color: colors.primaryColor,
                 }}>
-                Soft Button
+                {t("dashboard.settings.appearance.preview_soft_button", {
+                  defaultValue: "Soft Button",
+                })}
               </div>
             </div>
           </div>

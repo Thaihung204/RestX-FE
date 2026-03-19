@@ -35,6 +35,7 @@ import { useLanguage } from "../../components/I18nProvider";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import ThemeToggle from "../components/ThemeToggle";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useTenant } from "../../lib/contexts/TenantContext";
 
 const { Sider, Content, Header } = Layout;
 const { Text } = Typography;
@@ -54,6 +55,9 @@ export default function StaffLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { mode } = useThemeMode();
+  const { tenant } = useTenant();
+  const tenantName = tenant?.businessName || tenant?.name;
+  const tenantLogoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
 
   // Derive display info from real user
   const displayName = user?.fullName || user?.name || user?.email || "Staff";
@@ -242,17 +246,20 @@ export default function StaffLayout({
               overflow: "hidden",
             }}>
             <img
-              src="/images/logo/restx-removebg-preview.png"
-              alt="RestX Logo"
+              src={tenantLogoUrl}
+              alt={tenantName || "Restaurant Logo"}
               className="app-logo-img"
               style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              onError={(e) => {
+                e.currentTarget.src = "/images/logo/restx-removebg-preview.png";
+              }}
             />
           </div>
           {(!collapsed || inDrawer) && (
             <h2
               className="font-bold text-lg"
               style={{ color: "var(--text)" }}>
-              Rest<span style={{ color: "var(--primary)" }}>X</span>
+              {tenantName || t("staff.sidebar.brand")}
             </h2>
           )}
         </Link>
