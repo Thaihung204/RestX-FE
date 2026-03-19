@@ -127,7 +127,7 @@ function LoginEmailPageContent() {
         router.push(redirectPath);
       } else if (hasRole('Admin') || hasRole('System Admin')) {
         router.push('/admin');
-      } else if (hasRole('Waiter') || hasRole('Kitchen Staff')) {
+      } else if (hasRole('Staff')) {
         router.push('/staff');
       } else {
         router.push('/');

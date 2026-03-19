@@ -2,9 +2,73 @@
 
 import { Category, categoryService } from "@/lib/services/categoryService";
 import { message, Popconfirm } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+
+type ImagePosition = { x: number; y: number };
+
+function DraggableImagePreview({
+  src,
+  position,
+  onPositionChange,
+  alt,
+  onError,
+  hintText,
+}: {
+  src: string;
+  position: ImagePosition;
+  onPositionChange: (next: ImagePosition) => void;
+  alt: string;
+  onError?: React.ReactEventHandler<HTMLImageElement>;
+  hintText: string;
+}) {
+  const dragRef = useRef({ dragging: false, x: 0, y: 0 });
+  const clamp = (v: number) => Math.max(0, Math.min(100, v));
+
+  return (
+    <div
+      className="absolute inset-0 touch-none select-none cursor-grab active:cursor-grabbing"
+      onPointerDown={(e) => {
+        dragRef.current.dragging = true;
+        dragRef.current.x = e.clientX;
+        dragRef.current.y = e.clientY;
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        if (!dragRef.current.dragging) return;
+        const dx = e.clientX - dragRef.current.x;
+        const dy = e.clientY - dragRef.current.y;
+        dragRef.current.x = e.clientX;
+        dragRef.current.y = e.clientY;
+        onPositionChange({
+          x: clamp(position.x + dx * 0.2),
+          y: clamp(position.y + dy * 0.2),
+        });
+      }}
+      onPointerUp={() => {
+        dragRef.current.dragging = false;
+      }}
+      onPointerCancel={() => {
+        dragRef.current.dragging = false;
+      }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-full pointer-events-none"
+        style={{ objectFit: "cover", objectPosition: `${position.x}% ${position.y}%` }}
+        onError={onError}
+      />
+      <div
+        className="absolute bottom-2 right-2 rounded-md px-2 py-1 text-[10px] font-medium pointer-events-none"
+        style={{ color: "#fff", background: "rgba(0,0,0,0.55)" }}
+      >
+        {hintText}
+      </div>
+    </div>
+  );
+}
 
 export default function CategorySettings() {
   const { t } = useTranslation("common");
@@ -15,6 +79,7 @@ export default function CategorySettings() {
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+  const [imagePosition, setImagePosition] = useState<ImagePosition>({ x: 50, y: 50 });
 
   // Form state
   const [formData, setFormData] = useState<Partial<Category>>({
@@ -73,6 +138,7 @@ export default function CategorySettings() {
       });
       setSelectedImageFile(null);
       setRemoveImage(false);
+      setImagePosition({ x: 50, y: 50 });
     } else {
       setEditingCategory(null);
       setFormData({
@@ -82,6 +148,7 @@ export default function CategorySettings() {
       });
       setSelectedImageFile(null);
       setRemoveImage(false);
+      setImagePosition({ x: 50, y: 50 });
     }
     setIsModalOpen(true);
   };
@@ -91,6 +158,7 @@ export default function CategorySettings() {
     setEditingCategory(null);
     setSelectedImageFile(null);
     setRemoveImage(false);
+    setImagePosition({ x: 50, y: 50 });
   };
 
   const handleSave = async () => {
@@ -482,6 +550,7 @@ export default function CategorySettings() {
                         // Upload will be performed on Save via /api/categories (Cloudinary on BE).
                         setSelectedImageFile(file);
                         setRemoveImage(false);
+                        setImagePosition({ x: 50, y: 50 });
 
                         // Reset file input value to allow re-selecting same file if needed
                         e.target.value = "";
@@ -504,10 +573,14 @@ export default function CategorySettings() {
                         {((!removeImage && formData.imageUrl) || localPreviewUrl) ? (
                           <>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <DraggableImagePreview
                               src={localPreviewUrl || (formData.imageUrl as string)}
                               alt="Preview"
-                              className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity"
+                              position={imagePosition}
+                              onPositionChange={setImagePosition}
+                              hintText={t("dashboard.settings.appearance.drag_to_adjust", {
+                                defaultValue: "Drag to adjust",
+                              })}
                               onError={(e) => {
                                 e.currentTarget.style.display = "none";
                                 message.error("Invalid image URL");

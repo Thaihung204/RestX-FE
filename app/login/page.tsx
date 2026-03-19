@@ -209,7 +209,7 @@ export default function LoginPage() {
           const userRoles: string[] = data.user?.roles || (data.user?.role ? [data.user.role] : []);
           const hasRole = (role: string) => userRoles.some(r => r.toLowerCase() === role.toLowerCase());
 
-          if (hasRole('Waiter') || hasRole('Kitchen Staff')) {
+          if (hasRole('Staff')) {
             window.location.href = '/staff';
           } else if (hasRole('Admin') || hasRole('System Admin')) {
             window.location.href = '/admin';

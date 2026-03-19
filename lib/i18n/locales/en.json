@@ -1368,6 +1368,16 @@
         "compact_mode_desc": "Reduce spacing between elements",
         "show_animations": "Show Animations",
         "show_animations_desc": "Enable interface animations",
+        "branding_title": "Store Branding",
+        "loading_tenant_branding": "Loading tenant branding...",
+        "select_tenant_to_edit": "Select Tenant to Edit",
+        "choose_tenant_placeholder": "Choose a tenant...",
+        "editing_branding_for": "Editing branding for: {{name}} ({{hostname}})",
+        "select_tenant_warning": "Please select a tenant above to edit its branding.",
+        "drag_to_adjust": "Drag to adjust",
+        "preview_primary_button": "Primary Button",
+        "preview_outlined_button": "Outlined Button",
+        "preview_soft_button": "Soft Button",
         "themes": {
           "dark": "Dark",
           "light": "Light",
@@ -1407,6 +1417,7 @@
       "buttons": {
         "cancel": "Cancel",
         "save_changes": "Save Changes",
+        "save_branding": "Save Branding",
         "saving": "Saving..."
       }
     },

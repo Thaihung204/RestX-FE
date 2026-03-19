@@ -348,18 +348,18 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     }, [step, tenant]);
 
     const buildSelectedTable = (table: TableData): Table => ({
-        id: table.id,
-        label: table.name,
-        capacity: table.seats,
-        isOccupied: false,
-        isPremium: table.area === 'Window' || table.area === 'VIP',
-        zone: table.area,
-        x: table.position.x,
-        y: table.position.y,
-        width: table.width || 80,
-        height: table.height || 80,
-        shape: table.shape === 'Circle' ? 'Round' : 'Rectangle',
-        rotation: table.rotation || 0,
+                id: table.id,
+                label: table.name,
+                capacity: table.seats,
+                isOccupied: false,
+                isPremium: table.area === 'Window' || table.area === 'VIP',
+                zone: table.area,
+                x: table.position.x,
+                y: table.position.y,
+                width: table.width || 80,
+                height: table.height || 80,
+                shape: table.shape === 'Circle' ? 'Round' : 'Rectangle',
+                rotation: table.rotation || 0,
     });
 
     const handleMapTableClick = (table: TableData) => {

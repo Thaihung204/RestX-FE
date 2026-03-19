@@ -28,7 +28,7 @@ export default function AdminAuthGuard({
                 router.replace("/login-email");
             } else if (!isAdmin) {
                 // Logged in but not admin
-                if (userRoles.some(r => r === 'Waiter' || r === 'Kitchen Staff')) {
+                if (userRoles.some(r => r.toLowerCase() === 'staff')) {
                     router.replace("/staff");
                 } else {
                     router.replace("/");
