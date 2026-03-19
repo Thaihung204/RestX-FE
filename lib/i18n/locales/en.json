@@ -1960,6 +1960,18 @@
       "rank_silver": "Silver Member",
       "rank_bronze": "Bronze Member",
       "rank_platinum": "Platinum Member"
+    },
+    "ai_popup": {
+      "title": "AI Assistant",
+      "status_online": "Online",
+      "robot_alt": "AI Robot",
+      "add_item": "Add item",
+      "input_placeholder": "Ask AI for dish suggestions...",
+      "quick_replies": {
+        "spicy": "Suggest spicy dishes",
+        "combo_two": "Combo for 2",
+        "vegetarian": "Find vegetarian dishes"
+      }
     }
   },
   "menu_page": {
