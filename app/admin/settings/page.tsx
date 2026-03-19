@@ -406,11 +406,8 @@ export default function SettingsPage() {
                     suppressHydrationWarning>
                     <div className="text-center">
                       <p
-                        className={`font-bold ${
-                          theme.name === "Light"
-                            ? "text-gray-900"
-                            : "text-white"
-                        }`}>
+                        className="font-bold"
+                        style={{ color: "var(--text)" }}>
                         {t(
                           `dashboard.settings.appearance.themes.${theme.name.toLowerCase()}`,
                         )}
