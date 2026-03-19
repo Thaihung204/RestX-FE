@@ -35,6 +35,7 @@ interface CustomerFooterProps {
   openProfileSignal?: number;
   position?: "sticky" | "fixed";
   bottomPadding?: number;
+  tableId?: string;
 }
 
 export default function CustomerFooter({
@@ -46,6 +47,7 @@ export default function CustomerFooter({
   openProfileSignal,
   position = "sticky",
   bottomPadding = 12,
+  tableId,
 }: CustomerFooterProps) {
   const router = useRouter();
   const { logout } = useAuth();
@@ -55,7 +57,9 @@ export default function CustomerFooter({
   const [messageApi, contextHolder] = message.useMessage();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"profile" | "reservations">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "reservations">(
+    "profile",
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -212,29 +216,25 @@ export default function CustomerFooter({
           gap: 8,
           alignItems: "center",
         }}>
-        <Button
-          icon={
-            <img
-              src="/images/ai/icons8-robot-50.png"
-              alt="AI"
-              style={{ width: 20, height: 20, objectFit: "contain" }}
-            />
-          }
+        <div
           onClick={() => setAiModalOpen(true)}
+          role="button"
+          aria-label={t("customer_page.ai_popup.open")}
           style={{
-            height: 44,
             width: 44,
-            borderRadius: 10,
-            background: "var(--primary-soft)",
-            border: "1px solid var(--primary-border)",
-            color: "var(--primary)",
-            fontSize: 18,
-            flexShrink: 0,
+            height: 44,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-          }}
-        />
+            cursor: "pointer",
+            flexShrink: 0,
+          }}>
+          <img
+            src="/images/ai/assistant.png"
+            alt="AI"
+            style={{ width: 40, height: 40, objectFit: "contain" }}
+          />
+        </div>
 
         <Button
           icon={<BellOutlined />}
@@ -274,7 +274,8 @@ export default function CustomerFooter({
             }}>
             <Text
               style={{
-                color: "color-mix(in srgb, var(--text-inverse), transparent 30%)",
+                color:
+                  "color-mix(in srgb, var(--text-inverse), transparent 30%)",
                 fontSize: 10,
                 fontWeight: 600,
               }}>
@@ -305,6 +306,7 @@ export default function CustomerFooter({
       <AISuggestionPopup
         open={aiModalOpen}
         onClose={() => setAiModalOpen(false)}
+        tableId={tableId}
       />
 
       <Modal
@@ -376,7 +378,8 @@ export default function CustomerFooter({
                   fontWeight: 600,
                   fontSize: 12,
                   transition: "all 0.2s",
-                  background: activeTab === tab ? "var(--primary)" : "transparent",
+                  background:
+                    activeTab === tab ? "var(--primary)" : "transparent",
                   color: activeTab === tab ? "white" : "var(--text-muted)",
                 }}>
                 {tab === "profile" ? "Hồ sơ" : "Đặt bàn"}
@@ -415,7 +418,9 @@ export default function CustomerFooter({
                 e.currentTarget.style.background = "var(--surface)";
                 e.currentTarget.style.borderColor = "var(--border)";
               }}>
-              <GlobalOutlined style={{ color: "var(--primary)", fontSize: 14 }} />
+              <GlobalOutlined
+                style={{ color: "var(--primary)", fontSize: 14 }}
+              />
             </div>
 
             <div
@@ -443,7 +448,9 @@ export default function CustomerFooter({
               {mode === "dark" ? (
                 <BulbOutlined style={{ color: "var(--gold)", fontSize: 14 }} />
               ) : (
-                <MoonOutlined style={{ color: "var(--text-muted)", fontSize: 14 }} />
+                <MoonOutlined
+                  style={{ color: "var(--text-muted)", fontSize: 14 }}
+                />
               )}
             </div>
           </div>
@@ -464,7 +471,9 @@ export default function CustomerFooter({
               cursor: "pointer",
               zIndex: 10,
             }}>
-            <CloseOutlined style={{ color: "var(--text-muted)", fontSize: 14 }} />
+            <CloseOutlined
+              style={{ color: "var(--text-muted)", fontSize: 14 }}
+            />
           </div>
 
           {activeTab === "profile" ? (
@@ -525,10 +534,12 @@ export default function CustomerFooter({
                   </p>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {reservations.map((res) => {
                     const canCancel =
-                      res.status.code === "PENDING" || res.status.code === "CONFIRMED";
+                      res.status.code === "PENDING" ||
+                      res.status.code === "CONFIRMED";
                     const statusColors: Record<string, string> = {
                       PENDING: "#FFA500",
                       CONFIRMED: "#3b82f6",
@@ -536,7 +547,8 @@ export default function CustomerFooter({
                       COMPLETED: "#22c55e",
                       CANCELLED: "#ef4444",
                     };
-                    const color = statusColors[res.status.code] ?? "var(--text-muted)";
+                    const color =
+                      statusColors[res.status.code] ?? "var(--text-muted)";
                     return (
                       <div
                         key={res.id}
@@ -584,16 +596,21 @@ export default function CustomerFooter({
                           }}>
                           <span>
                             📅{" "}
-                            {new Date(res.reservationDateTime).toLocaleString("vi-VN", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            {new Date(res.reservationDateTime).toLocaleString(
+                              "vi-VN",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
                           </span>
                           <br />
-                          <span>🪑 {res.tables.map((t) => t.code).join(", ")}</span>
+                          <span>
+                            🪑 {res.tables.map((t) => t.code).join(", ")}
+                          </span>
                           <span style={{ marginLeft: 12 }}>
                             👥 {res.numberOfGuests} khách
                           </span>
@@ -616,7 +633,9 @@ export default function CustomerFooter({
                               cursor: "pointer",
                               opacity: cancellingId === res.id ? 0.5 : 1,
                             }}>
-                            {cancellingId === res.id ? "Đang huỷ..." : "Huỷ đặt bàn"}
+                            {cancellingId === res.id
+                              ? "Đang huỷ..."
+                              : "Huỷ đặt bàn"}
                           </button>
                         )}
                       </div>

@@ -19,7 +19,7 @@ export default function StaffAuthGuard({
 
     // Determine if user has staff access
     const userRoles = user?.roles || [];
-    const isStaff = userRoles.some(r => r === 'Waiter' || r === 'Kitchen Staff');
+    const isStaff = userRoles.some(r => r === 'Staff');
 
     useEffect(() => {
         if (!loading) {

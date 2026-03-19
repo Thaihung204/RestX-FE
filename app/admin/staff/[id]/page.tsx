@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const ROLES = ["Waiter", "Kitchen Staff"];
+const ROLES = ["Staff", "Manager"];
 const POSITIONS = ["Waiter", "Kitchen"];
 const SALARY_TYPES = ["Monthly", "Hourly", "Daily"];
 

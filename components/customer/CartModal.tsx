@@ -200,7 +200,7 @@ export default function CartModal() {
                       overflowY: "auto",
                       paddingRight: 2,
                       paddingBottom: 6,
-                      maxHeight: "50vh",
+                      maxHeight: "calc(80vh - 320px)",
                     }}>
                     {cartItems.length === 0 ? (
                       <div
@@ -376,7 +376,7 @@ export default function CartModal() {
                       overflowY: "auto",
                       paddingRight: 2,
                       paddingBottom: 6,
-                      maxHeight: "50vh",
+                      maxHeight: "calc(80vh - 320px)",
                     }}>
                     {orderedItems.length === 0 ? (
                       <div
@@ -410,13 +410,13 @@ export default function CartModal() {
                               <Text
                                 style={{
                                   color: "var(--primary)",
-                                  fontSize: 16,
+                                  fontSize: 12,
                                   fontWeight: 700,
                                   display: "block",
-                                  marginBottom: 10,
+                                  marginBottom: 8,
                                   textTransform: "uppercase",
                                   letterSpacing: 1,
-                                  marginTop: 10,
+                                  marginTop: 8,
                                 }}>
                                 {status}
                               </Text>
@@ -434,6 +434,7 @@ export default function CartModal() {
                                     style={{
                                       display: "flex",
                                       gap: 8,
+                                      alignItems: "center",
                                     }}>
                                     {item.image && (
                                       <img
@@ -456,8 +457,9 @@ export default function CartModal() {
                                         justifyContent: "space-between",
                                         alignItems: "center",
                                         flex: 1,
+                                        minWidth: 0,
                                       }}>
-                                      <div style={{ flex: 1 }}>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
                                         <Text
                                           style={{
                                             color: "var(--text)",
@@ -465,6 +467,9 @@ export default function CartModal() {
                                             fontWeight: 600,
                                             display: "block",
                                             marginBottom: 2,
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
                                           }}>
                                           {item.name}
                                         </Text>
@@ -474,8 +479,7 @@ export default function CartModal() {
                                             fontSize: 13,
                                             fontWeight: 600,
                                           }}>
-                                          {formatPrice(item.price)}đ x{" "}
-                                          {item.quantity}
+                                          {formatPrice(item.price)}đ x {item.quantity}
                                         </Text>
                                       </div>
                                       <div
@@ -541,8 +545,10 @@ export default function CartModal() {
                         <div
                           style={{
                             color: "var(--text)",
-                            fontSize: 22,
-                            fontWeight: 800,
+                            fontSize: 16,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: 1,
                           }}>
                           {formatVND(totalOrderAmount)}
                         </div>
@@ -551,7 +557,7 @@ export default function CartModal() {
                       block
                       type="primary"
                       size="large"
-                      onClick={confirmOrder}
+                      onClick={requestPayment}
                       style={{
                         background: "var(--primary)",
                         border: "none",
