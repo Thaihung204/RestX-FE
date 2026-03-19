@@ -871,6 +871,19 @@
         "detail_error_message": "Failed to load dish details.",
         "validation_error_message": "Invalid data. Please check your input."
       },
+      "images": {
+        "main_image": "Main",
+        "set_main": "Set as main image",
+        "is_main": "Main image",
+        "remove": "Remove image",
+        "add_photo": "Add photo",
+        "click_to_upload": "Click to upload images",
+        "format_hint": "PNG, JPG, WEBP up to 5MB each",
+        "helper_text": "Upload up to {{maxCount}} images. Star button sets the main image. Drag images to reposition.",
+        "max_count": "Maximum {{maxCount}} images allowed",
+        "file_too_large": "{{name}}: File size must be less than 5MB",
+        "invalid_type": "{{name}}: Only PNG, JPG, JPEG, and WEBP are allowed"
+      },
       "ingredients": {
         "actions": {
           "ingredients": "Ingredients",

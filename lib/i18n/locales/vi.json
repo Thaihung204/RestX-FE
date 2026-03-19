@@ -810,6 +810,19 @@
         "detail_error_message": "Không thể tải thông tin món ăn.",
         "validation_error_message": "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại."
       },
+      "images": {
+        "main_image": "Chính",
+        "set_main": "Đặt làm ảnh chính",
+        "is_main": "Ảnh chính",
+        "remove": "Xóa ảnh",
+        "add_photo": "Thêm ảnh",
+        "click_to_upload": "Nhấn để tải ảnh lên",
+        "format_hint": "PNG, JPG, WEBP tối đa 5MB mỗi ảnh",
+        "helper_text": "Tải lên tối đa {{maxCount}} ảnh. Nhấn ngôi sao để đặt ảnh chính. Kéo ảnh để điều chỉnh vị trí.",
+        "max_count": "Tối đa {{maxCount}} ảnh",
+        "file_too_large": "{{name}}: Kích thước file phải nhỏ hơn 5MB",
+        "invalid_type": "{{name}}: Chỉ hỗ trợ PNG, JPG, JPEG và WEBP"
+      },
       "ingredients": {
         "actions": {
           "ingredients": "Nguyên liệu",
