@@ -6,7 +6,6 @@ import CustomerFooter from "@/components/customer/CustomerFooter";
 import MenuCTA from "@/components/customer/MenuCTA";
 import RestaurantHeader from "@/components/customer/RestaurantHeader";
 import WelcomeCard from "@/components/customer/WelcomeCard";
-import NotificationSystem from "@/components/notifications/NotificationSystem";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useTenant } from "@/lib/contexts/TenantContext";
@@ -43,6 +42,7 @@ export default function CustomerHomePageByTable() {
   const [customerName, setCustomerName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [openProfileSignal, setOpenProfileSignal] = useState(0);
 
   useEffect(() => {
     if (!isValidGuid(tableId)) {
@@ -202,6 +202,7 @@ export default function CustomerHomePageByTable() {
                 customerName={customerName}
                 tableNumber={tableLabel}
                 rank={customerProfile?.membershipLevel}
+                onClick={() => setOpenProfileSignal((prev) => prev + 1)}
               />
 
               <MenuCTA onViewMenu={handleViewMenu} />
@@ -227,10 +228,10 @@ export default function CustomerHomePageByTable() {
             phoneNumber={phoneNumber}
             avatarUrl={avatarUrl}
             onProfileUpdate={loadCustomerProfile}
+            openProfileSignal={openProfileSignal}
             position="sticky"
           />
           <CartModal />
-          <NotificationSystem />
         </div>
       </ConfigProvider>
     </ProtectedRoute>

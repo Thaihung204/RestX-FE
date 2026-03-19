@@ -1877,6 +1877,18 @@
       "rank_silver": "Thành viên Bạc",
       "rank_bronze": "Thành viên Đồng",
       "rank_platinum": "Thành viên Bạch kim"
+    },
+    "ai_popup": {
+      "title": "Trợ lý AI",
+      "status_online": "Đang trực tuyến",
+      "robot_alt": "Robot AI",
+      "add_item": "Thêm món",
+      "input_placeholder": "Hỏi AI chọn món...",
+      "quick_replies": {
+        "spicy": "Gợi ý món cay",
+        "combo_two": "Combo 2 người",
+        "vegetarian": "Tìm món chay"
+      }
     }
   },
   "menu_page": {

@@ -1,9 +1,9 @@
 "use client";
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AISuggestionPopup from "@/components/customer/AISuggestionPopup";
 import CartModal from "@/components/customer/CartModal";
 import CustomerFooter from "@/components/customer/CustomerFooter";
-import NotificationSystem from "@/components/notifications/NotificationSystem";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useTheme } from "@/lib/hooks/useTheme";
@@ -1154,7 +1154,6 @@ export default function MenuPage() {
           onProfileUpdate={loadCustomerProfile}
         />
       </ConfigProvider>
-      <NotificationSystem />
     </>
     </ProtectedRoute>
   );
