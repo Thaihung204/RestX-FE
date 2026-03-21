@@ -11,7 +11,6 @@ export interface AIOrderDraftItem {
   dishName: string;
   quantity: number;
   price: number;
-  imageUrl?: string;
 }
 
 export interface AIOrderDraft {

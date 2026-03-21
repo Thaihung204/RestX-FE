@@ -22,12 +22,6 @@ export const aiService = {
     return response.data;
   },
 
-  clearChatSession: async (): Promise<void> => {
-    await axiosInstance.delete("/ai/chat", {
-      withCredentials: true,
-    });
-  },
-
   confirmOrder: async (payload: AIConfirmOrderRequest): Promise<string> => {
     const response = await axiosInstance.post<string>(
       "/ai/chat/confirm-order",

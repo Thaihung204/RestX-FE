@@ -1930,6 +1930,23 @@
       "robot_alt": "Robot AI",
       "add_item": "Thêm món",
       "input_placeholder": "Hỏi AI chọn món...",
+      "loading_reply": "Đang trả lời...",
+      "empty_state": {
+        "title": "Hãy bắt đầu trò chuyện",
+        "subtitle": "Để tôi gợi ý món ăn phù hợp cho bạn nhé."
+      },
+      "errors": {
+        "connection": "Mình đang gặp lỗi kết nối, bạn thử lại giúp mình nhé.",
+        "missing_order_info": "Không đủ thông tin để đặt đơn."
+      },
+      "order": {
+        "success": "Xác nhận đơn hàng thành công",
+        "error": "Không thể xác nhận đơn hàng. Vui lòng thử lại."
+      },
+      "order_draft": {
+        "title": "Đơn hàng",
+        "confirm": "Xác nhận"
+      },
       "quick_replies": {
         "spicy": "Gợi ý món cay",
         "combo_two": "Combo 2 người",

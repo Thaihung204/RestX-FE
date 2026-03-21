@@ -159,7 +159,7 @@ export default function AIFullScreenChat({ open, onClose, tableId, customerId }:
         {
           id: `${Date.now()}-error`,
           role: "assistant",
-          content: "Mình đang gặp lỗi kết nối, bạn thử lại giúp mình nhé.",
+          content: t("customer_page.ai_popup.errors.connection"),
           timestamp: new Date(),
         },
       ]);
@@ -172,24 +172,6 @@ export default function AIFullScreenChat({ open, onClose, tableId, customerId }:
     setDraftEdits((prev) => ({ ...prev, [messageId]: items }));
   };
 
-  // const resetChatState = () => {
-  //   setMessages([]);
-  //   setQuickReplies([]);
-  //   setDraftEdits({});
-  // };
-
-  // const handleClearSession = async () => {
-  //   if (isLoading || isConfirming) return;
-
-  //   try {
-  //     await aiService.clearChatSession();
-  //     resetChatState();
-  //     messageApi.success("Đã bắt đầu cuộc trò chuyện mới");
-  //   } catch {
-  //     messageApi.error("Không thể làm mới cuộc trò chuyện. Vui lòng thử lại.");
-  //   }
-  // };
-
   const handleConfirmOrder = async (messageId: string, draft: AIOrderDraft) => {
     if (isConfirming) return;
 
@@ -197,7 +179,7 @@ export default function AIFullScreenChat({ open, onClose, tableId, customerId }:
     const finalItems = draftEdits[messageId] ?? draft.items;
 
     if (!effectiveTableId || !finalItems?.length) {
-      messageApi.error("Không đủ thông tin để đặt đơn.");
+      messageApi.error(t("customer_page.ai_popup.errors.missing_order_info"));
       return;
     }
 
@@ -213,11 +195,9 @@ export default function AIFullScreenChat({ open, onClose, tableId, customerId }:
       };
 
       await orderService.createOrder(payload);
-      await aiService.clearChatSession();
-      resetChatState();
-      messageApi.success("Xác nhận đơn hàng thành công");
+      messageApi.success(t("customer_page.ai_popup.order.success"));
     } catch {
-      messageApi.error("Không thể xác nhận đơn hàng. Vui lòng thử lại.");
+      messageApi.error(t("customer_page.ai_popup.order.error"));
     } finally {
       setIsConfirming(false);
     }
@@ -234,38 +214,71 @@ export default function AIFullScreenChat({ open, onClose, tableId, customerId }:
               <Title level={5} style={{ margin: 0, fontSize: 16, color: "var(--text)" }}>{t("customer_page.ai_popup.title")}</Title>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            {/* <Button
-              size="small"
-              onClick={handleClearSession}
-              disabled={isLoading || isConfirming}
-              style={{ borderRadius: 999 }}>
-              Trò chuyện mới
-            </Button> */}
-            <Button type="text" icon={<CloseOutlined />} onClick={onClose} />
-          </div>
+          <Button type="text" icon={<CloseOutlined />} onClick={onClose} />
         </header>
 
         <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 24, background: chatBodyBg }}>
-          {messages.map((msg) => (
-            <AIMessageBubble
-              key={msg.id}
-              msg={msg}
-              popupBg={popupBg}
-              robotAlt={t("customer_page.ai_popup.robot_alt")}
-              formatVND={formatVND}
-              editedDraftItems={draftEdits[msg.id]}
-              onDraftItemsChange={handleDraftItemsChange}
-              onConfirmOrder={handleConfirmOrder}
-              isLoading={isLoading}
-              isConfirming={isConfirming}
-            />
-          ))}
+          {!messages.length && !isLoading ? (
+            <div
+              style={{
+                flex: 1,
+                minHeight: "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 16,
+                borderRadius: 14,
+                padding: "24px 12px",
+              }}>
+              <img
+                src="/images/ai/assistant.png"
+                alt={t("customer_page.ai_popup.robot_alt")}
+                style={{
+                  width: 240,
+                  height: 240,
+                  objectFit: "contain",
+                  opacity: 0.16,
+                  filter: "blur(2px)",
+                  pointerEvents: "none",
+                  userSelect: "none",
+                }}
+              />
+
+              <div
+                style={{
+                  textAlign: "center",
+                  maxWidth: 320,
+                }}>
+                <Title level={4} style={{ margin: 0, color: "var(--text)" }}>
+                  {t("customer_page.ai_popup.empty_state.title")}
+                </Title>
+                <Text style={{ color: "var(--text-muted)", display: "block", marginTop: 8 }}>
+                  {t("customer_page.ai_popup.empty_state.subtitle")}
+                </Text>
+              </div>
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <AIMessageBubble
+                key={msg.id}
+                msg={msg}
+                popupBg={popupBg}
+                robotAlt={t("customer_page.ai_popup.robot_alt")}
+                formatVND={formatVND}
+                editedDraftItems={draftEdits[msg.id]}
+                onDraftItemsChange={handleDraftItemsChange}
+                onConfirmOrder={handleConfirmOrder}
+                isLoading={isLoading}
+                isConfirming={isConfirming}
+              />
+            ))
+          )}
 
           {isLoading && (
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span aria-label={t("customer_page.ai_popup.robot_alt")} role="img" style={{ width: 28, height: 28, backgroundColor: "var(--text)", WebkitMaskImage: 'url("/images/ai/assistant.png")', maskImage: 'url("/images/ai/assistant.png")', WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", WebkitMaskSize: "contain", maskSize: "contain", display: "inline-block" }} />
-              <Text style={{ color: "var(--text-muted)" }}>Đang trả lời...</Text>
+              <Text style={{ color: "var(--text-muted)" }}>{t("customer_page.ai_popup.loading_reply")}</Text>
             </div>
           )}
         </div>

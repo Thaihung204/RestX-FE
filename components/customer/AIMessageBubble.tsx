@@ -1,6 +1,7 @@
 import { AIMessage, AIOrderDraft, AIOrderDraftItem } from "@/lib/types/ai";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Typography } from "antd";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -49,16 +50,15 @@ export default function AIMessageBubble({
   isLoading,
   isConfirming,
 }: AIMessageBubbleProps) {
+  const { t } = useTranslation("common");
   const draftItems = editedDraftItems ?? msg.orderDraft?.items ?? [];
 
   const updateDraftItemQuantity = (dishId: string, nextQuantity: number) => {
     const sourceItems = editedDraftItems ?? msg.orderDraft?.items ?? [];
 
-    const updated = sourceItems
-      .map((item) =>
-        item.dishId === dishId ? { ...item, quantity: Math.max(0, nextQuantity) } : item
-      )
-      .filter((item) => item.quantity > 0);
+    const updated = sourceItems.map((item) =>
+      item.dishId === dishId ? { ...item, quantity: Math.max(0, nextQuantity) } : item
+    );
 
     onDraftItemsChange(msg.id, updated);
   };
@@ -154,9 +154,28 @@ export default function AIMessageBubble({
               borderRadius: 12,
               padding: 10,
             }}>
-            <Text strong style={{ display: "block", marginBottom: 8 }}>
-              Bản nháp đơn hàng
-            </Text>
+              
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 8,
+                marginBottom: 8,
+              }}>
+              <Text strong style={{ margin: 0 }}>
+                {t("customer_page.ai_popup.order_draft.title")}
+              </Text>
+
+              <Button
+                type="primary"
+                size="small"
+                onClick={() => onConfirmOrder(msg.id, msg.orderDraft!)}
+                loading={isConfirming}
+                disabled={isLoading || isConfirming || draftItems.length === 0}>
+                {t("customer_page.ai_popup.order_draft.confirm")}
+              </Button>
+            </div>
 
             <div
               style={{
@@ -239,56 +258,80 @@ export default function AIMessageBubble({
 
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 6px", }}>
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={<MinusOutlined style={{ color: "#d9e2f2", fontSize: 7 }} />}
-                      onClick={() => updateDraftItemQuantity(item.dishId, item.quantity - 1)}
-                      disabled={isLoading || isConfirming}
-                      style={{
-                        border: "1px solid #2a3b5f",
-                        width: 25,
-                        height: 25,
-                        borderRadius: 7,
-                        background: "#16233a",
-                      }}
-                    />
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 6px" }}>
+                    {item.quantity > 0 ? (
+                      <>
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<MinusOutlined style={{ color: "#d9e2f2", fontSize: 10 }} />}
+                          onClick={() => updateDraftItemQuantity(item.dishId, item.quantity - 1)}
+                          disabled={isLoading || isConfirming}
+                          style={{
+                            border: "1px solid #2a3b5f",
+                            width: 25,
+                            height: 25,
+                            borderRadius: 7,
+                            background: "#16233a",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: 0,
+                            lineHeight: 1,
+                          }}
+                        />
 
-                    <Text
-                      strong
-                      style={{ minWidth: 14, textAlign: "center", color: "#f5f8ff", fontSize: 12 }}>
-                      {item.quantity}
-                    </Text>
+                        <Text
+                          strong
+                          style={{ minWidth: 14, textAlign: "center", color: "#f5f8ff", fontSize: 12 }}>
+                          {item.quantity}
+                        </Text>
 
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={<PlusOutlined style={{ color: "#d9e2f2", fontSize: 7, }} />}
-                      onClick={() => updateDraftItemQuantity(item.dishId, item.quantity + 1)}
-                      disabled={isLoading || isConfirming}
-                      style={{
-                        border: "1px solid #2a3b5f",
-                        width: 25,
-                        height: 25,
-                        borderRadius: 7,
-                        background: "#16233a",
-                      }}
-                    />
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<PlusOutlined style={{ color: "#d9e2f2", fontSize: 10 }} />}
+                          onClick={() => updateDraftItemQuantity(item.dishId, item.quantity + 1)}
+                          disabled={isLoading || isConfirming}
+                          style={{
+                            border: "1px solid #2a3b5f",
+                            width: 25,
+                            height: 25,
+                            borderRadius: 7,
+                            background: "#16233a",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: 0,
+                            lineHeight: 1,
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<PlusOutlined style={{ fontSize: 12 }} />}
+                        onClick={() => updateDraftItemQuantity(item.dishId, 1)}
+                        disabled={isLoading || isConfirming}
+                        style={{
+                          color: "var(--text)",
+                          border: "1px solid var(--border)",
+                          width: 25,
+                          minWidth: 25,
+                          height: 25,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
               ))}
             </div>
 
-            <Button
-              type="primary"
-              size="small"
-              onClick={() => onConfirmOrder(msg.id, msg.orderDraft!)}
-              loading={isConfirming}
-              disabled={isLoading || isConfirming || draftItems.length === 0}
-              style={{ marginTop: 8 }}>
-              Xác nhận đặt đơn
-            </Button>
+            
           </div>
         )}
       </div>
