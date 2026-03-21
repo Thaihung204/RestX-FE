@@ -210,8 +210,8 @@ export default function AIFullScreenChat({ open, onClose, tableId, customerId }:
         <header style={{ padding: "12px 16px", display: "flex", alignItems: "center", borderBottom: "1px solid var(--border)", background: headerBg, gap: 12 }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
             <span aria-label={t("customer_page.ai_popup.robot_alt")} role="img" style={{ width: 42, height: 42, flexShrink: 0, backgroundColor: "var(--text)", WebkitMaskImage: 'url("/images/ai/assistant.png")', maskImage: 'url("/images/ai/assistant.png")', WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center", WebkitMaskSize: "contain", maskSize: "contain", display: "inline-block" }} />
-            <div style={{ flex: 1, textAlign: "center" }}>
-              <Title level={5} style={{ margin: 0, fontSize: 16, color: "var(--text)" }}>{t("customer_page.ai_popup.title")}</Title>
+            <div style={{ flex: 1, textAlign: "center", }}>
+              <Title level={5} style={{ margin: 0, fontSize: 16, color: "var(--text)",  display: "block" }}>{t("customer_page.ai_popup.title")}</Title>
             </div>
           </div>
           <Button type="text" icon={<CloseOutlined />} onClick={onClose} />
@@ -231,14 +231,24 @@ export default function AIFullScreenChat({ open, onClose, tableId, customerId }:
                 borderRadius: 14,
                 padding: "24px 12px",
               }}>
-              <img
-                src="/images/ai/assistant.png"
-                alt={t("customer_page.ai_popup.robot_alt")}
+              <span
+                aria-label={t("customer_page.ai_popup.robot_alt")}
+                role="img"
                 style={{
                   width: 240,
                   height: 240,
-                  objectFit: "contain",
-                  opacity: 0.16,
+                  flexShrink: 0,
+                  backgroundColor: "var(--text-muted)",
+                  WebkitMaskImage: 'url("/images/ai/assistant.png")',
+                  maskImage: 'url("/images/ai/assistant.png")',
+                  WebkitMaskRepeat: "no-repeat",
+                  maskRepeat: "no-repeat",
+                  WebkitMaskPosition: "center",
+                  maskPosition: "center",
+                  WebkitMaskSize: "contain",
+                  maskSize: "contain",
+                  display: "inline-block",
+                  opacity: 0.2,
                   filter: "blur(2px)",
                   pointerEvents: "none",
                   userSelect: "none",
