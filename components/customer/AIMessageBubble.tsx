@@ -189,9 +189,9 @@ export default function AIMessageBubble({
                   key={item.dishId}
                   style={{
                     minWidth: "min(260px, calc(100vw - 145px))",
-                    border: "1px solid #223556",
+                    border: "1px solid var(--border)",
                     borderRadius: 12,
-                    background: "linear-gradient(135deg, #121a2a 0%, #0f1625 100%)",
+                    background: "var(--card)",
                     padding: 6,
                     display: "flex",
                     alignItems: "center",
@@ -234,7 +234,7 @@ export default function AIMessageBubble({
                       strong
                       style={{
                         display: "block",
-                        color: "#f5f8ff",
+                        color: "var(--text)",
                         fontSize: 12,
                         lineHeight: 1.15,
                         whiteSpace: "nowrap",
@@ -247,7 +247,7 @@ export default function AIMessageBubble({
                     <Text
                       style={{
                         display: "block",
-                        color: "#ff4d2d",
+                        color: "var(--primary)",
                         fontSize: 12,
                         fontWeight: 700,
                         lineHeight: 1.2,
@@ -264,15 +264,15 @@ export default function AIMessageBubble({
                         <Button
                           type="text"
                           size="small"
-                          icon={<MinusOutlined style={{ color: "#d9e2f2", fontSize: 10 }} />}
+                          icon={<MinusOutlined style={{ color: "var(--text)", fontSize: 10 }} />}
                           onClick={() => updateDraftItemQuantity(item.dishId, item.quantity - 1)}
                           disabled={isLoading || isConfirming}
                           style={{
-                            border: "1px solid #2a3b5f",
+                            border: "1px solid var(--border)",
                             width: 25,
                             height: 25,
                             borderRadius: 7,
-                            background: "#16233a",
+                            background: "var(--surface)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -283,22 +283,22 @@ export default function AIMessageBubble({
 
                         <Text
                           strong
-                          style={{ minWidth: 14, textAlign: "center", color: "#f5f8ff", fontSize: 12 }}>
+                          style={{ minWidth: 14, textAlign: "center", color: "var(--text)", fontSize: 12 }}>
                           {item.quantity}
                         </Text>
 
                         <Button
                           type="text"
                           size="small"
-                          icon={<PlusOutlined style={{ color: "#d9e2f2", fontSize: 10 }} />}
+                          icon={<PlusOutlined style={{ color: "var(--text)", fontSize: 10 }} />}
                           onClick={() => updateDraftItemQuantity(item.dishId, item.quantity + 1)}
                           disabled={isLoading || isConfirming}
                           style={{
-                            border: "1px solid #2a3b5f",
+                            border: "1px solid var(--border)",
                             width: 25,
                             height: 25,
                             borderRadius: 7,
-                            background: "#16233a",
+                            background: "var(--surface)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
