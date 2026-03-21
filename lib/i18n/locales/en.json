@@ -1967,6 +1967,23 @@
       "robot_alt": "AI Robot",
       "add_item": "Add item",
       "input_placeholder": "Ask AI for dish suggestions...",
+      "loading_reply": "Replying...",
+      "empty_state": {
+        "title": "Start a conversation",
+        "subtitle": "Let me suggest dishes that fit your taste."
+      },
+      "errors": {
+        "connection": "I'm having a connection issue, please try again.",
+        "missing_order_info": "Insufficient information to place the order."
+      },
+      "order": {
+        "success": "Order confirmed successfully",
+        "error": "Unable to confirm the order. Please try again."
+      },
+      "order_draft": {
+        "title": "Order",
+        "confirm": "Confirm"
+      },
       "quick_replies": {
         "spicy": "Suggest spicy dishes",
         "combo_two": "Combo for 2",

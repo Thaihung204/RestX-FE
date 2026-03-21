@@ -229,10 +229,23 @@ export default function CustomerFooter({
             cursor: "pointer",
             flexShrink: 0,
           }}>
-          <img
-            src="/images/ai/assistant.png"
-            alt="AI"
-            style={{ width: 40, height: 40, objectFit: "contain" }}
+          <span
+            aria-label="AI"
+            role="img"
+            style={{
+              width: 40,
+              height: 40,
+              backgroundColor: "var(--text)",
+              WebkitMaskImage: 'url("/images/ai/assistant.png")',
+              maskImage: 'url("/images/ai/assistant.png")',
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              WebkitMaskPosition: "center",
+              maskPosition: "center",
+              WebkitMaskSize: "contain",
+              maskSize: "contain",
+              display: "inline-block",
+            }}
           />
         </div>
 
@@ -307,6 +320,7 @@ export default function CustomerFooter({
         open={aiModalOpen}
         onClose={() => setAiModalOpen(false)}
         tableId={tableId}
+        customerId={customerProfile?.id}
       />
 
       <Modal
