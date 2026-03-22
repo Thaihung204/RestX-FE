@@ -28,6 +28,7 @@ export interface CustomerResponseDto {
   email: string;
   fullName: string;
   phoneNumber?: string;
+  avatarUrl?: string;
   totalOrders: number;
   totalReservations: number;
 }
@@ -38,6 +39,7 @@ export interface UpdateCustomerDto {
   membershipLevel?: string;
   loyaltyPoints?: number;
   isActive?: boolean;
+  avatar?: File;
 }
 
 export interface CustomerFilterParams {
@@ -187,6 +189,7 @@ const customerService = {
     if (data.membershipLevel !== undefined) formData.append('membershipLevel', data.membershipLevel);
     if (data.loyaltyPoints !== undefined) formData.append('loyaltyPoints', String(data.loyaltyPoints));
     if (data.isActive !== undefined) formData.append('isActive', String(data.isActive));
+    if (data.avatar) formData.append('avatar', data.avatar);
 
     const response = await axiosInstance.put<ApiResponse<CustomerResponseDto>>(
       `/customers/${id}`,

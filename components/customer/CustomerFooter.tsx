@@ -95,6 +95,7 @@ export default function CustomerFooter({
   const [tempName, setTempName] = useState("");
   const [tempPhone, setTempPhone] = useState("");
   const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null);
+  const [tempAvatarFile, setTempAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentPoints = customerProfile?.loyaltyPoints || 0;
@@ -114,6 +115,7 @@ export default function CustomerFooter({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setTempAvatarFile(file);
       setTempAvatarUrl(URL.createObjectURL(file));
     }
   };
@@ -122,6 +124,7 @@ export default function CustomerFooter({
     setTempName(customerName);
     setTempPhone(phoneNumber);
     setTempAvatarUrl(avatarUrl);
+    setTempAvatarFile(null);
     setIsEditing(true);
   };
 
@@ -139,6 +142,7 @@ export default function CustomerFooter({
         {
           fullName: tempName.trim(),
           phoneNumber: tempPhone.trim(),
+          avatar: tempAvatarFile || undefined,
         },
       );
       if (updated) {
