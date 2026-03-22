@@ -2,6 +2,7 @@
 
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { useLanguage } from "@/components/I18nProvider";
+import VnAddressSelect from "@/components/ui/VnAddressSelect";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantUpdateInput } from "@/lib/types/tenant";
 import {
@@ -120,7 +121,6 @@ const TenantEditPage: React.FC = () => {
   const [confirmInput, setConfirmInput] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [tenantStatus, setTenantStatus] = useState<boolean>(true);
-
   const tenantId = params.id as string;
 
   useEffect(() => {
@@ -141,6 +141,7 @@ const TenantEditPage: React.FC = () => {
       document.documentElement.style.overflow = originalHtmlOverflow;
     };
   }, [deleteModalVisible]);
+
 
   const fetchTenantDetails = async () => {
     try {
@@ -205,6 +206,8 @@ const TenantEditPage: React.FC = () => {
 
       form.setFieldsValue(formValues);
       setFormData(formValues);
+
+
       setTenantStatus(
         typeof data.status === "boolean" ? data.status : data.status === true,
       );
@@ -758,38 +761,17 @@ const TenantEditPage: React.FC = () => {
                         )}
                       />
                     </Form.Item>
-                    <Form.Item
-                      name="businessAddressLine2"
-                      rules={[
-                        {
-                          required: true,
-                          message: t(
-                            "tenants.create.validation.street_name_required",
-                          ),
-                        },
-                      ]}>
-                      <Input
-                        size="large"
-                        placeholder={t(
-                          "tenants.create.fields.address_line2_placeholder",
-                        )}
-                      />
-                    </Form.Item>
-                    <Form.Item
-                      name="businessAddressLine3"
-                      rules={[
-                        {
-                          required: true,
-                          message: t("tenants.create.validation.city_required"),
-                        },
-                      ]}>
-                      <Input
-                        size="large"
-                        placeholder={t(
-                          "tenants.create.fields.address_line3_placeholder",
-                        )}
-                      />
-                    </Form.Item>
+                    <VnAddressSelect
+                      form={form}
+                      cityFieldName="businessAddressLine3"
+                      districtWardFieldName="businessAddressLine2"
+                      stateProvinceFieldName="businessAddressLine4"
+                      required
+                      cityRequiredMessage={t("tenants.create.validation.city_required")}
+                      districtRequiredMessage={t("tenants.create.validation.street_name_required")}
+                      wardRequiredMessage={t("tenants.create.validation.street_name_required")}
+                    />
+
                     <Form.Item
                       name="businessAddressLine4"
                       rules={[

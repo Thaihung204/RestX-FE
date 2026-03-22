@@ -2518,6 +2518,24 @@
       }
     }
   },
+  "address": {
+    "vn": {
+      "city": "Tỉnh/Thành phố",
+      "district": "Quận/Huyện",
+      "ward": "Phường/Xã",
+      "city_placeholder": "Chọn tỉnh/thành phố",
+      "district_placeholder": "Chọn quận/huyện",
+      "ward_placeholder": "Chọn phường/xã",
+      "city_required": "Vui lòng chọn tỉnh/thành phố",
+      "district_required": "Vui lòng chọn quận/huyện",
+      "ward_required": "Vui lòng chọn phường/xã"
+    }
+  },
+  "request_tenant": {
+    "city_required": "Vui lòng chọn tỉnh/thành phố",
+    "district_required": "Vui lòng chọn quận/huyện",
+    "ward_required": "Vui lòng chọn phường/xã"
+  },
   "tenant_requests": {
     "form": {
       "title": "Đăng ký nhà hàng",
