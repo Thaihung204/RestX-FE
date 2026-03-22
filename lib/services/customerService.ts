@@ -156,9 +156,17 @@ const customerService = {
   },
 
   async updateCustomerProfile(id: string, data: UpdateCustomerDto): Promise<CustomerResponseDto | null> {
+    const formData = new FormData();
+
+    if (data.fullName !== undefined) formData.append('fullName', data.fullName);
+    if (data.phoneNumber !== undefined) formData.append('phoneNumber', data.phoneNumber);
+    if (data.membershipLevel !== undefined) formData.append('membershipLevel', data.membershipLevel);
+    if (data.loyaltyPoints !== undefined) formData.append('loyaltyPoints', String(data.loyaltyPoints));
+    if (data.isActive !== undefined) formData.append('isActive', String(data.isActive));
+
     const response = await axiosInstance.put<ApiResponse<CustomerResponseDto>>(
       `/customers/${id}`,
-      data
+      formData
     );
 
     if (response.data.success) {
