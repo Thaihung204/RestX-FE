@@ -9,18 +9,22 @@ interface WelcomeCardProps {
   customerName?: string;
   tableNumber: string;
   rank?: string;
+  onClick?: () => void;
 }
 
 const WelcomeCard: React.FC<WelcomeCardProps> = ({
   customerName,
   tableNumber,
   rank,
+  onClick,
 }) => {
   const { t } = useTranslation();
 
   return (
     <Card
       variant="borderless"
+      onClick={onClick}
+      hoverable={Boolean(onClick)}
       style={{
         borderRadius: 20,
         background: "var(--card)",
@@ -28,6 +32,7 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
         border: "1px solid var(--border)",
         position: "relative",
         overflow: "hidden",
+        cursor: onClick ? "pointer" : "default",
       }}
       styles={{ body: { padding: "24px 32px" } }}>
       {/* Decorative Glow */}
