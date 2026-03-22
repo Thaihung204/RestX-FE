@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Col, Form, Input, Row, Select } from "antd";
-import type { FormInstance, Rule } from "antd";
+import type { FormInstance } from "antd";
 import { useTranslation } from "react-i18next";
 
 type VnProvince = { code: number; name: string };
@@ -64,13 +64,13 @@ export default function VnAddressSelect({
   const resolvedDistrictPlaceholder = districtPlaceholder ?? t("address.vn.district_placeholder", { defaultValue: "Chọn quận/huyện" });
   const resolvedWardPlaceholder = wardPlaceholder ?? t("address.vn.ward_placeholder", { defaultValue: "Chọn phường/xã" });
 
-  const cityRules: Rule[] = required
+  const cityRules = required
     ? [{ required: true, message: cityRequiredMessage ?? t("address.vn.city_required", { defaultValue: "Vui lòng chọn tỉnh/thành phố" }) }]
     : [];
-  const districtRules: Rule[] = required
+  const districtRules = required
     ? [{ required: true, message: districtRequiredMessage ?? t("address.vn.district_required", { defaultValue: "Vui lòng chọn quận/huyện" }) }]
     : [];
-  const wardRules: Rule[] = required
+  const wardRules = required
     ? [{ required: true, message: wardRequiredMessage ?? t("address.vn.ward_required", { defaultValue: "Vui lòng chọn phường/xã" }) }]
     : [];
   const [provinceCode, setProvinceCode] = useState<number | null>(null);
