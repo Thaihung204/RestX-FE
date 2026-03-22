@@ -95,6 +95,7 @@ export default function CustomerFooter({
   const [tempName, setTempName] = useState("");
   const [tempPhone, setTempPhone] = useState("");
   const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null);
+  const [tempAvatarFile, setTempAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentPoints = customerProfile?.loyaltyPoints || 0;
@@ -114,6 +115,7 @@ export default function CustomerFooter({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setTempAvatarFile(file);
       setTempAvatarUrl(URL.createObjectURL(file));
     }
   };
@@ -122,6 +124,7 @@ export default function CustomerFooter({
     setTempName(customerName);
     setTempPhone(phoneNumber);
     setTempAvatarUrl(avatarUrl);
+    setTempAvatarFile(null);
     setIsEditing(true);
   };
 
@@ -139,6 +142,7 @@ export default function CustomerFooter({
         {
           fullName: tempName.trim(),
           phoneNumber: tempPhone.trim(),
+          avatar: tempAvatarFile || undefined,
         },
       );
       if (updated) {
@@ -528,7 +532,20 @@ export default function CustomerFooter({
                 </div>
               ) : reservations.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "40px 0" }}>
-                  <p style={{ fontSize: 32, marginBottom: 8 }}>📅</p>
+                  <p
+                    style={{
+                      width: 48,
+                      height: 48,
+                      margin: "0 auto 8px",
+                      borderRadius: "50%",
+                      display: "grid",
+                      placeItems: "center",
+                      background: "var(--surface-subtle)",
+                      color: "var(--text-muted)",
+                      fontSize: 20,
+                    }}>
+                    <span className="material-symbols-outlined">calendar_month</span>
+                  </p>
                   <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
                     Bạn chưa có đặt bàn nào
                   </p>
@@ -594,8 +611,10 @@ export default function CustomerFooter({
                             color: "var(--text-muted)",
                             lineHeight: 1.8,
                           }}>
-                          <span>
-                            📅{" "}
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 14, lineHeight: 1 }}>
+                              calendar_month
+                            </span>
                             {new Date(res.reservationDateTime).toLocaleString(
                               "vi-VN",
                               {
@@ -608,11 +627,17 @@ export default function CustomerFooter({
                             )}
                           </span>
                           <br />
-                          <span>
-                            🪑 {res.tables.map((t) => t.code).join(", ")}
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 14, lineHeight: 1 }}>
+                              table_restaurant
+                            </span>
+                            {res.tables.map((t) => t.code).join(", ")}
                           </span>
-                          <span style={{ marginLeft: 12 }}>
-                            👥 {res.numberOfGuests} khách
+                          <span style={{ marginLeft: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 14, lineHeight: 1 }}>
+                              groups
+                            </span>
+                            {res.numberOfGuests} khách
                           </span>
                         </div>
 

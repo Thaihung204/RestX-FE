@@ -79,7 +79,8 @@ export default function CustomerHomePageByTable() {
         setCustomerName(profile.fullName);
         setPhoneNumber(profile.phoneNumber || "");
         setAvatarUrl(
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.fullName)}&background=4F46E5&color=fff`,
+          profile.avatarUrl ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.fullName)}&background=4F46E5&color=fff`,
         );
       }
     } catch (error) {

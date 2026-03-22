@@ -1,5 +1,6 @@
 "use client";
 
+import VnAddressSelect from "@/components/ui/VnAddressSelect";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantRequestInput } from "@/lib/types/tenant";
 import {
@@ -74,7 +75,6 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
   const [form] = Form.useForm<TenantRequestInput>();
   const [loading, setLoading] = useState(false);
   const [hostNameValue, setHostNameValue] = useState("");
-
   const handleSubmit = async (values: TenantRequestInput) => {
     setLoading(true);
 
@@ -265,25 +265,21 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
             />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col xs={24} md={8}>
-              <Form.Item label={t("tenant_requests.form.address_line_2_placeholder")} name="businessAddressLine2">
-                <Input placeholder={t("tenant_requests.form.address_line_2_placeholder")}/>
-              </Form.Item>
-            </Col>
+          <VnAddressSelect
+            form={form}
+            cityFieldName="businessAddressLine3"
+            districtWardFieldName="businessAddressLine2"
+            stateProvinceFieldName="businessAddressLine4"
+            countryFieldName="businessCountry"
+            required
+            cityRequiredMessage={t("tenant_requests.form.city_required", { defaultValue: "Vui lòng chọn tỉnh/thành phố" })}
+            districtRequiredMessage={t("tenant_requests.form.district_required", { defaultValue: "Vui lòng chọn quận/huyện" })}
+            wardRequiredMessage={t("tenant_requests.form.ward_required", { defaultValue: "Vui lòng chọn phường/xã" })}
+          />
 
-            <Col xs={24} md={8}>
-              <Form.Item label={t("tenant_requests.form.address_line_3_placeholder")} name="businessAddressLine3">
-                <Input placeholder={t("tenant_requests.form.address_line_3_placeholder")}/>
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={8}>
-              <Form.Item label={t("tenant_requests.form.country_placeholder")} name="businessCountry">
-                <Input placeholder={t("tenant_requests.form.country_placeholder")}/>
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item label={t("tenant_requests.form.country_placeholder")} name="businessCountry" initialValue="Việt Nam">
+            <Input placeholder={t("tenant_requests.form.country_placeholder")}/>
+          </Form.Item>
         </Form>
       </div>
     </Modal>

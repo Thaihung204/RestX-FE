@@ -2555,6 +2555,24 @@
       }
     }
   },
+  "address": {
+    "vn": {
+      "city": "Province/City",
+      "district": "District",
+      "ward": "Ward",
+      "city_placeholder": "Select province/city",
+      "district_placeholder": "Select district",
+      "ward_placeholder": "Select ward",
+      "city_required": "Please select province/city",
+      "district_required": "Please select district",
+      "ward_required": "Please select ward"
+    }
+  },
+  "request_tenant": {
+    "city_required": "Please select province/city",
+    "district_required": "Please select district",
+    "ward_required": "Please select ward"
+  },
   "tenant_requests": {
     "form": {
       "description": "Fill in your restaurant information and our team will contact you to set up your account.",
