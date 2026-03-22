@@ -47,8 +47,9 @@ const TenantStatusPill: React.FC<Props> = ({ status }) => {
         borderRadius: 999,
         border: `1px solid ${style.border}`,
         backgroundColor: style.bg,
-      }}
-    >
+        minWidth: "100px",
+        justifyContent: "center",
+      }}>
       <span
         style={{
           width: 6,
@@ -61,11 +62,11 @@ const TenantStatusPill: React.FC<Props> = ({ status }) => {
       />
       <span
         style={{
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: 500,
           color: style.text,
-        }}
-      >
+          whiteSpace: "nowrap",
+        }}>
         {t(`tenants.status.${status}`)}
       </span>
     </div>

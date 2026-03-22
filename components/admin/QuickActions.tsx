@@ -22,7 +22,7 @@ export default function QuickActions() {
       id: "add-table",
       title: t("dashboard.quick_actions.add_table"),
       description: t("dashboard.quick_actions.add_table_desc"),
-      color: "", // Will use inline style
+      color: "",
       icon: (
         <svg
           className="w-6 h-6"
@@ -187,7 +187,7 @@ export default function QuickActions() {
                 action.color ? `bg-gradient-to-br ${action.color}` : ''
               }`}
               style={action.id === 'add-table' ? {
-                background: 'linear-gradient(to right, #FF380B, #FF380B)'
+                background: 'linear-gradient(to right, var(--primary), var(--primary))'
               } : undefined}>
               {action.icon}
             </div>

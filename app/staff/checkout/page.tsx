@@ -1,5 +1,6 @@
 'use client';
 
+import paymentService, { PaymentDetail } from '@/lib/services/paymentService';
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -8,7 +9,6 @@ import {
   GiftOutlined,
   PrinterOutlined,
   QrcodeOutlined,
-  SearchOutlined,
   TableOutlined,
   UserOutlined,
   WalletOutlined
@@ -32,10 +32,10 @@ import {
   Tag,
   Typography
 } from 'antd';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../../components/I18nProvider';
-import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import { useThemeMode } from '../../theme/AntdProvider';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -146,6 +146,8 @@ export default function CheckoutPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [bills, setBills] = useState<Bill[]>(initialBills);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [payments, setPayments] = useState<PaymentDetail[]>([]);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [cashReceived, setCashReceived] = useState<number>(0);
@@ -167,11 +169,34 @@ export default function CheckoutPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    const fetchPayments = async () => {
+      setIsLoadingPayments(true);
+      try {
+        const data = await paymentService.getAllPayments();
+        setPayments(data ?? []);
+      } catch (error) {
+        console.error('Failed to fetch payments:', error);
+        messageApi.error(t('staff.checkout.messages.payments_load_failed'));
+      } finally {
+        setIsLoadingPayments(false);
+      }
+    };
+
+    fetchPayments();
+  }, [messageApi]);
+
   const paymentMethods = [
     { key: 'cash', label: t('staff.checkout.methods.cash'), icon: <WalletOutlined />, color: '#52c41a' },
     { key: 'transfer', label: t('staff.checkout.methods.transfer'), icon: <CreditCardOutlined />, color: '#1890ff' },
     { key: 'momo', label: t('staff.checkout.methods.momo'), icon: <QrcodeOutlined />, color: '#cf1322' },
   ];
+
+  const getPaymentStatusColor = (statusId: number) => {
+    if (statusId === 1) return '#52c41a';
+    if (statusId === 2) return '#faad14';
+    return '#ff4d4f';
+  };
 
   const filteredBills = bills.filter(
     bill =>
@@ -241,7 +266,7 @@ export default function CheckoutPage() {
           <Avatar
             size={isMobile ? 44 : 56}
             style={{
-              background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+              background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
               fontSize: isMobile ? 14 : 18,
               fontWeight: 500,
             }}
@@ -274,7 +299,7 @@ export default function CheckoutPage() {
           <div>
             <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>{t('staff.checkout.bill.total_payment')}</Text>
             <br />
-            <Text strong style={{ fontSize: isMobile ? 18 : 24, color: '#FF380B' }}>
+            <Text strong style={{ fontSize: isMobile ? 18 : 24, color: 'var(--primary)' }}>
               {bill.total.toLocaleString('vi-VN')}đ
             </Text>
           </div>
@@ -307,7 +332,7 @@ export default function CheckoutPage() {
           <Card
             style={{
               borderRadius: isMobile ? 12 : 16,
-              background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+              background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
               border: 'none',
             }}
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
@@ -335,7 +360,7 @@ export default function CheckoutPage() {
               value={bills.filter(b => b.status === 'pending').length}
               suffix={t('staff.checkout.stats.tables')}
               styles={{ content: { color: 'var(--text)', fontSize: isMobile ? 24 : 32, fontWeight: 500 } }}
-              prefix={<TableOutlined style={{ color: '#FF380B' }} />}
+              prefix={<TableOutlined style={{ color: 'var(--primary)' }} />}
             />
           </Card>
         </Col>
@@ -359,8 +384,80 @@ export default function CheckoutPage() {
         </Col>
       </Row>
 
-      {/* Search */}
+      {/* Payments List */}
       <Card
+        style={{
+          borderRadius: 12,
+          marginBottom: isMobile ? 16 : 24,
+          border: '1px solid var(--border)',
+        }}
+        styles={{ body: { padding: isMobile ? 12 : 16 } }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <Title level={5} style={{ margin: 0 }}>
+            {t('staff.checkout.payments.title')}
+          </Title>
+          <Text type="secondary">
+            {t('staff.checkout.payments.count', { count: payments.length })}
+          </Text>
+        </div>
+        {isLoadingPayments ? (
+          <Text>{t('staff.checkout.payments.loading')}</Text>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {payments.length === 0 ? (
+              <Text type="secondary">{t('staff.checkout.payments.empty')}</Text>
+            ) : (
+              payments.map((payment) => (
+                <Card
+                  key={payment.id}
+                  size="small"
+                  style={{
+                    borderRadius: 10,
+                    border: '1px solid var(--border)',
+                  }}
+                  styles={{ body: { padding: isMobile ? 12 : 16 } }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <Text strong style={{ display: 'block' }}>
+                        {payment.transactionId || t('staff.checkout.payments.no_transaction')}
+                      </Text>
+                      <Text type="secondary">
+                        {new Date(payment.paymentDate).toLocaleString('vi-VN')}
+                      </Text>
+                    </div>
+                    <div>
+                      <Tag color={getPaymentStatusColor(payment.paymentStatusId)}>
+                        {payment.paymentStatusName || payment.paymentStatusCode || t('staff.checkout.payments.status_na')}
+                      </Tag>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <Text strong style={{ color: 'var(--primary)', fontSize: 16 }}>
+                        {Number(payment.amount).toLocaleString('vi-VN')}đ
+                      </Text>
+                      <Text type="secondary" style={{ display: 'block' }}>
+                        {payment.paymentMethodId}
+                      </Text>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+      </Card>
+
+      {/* Search */}
+      {/* <Card
         style={{
           borderRadius: 12,
           marginBottom: isMobile ? 16 : 24,
@@ -376,16 +473,16 @@ export default function CheckoutPage() {
           prefix={<SearchOutlined style={{ color: '#bbb' }} />}
           onChange={(e) => setSearchText(e.target.value)}
         />
-      </Card>
+      </Card> */}
 
       {/* Bills List */}
-      <Row gutter={[24, 24]}>
+      {/* <Row gutter={[24, 24]}>
         {filteredBills.map(bill => (
           <Col xs={24} md={12} lg={8} key={bill.id}>
             {renderBillCard(bill)}
           </Col>
         ))}
-      </Row>
+      </Row> */}
 
       {/* Payment Modal */}
       <Modal
@@ -447,12 +544,12 @@ export default function CheckoutPage() {
                 <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.bill')}: {selectedBill?.id}</Text>
                 <br />
                 <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#52c41a' }}>
-                  {calculateFinalTotal().toLocaleString('vi-VN')}đ
+                  {calculateFinalTotal().toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ
                 </Text>
                 {paymentMethod === 'cash' && cashReceived > calculateFinalTotal() && (
                   <div style={{ marginTop: 12 }}>
                     <Text style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.change')}: </Text>
-                    <Text strong style={{ color: '#FF380B', fontSize: isMobile ? 15 : 16 }}>
+                    <Text strong style={{ color: 'var(--primary)', fontSize: isMobile ? 15 : 16 }}>
                       {(cashReceived - calculateFinalTotal()).toLocaleString('vi-VN')}đ
                     </Text>
                   </div>
@@ -491,7 +588,7 @@ export default function CheckoutPage() {
                 <Avatar
                   size={isMobile ? 52 : 64}
                   style={{
-                    background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+                    background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
                     fontSize: isMobile ? 18 : 24,
                     fontWeight: 500,
                   }}
@@ -516,6 +613,7 @@ export default function CheckoutPage() {
                 {/* Bill Details */}
                 <Col xs={24} lg={14} style={{ display: 'flex', width: '100%' }}>
                   <Card
+                    className="payment-static-card"
                     size="small"
                     title={<span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>{t('staff.checkout.payment.bill_detail')}</span>}
                     style={{
@@ -560,7 +658,7 @@ export default function CheckoutPage() {
                     {/* Discount - moved inside the card */}
                     <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexWrap: 'wrap' }}>
-                      <GiftOutlined style={{ fontSize: isMobile ? 16 : 20, color: '#FF380B' }} />
+                      <GiftOutlined style={{ fontSize: isMobile ? 16 : 20, color: 'var(--primary)' }} />
                       <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>{t('staff.checkout.payment.discount')}</Text>
                       <InputNumber
                         min={0}
@@ -602,7 +700,7 @@ export default function CheckoutPage() {
                         </div>
                       )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 12, borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #F0F0F0' }}>
-                        <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>VAT (10%)</Text>
+                        <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{t('staff.checkout.payment.vat')}</Text>
                         <Text style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500 }}>{selectedBill.tax.toLocaleString('vi-VN')}đ</Text>
                       </div>
                       <div style={{
@@ -614,7 +712,7 @@ export default function CheckoutPage() {
                         borderTop: mode === 'dark' ? '2px solid rgba(255, 255, 255, 0.12)' : '2px solid #E5E7EB',
                       }}>
                         <Text strong style={{ fontSize: isMobile ? 15 : 17, fontWeight: 600 }}>{t('staff.checkout.payment.total')}</Text>
-                        <Text strong style={{ fontSize: isMobile ? 20 : 24, color: '#FF380B', fontWeight: 500 }}>
+                        <Text strong style={{ fontSize: isMobile ? 20 : 24, color: 'var(--primary)', fontWeight: 500 }}>
                           {calculateFinalTotal().toLocaleString('vi-VN')}đ
                         </Text>
                       </div>
@@ -675,7 +773,7 @@ export default function CheckoutPage() {
                         {cashReceived >= calculateFinalTotal() && cashReceived > 0 && (
                           <div style={{ marginTop: 8, padding: isMobile ? '6px 10px' : '8px 12px', background: '#f6ffed', borderRadius: 8 }}>
                             <Text style={{ color: '#52c41a', fontSize: isMobile ? 12 : 14 }}>
-                              {t('staff.checkout.payment.change')}: <strong>{(cashReceived - calculateFinalTotal()).toLocaleString('vi-VN')}đ</strong>
+                              {t('staff.checkout.payment.change')}: <strong>{(cashReceived - calculateFinalTotal()).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}đ</strong>
                             </Text>
                           </div>
                         )}
@@ -767,6 +865,14 @@ export default function CheckoutPage() {
         }
         .ant-modal-close:hover .ant-modal-close-x {
           color: ${mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.85)'} !important;
+        }
+
+        /* Keep bill details card border static on hover */
+        .payment-static-card.ant-card-hoverable:hover,
+        .payment-static-card.ant-card-hoverable:hover .ant-card-head,
+        .payment-static-card.ant-card-hoverable:hover .ant-card-body {
+          border-color: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#E5E7EB'} !important;
+          box-shadow: ${mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)'} !important;
         }
       `}</style>
     </div>

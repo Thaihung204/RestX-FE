@@ -1,0 +1,119 @@
+import axiosInstance from "./axiosInstance";
+
+// Backend DTOs (mirrors server DTOs)
+
+export interface OrderDetailRequestDto {
+  dishId: string;
+  quantity: number;
+  note?: string;
+}
+
+export interface OrderRequestDto {
+  tableId: string;
+  customerId?: string;
+  orderStatusId?: number;
+  paymentStatusId?: number;
+  reservationId?: string | null;
+  subTotal?: number | null;
+  discountAmount?: number | null;
+  taxAmount?: number | null;
+  serviceCharge?: number | null;
+  totalAmount?: number | null;
+  tableIds?: string[];
+  orderDetails: OrderDetailRequestDto[];
+}
+
+export interface OrderDetailDto {
+  id?: string;
+  dishId: string;
+  quantity: number;
+  note?: string | null;
+  status?: string | null;
+}
+
+export interface OrderStatusUpdateRequest {
+  statusId: number;
+}
+
+export interface OrderDto {
+  id?: string;
+  reference?: string | null;
+  tableId: string;
+  customerId: string;
+  reservationId?: string | null;
+  orderStatusId: number;
+  paymentStatusId: number;
+  subTotal?: number | null;
+  discountAmount?: number | null;
+  taxAmount?: number | null;
+  serviceCharge?: number | null;
+  totalAmount: number;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
+  handledBy?: string | null;
+  tableIds?: string[];
+  orderDetails: OrderDetailDto[];
+}
+
+const extractOrders = (data: unknown): OrderDto[] => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data as OrderDto[];
+
+  const record = data as Record<string, unknown>;
+  const orders = (record.orders || record.Orders) as unknown;
+  if (Array.isArray(orders)) return orders as OrderDto[];
+
+  return [];
+};
+
+class OrderService {
+  async createOrder(payload: OrderRequestDto): Promise<string> {
+    const response = await axiosInstance.post<string>("/orders", payload);
+    // Backend returns Guid in body, axios will parse as string
+    return response.data as unknown as string;
+  }
+
+  async updateOrder(id: string, payload: OrderRequestDto): Promise<void> {
+    await axiosInstance.put(`/orders/${id}`, payload);
+  }
+
+  async updateOrderStatus(id: string, statusId: number): Promise<void> {
+    await axiosInstance.put(`/orders/${id}/status`, statusId);
+  }
+
+  async updateOrderDetailStatus(
+    orderId: string,
+    detailId: string,
+    statusId: number,
+  ): Promise<void> {
+    await axiosInstance.put(
+      `/orders/${orderId}/order-details-status/${detailId}`,
+      statusId,
+    );
+  }
+
+  async getAllOrders(): Promise<OrderDto[]> {
+    const response = await axiosInstance.get("/orders");
+    return extractOrders(response.data);
+  }
+
+  async getOrdersByFilter(params: {
+    tableId?: string;
+    paymentStatusId?: number;
+  }): Promise<OrderDto[]> {
+    const response = await axiosInstance.get("/orders", {
+      params,
+    });
+    return extractOrders(response.data);
+  }
+
+  async getOrderById(id: string): Promise<OrderDto> {
+    const response = await axiosInstance.get<OrderDto>(`/orders/${id}`);
+    return response.data;
+  }
+}
+
+const orderService = new OrderService();
+
+export default orderService;
+

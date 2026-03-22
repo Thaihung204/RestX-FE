@@ -46,13 +46,17 @@ const FeaturedCategories: React.FC<FeaturedCategoriesProps> = ({ categories = []
                                 }}
                             >
                                 <img
-                                    src={cat.imageUrl || '/images/placeholder-food.png'}
+                                    src={cat.imageUrl || '/images/logo/restx-removebg-preview.png'}
                                     alt={cat.name}
                                     style={{
                                         width: "100%",
                                         height: "100%",
                                         objectFit: "cover",
                                         transition: "transform 0.5s ease",
+                                    }}
+                                    onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        e.currentTarget.src = '/images/logo/restx-removebg-preview.png';
                                     }}
                                     onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
                                     onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}

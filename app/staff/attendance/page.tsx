@@ -1,43 +1,41 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Tag,
-  Button,
-  Space,
-  Table,
-  Avatar,
-  Statistic,
-  Progress,
-  Timeline,
-  Divider,
-  Modal,
-  message,
-  Calendar,
-  Badge,
-  Flex,
-} from 'antd';
-import {
-  ClockCircleOutlined,
-  LoginOutlined,
-  LogoutOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  HistoryOutlined,
-  TrophyOutlined,
-  FieldTimeOutlined,
-  UserOutlined,
-  CoffeeOutlined,
+    CalendarOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CoffeeOutlined,
+    FieldTimeOutlined,
+    HistoryOutlined,
+    LoginOutlined,
+    LogoutOutlined,
+    TrophyOutlined,
+    UserOutlined,
 } from '@ant-design/icons';
-import { motion } from 'framer-motion';
+import {
+    Avatar,
+    Badge,
+    Button,
+    Card,
+    Col,
+    Divider,
+    Flex,
+    Modal,
+    Progress,
+    Row,
+    Space,
+    Statistic,
+    Table,
+    Tag,
+    Timeline,
+    Typography,
+    message
+} from 'antd';
 import type { Dayjs } from 'dayjs';
-import { useThemeMode } from '../../theme/AutoDarkThemeProvider';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../../components/I18nProvider';
+import { useThemeMode } from '../../theme/AntdProvider';
 
 const { Title, Text } = Typography;
 
@@ -264,7 +262,7 @@ export default function AttendancePage() {
             borderRadius: isMobile ? 16 : 24,
             background: mode === 'dark'
               ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
-              : 'linear-gradient(135deg, #FF380B 0%, #FF6B3B 100%)',
+              : 'linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)',
             border: 'none',
             marginBottom: isMobile ? 16 : 24,
             overflow: 'hidden',
@@ -312,7 +310,7 @@ export default function AttendancePage() {
                         </Text>
                       </div>
                       {isOnBreak && (
-                        <Tag style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12, background: '#fff', color: '#FF380B', border: 'none', fontWeight: 600 }}>
+                        <Tag style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12, background: '#fff', color: 'var(--primary)', border: 'none', fontWeight: 600 }}>
                           <CoffeeOutlined /> {isMobile ? t('staff.attendance.break') : t('staff.attendance.on_break')}
                         </Tag>
                       )}
@@ -476,7 +474,7 @@ export default function AttendancePage() {
               title={<span style={{ fontSize: isMobile ? 13 : 15 }}>{t('staff.attendance.stats.total_hours')}</span>}
               value={monthlyStats.totalHours}
               suffix="h"
-              styles={{ content: { color: '#FF380B', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
+              styles={{ content: { color: 'var(--primary)', fontWeight: 700, fontSize: isMobile ? 20 : 24 } }}
               prefix={<FieldTimeOutlined />}
             />
           </Card>
@@ -489,7 +487,7 @@ export default function AttendancePage() {
           <Card
             title={
               <Space>
-                <HistoryOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18 }} />
+                <HistoryOutlined style={{ color: 'var(--primary)', fontSize: isMobile ? 16 : 18 }} />
                 <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.attendance.history.title')}</span>
               </Space>
             }
@@ -518,7 +516,7 @@ export default function AttendancePage() {
           <Card
             title={
               <Space>
-                <TrophyOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 18 }} />
+                <TrophyOutlined style={{ color: 'var(--primary)', fontSize: isMobile ? 16 : 18 }} />
                 <span style={{ fontSize: isMobile ? 14 : 16 }}>{t('staff.attendance.history.progress')}</span>
               </Space>
             }
@@ -556,7 +554,7 @@ export default function AttendancePage() {
               </div>
               <Progress
                 percent={Number(((monthlyStats.totalHours / (monthlyStats.totalDays * 8)) * 100).toFixed(1))}
-                strokeColor="#FF380B"
+                strokeColor="var(--primary)"
                 railColor="var(--border)"
                 format={(p) => `${p?.toFixed(1)}%`}
               />
@@ -620,7 +618,7 @@ export default function AttendancePage() {
               <Avatar
                 size={isMobile ? 40 : 48}
                 style={{
-                  background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+                  background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
                 }}
               >
                 <UserOutlined />
@@ -682,7 +680,7 @@ export default function AttendancePage() {
                 actionType === 'checkOut'
                   ? '#ff4d4f'
                   : actionType === 'breakStart'
-                    ? '#FF380B'
+                    ? 'var(--primary)'
                     : '#52c41a',
               display: 'flex',
               alignItems: 'center',

@@ -18,6 +18,8 @@ interface TenantErrorProps {
  * - Errors are shown on the subdomain, not redirected away
  */
 export function TenantError({ error, hostname }: TenantErrorProps) {
+    const tenantLabel = hostname || "Restaurant";
+
     return (
         <div
             style={{
@@ -143,7 +145,7 @@ export function TenantError({ error, hostname }: TenantErrorProps) {
                     </button>
 
                     <a
-                        href="https://restx.food"
+                        href={hostname ? `https://${hostname}` : "/"}
                         style={{
                             padding: "12px 24px",
                             fontSize: "14px",
@@ -162,7 +164,7 @@ export function TenantError({ error, hostname }: TenantErrorProps) {
                             e.currentTarget.style.background = "#fff";
                         }}
                     >
-                        Visit RestX Home
+                        {`Visit ${tenantLabel} Home`}
                     </a>
                 </div>
             </div>
@@ -176,7 +178,7 @@ export function TenantError({ error, hostname }: TenantErrorProps) {
                     color: "rgba(255, 255, 255, 0.3)",
                 }}
             >
-                Powered by RestX
+                {`Powered by ${tenantLabel}`}
             </p>
         </div>
     );

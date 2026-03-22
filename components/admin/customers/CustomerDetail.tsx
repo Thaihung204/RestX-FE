@@ -1,19 +1,20 @@
 "use client";
 
 import customerService, { Customer } from "@/lib/services/customerService";
+import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
 import {
     Cake,
+    Cancel,
+    CheckCircle,
     Close,
-    Diamond,
     Email,
-    EmojiEvents,
     History,
     Phone,
     Star,
-    WorkspacePremium
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 interface CustomerDetailProps {
@@ -24,7 +25,7 @@ interface CustomerDetailProps {
 export default function CustomerDetail({ customer, onClose }: CustomerDetailProps) {
   const { t } = useTranslation('common');
   const isBirthday = customerService.isBirthday(customer.birthday);
-  const primaryColor = "#FF380B";
+  const primaryColor = "var(--primary)";
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -41,25 +42,21 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
   };
 
   const getVipIcon = (tier?: string) => {
-    const commonProps = { sx: { fontSize: 14 } };
-    switch(tier) {
-      case 'platinum': return <Diamond className="text-zinc-800" {...commonProps} />;
-      case 'gold': return <EmojiEvents className="text-zinc-800" {...commonProps} />;
-      case 'silver': return <Star className="text-zinc-800" {...commonProps} />;
-      default: return <WorkspacePremium className="text-white" {...commonProps} />; // Bronze is darker orange, white is ok
-    }
+    return <LoyaltyBandIcon color={getVipBadgeColor(tier)} size={20} />;
   };
 
   const getVipBadgeColor = (tier?: string) => {
      switch(tier) {
-      case 'platinum': return '#E5E7EB'; // Platinum
-      case 'gold': return '#EAB308';     // Gold
-      case 'silver': return '#9CA3AF';   // Silver
-      default: return '#FB923C';         // Bronze
+      case 'platinum': return '#E5E7EB'; 
+      case 'gold': return '#EAB308';    
+      case 'silver': return '#9CA3AF';   
+      default: return '#FB923C';         
     }
   };
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div 
       className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/80 backdrop-blur-sm"
       onClick={onClose}
@@ -92,40 +89,37 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
                   alt={customer.name}
                   className="w-24 h-24 rounded-full border-2 border-[#27272a] object-cover"
                 />
-                {/* VIP Badge - Positioned clearly separate but attached */}
-                {customer.vipTier && (
-                  <div 
-                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center border-4 border-[#18181b] z-10"
-                    style={{ background: getVipBadgeColor(customer.vipTier) }}
-                    title={t('customers.detail.member_tier', { tier: customer.vipTier })}
-                  >
-                    {getVipIcon(customer.vipTier)}
-                  </div>
-                )}
               </div>
             </div>
             
-            <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2 justify-center">
               {customer.name}
+              {customer.isActive ? (
+                <CheckCircle sx={{ fontSize: 20, color: '#22c55e' }} titleAccess={t('customers.list.status.active')} />
+              ) : (
+                <Cancel sx={{ fontSize: 20, color: '#ef4444' }} titleAccess={t('customers.list.status.inactive')} />
+              )}
               {isBirthday && <Cake sx={{ fontSize: 20, color: primaryColor }} className="animate-pulse" />}
             </h2>
             
             <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
-               <span 
-                className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-white/10"
-                style={{ color: getVipBadgeColor(customer.vipTier) }}
-              >
-                {customer.vipTier || 'Member'}
-              </span>
+               <div className="flex items-center gap-1" title={t('customers.detail.member_tier', { tier: customer.vipTier })}>
+                 {getVipIcon(customer.vipTier)}
+                 <span style={{ color: getVipBadgeColor(customer.vipTier) }} className="font-bold uppercase text-[12px]">
+                   {customer.vipTier || 'Member'}
+                 </span>
+               </div>
               <span className="w-1 h-1 rounded-full bg-gray-600"></span>
               <span>{t('customers.detail.member_since', { date: formatDate(customer.memberSince) })}</span>
             </div>
 
-            <div className="flex gap-4 items-center justify-center w-full">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#27272a] text-xs text-gray-300 border border-white/5">
-                <Email sx={{ fontSize: 14, color: primaryColor }} />
-                <span className="truncate max-w-[150px]">{customer.email}</span>
-              </div>
+            <div className="flex gap-4 items-center justify-center w-full flex-wrap">
+              {customer.email && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#27272a] text-xs text-gray-300 border border-white/5">
+                  <Email sx={{ fontSize: 14, color: primaryColor }} />
+                  <span className="truncate max-w-[150px]">{customer.email}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#27272a] text-xs text-gray-300 border border-white/5">
                 <Phone sx={{ fontSize: 14, color: primaryColor }} />
                 <span>{customer.phone}</span>
@@ -189,8 +183,8 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
           
           {/* Birthday Banner */}
           {isBirthday && (
-            <div className="mt-6 p-3 rounded-xl bg-[#27272a] border border-[#FF380B]/30 flex items-center gap-3">
-              <div className="p-2 rounded-full bg-[#FF380B]/10 text-[#FF380B]">
+            <div className="mt-6 p-3 rounded-xl bg-[#27272a] border border-[var(--primary)]/30 flex items-center gap-3">
+              <div className="p-2 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
                 <Cake sx={{ fontSize: 20 }} />
               </div>
               <div>
@@ -202,6 +196,7 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
 
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   );
 }

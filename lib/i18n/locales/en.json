@@ -1,5 +1,136 @@
 {
+  "admin": {
+    "reservations": {
+      "title": "Reservation Management",
+      "total_count": "Total {{total}} reservations",
+      "refresh": "Refresh",
+      "stats": {
+        "total": "Total",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed"
+      },
+      "filter": {
+        "search_placeholder": "Search by name, phone, booking code...",
+        "all_status": "All statuses",
+        "clear": "Clear filters"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "checkin": "Check-in",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "table_headers": {
+        "code": "Booking Code",
+        "customer": "Customer",
+        "table_floor": "Table / Floor",
+        "date_time": "Date & Time",
+        "guests": "Guests",
+        "status": "Status",
+        "walk_in": "Walk-in",
+        "actions": "Actions"
+      },
+      "empty": "No reservations found",
+      "pagination": {
+        "page_info": "Page {{page}} of {{total}} · {{count}} results",
+        "prev": "Prev",
+        "next": "Next"
+      },
+      "actions": {
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "checkin": "Check-in",
+        "complete": "Complete",
+        "quick_cancel": "Quick Cancel",
+        "view_detail": "View details & actions"
+      },
+      "side_effects": {
+        "CONFIRMED": "Table will be marked as Reserved",
+        "CHECKED_IN": "Table moves to Occupied, creates TableSession",
+        "COMPLETED": "Table returns to Available, closes TableSession",
+        "CANCELLED": "Table returns to Available"
+      },
+      "modal": {
+        "title": "Reservation Details",
+        "load_error": "Failed to load data",
+        "status_label": "Status:",
+        "confirm_action": "Confirm: {{action}}?",
+        "processing": "Processing...",
+        "cancel_btn": "Cancel",
+        "contact_title": "Contact Information",
+        "booking_title": "Booking Information",
+        "contact": {
+          "name": "Name",
+          "phone": "Phone",
+          "email": "Email",
+          "type": "Type",
+          "level": "Level",
+          "guest": "Walk-in Guest",
+          "member": "Member"
+        },
+        "booking": {
+          "date_time": "Date & Time",
+          "guests": "Guests",
+          "guests_suffix": "people",
+          "table": "Table",
+          "deposit": "Deposit",
+          "deposit_paid": "Deposit Paid",
+          "deposit_yes": "Yes",
+          "deposit_no": "No"
+        },
+        "special_requests": "Special Requests",
+        "created_at": "Created at:",
+        "checked_in_at": "Checked in:"
+      }
+    }
+  },
   "staff": {
+    "reservations": {
+      "title": "Reservations",
+      "subtitle": "Manage reservations and actions",
+      "refresh": "Refresh",
+      "search_placeholder": "Search by name, phone, code...",
+      "filter_status": "Filter by status",
+      "status_all": "All statuses",
+      "empty": "No reservations found",
+      "load_error": "Failed to load reservations",
+      "action_error": "Action failed",
+      "confirm_success": "Reservation confirmed",
+      "checkin_success": "Checked in successfully",
+      "complete_success": "Reservation completed",
+      "cancel_success": "Reservation cancelled",
+      "stats": {
+        "total": "Total",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed"
+      },
+      "columns": {
+        "code": "Code",
+        "customer": "Customer",
+        "table": "Table",
+        "date_time": "Date & Time",
+        "guests": "Guests",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "confirm": "Confirm",
+        "checkin": "Check-in",
+        "complete": "Complete",
+        "cancel": "Cancel"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "checkin": "Check-in",
+        "checked_in": "Checked in",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
     "dashboard": {
       "greeting": {
         "morning": "Good morning",
@@ -68,7 +199,19 @@
         "status": "Status",
         "total": "Total",
         "other_items": "other items",
+        "more_items": "more items",
+        "not_done": "not done",
         "items_not_done": "not done"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "serving": "Serving",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
       },
       "modal": {
         "order_detail": "Order Details",
@@ -85,10 +228,38 @@
         "main": "Main Courses",
         "drink": "Drinks"
       },
+      "empty": "No orders found",
       "messages": {
         "select_table_and_items": "Please select a table and add items",
         "order_created": "New order created successfully",
-        "status_updated": "Item status updated"
+        "status_updated": "Item status updated",
+        "order_status_updated": "Order status updated",
+        "order_status_update_failed": "Failed to update order status"
+      },
+      "payment": {
+        "actions": {
+          "pay": "Pay",
+          "confirm": "Confirm payment"
+        },
+        "modal": {
+          "title": "Payment",
+          "order_label": "Order",
+          "total_label": "Total",
+          "method_label": "Payment method",
+          "cash_label": "Cash received",
+          "change_label": "Change",
+          "missing_label": "Amount due"
+        },
+        "methods": {
+          "cash": "Cash",
+          "bank": "Bank transfer"
+        },
+        "messages": {
+          "cash_insufficient": "Cash received is not enough",
+          "cash_success": "Cash payment successful",
+          "link_created": "Payment link created",
+          "payment_failed": "Payment failed"
+        }
       }
     },
     "tables": {
@@ -159,7 +330,8 @@
       "orders": "Order Management",
       "orders_short": "Orders",
       "checkout": "Checkout",
-      "attendance": "Attendance"
+      "attendance": "Attendance",
+      "reservations": "Reservations"
     },
     "user_menu": {
       "profile": "Profile",
@@ -192,6 +364,14 @@
         "total_payment": "Total Payment",
         "pay": "Pay"
       },
+      "payments": {
+        "title": "All payments",
+        "count": "{{count}} transactions",
+        "loading": "Loading payments...",
+        "empty": "No payment transactions yet",
+        "no_transaction": "Cash payment",
+        "status_na": "Unknown"
+      },
       "payment": {
         "title": "Payment",
         "bill_detail": "Bill Details",
@@ -216,7 +396,8 @@
       },
       "messages": {
         "insufficient_cash": "Insufficient cash received",
-        "payment_success": "Payment successful!"
+        "payment_success": "Payment successful!",
+        "payments_load_failed": "Failed to load payments"
       }
     },
     "attendance": {
@@ -282,6 +463,91 @@
     }
   },
   "dashboard": {
+    "tables": {
+      "title": "Table management",
+      "subtitle": "Manage tables and reservations",
+      "add_floor": "Add area",
+      "add_table": "Add table",
+      "status": {
+        "available": "Available",
+        "occupied": "Occupied",
+        "reserved": "Reserved",
+        "cleaning": "Cleaning"
+      },
+      "stats": {
+        "total_tables": "Total tables",
+        "available": "Available",
+        "occupied": "Occupied",
+        "reserved": "Reserved"
+      },
+      "card": {
+        "table_name": "Table {{number}}",
+        "floor": "Floor",
+        "capacity": "Capacity: {{count}} seats",
+        "order": "Order",
+        "reserved_at": "Reserved at",
+        "view_details": "View details"
+      },
+      "view": {
+        "grid": "Grid",
+        "map": "Map"
+      },
+      "zones": {
+        "all": "All",
+        "zone_a": "Zone A",
+        "zone_b": "Zone B",
+        "zone_vip": "VIP",
+        "zone": "Zone"
+      },
+      "table": {
+        "seats": "seats",
+        "guests": "guests",
+        "dishes": "dishes",
+        "from": "From",
+        "booked_at": "Booked at",
+        "capacity": "Capacity"
+      },
+      "modal": {
+        "detail": "Details",
+        "open_table": "Open table",
+        "zone": "Area",
+        "guests_count": "Guest count",
+        "start_time": "Start time",
+        "total_amount": "Total amount",
+        "reservation_name": "Reserved by",
+        "reservation_time": "Reservation time",
+        "phone": "Phone",
+        "confirm_open": "Confirm open",
+        "guest_count": "Guests",
+        "capacity": "Capacity",
+        "total": "Total",
+        "reserved_by": "Reserved by"
+      },
+      "actions": {
+        "open_table": "Open table",
+        "add_dish": "Add dish",
+        "transfer_table": "Transfer table",
+        "checkout": "Checkout",
+        "close_table": "Close table",
+        "guest_arrived": "Guest arrived - Open table",
+        "edit_reservation": "Edit reservation",
+        "finish_cleaning": "Finish cleaning"
+      },
+      "messages": {
+        "table_opened": "Opened {table} for {guests} guests",
+        "table_closed": "Closed {table}",
+        "table_ready": "{table} is ready",
+        "enter_guests": "Please enter guest count",
+        "max_guests": "Max {capacity} guests"
+      },
+      "errors": {
+        "cannot_delete_last_area": "Cannot delete the last area.",
+        "cannot_delete_due_to_booking": "Cannot delete because there is a reservation.",
+        "add_failed": "Failed to add table",
+        "create_floor_failed": "Failed to create area"
+      },
+      "confirm_merge": "Merge tables? This will combine capacity and hide the source table."
+    },
     "toasts": {
       "staff": {
         "load_error_title": "Error",
@@ -364,6 +630,7 @@
         "dashboard": "Dashboard",
         "analytics": "Analytics",
         "tables": "Tables",
+        "reservations": "Reservations",
         "menu": "Menu",
         "ingredients": "Ingredients",
         "orders": "Orders",
@@ -379,7 +646,176 @@
       "title": "Manage",
       "subtitle": "Manage your restaurant categories and configurations",
       "tabs": {
-        "categories": "Categories"
+        "categories": "Categories",
+        "ingredient_categories": "Ingredient Categories",
+        "suppliers": "Suppliers",
+        "loyalty": "Loyalty Bands",
+        "order_status": "Dish Status"
+      },
+      "ingredient_categories": {
+        "title": "Ingredient Categories",
+        "subtitle": "Organize your ingredients by category for better inventory management",
+        "add": "Add Category",
+        "edit": "Edit Category",
+        "name": "Name",
+        "description": "Description",
+        "unit": "Default Unit",
+        "actions": "Actions",
+        "empty": "No ingredient categories found.",
+        "confirm_delete": "Are you sure you want to delete this category?",
+        "name_placeholder": "e.g. Vegetables, Meat, Dairy...",
+        "description_placeholder": "Brief description of this ingredient category",
+        "empty_title": "No Categories Found",
+        "tooltip_edit": "Edit category",
+        "tooltip_delete": "Delete category",
+        "defaults": {
+          "vegetables": {
+            "name": "Vegetables",
+            "description": "Fresh vegetables and greens"
+          },
+          "meat": {
+            "name": "Meat",
+            "description": "Beef, pork, chicken, etc."
+          },
+          "seafood": {
+            "name": "Seafood",
+            "description": "Fish, shrimp, crab, etc."
+          },
+          "dairy": {
+            "name": "Dairy products",
+            "description": "Milk, cheese, butter, etc."
+          },
+          "spices": {
+            "name": "Spices",
+            "description": "Salt, pepper, herbs, etc."
+          },
+          "sauces": {
+            "name": "Sauces",
+            "description": "Soy sauce, fish sauce, etc."
+          }
+        },
+        "units": {
+          "kg": "kg",
+          "gram": "gram",
+          "liter": "liter",
+          "ml": "ml",
+          "piece": "piece",
+          "bottle": "bottle",
+          "can": "can",
+          "pack": "pack",
+          "box": "box"
+        }
+      },
+      "suppliers": {
+        "title": "Supplier Management",
+        "subtitle": "Manage your restaurant suppliers and vendors",
+        "add": "Add Supplier",
+        "edit": "Edit Supplier",
+        "name": "Supplier Name",
+        "contact": "Contact Info",
+        "phone": "Phone",
+        "email": "Email",
+        "address": "Address",
+        "status": "Status",
+        "actions": "Actions",
+        "active": "Active",
+        "inactive": "Inactive",
+        "empty": "No suppliers found.",
+        "confirm_delete": "Are you sure you want to delete this supplier?",
+        "fetch_failed": "Failed to load suppliers",
+        "save_failed": "Failed to save supplier",
+        "status_update_failed": "Failed to update status",
+        "loading": "Loading suppliers...",
+        "name_required": "Please enter supplier name",
+        "tooltip_edit": "Edit supplier",
+        "tooltip_delete": "Delete supplier",
+        "created": "Supplier created successfully",
+        "updated": "Supplier updated successfully",
+        "deleted": "Supplier deleted",
+        "name_placeholder": "e.g. Fresh Veggies Co.",
+        "phone_placeholder": "0123456789",
+        "email_placeholder": "contact@supplier.com",
+        "address_placeholder": "Full address of the supplier",
+        "defaults": {
+          "supplier1": {
+            "name": "Fresh Veggies Co.",
+            "address": "123 Market Street, District 1"
+          },
+          "supplier2": {
+            "name": "Ocean Seafood Ltd.",
+            "address": "456 Harbor Road, District 2"
+          }
+        }
+      },
+      "loyalty": {
+        "title": "Loyalty Point Bands",
+        "desc": "Manage loyalty tiers and benefits",
+        "add_new": "Add New Band",
+        "edit": "Edit Loyalty Band",
+        "create": "Create Loyalty Band",
+        "name": "Band Name",
+        "range": "Points Range",
+        "discount": "Discount",
+        "benefits": "Benefits",
+        "status": "Status",
+        "form": {
+          "name": "Band Name",
+          "logo": "Rank",
+          "range": "Points Range",
+          "max_tooltip": "Leave empty for infinite range",
+          "discount": "Discount Percentage (%)",
+          "benefits": "Benefits Description"
+        },
+        "badges": {
+          "bronze": "Bronze",
+          "silver": "Silver",
+          "gold": "Gold",
+          "platinum": "Platinum"
+        }
+      },
+      "order_status": {
+        "title": "Dish Status Management",
+        "subtitle": "Manage dish statuses, codes, and colors",
+        "add_status": "Add Status",
+        "edit_status": "Edit Dish Status",
+        "name": "No dish status yet",
+        "name_placeholder": "Enter status name",
+        "name_required": "Please enter status name",
+        "code": "Code",
+        "code_placeholder": "e.g., PENDING, PROCESSING",
+        "code_required": "Please enter status code",
+        "code_format": "Code must be uppercase letters and underscores only",
+        "color": "Color",
+        "color_required": "Please select a color",
+        "is_active": "Active Status",
+        "is_active_desc": "Enable or disable this status",
+        "is_default": "Set as Default",
+        "is_default_desc": "Set this as the default status for new dishes",
+        "default_note": "Only one status can be set as default. This will replace the current default.",
+        "tooltip": {
+          "current_default": "Current Default",
+          "set_default": "Set as Default"
+        },
+        "modal_subtitle_edit": "Update status details",
+        "modal_subtitle_create": "Create a new status entry",
+        "empty_state_desc": "Create a new status to get started",
+        "table": {
+          "name": "Status Name",
+          "code": "Code",
+          "color": "Color",
+          "default": "Default",
+          "status": "Status",
+          "actions": "Actions"
+        }
+      },
+      "notifications": {
+        "delete_success": "Deleted successfully",
+        "update_success": "Updated successfully",
+        "create_success": "Created successfully"
+      },
+      "errors": {
+        "fetch_failed": "Failed to fetch loyalty point bands",
+        "delete_failed": "Failed to delete"
       }
     },
     "header": {
@@ -423,6 +859,76 @@
         "cannot_undo": "This action cannot be undone.",
         "cancel": "Cancel",
         "delete": "Delete"
+      },
+      "toasts": {
+        "fetch_success_message": "Menu loaded successfully",
+        "fetch_error_message": "Failed to load menu. Please try again.",
+        "delete_success_message": "Dish deleted successfully",
+        "delete_error_message": "Failed to delete dish. Please try again.",
+        "create_success_message": "Dish created successfully",
+        "update_success_message": "Dish updated successfully",
+        "save_error_message": "Failed to save dish. Please try again.",
+        "detail_error_message": "Failed to load dish details.",
+        "validation_error_message": "Invalid data. Please check your input."
+      },
+      "images": {
+        "main_image": "Main",
+        "set_main": "Set as main image",
+        "is_main": "Main image",
+        "remove": "Remove image",
+        "add_photo": "Add photo",
+        "click_to_upload": "Click to upload images",
+        "format_hint": "PNG, JPG, WEBP up to 5MB each",
+        "helper_text": "Upload up to {{maxCount}} images. Star button sets the main image. Drag images to reposition.",
+        "max_count": "Maximum {{maxCount}} images allowed",
+        "file_too_large": "{{name}}: File size must be less than 5MB",
+        "invalid_type": "{{name}}: Only PNG, JPG, JPEG, and WEBP are allowed"
+      },
+      "ingredients": {
+        "actions": {
+          "ingredients": "Ingredients",
+          "add": "Add",
+          "save": "Save",
+          "delete": "Delete",
+          "activate": "Activate",
+          "deactivate": "Deactivate",
+          "status_icon_label": "Dish status"
+        },
+        "modal": {
+          "title": "Ingredients: {{name}}",
+          "title_empty": "Ingredients",
+          "select_placeholder": "Select ingredient",
+          "quantity_placeholder": "Quantity",
+          "loading_recipes": "Loading ingredients...",
+          "empty_recipes": "No ingredients yet."
+        },
+        "status": {
+          "activate_title": "Activate dish",
+          "deactivate_title": "Deactivate dish",
+          "activate_confirm": "Are you sure you want to activate {{name}}?",
+          "deactivate_confirm": "Are you sure you want to deactivate {{name}}?",
+          "activate_action": "Activate",
+          "deactivate_action": "Deactivate",
+          "activate_success": "{{name}} activated",
+          "deactivate_success": "{{name}} deactivated",
+          "update_failed": "Failed to update status"
+        },
+        "validation": {
+          "select_ingredient": "Please select an ingredient",
+          "invalid_quantity": "Invalid quantity"
+        },
+        "toasts": {
+          "add_success": "Ingredient added",
+          "add_error": "Failed to add ingredient",
+          "update_success": "Ingredient updated",
+          "update_error": "Failed to update ingredient",
+          "delete_success": "Ingredient deleted",
+          "delete_error": "Failed to delete ingredient"
+        },
+        "errors": {
+          "fetch_ingredients": "Failed to load ingredients",
+          "fetch_recipes": "Failed to load dish ingredients"
+        }
       }
     },
     "orders": {
@@ -458,6 +964,55 @@
       "payment_status": {
         "paid": "Paid",
         "unpaid": "Unpaid"
+      },
+      "labels": {
+        "table_code": "Table {{tableCode}}",
+        "items_count": "{{count}} items",
+        "total_quantity": "{{count}} portions"
+      },
+      "actions": {
+        "view_details": "View details"
+      },
+      "fallbacks": {
+        "guest_name": "Guest"
+      },
+      "modal": {
+        "title": "Order {{orderNumber}} Details",
+        "close": "Close",
+        "table_code": "Table {{tableCode}}",
+        "total_items": "Total items: {{count}}",
+        "empty": "This order has no items yet.",
+        "unknown_dish": "Unknown dish",
+        "total": "Total payment",
+        "columns": {
+          "dish": "Dish",
+          "qty": "Qty"
+        }
+      },
+      "payment": {
+        "actions": {
+          "pay": "Pay",
+          "confirm": "Confirm payment"
+        },
+        "modal": {
+          "title": "Payment",
+          "order_label": "Order",
+          "total_label": "Total",
+          "method_label": "Payment method",
+          "cash_label": "Cash received",
+          "change_label": "Change",
+          "missing_label": "Amount due"
+        },
+        "methods": {
+          "cash": "Cash",
+          "bank": "Bank transfer"
+        },
+        "messages": {
+          "cash_insufficient": "Cash received is not enough",
+          "cash_success": "Cash payment successful",
+          "link_created": "Payment link created",
+          "payment_failed": "Payment failed"
+        }
       }
     },
     "tables": {
@@ -465,6 +1020,7 @@
       "subtitle": "Manage restaurant tables and reservations",
       "add_table": "Add Table",
       "add_area": "Add Area",
+      "add_zone": "Draw Zone",
       "add_area_modal": {
         "title": "Add New Area",
         "name_label": "Area Name",
@@ -515,6 +1071,13 @@
         "occupied": "Occupied",
         "reserved": "Reserved",
         "cleaning": "Cleaning"
+      },
+      "map": {
+        "upload_floorplan": "Upload Floorplan",
+        "show_grid": "Show Grid",
+        "floor_dimensions": "Floor Dimensions",
+        "zones": "zones",
+        "tables_on_floor": "tables on this floor"
       }
     },
     "staff": {
@@ -540,7 +1103,7 @@
       "try_adjusting_filters": "Try adjusting your search or filters",
       "stats": {
         "total_staff": "Total Staff",
-        "on_duty": "On Duty",
+        "on_duty": "Active",
         "departments": "Departments",
         "avg_rating": "Avg Rating",
         "inactive": "Inactive",
@@ -562,11 +1125,48 @@
         "position_placeholder": "e.g., Head Chef, Server, etc.",
         "active_description": "Active (Staff member is currently working)"
       },
+      "employment_details": {
+        "title": "Employment Details",
+        "salary": "Salary",
+        "salary_type": "Salary Type",
+        "termination_date": "Termination Date",
+        "roles": "System Roles",
+        "salary_types": {
+          "monthly": "Monthly",
+          "hourly": "Hourly",
+          "daily": "Daily"
+        }
+      },
+      "avatar": {
+        "profile_picture": "Profile Picture",
+        "change_photo": "Change Photo",
+        "remove_photo": "Remove Photo",
+        "drop_image_here": "Drop image here",
+        "drop_your_photo_here": "Drop your photo here",
+        "or_click_to_browse": "or click to browse",
+        "supported_formats": "Supported formats",
+        "max_size": "Max 5MB"
+      },
+      "account_status": {
+        "title": "Account Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "enabled": "ENABLED",
+        "disabled": "DISABLED",
+        "account_can_access": "This account can access the system",
+        "account_disabled": "This account is currently disabled"
+      },
+      "errors": {
+        "save_failed": "Failed to save staff",
+        "update_failed": "Failed to update staff status"
+      },
       "modal": {
         "activate_title": "Activate Staff Member",
         "deactivate_title": "Deactivate Staff Member",
         "activate_message": "Are you sure you want to activate {{name}} ?",
-        "deactivate_message": "Are you sure you want to deactivate {{name}} ?"
+        "deactivate_message": "Are you sure you want to deactivate {{name}} ?",
+        "activate_success": "{{name}} has been activated successfully",
+        "deactivate_success": "{{name}} has been deactivated successfully"
       },
       "card": {
         "shift": "Shift",
@@ -579,7 +1179,8 @@
         "chef": "Chef",
         "waiter": "Waiter",
         "cashier": "Cashier",
-        "cleaner": "Cleaner"
+        "kitchen staff": "Kitchen Staff",
+        "staff": "Staff"
       },
       "status": {
         "active": "Active",
@@ -634,7 +1235,101 @@
         "low-stock": "Low Stock",
         "out-of-stock": "Out of Stock"
       },
-      "no_results": "No ingredients found"
+      "no_results": "No ingredients found",
+      "back_to_list": "Back to List",
+      "add_title": "Add Ingredient",
+      "edit_title": "Edit Ingredient",
+      "loading": "Loading ingredient information...",
+      "loading_suppliers": "Loading…",
+      "retry": "Retry",
+      "name": "Ingredient Name",
+      "code": "Code",
+      "unit": "Unit",
+      "supplier": "Supplier",
+      "type": "Category / Type",
+      "type_optional": "(optional)",
+      "code_hint": "(max 20 chars)",
+      "placeholder_name": "e.g. Fresh salmon",
+      "placeholder_code": "e.g. SALMON",
+      "select_supplier": "— Select Supplier —",
+      "no_suppliers": "No suppliers available",
+      "no_suppliers_field": "No suppliers found",
+      "create_supplier": "create a supplier",
+      "no_supplier_warning": "Cannot add ingredient. Please",
+      "no_supplier_warning_after": "first.",
+      "need_supplier_tooltip": "At least one supplier is required before adding an ingredient",
+      "basic_info": "Basic Information",
+      "stock_levels": "Stock Levels",
+      "min_stock": "Minimum Stock (Min)",
+      "max_stock": "Maximum Stock (Max)",
+      "stock_status_label": "Stock status",
+      "status_values": {
+        "in_stock": "In stock",
+        "low_stock": "Low stock",
+        "out_of_stock": "Out of stock"
+      },
+      "stock_unit_note": "Measured in {{unit}}. Actual stock managed via the Inventory Stock module.",
+      "actions_section": "Actions",
+      "status_section": "Status",
+      "saving": "Saving…",
+      "create_btn": "Create Ingredient",
+      "update_btn": "Update",
+      "cancel": "Cancel",
+      "delete_btn_label": "Delete Ingredient",
+      "delete_confirm_msg": "This cannot be undone.",
+      "delete_btn": "Delete",
+      "status_active": "In Use",
+      "status_inactive": "Inactive",
+      "status_desc_active": "Ingredient is active",
+      "status_desc_inactive": "Ingredient is disabled",
+      "list": {
+        "search_placeholder": "Search name, code or supplier...",
+        "filter_all_types": "All Types",
+        "results_count": "{{count}} results",
+        "col_name": "Ingredient Name",
+        "col_code": "Code",
+        "col_unit": "Unit",
+        "col_min_max": "Min / Max",
+        "col_quantity": "Quantity",
+        "col_supplier": "Supplier",
+        "col_type": "Type",
+        "col_status": "Status",
+        "col_stock_status": "Stock status",
+        "badge_active": "Active",
+        "badge_inactive": "Inactive",
+        "badge_inactive_short": "Off",
+        "mobile_unit": "Unit: ",
+        "mobile_min_max": "Min/Max: ",
+        "mobile_stock_status": "Stock: ",
+        "mobile_supplier": "Supplier: ",
+        "mobile_type": "Type: ",
+        "edit_tooltip": "Edit",
+        "empty": "No ingredients found",
+        "load_error": "Failed to load ingredient list"
+      },
+      "tab_all": "All",
+      "tab_active": "Active",
+      "tab_inactive": "Inactive",
+      "fetch_suppliers_failed": "Failed to load supplier list",
+      "fetch_ingredient_failed": "Failed to load ingredient information",
+      "name_required": "Name cannot be empty",
+      "code_required": "Ingredient code cannot be empty",
+      "code_max_length": "Code must be at most 20 characters",
+      "unit_max_length": "Unit must be at most 20 characters",
+      "supplier_required": "Please select a supplier",
+      "create_success": "Ingredient created successfully",
+      "update_success": "Ingredient updated successfully",
+      "save_failed": "Save failed, please try again",
+      "delete_success": "Ingredient deleted",
+      "delete_failed": "Delete failed",
+      "type_codes": {
+        "seafood": "Seafood",
+        "grains": "Grains",
+        "vegetables": "Vegetables",
+        "sauces": "Sauces",
+        "spices": "Spices",
+        "dairy": "Dairy"
+      }
     },
     "settings": {
       "title": "Settings",
@@ -656,7 +1351,13 @@
         "description": "Description",
         "image": "Image",
         "actions": "Actions",
-        "confirm_delete": "Are you sure you want to delete this category?"
+        "confirm_delete": "Are you sure you want to delete this category?",
+        "change_image": "Change Image",
+        "upload_image": "Upload Image",
+        "file_size_error": "File size must be less than 5MB",
+        "name_placeholder": "e.g. Appetizers",
+        "description_placeholder": "Brief description of the category",
+        "no_categories": "No categories found. Click \"Add Category\" to create one."
       },
       "general": {
         "restaurant_info": "Restaurant Information",
@@ -680,6 +1381,16 @@
         "compact_mode_desc": "Reduce spacing between elements",
         "show_animations": "Show Animations",
         "show_animations_desc": "Enable interface animations",
+        "branding_title": "Store Branding",
+        "loading_tenant_branding": "Loading tenant branding...",
+        "select_tenant_to_edit": "Select Tenant to Edit",
+        "choose_tenant_placeholder": "Choose a tenant...",
+        "editing_branding_for": "Editing branding for: {{name}} ({{hostname}})",
+        "select_tenant_warning": "Please select a tenant above to edit its branding.",
+        "drag_to_adjust": "Drag to adjust",
+        "preview_primary_button": "Primary Button",
+        "preview_outlined_button": "Outlined Button",
+        "preview_soft_button": "Soft Button",
         "themes": {
           "dark": "Dark",
           "light": "Light",
@@ -718,7 +1429,9 @@
       },
       "buttons": {
         "cancel": "Cancel",
-        "save_changes": "Save Changes"
+        "save_changes": "Save Changes",
+        "save_branding": "Save Branding",
+        "saving": "Saving..."
       }
     },
     "help": {
@@ -817,6 +1530,9 @@
       "days_ago": "{{count}} days ago"
     },
     "status": {
+      "label": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
       "pending": "Pending",
       "preparing": "Preparing",
       "ready": "Ready",
@@ -824,6 +1540,9 @@
       "cancelled": "Cancelled"
     },
     "actions": {
+      "title": "Actions",
+      "yes": "Yes",
+      "no": "No",
       "create_order": "Create New Order"
     },
     "language": "Language",
@@ -843,6 +1562,18 @@
       "api_error": "API Error: {{status}} - {{message}}",
       "network_error": "Network Error: {{message}}",
       "unknown_error": "An unexpected error occurred"
+    }
+  },
+  "payment": {
+    "success": {
+      "title": "Payment successful",
+      "message": "Your order has been paid. You can return to the order management screen to continue.",
+      "back": "Back"
+    },
+    "cancel": {
+      "title": "Payment cancelled",
+      "message": "You cancelled the payment. You can return to the order management screen to continue.",
+      "back": "Back"
     }
   },
   "charts": {
@@ -916,7 +1647,7 @@
     },
     "hero": {
       "tag": "All-in-one Restaurant Ops Platform",
-      "title": "Optimize restaurant operations with RestX",
+      "title": "Optimize restaurant operations with Restaurant Platform",
       "description": "Manage tables, orders, kitchen, inventory and reports on a single platform.",
       "get_started": "Get Started",
       "watch_demo": "Watch Demo",
@@ -933,6 +1664,27 @@
         "recent_orders": "Recent Orders"
       },
       "trusted_by": "Trusted by top brands"
+    },
+    "about": {
+      "tag": "Our Story",
+      "title_prefix": "Revolutionizing the ",
+      "title_highlight": "Culinary World",
+      "description": "Restaurant Platform was born from a simple mission: to empower restaurateurs with technology that feels as natural as their craft. We bridge the gap between traditional hospitality and modern efficiency, helping you focus on what matters most—great food and happy customers.",
+      "mission": {
+        "title": "Mission Driven",
+        "desc": "Dedicated to your growth"
+      },
+      "innovation": {
+        "title": "Innovation First",
+        "desc": "Always ahead of the curve"
+      },
+      "cta": "Join Our Journey",
+      "stats": {
+        "restaurants": "Restaurants Empowered",
+        "countries": "Countries Supported",
+        "chefs": "Happy Chefs",
+        "team": "Team Members"
+      }
     },
     "features": {
       "tag": "Features",
@@ -967,8 +1719,8 @@
       }
     },
     "workflow": {
-      "title": "How RestX works in your restaurant",
-      "description": "From table booking to bill settlement, every step is supported by RestX.",
+      "title": "How Restaurant Platform works in your restaurant",
+      "description": "From table booking to bill settlement, every step is supported by Restaurant Platform.",
       "steps": {
         "setup": {
           "title": "Restaurant & Menu Setup",
@@ -985,16 +1737,16 @@
       }
     },
     "testimonials": {
-      "title": "What restaurants say about RestX?",
-      "description": "Hundreds of restaurant owners and managers have trusted RestX to optimize their operations.",
+      "title": "What restaurants say about Restaurant Platform?",
+      "description": "Hundreds of restaurant owners and managers have trusted Restaurant Platform to optimize their operations.",
       "items": {
         "nam": {
           "role": "Owner, 123 Seafood Restaurant",
-          "quote": "RestX has completely changed how we operate. From table reservations to inventory management, everything is automated and much more accurate."
+          "quote": "Restaurant Platform has completely changed how we operate. From table reservations to inventory management, everything is automated and much more accurate."
         },
         "huong": {
           "role": "Manager, Pho 24h Chain",
-          "quote": "I used to spend hours aggregating reports from 5 branches. Now with RestX, all data is available on the dashboard in a few clicks."
+          "quote": "I used to spend hours aggregating reports from 5 branches. Now with Restaurant Platform, all data is available on the dashboard in a few clicks."
         },
         "tuan": {
           "role": "Owner, Saigon Broken Rice",
@@ -1007,7 +1759,7 @@
       }
     },
     "footer": {
-      "tagline": "RestX – Next generation restaurant operations platform. Helping you manage every aspect of your restaurant on a single system.",
+      "tagline": "Next generation restaurant operations platform. Helping you manage every aspect of your restaurant on a single system.",
       "columns": {
         "product": {
           "title": "Product",
@@ -1038,7 +1790,7 @@
           "gdpr": "GDPR"
         }
       },
-      "copyright": "© {year} RestX. All rights reserved.",
+      "copyright": "© {year} Restaurant Platform. All rights reserved.",
       "privacy": "Privacy",
       "terms": "Terms",
       "cookies": "Cookies"
@@ -1059,7 +1811,7 @@
       "featured": "Featured",
       "daily": "Daily Specials",
       "news": "News",
-      "title": "RestX",
+      "title": "Restaurant",
       "book_table": "Book a Table"
     },
     "hero": {
@@ -1069,8 +1821,8 @@
     },
     "about": {
       "title": "About Us",
-      "restaurant_name": "RestX Restaurant",
-      "description": "At RestX Restaurant, we put our customers first. With a dedicated staff and unique recipes, we are committed to providing the best dining experience. Each dish is carefully prepared with the freshest ingredients, creating a special flavor found nowhere else. We sincerely thank you for your support.",
+      "restaurant_name": "Restaurant",
+      "description": "At Restaurant, we put our customers first. With a dedicated staff and unique recipes, we are committed to providing the best dining experience. Each dish is carefully prepared with the freshest ingredients, creating a special flavor found nowhere else. We sincerely thank you for your support.",
       "see_more": "See More"
     },
     "categories": {
@@ -1080,6 +1832,18 @@
       "dessert": "Desserts",
       "drinks": "Drinks"
     },
+    "descriptions": {
+      "appetizer": "Salads, soups, and starters",
+      "main": "Steak, seafood, and pasta",
+      "dessert": "Cakes, ice cream, and fruits",
+      "drinks": "Cocktails, wine, and soft drinks"
+    },
+    "messages": {
+      "name_required": "Please enter name",
+      "phone_required": "Please enter phone number",
+      "supplier_added": "Supplier added successfully",
+      "supplier_updated": "Supplier updated successfully"
+    },
     "menu_section": {
       "title": "Our Menu",
       "not_updated": "Menu is being updated..."
@@ -1087,6 +1851,7 @@
   },
   "customers": {
     "title": "Customer Management",
+    "subtitle": "View and manage your restaurant's customer information",
     "birthday_alert": {
       "title": "Birthday Today!",
       "message": "There are {{count}} customers having birthday today. Send them best wishes!"
@@ -1105,6 +1870,7 @@
         "customer": "Customer",
         "contact": "Contact",
         "vip_tier": "VIP Tier",
+        "rank": "Rank",
         "orders": "Orders",
         "total_spent": "Total Spent",
         "points": "Points",
@@ -1112,7 +1878,8 @@
       },
       "status": {
         "birthday": "Birthday",
-        "active": "Active"
+        "active": "Active",
+        "inactive": "Inactive"
       },
       "empty": "No customers found"
     },
@@ -1131,7 +1898,7 @@
     }
   },
   "points_card": {
-    "title": "RestX Rewards",
+    "title": "Loyalty Rewards",
     "points": "points",
     "gold_progress": "Gold Tier Progress",
     "remaining_points": "{{count}} points left",
@@ -1142,8 +1909,78 @@
     "mark_read": "Mark as read",
     "empty": "No notifications"
   },
+  "customer_page": {
+    "footer": {
+      "call_service": "Call Service",
+      "service_called": "Staff will be at your table shortly!",
+      "language_switched_vi": "Chuyển sang tiếng Việt",
+      "language_switched_en": "Switched to English",
+      "theme_switched_light": "Switched to Light Mode",
+      "theme_switched_dark": "Switched to Dark Mode"
+    },
+    "profile": {
+      "title": "My Profile",
+      "loyal_member": "Loyal Member",
+      "phone": "Phone",
+      "member_since": "Member Since",
+      "points": "Loyalty Points",
+      "membership_level": "Membership Level",
+      "next_reward": "Next Reward",
+      "points_to_next": "*{points} more points to get Voucher",
+      "edit_profile": "Edit Profile",
+      "save_changes": "Save Changes",
+      "cancel": "Cancel",
+      "name_label": "Full Name",
+      "phone_label": "Phone Number",
+      "validation": {
+        "required_fields": "Please fill in all fields!",
+        "update_success": "Profile updated successfully!",
+        "update_failed": "Failed to update profile"
+      }
+    },
+    "cart_modal": {
+      "title": "Cart",
+      "cart_tab": "Cart",
+      "cart_tab_with_count": "Cart ({{count}})",
+      "ordered_tab": "Ordered Items",
+      "empty_cart": "Cart is empty",
+      "empty_ordered": "No items ordered yet",
+      "status_preparing": "Preparing",
+      "total": "Total:",
+      "items_count": "{{count}} items",
+      "confirm_order": "Send Order Request",
+      "request_payment": "Request Payment"
+    },
+    "welcome_card": {
+      "greeting": "Welcome",
+      "default_name": "Guest",
+      "gold_member": "Gold Member",
+      "table_label": "Table",
+      "rank_gold": "Gold Member",
+      "rank_silver": "Silver Member",
+      "rank_bronze": "Bronze Member",
+      "rank_platinum": "Platinum Member"
+    },
+    "ai_popup": {
+      "title": "AI Assistant",
+      "status_online": "Online",
+      "robot_alt": "AI Robot",
+      "add_item": "Add item",
+      "input_placeholder": "Ask AI for dish suggestions...",
+      "quick_replies": {
+        "spicy": "Suggest spicy dishes",
+        "combo_two": "Combo for 2",
+        "vegetarian": "Find vegetarian dishes"
+      }
+    }
+  },
   "menu_page": {
+    "logo_title": "RESTX PREMIUM DINING",
     "title": "Today's Menu",
+    "loading": "Loading menu...",
+    "retry": "Retry",
+    "error_load": "Failed to load menu. Please try again later.",
+    "items": "items",
     "restx_menu": "RESTX MENU",
     "search_placeholder": "Search items...",
     "viewing_category": "Viewing Category",
@@ -1174,7 +2011,7 @@
     },
     "sections": {
       "all_title": "All Dishes",
-      "all_desc": "Discover the entire elite menu of RestX.",
+      "all_desc": "Discover the entire elite menu of Restaurant Platform.",
       "special_title": "Special Bowls",
       "special_desc": "Signature poke bowls with fresh fish, pickled vegetables and rich sauces.",
       "sushi_title": "Honi Sushi",
@@ -1184,6 +2021,10 @@
     }
   },
   "auth": {
+    "hero_section": {
+      "title": "Taste the extraordinary.",
+      "description": "Reserve your table, manage your bookings, and experience culinary excellence defined by passion."
+    },
     "admin_login_header": {
       "title": "Admin Portal",
       "subtitle": "Restaurant Management System",
@@ -1191,23 +2032,32 @@
     },
     "login_header": {
       "default_title": "Login",
-      "subtitle": "Welcome to Restaurant"
+      "subtitle": "Welcome to Restaurant",
+      "welcome_to": "Welcome to"
     },
     "login_button": {
       "login_text": "LOGIN",
       "create_account": "CREATE ACCOUNT",
+      "register_text": "REGISTER",
       "loading": "Loading..."
     },
     "login_page": {
+      "title": "Login with Phone",
       "phone_label": "Phone Number",
       "phone_placeholder": "0123456789",
       "name_label": "Name",
       "name_placeholder": "Enter your name",
-      "terms_text": "By continuing, you agree to RestX's",
+      "terms_text": "By continuing, you agree to our",
       "terms_of_service": "Terms of Service",
       "privacy_policy": "Privacy Policy",
       "or_login_with": "Or login with",
       "email_password": "Email & Password",
+      "welcome_back": "Welcome back",
+      "status": {
+        "registered": "Phone number is registered",
+        "not_registered": "Phone number is not registered",
+        "check_failed": "Unable to check phone number"
+      },
       "validation": {
         "phone_length": "Phone number must be exactly 10 digits",
         "phone_digits": "Phone number must contain only digits",
@@ -1221,7 +2071,7 @@
     },
     "register_page": {
       "title": "Create Account",
-      "subtitle": "Join RestX today",
+      "subtitle": "Join us today",
       "first_name": "First Name",
       "last_name": "Last Name",
       "email": "Email",
@@ -1230,7 +2080,7 @@
       "confirm_password": "Confirm Password",
       "password_placeholder": "Enter your password",
       "confirm_password_placeholder": "Confirm your password",
-      "i_agree": "I agree to RestX's",
+      "i_agree": "I agree to Restaurant Platform's",
       "terms_of_service": "Terms of Service",
       "privacy_policy": "Privacy Policy",
       "create_account_btn": "CREATE ACCOUNT",
@@ -1265,12 +2115,12 @@
     "login_email_page": {
       "title": "Login with Email",
       "email_label": "Email",
-      "email_placeholder": "your.email@example.com",
+      "email_placeholder": "",
       "password_label": "Password",
-      "password_placeholder": "Enter your password",
+      "password_placeholder": "",
       "forgot_password": "Forgot password?",
       "login_btn": "LOGIN",
-      "terms_text": "By continuing, you agree to RestX's",
+      "terms_text": "By continuing, you agree to our",
       "terms_of_service": "Terms of Service",
       "and": "and",
       "privacy_policy": "Privacy Policy",
@@ -1289,12 +2139,12 @@
       "title": "Admin Portal",
       "subtitle": "Restaurant Management System",
       "email_label": "Email",
-      "email_placeholder": "admin@restx.com",
+      "email_placeholder": "",
       "password_label": "Password",
-      "password_placeholder": "Enter your password",
+      "password_placeholder": "",
       "forgot_password": "Forgot password?",
       "login_btn": "LOGIN",
-      "terms_text": "By continuing, you agree to RestX's",
+      "terms_text": "By continuing, you agree to our",
       "terms_of_service": "Terms of Service",
       "and": "and",
       "privacy_policy": "Privacy Policy",
@@ -1317,7 +2167,7 @@
       "title": "Forgot Password",
       "subtitle": "Enter your email address and we will send you a link to reset your password.",
       "email_label": "Email Address",
-      "email_placeholder": "your.email@example.com",
+      "email_placeholder": "",
       "send_btn": "SEND RESET LINK",
       "back_to_login": "Back to Login",
       "validation": {
@@ -1453,21 +2303,26 @@
       "tenants": "Tenants"
     },
     "title": "Tenant Management",
-    "subtitle": "Manage restaurants in the RestX system, track tenant count and total system revenue.",
+    "subtitle": "Manage restaurants in the Restaurant Platform system, track tenant count and total system revenue.",
     "add_tenant": "Add Tenant",
     "stats": {
       "total_tenants": "Total Tenants",
       "active_tenants": "Active Tenants",
-      "monthly_revenue": "Monthly Revenue (mock)"
+      "monthly_revenue": "Monthly Revenue"
     },
     "tabs": {
-      "restaurant_list": "Restaurant List (Tenants)",
+      "restaurant_list": "Restaurant List",
+      "tenant_requests": "Restaurant Requests",
       "system_revenue": "System Revenue"
     },
     "table": {
       "tenant_info": "Tenant Info",
       "contact": "Contact",
       "address": "Address",
+      "hostname": "Hostname",
+      "domain": "Domain / IP",
+      "domain_not_configured": "Not configured",
+      "domain_not_set": "Not set",
       "plan": "Plan",
       "status": "Status",
       "owner": "Owner",
@@ -1480,12 +2335,20 @@
       "active": "Active",
       "inactive": "Inactive",
       "maintenance": "Maintenance",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "total_filtered": "Total: {{total}} | Filtered: {{filtered}}"
     },
     "actions": {
-      "view_details": "View Details",
+      "view_details": "View",
       "configure_domain": "Configure Domain",
-      "suspend_tenant": "Suspend Tenant"
+      "suspend_tenant": "Delete Tenant",
+      "delete_confirm_title": "Delete Tenant",
+      "delete_confirm_content": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone and will permanently remove all data associated with this tenant.",
+      "delete_warning": "This action is irreversible and will permanently delete all data associated with \"{{name}}\". To confirm, please type the restaurant name below.",
+      "delete_type_name": "Type \"{{name}}\" to confirm deletion",
+      "delete_name_mismatch": "Restaurant name does not match. Please try again.",
+      "delete_confirm_ok": "Delete",
+      "delete_confirm_cancel": "Cancel"
     },
     "revenue": {
       "title": "Total System Revenue",
@@ -1505,6 +2368,10 @@
       "fetch_success_message": "Tenants loaded successfully",
       "fetch_error_title": "Load Failed",
       "fetch_error_message": "Failed to load tenants. Please try again.",
+      "delete_success_title": "Success",
+      "delete_success_message": "Tenant deleted successfully",
+      "delete_error_title": "Delete Failed",
+      "delete_error_message": "Failed to delete tenant. Please try again.",
       "detail_error_title": "Load Failed",
       "detail_error_message": "Failed to load tenant details. Redirecting...",
       "feature_coming_title": "Coming Soon",
@@ -1546,33 +2413,36 @@
     "create": {
       "breadcrumb_create": "Create",
       "title": "Create New Restaurant",
-      "subtitle": "Add a new tenant (restaurant) to the RestX system.",
+      "subtitle": "Add a new tenant (restaurant) to the Restaurant Platform system.",
       "back": "Back",
       "restaurant_info": "Restaurant Information",
       "owner_info": "Owner Information",
       "subscription_plan": "Subscription Plan",
       "fields": {
         "name": "Name",
-        "name_placeholder": "e.g., ABC",
+        "name_placeholder": "Restaurant name",
         "host_name": "Host Name",
         "host_name_placeholder": "my-restaurant",
+        "hostname_disabled_text": "Hostname cannot be changed after creation",
         "access_url": "Access URL:",
         "business_name": "Business Name",
-        "business_name_placeholder": "ABC Restaurant",
+        "business_name_placeholder": "Legal business name",
         "phone_number": "Phone Number",
-        "phone_placeholder": "0912...",
+        "phone_placeholder": "Contact number",
         "mail_restaurant": "Mail Restaurant",
-        "mail_restaurant_placeholder": "restaurant@example.com",
+        "mail_restaurant_placeholder": "Restaurant contact email",
+        "prefix": "Prefix",
+        "prefix_placeholder": "e.g., NHS",
         "address": "Restaurant Address",
-        "street_number": "Street number (e.g., 123)",
-        "street_name": "Street name (e.g., Nguyen Van Linh)",
-        "city": "City (e.g., Da Nang)",
-        "country": "Country (e.g., Vietnam)",
+        "address_line1_placeholder": "Street number",
+        "address_line2_placeholder": "Ward/District",
+        "address_line3_placeholder": "City/Province",
+        "address_line4_placeholder": "Country",
         "owner_email": "Owner Email",
-        "owner_email_placeholder": "owner@example.com",
+        "owner_email_placeholder": "Owner account email",
         "owner_password": "Owner Password",
-        "password_placeholder": "Enter password",
-        "select_plan": "Select service plan"
+        "password_placeholder": "Minimum 6 characters password",
+        "plan_placeholder": "Choose subscription plan"
       },
       "plan_options": {
         "basic": "Basic Plan",
@@ -1612,12 +2482,390 @@
     "edit": {
       "breadcrumb_edit": "Edit",
       "title": "Edit Restaurant",
-      "subtitle": "Update tenant (restaurant) information in the RestX system.",
+      "subtitle": "Update tenant (restaurant) information in the Restaurant Platform system.",
       "back": "Back",
+      "extended_business_info": "Extended Business Information",
+      "about_overview": "About & Overview",
+      "branding": {
+        "title": "Branding & Theme",
+        "logo_url": "Logo URL",
+        "favicon_url": "Favicon URL",
+        "background_url": "Background URL",
+        "primary_color": "Brand Color",
+        "light_base_color": "Primary Background (Light)",
+        "light_surface_color": "Secondary Background (Light)",
+        "light_card_color": "Component Background (Light)",
+        "dark_base_color": "Primary Background (Dark)",
+        "dark_surface_color": "Secondary Background (Dark)",
+        "dark_card_color": "Component Background (Dark)"
+      },
+      "fields": {
+        "secondary_phone": "Secondary Phone",
+        "secondary_phone_placeholder": "Enter secondary phone number",
+        "opening_hours": "Opening Hours",
+        "opening_hours_placeholder": "e.g., Mon-Fri 9:00-18:00",
+        "about_us": "About Us",
+        "about_us_placeholder": "Enter restaurant description or about us content",
+        "overview": "Overview",
+        "overview_placeholder": "Enter brief overview or tagline",
+        "company_number": "Tax ID / Company Number",
+        "company_number_placeholder": "Enter tax ID or company number",
+        "county": "County / District",
+        "county_placeholder": "Enter county or district",
+        "post_code": "Postal Code",
+        "post_code_placeholder": "Enter postal code",
+        "country": "Country",
+        "country_placeholder": "Enter country",
+        "status": "Tenant Status",
+        "status_active": "Active — Restaurant is live and accessible",
+        "status_inactive": "Inactive — Restaurant is disabled"
+      },
+      "tenant_settings": {
+        "title": "Tenant Settings",
+        "placeholder": "JSON configuration for tenant settings"
+      },
+      "system_fields": {
+        "title": "System Fields",
+        "created_date": "Created Date",
+        "modified_date": "Modified Date",
+        "created_by": "Created By",
+        "modified_by": "Modified By"
+      },
       "buttons": {
         "update": "Save Changes",
+        "delete": "Delete Tenant",
         "cancel": "Cancel"
+      },
+      "delete_modal": {
+        "title": "Delete Tenant",
+        "warning_title": "Warning: This action cannot be undone!",
+        "warning_description": "Deleting this tenant will permanently remove:",
+        "warning_items": {
+          "data": "All restaurant data and settings",
+          "users": "All user accounts associated with this tenant",
+          "transactions": "All menus, orders, and transaction history",
+          "assets": "All uploaded images and assets"
+        },
+        "confirm_instruction": "To confirm deletion, please type the tenant name:",
+        "input_placeholder": "Type tenant name to confirm",
+        "name_mismatch": "Tenant name does not match",
+        "name_match": "Ready to delete",
+        "button_cancel": "Cancel",
+        "button_delete": "Delete Permanently"
       }
+    }
+  },
+  "tenant_requests": {
+    "form": {
+      "description": "Fill in your restaurant information and our team will contact you to set up your account.",
+      "restaurant_info": "Restaurant Information",
+      "contact_info": "Contact Information",
+      "address_section": "Address",
+      "restaurant_name": "Restaurant Name",
+      "restaurant_name_placeholder": "e.g., My Restaurant",
+      "restaurant_name_required": "Please enter restaurant name",
+      "restaurant_name_min": "Restaurant name must be at least 3 characters",
+      "hostname": "Subdomain/Hostname",
+      "hostname_placeholder": "myrestaurant",
+      "hostname_required": "Please enter subdomain",
+      "hostname_invalid": "Only lowercase letters, numbers, and hyphens are allowed",
+      "hostname_tooltip": "This will be your portal hostname",
+      "business_name": "Business Name",
+      "business_name_placeholder": "Legal business name",
+      "business_name_required": "Please enter business name",
+      "contact_person": "Contact Person",
+      "contact_person_placeholder": "Full name",
+      "contact_person_required": "Please enter contact person name",
+      "business_email": "Business Email",
+      "business_email_placeholder": "info@yourrestaurant.com",
+      "business_email_required": "Please enter business email",
+      "business_email_invalid": "Please enter a valid email",
+      "phone_number": "Phone Number",
+      "phone_number_placeholder": "+84 123 456 789",
+      "phone_number_required": "Please enter phone number",
+      "address_line_1": "Address Line 1",
+      "address_line_1_placeholder": "Street address",
+      "address_line_2": "Address Line 2",
+      "address_line_2_placeholder": "District/Ward",
+      "address_line_3": "Address Line 3",
+      "address_line_3_placeholder": "City",
+      "address_line_4": "Address Line 4",
+      "address_line_4_placeholder": "State/Province",
+      "country": "Country",
+      "country_placeholder": "Country",
+      "business_address": "Business Address",
+      "business_address_placeholder": "Full business address",
+      "business_address_required": "Please enter business address",
+      "select_plan": "Select Plan",
+      "select_plan_placeholder": "Choose your plan",
+      "select_plan_required": "Please select a plan",
+      "additional_notes": "Additional Notes",
+      "additional_notes_placeholder": "Any special requirements or questions...",
+      "plan_basic": "Basic",
+      "plan_professional": "Professional",
+      "plan_enterprise": "Enterprise",
+      "plan_basic_desc": "Perfect for small restaurants",
+      "plan_professional_desc": "Ideal for growing businesses",
+      "plan_enterprise_desc": "Complete solution for large operations",
+      "cancel": "Cancel",
+      "submit": "Submit Request",
+      "submitting": "Submitting...",
+      "success_title": "Request Submitted!",
+      "success_message": "Thank you for your interest! We'll review your request and contact you within 24-48 hours.",
+      "error_title": "Submission Failed",
+      "error_message": "Please try again or contact support."
+    },
+    "list": {
+      "title": "Tenant Requests",
+      "pending_requests": "Pending Requests",
+      "search_placeholder": "Search by name, email, phone, or hostname...",
+      "total_filtered": "Total: {{total}} | Filtered: {{filtered}}",
+      "refresh": "Refresh",
+      "column_restaurant": "Restaurant",
+      "column_business_name": "Business Name",
+      "column_contact": "Contact",
+      "column_contact_info": "Contact Info",
+      "column_address": "Address",
+      "column_plan": "Plan",
+      "column_status": "Status",
+      "column_submitted": "Submitted",
+      "column_actions": "Actions",
+      "status_pending": "Pending",
+      "status_approved": "Approved",
+      "status_rejected": "Rejected",
+      "status_pending_approval": "Pending Approval",
+      "action_view": "View",
+      "action_approve": "Approve",
+      "action_reject": "Reject",
+      "action_delete": "Delete",
+      "detail_modal_title": "Tenant Request Details",
+      "detail_restaurant_name": "Restaurant Name",
+      "detail_hostname": "Hostname",
+      "detail_business_name": "Business Name",
+      "detail_contact_person": "Contact Person",
+      "detail_business_email": "Business Email",
+      "detail_phone": "Phone Number",
+      "detail_address": "Address",
+      "detail_country": "Country",
+      "detail_plan": "Requested Plan",
+      "detail_status": "Status",
+      "detail_submitted": "Submitted Date",
+      "detail_notes": "Additional Notes",
+      "detail_approved_by": "Approved By",
+      "detail_approved_at": "Approved At",
+      "detail_rejected_by": "Rejected By",
+      "detail_rejected_at": "Rejected At",
+      "detail_rejection_reason": "Rejection Reason",
+      "detail_close": "Close",
+      "approve_confirm_title": "Approve Tenant Request",
+      "approve_confirm_message": "Are you sure you want to approve \"{{name}}\"? This will create a new tenant with hostname {{hostname}}",
+      "approve_confirm_ok": "Approve",
+      "approve_confirm_cancel": "Cancel",
+      "reject_confirm_title": "Reject Tenant Request",
+      "reject_confirm_message": "Are you sure you want to reject \"{{name}}\"? This will mark the request as denied.",
+      "reject_confirm_ok": "Reject",
+      "reject_confirm_cancel": "Cancel",
+      "approve_success": "Tenant \"{{name}}\" has been approved! Tenant ID: {{id}}",
+      "reject_success": "Tenant request \"{{name}}\" has been rejected",
+      "approve_error": "Failed to approve tenant",
+      "reject_error": "Failed to reject tenant",
+      "filter_all": "All Requests",
+      "filter_pending": "Pending",
+      "filter_approved": "Approved",
+      "filter_rejected": "Rejected",
+      "load_error": "Failed to load tenant requests",
+      "invalid_id": "Invalid request ID",
+      "no_data": "No pending tenant requests",
+      "total_requests": "Total {{count}} requests",
+      "total_requests_singular": "Total 1 pending request"
+    }
+  },
+  "landing": {
+    "hero": {
+      "subtitle": "Essence of Vietnamese Cuisine",
+      "title": "Exquisite Flavors",
+      "description": "Experience world-class dining with dishes crafted from the freshest ingredients in a luxurious and cozy atmosphere.",
+      "menu_btn": "Explore Menu",
+      "about_btn": "About Us"
+    },
+    "menu": {
+      "subtitle": "Signature Menu",
+      "title": "Taste of Excellence",
+      "view_all": "View Full Menu"
+    },
+    "reservation": {
+      "title": "Book a Table",
+      "description": "Secure the best spot for your dining experience. We are always ready to welcome you.",
+      "form": {
+        "name": "Full Name",
+        "name_placeholder": "John Doe",
+        "name_required": "Please enter your name",
+        "phone": "Phone Number",
+        "phone_placeholder": "090...",
+        "phone_required": "Please enter phone number",
+        "guests": "Guests",
+        "date": "Date",
+        "date_required": "Select date",
+        "submit": "Confirm Booking"
+      },
+      "guest_options": {
+        "2": "2 people",
+        "4": "4 people",
+        "6": "6 people",
+        "more": "6+ people"
+      }
+    },
+    "booking": {
+      "step": {
+        "schedule": "Schedule",
+        "location": "Location",
+        "confirm": "Confirm"
+      },
+      "confirm": {
+        "error_required": "Please fill in all required fields",
+        "error_generic": "An error occurred, please try again",
+        "change_table": "Change Table",
+        "title": "Confirm Reservation",
+        "date_time": "Date & Time",
+        "selected_table": "Selected Table",
+        "contact": "Contact Info",
+        "change": "Change",
+        "name": "Full Name",
+        "phone": "Phone Number",
+        "special_requests": "Special Requests",
+        "submit": "Complete Booking",
+        "submitting": "Processing...",
+        "success_title": "Booking Successful!",
+        "success_desc": "Thank you for choosing us. A confirmation code has been sent to your phone.",
+        "new_booking": "New Booking",
+        "finalize_title": "Finalize Your Reservation",
+        "finalize_desc": "Please provide your contact details so we can send you a confirmation.",
+        "logged_in_hint": "You are signed in as: {{name}}",
+        "full_name": "Full Name",
+        "name_placeholder": "John Smith",
+        "phone_number": "Phone Number",
+        "phone_placeholder": "09xxxxxxxx",
+        "email": "Email",
+        "email_placeholder": "",
+        "special_requests_optional": "(Optional)",
+        "requests_placeholder": "Seating preference, allergies, etc...",
+        "complete_btn": "Complete Booking",
+        "processing": "Processing...",
+        "terms": "By continuing, you agree to our Terms of Service and Privacy Policy.",
+        "party_size": "{{count}} guests",
+        "standard_seating": "Standard Seating"
+      },
+      "success": {
+        "title": "Booking Confirmed!",
+        "thank_you": "Thank you,",
+        "table_label": "Table",
+        "reserved_for": "reserved for",
+        "guests": "guests",
+        "on": "on",
+        "at": "at",
+        "booking_ref": "Booking Ref",
+        "confirmation_sent": "Confirmation email sent to:",
+        "make_another": "Make Another Booking"
+      },
+      "hero": {
+        "badge": "ONLINE BOOKING",
+        "title_prefix": "Experience",
+        "title_highlight": "Fine Dining",
+        "description": "Reserve your table in advance to secure the best spot for your wonderful dinner."
+      },
+      "form": {
+        "arrival_date": "Arrival Date",
+        "preferred_time": "Time",
+        "party_size": "Party Size",
+        "choose_table": "Choose Table",
+        "no_slots": "No available time slots"
+      },
+      "features": {
+        "fine_dining": {
+          "label": "Fine Dining",
+          "desc": "Diverse & rich menu"
+        },
+        "instant_confirm": {
+          "label": "Instant Confirm",
+          "desc": "No waiting required"
+        },
+        "valet": {
+          "label": "Valet Parking",
+          "desc": "Safe parking available"
+        }
+      },
+      "table_map": {
+        "change_schedule": "Change Schedule",
+        "reservation_for": "Reservation for",
+        "guests": "guests",
+        "title": "Restaurant Map",
+        "ai_assistant": "AI Assistant",
+        "ai_default": "Let me find the best table for you...",
+        "loading": "Loading map...",
+        "no_map": "No active map for this time.",
+        "booking_title": "Selected Table",
+        "floor": "Floor",
+        "capacity": "Capacity",
+        "no_table_selected": "No table selected",
+        "info_timer": "Please select a table on the map",
+        "confirm_table": "Confirm Table",
+        "mobile_selected": "Selected",
+        "mobile_none": "None",
+        "mobile_confirm": "Done"
+      },
+      "footer": {
+        "tagline": "World-class Dining Experience"
+      }
+    },
+    "lookup": {
+      "auth_required": "You must log in with a staff account to look up reservations.",
+      "error": "Failed to look up reservation or not found.",
+      "badge": "LOOKUP",
+      "title": "Reservation Status",
+      "description": "Enter your confirmation code to track your reservation status.",
+      "code_label": "Confirmation Code",
+      "placeholder": "E.g., 8F86D7",
+      "searching": "Searching...",
+      "search_btn": "Look Up",
+      "result": {
+        "confirmation_code": "Confirmation Code",
+        "guest_name": "Guest Name",
+        "phone": "Phone Number",
+        "date_time": "Date & Time",
+        "guests": "Party Size",
+        "guests_suffix": "guests",
+        "table": "Table",
+        "special_requests": "Special Requests"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "checked_in": "Checked In",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "about": {
+      "subtitle": "Our Story",
+      "title": "Culinary Heritage from Passion",
+      "default_description": "At Restaurant, we put customers first. With dedicated staff and unique recipes, we are committed to providing the best dining experience.",
+      "secondary_description": "Each dish is carefully prepared with the freshest ingredients, creating distinct flavors found nowhere else. We sincerely thank you for your support.",
+      "chef": "Executive Chef"
+    },
+    "news": {
+      "subtitle": "News & Events",
+      "title": "Latest updates from {{name}}",
+      "title_default": "our restaurant",
+      "description": "Don't miss out on special offers and culinary events.",
+      "tags": {
+        "event": "Event",
+        "cuisine": "Cuisine",
+        "discovery": "Discovery"
+      }
+    },
+    "overview": {
+      "subtitle": "Discover",
+      "title": "Overview"
     }
   }
 }

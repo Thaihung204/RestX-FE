@@ -1,0 +1,499 @@
+"use client";
+
+import { getTypeTranslation, type SupportedLocale } from "@/lib/i18n/dynamicTypeTranslations";
+import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+function getStatus(item: IngredientItem): "active" | "inactive" {
+  return item.isActive ? "active" : "inactive";
+}
+
+const STATUS_BADGE: Record<string, React.CSSProperties> = {
+  active:   { background: "rgba(34,197,94,0.12)",  color: "#16a34a", border: "1px solid rgba(34,197,94,0.3)"  },
+  inactive: { background: "rgba(239,68,68,0.12)",  color: "#dc2626", border: "1px solid rgba(239,68,68,0.3)"  },
+};
+
+export default function IngredientList() {
+  const { t, i18n } = useTranslation("common");
+  const router = useRouter();
+  const locale: SupportedLocale = i18n.language?.startsWith("en") ? "en" : "vi";
+
+  const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
+  const [ingredientCategories, setIngredientCategories] = useState<IngredientCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [filterActive, setFilterActive] = useState("all");
+  const [savingRow, setSavingRow] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [ingredientData, categoryData] = await Promise.all([
+        ingredientService.getAll(),
+        ingredientService.getAllCategories(),
+      ]);
+      setIngredients(ingredientData);
+      setIngredientCategories(categoryData.filter((c) => c.isActive !== false));
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ||
+          t("dashboard.ingredients.list.load_error"),
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateIngredient = async (
+    id: string,
+    patch: Partial<IngredientItem>,
+  ) => {
+    const current = ingredients.find((ingredient) => ingredient.id === id);
+    if (!current) return;
+
+    const next = { ...current, ...patch };
+    setSavingRow(id);
+    setIngredients((prev) =>
+      prev.map((ingredient) => (ingredient.id === id ? next : ingredient)),
+    );
+
+    try {
+      await ingredientService.update(id, next);
+    } catch (err) {
+      setIngredients((prev) =>
+        prev.map((ingredient) => (ingredient.id === id ? current : ingredient)),
+      );
+    } finally {
+      setSavingRow(null);
+    }
+  };
+
+  const typeToLabelMap = useMemo(() => {
+    return ingredientCategories.reduce<Record<string, string>>((acc, c) => {
+      const label = c.name?.trim();
+      if (!label) return acc;
+      if (c.code?.trim()) acc[c.code.trim()] = label;
+      acc[label] = label;
+      return acc;
+    }, {});
+  }, [ingredientCategories]);
+
+  const normalizeTypeCode = (value?: string | null) => {
+    if (!value) return "";
+    const trimmed = value.trim();
+    const found = ingredientCategories.find((c) => c.code === trimmed || c.name === trimmed);
+    return found?.code || trimmed;
+  };
+
+  const toTypeTranslationKey = (value?: string | null) => {
+    if (!value) return "";
+    return value.trim().toLowerCase().replace(/\s+/g, "_");
+  };
+
+  const getTypeLabel = (value?: string | null) => {
+    if (!value) return "";
+    const raw = value.trim();
+    const normalizedCode = normalizeTypeCode(raw);
+    const fallback = typeToLabelMap[raw] || typeToLabelMap[normalizedCode] || raw;
+    const dynamicValue = getTypeTranslation(normalizedCode, locale, fallback);
+    return t(`dashboard.ingredients.type_codes.${toTypeTranslationKey(normalizedCode)}`, { defaultValue: dynamicValue || fallback });
+  };
+
+  const getStatusLabel = (status?: number | null) => {
+    switch (status) {
+      case 0:
+        return t("dashboard.ingredients.status_values.in_stock");
+      case 1:
+        return t("dashboard.ingredients.status_values.low_stock");
+      case 2:
+        return t("dashboard.ingredients.status_values.out_of_stock");
+      default:
+        return "—";
+    }
+  };
+
+  const types = Array.from(new Set(ingredients.map((i) => normalizeTypeCode(i.type)).filter(Boolean))) as string[];
+
+  const filtered = ingredients.filter((i) => {
+    const q = searchTerm.toLowerCase();
+    const matchSearch =
+      i.name.toLowerCase().includes(q) ||
+      i.code.toLowerCase().includes(q) ||
+      (i.supplierName ?? "").toLowerCase().includes(q);
+    const matchTypeCode = normalizeTypeCode(i.type);
+    const matchType   = filterType   === "all" || matchTypeCode === filterType;
+    const matchActive = filterActive === "all" ||
+      (filterActive === "active"   && i.isActive) ||
+      (filterActive === "inactive" && !i.isActive);
+    return matchSearch && matchType && matchActive;
+  });
+
+  const TABS = [
+    { id: "all",      label: t("dashboard.ingredients.tab_all") },
+    { id: "active",   label: t("dashboard.ingredients.tab_active") },
+    { id: "inactive", label: t("dashboard.ingredients.tab_inactive") },
+  ];
+
+  const activeTabStyle: React.CSSProperties  = { background: "var(--primary)", color: "white" };
+  const normalTabStyle: React.CSSProperties  = { background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: "var(--primary)" }} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl p-6 text-center" style={{ background: "var(--card)", border: "1px solid rgba(239,68,68,0.3)" }}>
+        <p className="text-sm mb-3" style={{ color: "#dc2626" }}>{error}</p>
+        <button onClick={fetchData} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "var(--primary)" }}>
+          {t("dashboard.ingredients.retry", "Thử lại")}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+
+      <div className="rounded-xl p-4 sm:p-5" style={{ background: "var(--bg-surface)" }}>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder={t("dashboard.ingredients.list.search_placeholder")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border outline-none transition-all text-sm"
+              style={{ background: "var(--bg-base)", color: "var(--text)", borderColor: "var(--border)" }}
+            />
+          </div>
+
+          {types.length > 0 && (
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="px-3 py-2 rounded-lg border outline-none text-sm"
+              style={{ background: "var(--bg-base)", color: "var(--text)", borderColor: "var(--border)" }}
+            >
+              <option value="all">
+                {t("dashboard.ingredients.list.filter_all_types")}
+              </option>
+              {types.map((tp) => <option key={tp} value={tp}>{getTypeLabel(tp)}</option>)}
+            </select>
+          )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setFilterActive(tab.id)}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+              style={filterActive === tab.id ? activeTabStyle : normalTabStyle}
+            >
+              {tab.label}
+            </button>
+          ))}
+          <span className="ml-auto text-sm" style={{ color: "var(--text-secondary)" }}>
+            {t("dashboard.ingredients.list.results_count", { count: filtered.length })}
+          </span>
+        </div>
+      </div>
+
+      <div className="rounded-xl overflow-hidden" style={{ background: "var(--bg-surface)" }}>
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ background: "var(--bg-base)", borderBottom: "2px solid var(--border)" }}>
+                <th className="text-left px-4 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", minWidth: 160 }}>
+                  {t("dashboard.ingredients.list.col_name")}
+                </th>
+                <th className="text-left px-3 py-3 font-semibold whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text)", width: 90 }}>
+                  {t("dashboard.ingredients.list.col_code")}
+                </th>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 70 }}>
+                  {t("dashboard.ingredients.list.col_unit")}
+                </th>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 140 }}>
+                  {t("dashboard.ingredients.list.col_quantity")}
+                </th>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden xl:table-cell" style={{ color: "var(--text)", width: 120 }}>
+                  {t("dashboard.ingredients.list.col_min_max")}
+                </th>
+                <th className="text-left px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", minWidth: 120 }}>
+                  {t("dashboard.ingredients.list.col_supplier")}
+                </th>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden lg:table-cell" style={{ color: "var(--text)", width: 90 }}>
+                  {t("dashboard.ingredients.list.col_type")}
+                </th>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", width: 120 }}>
+                  {t("dashboard.ingredients.list.col_status")}
+                </th>
+                <th className="text-center px-3 py-3 font-semibold whitespace-nowrap hidden xl:table-cell" style={{ color: "var(--text)", width: 140 }}>
+                  {t("dashboard.ingredients.list.col_stock_status")}
+                </th>
+                <th className="text-center px-3 py-3 font-semibold" style={{ color: "var(--text)", width: 60 }}>
+                  &nbsp;
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item) => {
+                const status = getStatus(item);
+                return (
+                  <tr
+                    key={item.id}
+                    onClick={() => router.push(`/admin/ingredients/${item.id}`)}
+                    className="cursor-pointer transition-colors"
+                    style={{ borderBottom: "1px solid var(--border)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <td className="px-4 py-3">
+                      <p className="font-semibold truncate max-w-[180px]" style={{ color: "var(--text)" }}>{item.name}</p>
+                    </td>
+                    <td className="px-3 py-3 hidden lg:table-cell">
+                      <span
+                        className="px-1.5 py-0.5 rounded text-xs font-mono"
+                        style={{ background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+                      >
+                        {item.code}
+                      </span>
+                    </td>
+
+                    <td className="px-3 py-3 text-center" style={{ color: "var(--text)" }}>
+                      {item.unit}
+                    </td>
+
+                    <td className="px-3 py-3 text-center">
+                      <input
+                        type="number"
+                        value={item.currentQuantity ?? 0}
+                        onChange={(e) =>
+                          setIngredients((prev) =>
+                            prev.map((ingredient) =>
+                              ingredient.id === item.id
+                                ? {
+                                    ...ingredient,
+                                    currentQuantity: Number(e.target.value),
+                                  }
+                                : ingredient,
+                            ),
+                          )
+                        }
+                        onBlur={() =>
+                          handleUpdateIngredient(item.id as string, {
+                            currentQuantity: item.currentQuantity ?? 0,
+                          })
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                        className="w-20 px-2 py-1 rounded border text-sm text-center"
+                        style={{
+                          background: "var(--bg-base)",
+                          color: "var(--text)",
+                          borderColor: "var(--border)",
+                        }}
+                        disabled={savingRow === item.id}
+                      />
+                    </td>
+
+                    <td className="px-3 py-3 text-center text-xs hidden xl:table-cell" style={{ color: "var(--text-secondary)" }}>
+                      {item.minStockLevel} / {item.maxStockLevel}
+                    </td>
+
+                    <td className="px-3 py-3">
+                      <p className="truncate max-w-[150px] text-sm" style={{ color: "var(--text)" }}>
+                        {item.supplierName || (
+                          <span style={{ color: "var(--text-muted)" }}>—</span>
+                        )}
+                      </p>
+                    </td>
+
+                    <td className="px-3 py-3 text-center hidden lg:table-cell">
+                      {item.type ? (
+                        <span
+                          className="px-2 py-0.5 rounded-full text-xs"
+                          style={{ background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+                        >
+                          {getTypeLabel(item.type)}
+                        </span>
+                      ) : (
+                        <span style={{ color: "var(--text-muted)" }}>—</span>
+                      )}
+                    </td>
+
+                    <td className="px-3 py-3 text-center">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleUpdateIngredient(item.id as string, {
+                            isActive: !item.isActive,
+                          });
+                        }}
+                        className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
+                        style={STATUS_BADGE[status]}
+                        disabled={savingRow === item.id}
+                      >
+                        {item.isActive
+                          ? t("dashboard.ingredients.list.badge_active")
+                          : t("dashboard.ingredients.list.badge_inactive")}
+                      </button>
+                    </td>
+
+                    <td className="px-3 py-3 text-center hidden xl:table-cell">
+                      <span
+                        className="px-2 py-0.5 rounded-full text-xs"
+                        style={{ background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+                      >
+                        {getStatusLabel(item.status)}
+                      </span>
+                    </td>
+
+                    <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => router.push(`/admin/ingredients/${item.id}`)}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg transition-all"
+                        style={{ background: "rgba(255,56,11,0.1)", color: "var(--primary)" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,56,11,0.2)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,56,11,0.1)")}
+                        title={t("dashboard.ingredients.list.edit_tooltip")}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="md:hidden divide-y" style={{ borderColor: "var(--border)" }}>
+          {filtered.map((item) => {
+            const status = getStatus(item);
+            return (
+              <div
+                key={item.id}
+                onClick={() => router.push(`/admin/ingredients/${item.id}`)}
+                className="p-4 cursor-pointer transition-colors"
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <p className="font-semibold truncate" style={{ color: "var(--text)" }}>{item.name}</p>
+                    <p className="text-xs font-mono mt-0.5" style={{ color: "var(--text-muted)" }}>{item.code}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleUpdateIngredient(item.id as string, {
+                        isActive: !item.isActive,
+                      });
+                    }}
+                    className="px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 transition-all"
+                    style={STATUS_BADGE[status]}
+                    disabled={savingRow === item.id}
+                  >
+                    {item.isActive
+                      ? t("dashboard.ingredients.list.badge_active")
+                      : t("dashboard.ingredients.list.badge_inactive_short")}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mt-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+                  <div>
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.ingredients.list.col_quantity")}
+                    </span>
+                    <input
+                      type="number"
+                      value={item.currentQuantity ?? 0}
+                      onChange={(e) =>
+                        setIngredients((prev) =>
+                          prev.map((ingredient) =>
+                            ingredient.id === item.id
+                              ? {
+                                  ...ingredient,
+                                  currentQuantity: Number(e.target.value),
+                                }
+                              : ingredient,
+                          ),
+                        )
+                      }
+                      onBlur={() =>
+                        handleUpdateIngredient(item.id as string, {
+                          currentQuantity: item.currentQuantity ?? 0,
+                        })
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                      className="mt-1 w-full px-2 py-1 rounded border text-sm text-center"
+                      style={{
+                        background: "var(--bg-base)",
+                        color: "var(--text)",
+                        borderColor: "var(--border)",
+                      }}
+                      disabled={savingRow === item.id}
+                    />
+                  </div>
+                  <div>
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.ingredients.list.mobile_unit")}
+                    </span>
+                    <span style={{ color: "var(--text)" }}>{item.unit}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.ingredients.list.mobile_min_max")}
+                    </span>
+                    <span style={{ color: "var(--text)" }}>{item.minStockLevel}/{item.maxStockLevel}</span>
+                  </div>
+                  <div className="col-span-2 mt-1">
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.ingredients.list.mobile_supplier")}
+                    </span>
+                    <span style={{ color: "var(--text)" }}>{item.supplierName || "—"}</span>
+                  </div>
+                  {item.type && (
+                    <div>
+                      <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                        {t("dashboard.ingredients.list.mobile_type")}
+                      </span>
+                      <span style={{ color: "var(--text)" }}>{getTypeLabel(item.type)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="text-center py-14">
+            <p style={{ color: "var(--text-secondary)" }}>
+              {t("dashboard.ingredients.list.empty")}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

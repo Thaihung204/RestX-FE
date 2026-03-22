@@ -49,8 +49,10 @@ const TenantPlanTag: React.FC<Props> = ({ plan }) => {
         border: `1px solid ${style.border}`,
         color: style.text,
         letterSpacing: 0.4,
-      }}
-    >
+        minWidth: "85px",
+        textAlign: "center",
+        display: "inline-block",
+      }}>
       {t(`tenants.plans.${plan}`)}
     </Tag>
   );

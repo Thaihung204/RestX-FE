@@ -158,7 +158,7 @@ export default function ActivityTimeline() {
         </div>
         <button
           className="text-sm font-medium transition-colors"
-          style={{ color: '#FF380B' }}
+          style={{ color: 'var(--primary)' }}
           suppressHydrationWarning>
           {t("dashboard.recent_orders.view_all")}
         </button>
@@ -176,7 +176,7 @@ export default function ActivityTimeline() {
                 }`}
               style={activity.type === 'payment' ? { 
                 backgroundColor: 'rgba(255, 56, 11, 0.1)', 
-                color: '#FF380B', 
+                color: 'var(--primary)', 
                 borderColor: 'rgba(255, 56, 11, 0.2)' 
               } : undefined}>
               {activity.icon}
@@ -195,7 +195,7 @@ export default function ActivityTimeline() {
             {/* Indicator */}
             {index < 2 && (
               <div className="flex-shrink-0">
-                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#FF380B' }}></div>
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--primary)' }}></div>
               </div>
             )}
           </div>

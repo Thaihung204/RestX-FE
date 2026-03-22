@@ -1,26 +1,26 @@
 'use client';
 
+import { tableService, TableStatus } from '@/lib/services/tableService';
 import {
-  CalendarOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  DollarOutlined,
-  ExclamationCircleOutlined,
-  ReloadOutlined,
-  RightOutlined,
-  ShoppingCartOutlined,
-  SmileOutlined,
-  SyncOutlined,
-  TableOutlined,
-  ThunderboltOutlined
+    CalendarOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    DollarOutlined,
+    ExclamationCircleOutlined,
+    ReloadOutlined,
+    RightOutlined,
+    ShoppingCartOutlined,
+    SmileOutlined,
+    SyncOutlined,
+    TableOutlined,
+    ThunderboltOutlined
 } from '@ant-design/icons';
 import { Button, Card, Col, Flex, Progress, Row, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import PageTransition from '../components/PageTransition';
-import { useThemeMode } from '../theme/AutoDarkThemeProvider';
+import { useThemeMode } from '../theme/AntdProvider';
 
 const { Title, Text } = Typography;
 
@@ -137,51 +137,69 @@ export default function StaffDashboard() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+
+  // ... (top of file)
+
+  const [tables, setTables] = useState<any[]>([]);
+
   // Update time every minute
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
+  // Fetch tables
+  useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        const data = await tableService.getAllTables();
+        setTables(data);
+      } catch (error) {
+        console.error('Failed to fetch tables:', error);
+      }
+    };
+    fetchTables();
+  }, []);
+
   const { t } = useTranslation();
   const { mode } = useThemeMode();
 
-  const statsData = [
-    {
-      title: t('staff.dashboard.stats.serving_tables'), // 'Bàn đang phục vụ'
-      value: 12,
-      total: 20,
-      icon: <TableOutlined />,
-      color: '#FF380B',
-      bgColor: 'rgba(255, 56, 11, 0.1)',
-      suffix: t('staff.orders.order.table'),
-    },
-    {
-      title: t('staff.dashboard.stats.processing_orders'), // 'Order đang xử lý'
-      value: 8,
-      icon: <ShoppingCartOutlined />,
-      color: '#1890ff',
-      bgColor: 'rgba(24, 144, 255, 0.1)',
-      suffix: t('staff.dashboard.stats.orders_suffix'), // 'đơn'
-    },
-    {
-      title: t('staff.dashboard.stats.today_revenue'), // 'Doanh thu hôm nay'
-      value: 15750000,
-      icon: <DollarOutlined />,
-      color: '#52c41a',
-      bgColor: 'rgba(82, 196, 26, 0.1)',
-      prefix: '',
-      isMoney: true,
-    },
-    {
-      title: t('staff.dashboard.stats.today_hours'), // 'Giờ làm hôm nay'
-      value: 5.5,
-      icon: <ClockCircleOutlined />,
-      color: '#722ed1',
-      bgColor: 'rgba(114, 46, 209, 0.1)',
-      suffix: t('staff.dashboard.stats.hours_suffix'), // 'giờ'
-    },
-  ];
+  // const statsData = [
+  //   {
+  //     title: t('staff.dashboard.stats.serving_tables'), // 'Bàn đang phục vụ'
+  //     value: tables.filter(table => table.tableStatusId === TableStatus.Occupied).length,
+  //     total: tables.length,
+  //     icon: <TableOutlined />,
+  //     color: 'var(--primary)',
+  //     bgColor: 'rgba(255, 56, 11, 0.1)',
+  //     suffix: t('staff.orders.order.table'),
+  //   },
+  //   {
+  //     title: t('staff.dashboard.stats.processing_orders'), // 'Order đang xử lý'
+  //     value: 8,
+  //     icon: <ShoppingCartOutlined />,
+  //     color: '#1890ff',
+  //     bgColor: 'rgba(24, 144, 255, 0.1)',
+  //     suffix: t('staff.dashboard.stats.orders_suffix'), // 'đơn'
+  //   },
+  //   {
+  //     title: t('staff.dashboard.stats.today_revenue'), // 'Doanh thu hôm nay'
+  //     value: 15750000,
+  //     icon: <DollarOutlined />,
+  //     color: '#52c41a',
+  //     bgColor: 'rgba(82, 196, 26, 0.1)',
+  //     prefix: '',
+  //     isMoney: true,
+  //   },
+  //   {
+  //     title: t('staff.dashboard.stats.today_hours'), // 'Giờ làm hôm nay'
+  //     value: 5.5,
+  //     icon: <ClockCircleOutlined />,
+  //     color: '#722ed1',
+  //     bgColor: 'rgba(114, 46, 209, 0.1)',
+  //     suffix: t('staff.dashboard.stats.hours_suffix'), // 'giờ'
+  //   },
+  // ];
 
   const recentOrders = [
     {
@@ -234,11 +252,25 @@ export default function StaffDashboard() {
     },
   ];
 
-  const tableStatus = [
-    { zone: t('staff.tables.zones.zone_a'), available: 4, occupied: 6, total: 10 },
-    { zone: t('staff.tables.zones.zone_b'), available: 2, occupied: 4, total: 6 },
-    { zone: t('staff.tables.zones.zone_vip'), available: 1, occupied: 3, total: 4 },
-  ];
+  const tableStatus = React.useMemo(() => {
+    // Group tables by zone
+    const statusByZone: Record<string, { total: number, occupied: number, available: number, name: string }> = {};
+
+    tables.forEach(table => {
+      const zoneName = table.type || 'Other';
+      if (!statusByZone[zoneName]) {
+        statusByZone[zoneName] = {
+          total: 0, occupied: 0, available: 0,
+          name: t('staff.tables.zones.zone_' + zoneName.toLowerCase(), { defaultValue: zoneName })
+        };
+      }
+      statusByZone[zoneName].total++;
+      if (table.tableStatusId === TableStatus.Occupied) statusByZone[zoneName].occupied++;
+      else if (table.tableStatusId === TableStatus.Available) statusByZone[zoneName].available++;
+    });
+
+    return Object.values(statusByZone);
+  }, [tables, t]);
 
   const orderColumns = [
     {
@@ -261,7 +293,7 @@ export default function StaffDashboard() {
       key: 'total',
       width: '22%',
       render: (total: number) => (
-        <Text strong style={{ color: '#FF380B', fontSize: 14 }}>
+        <Text strong style={{ color: 'var(--primary)', fontSize: 14 }}>
           {total.toLocaleString('vi-VN')}đ
         </Text>
       ),
@@ -276,7 +308,7 @@ export default function StaffDashboard() {
           pending: { color: 'orange', text: t('common.status.pending'), icon: <ExclamationCircleOutlined /> },
           preparing: { color: 'blue', text: t('common.status.preparing'), icon: <SyncOutlined spin /> },
           ready: { color: 'green', text: t('common.status.ready'), icon: <CheckCircleOutlined /> },
-          served: { color: 'default', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
+          served: { color: 'green', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
           // Mock data contains these exact status strings 
         };
         const config = statusConfig[status] || { color: 'default', text: status, icon: null };
@@ -308,7 +340,6 @@ export default function StaffDashboard() {
     return t('staff.dashboard.greeting.evening');
   };
   return (
-    <PageTransition minimumLoadingTime={1500}>
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -336,7 +367,7 @@ export default function StaffDashboard() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <Title level={isMobile ? 4 : 3} style={{ color: '#FF380B', margin: 0, marginBottom: isMobile ? 12 : 8, fontWeight: 700 }}>
+                    <Title level={isMobile ? 4 : 3} style={{ color: 'var(--primary)', margin: 0, marginBottom: isMobile ? 12 : 8, fontWeight: 700 }}>
                       {getGreeting()}, Nguyễn Văn A! <SmileOutlined style={{ marginLeft: 8 }} />
                     </Title>
                     <Text style={{ color: 'var(--text)', fontSize: isMobile ? 14 : 16 }}>
@@ -346,10 +377,10 @@ export default function StaffDashboard() {
                           key="1"
                           animate={{ scale: [1, 1.1, 1] }}
                           transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
-                          style={{ display: 'inline-block', color: '#FF380B' }}
+                          style={{ display: 'inline-block', color: 'var(--primary)' }}
                         />,
                         <span key="2" />,
-                        <strong key="3" style={{ color: '#FF380B' }} />
+                        <strong key="3" style={{ color: 'var(--primary)' }} />
                       ]} />
                     </Text>
 
@@ -379,7 +410,7 @@ export default function StaffDashboard() {
                         borderRadius: 8,
                         border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.3)' : '1px solid rgba(255, 56, 11, 0.25)',
                       }}>
-                        <DollarOutlined style={{ color: '#FF380B', fontSize: isMobile ? 14 : 16 }} />
+                        <DollarOutlined style={{ color: 'var(--primary)', fontSize: isMobile ? 14 : 16 }} />
                         <Text style={{
                           color: 'var(--text)',
                           fontSize: isMobile ? 13 : 14,
@@ -403,8 +434,8 @@ export default function StaffDashboard() {
                           icon={<CalendarOutlined />}
                           style={{
                             background: '#fff',
-                            border: '1px solid #FF380B',
-                            color: '#FF380B',
+                            border: '1px solid var(--primary)',
+                            color: 'var(--primary)',
                             borderRadius: 10,
                             fontWeight: 600,
                             fontSize: isMobile ? 12 : 14,
@@ -424,7 +455,7 @@ export default function StaffDashboard() {
                           icon={<ShoppingCartOutlined />}
                           style={{
                             background: 'rgba(255, 255, 255, 0.95)',
-                            color: '#FF380B',
+                            color: 'white',
                             border: 'none',
                             borderRadius: 10,
                             fontWeight: 600,
@@ -487,8 +518,7 @@ export default function StaffDashboard() {
           </Card>
         </motion.div>
 
-        {/* Statistics Cards */}
-        <motion.div variants={itemVariants}>
+        {/* <motion.div variants={itemVariants}>
           <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ marginBottom: isMobile ? 16 : 24 }}>
             {statsData.map((stat, index) => (
               <Col xs={12} sm={12} lg={6} key={index} style={{ display: 'flex' }}>
@@ -585,7 +615,7 @@ export default function StaffDashboard() {
               </Col>
             ))}
           </Row>
-        </motion.div>
+        </motion.div> */}
 
         <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ display: 'flex', flexWrap: 'wrap' }}>
           {/* Recent Orders */}
@@ -599,7 +629,7 @@ export default function StaffDashboard() {
                         animate={{ rotate: [0, 10, -10, 0] }}
                         transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                       >
-                        <ShoppingCartOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
+                        <ShoppingCartOutlined style={{ color: 'var(--primary)', fontSize: isMobile ? 16 : 20 }} />
                       </motion.div>
                       <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>{t('staff.dashboard.recent_orders.title')}</span>
                       <Tag color="orange" style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12, margin: 0 }}>
@@ -608,7 +638,7 @@ export default function StaffDashboard() {
                     </Space>
                     <Link href="/staff/orders">
                       <motion.div whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
-                        <Button type="link" style={{ color: '#FF380B', fontWeight: 600, fontSize: isMobile ? 12 : 14, padding: isMobile ? '0 4px' : '0 15px' }}>
+                        <Button type="link" style={{ color: 'var(--primary)', fontWeight: 600, fontSize: isMobile ? 12 : 14, padding: isMobile ? '0 4px' : '0 15px' }}>
                           {t('staff.dashboard.recent_orders.view_all')} <RightOutlined />
                         </Button>
                       </motion.div>
@@ -645,7 +675,7 @@ export default function StaffDashboard() {
               <Card
                 title={
                   <Space>
-                    <TableOutlined style={{ color: '#FF380B', fontSize: isMobile ? 16 : 20 }} />
+                    <TableOutlined style={{ color: 'var(--primary)', fontSize: isMobile ? 16 : 20 }} />
                     <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>{t('staff.dashboard.table_status.title')}</span>
                   </Space>
                 }
@@ -676,7 +706,7 @@ export default function StaffDashboard() {
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <Text strong>{zone.zone}</Text>
+                      <Text strong>{zone.name}</Text>
                       <Text type="secondary">
                         <motion.span
                           key={zone.available}
@@ -699,7 +729,7 @@ export default function StaffDashboard() {
                         percent={(zone.occupied / zone.total) * 100}
                         showInfo={false}
                         strokeColor={{
-                          '0%': '#FF380B',
+                          '0%': 'var(--primary)',
                           '100%': '#FF6B3B',
                         }}
                         railColor="var(--border)"
@@ -728,7 +758,7 @@ export default function StaffDashboard() {
                             width: 8,
                             height: 8,
                             borderRadius: '50%',
-                            background: '#FF380B',
+                            background: 'var(--primary)',
                           }}
                         />
                         <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
@@ -754,7 +784,7 @@ export default function StaffDashboard() {
                           borderRadius: 12,
                           height: 48,
                           fontWeight: 600,
-                          background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+                          background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
                           border: 'none',
                           boxShadow: '0 4px 15px rgba(255, 56, 11, 0.3)',
                         }}
@@ -802,7 +832,7 @@ export default function StaffDashboard() {
           >
             <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}>
               {[
-                { icon: <TableOutlined />, title: t('staff.dashboard.quick_action_items.open_table'), color: '#FF380B', href: '/staff/tables' },
+                { icon: <TableOutlined />, title: t('staff.dashboard.quick_action_items.open_table'), color: 'var(--primary)', href: '/staff/tables' },
                 { icon: <ShoppingCartOutlined />, title: t('staff.dashboard.quick_action_items.create_order'), color: '#1890ff', href: '/staff/orders' },
                 { icon: <DollarOutlined />, title: t('staff.dashboard.quick_action_items.checkout'), color: '#52c41a', href: '/staff/checkout' },
                 { icon: <ClockCircleOutlined />, title: t('staff.dashboard.quick_action_items.attendance'), color: '#722ed1', href: '/staff/attendance' },
@@ -851,7 +881,7 @@ export default function StaffDashboard() {
         <style jsx global>{`
         .luxury-btn:hover {
           background: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : '#F8F8F8'} !important;
-          border-color: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.4)' : '#FF380B'} !important;
+          border-color: ${mode === 'dark' ? 'rgba(255, 56, 11, 0.4)' : 'var(--primary)'} !important;
           transform: translateY(-1px);
         }
         .welcome-btn:hover {
@@ -880,8 +910,12 @@ export default function StaffDashboard() {
           padding: 14px 20px !important;
           background: var(--card) !important;
           font-weight: 600;
-          color: var(--text-muted);
+          color: var(--text) !important;
           font-size: 13px;
+        }
+        .ant-table-wrapper .ant-table-thead > tr > th span,
+        .ant-table-wrapper .ant-table-thead > tr > th .ant-table-column-title {
+          color: var(--text) !important;
         }
         .ant-table-wrapper .ant-table-tbody > tr:hover > td {
           background: rgba(255, 56, 11, 0.08) !important;
@@ -903,6 +937,5 @@ export default function StaffDashboard() {
         }
       `}</style>
       </motion.div>
-    </PageTransition >
   );
 }

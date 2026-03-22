@@ -1,15 +1,14 @@
 'use client';
 
 import ThemeToggle from '@/app/components/ThemeToggle';
-import { useThemeMode } from '@/app/theme/AutoDarkThemeProvider';
+import { useThemeMode } from '@/app/theme/AntdProvider';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useTenant } from "@/lib/contexts/TenantContext";
+import authService, { User } from '@/lib/services/authService';
 import {
   CloseOutlined,
   DownOutlined,
   MenuOutlined,
-  SearchOutlined,
-  ShoppingCartOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Button, Drawer, Dropdown, Space } from 'antd';
@@ -19,21 +18,28 @@ import { useTranslation } from 'react-i18next';
 import Navbar from './Navbar';
 
 import { TenantConfig } from '@/lib/services/tenantService';
+import { Category } from '@/lib/services/categoryService';
 
 interface RestaurantHeaderProps {
   tenant: TenantConfig | null;
+  categories?: Category[];
 }
 
-const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant }) => {
+const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant, categories = [] }) => {
   const { t } = useTranslation();
   const { tenant: contextTenant } = useTenant();
   const tenant = propTenant || contextTenant;
   const { mode } = useThemeMode();
   const [scrolled, setScrolled] = useState(false);
+  
+  // Debug
+  console.log('[RestaurantHeader] tenant:', tenant);
+  console.log('[RestaurantHeader] businessName:', tenant?.businessName);
+  console.log('[RestaurantHeader] name:', tenant?.name);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [activeItem, setActiveItem] = useState('home');
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const headerContentColor = scrolled ? (mode === 'dark' ? 'white' : '#1a1a1a') : 'white';
 
   useEffect(() => {
@@ -45,17 +51,25 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
       setIsMobile(window.innerWidth < 768);
     };
 
+    const syncUserFromStorage = () => {
+      const localUser = authService.getCurrentUser();
+      setUser(localUser);
+    };
+
     handleResize();
+    syncUserFromStorage();
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleResize);
+    window.addEventListener('focus', syncUserFromStorage);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('focus', syncUserFromStorage);
     };
   }, []);
 
-  const menuItems = [
+  const menuItems = React.useMemo(() => [
     {
       key: 'home',
       label: t('restaurant.header.home'),
@@ -67,16 +81,21 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
       href: '/restaurant#about'
     },
     {
+      key: 'featured',
+      label: t('restaurant.header.featured'),
+      href: '/restaurant#featured'
+    },
+    {
       key: 'menu',
       label: (
         <Dropdown
           menu={{
             items: [
               { key: 'all', label: t('restaurant.header.menu.all') },
-              { key: 'appetizer', label: t('restaurant.header.menu.appetizer') },
-              { key: 'main', label: t('restaurant.header.menu.main') },
-              { key: 'dessert', label: t('restaurant.header.menu.dessert') },
-              { key: 'drink', label: t('restaurant.header.menu.drink') },
+              ...categories.map(cat => ({
+                key: cat.id,
+                label: cat.name,
+              })),
             ],
           }}>
           <Space style={{ color: 'inherit' }}>
@@ -88,21 +107,11 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
       href: '/restaurant#menu'
     },
     {
-      key: 'featured',
-      label: t('restaurant.header.featured'),
-      href: '/restaurant#featured'
-    },
-    {
-      key: 'daily',
-      label: t('restaurant.header.daily'),
-      href: '/restaurant#daily'
-    },
-    {
       key: 'news',
       label: t('restaurant.header.news'),
       href: '/restaurant#news'
     },
-  ];
+  ], [t, categories]);
 
   return (
     <header
@@ -123,25 +132,39 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
         style={{
           maxWidth: 1400,
           margin: '0 auto',
-          padding: '16px 24px',
+          padding: '12px 24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'nowrap',
+          gap: 16,
         }}>
         {/* Logo */}
-        <Link href="/restaurant" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+        <Link
+          href="/restaurant"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            textDecoration: 'none',
+            flexShrink: 0,
+            maxWidth: 280,
+            minWidth: 0,
+          }}
+        >
           <div
             style={{
-              width: 48,
-              height: 48,
+              width: 40,
+              height: 40,
+              flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
             }}>
             <img
-              src={(tenant?.logoUrl && tenant.logoUrl.trim() !== '') ? tenant.logoUrl : "/images/logo/restx-removebg-preview.png"}
-              alt="Restaurant Logo"
+              src={tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png"}
+              alt={tenant?.businessName || tenant?.name || "Restaurant Logo"}
               className="app-logo-img"
               style={{
                 width: '100%',
@@ -154,17 +177,20 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
           </div>
           <span
             style={{
-              fontSize: 20,
+              fontSize: 15,
               fontWeight: 700,
               color: headerContentColor,
-              fontFamily: 'serif',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              lineHeight: 1.2,
             }}>
-            {tenant?.name || t('restaurant.header.title')}
+            {tenant?.businessName || tenant?.name || t('restaurant.header.title')}
           </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
           <div style={{ display: isMobile ? 'none' : 'block' }}>
             <Navbar
               items={menuItems}
@@ -178,11 +204,65 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
             <LanguageSwitcher style={{ color: headerContentColor }} />
             <ThemeToggle style={{ color: headerContentColor }} />
 
-            <SearchOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
-            <UserOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
-            <ShoppingCartOutlined style={{ fontSize: 20, color: headerContentColor, cursor: 'pointer' }} />
+            {user ? (
+              <Dropdown
+                menu={{
+                  className: 'restaurant-user-dropdown-menu',
+                  style: { minWidth: 180 },
+                  items: [
+                    {
+                      key: 'logout',
+                      label: t('staff.user_menu.logout'),
+                      danger: true,
+                    },
+                  ],
+                  onClick: async ({ key }) => {
+                    if (key === 'logout') {
+                      await authService.logoutServer();
+                      authService.logout();
+                      setUser(null);
+                      window.location.href = '/login';
+                    }
+                  },
+                }}
+                trigger={['click']}>
+                <Space size={8} style={{ cursor: 'pointer' }}>
+                  <UserOutlined style={{ fontSize: 20, color: headerContentColor }} />
+                  {!isMobile && (
+                    <span
+                      style={{
+                        maxWidth: 140,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        color: headerContentColor,
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}>
+                      {user.fullName || user.name || user.email}
+                    </span>
+                  )}
+                </Space>
+              </Dropdown>
+            ) : (
+              <Button
+                type="text"
+                href="/login"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.22)',
+                  color: headerContentColor,
+                  borderRadius: 8,
+                  fontWeight: 600,
+                  height: 40,
+                  padding: '0 18px',
+                }}>
+                {t('homepage.header.login')}
+              </Button>
+            )}
             <Button
               type="primary"
+              href="#reservation"
               style={{
                 background: 'linear-gradient(135deg, #FF6B3B 0%, #CC2D08 100%)',
                 border: 'none',
@@ -259,7 +339,24 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant 
       </Drawer>
 
       {/* Keyframe animations */}
-      <style jsx>{`
+      <style jsx global>{`
+        .restaurant-user-dropdown-menu {
+          background: var(--card) !important;
+          border: 1px solid var(--border) !important;
+          border-radius: 12px !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
+          padding: 8px !important;
+        }
+
+        .restaurant-user-dropdown-menu .ant-dropdown-menu-item {
+          color: var(--text) !important;
+          border-radius: 8px !important;
+        }
+
+        .restaurant-user-dropdown-menu .ant-dropdown-menu-item:hover {
+          background: var(--surface-subtle) !important;
+        }
+
         @keyframes pulse {
           0%, 100% {
             opacity: 1;

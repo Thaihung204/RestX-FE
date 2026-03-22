@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, createContext, useContext } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 // Context to share animation ready state
 interface PageTransitionContextType {
@@ -102,7 +102,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
                 height: '50vw',
                 maxWidth: 500,
                 maxHeight: 500,
-                background: 'radial-gradient(circle, #FF380B 0%, transparent 70%)',
+                background: 'radial-gradient(circle, var(--primary) 0%, transparent 70%)',
                 borderRadius: '50%',
                 filter: 'blur(80px)',
               }}
@@ -138,7 +138,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
                   bottom: -12,
                   borderRadius: '50%',
                   border: '3px solid transparent',
-                  borderTopColor: '#FF380B',
+                  borderTopColor: 'var(--primary)',
                   borderRightColor: 'rgba(255, 56, 11, 0.3)',
                 }}
               />
@@ -181,7 +181,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
                 style={{
                   width: 80,
                   height: 80,
-                  background: 'linear-gradient(135deg, #FF380B 0%, #FF380B 100%)',
+                  background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
                   borderRadius: 20,
                   display: 'flex',
                   alignItems: 'center',
@@ -227,7 +227,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
               </motion.span>
               <motion.span
                 animate={{
-                  color: ['#FF380B', '#CC2D08', '#FF380B'],
+                  color: ['var(--primary)', '#CC2D08', 'var(--primary)'],
                 }}
                 transition={{
                   duration: 2,
@@ -268,7 +268,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({
                 style={{
                   width: '50%',
                   height: '100%',
-                  background: 'linear-gradient(90deg, transparent, #FF380B, transparent)',
+                  background: 'linear-gradient(90deg, transparent, var(--primary), transparent)',
                   borderRadius: 2,
                 }}
               />

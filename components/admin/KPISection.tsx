@@ -15,7 +15,7 @@ export default function KPISection() {
         icon={
           <svg
             className="w-6 h-6"
-            style={{ color: '#FF380B' }}
+            style={{ color: 'var(--primary)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -37,7 +37,7 @@ export default function KPISection() {
         icon={
           <svg
             className="w-6 h-6"
-            style={{ color: '#FF380B' }}
+            style={{ color: 'var(--primary)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -60,7 +60,7 @@ export default function KPISection() {
         icon={
           <svg
             className="w-6 h-6"
-            style={{ color: '#FF380B' }}
+            style={{ color: 'var(--primary)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -82,7 +82,7 @@ export default function KPISection() {
         icon={
           <svg
             className="w-6 h-6"
-            style={{ color: '#FF380B' }}
+            style={{ color: 'var(--primary)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -104,7 +104,7 @@ export default function KPISection() {
         icon={
           <svg
             className="w-6 h-6"
-            style={{ color: '#FF380B' }}
+            style={{ color: 'var(--primary)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -126,7 +126,7 @@ export default function KPISection() {
         icon={
           <svg
             className="w-6 h-6"
-            style={{ color: '#FF380B' }}
+            style={{ color: 'var(--primary)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">

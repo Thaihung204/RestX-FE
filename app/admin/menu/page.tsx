@@ -1,43 +1,56 @@
 "use client";
 
+import DishCard, { DishCardItem } from "@/components/admin/menu/DishCard";
+import { usePageLoading } from "@/components/PageTransitionLoader";
+import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
+import ingredientService, { IngredientItem } from "@/lib/services/ingredientService";
+import recipeService, { DishRecipeItem } from "@/lib/services/recipeService";
+import { App, Button, InputNumber, Modal, Select } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-interface MenuItem {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  image: string;
-  description: string;
-  available: boolean;
-  isBestSeller: boolean;
+interface MenuItem extends DishCardItem {
+  categoryId: string;
 }
 
 export default function MenuPage() {
   const { t } = useTranslation();
+  const { message, modal } = App.useApp();
 
   const formatPrice = (price: number) => {
     return price.toLocaleString("vi-VN");
   };
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  usePageLoading(loading);
   const [error, setError] = useState<string | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+
+  const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
+  const [ingredientsLoading, setIngredientsLoading] = useState(false);
+  const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+  const [activeDish, setActiveDish] = useState<MenuItem | null>(null);
+  const [dishRecipes, setDishRecipes] = useState<DishRecipeItem[]>([]);
+  const [loadingRecipes, setLoadingRecipes] = useState(false);
+  const [selectedIngredientId, setSelectedIngredientId] = useState<string>();
+  const [quantity, setQuantity] = useState<number | null>(1);
+  const [savingRecipe, setSavingRecipe] = useState(false);
 
   const fetchMenuItems = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const data = await dishService.getDishes(1, 100);
+      const [data, categoryData] = await Promise.all([
+        dishService.getDishes(1, 100),
+        categoryService.getCategories(),
+      ]);
+
+      setDbCategories((categoryData || []).filter((c) => c.isActive !== false));
+      message.success(t("dashboard.menu.toasts.fetch_success_message"));
       const arrayData =
         data.dishes ||
         data.data ||
@@ -51,12 +64,26 @@ export default function MenuPage() {
             item.dishId?.toString() ||
             `dish-${index}-${Date.now()}`,
           name: item.name || "",
-          category: item.categoryName || item.category || "Main Course",
+          categoryId:
+            item.categoryId?.toString() ||
+            item.category?.id?.toString() ||
+            item.category?.categoryId?.toString() ||
+            "",
+          categoryName:
+            item.categoryName?.trim() ||
+            item.category?.categoryName?.trim() ||
+            item.category?.name?.trim() ||
+            item.category?.trim() ||
+            "",
           price: item.price || 0,
           image:
             item.mainImageUrl ||
             item.imageUrl ||
             item.image ||
+            (item.images && item.images.length > 0
+              ? (item.images.find((img: any) => img.imageType === 0) ||
+                  item.images[0]).imageUrl
+              : null) ||
             "/placeholder-dish.jpg",
           description: item.description || "",
           available:
@@ -72,69 +99,184 @@ export default function MenuPage() {
         setMenuItems(mappedData);
         setError(null);
       } else {
-        setError("Data structure not supported");
+        setError(t("dashboard.menu.errors.load_failed"));
       }
-    } catch (err: any) {
-      if (err.response) {
-        setError(
-          `API Error: ${err.response?.status} - ${err.response?.data?.message || err.message}`,
-        );
-      } else if (err.request) {
-        setError("Network Error: No response from server");
-      } else {
-        setError(
-          err instanceof Error ? err.message : "Failed to load menu items",
-        );
-      }
+    } catch {
+      setError(t("dashboard.menu.errors.load_failed"));
+      message.error(t("dashboard.menu.toasts.fetch_error_message"));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchMenuItems();
-  }, []);
-
-  const handleDelete = async (id: string, name: string) => {
-    setItemToDelete({ id, name });
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
-
+  const fetchIngredients = async () => {
     try {
-      await dishService.deleteDish(itemToDelete.id);
-      setShowDeleteConfirm(false);
-      setItemToDelete(null);
-      await fetchMenuItems();
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || err.message || "Unknown error";
-      alert(`Failed to delete item: ${errorMsg}`);
-      setShowDeleteConfirm(false);
-      setItemToDelete(null);
+      setIngredientsLoading(true);
+      const data = await ingredientService.getAll();
+      setIngredients(data.filter((item) => item.isActive !== false));
+    } catch {
+      message.error(t("dashboard.menu.ingredients.errors.fetch_ingredients"));
+    } finally {
+      setIngredientsLoading(false);
     }
   };
 
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
-    setItemToDelete(null);
+  const fetchRecipes = async (dishId: string) => {
+    try {
+      setLoadingRecipes(true);
+      const data = await recipeService.getByDishId(dishId);
+      setDishRecipes(data);
+    } catch {
+      message.error(t("dashboard.menu.ingredients.errors.fetch_recipes"));
+    } finally {
+      setLoadingRecipes(false);
+    }
   };
 
-  const categories = useMemo(() => {
-    const uniqueCategories = Array.from(
-      new Set(menuItems.map((item) => item.category)),
-    ).sort();
-    return ["All", ...uniqueCategories];
-  }, [menuItems]);
+  useEffect(() => {
+    fetchMenuItems();
+    fetchIngredients();
+  }, []);
 
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const handleToggleStatus = async (item: DishCardItem) => {
+    const nextStatus = !item.available;
+    modal.confirm({
+      title: nextStatus
+        ? t("dashboard.menu.ingredients.status.activate_title")
+        : t("dashboard.menu.ingredients.status.deactivate_title"),
+      content: (
+        <>
+          {nextStatus
+            ? t("dashboard.menu.ingredients.status.activate_confirm", {
+                name: item.name,
+              })
+            : t("dashboard.menu.ingredients.status.deactivate_confirm", {
+                name: item.name,
+              })}
+        </>
+      ),
+      okText: nextStatus
+        ? t("dashboard.menu.ingredients.status.activate_action")
+        : t("dashboard.menu.ingredients.status.deactivate_action"),
+      okType: nextStatus ? "primary" : "danger",
+      cancelText: t("dashboard.menu.modal.cancel"),
+      onOk: async () => {
+        try {
+          await dishService.toggleDishStatus(item.id, nextStatus);
+          message.success(
+            nextStatus
+              ? t("dashboard.menu.ingredients.status.activate_success", {
+                  name: item.name,
+                })
+              : t("dashboard.menu.ingredients.status.deactivate_success", {
+                  name: item.name,
+                }),
+          );
+          await fetchMenuItems();
+        } catch {
+          message.error(t("dashboard.menu.ingredients.status.update_failed"));
+        }
+      },
+    });
+  };
+
+  const handleOpenIngredients = async (item: DishCardItem) => {
+    const dish = menuItems.find((menuItem) => menuItem.id === item.id) || null;
+    setActiveDish(dish);
+    setRecipeModalOpen(true);
+    setSelectedIngredientId(undefined);
+    setQuantity(1);
+    await fetchRecipes(item.id);
+  };
+
+  const handleAddRecipe = async () => {
+    if (!activeDish) return;
+    if (!selectedIngredientId) {
+      message.warning(t("dashboard.menu.ingredients.validation.select_ingredient"));
+      return;
+    }
+    if (!quantity || quantity <= 0) {
+      message.warning(t("dashboard.menu.ingredients.validation.invalid_quantity"));
+      return;
+    }
+
+    try {
+      setSavingRecipe(true);
+      await recipeService.create({
+        dishId: activeDish.id,
+        ingredientId: selectedIngredientId,
+        quantity,
+      });
+      message.success(t("dashboard.menu.ingredients.toasts.add_success"));
+      await fetchRecipes(activeDish.id);
+      setSelectedIngredientId(undefined);
+      setQuantity(1);
+    } catch {
+      message.error(t("dashboard.menu.ingredients.toasts.add_error"));
+    } finally {
+      setSavingRecipe(false);
+    }
+  };
+
+  const handleUpdateRecipe = async (recipe: DishRecipeItem) => {
+    if (!recipe.id || !activeDish) return;
+    if (!recipe.quantity || recipe.quantity <= 0) {
+      message.warning(t("dashboard.menu.ingredients.validation.invalid_quantity"));
+      return;
+    }
+
+    try {
+      setSavingRecipe(true);
+      await recipeService.update(recipe.id, {
+        ...recipe,
+        dishId: activeDish.id,
+      });
+      message.success(t("dashboard.menu.ingredients.toasts.update_success"));
+      await fetchRecipes(activeDish.id);
+    } catch {
+      message.error(t("dashboard.menu.ingredients.toasts.update_error"));
+    } finally {
+      setSavingRecipe(false);
+    }
+  };
+
+  const handleDeleteRecipe = async (recipe: DishRecipeItem) => {
+    if (!recipe.id || !activeDish) return;
+    try {
+      setSavingRecipe(true);
+      await recipeService.delete(recipe.id);
+      message.success(t("dashboard.menu.ingredients.toasts.delete_success"));
+      await fetchRecipes(activeDish.id);
+    } catch {
+      message.error(t("dashboard.menu.ingredients.toasts.delete_error"));
+    } finally {
+      setSavingRecipe(false);
+    }
+  };
+
+  const categoryFilters = useMemo(() => {
+    return [
+      { id: "All", name: t("dashboard.menu.categories.all") },
+      ...dbCategories
+        .map((category) => ({
+          id: category.id,
+          name: category.name,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    ];
+  }, [dbCategories, t]);
+
+  const [selectedCategoryId, setSelectedCategoryId] = useState("All");
 
   const filteredItems =
-    selectedCategory === "All"
+    selectedCategoryId === "All"
       ? menuItems
-      : menuItems.filter((item) => item.category === selectedCategory);
+      : menuItems.filter((item) => item.categoryId === selectedCategoryId);
+
+  const ingredientOptions = ingredients.map((ingredient) => ({
+    value: ingredient.id || "",
+    label: `${ingredient.name} (${ingredient.unit})`,
+  }));
 
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -154,16 +296,14 @@ export default function MenuPage() {
           <Link href="/admin/menu/new">
             <button
               className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-              style={{
-                background: "linear-gradient(to right, #FF380B, #CC2D08)",
-              }}
+              style={{ background: "var(--primary)", color: "white" }}
               onMouseEnter={(e) =>
-              (e.currentTarget.style.background =
-                "linear-gradient(to right, #CC2D08, #B32607)")
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, #B32607)")
               }
               onMouseLeave={(e) =>
-              (e.currentTarget.style.background =
-                "linear-gradient(to right, #FF380B, #CC2D08)")
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, var(--primary))")
               }
               suppressHydrationWarning>
               <svg
@@ -264,7 +404,7 @@ export default function MenuPage() {
                 </p>
                 <p
                   className="text-3xl font-bold mt-1"
-                  style={{ color: "#FF380B" }}>
+                  style={{ color: "var(--primary)" }}>
                   {menuItems.filter((i) => i.isBestSeller).length}
                 </p>
               </div>
@@ -273,7 +413,7 @@ export default function MenuPage() {
                 style={{ backgroundColor: "rgba(255,56,11,0.1)" }}>
                 <svg
                   className="w-6 h-6"
-                  style={{ color: "#FF380B" }}
+                  style={{ color: "var(--primary)" }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24">
@@ -300,7 +440,7 @@ export default function MenuPage() {
                   {t("dashboard.menu.stats.categories")}
                 </p>
                 <p className="text-3xl font-bold text-purple-500 mt-1">
-                  {categories.length - 1}
+                  {categoryFilters.length - 1}
                 </p>
               </div>
               <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
@@ -326,7 +466,7 @@ export default function MenuPage() {
           <div className="flex items-center justify-center py-12">
             <div
               className="animate-spin rounded-full h-12 w-12 border-b-2"
-              style={{ borderColor: "#FF380B" }}></div>
+              style={{ borderColor: "var(--primary)" }}></div>
             <p className="ml-4" style={{ color: "var(--text-muted)" }}>
               {t("dashboard.menu.loading")}
             </p>
@@ -335,10 +475,25 @@ export default function MenuPage() {
 
         {/* Error State */}
         {error && !loading && (
-          <div className="rounded-xl p-4 bg-red-500/10 border border-red-500/20">
-            <p className="text-red-500 font-medium">⚠️ {error}</p>
+          <div className="flex flex-col items-center justify-center py-12">
+            <svg
+              className="w-16 h-16 mb-4"
+              style={{ color: "var(--text-muted)" }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+              />
+            </svg>
+            <p className="text-lg font-medium" style={{ color: "var(--text)" }}>
+              {t("dashboard.menu.no_items")}
+            </p>
             <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
-              Please check your API connection
+              {t("dashboard.menu.errors.retry_hint")}
             </p>
           </div>
         )}
@@ -348,26 +503,25 @@ export default function MenuPage() {
           <>
             {/* Category Filter */}
             <div className="flex gap-2 flex-wrap">
-              {categories.map((category) => (
+              {categoryFilters.map((category) => (
                 <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
+                  key={category.id}
+                  onClick={() => setSelectedCategoryId(category.id)}
                   className={`px-4 py-2 rounded-lg font-medium transition-all`}
                   style={
-                    selectedCategory === category
+                    selectedCategoryId === category.id
                       ? {
-                        background:
-                          "linear-gradient(to right, #FF380B, #CC2D08)",
-                        color: "white",
-                      }
+                          background: "linear-gradient(to right, var(--primary))",
+                          color: "white",
+                        }
                       : {
-                        background: "var(--surface)",
-                        color: "var(--text-muted)",
-                        border: "1px solid var(--border)",
-                      }
+                          background: "var(--surface)",
+                          color: "var(--text-muted)",
+                          border: "1px solid var(--border)",
+                        }
                   }
                   suppressHydrationWarning>
-                  {category === "All" ? t("dashboard.menu.categories.all") : category}
+                  {category.name}
                 </button>
               ))}
             </div>
@@ -388,186 +542,40 @@ export default function MenuPage() {
                     d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                   />
                 </svg>
-                <p
-                  className="text-lg font-medium"
-                  style={{ color: "var(--text)" }}>
+                <p className="text-lg font-medium" style={{ color: "var(--text)" }}>
                   {t("dashboard.menu.no_items")}
                 </p>
-                <p
-                  className="text-sm mt-2"
-                  style={{ color: "var(--text-muted)" }}>
-                  {selectedCategory === "All"
+                <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
+                  {selectedCategoryId === "All"
                     ? t("dashboard.menu.add_first_item")
-                    : t("dashboard.menu.empty_category", { category: selectedCategory })}
+                    : t("dashboard.menu.empty_category", {
+                        category:
+                          categoryFilters.find((c) => c.id === selectedCategoryId)
+                            ?.name || "",
+                      })}
                 </p>
               </div>
             ) : (
-              /* Menu Items Grid */
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
                 {filteredItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-xl overflow-hidden transition-all group"
-                    style={{
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                    }}
-                    onMouseEnter={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      "rgba(255,56,11,0.5)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.borderColor = "var(--border)")
-                    }>
-                    {/* Image */}
-                    <div
-                      className="relative overflow-hidden"
-                      style={{
-                        background: "var(--surface)",
-                        aspectRatio: "4/3",
-                      }}>
-                      {item.image && item.image !== "/placeholder-dish.jpg" ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <svg
-                            className="w-16 h-16"
-                            style={{ color: "var(--text-muted)" }}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                      {item.isBestSeller && (
-                        <div
-                          className="absolute top-3 right-3 px-3 py-1 rounded-full text-white text-xs font-bold flex items-center gap-1"
-                          style={{ backgroundColor: "#FF380B" }}>
-                          <svg
-                            className="w-3 h-3"
-                            fill="currentColor"
-                            viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                          {t("dashboard.menu.best_seller")}
-                        </div>
-                      )}
-                      {!item.available && (
-                        <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                          <span className="px-4 py-2 bg-red-500 text-white rounded-lg font-bold">
-                            {t("dashboard.menu.out_of_stock")}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-3">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h3
-                            className="text-sm font-bold mb-1 line-clamp-1"
-                            style={{ color: "var(--text)" }}>
-                            {item.name}
-                          </h3>
-                          <p
-                            className="text-xs line-clamp-2"
-                            style={{ color: "var(--text-muted)" }}>
-                            {item.description || t("dashboard.menu.no_description")}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between mt-3 gap-1">
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className="text-[10px] sm:text-xs"
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("dashboard.menu.price")}
-                          </p>
-                          <p
-                            className="text-sm sm:text-base md:text-lg lg:text-xl font-bold truncate"
-                            style={{ color: "#FF380B" }}>
-                            {formatPrice(item.price)}đ
-                          </p>
-                        </div>
-                        <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-blue-500/10 text-blue-500 rounded-full text-[9px] sm:text-[10px] md:text-xs font-medium border border-blue-500/20 whitespace-nowrap flex-shrink-0 max-w-[45%] truncate">
-                          {item.category}
-                        </span>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2 mt-4">
-                        <Link
-                          href={`/admin/menu/${item.id}`}
-                          className="flex-1">
-                          <button
-                            className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                            style={{
-                              backgroundColor: "rgba(255,56,11,0.1)",
-                              color: "#FF380B",
-                            }}
-                            onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "rgba(255,56,11,0.2)")
-                            }
-                            onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "rgba(255,56,11,0.1)")
-                            }
-                            suppressHydrationWarning>
-                            {t("dashboard.menu.edit")}
-                          </button>
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(item.id, item.name)}
-                          className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                          style={{
-                            background: "var(--surface)",
-                            color: "var(--text-muted)",
-                            border: "1px solid var(--border)",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background =
-                              "rgba(239, 68, 68, 0.1)";
-                            e.currentTarget.style.borderColor =
-                              "rgba(239, 68, 68, 0.2)";
-                            e.currentTarget.style.color = "#ef4444";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "var(--surface)";
-                            e.currentTarget.style.borderColor = "var(--border)";
-                            e.currentTarget.style.color = "var(--text-muted)";
-                          }}
-                          suppressHydrationWarning>
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
+                  <div key={item.id} className="space-y-2">
+                    <DishCard
+                      item={item}
+                      formatPrice={formatPrice}
+                      onToggleStatus={handleToggleStatus}
+                      onAddIngredients={handleOpenIngredients}
+                      labels={{
+                        bestSeller: t("dashboard.menu.best_seller"),
+                        outOfStock: t("dashboard.menu.out_of_stock"),
+                        noDescription: t("dashboard.menu.no_description"),
+                        price: t("dashboard.menu.price"),
+                        edit: t("dashboard.menu.edit"),
+                        ingredients: t("dashboard.menu.ingredients.actions.ingredients"),
+                        activate: t("dashboard.menu.ingredients.actions.activate"),
+                        deactivate: t("dashboard.menu.ingredients.actions.deactivate"),
+                        status_icon_label: t("dashboard.menu.ingredients.actions.status_icon_label"),
+                      }}
+                    />
                   </div>
                 ))}
               </div>
@@ -576,82 +584,110 @@ export default function MenuPage() {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0, 0, 0, 0.7)" }}
-          onClick={cancelDelete}>
-          <div
-            className="rounded-2xl shadow-2xl max-w-md w-full"
-            style={{
-              background: "var(--card)",
-              border: "1px solid var(--border)",
-            }}
-            onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              <div className="flex justify-center mb-4">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(239, 68, 68, 0.1)" }}>
-                  <svg
-                    className="w-8 h-8 text-red-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                </div>
+      <Modal
+        title={
+          activeDish
+            ? t("dashboard.menu.ingredients.modal.title", { name: activeDish.name })
+            : t("dashboard.menu.ingredients.modal.title_empty")
+        }
+        open={recipeModalOpen}
+        onCancel={() => setRecipeModalOpen(false)}
+        footer={null}
+        width={640}
+        destroyOnClose>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_140px_120px] gap-3">
+            <Select
+              showSearch
+              placeholder={t("dashboard.menu.ingredients.modal.select_placeholder")}
+              options={ingredientOptions}
+              value={selectedIngredientId}
+              loading={ingredientsLoading}
+              onChange={(value) => setSelectedIngredientId(value)}
+              optionFilterProp="label"
+            />
+            <InputNumber
+              min={0.01}
+              step={0.1}
+              value={quantity ?? undefined}
+              onChange={(value) => setQuantity(value)}
+              placeholder={t("dashboard.menu.ingredients.modal.quantity_placeholder")}
+              className="w-full"
+            />
+            <Button
+              type="primary"
+              onClick={handleAddRecipe}
+              loading={savingRecipe}
+              className="w-full">
+              {t("dashboard.menu.ingredients.actions.add")}
+            </Button>
+          </div>
+
+          <div className="border rounded-lg" style={{ borderColor: "var(--border)" }}>
+            {loadingRecipes ? (
+              <div className="p-4 text-sm" style={{ color: "var(--text-muted)" }}>
+                {t("dashboard.menu.ingredients.modal.loading_recipes")}
               </div>
-
-              <h3
-                className="text-xl font-bold text-center mb-2"
-                style={{ color: "var(--text)" }}>
-                {t("dashboard.menu.modal.delete_title")}
-              </h3>
-
-              <p
-                className="text-center mb-6"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.menu.modal.delete_confirm")}{" "}
-                <span
-                  className="font-semibold"
-                  style={{ color: "var(--text)" }}>
-                  &quot;{itemToDelete?.name}&quot;
-                </span>
-                ? {t("dashboard.menu.modal.cannot_undo")}
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={cancelDelete}
-                  className="flex-1 px-4 py-3 rounded-lg font-medium transition-all"
-                  style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    color: "var(--text)",
-                  }}>
-                  {t("dashboard.menu.modal.cancel")}
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="flex-1 px-4 py-3 rounded-lg font-medium transition-all text-white"
-                  style={{
-                    background: "linear-gradient(to right, #ef4444, #dc2626)",
-                    boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)",
-                  }}>
-                  {t("dashboard.menu.modal.delete")}
-                </button>
+            ) : dishRecipes.length === 0 ? (
+              <div className="p-4 text-sm" style={{ color: "var(--text-muted)" }}>
+                {t("dashboard.menu.ingredients.modal.empty_recipes")}
               </div>
-            </div>
+            ) : (
+              <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+                {dishRecipes.map((recipe) => {
+                  const ingredientName =
+                    recipe.ingredientName ||
+                    ingredients.find((item) => item.id === recipe.ingredientId)
+                      ?.name ||
+                    "";
+                  return (
+                    <div key={recipe.id || recipe.ingredientId} className="p-3">
+                      <div className="flex flex-col md:flex-row md:items-center gap-3">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                            {ingredientName}
+                          </p>
+                        </div>
+                        <InputNumber
+                          min={0.01}
+                          step={0.1}
+                          value={recipe.quantity}
+                          onChange={(value) =>
+                            setDishRecipes((prev) =>
+                              prev.map((r) =>
+                                r.ingredientId === recipe.ingredientId
+                                  ? { ...r, quantity: value || 0 }
+                                  : r,
+                              ),
+                            )
+                          }
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleUpdateRecipe(recipe)}
+                            loading={savingRecipe}
+                            type="primary"
+                            ghost
+                            className="min-w-[72px]">
+                            {t("dashboard.menu.ingredients.actions.save")}
+                          </Button>
+                          <Button
+                            danger
+                            onClick={() => handleDeleteRecipe(recipe)}
+                            loading={savingRecipe}
+                            className="min-w-[72px]">
+                            {t("dashboard.menu.ingredients.actions.delete")}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </Modal>
     </main>
   );
 }

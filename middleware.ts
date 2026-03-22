@@ -11,19 +11,18 @@ export function middleware(req: NextRequest) {
   // Super Admin domain - serve /tenants (manage all tenants)
   const ADMIN_DOMAIN = 'admin.restx.food';
 
-  // Development domains - no routing logic
-  const DEVELOPMENT_DOMAINS = new Set(["localhost", "127.0.0.1"]);
+  // Custom tenant domains (mapped in DB)
+  const CUSTOM_TENANT_DOMAINS = new Set([
+    "lebon.io.vn",
+  ]);
 
-  // Public routes accessible on any domain
+  // Public routes accessible on any domain (no auth needed)
   const PUBLIC_ROUTES = new Set([
     "/login",
     "/login-email",
-    "/login-admin",
     "/register",
     "/forgot-password",
     "/restaurant",
-    "/customer",
-    "/menu",
     "/reset-password",
   ]);
 
@@ -38,19 +37,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow public routes on any domain
-  const isPublicRoute =
-    PUBLIC_ROUTES.has(pathname) ||
-    pathname.startsWith('/restaurant') ||
-    pathname.startsWith('/customer') ||
-    pathname.startsWith('/menu');
-
-  if (isPublicRoute) {
-    return NextResponse.next();
-  }
-
-  // Development mode - allow all routes for plain localhost
-  // But NOT for subdomains like demo.localhost (those are treated as tenant domains)
+  // Development mode - allow all routes for plain localhost (no subdomain)
   const isPlainDevelopment =
     host === 'localhost' ||
     host.startsWith('localhost:') ||
@@ -61,55 +48,124 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Landing domains (restx.food, www.restx.food) - serve public landing page
+  // Landing domains (restx.food, www.restx.food)
   if (LANDING_DOMAINS.has(host)) {
     return NextResponse.next();
   }
 
-  // Super Admin domain (admin.restx.food or admin.localhost) - route to /tenants
   const hostWithoutPort = host.includes(':') ? host.split(':')[0] : host;
   const isAdminDomain = host === ADMIN_DOMAIN || hostWithoutPort === 'admin.localhost';
 
+  // ── Auth token check (read cookie set by authService on login) ──
+  const accessToken = req.cookies.get('accessToken')?.value;
+  const hasAuthToken = !!accessToken;
+  
+  const adminAccessToken = req.cookies.get('adminAccessToken')?.value;
+  const hasAdminAuthToken = !!adminAccessToken;
+
+  // Super Admin domain (admin.restx.food or admin.localhost)
   if (isAdminDomain) {
+    // Canonical login path: /login (rewrite to admin login page)
+    if (pathname === '/login') {
+      // If already logged in, go to home (which will redirect to /tenants)
+      if (hasAdminAuthToken) {
+        return NextResponse.redirect(new URL('/tenants', req.url));
+      }
+      return NextResponse.rewrite(new URL('/login-admin', req.url));
+    }
+
+    // Backward compatibility: redirect /login-admin to /login
+    if (pathname === '/login-admin') {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
+    // Require admin token for all other paths on the admin domain
+    if (!hasAdminAuthToken) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
+    // Redirect root to /tenants
     if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/tenants', req.url));
+      return NextResponse.redirect(new URL('/tenants', req.url));
     }
+    
+    return NextResponse.next();
+  }
 
-    if (pathname.startsWith('/tenants')) {
-      return NextResponse.next();
-    }
+  // Allow public routes on any domain
+  const isPublicRoute =
+    PUBLIC_ROUTES.has(pathname) ||
+    pathname.startsWith('/restaurant');
 
-    return NextResponse.rewrite(new URL(`/tenants${pathname}`, req.url));
+  if (isPublicRoute) {
+    return NextResponse.next();
   }
 
   // Tenant domains:
-  // - Production: *.restx.food (excluding www, admin, and root)
+  // - Production: *.restx.food (excluding www, admin, root)
   // - Development: *.localhost (e.g., demo.localhost:3000, excluding admin.localhost)
   const isTenantDomain =
-    (host.endsWith('.restx.food') && !LANDING_DOMAINS.has(host) && host !== ADMIN_DOMAIN) ||
-    (host.includes('.localhost') && hostWithoutPort !== 'admin.localhost');
+    CUSTOM_TENANT_DOMAINS.has(hostWithoutPort) ||
+    (host.endsWith('.restx.food') &&
+      !LANDING_DOMAINS.has(host) &&
+      host !== ADMIN_DOMAIN) ||
+    (host.includes('.localhost') &&
+      hostWithoutPort !== 'admin.localhost');
 
   if (isTenantDomain) {
-    // Root path → restaurant page (for customers)
+    // Block admin tenants routes on tenant domains
+    if (pathname === '/tenants' || pathname.startsWith('/tenants/')) {
+      const port = host.includes(':') ? host.split(':')[1] : '';
+      const adminHost = hostWithoutPort.endsWith('localhost')
+        ? `admin.localhost${port ? `:${port}` : ''}`
+        : ADMIN_DOMAIN;
+      const adminLoginUrl = new URL(req.nextUrl);
+      adminLoginUrl.host = adminHost;
+      adminLoginUrl.pathname = '/login';
+      adminLoginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(adminLoginUrl);
+    }
+
+    // Root path → restaurant landing page
     if (pathname === '/') {
       return NextResponse.rewrite(new URL('/restaurant', req.url));
     }
 
-    // Tenant admin routes → allow through
+    // ── Protect /admin/* — require auth token in cookie ──
     if (pathname.startsWith('/admin')) {
+      if (!hasAuthToken) {
+        const loginUrl = new URL('/login-email', req.url);
+        // Pass redirect so login page can send user back after login
+        loginUrl.searchParams.set('redirect', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+      // Has token → let AdminAuthGuard do the role check on client
       return NextResponse.next();
     }
 
-    // Staff routes → allow through
+    // Customer-facing authenticated routes: require access token
+    if (
+      (pathname === '/customer' || pathname.startsWith('/customer/')) ||
+      (pathname === '/menu' || pathname.startsWith('/menu/'))
+    ) {
+      if (!hasAuthToken) {
+        const loginUrl = new URL('/login', req.url);
+        loginUrl.searchParams.set('redirect', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+      return NextResponse.next();
+    }
+
+    // Staff routes
     if (pathname.startsWith('/staff')) {
       return NextResponse.next();
     }
 
-    // Other paths → allow through (could be /restaurant, /customer, /menu, etc)
+    // All other paths
     return NextResponse.next();
   }
 
-  // Unknown domain - allow through
+  // Unknown domain
   return NextResponse.next();
 }
 

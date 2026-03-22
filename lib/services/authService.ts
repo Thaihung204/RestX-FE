@@ -38,7 +38,7 @@ export interface User {
   email: string;
   name?: string;  // Frontend format
   fullName?: string;  // Backend format
-  role?: 'user' | 'admin' | 'shop';  // Frontend format (single role)
+  role?: string;  // Primary role from backend (e.g., 'Admin', 'Waiter', 'Kitchen Staff', 'Customer', 'System Admin')
   roles?: string[];  // Backend format (array of roles)
   phoneNumber?: string;  // Backend format
   avatar?: string;
@@ -61,6 +61,23 @@ export interface GenericResponse {
   success: boolean;
   message?: string;
   error?: string;
+}
+
+// ── Cookie helpers (middleware runs server-side, needs cookie not localStorage) ──
+function setAuthCookie(token: string, rememberMe: boolean) {
+  if (typeof document === 'undefined') return;
+  if (rememberMe) {
+    const maxAge = 8 * 60 * 60; // 8 hours in seconds
+    document.cookie = `accessToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    return;
+  }
+  // Session cookie (cleared when browser closes)
+  document.cookie = `accessToken=${token}; path=/; SameSite=Lax`;
+}
+
+function clearAuthCookie() {
+  if (typeof document === 'undefined') return;
+  document.cookie = 'accessToken=; path=/; max-age=0; SameSite=Lax';
 }
 
 const authService = {
@@ -162,16 +179,28 @@ const authService = {
         customerId: user.customerId,  // Preserve customerId from backend
         name: user.name || user.fullName || user.email.split('@')[0],
         fullName: user.fullName || user.name || user.email.split('@')[0],
-        role: user.role || (user.roles && user.roles[0]?.toLowerCase() as 'user' | 'admin' | 'shop') || 'user',
-        roles: user.roles || (user.role ? [user.role] : ['user']),
+        role: user.role || (user.roles && user.roles[0]) || 'Customer',
+        roles: user.roles || (user.role ? [user.role] : ['Customer']),
       };
 
-      // Lưu thông tin vào localStorage
-      localStorage.setItem('accessToken', tokens.accessToken);
+      const shouldRemember = !!credentials.rememberMe;
+      const storage = shouldRemember ? localStorage : sessionStorage;
+
+      // Lưu thông tin vào storage theo rememberMe
+      storage.setItem('accessToken', tokens.accessToken);
       if (tokens.refreshToken) {
-        localStorage.setItem('refreshToken', tokens.refreshToken);
+        storage.setItem('refreshToken', tokens.refreshToken);
       }
-      localStorage.setItem('userInfo', JSON.stringify(normalizedUser));
+      storage.setItem('userInfo', JSON.stringify(normalizedUser));
+
+      if (!shouldRemember) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userInfo');
+      }
+
+      // Lưu token vào cookie để middleware có thể đọc (server-side auth check)
+      setAuthCookie(tokens.accessToken, shouldRemember);
 
       console.log('Login successful, user:', normalizedUser);
       return normalizedUser;
@@ -293,8 +322,8 @@ const authService = {
         ...user,
         name: user.name || user.fullName || user.email.split('@')[0],
         fullName: user.fullName || user.name || user.email.split('@')[0],
-        role: user.role || (user.roles && user.roles[0]?.toLowerCase() as 'user' | 'admin' | 'shop') || 'user',
-        roles: user.roles || (user.role ? [user.role] : ['user']),
+        role: user.role || (user.roles && user.roles[0]) || 'Customer',
+        roles: user.roles || (user.role ? [user.role] : ['Customer']),
       };
 
       // Lưu thông tin vào localStorage (nếu có tokens)
@@ -351,17 +380,32 @@ const authService = {
     }
   },
 
-  // Logout user
+  // Call logout API (invalidate server-side session/token if backend supports)
+  async logoutServer(): Promise<void> {
+    try {
+      await axiosInstance.post('/auth/logout');
+    } catch (error) {
+      // Không chặn luồng logout ở client nếu API lỗi
+      console.warn('Logout API error:', error);
+    }
+  },
+
+  // Logout user on client
   logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userInfo');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('userInfo');
+    // Xóa cookie để middleware biết user đã logout
+    clearAuthCookie();
   },
 
   // Get current user
   getCurrentUser(): User | null {
     if (typeof window === 'undefined') return null;
-    const userInfo = localStorage.getItem('userInfo');
+    const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
     return userInfo ? JSON.parse(userInfo) : null;
   },
 
@@ -387,12 +431,12 @@ const authService = {
 
   getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('accessToken');
+    return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
   },
 
   getRefreshToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('refreshToken');
+    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
   },
 
   // Change Password (requires authentication)

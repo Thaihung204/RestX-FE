@@ -1,9 +1,16 @@
 "use client";
 
-import LoginButton from "@/components/auth/LoginButton";
+import { HeroSection } from "@/components/auth/HeroSection";
+import { GlassInput } from "@/components/ui/GlassInput";
 import authService from "@/lib/services/authService";
+import { MailOutlined, SendOutlined } from "@ant-design/icons";
+import { message } from "antd";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useTenant } from "@/lib/contexts/TenantContext";
+
+const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation('auth');
@@ -12,36 +19,19 @@ export default function ForgotPasswordPage() {
   const [emailError, setEmailError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [checkingEmail, setCheckingEmail] = useState(false);
 
   const validateEmail = (email: string) => {
     if (!email) {
       setEmailError(t('forgot_password_page.validation.required_email'));
       return false;
     }
-
-    // Improved email regex validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       setEmailError(t('forgot_password_page.validation.invalid_email'));
       return false;
     }
-
     setEmailError("");
     return true;
-  };
-
-  const checkEmailExists = async (email: string) => {
-    setCheckingEmail(true);
-
-    return new Promise<boolean>((resolve) => {
-      setTimeout(() => {
-        // Simulate: emails containing "test" don't exist in DB
-        const exists = !email.toLowerCase().includes("test");
-        setCheckingEmail(false);
-        resolve(exists);
-      }, 500);
-    });
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,138 +42,141 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  const handleEmailBlur = () => {
-    setEmailTouched(true);
-    if (!email) {
-      setEmailError(t('forgot_password_page.validation.required_email'));
-    } else {
-      validateEmail(email);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setEmailTouched(true);
 
-    // Check if email is empty first
     if (!email || !email.trim()) {
       setEmailError(t('forgot_password_page.validation.required_email'));
       return;
     }
 
-    // Validate email format
     if (!validateEmail(email)) {
       return;
     }
 
-    // Call API to send reset link
     setLoading(true);
     setSuccess(false);
 
     try {
       await authService.requestPasswordReset(email);
       setSuccess(true);
-      alert(t('forgot_password_page.alerts.success', { email }));
+      message.success(t('forgot_password_page.alerts.success', { email }));
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to send reset link. Please try again.';
-      alert(errorMessage);
+      message.error(errorMessage);
       console.error('Forgot password error:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const { mode } = useThemeMode();
+  const { tenant } = useTenant();
+  const tenantName = tenant?.businessName || tenant?.name;
+  const tenantLogoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
+  const isDark = mode === 'dark';
+
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden auth-bg-gradient">
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 rounded-full filter blur-3xl opacity-20 animate-pulse auth-decorative"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full filter blur-3xl opacity-10 auth-decorative"></div>
+    <div className="auth-page-bg flex flex-col md:flex-row relative transition-colors duration-300">
+      {/* Mobile Background: Image with Overlay */}
+      <div className="absolute inset-0 z-0 md:hidden">
+        <img
+          src={HERO_IMAGE_URL}
+          alt="Background"
+          className="w-full h-full object-cover"
+        />
+        {/* Dark overlay for mobile legibility */}
+        <div className="absolute inset-0 backdrop-blur-[2px] bg-black/40"></div>
+      </div>
 
-      <div className="max-w-[420px] w-full space-y-8 relative z-10">
-        <div className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card">
-          <div className="text-center mb-6">
-            <div
-              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl"
-              style={{ background: "#FF380B" }}>
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-3xl font-bold mb-2 auth-title">
-              {t('forgot_password_page.title')}
-            </h2>
-            <p className="auth-text">
-              {t('forgot_password_page.subtitle')}
-            </p>
-          </div>
+      {/* Left Side: Hero Image & Branding (Desktop Only) */}
+      <HeroSection />
 
-          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium mb-2 auth-label">
-                {t('forgot_password_page.email_label')}
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={handleEmailChange}
-                onBlur={handleEmailBlur}
-                placeholder={t('forgot_password_page.email_placeholder')}
-                disabled={loading}
-                className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
-                style={{
-                  borderColor:
-                    emailTouched && emailError ? "#ef4444" : undefined,
+      {/* Right Side: Form */}
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-12 lg:p-20 relative overflow-hidden min-h-screen z-10">
+
+        {/* Desktop Ambient Orbs */}
+        <div className="hidden md:block absolute top-0 right-0 w-96 h-96 auth-orb"></div>
+        <div className="hidden md:block absolute bottom-0 left-0 w-64 h-64 auth-orb"></div>
+
+        {/* Form Container */}
+        <div className="auth-form-card w-full max-w-md p-8 lg:p-10 relative z-20 transition-colors duration-300">
+
+          <div className="md:hidden w-full flex flex-col items-center mb-8">
+            <div className="w-20 h-20 bg-[var(--primary)]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[var(--primary)]/20 p-4">
+              <img
+                src={tenantLogoUrl}
+                alt={tenantName || "Restaurant Logo"}
+                className={`w-full h-full object-contain ${isDark ? 'filter invert hue-rotate-180 brightness-110' : ''}`}
+                onError={(e) => {
+                  e.currentTarget.src = "/images/logo/restx-removebg-preview.png";
                 }}
               />
-              {emailTouched && emailError && (
-                <p className="mt-1 text-sm" style={{ color: "#ef4444" }}>
-                  {emailError}
-                </p>
+            </div>
+            <span className="auth-heading font-bold uppercase tracking-[0.2em] text-2xl drop-shadow-md">
+              {tenantName || t('login_header.default_title')}
+            </span>
+          </div>
+
+          <div className="text-center md:text-left mb-8">
+            <h1 className="auth-heading text-3xl font-bold tracking-tight drop-shadow-sm transition-colors">
+              {t('forgot_password_page.title')}
+            </h1>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="relative">
+              <GlassInput
+                id="email"
+                label={t('forgot_password_page.email_label')}
+                icon={<MailOutlined />}
+                type="email"
+                placeholder={t('forgot_password_page.email_placeholder')}
+                required
+                value={email}
+                onChange={handleEmailChange}
+                onBlur={() => setEmailTouched(true)}
+                disabled={loading}
+              />
+              {(emailTouched && emailError) && (
+                <div className="text-red-400 text-xs mt-1 ml-1 font-medium">{emailError}</div>
               )}
             </div>
 
-            <LoginButton loading={loading} text={t('forgot_password_page.send_btn')} />
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[var(--primary)] hover:bg-[#ff5722] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1a100e] focus:ring-[var(--primary)] transition-all duration-300 shadow-[0_4px_14px_0_rgba(255,56,11,0.39)] hover:shadow-[0_6px_20px_rgba(255,56,11,0.23)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
+              >
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-0 border-white ml-1"></div>
+                  ) : (
+                    <span className="material-icons text-white/50 group-hover:text-white transition-colors text-lg">
+                      <SendOutlined />
+                    </span>
+                  )}
+                </span>
+                {loading ? t('login_button.loading', { defaultValue: 'Sending...' }) : t('forgot_password_page.send_btn')}
+              </button>
+            </div>
 
-            <div
-              className="text-center pt-4 border-t"
-              style={{
-                borderColor: "var(--border)",
-              }}>
-              <a
-                href="/login"
-                className="text-sm font-semibold transition-colors inline-flex items-center"
-                style={{ color: "#FF380B" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#CC2D08")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#FF380B")}>
-                <svg
-                  className="w-4 h-4 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
+            <div className="text-center pt-4 border-t auth-divider">
+              <a href="/login" className="auth-terms-link text-sm font-semibold transition-colors inline-flex items-center hover:underline">
+                <span className="mr-2">←</span>
                 {t('forgot_password_page.back_to_login')}
               </a>
             </div>
           </form>
+        </div>
+
+        {/* Footer */}
+        <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none">
+          <p className="auth-footer-text">
+            © {new Date().getFullYear()} {tenantName || t('login_header.default_title')}. All rights reserved.
+          </p>
         </div>
       </div>
     </div>

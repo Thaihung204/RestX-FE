@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Header from './components/Header';
-import HeroSection from './components/HeroSection';
-import FeatureSection from './components/FeatureSection';
-import WorkflowSection from './components/WorkflowSection';
-import TestimonialsSection from './components/TestimonialsSection';
-import Footer from './components/Footer';
-import PageTransition from './components/PageTransition';
+import AboutUsSection from "./components/AboutUsSection";
+import FeatureSection from "./components/FeatureSection";
+import Footer from "./components/Footer";
+import Header from "./components/Header";
+import HeroSection from "./components/HeroSection";
+import PageTransition from "./components/PageTransition";
+import TestimonialsSection from "./components/TestimonialsSection";
+import WorkflowSection from "./components/WorkflowSection";
 
 export default function Home() {
   return (
     <PageTransition minimumLoadingTime={2000}>
-      <div style={{ minHeight: '100vh' }}>
+      <div style={{ minHeight: "100vh" }}>
         <Header />
         <main>
           <section id="hero" style={{ scrollMarginTop: 120 }}>
@@ -23,6 +23,9 @@ export default function Home() {
           </section>
           <section id="workflow" style={{ scrollMarginTop: 120 }}>
             <WorkflowSection />
+          </section>
+          <section id="about-us" style={{ scrollMarginTop: 120 }}>
+            <AboutUsSection />
           </section>
           <section id="testimonials" style={{ scrollMarginTop: 120 }}>
             <TestimonialsSection />

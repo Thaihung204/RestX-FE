@@ -36,12 +36,19 @@ export const setAxiosBaseUrl = (baseUrl: string) => {
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Ensure we are in the browser before accessing localStorage
+    // Ensure we are in the browser before accessing storage
+    // Token co the nam trong localStorage (rememberMe=true) hoac sessionStorage (rememberMe=false)
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+    }
+    // When sending FormData, do not set Content-Type so the browser/axios can set
+    // multipart/form-data with the correct boundary. Otherwise server gets
+    // Content-Type: application/json and returns 400.
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },
@@ -63,22 +70,36 @@ axiosInstance.interceptors.response.use(
       try {
         if (typeof window === 'undefined') throw new Error('No window object');
 
-        const refreshToken = localStorage.getItem('refreshToken');
+        // Doc refreshToken tu ca localStorage (rememberMe=true) va sessionStorage (rememberMe=false)
+        const refreshTokenFromLocal = localStorage.getItem('refreshToken');
+        const refreshTokenFromSession = sessionStorage.getItem('refreshToken');
+        const refreshToken = refreshTokenFromLocal || refreshTokenFromSession;
+        const useSession = !refreshTokenFromLocal && !!refreshTokenFromSession;
+
         if (!refreshToken) throw new Error('No refresh token available');
 
         // Call refresh token API
         const response = await axiosInstance.post(`/auth/refresh-token`, { refreshToken });
         if (response.data.success) {
           const { accessToken } = response.data.data;
-          localStorage.setItem('accessToken', accessToken);
+          // Ghi lai accessToken vao dung storage tuong ung
+          if (useSession) {
+            sessionStorage.setItem('accessToken', accessToken);
+          } else {
+            localStorage.setItem('accessToken', accessToken);
+          }
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return axiosInstance(originalRequest);
         }
       } catch (refreshError) {
         if (typeof window !== 'undefined') {
+          // Xoa ca hai storage khi refresh that bai
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('userInfo');
+          sessionStorage.removeItem('accessToken');
+          sessionStorage.removeItem('refreshToken');
+          sessionStorage.removeItem('userInfo');
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);

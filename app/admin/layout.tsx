@@ -1,5 +1,6 @@
 "use client";
 
+import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import React from "react";
@@ -10,21 +11,24 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: "var(--bg-base)" }}>
-      {/* Header spans the full width */}
-      <DashboardHeader />
+    <AdminAuthGuard>
+      {/* Fixed-height layout: body/html không scroll. Content scroll bên trong main */}
+      <div className="flex flex-col h-screen overflow-hidden" style={{ background: "var(--bg-base)" }}>
+        {/* Header spans the full width */}
+        <DashboardHeader />
 
-      {/* Container for Sidebar and Main Content */}
-      <div className="flex flex-1">
-        {/* Sidebar takes its defined width and sits below header */}
-        <DashboardSidebar />
+        {/* Container for Sidebar and Main Content */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar takes its defined width and sits below header */}
+          <DashboardSidebar />
 
-        {/* Main Content Area */}
-        {/* We use 'relative' to establish a positioning context if needed */}
-        <div className="flex-1 relative">
-          {children}
+          {/* Main Content Area — scroll happens HERE, not in body */}
+          <div className="flex-1 overflow-y-auto relative">
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </AdminAuthGuard>
   );
 }
+

@@ -18,7 +18,6 @@ const resources = {
   },
 };
 
-// Get initial language from localStorage or default to 'vi'
 const getInitialLanguage = (): string => {
   if (typeof window !== 'undefined') {
     const savedLang = localStorage.getItem('language');

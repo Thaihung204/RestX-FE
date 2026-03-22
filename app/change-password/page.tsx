@@ -2,6 +2,7 @@
 
 import LoginButton from "@/components/auth/LoginButton";
 import authService from "@/lib/services/authService";
+import Link from "next/link";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -161,7 +162,7 @@ export default function ChangePasswordPage() {
                     className="backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border auth-card"
                 >
                     <div className="text-center mb-6">
-                        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl" style={{ background: '#FF380B' }}>
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl" style={{ background: 'var(--primary)' }}>
                             <svg
                                 className="w-8 h-8 text-white"
                                 fill="none"
@@ -272,12 +273,12 @@ export default function ChangePasswordPage() {
                                 borderColor: 'var(--border)'
                             }}
                         >
-                            <a
-                                href="/customer"
+                            <Link
+                                href="/"
                                 className="text-sm font-semibold transition-colors inline-flex items-center"
-                                style={{ color: '#FF380B' }}
+                                style={{ color: 'var(--primary)' }}
                                 onMouseEnter={(e) => e.currentTarget.style.color = '#CC2D08'}
-                                onMouseLeave={(e) => e.currentTarget.style.color = '#FF380B'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--primary)'}
                             >
                                 <svg
                                     className="w-4 h-4 mr-1"
@@ -292,7 +293,7 @@ export default function ChangePasswordPage() {
                                     />
                                 </svg>
                                 {t('change_password_page.back_to_dashboard')}
-                            </a>
+                            </Link>
                         </div>
                     </form>
                 </div>

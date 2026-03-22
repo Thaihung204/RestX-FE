@@ -76,6 +76,25 @@ export default function DashboardSidebar() {
       ),
     },
     {
+      id: "reservations",
+      label: t("dashboard.sidebar.items.reservations"),
+      path: "/admin/reservations",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+      ),
+    },
+    {
       id: "menu",
       label: t("dashboard.sidebar.items.menu"),
       path: "/admin/menu",
@@ -258,9 +277,10 @@ export default function DashboardSidebar() {
     <aside
       className={`relative flex flex-col transition-all duration-300 z-30 ${collapsed ? "w-20" : "w-64"
         }`}
-      style={{ color: "var(--text)" }}>
-      {/* Logo Removed - Moved to Header */}
-      <div className="h-4"></div>
+      style={{
+        background: "var(--card)",
+        color: "var(--text)",
+      }}>
 
       {/* Navigation */}
       <nav className="flex-1 py-6 px-3 overflow-y-auto">
@@ -274,14 +294,17 @@ export default function DashboardSidebar() {
                   className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group"
                   style={
                     isActive
-                      ? { background: '#FF380B', color: 'white' }
-                      : { color: "var(--text-muted)", background: "transparent" }
+                      ? { background: "var(--primary)", color: "white" }
+                      : {
+                        color: "var(--text-muted)",
+                        background: "transparent",
+                      }
                   }>
                   <span
                     className="transition-colors"
                     style={
                       isActive
-                        ? { color: 'white' }
+                        ? { color: "white" }
                         : { color: "var(--text-muted)" }
                     }>
                     {item.icon}
@@ -289,12 +312,11 @@ export default function DashboardSidebar() {
                   {!collapsed && (
                     <span
                       className="font-medium text-sm"
-                      style={{ color: isActive ? "white" : "var(--text-muted)" }}>
+                      style={{
+                        color: isActive ? "white" : "var(--text-muted)",
+                      }}>
                       {item.label}
                     </span>
-                  )}
-                  {!collapsed && isActive && (
-                    <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
                   )}
                 </Link>
               </li>
@@ -306,15 +328,24 @@ export default function DashboardSidebar() {
       {/* User Profile */}
       <div className="p-4" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0" style={{ border: '2px solid #FF380B', color: '#FF380B' }}>
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0"
+            style={{
+              border: "2px solid var(--primary)",
+              color: "var(--primary)",
+            }}>
             A
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate" style={{ color: "var(--text)" }}>
+              <p
+                className="font-medium text-sm truncate"
+                style={{ color: "var(--text)" }}>
                 Admin User
               </p>
-              <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+              <p
+                className="text-xs truncate"
+                style={{ color: "var(--text-muted)" }}>
                 admin@restx.com
               </p>
             </div>
@@ -346,7 +377,6 @@ export default function DashboardSidebar() {
           />
         </svg>
       </button>
-
     </aside>
   );
 }
