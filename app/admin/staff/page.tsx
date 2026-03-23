@@ -51,45 +51,6 @@ export default function StaffPage() {
 
   const roles = ["Manager", "Staff"];
 
-  const fetchStaffStats = async () => {
-    try {
-      const [activeRes, inactiveRes] = await Promise.all([
-        employeeService.getEmployees({
-          page: 1,
-          itemsPerPage: 1,
-          isActive: true,
-        }),
-        employeeService.getEmployees({
-          page: 1,
-          itemsPerPage: 1,
-          isActive: false,
-        }),
-      ]);
-
-      const extractTotal = (res: any) => {
-        const pd = res.data;
-        return (
-          pd?.totalCount ??
-          res.totalCount ??
-          pd?.items?.length ??
-          pd?.employees?.length ??
-          (Array.isArray(res.data) ? res.data.length : 0) ??
-          0
-        );
-      };
-
-      setTotalActive(extractTotal(activeRes));
-      setTotalInactive(extractTotal(inactiveRes));
-    } catch {
-      setTotalActive(
-        staffList.filter((s) => s.status === "active").length,
-      );
-      setTotalInactive(
-        staffList.filter((s) => s.status === "inactive").length,
-      );
-    }
-  };
-
   const fetchStaffList = async (page: number = 1) => {
     try {
       setLoading(true);
@@ -136,8 +97,9 @@ export default function StaffPage() {
           new Set(mappedData.map((s) => s.position).filter(Boolean)).size
         );
 
-        // Fetch global active/inactive stats from API metadata
-        fetchStaffStats();
+        // Use global active/inactive stats from main API metadata
+        setTotalActive(paginatedData?.totalActive ?? mappedData.filter((s) => s.status === "active").length);
+        setTotalInactive(paginatedData?.totalInactive ?? mappedData.filter((s) => s.status === "inactive").length);
 
         setError(null);
       } else {

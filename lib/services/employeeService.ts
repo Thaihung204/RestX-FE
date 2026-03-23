@@ -78,6 +78,8 @@ export interface EmployeePaginatedData {
   totalPages?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+  totalActive?: number;
+  totalInactive?: number;
 }
 
 export interface EmployeeListResponseDto {
