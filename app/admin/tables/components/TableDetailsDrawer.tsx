@@ -17,6 +17,14 @@ interface Table {
   height?: number;
   rotation?: number;
   qrCodeUrl?: string;
+  cubemap?: {
+    px: string;
+    nx: string;
+    py: string;
+    ny: string;
+    pz: string;
+    nz: string;
+  };
 }
 
 interface TableDetailsDrawerProps {
@@ -267,6 +275,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
   onDelete,
 }) => {
   const { t } = useTranslation();
+  const [activeSection, setActiveSection] = React.useState<"info" | "cubemap">("info");
   const [formData, setFormData] = React.useState({
     number: 0,
     capacity: 4,
@@ -276,7 +285,9 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
     width: 80,
     height: 80,
     rotation: 0,
+    cubemap: undefined as Table["cubemap"] | undefined,
   });
+  const [uploadProgress, setUploadProgress] = React.useState<Partial<Record<keyof NonNullable<Table["cubemap"]>, number>>>({});
 
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
@@ -291,8 +302,11 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
         width: table.width || 80,
         height: table.height || 80,
         rotation: table.rotation || 0,
+        cubemap: table.cubemap,
       });
       setErrors({});
+      setUploadProgress({});
+      setActiveSection("info");
     }
   }, [table]);
 
@@ -309,6 +323,60 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const uploadFaceImage = async (face: keyof NonNullable<Table["cubemap"]>, file: File) => {
+    setUploadProgress((prev) => ({ ...prev, [face]: 5 }));
+
+    const readFileAsDataUrl = () =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("read_error"));
+        reader.readAsDataURL(file);
+      });
+
+    const progressTimer = window.setInterval(() => {
+      setUploadProgress((prev) => {
+        const current = prev[face] || 0;
+        return { ...prev, [face]: Math.min(current + 15, 90) };
+      });
+    }, 120);
+
+    try {
+      const url = await readFileAsDataUrl();
+      window.clearInterval(progressTimer);
+
+      setFormData((prev) => ({
+        ...prev,
+        cubemap: {
+          px: prev.cubemap?.px || "",
+          nx: prev.cubemap?.nx || "",
+          py: prev.cubemap?.py || "",
+          ny: prev.cubemap?.ny || "",
+          pz: prev.cubemap?.pz || "",
+          nz: prev.cubemap?.nz || "",
+          [face]: url,
+        },
+      }));
+
+      setUploadProgress((prev) => ({ ...prev, [face]: 100 }));
+    } catch {
+      window.clearInterval(progressTimer);
+      setUploadProgress((prev) => ({ ...prev, [face]: 0 }));
+      throw new Error("upload_failed");
+    }
+  };
+
+  const handleFaceFileChange = async (face: keyof NonNullable<Table["cubemap"]>, file?: File) => {
+    if (!file) return;
+    try {
+      await uploadFaceImage(face, file);
+    } catch {
+      setUploadProgress((prev) => ({ ...prev, [face]: 0 }));
+    }
+  };
+
+  const uploadedCount = Object.values(formData.cubemap || {}).filter(Boolean).length;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -521,7 +589,45 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                     <QRCodeSection qrCodeUrl={table.qrCodeUrl} tableNumber={table.number} tableId={table.id} />
                   )}
 
+                  <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection("info")}
+                      style={{
+                        flex: 1,
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        border: activeSection === "info" ? "2px solid var(--primary)" : "2px solid var(--border)",
+                        background: activeSection === "info" ? "var(--primary-soft)" : "var(--surface)",
+                        color: activeSection === "info" ? "var(--primary)" : "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Thông tin bàn
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection("cubemap")}
+                      style={{
+                        flex: 1,
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        border: activeSection === "cubemap" ? "2px solid var(--primary)" : "2px solid var(--border)",
+                        background: activeSection === "cubemap" ? "var(--primary-soft)" : "var(--surface)",
+                        color: activeSection === "cubemap" ? "var(--primary)" : "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Ảnh 360° ({uploadedCount}/6 ảnh)
+                    </button>
+                  </div>
+
                   {/* Form Fields */}
+                  {activeSection === "info" && (
                   <div
                     style={{
                       display: "flex",
@@ -816,6 +922,111 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                       </div>
                     </motion.div>
                   </div>
+                  )}
+
+                  {activeSection === "cubemap" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      style={{
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: 16,
+                        background: "var(--surface)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Ảnh 360°</div>
+                        <div style={{ fontSize: 12, color: "var(--primary)", fontWeight: 700 }}>{uploadedCount}/6 ảnh</div>
+                      </div>
+
+                      {([
+                        ["", "py", "Trên (ngửa nhìn trần)", ""],
+                        ["nx", "pz", "px", "nz"],
+                        ["", "ny", "Dưới (úp nhìn sàn)", ""],
+                      ] as any[]).map((row, rowIndex) => (
+                        <div key={rowIndex} style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10, marginBottom: rowIndex === 2 ? 0 : 10 }}>
+                          {row.map((cell, colIndex) => {
+                            if (!cell) return <div key={`empty-${rowIndex}-${colIndex}`} />;
+
+                            if (typeof cell === "string" && ["px", "nx", "py", "ny", "pz", "nz"].includes(cell)) {
+                              const face = cell as keyof NonNullable<Table["cubemap"]>;
+                              const labelMap: Record<keyof NonNullable<Table["cubemap"]>, string> = {
+                                px: "Phải",
+                                nx: "Trái",
+                                py: "Trên",
+                                ny: "Dưới",
+                                pz: "Trước",
+                                nz: "Sau",
+                              };
+                              const fullLabelMap: Record<keyof NonNullable<Table["cubemap"]>, string> = {
+                                px: "Phải (nhìn bên phải)",
+                                nx: "Trái (nhìn bên trái)",
+                                py: "Trên (ngửa nhìn trần)",
+                                ny: "Dưới (úp nhìn sàn)",
+                                pz: "Trước (nhìn thẳng)",
+                                nz: "Sau (quay lưng lại)",
+                              };
+                              const imageUrl = formData.cubemap?.[face];
+                              const progress = uploadProgress[face] || 0;
+                              const done = Boolean(imageUrl);
+                              return (
+                                <label
+                                  key={face}
+                                  style={{
+                                    border: done ? "2px solid #52c41a" : "2px dashed var(--border)",
+                                    borderRadius: 12,
+                                    minHeight: 112,
+                                    cursor: "pointer",
+                                    background: "var(--card)",
+                                    position: "relative",
+                                    overflow: "hidden",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "flex-end",
+                                  }}
+                                >
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: "none" }}
+                                    onChange={(e) => handleFaceFileChange(face, e.target.files?.[0])}
+                                  />
+                                  {imageUrl ? (
+                                    <img src={imageUrl} alt={fullLabelMap[face]} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                                  ) : (
+                                    <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "var(--text-muted)", fontSize: 11, padding: 6, textAlign: "center" }}>
+                                      Click để tải ảnh
+                                    </div>
+                                  )}
+
+                                  <div style={{ position: "relative", zIndex: 2, background: "rgba(0,0,0,.58)", color: "#fff", padding: "6px 8px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                                      <span style={{ fontSize: 11, fontWeight: 700 }}>{face.toUpperCase()} · {labelMap[face]}</span>
+                                      {done && <span style={{ color: "#52c41a", fontWeight: 700 }}>✓</span>}
+                                    </div>
+                                    <div style={{ fontSize: 10, opacity: 0.85, marginTop: 2 }}>{fullLabelMap[face]}</div>
+                                    {progress > 0 && progress < 100 && (
+                                      <div style={{ marginTop: 5, height: 4, borderRadius: 999, background: "rgba(255,255,255,0.2)", overflow: "hidden" }}>
+                                        <div style={{ width: `${progress}%`, height: "100%", background: "#52c41a" }} />
+                                      </div>
+                                    )}
+                                  </div>
+                                </label>
+                              );
+                            }
+
+                            const textLabel = String(cell);
+                            return (
+                              <div key={`${rowIndex}-${colIndex}-${textLabel}`} style={{ border: "1px dashed var(--border)", borderRadius: 10, fontSize: 10, color: "var(--text-muted)", display: "grid", placeItems: "center", minHeight: 112, textAlign: "center", padding: 6 }}>
+                                {textLabel}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
                 </form>
               )}
             </div>

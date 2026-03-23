@@ -31,6 +31,14 @@ interface Table {
   height: number;
   rotation: number;
   isActive: boolean;
+  cubemap?: {
+    px: string;
+    nx: string;
+    py: string;
+    ny: string;
+    pz: string;
+    nz: string;
+  };
   // Backend optional fields — preserved during updates
   has3DView?: boolean;
   viewDescription?: string;
@@ -101,6 +109,18 @@ export default function TablesPage() {
         if (item.tableStatusId === TableStatus.Occupied) status = 'occupied';
         if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
 
+        let cubemap: Table["cubemap"] | undefined;
+        if (item.defaultViewUrl) {
+          try {
+            const parsed = JSON.parse(item.defaultViewUrl);
+            if (parsed?.px && parsed?.nx && parsed?.py && parsed?.ny && parsed?.pz && parsed?.nz) {
+              cubemap = parsed;
+            }
+          } catch {
+            cubemap = undefined;
+          }
+        }
+
         return {
           id: item.id,
           number: parseInt(item.code) || 0,
@@ -115,6 +135,7 @@ export default function TablesPage() {
           height: Number(item.height) || 80,
           rotation: Number(item.rotation) || 0,
           isActive: item.isActive,
+          cubemap,
           has3DView: item.has3DView,
           viewDescription: item.viewDescription,
           defaultViewUrl: item.defaultViewUrl,
@@ -473,6 +494,13 @@ export default function TablesPage() {
           if (values.width !== undefined) apiData.width = values.width;
           if (values.height !== undefined) apiData.height = values.height;
           if (values.rotation !== undefined) apiData.rotation = values.rotation;
+          if (values.cubemap !== undefined) {
+            apiData.defaultViewUrl = JSON.stringify(values.cubemap);
+            apiData.has3DView = Boolean(
+              values.cubemap?.px && values.cubemap?.nx && values.cubemap?.py && values.cubemap?.ny && values.cubemap?.pz && values.cubemap?.nz,
+            );
+            apiData.viewDescription = apiData.has3DView ? "Cubemap 360" : null;
+          }
 
           if (values.status !== undefined) {
             if (values.status === 'available') apiData.tableStatusId = TableStatus.Available;

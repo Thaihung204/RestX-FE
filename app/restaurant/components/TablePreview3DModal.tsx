@@ -21,10 +21,12 @@ const STATUS_LABEL: Record<string, string> = {
   DISABLED: "Không hoạt động",
 };
 
+type CubemapData = NonNullable<TableData["cubemap"]>;
+
 interface TablePreview3DModalProps {
   open: boolean;
   table: TableData | null;
-  tableImageUrl?: string; // 360° panorama (equirectangular)
+  tableCubemap?: CubemapData;
   onClose: () => void;
   onBookNow: () => void;
   onSuccess?: (result: CreateReservationResponse) => void;
@@ -34,12 +36,12 @@ const clamp = (value: number, min: number, max: number) => Math.max(min, Math.mi
 
 function Table360Viewer({
   open,
-  imageUrl,
+  cubemap,
   onReady,
   onError,
 }: {
   open: boolean;
-  imageUrl?: string;
+  cubemap?: CubemapData;
   onReady: () => void;
   onError?: (reason: "missing" | "load") => void;
 }) {
@@ -165,7 +167,8 @@ function Table360Viewer({
 
     const loader = new THREE.TextureLoader();
     loader.setCrossOrigin("anonymous");
-    if (!imageUrl) {
+
+    if (!cubemap) {
       onError?.("missing");
       onReady();
       return () => {
@@ -174,24 +177,45 @@ function Table360Viewer({
       };
     }
 
-    loader.load(
-      imageUrl,
-      (texture) => {
+    const faceOrder: Array<keyof CubemapData> = ["px", "nx", "py", "ny", "pz", "nz"];
+
+    Promise.all(
+      faceOrder.map(
+        (face) =>
+          new Promise<THREE.Texture>((resolve, reject) => {
+            loader.load(
+              cubemap[face],
+              (texture) => resolve(texture),
+              undefined,
+              reject,
+            );
+          }),
+      ),
+    )
+      .then((textures) => {
         if (disposed) return;
-        texture.colorSpace = THREE.SRGBColorSpace;
-        const geometry = new THREE.SphereGeometry(500, 60, 40);
-        geometry.scale(-1, 1, 1);
-        const material = new THREE.MeshBasicMaterial({ map: texture });
-        const mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
+
+        textures.forEach((texture) => {
+          texture.colorSpace = THREE.SRGBColorSpace;
+        });
+
+        const materials = textures.map(
+          (texture) =>
+            new THREE.MeshBasicMaterial({
+              map: texture,
+              side: THREE.BackSide,
+            }),
+        );
+
+        const box = new THREE.BoxGeometry(500, 500, 500);
+        const skybox = new THREE.Mesh(box, materials);
+        scene.add(skybox);
         onReady();
-      },
-      undefined,
-      () => {
+      })
+      .catch(() => {
         onError?.("load");
         onReady();
-      },
-    );
+      });
 
     renderer.domElement.style.cursor = "grab";
     renderer.domElement.addEventListener("pointerdown", onPointerDown);
@@ -236,7 +260,7 @@ function Table360Viewer({
       viewerRef.current?.cleanup();
       viewerRef.current = null;
     };
-  }, [open, imageUrl, onReady]);
+  }, [open, cubemap, onReady]);
 
   return <div ref={mountRef} style={{ width: "100%", height: "100%" }} />;
 }
@@ -244,10 +268,10 @@ function Table360Viewer({
 export default function TablePreview3DModal({
   open,
   table,
-  tableImageUrl,
+  tableCubemap,
   onClose,
   onBookNow,
-  onSuccess,
+  onSuccess: _onSuccess,
 }: TablePreview3DModalProps) {
   const [viewerReady, setViewerReady] = useState(false);
   const [viewerError, setViewerError] = useState<"missing" | "load" | null>(null);
@@ -280,7 +304,7 @@ export default function TablePreview3DModal({
           <div style={{ position: "absolute", inset: 0 }}>
             <Table360Viewer
               open={open}
-              imageUrl={tableImageUrl}
+              cubemap={tableCubemap}
               onReady={() => setViewerReady(true)}
               onError={(reason) => setViewerError(reason)}
             />
@@ -333,7 +357,7 @@ export default function TablePreview3DModal({
             >
               <div style={{ fontSize: 14, fontWeight: 600 }}>Ảnh 360° chưa sẵn sàng</div>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,.45)" }}>
-                {viewerError === "missing" ? "Bàn này chưa có ảnh 360°." : "Không thể tải ảnh 360°. Vui lòng thử lại sau."}
+                {viewerError === "missing" ? "Nhà hàng chưa cập nhật ảnh 360°" : "Không thể tải ảnh 360°. Vui lòng thử lại sau."}
               </div>
             </div>
           )}
