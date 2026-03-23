@@ -1,5 +1,6 @@
 "use client";
 
+import VnAddressSelect from "@/components/ui/VnAddressSelect";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantRequestInput } from "@/lib/types/tenant";
 import type { FormProps } from "antd";
@@ -20,7 +21,6 @@ const RequestTenantPage: React.FC = () => {
   const { message } = App.useApp();
   const [form] = Form.useForm<TenantRequestInput>();
   const [loading, setLoading] = useState(false);
-
   const onFinish: FormProps<TenantRequestInput>["onFinish"] = async (
     values,
   ) => {
@@ -158,19 +158,23 @@ const RequestTenantPage: React.FC = () => {
               <Input placeholder="Street address (optional)" />
             </Form.Item>
 
-            <Form.Item label="Address Line 2" name="businessAddressLine2">
-              <Input placeholder="District/Ward (optional)" />
-            </Form.Item>
+            <VnAddressSelect
+              form={form}
+              cityFieldName="businessAddressLine3"
+              districtWardFieldName="businessAddressLine2"
+              stateProvinceFieldName="businessAddressLine4"
+              countryFieldName="businessCountry"
+              required
+              cityRequiredMessage={t("request_tenant.city_required", { defaultValue: "Vui lòng chọn tỉnh/thành phố" })}
+              districtRequiredMessage={t("request_tenant.district_required", { defaultValue: "Vui lòng chọn quận/huyện" })}
+              wardRequiredMessage={t("request_tenant.ward_required", { defaultValue: "Vui lòng chọn phường/xã" })}
+            />
 
-            <Form.Item label="Address Line 3" name="businessAddressLine3">
-              <Input placeholder="City (optional)" />
-            </Form.Item>
-
-            <Form.Item label="Address Line 4" name="businessAddressLine4">
+            <Form.Item label="Address Line 4" name="businessAddressLine4" initialValue="Việt Nam">
               <Input placeholder="State/Province (optional)" />
             </Form.Item>
 
-            <Form.Item label="Country" name="businessCountry">
+            <Form.Item label="Country" name="businessCountry" initialValue="Việt Nam">
               <Input placeholder="Country (optional)" />
             </Form.Item>
 

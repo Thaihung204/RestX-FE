@@ -2,6 +2,7 @@
 
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { useLanguage } from "@/components/I18nProvider";
+import VnAddressSelect from "@/components/ui/VnAddressSelect";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantCreateInput } from "@/lib/types/tenant";
 import {
@@ -101,6 +102,7 @@ const TenantCreatePage: React.FC = () => {
   const [form] = Form.useForm<TenantCreateInput>();
   const [hostNameValue, setHostNameValue] = useState("");
   const [loading, setLoading] = useState(false);
+
 
   const onFinish: FormProps<TenantCreateInput>["onFinish"] = async (values) => {
     if (loading) return;
@@ -581,42 +583,20 @@ const TenantCreatePage: React.FC = () => {
                     />
                   </Form.Item>
 
-                  <Form.Item
-                    name="addressLine2"
-                    rules={[
-                      {
-                        required: true,
-                        message: t(
-                          "tenants.create.validation.street_name_required",
-                        ),
-                      },
-                    ]}>
-                    <Input
-                      size="large"
-                      placeholder={t(
-                        "tenants.create.fields.address_line2_placeholder",
-                      )}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="addressLine3"
-                    rules={[
-                      {
-                        required: true,
-                        message: t("tenants.create.validation.city_required"),
-                      },
-                    ]}>
-                    <Input
-                      size="large"
-                      placeholder={t(
-                        "tenants.create.fields.address_line3_placeholder",
-                      )}
-                    />
-                  </Form.Item>
+                  <VnAddressSelect
+                    form={form}
+                    cityFieldName="addressLine3"
+                    districtWardFieldName="addressLine2"
+                    stateProvinceFieldName="addressLine4"
+                    required
+                    cityRequiredMessage={t("tenants.create.validation.city_required")}
+                    districtRequiredMessage={t("tenants.create.validation.street_name_required")}
+                    wardRequiredMessage={t("tenants.create.validation.street_name_required")}
+                  />
 
                   <Form.Item
                     name="addressLine4"
+                    initialValue="Việt Nam"
                     rules={[
                       {
                         required: true,
