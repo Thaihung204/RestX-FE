@@ -965,8 +965,22 @@
         "title": "Thêm khu vực mới",
         "name_label": "Tên khu vực",
         "name_placeholder": "VD: Sân thượng",
+        "width_label": "Chiều rộng (px)",
+        "height_label": "Chiều cao (px)",
         "cancel": "Hủy",
-        "submit": "Thêm khu vực"
+        "submit": "Thêm khu vực",
+        "errors": {
+          "name_required": "Vui lòng nhập tên khu vực",
+          "name_min": "Tên khu vực tối thiểu {{min}} ký tự",
+          "name_max": "Tên khu vực tối đa {{max}} ký tự",
+          "name_duplicate": "Tên khu vực đã tồn tại",
+          "width_required": "Vui lòng nhập chiều rộng",
+          "width_min": "Chiều rộng tối thiểu {{min}} px",
+          "width_max": "Chiều rộng tối đa {{max}} px",
+          "height_required": "Vui lòng nhập chiều cao",
+          "height_min": "Chiều cao tối thiểu {{min}} px",
+          "height_max": "Chiều cao tối đa {{max}} px"
+        }
       },
       "add_table_modal": {
         "title": "Tạo bàn mới",

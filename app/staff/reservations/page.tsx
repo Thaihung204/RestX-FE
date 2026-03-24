@@ -9,6 +9,9 @@ import reservationService, {
     PaginatedReservations,
     ReservationStatus,
 } from "@/lib/services/reservationService";
+import orderSignalRService from "@/lib/services/orderSignalRService";
+import { HubConnectionState } from "@microsoft/signalr";
+import { tenantService } from "@/lib/services/tenantService";
 
 // ─── Status actions (keys mapped to i18n) ────────────────────────────────────
 const STATUS_ACTIONS_KEYS: Record<
@@ -326,6 +329,7 @@ export default function ReservationsPage() {
 
     // Detail modal
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [tenantId, setTenantId] = useState<string>("");
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -356,6 +360,60 @@ export default function ReservationsPage() {
             .then(setStatuses)
             .catch(console.error);
     }, []);
+
+    useEffect(() => {
+        tenantService.getCurrentTenantProfile().then((tenant) => {
+            if (tenant?.id) setTenantId(tenant.id);
+        }).catch(() => {});
+    }, []);
+
+    useEffect(() => {
+        if (!tenantId) return;
+
+        let isMounted = true;
+        let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+        const handleReservationChanged = (payload: any) => {
+            if (!isMounted) return;
+            const changedTenantId = payload?.tenantId || payload?.reservation?.tenantId;
+            if (changedTenantId && changedTenantId !== tenantId) return;
+
+            if (debounceTimer) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                if (!isMounted) return;
+                fetchData();
+            }, 300);
+        };
+
+        const events = [
+            "reservations.created",
+            "reservations.updated",
+            "reservations.cancelled",
+            "reservations.status_updated",
+        ];
+
+        const setupSignalR = async () => {
+            try {
+                await orderSignalRService.start();
+                const conn = orderSignalRService.getConnection();
+                if (conn.state === HubConnectionState.Connected) {
+                    await orderSignalRService.invoke("JoinTenantGroup", tenantId);
+                    events.forEach((event) => orderSignalRService.on(event, handleReservationChanged));
+                }
+            } catch (error) {
+                console.error("SignalR: setup reservations failed", error);
+            }
+        };
+
+        setupSignalR();
+
+        return () => {
+            isMounted = false;
+            if (debounceTimer) clearTimeout(debounceTimer);
+            events.forEach((event) => orderSignalRService.off(event, handleReservationChanged));
+            orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+        };
+    }, [tenantId, fetchData]);
 
     const pendingCount = data?.items.filter(i => i.status.code === "PENDING").length ?? 0;
     const confirmedCount = data?.items.filter(i => i.status.code === "CONFIRMED").length ?? 0;
