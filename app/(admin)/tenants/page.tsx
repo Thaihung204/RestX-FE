@@ -34,7 +34,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import TenantsBusinessTools from "../../../components/(admin)/tenants/BusinessToolsTab";
 import TenantsSystemRevenue from "../../../components/(admin)/tenants/SystemRevenueTab";
 import TenantRequestList from "../../../components/(admin)/tenants/TenantRequestList";
 import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
@@ -689,17 +688,6 @@ const TenantPage: React.FC = () => {
                 key: "revenue",
                 label: t("tenants.tabs.system_revenue"),
                 children: <TenantsSystemRevenue />,
-              },
-              {
-                key: "business-tools",
-                label: t("tenants.tabs.business_tools"),
-                children: (
-                  <TenantsBusinessTools
-                    tenants={tenants}
-                    loading={loading}
-                    onRefresh={handleRefresh}
-                  />
-                ),
               },
             ]}
           />
