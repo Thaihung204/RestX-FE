@@ -438,9 +438,7 @@ export default function SupplierSettings() {
                       borderColor: "var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder={t(
-                      "dashboard.manage.suppliers.name_placeholder",
-                    )}
+
                   />
                 </div>
 
@@ -479,9 +477,7 @@ export default function SupplierSettings() {
                           borderColor: "var(--border)",
                           color: "var(--text)",
                         }}
-                        placeholder={t(
-                          "dashboard.manage.suppliers.phone_placeholder",
-                        )}
+
                       />
                     </div>
                   </div>
@@ -519,9 +515,7 @@ export default function SupplierSettings() {
                           borderColor: "var(--border)",
                           color: "var(--text)",
                         }}
-                        placeholder={t(
-                          "dashboard.manage.suppliers.email_placeholder",
-                        )}
+
                       />
                     </div>
                   </div>
@@ -545,9 +539,7 @@ export default function SupplierSettings() {
                       borderColor: "var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder={t(
-                      "dashboard.manage.suppliers.address_placeholder",
-                    )}
+
                   />
                 </div>
 

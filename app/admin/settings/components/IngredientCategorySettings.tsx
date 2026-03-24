@@ -267,7 +267,7 @@ export default function IngredientCategorySettings() {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                     style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }}
-                    placeholder={t("dashboard.manage.ingredient_categories.name_placeholder", { defaultValue: "Ví dụ: Hải sản" })}
+
                   />
                 </div>
 
@@ -281,7 +281,7 @@ export default function IngredientCategorySettings() {
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                     style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }}
-                    placeholder="seafood"
+
                   />
                 </div>
 
@@ -295,7 +295,7 @@ export default function IngredientCategorySettings() {
                     className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none"
                     rows={3}
                     style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }}
-                    placeholder={t("dashboard.manage.ingredient_categories.description_placeholder")}
+
                   />
                 </div>
               </div>

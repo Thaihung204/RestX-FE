@@ -1485,6 +1485,7 @@
   },
   "common": {
     "cancel": "Hủy",
+    "save": "Lưu",
     "saving": "Đang lưu...",
     "time": {
       "just_now": "Vừa xong",

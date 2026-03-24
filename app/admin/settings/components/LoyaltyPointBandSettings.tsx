@@ -383,7 +383,7 @@ export default function LoyaltyPointBandSettings() {
                 }),
               },
             ]}>
-            <Input placeholder="e.g. Silver, Gold" />
+            <Input />
           </Form.Item>
 
           <Form.Item
@@ -399,7 +399,7 @@ export default function LoyaltyPointBandSettings() {
                 style={{ flex: 1 }}>
                 <InputNumber
                   min={0}
-                  placeholder="Min Points"
+
                   style={{ width: "100%" }}
                 />
               </Form.Item>
@@ -412,7 +412,7 @@ export default function LoyaltyPointBandSettings() {
                 })}>
                 <InputNumber
                   min={0}
-                  placeholder="Max Points (Optional)"
+
                   style={{ width: "100%" }}
                 />
               </Form.Item>
@@ -442,7 +442,7 @@ export default function LoyaltyPointBandSettings() {
             rules={[{ required: true }]}>
             <Input.TextArea
               rows={3}
-              placeholder="Describe the benefits for this tier..."
+
             />
           </Form.Item>
 
