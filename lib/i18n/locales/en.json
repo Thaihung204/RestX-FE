@@ -1522,6 +1522,7 @@
   },
   "common": {
     "cancel": "Cancel",
+    "save": "Save",
     "saving": "Saving...",
     "time": {
       "just_now": "Just now",
