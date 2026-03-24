@@ -362,7 +362,7 @@ export default function ReservationsPage() {
     }, []);
 
     useEffect(() => {
-        tenantService.getCurrentTenantProfile().then((tenant) => {
+        tenantService.getTenantConfig(window.location.hostname).then((tenant) => {
             if (tenant?.id) setTenantId(tenant.id);
         }).catch(() => {});
     }, []);
