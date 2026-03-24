@@ -5,33 +5,33 @@ import RevenueChart from "@/components/admin/charts/RevenueChart";
 import { useLanguage } from "@/components/I18nProvider";
 import adminAuthService from "@/lib/services/adminAuthService";
 import {
-    CheckCircleOutlined,
-    EyeOutlined,
-    MailOutlined,
-    PhoneOutlined,
-    PlusOutlined,
-    ReloadOutlined,
-    RiseOutlined,
-    SearchOutlined,
-    ShopOutlined,
-    UserOutlined,
+  CheckCircleOutlined,
+  EyeOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  RiseOutlined,
+  SearchOutlined,
+  SettingOutlined,
+  ShopOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import {
-    App,
-    Avatar,
-    Breadcrumb,
-    Button,
-    Card,
-    DatePicker,
-    Dropdown,
-    Input,
-    Radio,
-    Select,
-    Space,
-    Statistic,
-    Table,
-    Tabs,
-    Typography,
+  App,
+  Avatar,
+  Breadcrumb,
+  Button,
+  Card,
+  DatePicker,
+  Dropdown,
+  Input,
+  Radio,
+  Select,
+  Statistic,
+  Table,
+  Tabs,
+  Typography
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
@@ -508,6 +508,14 @@ const TenantPage: React.FC = () => {
                   />
                 </button>
               </Dropdown>
+              <Link
+                href="https://admin.restx.food/hangfire"
+                target="_blank"
+                rel="noreferrer">
+                <Button icon={<SettingOutlined />}>
+                Hangfire Jobs
+                </Button>
+              </Link>
               <Link href="/tenants/new">
                 <Button
                   type="primary"
