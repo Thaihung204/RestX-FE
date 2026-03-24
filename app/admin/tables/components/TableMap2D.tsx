@@ -33,7 +33,7 @@ interface TableMap2DProps {
   onBackgroundImageUpload?: (floorId: string, file: File) => void;
   renderTableContent?: (table: TableData) => React.ReactNode;
   readOnly?: boolean;
-  selectedTableId?: string;
+  selectedTableIds?: string[];
 }
 
 /* ══════════════════════════════════════════════
@@ -49,7 +49,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   onBackgroundImageUpload,
   renderTableContent,
   readOnly = false,
-  selectedTableId,
+  selectedTableIds = [],
 }) => {
   const [showGrid, setShowGrid] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,6 +59,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   const [scale, setScale] = useState(1);
 
   const activeFloor = layout.floors.find((f) => f.id === layout.activeFloorId);
+  const selectedSet = React.useMemo(() => new Set(selectedTableIds), [selectedTableIds]);
 
   // ── Auto-fit: scale canvas to fit container ──
   useEffect(() => {
@@ -297,7 +298,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
             {activeFloor.tables.map((table) => (
               <DraggableTable
                 key={table.id}
-                table={table}
+                table={{ ...table, status: selectedSet.has(table.id) ? "SELECTED" : table.status }}
                 onDragEnd={handleTableDragEnd}
                 onClick={onTableClick}
                 onResize={!readOnly ? onTableResize : undefined}

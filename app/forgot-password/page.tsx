@@ -8,6 +8,7 @@ import { message } from "antd";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
+import { useTenant } from "@/lib/contexts/TenantContext";
 
 const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
@@ -71,6 +72,9 @@ export default function ForgotPasswordPage() {
   };
 
   const { mode } = useThemeMode();
+  const { tenant } = useTenant();
+  const tenantName = tenant?.businessName || tenant?.name;
+  const tenantLogoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
   const isDark = mode === 'dark';
 
   return (
@@ -102,12 +106,17 @@ export default function ForgotPasswordPage() {
           <div className="md:hidden w-full flex flex-col items-center mb-8">
             <div className="w-20 h-20 bg-[var(--primary)]/10 rounded-full flex items-center justify-center mb-3 backdrop-blur-md border border-[var(--primary)]/20 p-4">
               <img
-                src="/images/logo/restx-removebg-preview.png"
-                alt="RestX Logo"
+                src={tenantLogoUrl}
+                alt={tenantName || "Restaurant Logo"}
                 className={`w-full h-full object-contain ${isDark ? 'filter invert hue-rotate-180 brightness-110' : ''}`}
+                onError={(e) => {
+                  e.currentTarget.src = "/images/logo/restx-removebg-preview.png";
+                }}
               />
             </div>
-            <span className="auth-heading font-bold uppercase tracking-[0.2em] text-2xl drop-shadow-md">RestX</span>
+            <span className="auth-heading font-bold uppercase tracking-[0.2em] text-2xl drop-shadow-md">
+              {tenantName || t('login_header.default_title')}
+            </span>
           </div>
 
           <div className="text-center md:text-left mb-8">
@@ -166,7 +175,7 @@ export default function ForgotPasswordPage() {
         {/* Footer */}
         <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none">
           <p className="auth-footer-text">
-            © {new Date().getFullYear()} RestX. All rights reserved.
+            © {new Date().getFullYear()} {tenantName || t('login_header.default_title')}. All rights reserved.
           </p>
         </div>
       </div>

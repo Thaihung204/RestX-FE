@@ -8,7 +8,7 @@ const AdminLoginHeader: React.FC = () => {
         <div className="w-14 h-14 flex items-center justify-center overflow-hidden">
           <img
             src="/images/logo/restx-removebg-preview.png"
-            alt="RestX Logo"
+            alt="Admin Logo"
             className="w-full h-full object-contain app-logo-img"
           />
         </div>

@@ -1,24 +1,18 @@
 "use client";
 
-import DishCard from "@/components/admin/menu/DishCard";
+import DishCard, { DishCardItem } from "@/components/admin/menu/DishCard";
 import { usePageLoading } from "@/components/PageTransitionLoader";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
-import { App } from "antd";
+import ingredientService, { IngredientItem } from "@/lib/services/ingredientService";
+import recipeService, { DishRecipeItem } from "@/lib/services/recipeService";
+import { App, Button, InputNumber, Modal, Select } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-interface MenuItem {
-  id: string;
-  name: string;
+interface MenuItem extends DishCardItem {
   categoryId: string;
-  categoryName: string;
-  price: number;
-  image: string;
-  description: string;
-  available: boolean;
-  isBestSeller: boolean;
 }
 
 export default function MenuPage() {
@@ -34,6 +28,16 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true);
   usePageLoading(loading);
   const [error, setError] = useState<string | null>(null);
+
+  const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
+  const [ingredientsLoading, setIngredientsLoading] = useState(false);
+  const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+  const [activeDish, setActiveDish] = useState<MenuItem | null>(null);
+  const [dishRecipes, setDishRecipes] = useState<DishRecipeItem[]>([]);
+  const [loadingRecipes, setLoadingRecipes] = useState(false);
+  const [selectedIngredientId, setSelectedIngredientId] = useState<string>();
+  const [quantity, setQuantity] = useState<number | null>(1);
+  const [savingRecipe, setSavingRecipe] = useState(false);
 
   const fetchMenuItems = async () => {
     try {
@@ -77,7 +81,8 @@ export default function MenuPage() {
             item.imageUrl ||
             item.image ||
             (item.images && item.images.length > 0
-              ? (item.images.find((img: any) => img.imageType === 0) || item.images[0]).imageUrl
+              ? (item.images.find((img: any) => img.imageType === 0) ||
+                  item.images[0]).imageUrl
               : null) ||
             "/placeholder-dish.jpg",
           description: item.description || "",
@@ -94,9 +99,7 @@ export default function MenuPage() {
         setMenuItems(mappedData);
         setError(null);
       } else {
-        setError(
-          t("dashboard.menu.errors.load_failed"),
-        );
+        setError(t("dashboard.menu.errors.load_failed"));
       }
     } catch {
       setError(t("dashboard.menu.errors.load_failed"));
@@ -106,33 +109,149 @@ export default function MenuPage() {
     }
   };
 
+  const fetchIngredients = async () => {
+    try {
+      setIngredientsLoading(true);
+      const data = await ingredientService.getAll();
+      setIngredients(data.filter((item) => item.isActive !== false));
+    } catch {
+      message.error(t("dashboard.menu.ingredients.errors.fetch_ingredients"));
+    } finally {
+      setIngredientsLoading(false);
+    }
+  };
+
+  const fetchRecipes = async (dishId: string) => {
+    try {
+      setLoadingRecipes(true);
+      const data = await recipeService.getByDishId(dishId);
+      setDishRecipes(data);
+    } catch {
+      message.error(t("dashboard.menu.ingredients.errors.fetch_recipes"));
+    } finally {
+      setLoadingRecipes(false);
+    }
+  };
+
   useEffect(() => {
     fetchMenuItems();
+    fetchIngredients();
   }, []);
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleToggleStatus = async (item: DishCardItem) => {
+    const nextStatus = !item.available;
     modal.confirm({
-      title: t("dashboard.menu.modal.delete_title"),
+      title: nextStatus
+        ? t("dashboard.menu.ingredients.status.activate_title")
+        : t("dashboard.menu.ingredients.status.deactivate_title"),
       content: (
         <>
-          {t("dashboard.menu.modal.delete_confirm")} <strong>&quot;{name}&quot;</strong>?
-          <br />
-          {t("dashboard.menu.modal.cannot_undo")}
+          {nextStatus
+            ? t("dashboard.menu.ingredients.status.activate_confirm", {
+                name: item.name,
+              })
+            : t("dashboard.menu.ingredients.status.deactivate_confirm", {
+                name: item.name,
+              })}
         </>
       ),
-      okText: t("dashboard.menu.modal.delete"),
-      okType: "danger",
+      okText: nextStatus
+        ? t("dashboard.menu.ingredients.status.activate_action")
+        : t("dashboard.menu.ingredients.status.deactivate_action"),
+      okType: nextStatus ? "primary" : "danger",
       cancelText: t("dashboard.menu.modal.cancel"),
       onOk: async () => {
         try {
-          await dishService.deleteDish(id);
-          message.success(t("dashboard.menu.toasts.delete_success_message"));
+          await dishService.toggleDishStatus(item.id, nextStatus);
+          message.success(
+            nextStatus
+              ? t("dashboard.menu.ingredients.status.activate_success", {
+                  name: item.name,
+                })
+              : t("dashboard.menu.ingredients.status.deactivate_success", {
+                  name: item.name,
+                }),
+          );
           await fetchMenuItems();
         } catch {
-          message.error(t("dashboard.menu.toasts.delete_error_message"));
+          message.error(t("dashboard.menu.ingredients.status.update_failed"));
         }
       },
     });
+  };
+
+  const handleOpenIngredients = async (item: DishCardItem) => {
+    const dish = menuItems.find((menuItem) => menuItem.id === item.id) || null;
+    setActiveDish(dish);
+    setRecipeModalOpen(true);
+    setSelectedIngredientId(undefined);
+    setQuantity(1);
+    await fetchRecipes(item.id);
+  };
+
+  const handleAddRecipe = async () => {
+    if (!activeDish) return;
+    if (!selectedIngredientId) {
+      message.warning(t("dashboard.menu.ingredients.validation.select_ingredient"));
+      return;
+    }
+    if (!quantity || quantity <= 0) {
+      message.warning(t("dashboard.menu.ingredients.validation.invalid_quantity"));
+      return;
+    }
+
+    try {
+      setSavingRecipe(true);
+      await recipeService.create({
+        dishId: activeDish.id,
+        ingredientId: selectedIngredientId,
+        quantity,
+      });
+      message.success(t("dashboard.menu.ingredients.toasts.add_success"));
+      await fetchRecipes(activeDish.id);
+      setSelectedIngredientId(undefined);
+      setQuantity(1);
+    } catch {
+      message.error(t("dashboard.menu.ingredients.toasts.add_error"));
+    } finally {
+      setSavingRecipe(false);
+    }
+  };
+
+  const handleUpdateRecipe = async (recipe: DishRecipeItem) => {
+    if (!recipe.id || !activeDish) return;
+    if (!recipe.quantity || recipe.quantity <= 0) {
+      message.warning(t("dashboard.menu.ingredients.validation.invalid_quantity"));
+      return;
+    }
+
+    try {
+      setSavingRecipe(true);
+      await recipeService.update(recipe.id, {
+        ...recipe,
+        dishId: activeDish.id,
+      });
+      message.success(t("dashboard.menu.ingredients.toasts.update_success"));
+      await fetchRecipes(activeDish.id);
+    } catch {
+      message.error(t("dashboard.menu.ingredients.toasts.update_error"));
+    } finally {
+      setSavingRecipe(false);
+    }
+  };
+
+  const handleDeleteRecipe = async (recipe: DishRecipeItem) => {
+    if (!recipe.id || !activeDish) return;
+    try {
+      setSavingRecipe(true);
+      await recipeService.delete(recipe.id);
+      message.success(t("dashboard.menu.ingredients.toasts.delete_success"));
+      await fetchRecipes(activeDish.id);
+    } catch {
+      message.error(t("dashboard.menu.ingredients.toasts.delete_error"));
+    } finally {
+      setSavingRecipe(false);
+    }
   };
 
   const categoryFilters = useMemo(() => {
@@ -154,6 +273,11 @@ export default function MenuPage() {
       ? menuItems
       : menuItems.filter((item) => item.categoryId === selectedCategoryId);
 
+  const ingredientOptions = ingredients.map((ingredient) => ({
+    value: ingredient.id || "",
+    label: `${ingredient.name} (${ingredient.unit})`,
+  }));
+
   return (
     <main className="flex-1 p-6 lg:p-8">
       <div className="space-y-6">
@@ -174,12 +298,12 @@ export default function MenuPage() {
               className="px-4 py-2 text-white rounded-lg font-medium transition-all"
               style={{ background: "var(--primary)", color: "white" }}
               onMouseEnter={(e) =>
-              (e.currentTarget.style.background =
-                "linear-gradient(to right, #B32607)")
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, #B32607)")
               }
               onMouseLeave={(e) =>
-              (e.currentTarget.style.background =
-                "linear-gradient(to right, var(--primary))")
+                (e.currentTarget.style.background =
+                  "linear-gradient(to right, var(--primary))")
               }
               suppressHydrationWarning>
               <svg
@@ -365,14 +489,10 @@ export default function MenuPage() {
                 d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
               />
             </svg>
-            <p
-              className="text-lg font-medium"
-              style={{ color: "var(--text)" }}>
+            <p className="text-lg font-medium" style={{ color: "var(--text)" }}>
               {t("dashboard.menu.no_items")}
             </p>
-            <p
-              className="text-sm mt-2"
-              style={{ color: "var(--text-muted)" }}>
+            <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
               {t("dashboard.menu.errors.retry_hint")}
             </p>
           </div>
@@ -391,15 +511,14 @@ export default function MenuPage() {
                   style={
                     selectedCategoryId === category.id
                       ? {
-                        background:
-                          "linear-gradient(to right, var(--primary))",
-                        color: "white",
-                      }
+                          background: "linear-gradient(to right, var(--primary))",
+                          color: "white",
+                        }
                       : {
-                        background: "var(--surface)",
-                        color: "var(--text-muted)",
-                        border: "1px solid var(--border)",
-                      }
+                          background: "var(--surface)",
+                          color: "var(--text-muted)",
+                          border: "1px solid var(--border)",
+                        }
                   }
                   suppressHydrationWarning>
                   {category.name}
@@ -423,42 +542,38 @@ export default function MenuPage() {
                     d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                   />
                 </svg>
-                <p
-                  className="text-lg font-medium"
-                  style={{ color: "var(--text)" }}>
+                <p className="text-lg font-medium" style={{ color: "var(--text)" }}>
                   {t("dashboard.menu.no_items")}
                 </p>
-                <p
-                  className="text-sm mt-2"
-                  style={{ color: "var(--text-muted)" }}>
+                <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
                   {selectedCategoryId === "All"
                     ? t("dashboard.menu.add_first_item")
-                    : t(
-                      "dashboard.menu.empty_category",
-                      {
+                    : t("dashboard.menu.empty_category", {
                         category:
-                          categoryFilters.find((c) => c.id === selectedCategoryId)?.name ||
-                          "",
-                      },
-                    )}
+                          categoryFilters.find((c) => c.id === selectedCategoryId)
+                            ?.name || "",
+                      })}
                 </p>
               </div>
             ) : (
-              /* Menu Items Grid */
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
                 {filteredItems.map((item) => (
                   <div key={item.id} className="space-y-2">
-
                     <DishCard
                       item={item}
                       formatPrice={formatPrice}
-                      onDelete={handleDelete}
+                      onToggleStatus={handleToggleStatus}
+                      onAddIngredients={handleOpenIngredients}
                       labels={{
                         bestSeller: t("dashboard.menu.best_seller"),
                         outOfStock: t("dashboard.menu.out_of_stock"),
                         noDescription: t("dashboard.menu.no_description"),
                         price: t("dashboard.menu.price"),
                         edit: t("dashboard.menu.edit"),
+                        ingredients: t("dashboard.menu.ingredients.actions.ingredients"),
+                        activate: t("dashboard.menu.ingredients.actions.activate"),
+                        deactivate: t("dashboard.menu.ingredients.actions.deactivate"),
+                        status_icon_label: t("dashboard.menu.ingredients.actions.status_icon_label"),
                       }}
                     />
                   </div>
@@ -468,6 +583,111 @@ export default function MenuPage() {
           </>
         )}
       </div>
+
+      <Modal
+        title={
+          activeDish
+            ? t("dashboard.menu.ingredients.modal.title", { name: activeDish.name })
+            : t("dashboard.menu.ingredients.modal.title_empty")
+        }
+        open={recipeModalOpen}
+        onCancel={() => setRecipeModalOpen(false)}
+        footer={null}
+        width={640}
+        destroyOnClose>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_140px_120px] gap-3">
+            <Select
+              showSearch
+              placeholder={t("dashboard.menu.ingredients.modal.select_placeholder")}
+              options={ingredientOptions}
+              value={selectedIngredientId}
+              loading={ingredientsLoading}
+              onChange={(value) => setSelectedIngredientId(value)}
+              optionFilterProp="label"
+            />
+            <InputNumber
+              min={0.01}
+              step={0.1}
+              value={quantity ?? undefined}
+              onChange={(value) => setQuantity(value)}
+              placeholder={t("dashboard.menu.ingredients.modal.quantity_placeholder")}
+              className="w-full"
+            />
+            <Button
+              type="primary"
+              onClick={handleAddRecipe}
+              loading={savingRecipe}
+              className="w-full">
+              {t("dashboard.menu.ingredients.actions.add")}
+            </Button>
+          </div>
+
+          <div className="border rounded-lg" style={{ borderColor: "var(--border)" }}>
+            {loadingRecipes ? (
+              <div className="p-4 text-sm" style={{ color: "var(--text-muted)" }}>
+                {t("dashboard.menu.ingredients.modal.loading_recipes")}
+              </div>
+            ) : dishRecipes.length === 0 ? (
+              <div className="p-4 text-sm" style={{ color: "var(--text-muted)" }}>
+                {t("dashboard.menu.ingredients.modal.empty_recipes")}
+              </div>
+            ) : (
+              <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+                {dishRecipes.map((recipe) => {
+                  const ingredientName =
+                    recipe.ingredientName ||
+                    ingredients.find((item) => item.id === recipe.ingredientId)
+                      ?.name ||
+                    "";
+                  return (
+                    <div key={recipe.id || recipe.ingredientId} className="p-3">
+                      <div className="flex flex-col md:flex-row md:items-center gap-3">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                            {ingredientName}
+                          </p>
+                        </div>
+                        <InputNumber
+                          min={0.01}
+                          step={0.1}
+                          value={recipe.quantity}
+                          onChange={(value) =>
+                            setDishRecipes((prev) =>
+                              prev.map((r) =>
+                                r.ingredientId === recipe.ingredientId
+                                  ? { ...r, quantity: value || 0 }
+                                  : r,
+                              ),
+                            )
+                          }
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleUpdateRecipe(recipe)}
+                            loading={savingRecipe}
+                            type="primary"
+                            ghost
+                            className="min-w-[72px]">
+                            {t("dashboard.menu.ingredients.actions.save")}
+                          </Button>
+                          <Button
+                            danger
+                            onClick={() => handleDeleteRecipe(recipe)}
+                            loading={savingRecipe}
+                            className="min-w-[72px]">
+                            {t("dashboard.menu.ingredients.actions.delete")}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </main>
   );
 }

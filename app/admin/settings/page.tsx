@@ -103,7 +103,7 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue="RestX Premium Restaurant"
+                    defaultValue={t("dashboard.settings.general.restaurant_name_placeholder", "Restaurant")}
                     className="w-full px-4 py-2 rounded-lg focus:outline-none"
                     style={{
                       background: "var(--surface)",
@@ -406,11 +406,8 @@ export default function SettingsPage() {
                     suppressHydrationWarning>
                     <div className="text-center">
                       <p
-                        className={`font-bold ${
-                          theme.name === "Light"
-                            ? "text-gray-900"
-                            : "text-white"
-                        }`}>
+                        className="font-bold"
+                        style={{ color: "var(--text)" }}>
                         {t(
                           `dashboard.settings.appearance.themes.${theme.name.toLowerCase()}`,
                         )}

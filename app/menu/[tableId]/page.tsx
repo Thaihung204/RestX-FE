@@ -3,7 +3,6 @@
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CartModal from "@/components/customer/CartModal";
 import CustomerFooter from "@/components/customer/CustomerFooter";
-import NotificationSystem from "@/components/notifications/NotificationSystem";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useTheme } from "@/lib/hooks/useTheme";
@@ -20,8 +19,7 @@ import type {
 import {
   ArrowLeftOutlined,
   CloseOutlined,
-  FireOutlined,
-  HeartFilled,
+  
   MinusOutlined,
   PlusOutlined,
   SearchOutlined,
@@ -33,22 +31,26 @@ import {
   Card,
   Col,
   ConfigProvider,
+  Grid,
   Input,
+  message,
   Modal,
   Row,
   Spin,
-  Typography,
-  message,
   theme,
+  Typography,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 export default function MenuPage() {
   const { t } = useTranslation("common");
+  const screens = useBreakpoint();
+  const isSmallPhone = !screens.sm;
   const router = useRouter();
   const params = useParams();
   
@@ -70,8 +72,6 @@ export default function MenuPage() {
     cartItems,
     addToCart: addToCartContext,
     updateQuantity,
-    openCartModal,
-    cartModalOpen,
     setOrderContext,
   } = useCart();
 
@@ -82,7 +82,8 @@ export default function MenuPage() {
   const [foodDetailModalOpen, setFoodDetailModalOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState<MenuItem | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [messageApi, contextHolder] = message.useMessage();
+  const [, contextHolder] = message.useMessage();
+  const [addingItemId, setAddingItemId] = useState<string | null>(null);
 
   // API state
   const [dishes, setDishes] = useState<MenuItem[]>([]);
@@ -115,7 +116,8 @@ export default function MenuPage() {
         setCustomerName(profile.fullName);
         setPhoneNumber(profile.phoneNumber || "");
         setAvatarUrl(
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.fullName)}&background=4F46E5&color=fff`,
+          profile.avatarUrl ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.fullName)}&background=4F46E5&color=fff`,
         );
       }
     } catch (error) {
@@ -259,6 +261,9 @@ export default function MenuPage() {
   };
 
   const handleAddToCart = (item: MenuItem) => {
+    if (addingItemId === item.id) return;
+
+    setAddingItemId(item.id);
     const cartItem: CartItem = {
       id: item.id,
       name: item.name,
@@ -269,11 +274,11 @@ export default function MenuPage() {
       categoryName: item.categoryName,
       image: item.image,
     };
-    addToCartContext(cartItem);
-  };
 
-  const formatVND = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN").format(amount) + "đ";
+    addToCartContext(cartItem);
+    window.setTimeout(() => {
+      setAddingItemId((current) => (current === item.id ? null : current));
+    }, 450);
   };
 
   const formatPrice = (price: string | number) => {
@@ -403,11 +408,17 @@ export default function MenuPage() {
             radial-gradient(circle at 0% 0%, var(--primary-soft), transparent 45%),
             radial-gradient(circle at 100% 100%, var(--primary-faint), transparent 45%)
           `,
-            paddingBottom: 80,
+            paddingBottom: isSmallPhone ? 104 : 96,
           }}>
           {/* --- Hero Section --- */}
           <div
-            style={{ position: "relative", height: 280, overflow: "hidden" }}>
+            style={{
+              position: "relative",
+              height: isSmallPhone
+                ? "clamp(205px, 30vh, 250px)"
+                : "clamp(220px, 34vh, 300px)",
+              overflow: "hidden",
+            }}>
             <div
               style={{
                 position: "absolute",
@@ -451,8 +462,8 @@ export default function MenuPage() {
               style={{
                 position: "absolute",
                 bottom: 20,
-                left: 16,
-                right: 16,
+                left: 12,
+                right: 12,
                 maxWidth: 1200,
                 margin: "0 auto",
               }}>
@@ -488,7 +499,7 @@ export default function MenuPage() {
               <div style={{ maxWidth: 1200, margin: "0 auto" }}>
                 <Input
                   size="large"
-                  placeholder="Search items..."
+                  placeholder={t("menu_page.search_placeholder")}
                   prefix={<SearchOutlined />}
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
@@ -505,7 +516,11 @@ export default function MenuPage() {
 
           {/* --- Main Content --- */}
           <div
-            style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
+            style={{
+              maxWidth: 1200,
+              margin: "0 auto",
+              padding: isSmallPhone ? "16px 10px" : "20px 12px",
+            }}>
             {/* Hiển thị phẳng các category và dishes */}
             <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
               {categoriesWithDishes.map((categoryGroup) => (
@@ -568,16 +583,16 @@ export default function MenuPage() {
                             style={{
                               display: "flex",
                               flexDirection: "row",
-                              gap: 12,
-                              padding: 12,
+                              gap: isSmallPhone ? 8 : 12,
+                              padding: isSmallPhone ? 10 : 12,
                               alignItems: "center",
                             }}>
                             {/* Image Section */}
                             <div
                               style={{
                                 flexShrink: 0,
-                                width: 85,
-                                height: 85,
+                                width: isSmallPhone ? 72 : 85,
+                                height: isSmallPhone ? 72 : 85,
                                 position: "relative",
                               }}>
                               {item.isBestSeller && (
@@ -594,7 +609,7 @@ export default function MenuPage() {
                                     borderBottomRightRadius: 8,
                                     zIndex: 1,
                                   }}>
-                                  {t("menu_page.best_seller", "Best Seller")}
+                                  {t("menu_page.best_seller")}
                                 </div>
                               )}
                               {item.image ? (
@@ -620,12 +635,11 @@ export default function MenuPage() {
                                     alignItems: "center",
                                     justifyContent: "center",
                                   }}>
-                                  <FireOutlined
-                                    style={{
-                                      color: "var(--text-muted)",
-                                      fontSize: 24,
-                                    }}
-                                  />
+                                  <img
+                                src="/images/dishStatus/spicy.png"
+                                alt={t("menu_page.tags.vegan")}
+                                style={{ width: 16, height: 16, objectFit: "contain" }}
+                              />
                                 </div>
                               )}
                             </div>
@@ -634,7 +648,7 @@ export default function MenuPage() {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <Text
                                 style={{
-                                  fontSize: 16,
+                                  fontSize: isSmallPhone ? 15 : 16,
                                   fontWeight: 600,
                                   color: "var(--text)",
                                   display: "block",
@@ -649,7 +663,7 @@ export default function MenuPage() {
                                 style={{
                                   color: "var(--primary)",
                                   fontWeight: 700,
-                                  fontSize: 16,
+                                  fontSize: isSmallPhone ? 15 : 16,
                                   display: "block",
                                 }}>
                                 {formatPrice(item.price)}đ
@@ -663,13 +677,17 @@ export default function MenuPage() {
                                   marginTop: 6,
                                 }}>
                                 {item.isSpicy && (
-                                  <FireOutlined
-                                    style={{ color: "var(--danger)", fontSize: 12 }}
+                                  <img
+                                    src="/images/dishStatus/spicy.png"
+                                    alt={t("menu_page.tags.spicy")}
+                                    style={{ width: 12, height: 12, objectFit: "contain" }}
                                   />
                                 )}
                                 {item.isVegetarian && (
-                                  <HeartFilled
-                                    style={{ color: "var(--success)", fontSize: 12 }}
+                                  <img
+                                    src="/images/dishStatus/vegetable.png"
+                                    alt={t("menu_page.tags.vegan")}
+                                    style={{ width: 12, height: 12, objectFit: "contain" }}
                                   />
                                 )}
                                 {item.isBestSeller && (
@@ -700,6 +718,7 @@ export default function MenuPage() {
                                     <Button
                                       type="text"
                                       icon={<MinusOutlined />}
+                                      disabled={addingItemId === item.id}
                                       onClick={() =>
                                         updateQuantity(item.id, cartItem.quantity - 1)
                                       }
@@ -727,6 +746,7 @@ export default function MenuPage() {
                                     <Button
                                       type="text"
                                       icon={<PlusOutlined />}
+                                      disabled={addingItemId === item.id}
                                       onClick={() =>
                                         updateQuantity(item.id, cartItem.quantity + 1)
                                       }
@@ -750,6 +770,8 @@ export default function MenuPage() {
                                   type="primary"
                                   shape="circle"
                                   icon={<PlusOutlined />}
+                                  loading={addingItemId === item.id}
+                                  disabled={addingItemId === item.id}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleAddToCart(item);
@@ -757,7 +779,6 @@ export default function MenuPage() {
                                   style={{
                                     background: "var(--primary)",
                                     border: "none",
-                                    // boxShadow: "0 4px 10px var(--primary-glow)",
                                   }}
                                 />
                               );
@@ -877,9 +898,11 @@ export default function MenuPage() {
                             alignItems: "center",
                             justifyContent: "center",
                           }}>
-                          <FireOutlined
-                            style={{ fontSize: 40, color: "var(--primary)" }}
-                          />
+                          <img
+                                src="/images/dishStatus/spicy.png"
+                                alt={t("menu_page.tags.vegan")}
+                                style={{ width: 16, height: 16, objectFit: "contain" }}
+                              />
                         </div>
                       )}
 
@@ -965,7 +988,11 @@ export default function MenuPage() {
                                 alignItems: "center",
                                 gap: 5,
                               }}>
-                              <FireOutlined />
+                              <img
+                                src="/images/dishStatus/spicy.png"
+                                alt={t("menu_page.tags.vegan")}
+                                style={{ width: 16, height: 16, objectFit: "contain" }}
+                              />
                               {t("menu_page.tags.spicy")}
                             </span>
                           )}
@@ -983,7 +1010,11 @@ export default function MenuPage() {
                                 alignItems: "center",
                                 gap: 5,
                               }}>
-                              <HeartFilled />
+                              <img
+                                src="/images/dishStatus/vegetable.png"
+                                alt={t("menu_page.tags.vegan")}
+                                style={{ width: 16, height: 16, objectFit: "contain" }}
+                              />
                               {t("menu_page.tags.vegan")}
                             </span>
                           )}
@@ -1120,6 +1151,8 @@ export default function MenuPage() {
                             <Button
                               type="primary"
                               icon={<PlusOutlined />}
+                              loading={addingItemId === selectedFood.id}
+                              disabled={addingItemId === selectedFood.id}
                               onClick={() => handleAddToCart(selectedFood)}
                               style={{
                                 background: "var(--primary)",
@@ -1152,9 +1185,9 @@ export default function MenuPage() {
           phoneNumber={phoneNumber}
           avatarUrl={avatarUrl}
           onProfileUpdate={loadCustomerProfile}
+          tableId={tableId}
         />
       </ConfigProvider>
-      <NotificationSystem />
     </>
     </ProtectedRoute>
   );

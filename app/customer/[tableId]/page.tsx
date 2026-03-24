@@ -6,7 +6,6 @@ import CustomerFooter from "@/components/customer/CustomerFooter";
 import MenuCTA from "@/components/customer/MenuCTA";
 import RestaurantHeader from "@/components/customer/RestaurantHeader";
 import WelcomeCard from "@/components/customer/WelcomeCard";
-import NotificationSystem from "@/components/notifications/NotificationSystem";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useTenant } from "@/lib/contexts/TenantContext";
@@ -14,11 +13,12 @@ import { useTheme } from "@/lib/hooks/useTheme";
 import customerService, {
   CustomerResponseDto,
 } from "@/lib/services/customerService";
-import { ConfigProvider, Space, Typography, message, theme } from "antd";
+import { ConfigProvider, Grid, Space, Typography, message, theme } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 function isValidGuid(id: string) {
   return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
@@ -28,6 +28,8 @@ function isValidGuid(id: string) {
 
 export default function CustomerHomePageByTable() {
   const router = useRouter();
+  const screens = useBreakpoint();
+  const isSmallPhone = !screens.sm;
   const params = useParams();
   const rawTableId = params?.tableId;
   const tableId = Array.isArray(rawTableId) ? rawTableId[0] : rawTableId || "";
@@ -43,6 +45,7 @@ export default function CustomerHomePageByTable() {
   const [customerName, setCustomerName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [openProfileSignal, setOpenProfileSignal] = useState(0);
 
   useEffect(() => {
     if (!isValidGuid(tableId)) {
@@ -76,7 +79,8 @@ export default function CustomerHomePageByTable() {
         setCustomerName(profile.fullName);
         setPhoneNumber(profile.phoneNumber || "");
         setAvatarUrl(
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.fullName)}&background=4F46E5&color=fff`,
+          profile.avatarUrl ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.fullName)}&background=4F46E5&color=fff`,
         );
       }
     } catch (error) {
@@ -145,15 +149,15 @@ export default function CustomerHomePageByTable() {
               radial-gradient(circle at 0% 0%, var(--primary-soft), transparent 45%),
               radial-gradient(circle at 100% 100%, var(--primary-faint), transparent 45%)
             `,
-            paddingBottom: -100,
+            paddingBottom: isSmallPhone ? 96 : 88,
           }}
         >
           {contextHolder}
 
-          <section style={{ position: "relative", marginBottom: -60, zIndex: 1 }}>
+          <section style={{ position: "relative", marginBottom: -48, zIndex: 1 }}>
             <div
               style={{
-                height: 380,
+                height: "clamp(260px, 40vh, 400px)",
                 background:
                   "url(/images/customer/customer.png) no-repeat center center / cover",
                 position: "relative",
@@ -173,9 +177,9 @@ export default function CustomerHomePageByTable() {
               style={{
                 maxWidth: 1200,
                 margin: "0 auto",
-                padding: "0 16px",
+                padding: "0 12px",
                 position: "absolute",
-                bottom: 80,
+                bottom: 64,
                 left: 0,
                 right: 0,
               }}
@@ -202,12 +206,13 @@ export default function CustomerHomePageByTable() {
                 customerName={customerName}
                 tableNumber={tableLabel}
                 rank={customerProfile?.membershipLevel}
+                onClick={() => setOpenProfileSignal((prev) => prev + 1)}
               />
 
               <MenuCTA onViewMenu={handleViewMenu} />
             </Space>
 
-            <div style={{ textAlign: "center", marginTop: 48, opacity: 0.5 }}>
+            <div style={{ textAlign: "center", marginTop: 32, opacity: 0.5 }}>
               <Text
                 style={{
                   color: "var(--text-muted)",
@@ -216,7 +221,7 @@ export default function CustomerHomePageByTable() {
                   textTransform: "uppercase",
                 }}
               >
-                Powered by RestX Experience
+                {tenant?.businessName || tenant?.name || "Restaurant Experience"}
               </Text>
             </div>
           </div>
@@ -227,10 +232,11 @@ export default function CustomerHomePageByTable() {
             phoneNumber={phoneNumber}
             avatarUrl={avatarUrl}
             onProfileUpdate={loadCustomerProfile}
+            openProfileSignal={openProfileSignal}
             position="sticky"
+            tableId={tableId}
           />
           <CartModal />
-          <NotificationSystem />
         </div>
       </ConfigProvider>
     </ProtectedRoute>

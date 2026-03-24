@@ -1,9 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
+import { useTenant } from '@/lib/contexts/TenantContext';
 
 export const HeroSection: React.FC = () => {
     const { t } = useTranslation('auth');
+    const { tenant } = useTenant();
+
+    const restaurantName = tenant?.businessName || tenant?.name;
+    const logoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
 
     return (
         <div className="hidden md:block md:w-1/2 relative overflow-hidden auth-hero-panel z-10 h-full min-h-screen">
@@ -19,8 +24,8 @@ export const HeroSection: React.FC = () => {
             {/* Content */}
             <div className="absolute bottom-0 left-0 p-12 md:p-16 w-full text-white z-10">
                 <div className="flex items-center gap-2 mb-6">
-                    <img src="/images/logo/restx-removebg-preview.png" alt="RestX Logo" className="w-10 h-10 object-contain" style={{ filter: 'invert(1) hue-rotate(180deg) brightness(1.1)' }} />
-                    <span className="text-xl font-bold tracking-widest uppercase">RestX</span>
+                    <img src={logoUrl} alt={restaurantName || "Restaurant Logo"} className="w-10 h-10 object-contain" style={{ filter: 'invert(1) hue-rotate(180deg) brightness(1.1)' }} />
+                    <span className="text-xl font-bold tracking-widest uppercase">{restaurantName || t('login_header.default_title')}</span>
                 </div>
 
                 <h2 className="text-4xl lg:text-5xl font-bold leading-tight mb-4 drop-shadow-lg">

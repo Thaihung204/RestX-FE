@@ -870,6 +870,65 @@
         "save_error_message": "Failed to save dish. Please try again.",
         "detail_error_message": "Failed to load dish details.",
         "validation_error_message": "Invalid data. Please check your input."
+      },
+      "images": {
+        "main_image": "Main",
+        "set_main": "Set as main image",
+        "is_main": "Main image",
+        "remove": "Remove image",
+        "add_photo": "Add photo",
+        "click_to_upload": "Click to upload images",
+        "format_hint": "PNG, JPG, WEBP up to 5MB each",
+        "helper_text": "Upload up to {{maxCount}} images. Star button sets the main image. Drag images to reposition.",
+        "max_count": "Maximum {{maxCount}} images allowed",
+        "file_too_large": "{{name}}: File size must be less than 5MB",
+        "invalid_type": "{{name}}: Only PNG, JPG, JPEG, and WEBP are allowed"
+      },
+      "ingredients": {
+        "actions": {
+          "ingredients": "Ingredients",
+          "add": "Add",
+          "save": "Save",
+          "delete": "Delete",
+          "activate": "Activate",
+          "deactivate": "Deactivate",
+          "status_icon_label": "Dish status"
+        },
+        "modal": {
+          "title": "Ingredients: {{name}}",
+          "title_empty": "Ingredients",
+          "select_placeholder": "Select ingredient",
+          "quantity_placeholder": "Quantity",
+          "loading_recipes": "Loading ingredients...",
+          "empty_recipes": "No ingredients yet."
+        },
+        "status": {
+          "activate_title": "Activate dish",
+          "deactivate_title": "Deactivate dish",
+          "activate_confirm": "Are you sure you want to activate {{name}}?",
+          "deactivate_confirm": "Are you sure you want to deactivate {{name}}?",
+          "activate_action": "Activate",
+          "deactivate_action": "Deactivate",
+          "activate_success": "{{name}} activated",
+          "deactivate_success": "{{name}} deactivated",
+          "update_failed": "Failed to update status"
+        },
+        "validation": {
+          "select_ingredient": "Please select an ingredient",
+          "invalid_quantity": "Invalid quantity"
+        },
+        "toasts": {
+          "add_success": "Ingredient added",
+          "add_error": "Failed to add ingredient",
+          "update_success": "Ingredient updated",
+          "update_error": "Failed to update ingredient",
+          "delete_success": "Ingredient deleted",
+          "delete_error": "Failed to delete ingredient"
+        },
+        "errors": {
+          "fetch_ingredients": "Failed to load ingredients",
+          "fetch_recipes": "Failed to load dish ingredients"
+        }
       }
     },
     "orders": {
@@ -1203,10 +1262,15 @@
       "stock_levels": "Stock Levels",
       "min_stock": "Minimum Stock (Min)",
       "max_stock": "Maximum Stock (Max)",
+      "stock_status_label": "Stock status",
+      "status_values": {
+        "in_stock": "In stock",
+        "low_stock": "Low stock",
+        "out_of_stock": "Out of stock"
+      },
       "stock_unit_note": "Measured in {{unit}}. Actual stock managed via the Inventory Stock module.",
       "actions_section": "Actions",
       "status_section": "Status",
-      "system_info": "System Information",
       "saving": "Saving…",
       "create_btn": "Create Ingredient",
       "update_btn": "Update",
@@ -1230,11 +1294,13 @@
         "col_supplier": "Supplier",
         "col_type": "Type",
         "col_status": "Status",
+        "col_stock_status": "Stock status",
         "badge_active": "Active",
         "badge_inactive": "Inactive",
         "badge_inactive_short": "Off",
         "mobile_unit": "Unit: ",
         "mobile_min_max": "Min/Max: ",
+        "mobile_stock_status": "Stock: ",
         "mobile_supplier": "Supplier: ",
         "mobile_type": "Type: ",
         "edit_tooltip": "Edit",
@@ -1315,6 +1381,16 @@
         "compact_mode_desc": "Reduce spacing between elements",
         "show_animations": "Show Animations",
         "show_animations_desc": "Enable interface animations",
+        "branding_title": "Store Branding",
+        "loading_tenant_branding": "Loading tenant branding...",
+        "select_tenant_to_edit": "Select Tenant to Edit",
+        "choose_tenant_placeholder": "Choose a tenant...",
+        "editing_branding_for": "Editing branding for: {{name}} ({{hostname}})",
+        "select_tenant_warning": "Please select a tenant above to edit its branding.",
+        "drag_to_adjust": "Drag to adjust",
+        "preview_primary_button": "Primary Button",
+        "preview_outlined_button": "Outlined Button",
+        "preview_soft_button": "Soft Button",
         "themes": {
           "dark": "Dark",
           "light": "Light",
@@ -1354,6 +1430,7 @@
       "buttons": {
         "cancel": "Cancel",
         "save_changes": "Save Changes",
+        "save_branding": "Save Branding",
         "saving": "Saving..."
       }
     },
@@ -1570,7 +1647,7 @@
     },
     "hero": {
       "tag": "All-in-one Restaurant Ops Platform",
-      "title": "Optimize restaurant operations with RestX",
+      "title": "Optimize restaurant operations with Restaurant Platform",
       "description": "Manage tables, orders, kitchen, inventory and reports on a single platform.",
       "get_started": "Get Started",
       "watch_demo": "Watch Demo",
@@ -1592,7 +1669,7 @@
       "tag": "Our Story",
       "title_prefix": "Revolutionizing the ",
       "title_highlight": "Culinary World",
-      "description": "RestX was born from a simple mission: to empower restaurateurs with technology that feels as natural as their craft. We bridge the gap between traditional hospitality and modern efficiency, helping you focus on what matters most—great food and happy customers.",
+      "description": "Restaurant Platform was born from a simple mission: to empower restaurateurs with technology that feels as natural as their craft. We bridge the gap between traditional hospitality and modern efficiency, helping you focus on what matters most—great food and happy customers.",
       "mission": {
         "title": "Mission Driven",
         "desc": "Dedicated to your growth"
@@ -1642,8 +1719,8 @@
       }
     },
     "workflow": {
-      "title": "How RestX works in your restaurant",
-      "description": "From table booking to bill settlement, every step is supported by RestX.",
+      "title": "How Restaurant Platform works in your restaurant",
+      "description": "From table booking to bill settlement, every step is supported by Restaurant Platform.",
       "steps": {
         "setup": {
           "title": "Restaurant & Menu Setup",
@@ -1660,16 +1737,16 @@
       }
     },
     "testimonials": {
-      "title": "What restaurants say about RestX?",
-      "description": "Hundreds of restaurant owners and managers have trusted RestX to optimize their operations.",
+      "title": "What restaurants say about Restaurant Platform?",
+      "description": "Hundreds of restaurant owners and managers have trusted Restaurant Platform to optimize their operations.",
       "items": {
         "nam": {
           "role": "Owner, 123 Seafood Restaurant",
-          "quote": "RestX has completely changed how we operate. From table reservations to inventory management, everything is automated and much more accurate."
+          "quote": "Restaurant Platform has completely changed how we operate. From table reservations to inventory management, everything is automated and much more accurate."
         },
         "huong": {
           "role": "Manager, Pho 24h Chain",
-          "quote": "I used to spend hours aggregating reports from 5 branches. Now with RestX, all data is available on the dashboard in a few clicks."
+          "quote": "I used to spend hours aggregating reports from 5 branches. Now with Restaurant Platform, all data is available on the dashboard in a few clicks."
         },
         "tuan": {
           "role": "Owner, Saigon Broken Rice",
@@ -1682,7 +1759,7 @@
       }
     },
     "footer": {
-      "tagline": "RestX – Next generation restaurant operations platform. Helping you manage every aspect of your restaurant on a single system.",
+      "tagline": "Next generation restaurant operations platform. Helping you manage every aspect of your restaurant on a single system.",
       "columns": {
         "product": {
           "title": "Product",
@@ -1713,7 +1790,7 @@
           "gdpr": "GDPR"
         }
       },
-      "copyright": "© {year} RestX. All rights reserved.",
+      "copyright": "© {year} Restaurant Platform. All rights reserved.",
       "privacy": "Privacy",
       "terms": "Terms",
       "cookies": "Cookies"
@@ -1744,8 +1821,8 @@
     },
     "about": {
       "title": "About Us",
-      "restaurant_name": "RestX Restaurant",
-      "description": "At RestX Restaurant, we put our customers first. With a dedicated staff and unique recipes, we are committed to providing the best dining experience. Each dish is carefully prepared with the freshest ingredients, creating a special flavor found nowhere else. We sincerely thank you for your support.",
+      "restaurant_name": "Restaurant",
+      "description": "At Restaurant, we put our customers first. With a dedicated staff and unique recipes, we are committed to providing the best dining experience. Each dish is carefully prepared with the freshest ingredients, creating a special flavor found nowhere else. We sincerely thank you for your support.",
       "see_more": "See More"
     },
     "categories": {
@@ -1821,7 +1898,7 @@
     }
   },
   "points_card": {
-    "title": "RestX Rewards",
+    "title": "Loyalty Rewards",
     "points": "points",
     "gold_progress": "Gold Tier Progress",
     "remaining_points": "{{count}} points left",
@@ -1883,6 +1960,35 @@
       "rank_silver": "Silver Member",
       "rank_bronze": "Bronze Member",
       "rank_platinum": "Platinum Member"
+    },
+    "ai_popup": {
+      "title": "AI Assistant",
+      "status_online": "Online",
+      "robot_alt": "AI Robot",
+      "add_item": "Add item",
+      "input_placeholder": "Ask AI for dish suggestions...",
+      "loading_reply": "Replying...",
+      "empty_state": {
+        "title": "Start a conversation",
+        "subtitle": "Let me suggest dishes that fit your taste."
+      },
+      "errors": {
+        "connection": "I'm having a connection issue, please try again.",
+        "missing_order_info": "Insufficient information to place the order."
+      },
+      "order": {
+        "success": "Order confirmed successfully",
+        "error": "Unable to confirm the order. Please try again."
+      },
+      "order_draft": {
+        "title": "Order",
+        "confirm": "Confirm"
+      },
+      "quick_replies": {
+        "spicy": "Suggest spicy dishes",
+        "combo_two": "Combo for 2",
+        "vegetarian": "Find vegetarian dishes"
+      }
     }
   },
   "menu_page": {
@@ -1922,7 +2028,7 @@
     },
     "sections": {
       "all_title": "All Dishes",
-      "all_desc": "Discover the entire elite menu of RestX.",
+      "all_desc": "Discover the entire elite menu of Restaurant Platform.",
       "special_title": "Special Bowls",
       "special_desc": "Signature poke bowls with fresh fish, pickled vegetables and rich sauces.",
       "sushi_title": "Honi Sushi",
@@ -1937,7 +2043,7 @@
       "description": "Reserve your table, manage your bookings, and experience culinary excellence defined by passion."
     },
     "admin_login_header": {
-      "title": "Admin RestX",
+      "title": "Admin Portal",
       "subtitle": "Restaurant Management System",
       "forgot_password": "Forgot your password?"
     },
@@ -1958,7 +2064,7 @@
       "phone_placeholder": "0123456789",
       "name_label": "Name",
       "name_placeholder": "Enter your name",
-      "terms_text": "By continuing, you agree to RestX's",
+      "terms_text": "By continuing, you agree to our",
       "terms_of_service": "Terms of Service",
       "privacy_policy": "Privacy Policy",
       "or_login_with": "Or login with",
@@ -1982,7 +2088,7 @@
     },
     "register_page": {
       "title": "Create Account",
-      "subtitle": "Join RestX today",
+      "subtitle": "Join us today",
       "first_name": "First Name",
       "last_name": "Last Name",
       "email": "Email",
@@ -1991,7 +2097,7 @@
       "confirm_password": "Confirm Password",
       "password_placeholder": "Enter your password",
       "confirm_password_placeholder": "Confirm your password",
-      "i_agree": "I agree to RestX's",
+      "i_agree": "I agree to Restaurant Platform's",
       "terms_of_service": "Terms of Service",
       "privacy_policy": "Privacy Policy",
       "create_account_btn": "CREATE ACCOUNT",
@@ -2031,7 +2137,7 @@
       "password_placeholder": "",
       "forgot_password": "Forgot password?",
       "login_btn": "LOGIN",
-      "terms_text": "By continuing, you agree to RestX's",
+      "terms_text": "By continuing, you agree to our",
       "terms_of_service": "Terms of Service",
       "and": "and",
       "privacy_policy": "Privacy Policy",
@@ -2055,7 +2161,7 @@
       "password_placeholder": "",
       "forgot_password": "Forgot password?",
       "login_btn": "LOGIN",
-      "terms_text": "By continuing, you agree to RestX's",
+      "terms_text": "By continuing, you agree to our",
       "terms_of_service": "Terms of Service",
       "and": "and",
       "privacy_policy": "Privacy Policy",
@@ -2214,7 +2320,7 @@
       "tenants": "Tenants"
     },
     "title": "Tenant Management",
-    "subtitle": "Manage restaurants in the RestX system, track tenant count and total system revenue.",
+    "subtitle": "Manage restaurants in the Restaurant Platform system, track tenant count and total system revenue.",
     "add_tenant": "Add Tenant",
     "stats": {
       "total_tenants": "Total Tenants",
@@ -2396,7 +2502,7 @@
     "create": {
       "breadcrumb_create": "Create",
       "title": "Create New Restaurant",
-      "subtitle": "Add a new tenant (restaurant) to the RestX system.",
+      "subtitle": "Add a new tenant (restaurant) to the Restaurant Platform system.",
       "back": "Back",
       "restaurant_info": "Restaurant Information",
       "owner_info": "Owner Information",
@@ -2465,7 +2571,7 @@
     "edit": {
       "breadcrumb_edit": "Edit",
       "title": "Edit Restaurant",
-      "subtitle": "Update tenant (restaurant) information in the RestX system.",
+      "subtitle": "Update tenant (restaurant) information in the Restaurant Platform system.",
       "back": "Back",
       "extended_business_info": "Extended Business Information",
       "about_overview": "About & Overview",
@@ -2537,6 +2643,24 @@
         "button_delete": "Delete Permanently"
       }
     }
+  },
+  "address": {
+    "vn": {
+      "city": "Province/City",
+      "district": "District",
+      "ward": "Ward",
+      "city_placeholder": "Select province/city",
+      "district_placeholder": "Select district",
+      "ward_placeholder": "Select ward",
+      "city_required": "Please select province/city",
+      "district_required": "Please select district",
+      "ward_required": "Please select ward"
+    }
+  },
+  "request_tenant": {
+    "city_required": "Please select province/city",
+    "district_required": "Please select district",
+    "ward_required": "Please select ward"
   },
   "tenant_requests": {
     "form": {
@@ -2831,7 +2955,7 @@
     "about": {
       "subtitle": "Our Story",
       "title": "Culinary Heritage from Passion",
-      "default_description": "At RestX Restaurant, we put customers first. With dedicated staff and unique recipes, we are committed to providing the best dining experience.",
+      "default_description": "At Restaurant, we put customers first. With dedicated staff and unique recipes, we are committed to providing the best dining experience.",
       "secondary_description": "Each dish is carefully prepared with the freshest ingredients, creating distinct flavors found nowhere else. We sincerely thank you for your support.",
       "chef": "Executive Chef"
     },

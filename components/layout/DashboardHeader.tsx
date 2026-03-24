@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import adminAuthService from "@/lib/services/adminAuthService";
+import { useTenant } from "@/lib/contexts/TenantContext";
 
 export default function DashboardHeader() {
   const { t } = useTranslation("common");
@@ -16,6 +17,9 @@ export default function DashboardHeader() {
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [adminName, setAdminName] = useState("Admin");
   const [adminRole, setAdminRole] = useState("Super Admin");
+  const { tenant } = useTenant();
+  const tenantName = tenant?.businessName || tenant?.name;
+  const tenantLogoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
 
   useEffect(() => {
     const admin = adminAuthService.getCurrentAdmin();
@@ -58,16 +62,19 @@ export default function DashboardHeader() {
               style={{ borderColor: "var(--border)" }}>
               <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                 <img
-                  src="/images/logo/restx-removebg-preview.png"
-                  alt="RestX Logo"
+                  src={tenantLogoUrl}
+                  alt={tenantName || "Restaurant Logo"}
                   className="w-full h-full object-contain app-logo-img"
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/logo/restx-removebg-preview.png";
+                  }}
                 />
               </div>
               <div>
                 <h2
                   className="font-bold text-lg"
                   style={{ color: "var(--text)" }}>
-                  Rest<span style={{ color: "var(--primary)" }}>X</span>
+                  {tenantName || t("dashboard.header.brand", { defaultValue: "Restaurant" })}
                 </h2>
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.sidebar.management")}

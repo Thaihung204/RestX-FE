@@ -1,6 +1,6 @@
 import axiosInstance from "./axiosInstance";
 
-// Backend DTOs (mirrors RestX.BLL.DataTranferObjects.Orders)
+// Backend DTOs (mirrors server DTOs)
 
 export interface OrderDetailRequestDto {
   dishId: string;

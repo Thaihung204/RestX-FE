@@ -49,46 +49,7 @@ export default function StaffPage() {
     currentStatus: "active" | "inactive";
   } | null>(null);
 
-  const roles = ["Manager", "Waiter", "Kitchen Chef"];
-
-  const fetchStaffStats = async () => {
-    try {
-      const [activeRes, inactiveRes] = await Promise.all([
-        employeeService.getEmployees({
-          page: 1,
-          itemsPerPage: 1,
-          isActive: true,
-        }),
-        employeeService.getEmployees({
-          page: 1,
-          itemsPerPage: 1,
-          isActive: false,
-        }),
-      ]);
-
-      const extractTotal = (res: any) => {
-        const pd = res.data;
-        return (
-          pd?.totalCount ??
-          res.totalCount ??
-          pd?.items?.length ??
-          pd?.employees?.length ??
-          (Array.isArray(res.data) ? res.data.length : 0) ??
-          0
-        );
-      };
-
-      setTotalActive(extractTotal(activeRes));
-      setTotalInactive(extractTotal(inactiveRes));
-    } catch {
-      setTotalActive(
-        staffList.filter((s) => s.status === "active").length,
-      );
-      setTotalInactive(
-        staffList.filter((s) => s.status === "inactive").length,
-      );
-    }
-  };
+  const roles = ["Manager", "Staff"];
 
   const fetchStaffList = async (page: number = 1) => {
     try {
@@ -136,8 +97,9 @@ export default function StaffPage() {
           new Set(mappedData.map((s) => s.position).filter(Boolean)).size
         );
 
-        // Fetch global active/inactive stats from API metadata
-        fetchStaffStats();
+        // Use global active/inactive stats from main API metadata
+        setTotalActive(paginatedData?.totalActive ?? mappedData.filter((s) => s.status === "active").length);
+        setTotalInactive(paginatedData?.totalInactive ?? mappedData.filter((s) => s.status === "inactive").length);
 
         setError(null);
       } else {
@@ -530,11 +492,9 @@ export default function StaffPage() {
                         <span
                           className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium mt-1 ${member.role === "Manager"
                               ? "bg-purple-500/10 text-purple-500"
-                              : member.role === "Kitchen Chef"
-                                ? "bg-orange-500/10 text-orange-500"
-                                : member.role === "Waiter"
-                                  ? "bg-blue-500/10 text-blue-500"
-                                  : "bg-gray-500/10 text-gray-500"
+                              : member.role === "Staff"
+                                ? "bg-blue-500/10 text-blue-500"
+                                : "bg-gray-500/10 text-gray-500"
                             }`}>
                           {t(
                             `dashboard.staff.roles.${member.role.toLowerCase()}`,

@@ -12,6 +12,7 @@ import { Card, Col, Flex, Row, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTenant } from '@/lib/contexts/TenantContext';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -26,6 +27,8 @@ interface Feature {
 
 const FeatureSection: React.FC = () => {
   const { t } = useTranslation();
+  const { tenant } = useTenant();
+  const tenantName = tenant?.businessName || tenant?.name;
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const features: Feature[] = [
@@ -193,7 +196,7 @@ const FeatureSection: React.FC = () => {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}>
-                RestX
+                {tenantName || t('homepage.features.brand', { defaultValue: 'Restaurant' })}
               </span>
             </Title>
             <Paragraph
