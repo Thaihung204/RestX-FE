@@ -491,9 +491,7 @@ export default function CategorySettings() {
                       borderColor: "var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder={t(
-                      "dashboard.settings.categories.name_placeholder",
-                    )}
+
                   />
                 </div>
 
@@ -515,9 +513,7 @@ export default function CategorySettings() {
                       borderColor: "var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder={t(
-                      "dashboard.settings.categories.description_placeholder",
-                    )}
+
                   />
                 </div>
 
@@ -624,13 +620,13 @@ export default function CategorySettings() {
                               className="font-medium text-sm"
                               style={{ color: "var(--text)" }}>
                               {t("dashboard.settings.categories.upload_image", {
-                                defaultValue: "Click to upload image",
+                                defaultValue: "",
                               })}
                             </p>
                             <p
                               className="text-xs mt-1"
                               style={{ color: "var(--text-muted)" }}>
-                              PNG, JPG up to 5MB
+
                             </p>
                           </div>
                         )}

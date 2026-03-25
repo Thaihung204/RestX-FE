@@ -12,6 +12,7 @@ import {
   ReloadOutlined,
   RiseOutlined,
   SearchOutlined,
+  SettingOutlined,
   ShopOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -21,8 +22,10 @@ import {
   Breadcrumb,
   Button,
   Card,
+  DatePicker,
   Dropdown,
   Input,
+  Radio,
   Select,
   Statistic,
   Table,
@@ -503,6 +506,14 @@ const TenantPage: React.FC = () => {
                   />
                 </button>
               </Dropdown>
+              <Link
+                href="https://admin.restx.food/hangfire"
+                target="_blank"
+                rel="noreferrer">
+                <Button icon={<SettingOutlined />}>
+                Hangfire Jobs
+                </Button>
+              </Link>
               <Link href="/tenants/new">
                 <Button
                   type="primary"
