@@ -2291,11 +2291,6 @@
       "active_tenants": "Đang hoạt động",
       "monthly_revenue": "Doanh thu tháng"
     },
-    "tabs": {
-      "restaurant_list": "Danh sách nhà hàng",
-      "tenant_requests": "Nhà hàng đăng kí",
-      "system_revenue": "Doanh thu hệ thống"
-    },
     "table": {
       "tenant_info": "Thông tin nhà hàng",
       "contact": "Liên hệ",
@@ -2338,6 +2333,83 @@
       "week": "Tuần",
       "month": "Tháng",
       "year": "Năm"
+    },
+    "tabs": {
+      "restaurant_list": "Danh sách nhà hàng",
+      "tenant_requests": "Yêu cầu nhà hàng",
+      "system_revenue": "Doanh thu hệ thống",
+      "business_tools": "Business Tools"
+    },
+    "business_tools": {
+      "title": "Business Tools",
+      "subtitle": "Tự động chuyển trạng thái tenants theo lịch và rule mẫu.",
+      "new_rule": "Tạo rule",
+      "refresh": "Làm mới",
+      "search_placeholder": "Tìm nhà hàng, doanh nghiệp, email...",
+      "sync_tenants": "Đồng bộ tenants",
+      "summary": "Tổng: {{total}} tenants · Hiển thị: {{showing}}",
+      "stats": {
+        "active_rules": "Rule đang chạy",
+        "scheduled_jobs": "Tác vụ theo lịch",
+        "maintenance_queue": "Hàng chờ bảo trì"
+      },
+      "tags": {
+        "auto": "Auto",
+        "schedule": "Schedule",
+        "manual_trigger": "Manual Trigger"
+      },
+      "table": {
+        "live": "Live",
+        "trigger": "Trigger",
+        "auto_status": "Auto Status",
+        "schedule": "Schedule",
+        "current_status": "Trạng thái hiện tại",
+        "next_status": "Trạng thái tiếp theo",
+        "actions": "Thao tác",
+        "apply": "Apply",
+        "tooltip_auto_switch": "Tự động chuyển trạng thái"
+      },
+      "quick_actions": {
+        "title": "Quick Actions",
+        "subtitle": "Template bật/tắt hàng loạt theo rule.",
+        "view_all": "Xem tất cả",
+        "items": {
+          "bulk_activation": {
+            "title": "Kích hoạt hàng loạt",
+            "desc": "Bật active cho các tenant vượt KPI tuần."
+          },
+          "scheduled_pause": {
+            "title": "Tạm dừng theo lịch",
+            "desc": "Chuyển maintenance vào 0:00 mỗi ngày."
+          },
+          "inactive_reminder": {
+            "title": "Nhắc nhở inactive",
+            "desc": "Cảnh báo nếu inactive quá 7 ngày."
+          }
+        }
+      },
+      "rule_preview": {
+        "title": "Rule Preview",
+        "subtitle": "Mẫu workflow chuyển trạng thái.",
+        "create": "Tạo",
+        "items": {
+          "new_signup": "Đăng ký mới",
+          "payment_failure": "Thanh toán thất bại",
+          "scheduled_downtime": "Bảo trì định kỳ"
+        },
+        "condition_label": "Điều kiện: {{value}}",
+        "action_label": "Hành động: {{value}}",
+        "conditions": {
+          "new_tenant": "Tenant mới trong 24h",
+          "failed_payment": "Thanh toán thất bại 2 lần",
+          "scheduled_maintenance": "Bảo trì định kỳ"
+        },
+        "actions": {
+          "auto_active": "Tự động bật",
+          "switch_inactive": "Chuyển sang inactive",
+          "schedule_maintenance": "Đặt lịch bảo trì"
+        }
+      }
     },
     "messages": {
       "refresh_success": "Làm mới thành công",

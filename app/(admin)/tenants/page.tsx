@@ -1,7 +1,6 @@
 "use client";
 
 import ThemeToggle from "@/app/components/ThemeToggle";
-import RevenueChart from "@/components/admin/charts/RevenueChart";
 import { useLanguage } from "@/components/I18nProvider";
 import adminAuthService from "@/lib/services/adminAuthService";
 import {
@@ -38,6 +37,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import TenantsSystemRevenue from "../../../components/(admin)/tenants/SystemRevenueTab";
 import TenantRequestList from "../../../components/(admin)/tenants/TenantRequestList";
 import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
 import { tenantService } from "../../../lib/services/tenantService";
@@ -55,9 +55,6 @@ const TenantPage: React.FC = () => {
   const [adminRole, setAdminRole] = useState("Super Admin");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
-  const [activeRevenueRange, setActiveRevenueRange] = useState<
-    "day" | "week" | "month" | "year"
-  >("month");
   const [tenants, setTenants] = useState<ITenant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -236,6 +233,7 @@ const TenantPage: React.FC = () => {
       ),
     },
   ];
+
 
   return (
     <div
@@ -445,7 +443,7 @@ const TenantPage: React.FC = () => {
                             fill="#FF0"
                           />
                         </svg>
-                        <span className="font-medium">Tiếng Việt</span>
+                        <span className="font-medium">Vietnamese</span>
                         {language === "vi" && (
                           <svg
                             className="w-4 h-4 ml-auto"
@@ -700,63 +698,7 @@ const TenantPage: React.FC = () => {
               {
                 key: "revenue",
                 label: t("tenants.tabs.system_revenue"),
-                children: (
-                  <div className="space-y-4">
-                    {/* Filter bar for revenue */}
-                    <Card
-                      variant="borderless"
-                      style={{
-                        background: "var(--card)",
-                        borderColor: "var(--border)",
-                      }}>
-                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                        <div>
-                          <Typography.Title
-                            level={4}
-                            style={{
-                              margin: 0,
-                              color: "var(--text)",
-                            }}>
-                            {t("tenants.revenue.title")}
-                          </Typography.Title>
-                          <Typography.Text
-                            style={{ color: "var(--text-muted)" }}>
-                            {t("tenants.revenue.subtitle")}
-                          </Typography.Text>
-                        </div>
-                        <div className="flex flex-wrap gap-3">
-                          <Radio.Group
-                            value={activeRevenueRange}
-                            onChange={(e) =>
-                              setActiveRevenueRange(e.target.value)
-                            }
-                            options={[
-                              { label: t("tenants.revenue.day"), value: "day" },
-                              {
-                                label: t("tenants.revenue.week"),
-                                value: "week",
-                              },
-                              {
-                                label: t("tenants.revenue.month"),
-                                value: "month",
-                              },
-                              {
-                                label: t("tenants.revenue.year"),
-                                value: "year",
-                              },
-                            ]}
-                            optionType="button"
-                            buttonStyle="solid"
-                          />
-                          <DatePicker.RangePicker />
-                        </div>
-                      </div>
-                    </Card>
-
-                    {/* Chart area - reuse RevenueChart with system theme */}
-                    <RevenueChart />
-                  </div>
-                ),
+                children: <TenantsSystemRevenue />,
               },
             ]}
           />

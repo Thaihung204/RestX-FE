@@ -228,6 +228,25 @@ export default function DashboardSidebar() {
       ),
     },
     {
+      id: "automation",
+      label: "Automation",
+      path: "/admin/automation",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10.5 6h3M9.75 10.5a2.25 2.25 0 104.5 0 2.25 2.25 0 00-4.5 0zM4.5 19.5h15M6 19.5v-4.125a6 6 0 0112 0V19.5"
+          />
+        </svg>
+      ),
+    },
+    {
       id: "settings",
       label: t("dashboard.sidebar.items.settings"),
       path: "/admin/settings",
