@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminSelect } from "@/components/ui/AdminSelect";
 import { triggerService } from "@/lib/services/triggerService";
 import { App } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -302,8 +303,8 @@ export default function NewAutomationTriggerPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="md:col-span-2"><label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>Name</label><input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Name" className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20" style={fieldStyle} /></div>
                   <div className="md:col-span-2"><label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>Description</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20 resize-none" style={fieldStyle} /></div>
-                  <div><label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>Type</label><select value={type} onChange={(e) => setType(e.target.value)} className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20" style={fieldStyle} disabled={loadingMeta}>{typeOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select></div>
-                  <div><label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>Trigger Object</label><select value={triggerObjectId} onChange={(e) => setTriggerObjectId(e.target.value)} className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20" style={fieldStyle} disabled={loadingMeta}>{objectOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select></div>
+                  <div><label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>Type</label><AdminSelect value={type} onChange={(e) => setType(e.target.value)} style={fieldStyle} disabled={loadingMeta}>{typeOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</AdminSelect></div>
+                  <div><label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>Trigger Object</label><AdminSelect value={triggerObjectId} onChange={(e) => setTriggerObjectId(e.target.value)} style={fieldStyle} disabled={loadingMeta}>{objectOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</AdminSelect></div>
                 </div>
               </section>
 

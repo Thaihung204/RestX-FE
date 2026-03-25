@@ -1,10 +1,10 @@
 "use client";
 
+import { AdminSelect } from "@/components/ui/AdminSelect";
 import { triggerService } from "@/lib/services/triggerService";
 import { Trigger, TriggerObject } from "@/lib/types/trigger";
-import { EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
-import { Button, Select, Space, Switch, Table, Tag, Typography } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import { EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Space, Switch, Tag, Typography } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -90,70 +90,6 @@ export default function AutomationPage() {
     return triggerList.filter((item) => item.triggerObjectId === listFilterObject);
   }, [listFilterObject, triggerList]);
 
-  const listColumns: ColumnsType<TriggerListItem> = [
-    {
-      title: "Live",
-      dataIndex: "live",
-      key: "live",
-      width: 80,
-      render: (_, record) => (
-        <Switch
-          size="small"
-          checked={record.live}
-          onChange={(checked) => {
-            setTriggerList((prev) =>
-              prev.map((item) =>
-                item.id === record.id ? { ...item, live: checked } : item
-              )
-            );
-          }}
-        />
-      ),
-    },
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-      width: 320,
-      render: (value: string) => (
-        <Typography.Text style={{ color: "var(--text)" }} strong>
-          {value}
-        </Typography.Text>
-      ),
-    },
-    {
-      title: "Object",
-      dataIndex: "objectName",
-      key: "objectName",
-      width: 180,
-      render: (value: string) => <Tag color="processing">{value}</Tag>,
-    },
-    {
-      title: "Description",
-      dataIndex: "description",
-      key: "description",
-      render: (value: string) => (
-        <Typography.Text style={{ color: "var(--text-muted)" }}>
-          {value}
-        </Typography.Text>
-      ),
-    },
-    {
-      title: "",
-      key: "actions",
-      width: 100,
-      align: "right",
-      render: (_, record) => (
-        <Button
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => router.push(`/admin/automation/new?triggerId=${record.id}`)}
-        >
-          Edit
-        </Button>
-      ),
-    },
-  ];
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[var(--bg-base)]">
@@ -169,9 +105,6 @@ export default function AutomationPage() {
               </Typography.Text>
             </div>
             <Space wrap>
-              <Button icon={<ReloadOutlined />} onClick={fetchTriggerData} loading={loading}>
-                Reload Metadata
-              </Button>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
@@ -182,26 +115,99 @@ export default function AutomationPage() {
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <Select
-              className="w-full md:w-72"
+            <AdminSelect
+              containerClassName="w-full md:w-72"
               value={listFilterObject}
-              options={[{ label: "Filter by Object", value: "all" }, ...objectOptions]}
-              onChange={setListFilterObject}
-            />
+              onChange={(e) => setListFilterObject(e.target.value)}
+            >
+              <option value="all">Filter by Object</option>
+              {objectOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </AdminSelect>
             <Tag color="default">{filteredTriggers.length} triggers</Tag>
           </div>
 
-          <Table
-            rowKey="id"
-            columns={listColumns}
-            dataSource={filteredTriggers}
-            loading={loading}
-            size="middle"
-            scroll={{ x: 980 }}
-            pagination={{ pageSize: 10, showSizeChanger: false }}
-            className="admin-tenants-table"
-            style={{ background: "transparent" }}
-          />
+          <div className="rounded-lg overflow-hidden" style={{ background: "var(--bg-surface)" }}>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr style={{ background: "var(--bg-base)", borderBottom: "2px solid var(--border)" }}>
+                    <th className="text-left px-6 py-4 text-sm font-semibold" style={{ color: "var(--text)" }}>
+                      Live
+                    </th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold" style={{ color: "var(--text)" }}>
+                      Name
+                    </th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold" style={{ color: "var(--text)" }}>
+                      Object
+                    </th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold" style={{ color: "var(--text)" }}>
+                      Description
+                    </th>
+                    <th className="text-right px-6 py-4 text-sm font-semibold" style={{ color: "var(--text)" }}>
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTriggers.map((item) => (
+                    <tr
+                      key={item.id}
+                      style={{
+                        background: "var(--bg-surface)",
+                        borderBottom: "1px solid var(--border)",
+                      }}
+                    >
+                      <td className="px-6 py-4">
+                        <Switch
+                          size="small"
+                          checked={item.live}
+                          onChange={(checked) => {
+                            setTriggerList((prev) =>
+                              prev.map((trigger) =>
+                                trigger.id === item.id ? { ...trigger, live: checked } : trigger
+                              )
+                            );
+                          }}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <p className="font-semibold" style={{ color: "var(--text)" }}>
+                            {item.name}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p style={{ color: "var(--text)" }}>{item.objectName}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p style={{ color: "var(--text-secondary)" }}>{item.description || "-"}</p>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button
+                          size="small"
+                          icon={<EditOutlined />}
+                          onClick={() => router.push(`/admin/automation/new?triggerId=${item.id}`)}
+                        >
+                          Edit
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {filteredTriggers.length === 0 && !loading && (
+              <div className="text-center py-12">
+                <p style={{ color: "var(--text-secondary)" }}>No triggers found.</p>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>

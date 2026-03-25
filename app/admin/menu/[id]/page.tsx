@@ -1,6 +1,7 @@
 "use client";
 
 import MultiImageUpload from "@/components/MultiImageUpload";
+import { AdminSelect } from "@/components/ui/AdminSelect";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import { message, Modal } from "antd";
@@ -448,32 +449,21 @@ export default function MenuItemFormPage() {
                         style={{ color: "var(--text)" }}>
                         Category
                       </label>
-                      <select
+                      <AdminSelect
                         id="categoryId"
                         name="categoryId"
                         value={formData.categoryId}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 rounded-lg outline-none transition-all"
-                        style={{
-                          background: "var(--surface)",
-                          border: "1px solid var(--border)",
-                          color: "var(--text)",
-                        }}
-                        onFocus={(e) =>
-                          (e.currentTarget.style.boxShadow =
-                            "0 0 0 2px var(--primary)")
-                        }
-                        onBlur={(e) =>
-                          (e.currentTarget.style.boxShadow = "none")
-                        }>
+                        className="py-3"
+                      >
                         <option value="">Select a category</option>
                         {categories.map((cat) => (
                           <option key={cat.id} value={cat.id}>
                             {cat.name}
                           </option>
                         ))}
-                      </select>
+                      </AdminSelect>
                     </div>
 
                     <div>
@@ -483,25 +473,14 @@ export default function MenuItemFormPage() {
                         style={{ color: "var(--text)" }}>
                         Unit
                       </label>
-                      <select
+                      <AdminSelect
                         id="unit"
                         name="unit"
                         value={formData.unit}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 rounded-lg outline-none transition-all"
-                        style={{
-                          background: "var(--surface)",
-                          border: "1px solid var(--border)",
-                          color: "var(--text)",
-                        }}
-                        onFocus={(e) =>
-                          (e.currentTarget.style.boxShadow =
-                            "0 0 0 2px var(--primary)")
-                        }
-                        onBlur={(e) =>
-                          (e.currentTarget.style.boxShadow = "none")
-                        }>
+                        className="py-3"
+                      >
                         <option value="portion">Portion</option>
                         <option value="plate">Plate</option>
                         <option value="bowl">Bowl</option>
@@ -509,7 +488,7 @@ export default function MenuItemFormPage() {
                         <option value="glass">Glass</option>
                         <option value="piece">Piece</option>
                         <option value="serving">Serving</option>
-                      </select>
+                      </AdminSelect>
                     </div>
 
                     <div>
