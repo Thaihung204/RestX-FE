@@ -1,5 +1,5 @@
-import axiosInstance from "./axiosInstance";
 import { Trigger, TriggerObject, TriggerProperty, TriggerType } from "../types/trigger";
+import axiosInstance from "./axiosInstance";
 
 const normalizeArray = <T,>(payload: unknown): T[] => {
   if (Array.isArray(payload)) return payload as T[];
@@ -14,10 +14,27 @@ const normalizeArray = <T,>(payload: unknown): T[] => {
   return [];
 };
 
+const normalizeObject = <T,>(payload: unknown): T | null => {
+  if (!payload) return null;
+  if (typeof payload === "object") {
+    const data = (payload as any).data;
+    if (data && typeof data === "object") return data as T;
+    const result = (payload as any).result;
+    if (result && typeof result === "object") return result as T;
+    return payload as T;
+  }
+  return null;
+};
+
 export const triggerService = {
   async getTriggerTypes(): Promise<TriggerType[]> {
     const res = await axiosInstance.get("/triggers/types");
     return normalizeArray<TriggerType>(res.data);
+  },
+
+  async createTriggerObject(payload: unknown) {
+    const res = await axiosInstance.post("/triggers/objects", payload);
+    return res.data;
   },
 
   async getTriggers(): Promise<Trigger[]> {
@@ -28,6 +45,16 @@ export const triggerService = {
   async getTriggerObjects(): Promise<TriggerObject[]> {
     const res = await axiosInstance.get("/triggers/objects");
     return normalizeArray<TriggerObject>(res.data);
+  },
+
+  async getTriggerById(id: string | number) {
+    const res = await axiosInstance.get(`/triggers/${id}`);
+    return normalizeObject<Record<string, any>>(res.data);
+  },
+
+  async updateTriggerById(id: string | number, payload: unknown) {
+    const res = await axiosInstance.put(`/triggers/${id}`, payload);
+    return res.data;
   },
 
   async getTriggerObjectProperties(objectId: string | number): Promise<TriggerProperty[]> {

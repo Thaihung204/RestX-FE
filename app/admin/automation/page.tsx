@@ -5,6 +5,7 @@ import { Trigger, TriggerObject } from "@/lib/types/trigger";
 import { EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Select, Space, Switch, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 const toLabel = (item: any, fallback: string) =>
@@ -20,6 +21,7 @@ type TriggerListItem = {
 };
 
 export default function AutomationPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [triggerObjects, setTriggerObjects] = useState<TriggerObject[]>([]);
   const [triggerList, setTriggerList] = useState<TriggerListItem[]>([]);
@@ -141,8 +143,12 @@ export default function AutomationPage() {
       key: "actions",
       width: 100,
       align: "right",
-      render: () => (
-        <Button size="small" icon={<EditOutlined />}>
+      render: (_, record) => (
+        <Button
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => router.push(`/admin/automation/new?triggerId=${record.id}`)}
+        >
           Edit
         </Button>
       ),
@@ -166,7 +172,10 @@ export default function AutomationPage() {
               <Button icon={<ReloadOutlined />} onClick={fetchTriggerData} loading={loading}>
                 Reload Metadata
               </Button>
-              <Button type="primary" icon={<PlusOutlined />}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => router.push("/admin/automation/new")}>
                 Add Trigger
               </Button>
             </Space>
