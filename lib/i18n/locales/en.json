@@ -637,6 +637,7 @@
         "customers": "Customers",
         "staff": "Staff",
         "schedules": "Schedules",
+        "automation": "Automation",
         "settings": "Settings",
         "manage": "Manage",
         "help": "Help"
@@ -2312,6 +2313,152 @@
         "Area": "Area",
         "Dish": "Dish",
         "Staff": "Staff"
+      }
+    }
+  },
+  "automation": {
+    "page": {
+      "title": "Trigger Manager",
+      "subtitle": "View and manage your restaurant automation triggers."
+    },
+    "actions": {
+      "add_trigger": "Add Trigger",
+      "edit": "Edit",
+      "delete": "Delete",
+      "delete_confirm_title": "Delete Trigger",
+      "delete_confirm_description": "Are you sure you want to delete trigger \"{{name}}\"?",
+      "delete_confirm_ok": "Delete",
+      "delete_confirm_cancel": "Cancel"
+    },
+    "filter": {
+      "by_object": "Filter by Object"
+    },
+    "summary": {
+      "total_triggers": "{{count}} triggers"
+    },
+    "table": {
+      "live": "Live",
+      "name": "Name",
+      "object": "Object",
+      "description": "Description",
+      "actions": "Actions"
+    },
+    "empty": {
+      "no_triggers": "No triggers found."
+    },
+    "fallback": {
+      "unknown_object": "Unknown Object",
+      "trigger_name": "Trigger {{index}}",
+      "object_name": "Object {{index}}",
+      "empty_description": "-"
+    },
+    "logs": {
+      "fetch_triggers_failed": "Failed to load triggers:",
+      "delete_trigger_failed": "Failed to delete trigger:"
+    },
+    "messages": {
+      "delete_success": "Trigger deleted successfully",
+      "delete_failed": "Failed to delete trigger"
+    },
+    "new": {
+      "page": {
+        "create_title": "Create Trigger",
+        "edit_title": "Edit Trigger"
+      },
+      "sections": {
+        "basic_information": "Basic Information",
+        "criteria": "Criteria",
+        "actions": "Actions",
+        "form_actions": "Actions",
+        "status": "Status",
+        "groups": "Groups"
+      },
+      "fields": {
+        "name": "Name",
+        "description": "Description",
+        "type": "Type",
+        "trigger_object": "Trigger Object",
+        "property_name": "Property Name",
+        "property_value": "Property Value",
+        "criteria_type": "Criteria Type",
+        "logic_type": "Logic Type",
+        "computed_description": "Computed Description",
+        "group_name": "Group name",
+        "groups": "Groups",
+        "action": "Action",
+        "custom_properties": "Custom Properties",
+        "custom_properties_json": "Custom Properties (JSON)"
+      },
+      "placeholders": {
+        "name": "Name",
+        "description": "Description",
+        "group_name": "New Group",
+        "action": "CascadePendingToPreparing",
+        "property_name": "OrderStatusId",
+        "property_value": "Confirmed",
+        "computed_description": "Order status changed to Confirmed"
+      },
+      "actions": {
+        "back_to_list": "Back to automation list",
+        "group": "Group",
+        "criteria": "Criteria",
+        "action": "Action",
+        "remove": "Remove",
+        "close": "Close",
+        "save": "Save",
+        "cancel": "Cancel",
+        "create_trigger": "Create Trigger",
+        "update_trigger": "Update Trigger",
+        "creating": "Creating...",
+        "updating": "Updating..."
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "active_help": "Trigger will run when conditions match",
+        "inactive_help": "Trigger is disabled"
+      },
+      "empty": {
+        "no_criteria": "No criteria defined.",
+        "no_actions": "No actions defined.",
+        "no_groups": "No groups defined."
+      },
+      "modals": {
+        "add_group_title": "Add Group",
+        "add_action_title": "Add Action",
+        "add_criteria_title": "Add Criteria"
+      },
+      "criteria_type_options": {
+        "any_property_change": "AnyPropertyChange",
+        "specific_property_new_value": "SpecificPropertyNewValue",
+        "specific_property_old_value": "SpecificPropertyOldValue",
+        "specific_property_value": "SpecificPropertyValue",
+        "specific_property_value_not_equals": "SpecificPropertyValueNotEquals",
+        "is_greater_than": "IsGreaterThan",
+        "is_less_than": "IsLessThan",
+        "is_updated": "IsUpdated",
+        "contains": "Contains"
+      },
+      "logic_type_options": {
+        "and": "And",
+        "or": "Or"
+      },
+      "fallback": {
+        "type_name": "Type {{index}}",
+        "object_name": "Object {{index}}",
+        "group_name": "Group {{index}}",
+        "action_name": "Action {{index}}"
+      },
+      "messages": {
+        "load_metadata_failed": "Failed to load automation metadata",
+        "trigger_not_found": "Trigger not found",
+        "load_detail_failed": "Failed to load trigger detail",
+        "invalid_json": "Custom properties must be valid JSON",
+        "require_action": "Please add at least one action",
+        "create_success": "Trigger created successfully",
+        "update_success": "Trigger updated successfully",
+        "create_failed": "Failed to create trigger",
+        "update_failed": "Failed to update trigger"
       }
     }
   },

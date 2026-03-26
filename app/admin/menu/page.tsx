@@ -2,11 +2,12 @@
 
 import DishCard, { DishCardItem } from "@/components/admin/menu/DishCard";
 import { usePageLoading } from "@/components/PageTransitionLoader";
+import { AdminSelect } from "@/components/ui/AdminSelect";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import ingredientService, { IngredientItem } from "@/lib/services/ingredientService";
 import recipeService, { DishRecipeItem } from "@/lib/services/recipeService";
-import { App, Button, InputNumber, Modal, Select } from "antd";
+import { App, Button, Modal } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -35,8 +36,8 @@ export default function MenuPage() {
   const [activeDish, setActiveDish] = useState<MenuItem | null>(null);
   const [dishRecipes, setDishRecipes] = useState<DishRecipeItem[]>([]);
   const [loadingRecipes, setLoadingRecipes] = useState(false);
-  const [selectedIngredientId, setSelectedIngredientId] = useState<string>();
-  const [quantity, setQuantity] = useState<number | null>(1);
+  const [selectedIngredientId, setSelectedIngredientId] = useState<string>("");
+  const [quantity, setQuantity] = useState<string>("1");
   const [savingRecipe, setSavingRecipe] = useState(false);
 
   const fetchMenuItems = async () => {
@@ -184,8 +185,8 @@ export default function MenuPage() {
     const dish = menuItems.find((menuItem) => menuItem.id === item.id) || null;
     setActiveDish(dish);
     setRecipeModalOpen(true);
-    setSelectedIngredientId(undefined);
-    setQuantity(1);
+    setSelectedIngredientId("");
+    setQuantity("1");
     await fetchRecipes(item.id);
   };
 
@@ -195,7 +196,9 @@ export default function MenuPage() {
       message.warning(t("dashboard.menu.ingredients.validation.select_ingredient"));
       return;
     }
-    if (!quantity || quantity <= 0) {
+
+    const parsedQuantity = Number(quantity);
+    if (!quantity.trim() || Number.isNaN(parsedQuantity) || parsedQuantity <= 0) {
       message.warning(t("dashboard.menu.ingredients.validation.invalid_quantity"));
       return;
     }
@@ -205,12 +208,12 @@ export default function MenuPage() {
       await recipeService.create({
         dishId: activeDish.id,
         ingredientId: selectedIngredientId,
-        quantity,
+        quantity: parsedQuantity,
       });
       message.success(t("dashboard.menu.ingredients.toasts.add_success"));
       await fetchRecipes(activeDish.id);
-      setSelectedIngredientId(undefined);
-      setQuantity(1);
+      setSelectedIngredientId("");
+      setQuantity("1");
     } catch {
       message.error(t("dashboard.menu.ingredients.toasts.add_error"));
     } finally {
@@ -273,10 +276,7 @@ export default function MenuPage() {
       ? menuItems
       : menuItems.filter((item) => item.categoryId === selectedCategoryId);
 
-  const ingredientOptions = ingredients.map((ingredient) => ({
-    value: ingredient.id || "",
-    label: `${ingredient.name} (${ingredient.unit})`,
-  }));
+  const isNumericInput = (value: string) => /^\d*\.?\d*$/.test(value);
 
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -594,25 +594,37 @@ export default function MenuPage() {
         onCancel={() => setRecipeModalOpen(false)}
         footer={null}
         width={640}
-        destroyOnClose>
+        destroyOnHidden>
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-[1fr_140px_120px] gap-3">
-            <Select
-              showSearch
-              placeholder={t("dashboard.menu.ingredients.modal.select_placeholder")}
-              options={ingredientOptions}
+            <AdminSelect
               value={selectedIngredientId}
-              loading={ingredientsLoading}
-              onChange={(value) => setSelectedIngredientId(value)}
-              optionFilterProp="label"
-            />
-            <InputNumber
-              min={0.01}
-              step={0.1}
-              value={quantity ?? undefined}
-              onChange={(value) => setQuantity(value)}
+              onChange={(e) => setSelectedIngredientId(e.target.value)}
+              disabled={ingredientsLoading}
+            >
+              <option value="">{t("dashboard.menu.ingredients.modal.select_placeholder")}</option>
+              {ingredients.map((ingredient) => (
+                <option key={ingredient.id || ingredient.name} value={ingredient.id || ""}>
+                  {ingredient.name} ({ingredient.unit})
+                </option>
+              ))}
+            </AdminSelect>
+            <input
+              type="text"
+              value={quantity}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                if (isNumericInput(nextValue)) {
+                  setQuantity(nextValue);
+                }
+              }}
               placeholder={t("dashboard.menu.ingredients.modal.quantity_placeholder")}
-              className="w-full"
+              className="w-full px-4 py-2.5 rounded-lg outline-none transition-all"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}
             />
             <Button
               type="primary"
@@ -648,29 +660,33 @@ export default function MenuPage() {
                             {ingredientName}
                           </p>
                         </div>
-                        <InputNumber
-                          min={0.01}
-                          step={0.1}
-                          value={recipe.quantity}
-                          onChange={(value) =>
+                        <input
+                          type="text"
+                          value={String(recipe.quantity ?? "")}
+                          onChange={(e) => {
+                            const nextValue = e.target.value;
+                            if (!isNumericInput(nextValue)) return;
+
                             setDishRecipes((prev) =>
                               prev.map((r) =>
                                 r.ingredientId === recipe.ingredientId
-                                  ? { ...r, quantity: value || 0 }
+                                  ? {
+                                      ...r,
+                                      quantity:
+                                        nextValue === "" ? 0 : Number(nextValue),
+                                    }
                                   : r,
                               ),
-                            )
-                          }
+                            );
+                          }}
+                          className="w-full md:w-[120px] px-4 py-2.5 rounded-lg outline-none transition-all"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }}
                         />
                         <div className="flex gap-2">
-                          <Button
-                            onClick={() => handleUpdateRecipe(recipe)}
-                            loading={savingRecipe}
-                            type="primary"
-                            ghost
-                            className="min-w-[72px]">
-                            {t("dashboard.menu.ingredients.actions.save")}
-                          </Button>
                           <Button
                             danger
                             onClick={() => handleDeleteRecipe(recipe)}
