@@ -57,6 +57,11 @@ export const triggerService = {
     return res.data;
   },
 
+  async deleteTriggerById(id: string | number) {
+    const res = await axiosInstance.delete(`/triggers/${id}`);
+    return res.data;
+  },
+
   async getTriggerObjectProperties(objectId: string | number): Promise<TriggerProperty[]> {
     const res = await axiosInstance.get(`/triggers/objects/${objectId}/properties`);
     return normalizeArray<TriggerProperty>(res.data);

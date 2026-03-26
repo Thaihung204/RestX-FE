@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminSelect } from "@/components/ui/AdminSelect";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -609,23 +610,19 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                         <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
                           {tDetails("shape")}
                         </label>
-                        <select
+                        <AdminSelect
                           value={formData.shape}
                           onChange={(e) => setFormData({ ...formData, shape: e.target.value as any })}
+                          className="py-[14px]"
                           style={{
-                            width: "100%",
-                            padding: "14px 16px",
                             borderRadius: 10,
                             border: "2px solid var(--border)",
-                            background: "var(--surface)",
-                            color: "var(--text)",
-                            outline: "none",
                           }}
                         >
                           {SHAPE_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{tDetails(opt.labelKey)}</option>
                           ))}
-                        </select>
+                        </AdminSelect>
                       </div>
                       <div>
                         <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
@@ -706,63 +703,26 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                         }}>
                         {tDetails("floor")}
                       </label>
-                      <div style={{ position: "relative" }}>
-                        <select
-                          value={formData.area}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              area: e.target.value as any,
-                            })
-                          }
-                          style={{
-                            width: "100%",
-                            padding: "14px 16px",
-                            paddingRight: 40,
-                            borderRadius: 10,
-                            border: "2px solid var(--border)",
-                            background: "var(--surface)",
-                            color: "var(--text)",
-                            fontSize: 15,
-                            fontWeight: 500,
-                            cursor: "pointer",
-                            appearance: "none",
-                            outline: "none",
-                            transition: "all 0.2s",
-                          }}
-                          onFocus={(e) =>
-                            (e.target.style.borderColor = "var(--primary)")
-                          }
-                          onBlur={(e) =>
-                            (e.target.style.borderColor = "var(--border)")
-                          }>
-                          {floors.length > 0 ? (
-                            floors.map((floor) => (
-                              <option key={floor.id} value={floor.id}>
-                                {floor.name}
-                            </option>
-                            ))
-                          ) : (
-                            <option value="">{tDetails("no_floor")}</option>
-                          )}
-                        </select>
-                        <svg
-                          style={{
-                            position: "absolute",
-                            right: 16,
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            pointerEvents: "none",
-                          }}
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="var(--text-muted)"
-                          strokeWidth="2.5">
-                          <path d="M6 9l6 6 6-6" strokeLinecap="round" />
-                        </svg>
-                      </div>
+                      <AdminSelect
+                        value={formData.area}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            area: e.target.value as any,
+                          })
+                        }
+                        className="py-[14px] font-medium"
+                        style={{
+                          borderRadius: 10,
+                          border: "2px solid var(--border)",
+                        }}
+                      >
+                        {AREA_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </AdminSelect>
                     </motion.div>
 
                     {/* Status */}

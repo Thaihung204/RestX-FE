@@ -1,6 +1,7 @@
 "use client";
 
 import { usePageLoading } from "@/components/PageTransitionLoader";
+import { AdminSelect } from "@/components/ui/AdminSelect";
 import employeeService from "@/lib/services/employeeService";
 import { App, Button, Modal } from "antd";
 import Link from "next/link";
@@ -276,39 +277,19 @@ export default function StaffPage() {
                 }}
               />
             </div>
-            <div className="relative sm:w-48">
-              <select
-                value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
-                className="w-full px-4 py-3 pr-10 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all appearance-none cursor-pointer font-medium"
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}>
-                <option value="all">{t("dashboard.staff.all_roles")}</option>
-                {roles.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5"
-                  style={{ color: "var(--text-muted)" }}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
+            <AdminSelect
+              containerClassName="sm:w-48"
+              value={filterRole}
+              onChange={(e) => setFilterRole(e.target.value)}
+              className="py-3 font-medium"
+            >
+              <option value="all">{t("dashboard.staff.all_roles")}</option>
+              {roles.map((role) => (
+                <option key={role} value={role}>
+                  {role}
+                </option>
+              ))}
+            </AdminSelect>
           </div>
 
           {/* Stats — totalCount từ API metadata */}

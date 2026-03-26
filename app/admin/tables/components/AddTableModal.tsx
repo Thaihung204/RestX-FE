@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminSelect } from "@/components/ui/AdminSelect";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
@@ -349,7 +350,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                         <span style={{ color: "#ff4d4f" }}>*</span>
                       </label>
                       <div style={{ position: "relative" }}>
-                        <select
+                        <AdminSelect
                           id="area"
                           name="area"
                           value={formData.area}
@@ -357,27 +358,12 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                             setFormData({ ...formData, area: e.target.value })
                           }
                           required
+                          className="py-[14px] font-medium"
                           style={{
-                            width: "100%",
-                            padding: "14px 16px",
-                            paddingRight: 40,
                             borderRadius: 10,
                             border: "2px solid var(--border)",
-                            background: "var(--surface)",
-                            color: "var(--text)",
-                            fontSize: 15,
-                            fontWeight: 500,
-                            cursor: "pointer",
-                            appearance: "none",
-                            outline: "none",
-                            transition: "all 0.2s",
                           }}
-                          onFocus={(e) =>
-                            (e.target.style.borderColor = "var(--primary)")
-                          }
-                          onBlur={(e) =>
-                            (e.target.style.borderColor = "var(--border)")
-                          }>
+                        >
                           {floors.length > 0 ? (
                             floors.map(f => (
                               <option key={f.id} value={f.id}>
@@ -399,7 +385,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                               </option>
                             </>
                           )}
-                        </select>
+                        </AdminSelect>
                         <svg
                           style={{
                             position: "absolute",
