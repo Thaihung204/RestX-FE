@@ -9,7 +9,6 @@ import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
-import { TableMap3D } from "./components/TableMap3D";
 import { tableService, TableStatus, floorService, FloorSummary } from "@/lib/services/tableService";
 import { usePageLoading } from "@/components/PageTransitionLoader";
 import { App } from "antd";
@@ -19,7 +18,7 @@ import { tenantService } from "@/lib/services/tenantService";
 
 interface Table {
   id: string;
-  number: number;
+  number: string;
   capacity: number;
   status: "available" | "occupied" | "reserved" | "cleaning";
   area: string; // floorName from BE
@@ -41,12 +40,12 @@ interface Table {
   qrCodeUrl?: string;
 }
 
-type ViewMode = "grid" | "map" | "map3d";
+type ViewMode = "grid" | "map";
 
 export default function TablesPage() {
   const { t } = useTranslation();
 
-  const tDashboard = (key: string, options?: any) => String(t(`dashboard.${key}`, options));
+  const tDashboard = (key: string, options?: any) => String(t(key, { ns: "dashboard", ...options }));
   const { message } = App.useApp();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
@@ -55,7 +54,10 @@ export default function TablesPage() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [tables, setTables] = useState<Table[]>([]);
-  const [qrModal, setQrModal] = useState<{ url: string; number: number; tableId: string } | null>(null);
+  const [qrModal, setQrModal] = useState<{ url: string; number: string; tableId: string } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | Table["status"]>("all");
+  const [floorFilter, setFloorFilter] = useState<string>("all");
+  const [keyword, setKeyword] = useState("");
 
   const statusConfig = {
     available: {
@@ -80,6 +82,13 @@ export default function TablesPage() {
       badge: "bg-red-500/10 text-red-500 border-red-500/20",
     },
   };
+
+  const filteredTables = tables.filter((table) => {
+    const matchStatus = statusFilter === "all" || table.status === statusFilter;
+    const matchFloor = floorFilter === "all" || table.floorId === floorFilter;
+    const matchKeyword = !keyword.trim() || table.number.toLowerCase().includes(keyword.trim().toLowerCase());
+    return matchStatus && matchFloor && matchKeyword;
+  });
 
   /* BE floors state */
   const [beFloors, setBeFloors] = useState<FloorSummary[]>([]);
@@ -109,7 +118,7 @@ export default function TablesPage() {
 
         return {
           id: item.id,
-          number: parseInt(item.code) || 0,
+          number: item.code || '',
           capacity: item.seatingCapacity,
           status: status,
           area: item.floorName || item.type || 'Indoor',
@@ -321,7 +330,7 @@ export default function TablesPage() {
 
       const apiData: any = {
         id: tableToUpdate.id,
-        code: tableToUpdate.number.toString(),
+        code: tableToUpdate.number,
         seatingCapacity: tableToUpdate.capacity,
         type: tableToUpdate.area,
         floorId: effectiveFloorId,
@@ -376,7 +385,7 @@ export default function TablesPage() {
 
       const apiData: any = {
         id: tableToUpdate.id,
-        code: tableToUpdate.number.toString(),
+        code: tableToUpdate.number,
         seatingCapacity: tableToUpdate.capacity,
         type: tableToUpdate.area,
         floorId: tableToUpdate.floorId || layout.activeFloorId,
@@ -492,8 +501,16 @@ export default function TablesPage() {
   const handleUpdateTable = async (values: Partial<Table>) => {
     if (selectedTable) {
       // Optimistic
+      const nextFloor = values.area ? beFloors.find((f) => f.id === values.area) : undefined;
       setTables(tables.map(t =>
-        t.id === selectedTable.id ? { ...t, ...values } : t
+        t.id === selectedTable.id
+          ? {
+              ...t,
+              ...values,
+              area: values.area !== undefined ? (nextFloor?.name || t.area) : t.area,
+              floorId: values.area !== undefined ? values.area : t.floorId,
+            }
+          : t
       ));
 
       try {
@@ -509,7 +526,7 @@ export default function TablesPage() {
           // Full update - preserve all fields
           const apiData: any = {
             id: selectedTable.id,
-            code: selectedTable.number.toString(),
+            code: selectedTable.number,
             seatingCapacity: selectedTable.capacity,
             type: selectedTable.area,
             floorId: selectedTable.floorId || layout?.activeFloorId,
@@ -530,9 +547,12 @@ export default function TablesPage() {
           if (selectedTable.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
           else if (selectedTable.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
 
-          if (values.number !== undefined) apiData.code = values.number.toString();
+          if (values.number !== undefined) apiData.code = values.number;
           if (values.capacity !== undefined) apiData.seatingCapacity = values.capacity;
-          if (values.area !== undefined) apiData.type = values.area;
+          if (values.area !== undefined) {
+            apiData.floorId = values.area;
+            apiData.type = beFloors.find((f) => f.id === values.area)?.name || selectedTable.area;
+          }
           if (values.shape !== undefined) apiData.shape = values.shape;
           if (values.width !== undefined) apiData.width = values.width;
           if (values.height !== undefined) apiData.height = values.height;
@@ -687,19 +707,7 @@ export default function TablesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                   </svg>
                 </button>
-                <button
-                  onClick={() => setViewMode("map3d")}
-                  className={`p-2 rounded-md transition-all ${viewMode === "map3d"
-                    ? "bg-[var(--bg-base)] shadow-sm text-[var(--text)]"
-                    : "text-[var(--text-muted)] hover:text-[var(--text)]"
-                    }`}>
-                  {/* 3D Icon */}
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l8 4-8 4-8-4 8-4z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 10l8 4 8-4" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 14l8 4 8-4" />
-                  </svg>
-                </button>
+
               </div>
               <button
                 onClick={() => setAddAreaModalOpen(true)}
@@ -713,14 +721,14 @@ export default function TablesPage() {
                     className="px-4 py-2 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium transition-all hover:bg-[var(--bg-base)]"
                     disabled={!layout.activeFloorId}
                   >
-                    {tDashboard("tables.edit_floor", { defaultValue: "Sửa tầng" })}
+                    {tDashboard("tables.edit_floor")}
                   </button>
                   <button
                     onClick={() => setZoneToDelete(layout.activeFloorId)}
                     className="px-4 py-2 bg-[var(--card)] border border-red-400/40 text-red-500 rounded-lg font-medium transition-all hover:bg-red-500/10"
                     disabled={layout.floors.length <= 1}
                   >
-                    {tDashboard("tables.delete_floor", { defaultValue: "Xóa tầng" })}
+                    {tDashboard("tables.delete_floor")}
                   </button>
                 </>
               )}
@@ -794,16 +802,79 @@ export default function TablesPage() {
             </div>
           )}
 
-          {/* 3D Map View */}
-          {viewMode === "map3d" && layout && (
-            <div className="h-[calc(100vh-280px)]">
-              <TableMap3D
-                floor={layout.floors.find((floor) => floor.id === layout.activeFloorId) ?? layout.floors[0]}
-                onTableClick={handleMap2DTableClick}
-                selectedTableIds={selectedTable?.id ? [selectedTable.id] : []}
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Search input with icon */}
+            <div className="relative flex-1 min-w-[180px]">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                style={{ color: "var(--text-muted)" }}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+              </svg>
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder={tDashboard("tables.search_placeholder")}
+                className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]/60 transition-all"
+                style={{ color: "var(--text)" }}
               />
             </div>
-          )}
+
+            {/* Status filter */}
+            <div className="relative min-w-[160px]">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                style={{ color: "var(--text-muted)" }}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M3 4h18M7 8h10M11 12h2" />
+              </svg>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="w-full pl-9 pr-8 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--text)] appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]/60 transition-all"
+              >
+                <option value="all">{tDashboard("tables.filters.all_status")}</option>
+                <option value="available">{tDashboard("tables.status.available")}</option>
+                <option value="occupied">{tDashboard("tables.status.occupied")}</option>
+                <option value="reserved">{tDashboard("tables.status.reserved")}</option>
+                <option value="cleaning">{tDashboard("tables.status.cleaning")}</option>
+              </select>
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                style={{ color: "var(--text-muted)" }}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+
+            {/* Floor filter */}
+            <div className="relative min-w-[160px]">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                style={{ color: "var(--text-muted)" }}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9" />
+              </svg>
+              <select
+                value={floorFilter}
+                onChange={(e) => setFloorFilter(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--text)] appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]/60 transition-all"
+              >
+                <option value="all">{tDashboard("tables.filters.all_floor")}</option>
+                {beFloors.map((floor) => (
+                  <option key={floor.id} value={floor.id}>{floor.name}</option>
+                ))}
+              </select>
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                style={{ color: "var(--text-muted)" }}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
 
           <h3
             className="text-xl font-bold mb-6"
@@ -811,7 +882,7 @@ export default function TablesPage() {
             {tDashboard("tables.title")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tables.map((table) => (
+            {filteredTables.map((table) => (
               <div
                 key={table.id}
                 onClick={() => handleTableClick(table)}
@@ -1000,6 +1071,7 @@ export default function TablesPage() {
         }
         onSave={handleUpdateTable}
         onDelete={handleDeleteTable}
+        floors={beFloors.map(f => ({ id: f.id, name: f.name }))}
       />
 
       {/* Add Table Modal */}
@@ -1030,14 +1102,14 @@ export default function TablesPage() {
         initialHeight={beFloors.find(f => f.id === selectedFloorId)?.height || 900}
         existingNames={beFloors.map((f) => f.name)}
         showDimensions
-        title={tDashboard("tables.edit_floor", { defaultValue: "Sửa tầng" })}
-        submitText={tDashboard("common.save_changes", { defaultValue: "Lưu thay đổi" })}
+        title={tDashboard("tables.edit_floor")}
+        submitText={t("common.save_changes")}
       />
 
       {/* Delete Confirmation Modal for Table */}
       < DeleteConfirmModal
         open={deleteConfirmOpen}
-        itemName={selectedTable?.number || 0}
+        itemName={selectedTable?.number || ""}
         itemType="Table"
         onClose={() => setDeleteConfirmOpen(false)}
         onConfirm={confirmDelete}

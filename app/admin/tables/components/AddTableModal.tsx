@@ -211,18 +211,14 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                       </label>
                       <input
                         id="number"
-                        type="number"
+                        type="text"
                         name="number"
-                        min="1"
                         value={formData.number}
                         onChange={(e) => {
                           setFormData({ ...formData, number: e.target.value });
                           if (errors.number)
                             setErrors({ ...errors, number: "" });
                         }}
-                        placeholder={t(
-                          "dashboard.tables.add_table_modal.table_number_placeholder",
-                        )}
                         required
                         style={{
                           width: "100%",
@@ -295,9 +291,6 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                           if (errors.capacity)
                             setErrors({ ...errors, capacity: "" });
                         }}
-                        placeholder={t(
-                          "dashboard.tables.add_table_modal.capacity_placeholder",
-                        )}
                         required
                         style={{
                           width: "100%",

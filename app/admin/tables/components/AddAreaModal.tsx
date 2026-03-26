@@ -88,6 +88,8 @@ export const AddAreaModal: React.FC<AddAreaModalProps> = ({
 
   if (!open || typeof document === "undefined") return null;
 
+  const isFloorMode = showDimensions;
+
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-[var(--card)] rounded-xl shadow-xl w-full max-w-md border border-[var(--border)]">
@@ -100,7 +102,9 @@ export const AddAreaModal: React.FC<AddAreaModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--text-muted)] mb-1">
-              {t("dashboard.tables.add_area_modal.name_label")}
+              {isFloorMode
+                ? t("dashboard.tables.add_area_modal.floor_name_label", { defaultValue: t("dashboard.tables.add_area_modal.name_label") })
+                : t("dashboard.tables.add_area_modal.name_label")}
             </label>
             <input
               name="name"
