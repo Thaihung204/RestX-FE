@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import { useTenant } from '@/lib/contexts/TenantContext';
 
 // ─── CSS — only things RAF can't do ───────────────────────────────────────────
@@ -397,14 +396,12 @@ const MAX_WAIT = 8000;
 const MIN_VISIBLE_MS = 250;
 
 export function PageTransitionLoader() {
-    const pathname = usePathname();
     const { tenant } = useTenant();
     const brandName = tenant?.businessName || tenant?.name;
     const [loading, setLoading] = useState(false);
 
     // Ref to avoid stale closures in event listeners
     const loadingRef = useRef(false);
-    const prevPath = useRef<string | null>(null);
     const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const forceHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -514,61 +511,7 @@ export function PageTransitionLoader() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // ── Trigger 2: Show immediately on link click (before route changes) ──
-    useEffect(() => {
-        const handleDocumentClick = (event: MouseEvent) => {
-            const target = event.target as HTMLElement | null;
-            if (!target) return;
-
-            const anchor = target.closest('a[href]') as HTMLAnchorElement | null;
-            if (!anchor) return;
-
-            const href = anchor.getAttribute('href');
-            if (!href) return;
-
-            // Skip same-page hash, new-tab, external links, download links
-            if (href.startsWith('#')) return;
-            if (anchor.target === '_blank') return;
-            if (anchor.hasAttribute('download')) return;
-            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-            try {
-                const toUrl = new URL(anchor.href, window.location.origin);
-                const isExternal = toUrl.origin !== window.location.origin;
-                if (isExternal) return;
-
-                const currentPath = window.location.pathname;
-                const currentSearch = window.location.search;
-                const nextPath = toUrl.pathname;
-                const nextSearch = toUrl.search;
-
-                // only show when actual route/search changes
-                if (currentPath === nextPath && currentSearch === nextSearch) return;
-
-                show();
-            } catch {
-                // ignore invalid urls
-            }
-        };
-
-        document.addEventListener('click', handleDocumentClick, true);
-        return () => document.removeEventListener('click', handleDocumentClick, true);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // ── Trigger 3: Any route navigation (fallback + auto-hide) ──
-    useEffect(() => {
-        const current = pathname;
-        if (prevPath.current === null) { prevPath.current = current; return; }
-        if (prevPath.current === current) return;
-
-        prevPath.current = current;
-        show();
-        if (hideTimer.current) clearTimeout(hideTimer.current);
-        hideTimer.current = setTimeout(() => { hide(FADEOUT); }, T_TOTAL);
-    }, [pathname]);
-
-    // ── Trigger 3: Slow page content (via usePageLoading hook) ──
+    // ── Trigger 2: Slow page content (via usePageLoading hook) ──
     useEffect(() => {
         const handleLoading = () => {
             if (loadingRef.current) return; // already showing
