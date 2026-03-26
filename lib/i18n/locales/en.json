@@ -1026,8 +1026,22 @@
         "title": "Add New Area",
         "name_label": "Area Name",
         "name_placeholder": "e.g. Roof Top",
+        "width_label": "Width (px)",
+        "height_label": "Height (px)",
         "cancel": "Cancel",
-        "submit": "Add Area"
+        "submit": "Add Area",
+        "errors": {
+          "name_required": "Please enter area name",
+          "name_min": "Area name must be at least {{min}} characters",
+          "name_max": "Area name must be at most {{max}} characters",
+          "name_duplicate": "Area name already exists",
+          "width_required": "Please enter width",
+          "width_min": "Width must be at least {{min}} px",
+          "width_max": "Width must be at most {{max}} px",
+          "height_required": "Please enter height",
+          "height_min": "Height must be at least {{min}} px",
+          "height_max": "Height must be at most {{max}} px"
+        }
       },
       "add_table_modal": {
         "title": "Create New Table",
