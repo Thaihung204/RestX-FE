@@ -576,6 +576,7 @@
         "customers": "Khách hàng",
         "staff": "Nhân viên",
         "schedules": "Lịch làm việc",
+        "automation": "Tự động hóa",
         "settings": "Cài đặt",
         "manage": "Quản lý",
         "help": "Trợ giúp"
@@ -2289,6 +2290,152 @@
         "Area": "Khu vực",
         "Dish": "Món ăn",
         "Staff": "Nhân viên"
+      }
+    }
+  },
+  "automation": {
+    "page": {
+      "title": "Quản lý Trigger",
+      "subtitle": "Xem và quản lý các trigger tự động hóa của nhà hàng."
+    },
+    "actions": {
+      "add_trigger": "Thêm Trigger",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "delete_confirm_title": "Xóa Trigger",
+      "delete_confirm_description": "Bạn có chắc muốn xóa trigger \"{{name}}\" không?",
+      "delete_confirm_ok": "Xóa",
+      "delete_confirm_cancel": "Hủy"
+    },
+    "filter": {
+      "by_object": "Lọc theo đối tượng"
+    },
+    "summary": {
+      "total_triggers": "{{count}} trigger"
+    },
+    "table": {
+      "live": "Live",
+      "name": "Tên",
+      "object": "Đối tượng",
+      "description": "Mô tả",
+      "actions": "Thao tác"
+    },
+    "empty": {
+      "no_triggers": "Không tìm thấy trigger nào."
+    },
+    "fallback": {
+      "unknown_object": "Đối tượng không xác định",
+      "trigger_name": "Trigger {{index}}",
+      "object_name": "Đối tượng {{index}}",
+      "empty_description": "-"
+    },
+    "logs": {
+      "fetch_triggers_failed": "Tải danh sách trigger thất bại:",
+      "delete_trigger_failed": "Xóa trigger thất bại:"
+    },
+    "messages": {
+      "delete_success": "Xóa trigger thành công",
+      "delete_failed": "Xóa trigger thất bại"
+    },
+    "new": {
+      "page": {
+        "create_title": "Tạo Trigger",
+        "edit_title": "Chỉnh sửa Trigger"
+      },
+      "sections": {
+        "basic_information": "Thông tin cơ bản",
+        "criteria": "Điều kiện",
+        "actions": "Hành động",
+        "form_actions": "Thao tác",
+        "status": "Trạng thái",
+        "groups": "Nhóm"
+      },
+      "fields": {
+        "name": "Tên",
+        "description": "Mô tả",
+        "type": "Loại",
+        "trigger_object": "Đối tượng Trigger",
+        "property_name": "Tên thuộc tính",
+        "property_value": "Giá trị thuộc tính",
+        "criteria_type": "Loại điều kiện",
+        "logic_type": "Logic",
+        "computed_description": "Mô tả tính toán",
+        "group_name": "Tên nhóm",
+        "groups": "Nhóm",
+        "action": "Hành động",
+        "custom_properties": "Thuộc tính tùy chỉnh",
+        "custom_properties_json": "Thuộc tính tùy chỉnh (JSON)"
+      },
+      "placeholders": {
+        "name": "Tên",
+        "description": "Mô tả",
+        "group_name": "Nhóm mới",
+        "action": "CascadePendingToPreparing",
+        "property_name": "OrderStatusId",
+        "property_value": "Confirmed",
+        "computed_description": "Trạng thái đơn hàng chuyển sang Confirmed"
+      },
+      "actions": {
+        "back_to_list": "Quay lại danh sách automation",
+        "group": "Nhóm",
+        "criteria": "Điều kiện",
+        "action": "Hành động",
+        "remove": "Xóa",
+        "close": "Đóng",
+        "save": "Lưu",
+        "cancel": "Hủy",
+        "create_trigger": "Tạo Trigger",
+        "update_trigger": "Cập nhật Trigger",
+        "creating": "Đang tạo...",
+        "updating": "Đang cập nhật..."
+      },
+      "status": {
+        "active": "Đang hoạt động",
+        "inactive": "Không hoạt động",
+        "active_help": "Trigger sẽ chạy khi điều kiện khớp",
+        "inactive_help": "Trigger đang bị tắt"
+      },
+      "empty": {
+        "no_criteria": "Chưa có điều kiện nào.",
+        "no_actions": "Chưa có hành động nào.",
+        "no_groups": "Chưa có nhóm nào."
+      },
+      "modals": {
+        "add_group_title": "Thêm nhóm",
+        "add_action_title": "Thêm hành động",
+        "add_criteria_title": "Thêm điều kiện"
+      },
+      "criteria_type_options": {
+        "any_property_change": "AnyPropertyChange",
+        "specific_property_new_value": "SpecificPropertyNewValue",
+        "specific_property_old_value": "SpecificPropertyOldValue",
+        "specific_property_value": "SpecificPropertyValue",
+        "specific_property_value_not_equals": "SpecificPropertyValueNotEquals",
+        "is_greater_than": "IsGreaterThan",
+        "is_less_than": "IsLessThan",
+        "is_updated": "IsUpdated",
+        "contains": "Contains"
+      },
+      "logic_type_options": {
+        "and": "And",
+        "or": "Or"
+      },
+      "fallback": {
+        "type_name": "Loại {{index}}",
+        "object_name": "Đối tượng {{index}}",
+        "group_name": "Nhóm {{index}}",
+        "action_name": "Hành động {{index}}"
+      },
+      "messages": {
+        "load_metadata_failed": "Không thể tải metadata automation",
+        "trigger_not_found": "Không tìm thấy trigger",
+        "load_detail_failed": "Không thể tải chi tiết trigger",
+        "invalid_json": "Custom properties phải là JSON hợp lệ",
+        "require_action": "Vui lòng thêm ít nhất một hành động",
+        "create_success": "Tạo trigger thành công",
+        "update_success": "Cập nhật trigger thành công",
+        "create_failed": "Tạo trigger thất bại",
+        "update_failed": "Cập nhật trigger thất bại"
       }
     }
   },

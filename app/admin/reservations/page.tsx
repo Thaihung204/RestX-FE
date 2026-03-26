@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminSelect } from "@/components/ui/AdminSelect";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip, Select } from "antd";
@@ -441,11 +442,10 @@ export default function ReservationsPage() {
                         />
                     </div>
 
-                    <select
+                    <AdminSelect
                         value={statusId}
                         onChange={(e) => setStatusId(e.target.value === "" ? "" : Number(e.target.value))}
-                        className="px-3 py-2 rounded-lg text-sm outline-none min-w-[160px]"
-                        style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                        className="px-3 py-2 text-sm min-w-[160px]"
                     >
                         <option value="">{t('admin.reservations.filter.all_status')}</option>
                         {statuses.map((s) => (
@@ -453,7 +453,7 @@ export default function ReservationsPage() {
                                 {t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name })}
                             </option>
                         ))}
-                    </select>
+                    </AdminSelect>
 
                     <input
                         type="date"

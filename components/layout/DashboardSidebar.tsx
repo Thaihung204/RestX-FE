@@ -229,7 +229,7 @@ export default function DashboardSidebar() {
     },
     {
       id: "automation",
-      label: "Automation",
+      label: t("dashboard.sidebar.items.automation"),
       path: "/admin/automation",
       icon: (
         <svg

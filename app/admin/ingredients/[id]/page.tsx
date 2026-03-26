@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminSelect } from "@/components/ui/AdminSelect";
 import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
 import supplierService, { SupplierItem } from "@/lib/services/supplierService";
 import { App } from "antd";
@@ -290,14 +291,14 @@ export default function IngredientFormPage() {
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.unit")} 
                       </label>
-                      <select
+                      <AdminSelect
                         name="unit" value={form.unit} onChange={handleChange}
                         disabled={cannotSave}
-                        className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
+                        className="px-3"
                         style={cannotSave ? disabledFieldStyle : fieldStyle}
                       >
                         {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-                      </select>
+                      </AdminSelect>
                     </div>
 
                     <div>
@@ -323,19 +324,19 @@ export default function IngredientFormPage() {
                           {t("dashboard.ingredients.no_suppliers")}
                         </div>
                       ) : (
-                        <select
+                        <AdminSelect
                           name="supplierId"
                           value={form.supplierId ?? ""}
                           onChange={handleChange}
                           required={isNew}
-                          className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
+                          className="px-3"
                           style={fieldStyle}
                         >
                           <option value="" disabled>{t("dashboard.ingredients.select_supplier")}</option>
                           {suppliers.map((s) => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                           ))}
-                        </select>
+                        </AdminSelect>
                       )}
                     </div>
 
@@ -352,12 +353,12 @@ export default function IngredientFormPage() {
                           {t("dashboard.ingredients.loading_categories")}
                         </div>
                       ) : (
-                        <select
+                        <AdminSelect
                           name="type"
                           value={form.type ?? ""}
                           onChange={handleChange}
                           disabled={cannotSave}
-                          className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
+                          className="px-3"
                           style={cannotSave ? disabledFieldStyle : fieldStyle}
                         >
                           {ingredientCategories.map((c) => (
@@ -365,7 +366,7 @@ export default function IngredientFormPage() {
                               {getCategoryLabel(c)}
                             </option>
                           ))}
-                        </select>
+                        </AdminSelect>
                       )}
                     </div>
                   </div>
@@ -413,18 +414,18 @@ export default function IngredientFormPage() {
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.stock_status_label")}
                       </label>
-                      <select
+                      <AdminSelect
                         name="status"
                         value={form.status ?? 0}
                         onChange={handleChange}
                         disabled={cannotSave}
-                        className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
+                        className="px-3"
                         style={cannotSave ? disabledFieldStyle : fieldStyle}
                       >
                         <option value={0}>{t("dashboard.ingredients.status_values.in_stock")}</option>
                         <option value={1}>{t("dashboard.ingredients.status_values.low_stock")}</option>
                         <option value={2}>{t("dashboard.ingredients.status_values.out_of_stock")}</option>
-                      </select>
+                      </AdminSelect>
                     </div>
                   </div>
 
