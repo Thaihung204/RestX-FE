@@ -565,9 +565,11 @@ export default function TablesPage() {
           }
 
           await tableService.updateTable(selectedTable.id, apiData);
+          await fetchTables();
         }
       } catch (err) {
         console.error("Update failed", err);
+      } finally {
         fetchTables();
       }
       setDrawerOpen(false);

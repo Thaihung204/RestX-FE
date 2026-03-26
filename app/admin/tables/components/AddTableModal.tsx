@@ -220,6 +220,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                           if (errors.number)
                             setErrors({ ...errors, number: "" });
                         }}
+                        placeholder={t("dashboard.tables.add_table_modal.table_number_placeholder")}
                         required
                         style={{
                           width: "100%",

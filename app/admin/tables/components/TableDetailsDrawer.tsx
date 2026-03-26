@@ -558,6 +558,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                               number: e.target.value,
                             });
                           }}
+                          placeholder={tDetails("table_code_placeholder", { defaultValue: "Nhập mã bàn" })}
                           style={{
                             width: "100%",
                             padding: "14px 16px",
@@ -717,9 +718,9 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                           border: "2px solid var(--border)",
                         }}
                       >
-                        {AREA_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
+                        {floors.map((floor) => (
+                          <option key={floor.id} value={floor.id}>
+                            {floor.name}
                           </option>
                         ))}
                       </AdminSelect>

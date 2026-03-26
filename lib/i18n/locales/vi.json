@@ -960,7 +960,7 @@
     "tables": {
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
-      "search_placeholder": "Tìm theo số bàn...",
+      "search_placeholder": "Tìm theo mã bàn...",
       "add_floor": "Thêm tầng",
       "edit_floor": "Sửa tầng",
       "delete_floor": "Xóa tầng",
@@ -992,15 +992,15 @@
       "add_table_modal": {
         "title": "Tạo bàn mới",
         "subtitle": "Thêm bàn mới vào sơ đồ nhà hàng",
-        "table_number": "Số bàn",
-        "table_number_placeholder": "Nhập số bàn",
+        "table_number": "Mã bàn",
+        "table_number_placeholder": "Nhập mã bàn",
         "capacity": "Sức chứa",
         "capacity_placeholder": "Số ghế (1-20)",
         "area": "Khu vực ăn uống",
         "cancel": "Hủy",
         "submit": "Tạo bàn",
         "errors": {
-          "number_required": "Yêu cầu nhập số bàn",
+          "number_required": "Yêu cầu nhập mã bàn",
           "capacity_min": "Sức chứa tối thiểu là 1",
           "capacity_max": "Sức chứa tối đa là 20"
         },
