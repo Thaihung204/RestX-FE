@@ -214,7 +214,6 @@
         "cancelled": "Cancelled"
       },
       "modal": {
-        "order_detail": "Order Details",
         "cart": "Cart",
         "select_table": "Select Table",
         "no_items": "No items yet",

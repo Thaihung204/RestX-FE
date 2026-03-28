@@ -1,5 +1,8 @@
 "use client";
 
+import AddItem from "@/components/staff/orders/AddItem";
+import CardTable from "@/components/staff/orders/CardTable";
+import OrderDetail from "@/components/staff/orders/OrderDetail";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import menuService from "@/lib/services/menuService";
 import orderDetailStatusService, {
@@ -14,11 +17,8 @@ import paymentService from "@/lib/services/paymentService";
 import { tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import {
-  DollarOutlined,
-  MinusOutlined,
   PlusOutlined,
-  SearchOutlined,
-  ShoppingCartOutlined,
+  SearchOutlined
 } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
 import {
@@ -26,16 +26,12 @@ import {
   Button,
   Card,
   Col,
-  Divider,
   Empty,
   Input,
   InputNumber,
   Modal,
   Row,
-  Select,
   Space,
-  Tabs,
-  Tag,
   Typography
 } from "antd";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -125,90 +121,56 @@ export default function OrderManagement() {
   const { tenant } = useTenant();
   const [orders, setOrders] = useState<Order[]>([]);
   const [tables, setTables] = useState<{ id: string; name: string }[]>([]);
+  const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
   const [orderDetailStatuses, setOrderDetailStatuses] = useState<OrderDetailStatus[]>([]);
+  const statusValueMapRef = useRef<Record<string, string>>({});
+  const tableNameMapRef = useRef<Record<string, string>>({});
+  const dishNameMapRef = useRef<Record<string, string>>({});
+  const initializedRef = useRef(false);
 
-  useEffect(() => {
-    const fetchOrderDetailStatuses = async () => {
-      try {
-        const data = await orderDetailStatusService.getAllStatuses();
-        setOrderDetailStatuses(data ?? []);
-      } catch (error) {
-        console.error("Failed to fetch order detail statuses:", error);
-        setOrderDetailStatuses([]);
-      }
-    };
-
-    fetchOrderDetailStatuses();
+  const buildStatusValueMap = useCallback((statuses: OrderDetailStatus[]) => {
+    return statuses.reduce<Record<string, string>>((acc, status) => {
+      const codeKey = status.code?.toLowerCase();
+      const nameKey = status.name?.toLowerCase();
+      const value = codeKey || status.id;
+      if (codeKey) acc[codeKey] = value;
+      if (nameKey) acc[nameKey] = value;
+      acc[status.id] = value;
+      return acc;
+    }, {});
   }, []);
 
-  const statusValueMap = useMemo(
-    () =>
-      orderDetailStatuses.reduce<Record<string, string>>((acc, status) => {
-        const codeKey = status.code?.toLowerCase();
-        const nameKey = status.name?.toLowerCase();
-        const value = codeKey || status.id;
-        if (codeKey) acc[codeKey] = value;
-        if (nameKey) acc[nameKey] = value;
-        acc[status.id] = value;
-        return acc;
-      }, {}),
-    [orderDetailStatuses],
-  );
-
-  const normalizeStatusValue = useCallback(
-    (status: OrderItemStatus) => {
-      const key = status?.toLowerCase?.() ?? String(status ?? "");
-      return statusValueMap[key] || statusValueMap[status] || status;
-    },
-    [statusValueMap],
-  );
-
-  useEffect(() => {
-    const fetchTables = async () => {
-      try {
-        const data = await tableService.getAllTables();
-        setTables(data.map((row) => ({ id: row.id, name: `${row.code}` })));
-      } catch (error) {
-        console.error("Failed to fetch tables:", error);
-      }
-    };
-    fetchTables();
+  const buildTableNameMap = useCallback((rows: { id: string; name: string }[]) => {
+    return rows.reduce<Record<string, string>>((acc, row) => {
+      acc[row.id] = row.name;
+      return acc;
+    }, {});
   }, []);
 
-  const fetchOrders = useCallback(async () => {
-    if (inFlightRef.current) return;
-    inFlightRef.current = true;
-    try {
-      const data = await orderService.getAllOrders();
+  const buildDishNameMap = useCallback((categories: MenuCategory[]) => {
+    return categories.reduce<Record<string, string>>((acc, category) => {
+      category.items?.forEach((item) => {
+        acc[item.id] = item.name;
+      });
+      return acc;
+    }, {});
+  }, []);
 
-      const uniqueDishIds = Array.from(
-        new Set(
-          data
-            .flatMap((order) =>
-              (order.orderDetails ?? []).map((detail) => detail.dishId),
-            )
-            .filter(Boolean),
-        ),
-      );
+  const normalizeStatusValue = useCallback((status: OrderItemStatus) => {
+    const key = status?.toLowerCase?.() ?? String(status ?? "");
+    const map = statusValueMapRef.current;
+    return map[key] || map[status] || status;
+  }, []);
 
-      const dishNameMap: Record<string, string> = {};
-      await Promise.all(
-        uniqueDishIds.map(async (dishId) => {
-          try {
-            const dish = await menuService.getDishById(dishId);
-            dishNameMap[dishId] = dish?.name || dishId;
-          } catch {
-            dishNameMap[dishId] = dishId;
-          }
-        }),
-      );
+  const mapOrders = useCallback(
+    (data: OrderDto[]) => {
+      const tableNameMap = tableNameMapRef.current;
+      const dishNameMap = dishNameMapRef.current;
 
-      const mappedOrders: Order[] = data.map((order: OrderDto) => {
-        const tableName =
-          tables.find((table) => table.id === order.tableId)?.name ||
-          order.tableId;
+      return data.map((order: OrderDto) => {
+        const tableName = tableNameMap[order.tableId] || order.tableId;
 
         const items: OrderItem[] = (order.orderDetails ?? []).map(
           (detail, index) => {
@@ -253,44 +215,71 @@ export default function OrderManagement() {
           raw: order,
         };
       });
+    },
+    [normalizeStatusValue],
+  );
 
-      setOrders(mappedOrders);
+  const fetchOrders = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    try {
+      const data = await orderService.getAllOrders();
+      setOrders(mapOrders(data ?? []));
     } catch (error) {
       console.error("Failed to fetch orders:", error);
     } finally {
       inFlightRef.current = false;
     }
-  }, [tables, normalizeStatusValue]);
+  }, [mapOrders]);
 
   const refreshOrders = useCallback(
-    async () => {
+    async (force = false) => {
       const now = Date.now();
-      if (lastRefreshRef.current && now - lastRefreshRef.current < 2000) return;
+      if (!force && lastRefreshRef.current && now - lastRefreshRef.current < 2000) return;
       lastRefreshRef.current = now;
       await fetchOrders();
     },
     [fetchOrders],
   );
 
+  const loadInitialData = useCallback(async () => {
+    if (inFlightRef.current || initializedRef.current) return;
+    inFlightRef.current = true;
+    initializedRef.current = true;
+    try {
+      const [statusData, tableData, menuData, orderData] = await Promise.all([
+        orderDetailStatusService.getAllStatuses(),
+        tableService.getAllTables(),
+        menuService.getMenu(),
+        orderService.getAllOrders(),
+      ]);
+
+      const safeStatuses = statusData ?? [];
+      const safeMenu = menuData ?? [];
+      const mappedTables = (tableData ?? []).map((row) => ({
+        id: row.id,
+        name: `${row.code}`,
+      }));
+
+      setOrderDetailStatuses(safeStatuses);
+      setTables(mappedTables);
+      setMenuCategories(safeMenu);
+
+      statusValueMapRef.current = buildStatusValueMap(safeStatuses);
+      tableNameMapRef.current = buildTableNameMap(mappedTables);
+      dishNameMapRef.current = buildDishNameMap(safeMenu);
+
+      setOrders(mapOrders(orderData ?? []));
+    } catch (error) {
+      console.error("Failed to fetch initial data:", error);
+    } finally {
+      inFlightRef.current = false;
+    }
+  }, [buildDishNameMap, buildStatusValueMap, buildTableNameMap, mapOrders]);
+
   useEffect(() => {
-    refreshOrders();
-  }, [refreshOrders]);
-
-  const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
-
-  useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        const data = await menuService.getMenu();
-        setMenuCategories(data ?? []);
-      } catch (error) {
-        console.error("Failed to fetch menu:", error);
-        setMenuCategories([]);
-      }
-    };
-
-    fetchMenu();
-  }, []);
+    loadInitialData();
+  }, [loadInitialData]);
 
 
   const statusOptions = orderDetailStatuses.map((status) => ({
@@ -349,6 +338,8 @@ export default function OrderManagement() {
   const [isUpdatingDetailStatus, setIsUpdatingDetailStatus] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrderForDetail, setSelectedOrderForDetail] = useState<Order | null>(null);
+  const [isOrderDetailModalOpen, setIsOrderDetailModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "bank">("cash");
   const [cashReceived, setCashReceived] = useState<number>(0);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -427,7 +418,29 @@ export default function OrderManagement() {
     return matchesSearch;
   });
 
+  const tableCodeMap = useMemo(() => {
+    return tables.reduce<Record<string, string>>((acc, table) => {
+      acc[table.id] = table.name;
+      return acc;
+    }, {});
+  }, [tables]);
 
+  const groupedOrders = useMemo(() => {
+    return filteredOrders.reduce<Record<string, Order[]>>((acc, order) => {
+      const key = order.tableId || "unknown";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(order);
+      return acc;
+    }, {});
+  }, [filteredOrders]);
+
+  useEffect(() => {
+    if (!selectedOrderForDetail) return;
+    const latestOrder = orders.find((order) => order.id === selectedOrderForDetail.id);
+    if (latestOrder) {
+      setSelectedOrderForDetail(latestOrder);
+    }
+  }, [orders, selectedOrderForDetail]);
 
   const handleUpdateOrderStatus = async (
     orderId: string,
@@ -632,251 +645,13 @@ export default function OrderManagement() {
     { id: "bank", label: t("staff.orders.payment.methods.bank") },
   ];
 
-  const renderOrderCard = (order: Order) => {
-    const orderStyle = orderStatusStyleMap[order.orderStatus];
-
-    return (
-      <div>
-        <Card
-          style={{
-            borderRadius: 12,
-            border: `1px solid ${orderStyle.border}`,
-            marginBottom: isMobile ? 12 : 16,
-            overflow: "hidden",
-            background: orderStyle.bg,
-            boxShadow:
-              mode === "dark"
-                ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-                : "0 2px 8px rgba(0, 0, 0, 0.08)",
-            transition: "all 0.3s ease",
-          }}
-          styles={{ body: { padding: isMobile ? 14 : 20 } }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              flexWrap: "wrap",
-              gap: 8,
-            }}>
-            <div style={{ flex: 1, minWidth: isMobile ? "100%" : "auto" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: isMobile ? 10 : 12,
-                  marginBottom: isMobile ? 10 : 12,
-                }}>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 8,
-                      flexWrap: "wrap",
-                    }}>
-                    <Text
-                      strong
-                      style={{
-                        fontSize: isMobile ? 15 : 17,
-                        fontWeight: 500,
-                      }}>
-                      {t("staff.orders.order.table")} {order.tableName}
-                    </Text>
-                    <div
-                      onClick={(event) => event.stopPropagation()}
-                      onMouseDown={(event) => event.stopPropagation()}>
-                      <Select
-                        value={order.orderStatusId}
-                        size="small"
-                        style={{ minWidth: 130 }}
-                        className="order-status-select"
-                        onChange={(value) =>
-                          handleUpdateOrderStatus(
-                            order.id,
-                            value as OrderStatusId,
-                          )
-                        }
-                        disabled={isUpdatingOrderStatus}
-                        options={[
-                          {
-                            value: 0,
-                            label: t("staff.orders.status.pending"),
-                            className: "order-status-option",
-                          },
-                          {
-                            value: 1,
-                            label: t("staff.orders.status.confirmed"),
-                            className: "order-status-option",
-                          },
-                          {
-                            value: 2,
-                            label: t("staff.orders.status.serving"),
-                            className: "order-status-option",
-                          },
-                          {
-                            value: 3,
-                            label: t("staff.orders.status.completed"),
-                            className: "order-status-option",
-                          },
-                          {
-                            value: 4,
-                            label: t("staff.orders.status.cancelled"),
-                            className: "order-status-option",
-                          },
-                        ]}
-                      />
-                    </div>
-                  </div>
-                  <Text
-                    style={{
-                      fontSize: isMobile ? 13 : 14,
-                      color:
-                        mode === "dark"
-                          ? "rgba(255, 255, 255, 0.5)"
-                          : "rgba(0, 0, 0, 0.5)",
-                      fontWeight: 400,
-                    }}>
-                    {order.reference} • {order.createdAt}
-                  </Text>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: isMobile ? 12 : 16 }}>
-                {order.detailItems.length > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {order.detailItems.map((item) => (
-                      <div
-                        key={item.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 8,
-                          padding: isMobile ? "6px 0" : "8px 0",
-                          borderBottom:
-                            mode === "dark"
-                              ? "1px dashed rgba(255, 255, 255, 0.08)"
-                              : "1px dashed #EDEDED",
-                        }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <Text
-                            style={{
-                              fontSize: isMobile ? 13 : 14,
-                              fontWeight: 500,
-                              display: "block",
-                            }}>
-                            {item.name}
-                          </Text>
-                          {item.note && (
-                            <Text
-                              style={{
-                                fontSize: isMobile ? 11 : 12,
-                                color:
-                                  mode === "dark"
-                                    ? "rgba(255, 255, 255, 0.45)"
-                                    : "rgba(0, 0, 0, 0.45)",
-                                display: "block",
-                              }}>
-                              {item.note}
-                            </Text>
-                          )}
-                        </div>
-                        <Space size={8} style={{ alignItems: "center" }}>
-                          <Tag
-                            style={{
-                              margin: 0,
-                              borderRadius: 8,
-                              fontSize: isMobile ? 12 : 13,
-                            }}>
-                            x{item.quantity}
-                          </Tag>
-                          <Select
-                            value={normalizeStatusValue(item.status)}
-                            size="small"
-                            style={{ minWidth: isMobile ? 110 : 130 }}
-                            onChange={(value) =>
-                              handleUpdateDetailStatus(
-                                order.id,
-                                item.id,
-                                String(value),
-                              )
-                            }
-                            disabled={isUpdatingDetailStatus}
-                            options={statusOptions}
-                          />
-                        </Space>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <Text
-                    style={{
-                      fontSize: isMobile ? 12 : 13,
-                      color:
-                        mode === "dark"
-                          ? "rgba(255, 255, 255, 0.5)"
-                          : "rgba(0, 0, 0, 0.45)",
-                    }}>
-                    {t("staff.orders.empty")}
-                  </Text>
-                )}
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: isMobile ? 8 : 16,
-                  flexWrap: "wrap",
-                }}>
-                <Text
-                  strong
-                  style={{ color: "var(--primary)", fontSize: isMobile ? 15 : 16 }}>
-                  {order.total.toLocaleString("vi-VN")}đ
-                </Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {order.raw?.paymentStatusId !== 1 && (
-                    <Button
-                      icon={<DollarOutlined />}
-                      size="small"
-                      type="primary"
-                      onClick={() => openPaymentModal(order)}
-                      style={{
-                        borderRadius: 6,
-                        minWidth: isMobile ? 110 : 130,
-                        height: 24,
-                        padding: "0 8px",
-                      }}>
-                      Thanh toán
-                    </Button>
-                  )}
-                  <Button
-                    icon={<PlusOutlined />}
-                    size="small"
-                    onClick={() => {
-                      setSelectedOrderIdForAdd(order.id);
-                      setIsAddItemModalOpen(true);
-                    }}
-                    style={{
-                      borderRadius: 6,
-                      minWidth: isMobile ? 110 : 130,
-                      height: 24,
-                      padding: "0 8px",
-                    }}>
-                    {t("staff.orders.modal.add_item")}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </Card>
-      </div>
-    );
-  };
+  const orderStatusOptions = [
+    { value: 0, label: t("staff.orders.status.pending"), className: "order-status-option" },
+    { value: 1, label: t("staff.orders.status.confirmed"), className: "order-status-option" },
+    { value: 2, label: t("staff.orders.status.serving"), className: "order-status-option" },
+    { value: 3, label: t("staff.orders.status.completed"), className: "order-status-option" },
+    { value: 4, label: t("staff.orders.status.cancelled"), className: "order-status-option" },
+  ];
 
   return (
     <div>
@@ -933,24 +708,29 @@ export default function OrderManagement() {
       </Card>
 
       {/* Order List */}
-      <Card
-        style={{
-          borderRadius: 12,
-          border:
-            mode === "dark"
-              ? "1px solid rgba(255, 255, 255, 0.1)"
-              : "1px solid #E5E5E5",
-          background: mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFFFF",
-          boxShadow:
-            mode === "dark"
-              ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-              : "0 2px 8px rgba(0, 0, 0, 0.08)",
-        }}
-        styles={{ body: { padding: isMobile ? 16 : 24 } }}>
-        {filteredOrders.length > 0 ? (
-          filteredOrders.map((order) => (
-            <div key={order.id}>{renderOrderCard(order)}</div>
-          ))
+      <div style={{ marginTop: isMobile ? 8 : 12 }}>
+        {Object.keys(groupedOrders).length > 0 ? (
+          Object.entries(groupedOrders).map(([tableId, tableOrders]) => {
+            const tableCode = tableCodeMap[tableId] || tableOrders[0]?.tableName || tableId;
+            return (
+              <CardTable
+                key={tableId}
+                tableCode={tableCode}
+                tableOrders={tableOrders}
+                mode={mode}
+                isMobile={isMobile}
+                isUpdatingOrderStatus={isUpdatingOrderStatus}
+                orderStatusOptions={orderStatusOptions}
+                orderStatusStyleMap={orderStatusStyleMap}
+                tableLabel={t("staff.orders.order.table")}
+                onOpenDetail={(order) => {
+                  setSelectedOrderForDetail(order);
+                  setIsOrderDetailModalOpen(true);
+                }}
+                onUpdateOrderStatus={handleUpdateOrderStatus}
+              />
+            );
+          })
         ) : (
           <Empty
             description={t("staff.orders.empty")}
@@ -964,8 +744,41 @@ export default function OrderManagement() {
             }}
           />
         )}
-      </Card>
+      </div>
 
+
+      {/* Order Detail Modal */}
+      <OrderDetail
+        selectedOrderForDetail={selectedOrderForDetail}
+        isOrderDetailModalOpen={isOrderDetailModalOpen}
+        isMobile={isMobile}
+        mode={mode}
+        isUpdatingOrderStatus={isUpdatingOrderStatus}
+        isUpdatingDetailStatus={isUpdatingDetailStatus}
+        normalizeStatusValue={normalizeStatusValue}
+        statusOptions={statusOptions}
+        orderStatusOptions={orderStatusOptions}
+        totalLabel={t("staff.orders.payment.modal.total_label")}
+        emptyLabel={t("staff.orders.empty")}
+        // addItemLabel={t("staff.orders.modal.add_item")}
+        paymentLabel="Thanh toán"
+        statusLabel="Status"
+        onClose={() => {
+          setIsOrderDetailModalOpen(false);
+          setSelectedOrderForDetail(null);
+        }}
+        onUpdateOrderStatus={handleUpdateOrderStatus}
+        onUpdateDetailStatus={handleUpdateDetailStatus}
+        onOpenPayment={(order) => {
+          setIsOrderDetailModalOpen(false);
+          openPaymentModal(order);
+        }}
+        onAddItem={(orderId) => {
+          setIsOrderDetailModalOpen(false);
+          setSelectedOrderIdForAdd(orderId);
+          setIsAddItemModalOpen(true);
+        }}
+      />
 
       {/* Payment Modal */}
       <Modal
@@ -1140,285 +953,40 @@ export default function OrderManagement() {
       </Modal>
 
       {/* Add Item To Existing Order Modal */}
-      <Modal
-        title={
-          <Space>
-            <PlusOutlined/>
-            <span>{t("staff.orders.modal.add_item")}</span>
-          </Space>
-        }
-        open={isAddItemModalOpen}
-        onCancel={() => {
+      <AddItem
+        isOpen={isAddItemModalOpen}
+        isMobile={isMobile}
+        mode={mode}
+        selectedOrderIdForAdd={selectedOrderIdForAdd}
+        setSelectedOrderIdForAdd={setSelectedOrderIdForAdd}
+        menuCategories={menuCategories}
+        activeMenuCategory={activeMenuCategory}
+        setActiveMenuCategory={setActiveMenuCategory}
+        cart={cart}
+        cartTotal={cartTotal}
+        orders={orders.map((order) => ({
+          id: order.id,
+          reference: order.reference,
+          tableName: order.tableName,
+        }))}
+        onClose={() => {
           setIsAddItemModalOpen(false);
           setCart([]);
           setSelectedOrderIdForAdd("");
         }}
-        footer={null}
-        width={isMobile ? "95%" : 900}
-        centered
-        style={{
-          backgroundColor: mode === "dark" ? "#1A1A1A" : "#FFFFFF",
-          border:
-            mode === "dark"
-              ? "1px solid rgba(255, 56, 11, 0.2)"
-              : "1px solid #E5E7EB",
-          borderRadius: 12,
+        onAddToCart={addToCart}
+        onUpdateCartQuantity={updateCartQuantity}
+        onSubmit={handleAddItemsToOrder}
+        labels={{
+          title: t("staff.orders.modal.add_item"),
+          orderPlaceholder: "",
+          table: t("staff.orders.order.table"),
+          cart: t("staff.orders.modal.cart"),
+          total: t("staff.orders.order.total"),
+          noItems: t("staff.orders.modal.no_items"),
+          addItem: t("staff.orders.modal.add_item"),
         }}
-        styles={{
-          header: {
-            backgroundColor: mode === "dark" ? "#1A1A1A" : "#FFFFFF",
-            borderBottom:
-              mode === "dark"
-                ? "1px solid rgba(255, 56, 11, 0.2)"
-                : "1px solid #E5E7EB",
-            borderRadius: "12px 12px 0 0",
-            padding: "20px 28px",
-            position: "relative",
-            paddingRight: "56px",
-          },
-          body: {
-            padding: isMobile ? 20 : 28,
-            maxHeight: isMobile ? "80vh" : "auto",
-            overflowY: "auto",
-            backgroundColor: mode === "dark" ? "#1A1A1A" : "#FFFFFF",
-          },
-          footer: {
-            borderRadius: "0 0 12px 12px",
-          },
-          mask: {
-            background:
-              mode === "dark" ? "rgba(0, 0, 0, 0.92)" : "rgba(0, 0, 0, 0.45)",
-            backdropFilter: "none",
-            WebkitBackdropFilter: "none",
-            filter: "none",
-          },
-        }}>
-        <Row gutter={[16, 16]}>
-          {/* Menu */}
-          <Col xs={24} md={14}>
-            <div style={{ marginBottom: 16 }}>
-              <Select
-                placeholder={t("staff.orders.modal.order_detail")}
-                size={isMobile ? "middle" : "large"}
-                style={{ width: "100%" }}
-                value={selectedOrderIdForAdd || undefined}
-                onChange={setSelectedOrderIdForAdd}
-                options={orders.map((order) => ({
-                  value: order.id,
-                  label: `${order.reference} - ${t("staff.orders.order.table")} ${order.tableName}`,
-                }))}
-              />
-            </div>
-
-            <Tabs
-              activeKey={activeMenuCategory}
-              onChange={setActiveMenuCategory}
-              size={isMobile ? "small" : "middle"}
-              items={menuCategories.map((cat) => ({
-                key: cat.categoryId,
-                label: cat.categoryName,
-              }))}
-            />
-
-            <Row gutter={[isMobile ? 8 : 12, isMobile ? 8 : 12]}>
-              {menuCategories
-                .find((c) => c.categoryId === activeMenuCategory)
-                ?.items.map((item) => (
-                  <Col xs={24} sm={12} key={item.id}>
-                    <Card
-                      hoverable
-                      size="small"
-                      style={{
-                        borderRadius: isMobile ? 12 : 16,
-                        overflow: "hidden",
-                      }}
-                      styles={{ body: { padding: isMobile ? 10 : 12 } }}
-                      onClick={() => addToCart(item)}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: isMobile ? 8 : 12,
-                        }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <Text
-                            strong
-                            style={{
-                              display: "block",
-                              fontSize: isMobile ? 13 : 14,
-                            }}>
-                            {item.name}
-                          </Text>
-                          <Text
-                            style={{
-                              fontSize: isMobile ? 12 : 14,
-                            }}>
-                            {item.price.toLocaleString("vi-VN")}đ
-                          </Text>
-                        </div>
-                        <PlusOutlined
-                          style={{
-                            fontSize: isMobile ? 14 : 16,
-                          }}
-                        />
-                      </div>
-                    </Card>
-                  </Col>
-                ))}
-            </Row>
-          </Col>
-
-          {/* Cart */}
-          <Col xs={24} md={10}>
-            <Card
-              title={
-                <Space size={isMobile ? 8 : 12}>
-                  <ShoppingCartOutlined />
-                  <span style={{ fontSize: isMobile ? 14 : 16 }}>
-                    {t("staff.orders.modal.cart")} ({cart.length})
-                  </span>
-                </Space>
-              }
-              style={{
-                borderRadius: 12,
-                background:
-                  mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFFFF",
-                border:
-                  mode === "dark"
-                    ? "1px solid rgba(255, 255, 255, 0.1)"
-                    : "1px solid #E5E7EB",
-                overflow: "hidden",
-                boxShadow:
-                  mode === "dark"
-                    ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-                    : "0 2px 8px rgba(0, 0, 0, 0.08)",
-              }}
-              styles={{ body: { padding: isMobile ? 16 : 24 } }}>
-              {cart.length > 0 ? (
-                <>
-                  <div>
-                    {cart.map((c, index) => (
-                      <div
-                        key={c.item.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          padding: isMobile ? "8px 0" : "12px 0",
-                          borderBottom:
-                            index < cart.length - 1
-                              ? mode === "dark"
-                                ? "1px solid var(--border)"
-                                : "1px solid #E5E7EB"
-                              : "none",
-                          gap: isMobile ? 8 : 12,
-                        }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div
-                            style={{
-                              fontSize: isMobile ? 13 : 14,
-                              fontWeight: 500,
-                            }}>
-                            {c.item.name}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: isMobile ? 12 : 14,
-                              color:
-                                mode === "dark"
-                                  ? "var(--text-muted)"
-                                  : "#4F4F4F",
-                            }}>
-                            {(c.item.price * c.quantity).toLocaleString(
-                              "vi-VN",
-                            )}
-                            đ
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 4,
-                          }}>
-                          <Button
-                            type="text"
-                            size="small"
-                            icon={<MinusOutlined />}
-                            onClick={() => updateCartQuantity(c.item.id, -1)}
-                          />
-                          <span
-                            style={{
-                              minWidth: 20,
-                              textAlign: "center",
-                              fontSize: isMobile ? 13 : 14,
-                            }}>
-                            {c.quantity}
-                          </span>
-                          <Button
-                            type="text"
-                            size="small"
-                            icon={<PlusOutlined />}
-                            onClick={() => updateCartQuantity(c.item.id, 1)}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Divider style={{ margin: isMobile ? "12px 0" : "16px 0" }} />
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: isMobile ? 12 : 16,
-                    }}>
-                    <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>
-                      {t("staff.orders.order.total")}
-                    </Text>
-                    <Text
-                      strong
-                      style={{
-                        fontSize: isMobile ? 16 : 18,
-                        color: "var(--primary)",
-                      }}>
-                      {cartTotal.toLocaleString("vi-VN")}đ
-                    </Text>
-                  </div>
-
-                  <Button
-                    type="primary"
-                    size={isMobile ? "middle" : "large"}
-                    block
-                    onClick={handleAddItemsToOrder}
-                    style={{
-                      borderRadius: 12,
-                      height: isMobile ? 44 : 48,
-                      fontWeight: 600,
-                      background:
-                        "linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)",
-                      border: "none",
-                    }}>
-                    {t("staff.orders.modal.add_item")}
-                  </Button>
-                </>
-              ) : (
-                <Empty
-                  description={t("staff.orders.modal.no_items")}
-                  styles={{
-                    image: {
-                      opacity: mode === "dark" ? 0.65 : 0.4,
-                    },
-                  }}
-                  style={{
-                    color: mode === "dark" ? undefined : "#4F4F4F",
-                  }}
-                />
-              )}
-            </Card>
-          </Col>
-        </Row>
-      </Modal>
+      />
 
       <style jsx global>{`
         .order-detail-status-option,
