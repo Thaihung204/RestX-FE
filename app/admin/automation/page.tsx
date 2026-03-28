@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminSelect } from "@/components/ui/AdminSelect";
+import { DropDown } from "@/components/ui/DropDown";
 import { triggerService } from "@/lib/services/triggerService";
 import { Trigger, TriggerObject } from "@/lib/types/trigger";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
@@ -137,7 +137,7 @@ export default function AutomationPage() {
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <AdminSelect
+            <DropDown
               containerClassName="w-full md:w-72"
               value={listFilterObject}
               onChange={(e) => setListFilterObject(e.target.value)}
@@ -148,7 +148,7 @@ export default function AutomationPage() {
                   {opt.label}
                 </option>
               ))}
-            </AdminSelect>
+            </DropDown>
             <Tag color="default">
               {t("automation.summary.total_triggers", { count: filteredTriggers.length })}
             </Tag>

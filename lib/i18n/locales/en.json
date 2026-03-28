@@ -179,6 +179,9 @@
         "placeholder": "Search orders...",
         "placeholder_full": "Search by order ID or table name..."
       },
+      "filter": {
+        "all_tables": "All tables"
+      },
       "create_order_short": "Create Order",
       "stats": {
         "pending": "Pending",

@@ -1,7 +1,7 @@
 "use client";
 
 import MultiImageUpload from "@/components/MultiImageUpload";
-import { AdminSelect } from "@/components/ui/AdminSelect";
+import { DropDown } from "@/components/ui/DropDown";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import { message, Modal } from "antd";
@@ -449,7 +449,7 @@ export default function MenuItemFormPage() {
                         style={{ color: "var(--text)" }}>
                         Category
                       </label>
-                      <AdminSelect
+                      <DropDown
                         id="categoryId"
                         name="categoryId"
                         value={formData.categoryId}
@@ -463,7 +463,7 @@ export default function MenuItemFormPage() {
                             {cat.name}
                           </option>
                         ))}
-                      </AdminSelect>
+                      </DropDown>
                     </div>
 
                     <div>
@@ -473,7 +473,7 @@ export default function MenuItemFormPage() {
                         style={{ color: "var(--text)" }}>
                         Unit
                       </label>
-                      <AdminSelect
+                      <DropDown
                         id="unit"
                         name="unit"
                         value={formData.unit}
@@ -488,7 +488,7 @@ export default function MenuItemFormPage() {
                         <option value="glass">Glass</option>
                         <option value="piece">Piece</option>
                         <option value="serving">Serving</option>
-                      </AdminSelect>
+                      </DropDown>
                     </div>
 
                     <div>

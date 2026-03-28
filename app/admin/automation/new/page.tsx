@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminSelect } from "@/components/ui/AdminSelect";
+import { DropDown } from "@/components/ui/DropDown";
 import { triggerService } from "@/lib/services/triggerService";
 import { App } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -411,7 +411,7 @@ export default function NewAutomationTriggerPage() {
                     <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                       {t("automation.new.fields.type")}
                     </label>
-                    <AdminSelect
+                    <DropDown
                       value={type}
                       onChange={(e) => setType(e.target.value)}
                       style={fieldStyle}
@@ -421,13 +421,13 @@ export default function NewAutomationTriggerPage() {
                           {opt.label}
                         </option>
                       ))}
-                    </AdminSelect>
+                    </DropDown>
                   </div>
                   <div>
                     <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                       {t("automation.new.fields.trigger_object")}
                     </label>
-                    <AdminSelect
+                    <DropDown
                       value={triggerObjectId}
                       onChange={(e) => setTriggerObjectId(e.target.value)}
                       style={fieldStyle}
@@ -437,7 +437,7 @@ export default function NewAutomationTriggerPage() {
                           {opt.label}
                         </option>
                       ))}
-                    </AdminSelect>
+                    </DropDown>
                   </div>
                 </div>
               </section>

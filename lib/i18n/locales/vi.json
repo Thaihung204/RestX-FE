@@ -179,6 +179,9 @@
         "placeholder": "Tìm order...",
         "placeholder_full": "Tìm theo mã order hoặc tên bàn..."
       },
+      "filter": {
+        "all_tables": "Tất cả bàn"
+      },
       "create_order_short": "Tạo Order",
       "stats": {
         "pending": "Chờ xử lý",

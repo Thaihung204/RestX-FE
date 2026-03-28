@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 
-type AdminSelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
+type DropDownProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   containerClassName?: string;
 };
 
@@ -18,7 +18,7 @@ const iconStyle: React.CSSProperties = {
   color: "var(--text-muted)",
 };
 
-export const AdminSelect = forwardRef<HTMLSelectElement, AdminSelectProps>(
+export const DropDown = forwardRef<HTMLSelectElement, DropDownProps>(
   ({ className = "", style, containerClassName = "", children, ...props }, ref) => {
     return (
       <div className={`relative ${containerClassName}`.trim()}>
@@ -51,4 +51,4 @@ export const AdminSelect = forwardRef<HTMLSelectElement, AdminSelectProps>(
   }
 );
 
-AdminSelect.displayName = "AdminSelect";
+DropDown.displayName = "DropDown";

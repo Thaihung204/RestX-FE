@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminSelect } from "@/components/ui/AdminSelect";
+import { DropDown } from "@/components/ui/DropDown";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
@@ -357,7 +357,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                         <span style={{ color: "#ff4d4f" }}>*</span>
                       </label>
                       <div style={{ position: "relative" }}>
-                        <AdminSelect
+                        <DropDown
                           id="area"
                           name="area"
                           value={formData.area}
@@ -392,7 +392,7 @@ export const AddTableModal: React.FC<AddTableModalProps> = ({
                               </option>
                             </>
                           )}
-                        </AdminSelect>
+                        </DropDown>
                         <svg
                           style={{
                             position: "absolute",

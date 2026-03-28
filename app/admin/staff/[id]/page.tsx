@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminSelect } from "@/components/ui/AdminSelect";
+import { DropDown } from "@/components/ui/DropDown";
 import employeeService from "@/lib/services/employeeService";
 import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
@@ -375,7 +375,7 @@ export default function StaffFormPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.staff.form.position")}
                     </label>
-                    <AdminSelect
+                    <DropDown
                       name="position"
                       value={formData.position}
                       onChange={handleChange}
@@ -389,7 +389,7 @@ export default function StaffFormPage() {
                           {position}
                         </option>
                       ))}
-                    </AdminSelect>
+                    </DropDown>
                   </div>
 
                   <div>
@@ -419,7 +419,7 @@ export default function StaffFormPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.staff.form.role")}
                     </label>
-                    <AdminSelect
+                    <DropDown
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
@@ -429,7 +429,7 @@ export default function StaffFormPage() {
                           {role}
                         </option>
                       ))}
-                    </AdminSelect>
+                    </DropDown>
                   </div>
 
                   <div className="md:col-span-2">
@@ -504,7 +504,7 @@ export default function StaffFormPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.staff.employment_details.salary_type")}
                     </label>
-                    <AdminSelect
+                    <DropDown
                       name="salaryType"
                       value={formData.salaryType}
                       onChange={handleChange}
@@ -514,7 +514,7 @@ export default function StaffFormPage() {
                           {t(`dashboard.staff.employment_details.salary_types.${st.toLowerCase()}`, { defaultValue: st })}
                         </option>
                       ))}
-                    </AdminSelect>
+                    </DropDown>
                   </div>
 
                   {/* Termination Date */}

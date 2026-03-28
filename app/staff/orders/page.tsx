@@ -17,8 +17,7 @@ import paymentService from "@/lib/services/paymentService";
 import { tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import {
-  PlusOutlined,
-  SearchOutlined
+  PlusOutlined
 } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
 import {
@@ -27,10 +26,10 @@ import {
   Card,
   Col,
   Empty,
-  Input,
   InputNumber,
   Modal,
   Row,
+  Select,
   Space,
   Typography
 } from "antd";
@@ -39,7 +38,6 @@ import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
 
 const { Text } = Typography;
-const { Search } = Input;
 
 type OrderItemStatus = string;
 
@@ -328,8 +326,8 @@ export default function OrderManagement() {
   };
 
   const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] = useState<string>("");
+  const [selectedTableId, setSelectedTableId] = useState<string>("all");
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
   const [cart, setCart] = useState<{ item: DishItem; quantity: number }[]>([]);
   const [activeMenuCategory, setActiveMenuCategory] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -412,10 +410,7 @@ export default function OrderManagement() {
   }, []);
 
   const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.tableName.toLowerCase().includes(searchText.toLowerCase()) ||
-      order.reference.toLowerCase().includes(searchText.toLowerCase());
-    return matchesSearch;
+    return selectedTableId === "all" || order.tableId === selectedTableId;
   });
 
   const tableCodeMap = useMemo(() => {
@@ -673,17 +668,18 @@ export default function OrderManagement() {
         styles={{ body: { padding: isMobile ? 16 : "20px 28px" } }}>
         <Row gutter={[12, 12]} align="middle">
           <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-            <Search
-              placeholder={
-                isMobile
-                  ? t("staff.orders.search.placeholder")
-                  : t("staff.orders.search.placeholder_full")
-              }
-              allowClear
+            <Select
               size={isMobile ? "middle" : "large"}
               style={{ width: "100%" }}
-              prefix={<SearchOutlined style={{ color: "#bbb" }} />}
-              onChange={(e) => setSearchText(e.target.value)}
+              value={selectedTableId}
+              onChange={(value) => setSelectedTableId(String(value))}
+              options={[
+                { value: "all", label: t("staff.orders.filter.all_tables") },
+                ...tables.map((table) => ({
+                  value: table.id,
+                  label: `${t("staff.orders.order.table")} ${table.name}`,
+                })),
+              ]}
             />
           </Col>
           <Col xs={24} sm={24} md={6} lg={6} xl={6}>

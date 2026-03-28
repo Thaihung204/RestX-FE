@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminSelect } from "@/components/ui/AdminSelect";
+import { DropDown } from "@/components/ui/DropDown";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -604,7 +604,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                         <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
                           Shape
                         </label>
-                        <AdminSelect
+                        <DropDown
                           value={formData.shape}
                           onChange={(e) => setFormData({ ...formData, shape: e.target.value as any })}
                           className="py-[14px]"
@@ -616,7 +616,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                           {SHAPE_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                           ))}
-                        </AdminSelect>
+                        </DropDown>
                       </div>
                       <div>
                         <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
@@ -697,7 +697,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                         }}>
                         Floor
                       </label>
-                      <AdminSelect
+                      <DropDown
                         value={formData.area}
                         onChange={(e) =>
                           setFormData({
@@ -716,7 +716,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                             {opt.label}
                           </option>
                         ))}
-                      </AdminSelect>
+                      </DropDown>
                     </motion.div>
 
                     {/* Status */}

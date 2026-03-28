@@ -2,7 +2,7 @@
 
 import DishCard, { DishCardItem } from "@/components/admin/menu/DishCard";
 import { usePageLoading } from "@/components/PageTransitionLoader";
-import { AdminSelect } from "@/components/ui/AdminSelect";
+import { DropDown } from "@/components/ui/DropDown";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import ingredientService, { IngredientItem } from "@/lib/services/ingredientService";
@@ -597,7 +597,7 @@ export default function MenuPage() {
         destroyOnHidden>
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-[1fr_140px_120px] gap-3">
-            <AdminSelect
+            <DropDown
               value={selectedIngredientId}
               onChange={(e) => setSelectedIngredientId(e.target.value)}
               disabled={ingredientsLoading}
@@ -608,7 +608,7 @@ export default function MenuPage() {
                   {ingredient.name} ({ingredient.unit})
                 </option>
               ))}
-            </AdminSelect>
+            </DropDown>
             <input
               type="text"
               value={quantity}
