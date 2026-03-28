@@ -240,8 +240,15 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                 // ── Primary Path: GET /api/floors then /api/floors/{id}/layout ──
                 try {
-                    const allFloors = await floorService.getAllFloors();
+                    const [allFloors, allTables] = await Promise.all([
+                        floorService.getAllFloors(),
+                        tableService.getAllTables(),
+                    ]);
                     const activeFloors = allFloors.filter(f => f.isActive !== false);
+
+                    const tableImageMap = new Map(
+                        allTables.map(t => [t.id, t.cubeFrontImageUrl || undefined] as const)
+                    );
 
                     if (activeFloors.length > 0) {
                         const selectedAt = `${booking.date}T${booking.time}:00`;
@@ -268,7 +275,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     height: Number(t.layout.height) || 100,
                                     rotation: Number(t.layout.rotation) || 0,
                                     zoneId: floorSummary.name,
-                                    cubemap: parseCubemapFromDefaultViewUrl((t as any).defaultViewUrl),
+                                    photo360Url: tableImageMap.get(t.id) || undefined,
                                 })
                             );
                             // DEBUG: show BE positions
@@ -329,7 +336,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 height: t.height ?? 100,
                                 rotation: t.rotation ?? 0,
                                 zoneId: typeName,
-                                cubemap: parseCubemapFromDefaultViewUrl(t.defaultViewUrl),
+                                photo360Url: t.cubeFrontImageUrl || undefined,
                             };
                         });
                         return {

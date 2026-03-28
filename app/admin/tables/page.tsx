@@ -9,8 +9,7 @@ import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
-import { TableMap3D } from "./components/TableMap3D";
-import { tableService, TableStatus, floorService, FloorSummary } from "@/lib/services/tableService";
+import { tableService, TableStatus, floorService, FloorSummary, CubemapImages } from "@/lib/services/tableService";
 import { usePageLoading } from "@/components/PageTransitionLoader";
 import { App } from "antd";
 
@@ -44,6 +43,13 @@ interface Table {
   viewDescription?: string;
   defaultViewUrl?: string;
   qrCodeUrl?: string;
+  // Cubemap 360
+  cubeFrontImageUrl?: string;
+  cubeRightImageUrl?: string;
+  cubeLeftImageUrl?: string;
+  cubeTopImageUrl?: string;
+  cubeBackImageUrl?: string;
+  cubeBottomImageUrl?: string;
 }
 
 type ViewMode = "grid" | "map" | "map3d";
@@ -140,6 +146,13 @@ export default function TablesPage() {
           viewDescription: item.viewDescription,
           defaultViewUrl: item.defaultViewUrl,
           qrCodeUrl: item.qrCodeUrl,
+          // Cubemap 360
+          cubeFrontImageUrl: item.cubeFrontImageUrl,
+          cubeRightImageUrl: item.cubeRightImageUrl,
+          cubeLeftImageUrl: item.cubeLeftImageUrl,
+          cubeTopImageUrl: item.cubeTopImageUrl,
+          cubeBackImageUrl: item.cubeBackImageUrl,
+          cubeBottomImageUrl: item.cubeBottomImageUrl,
         };
       });
       // DEBUG: show BE positions
@@ -522,6 +535,51 @@ export default function TablesPage() {
   const handleDeleteTable = () => {
     if (selectedTable) {
       setDeleteConfirmOpen(true);
+    }
+  };
+
+  const handleSaveCubemap = async (tableId: string, cubemap: CubemapImages, clear: boolean) => {
+    const tableToUpdate = tables.find(t => t.id === tableId);
+    if (!tableToUpdate) return;
+
+    try {
+      const tableData = {
+        id: tableToUpdate.id,
+        code: tableToUpdate.number,
+        seatingCapacity: tableToUpdate.capacity,
+        type: tableToUpdate.area,
+        floorId: tableToUpdate.floorId || layout?.activeFloorId,
+        shape: tableToUpdate.shape,
+        positionX: tableToUpdate.positionX,
+        positionY: tableToUpdate.positionY,
+        width: tableToUpdate.width,
+        height: tableToUpdate.height,
+        rotation: tableToUpdate.rotation,
+        isActive: tableToUpdate.isActive,
+        tableStatusId: tableToUpdate.status === 'occupied'
+          ? TableStatus.Occupied
+          : tableToUpdate.status === 'reserved'
+            ? TableStatus.Reserved
+            : TableStatus.Available,
+        has3DView: clear ? false : (Object.values(cubemap).some(Boolean) || tableToUpdate.has3DView),
+        viewDescription: tableToUpdate.viewDescription,
+        defaultViewUrl: tableToUpdate.defaultViewUrl,
+        qrCodeUrl: tableToUpdate.qrCodeUrl,
+        // Pass existing cubemap URLs so BE doesn't clear ones we're not replacing
+        cubeFrontImageUrl: tableToUpdate.cubeFrontImageUrl,
+        cubeRightImageUrl: tableToUpdate.cubeRightImageUrl,
+        cubeLeftImageUrl: tableToUpdate.cubeLeftImageUrl,
+        cubeTopImageUrl: tableToUpdate.cubeTopImageUrl,
+        cubeBackImageUrl: tableToUpdate.cubeBackImageUrl,
+        cubeBottomImageUrl: tableToUpdate.cubeBottomImageUrl,
+      };
+
+      await tableService.updateTableWithCubemap(tableId, tableData, cubemap, clear);
+      message.success(tDashboard('tables.cubemap_saved', { defaultValue: 'Da luu anh 360!' }));
+      await fetchTables();
+    } catch (err) {
+      console.error('Failed to save cubemap:', err);
+      message.error(tDashboard('tables.cubemap_save_failed', { defaultValue: 'Luu anh 360 that bai' }));
     }
   };
 
@@ -919,6 +977,7 @@ export default function TablesPage() {
         }
         }
         onSave={handleUpdateTable}
+        onSaveCubemap={handleSaveCubemap}
         onDelete={handleDeleteTable}
       />
 

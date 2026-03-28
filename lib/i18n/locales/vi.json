@@ -1005,8 +1005,14 @@
         "table_name": "Bàn {{number}}"
       },
       "errors": {
-        "cannot_delete_last_area": "Không thể xóa khu vực cuối cùng."
+        "cannot_delete_last_area": "Không thể xóa khu vực cuối cùng.",
+        "add_failed": "Thêm bàn thất bại",
+        "create_floor_failed": "Tạo tầng thất bại",
+        "update_failed": "Cập nhật thất bại",
+        "cannot_delete_due_to_booking": "Không thể xóa bàn này vì có đặt chỗ đang hoạt động"
       },
+      "cubemap_saved": "Đã lưu ảnh 360!",
+      "cubemap_save_failed": "Lưu ảnh 360 thất bại",
       "status": {
         "available": "Trống",
         "occupied": "Đang dùng",
@@ -1019,6 +1025,50 @@
         "floor_dimensions": "Kích thước tầng",
         "zones": "vùng",
         "tables_on_floor": "bàn trên tầng này"
+      },
+      "filters": {
+        "all_status": "Tất cả trạng thái",
+        "all_floor": "Tất cả tầng"
+      },
+      "details": {
+        "title": "Chi tiết bàn",
+        "subtitle": "Quản lý và cập nhật thông tin bàn",
+        "current_status": "Trạng thái hiện tại",
+        "table_code": "Mã bàn",
+        "seating_capacity": "Sức chứa",
+        "shape": "Hình dạng",
+        "rotation": "Góc xoay (độ)",
+        "width": "Chiều rộng (px)",
+        "height": "Chiều cao (px)",
+        "floor": "Tầng",
+        "no_floor": "Không có tầng",
+        "table_status": "Trạng thái bàn",
+        "delete": "Xóa",
+        "cancel": "Hủy",
+        "save_changes": "Lưu thay đổi",
+        "qr_title": "QR Code — Bàn {{number}}",
+        "qr_scan": "Quét để gọi món",
+        "qr_load_failed": "Không tải được QR",
+        "copied": "Đã copy!",
+        "copy_link": "Sao chép link",
+        "download_qr": "Tải QR",
+        "status_available": "Trống",
+        "status_occupied": "Có khách",
+        "status_reserved": "Đã đặt",
+        "status_cleaning": "Đang dọn",
+        "shape_square": "Vuông",
+        "shape_circle": "Tròn",
+        "shape_rectangle": "Chữ nhật",
+        "shape_oval": "Bầu dục",
+        "errors": {
+          "number_required": "Vui lòng nhập mã bàn",
+          "width_too_small": "Chiều rộng quá nhỏ",
+          "height_too_small": "Chiều cao quá nhỏ"
+        },
+        "cubemap_title": "Ảnh 360° (Cubemap)",
+        "cubemap_set": "Đã có ảnh",
+        "cubemap_save": "Lưu ảnh 360",
+        "cubemap_clear": "Xóa toàn bộ ảnh 360°"
       }
     },
     "staff": {
