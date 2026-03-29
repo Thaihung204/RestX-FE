@@ -5,7 +5,7 @@ import { GlassInput } from "@/components/ui/GlassInput";
 import authService from "@/lib/services/authService";
 import { MailOutlined, SendOutlined } from "@ant-design/icons";
 import { message } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
 import { useTenant } from "@/lib/contexts/TenantContext";
@@ -14,11 +14,16 @@ const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMV
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation('auth');
+  const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const validateEmail = (email: string) => {
     if (!email) {
@@ -115,7 +120,7 @@ export default function ForgotPasswordPage() {
               />
             </div>
             <span className="auth-heading font-bold uppercase tracking-[0.2em] text-2xl drop-shadow-md">
-              {tenantName || t('login_header.default_title')}
+              {tenantName || (mounted ? t('login_header.default_title') : '')}
             </span>
           </div>
 
@@ -175,7 +180,7 @@ export default function ForgotPasswordPage() {
         {/* Footer */}
         <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none">
           <p className="auth-footer-text">
-            © {new Date().getFullYear()} {tenantName || t('login_header.default_title')}. All rights reserved.
+            © {new Date().getFullYear()} {tenantName || (mounted ? t('login_header.default_title') : '')}. All rights reserved.
           </p>
         </div>
       </div>

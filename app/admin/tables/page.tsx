@@ -52,7 +52,7 @@ interface Table {
   cubeBottomImageUrl?: string;
 }
 
-type ViewMode = "grid" | "map" | "map3d";
+type ViewMode = "grid" | "map";
 
 export default function TablesPage() {
   const { t } = useTranslation();
@@ -109,6 +109,12 @@ export default function TablesPage() {
 
       setBeFloors(floors);
 
+      const cacheBust = Date.now();
+      const withCacheBust = (url?: string) => {
+        if (!url) return undefined;
+        return `${url}${url.includes('?') ? '&' : '?'}v=${cacheBust}`;
+      };
+
       const mappedTables: Table[] = items.map(item => {
         let status: Table['status'] = 'available';
         if (item.tableStatusId === TableStatus.Reserved) status = 'reserved';
@@ -147,12 +153,12 @@ export default function TablesPage() {
           defaultViewUrl: item.defaultViewUrl,
           qrCodeUrl: item.qrCodeUrl,
           // Cubemap 360
-          cubeFrontImageUrl: item.cubeFrontImageUrl,
-          cubeRightImageUrl: item.cubeRightImageUrl,
-          cubeLeftImageUrl: item.cubeLeftImageUrl,
-          cubeTopImageUrl: item.cubeTopImageUrl,
-          cubeBackImageUrl: item.cubeBackImageUrl,
-          cubeBottomImageUrl: item.cubeBottomImageUrl,
+          cubeFrontImageUrl: withCacheBust(item.cubeFrontImageUrl),
+          cubeRightImageUrl: withCacheBust(item.cubeRightImageUrl),
+          cubeLeftImageUrl: withCacheBust(item.cubeLeftImageUrl),
+          cubeTopImageUrl: withCacheBust(item.cubeTopImageUrl),
+          cubeBackImageUrl: withCacheBust(item.cubeBackImageUrl),
+          cubeBottomImageUrl: withCacheBust(item.cubeBottomImageUrl),
         };
       });
       // DEBUG: show BE positions
@@ -545,7 +551,7 @@ export default function TablesPage() {
     try {
       const tableData = {
         id: tableToUpdate.id,
-        code: tableToUpdate.number,
+        code: String(tableToUpdate.number),
         seatingCapacity: tableToUpdate.capacity,
         type: tableToUpdate.area,
         floorId: tableToUpdate.floorId || layout?.activeFloorId,
@@ -683,19 +689,6 @@ export default function TablesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                   </svg>
                 </button>
-                <button
-                  onClick={() => setViewMode("map3d")}
-                  className={`p-2 rounded-md transition-all ${viewMode === "map3d"
-                    ? "bg-[var(--bg-base)] shadow-sm text-[var(--text)]"
-                    : "text-[var(--text-muted)] hover:text-[var(--text)]"
-                    }`}>
-                  {/* 3D Icon */}
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l8 4-8 4-8-4 8-4z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 10l8 4 8-4" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 14l8 4 8-4" />
-                  </svg>
-                </button>
               </div>
               <button
                 onClick={() => setAddAreaModalOpen(true)}
@@ -772,16 +765,6 @@ export default function TablesPage() {
             </div>
           )}
 
-          {/* 3D Map View */}
-          {viewMode === "map3d" && layout && (
-            <div className="h-[calc(100vh-280px)]">
-              <TableMap3D
-                floor={layout.floors.find((floor) => floor.id === layout.activeFloorId) ?? layout.floors[0]}
-                onTableClick={handleMap2DTableClick}
-                selectedTableIds={selectedTable?.id ? [selectedTable.id] : []}
-              />
-            </div>
-          )}
 
           <h3
             className="text-xl font-bold mb-6"

@@ -1,11 +1,17 @@
-import React from 'react';
-import Link from 'next/link';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTenant } from '@/lib/contexts/TenantContext';
 
 export const HeroSection: React.FC = () => {
     const { t } = useTranslation('auth');
     const { tenant } = useTenant();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const restaurantName = tenant?.businessName || tenant?.name;
     const logoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
@@ -25,15 +31,15 @@ export const HeroSection: React.FC = () => {
             <div className="absolute bottom-0 left-0 p-12 md:p-16 w-full text-white z-10">
                 <div className="flex items-center gap-2 mb-6">
                     <img src={logoUrl} alt={restaurantName || "Restaurant Logo"} className="w-10 h-10 object-contain" style={{ filter: 'invert(1) hue-rotate(180deg) brightness(1.1)' }} />
-                    <span className="text-xl font-bold tracking-widest uppercase">{restaurantName || t('login_header.default_title')}</span>
+                    <span className="text-xl font-bold tracking-widest uppercase">{mounted ? (restaurantName || t('login_header.default_title')) : (restaurantName || '')}</span>
                 </div>
 
                 <h2 className="text-4xl lg:text-5xl font-bold leading-tight mb-4 drop-shadow-lg">
-                    {t('hero_section.title')}
+                    {mounted ? t('hero_section.title') : ''}
                 </h2>
 
                 <p className="text-gray-300 text-lg max-w-md drop-shadow-md">
-                    {t('hero_section.description')}
+                    {mounted ? t('hero_section.description') : ''}
                 </p>
 
                 {/* Decorative Slider Indicators */}

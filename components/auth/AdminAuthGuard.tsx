@@ -25,11 +25,18 @@ export default function AdminAuthGuard({
         if (!loading) {
             if (!user) {
                 // Not logged in → redirect to login-email
-                router.replace("/login-email");
+                const currentPath = typeof window !== 'undefined'
+                    ? `${window.location.pathname}${window.location.search || ''}`
+                    : '/admin';
+                const redirect = encodeURIComponent(currentPath);
+                router.replace(`/login-email?redirect=${redirect}`);
             } else if (!isAdmin) {
                 // Logged in but not admin
                 if (userRoles.some(r => r.toLowerCase() === 'staff')) {
-                    router.replace("/staff");
+                    const staffPath = typeof window !== 'undefined'
+                        ? `${window.location.pathname}${window.location.search || ''}`
+                        : '/staff';
+                    router.replace(`/staff?redirect=${encodeURIComponent(staffPath)}`);
                 } else {
                     router.replace("/");
                 }
