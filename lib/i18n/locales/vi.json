@@ -179,6 +179,9 @@
         "placeholder": "Tìm order...",
         "placeholder_full": "Tìm theo mã order hoặc tên bàn..."
       },
+      "filter": {
+        "all_tables": "Tất cả bàn"
+      },
       "create_order_short": "Tạo Order",
       "stats": {
         "pending": "Chờ xử lý",
@@ -214,7 +217,6 @@
         "cancelled": "Đã hủy"
       },
       "modal": {
-        "order_detail": "Chi tiết Order",
         "cart": "Giỏ hàng",
         "select_table": "Chọn bàn",
         "no_items": "Chưa có món nào",
@@ -265,7 +267,9 @@
     "tables": {
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
-      "add_floor": "Thêm khu vực",
+      "add_floor": "Thêm tầng",
+      "edit_floor": "Sửa tầng",
+      "delete_floor": "Xóa tầng",
       "add_table": "Thêm bàn",
       "status": {
         "available": "Trống",
@@ -576,6 +580,7 @@
         "customers": "Khách hàng",
         "staff": "Nhân viên",
         "schedules": "Lịch làm việc",
+        "automation": "Tự động hóa",
         "settings": "Cài đặt",
         "manage": "Quản lý",
         "help": "Trợ giúp"
@@ -957,29 +962,47 @@
     "tables": {
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
-      "add_floor": "Thêm khu vực",
+      "search_placeholder": "Tìm theo mã bàn...",
+      "add_floor": "Thêm tầng",
+      "edit_floor": "Sửa tầng",
+      "delete_floor": "Xóa tầng",
       "add_table": "Thêm bàn",
-      "add_area": "Thêm khu vực",
+      "add_area": "Thêm tầng",
       "add_zone": "Vẽ vùng",
       "add_area_modal": {
-        "title": "Thêm khu vực mới",
-        "name_label": "Tên khu vực",
-        "name_placeholder": "VD: Sân thượng",
+        "title": "Thêm tầng mới",
+        "name_label": "Tên tầng",
+        "floor_name_label": "Tên tầng",
+        "name_placeholder": "VD: Tầng 1, Sân thượng",
+        "width_label": "Chiều rộng (px)",
+        "height_label": "Chiều cao (px)",
         "cancel": "Hủy",
-        "submit": "Thêm khu vực"
+        "submit": "Thêm tầng",
+        "errors": {
+          "name_required": "Vui lòng nhập tên tầng",
+          "name_min": "Tên tầng tối thiểu {{min}} ký tự",
+          "name_max": "Tên tầng tối đa {{max}} ký tự",
+          "name_duplicate": "Tên tầng đã tồn tại",
+          "width_required": "Vui lòng nhập chiều rộng",
+          "width_min": "Chiều rộng tối thiểu {{min}} px",
+          "width_max": "Chiều rộng tối đa {{max}} px",
+          "height_required": "Vui lòng nhập chiều cao",
+          "height_min": "Chiều cao tối thiểu {{min}} px",
+          "height_max": "Chiều cao tối đa {{max}} px"
+        }
       },
       "add_table_modal": {
         "title": "Tạo bàn mới",
         "subtitle": "Thêm bàn mới vào sơ đồ nhà hàng",
-        "table_number": "Số bàn",
-        "table_number_placeholder": "Nhập số bàn",
+        "table_number": "Mã bàn",
+        "table_number_placeholder": "Nhập mã bàn",
         "capacity": "Sức chứa",
         "capacity_placeholder": "Số ghế (1-20)",
         "area": "Khu vực ăn uống",
         "cancel": "Hủy",
         "submit": "Tạo bàn",
         "errors": {
-          "number_required": "Yêu cầu nhập số bàn",
+          "number_required": "Yêu cầu nhập mã bàn",
           "capacity_min": "Sức chứa tối thiểu là 1",
           "capacity_max": "Sức chứa tối đa là 20"
         },
@@ -1097,7 +1120,7 @@
         "on_duty": "Đang làm",
         "departments": "Bộ phận",
         "avg_rating": "Đánh giá TB",
-        "inactive": "Ngừng hoạt động",
+        "inactive": "Đã nghỉ",
         "positions": "Vị trí"
       },
       "form": {
@@ -1535,6 +1558,7 @@
   },
   "common": {
     "cancel": "Hủy",
+    "save": "Lưu",
     "saving": "Đang lưu...",
     "time": {
       "just_now": "Vừa xong",
@@ -1980,6 +2004,23 @@
       "robot_alt": "Robot AI",
       "add_item": "Thêm món",
       "input_placeholder": "Hỏi AI chọn món...",
+      "loading_reply": "Đang trả lời...",
+      "empty_state": {
+        "title": "Hãy bắt đầu trò chuyện",
+        "subtitle": "Để tôi gợi ý món ăn phù hợp cho bạn nhé."
+      },
+      "errors": {
+        "connection": "Mình đang gặp lỗi kết nối, bạn thử lại giúp mình nhé.",
+        "missing_order_info": "Không đủ thông tin để đặt đơn."
+      },
+      "order": {
+        "success": "Xác nhận đơn hàng thành công",
+        "error": "Không thể xác nhận đơn hàng. Vui lòng thử lại."
+      },
+      "order_draft": {
+        "title": "Đơn hàng",
+        "confirm": "Xác nhận"
+      },
       "quick_replies": {
         "spicy": "Gợi ý món cay",
         "combo_two": "Combo 2 người",
@@ -2310,6 +2351,152 @@
       }
     }
   },
+  "automation": {
+    "page": {
+      "title": "Quản lý Trigger",
+      "subtitle": "Xem và quản lý các trigger tự động hóa của nhà hàng."
+    },
+    "actions": {
+      "add_trigger": "Thêm Trigger",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "delete_confirm_title": "Xóa Trigger",
+      "delete_confirm_description": "Bạn có chắc muốn xóa trigger \"{{name}}\" không?",
+      "delete_confirm_ok": "Xóa",
+      "delete_confirm_cancel": "Hủy"
+    },
+    "filter": {
+      "by_object": "Lọc theo đối tượng"
+    },
+    "summary": {
+      "total_triggers": "{{count}} trigger"
+    },
+    "table": {
+      "live": "Live",
+      "name": "Tên",
+      "object": "Đối tượng",
+      "description": "Mô tả",
+      "actions": "Thao tác"
+    },
+    "empty": {
+      "no_triggers": "Không tìm thấy trigger nào."
+    },
+    "fallback": {
+      "unknown_object": "Đối tượng không xác định",
+      "trigger_name": "Trigger {{index}}",
+      "object_name": "Đối tượng {{index}}",
+      "empty_description": "-"
+    },
+    "logs": {
+      "fetch_triggers_failed": "Tải danh sách trigger thất bại:",
+      "delete_trigger_failed": "Xóa trigger thất bại:"
+    },
+    "messages": {
+      "delete_success": "Xóa trigger thành công",
+      "delete_failed": "Xóa trigger thất bại"
+    },
+    "new": {
+      "page": {
+        "create_title": "Tạo Trigger",
+        "edit_title": "Chỉnh sửa Trigger"
+      },
+      "sections": {
+        "basic_information": "Thông tin cơ bản",
+        "criteria": "Điều kiện",
+        "actions": "Hành động",
+        "form_actions": "Thao tác",
+        "status": "Trạng thái",
+        "groups": "Nhóm"
+      },
+      "fields": {
+        "name": "Tên",
+        "description": "Mô tả",
+        "type": "Loại",
+        "trigger_object": "Đối tượng Trigger",
+        "property_name": "Tên thuộc tính",
+        "property_value": "Giá trị thuộc tính",
+        "criteria_type": "Loại điều kiện",
+        "logic_type": "Logic",
+        "computed_description": "Mô tả tính toán",
+        "group_name": "Tên nhóm",
+        "groups": "Nhóm",
+        "action": "Hành động",
+        "custom_properties": "Thuộc tính tùy chỉnh",
+        "custom_properties_json": "Thuộc tính tùy chỉnh (JSON)"
+      },
+      "placeholders": {
+        "name": "Tên",
+        "description": "Mô tả",
+        "group_name": "Nhóm mới",
+        "action": "CascadePendingToPreparing",
+        "property_name": "OrderStatusId",
+        "property_value": "Confirmed",
+        "computed_description": "Trạng thái đơn hàng chuyển sang Confirmed"
+      },
+      "actions": {
+        "back_to_list": "Quay lại danh sách automation",
+        "group": "Nhóm",
+        "criteria": "Điều kiện",
+        "action": "Hành động",
+        "remove": "Xóa",
+        "close": "Đóng",
+        "save": "Lưu",
+        "cancel": "Hủy",
+        "create_trigger": "Tạo Trigger",
+        "update_trigger": "Cập nhật Trigger",
+        "creating": "Đang tạo...",
+        "updating": "Đang cập nhật..."
+      },
+      "status": {
+        "active": "Đang hoạt động",
+        "inactive": "Không hoạt động",
+        "active_help": "Trigger sẽ chạy khi điều kiện khớp",
+        "inactive_help": "Trigger đang bị tắt"
+      },
+      "empty": {
+        "no_criteria": "Chưa có điều kiện nào.",
+        "no_actions": "Chưa có hành động nào.",
+        "no_groups": "Chưa có nhóm nào."
+      },
+      "modals": {
+        "add_group_title": "Thêm nhóm",
+        "add_action_title": "Thêm hành động",
+        "add_criteria_title": "Thêm điều kiện"
+      },
+      "criteria_type_options": {
+        "any_property_change": "AnyPropertyChange",
+        "specific_property_new_value": "SpecificPropertyNewValue",
+        "specific_property_old_value": "SpecificPropertyOldValue",
+        "specific_property_value": "SpecificPropertyValue",
+        "specific_property_value_not_equals": "SpecificPropertyValueNotEquals",
+        "is_greater_than": "IsGreaterThan",
+        "is_less_than": "IsLessThan",
+        "is_updated": "IsUpdated",
+        "contains": "Contains"
+      },
+      "logic_type_options": {
+        "and": "And",
+        "or": "Or"
+      },
+      "fallback": {
+        "type_name": "Loại {{index}}",
+        "object_name": "Đối tượng {{index}}",
+        "group_name": "Nhóm {{index}}",
+        "action_name": "Hành động {{index}}"
+      },
+      "messages": {
+        "load_metadata_failed": "Không thể tải metadata automation",
+        "trigger_not_found": "Không tìm thấy trigger",
+        "load_detail_failed": "Không thể tải chi tiết trigger",
+        "invalid_json": "Custom properties phải là JSON hợp lệ",
+        "require_action": "Vui lòng thêm ít nhất một hành động",
+        "create_success": "Tạo trigger thành công",
+        "update_success": "Cập nhật trigger thành công",
+        "create_failed": "Tạo trigger thất bại",
+        "update_failed": "Cập nhật trigger thất bại"
+      }
+    }
+  },
   "tenants": {
     "breadcrumb": {
       "admin": "Quản trị",
@@ -2322,11 +2509,6 @@
       "total_tenants": "Tổng nhà hàng",
       "active_tenants": "Đang hoạt động",
       "monthly_revenue": "Doanh thu tháng"
-    },
-    "tabs": {
-      "restaurant_list": "Danh sách nhà hàng",
-      "tenant_requests": "Nhà hàng đăng kí",
-      "system_revenue": "Doanh thu hệ thống"
     },
     "table": {
       "tenant_info": "Thông tin nhà hàng",
@@ -2370,6 +2552,83 @@
       "week": "Tuần",
       "month": "Tháng",
       "year": "Năm"
+    },
+    "tabs": {
+      "restaurant_list": "Danh sách nhà hàng",
+      "tenant_requests": "Yêu cầu nhà hàng",
+      "system_revenue": "Doanh thu hệ thống",
+      "business_tools": "Business Tools"
+    },
+    "business_tools": {
+      "title": "Business Tools",
+      "subtitle": "Tự động chuyển trạng thái tenants theo lịch và rule mẫu.",
+      "new_rule": "Tạo rule",
+      "refresh": "Làm mới",
+      "search_placeholder": "Tìm nhà hàng, doanh nghiệp, email...",
+      "sync_tenants": "Đồng bộ tenants",
+      "summary": "Tổng: {{total}} tenants · Hiển thị: {{showing}}",
+      "stats": {
+        "active_rules": "Rule đang chạy",
+        "scheduled_jobs": "Tác vụ theo lịch",
+        "maintenance_queue": "Hàng chờ bảo trì"
+      },
+      "tags": {
+        "auto": "Auto",
+        "schedule": "Schedule",
+        "manual_trigger": "Manual Trigger"
+      },
+      "table": {
+        "live": "Live",
+        "trigger": "Trigger",
+        "auto_status": "Auto Status",
+        "schedule": "Schedule",
+        "current_status": "Trạng thái hiện tại",
+        "next_status": "Trạng thái tiếp theo",
+        "actions": "Thao tác",
+        "apply": "Apply",
+        "tooltip_auto_switch": "Tự động chuyển trạng thái"
+      },
+      "quick_actions": {
+        "title": "Quick Actions",
+        "subtitle": "Template bật/tắt hàng loạt theo rule.",
+        "view_all": "Xem tất cả",
+        "items": {
+          "bulk_activation": {
+            "title": "Kích hoạt hàng loạt",
+            "desc": "Bật active cho các tenant vượt KPI tuần."
+          },
+          "scheduled_pause": {
+            "title": "Tạm dừng theo lịch",
+            "desc": "Chuyển maintenance vào 0:00 mỗi ngày."
+          },
+          "inactive_reminder": {
+            "title": "Nhắc nhở inactive",
+            "desc": "Cảnh báo nếu inactive quá 7 ngày."
+          }
+        }
+      },
+      "rule_preview": {
+        "title": "Rule Preview",
+        "subtitle": "Mẫu workflow chuyển trạng thái.",
+        "create": "Tạo",
+        "items": {
+          "new_signup": "Đăng ký mới",
+          "payment_failure": "Thanh toán thất bại",
+          "scheduled_downtime": "Bảo trì định kỳ"
+        },
+        "condition_label": "Điều kiện: {{value}}",
+        "action_label": "Hành động: {{value}}",
+        "conditions": {
+          "new_tenant": "Tenant mới trong 24h",
+          "failed_payment": "Thanh toán thất bại 2 lần",
+          "scheduled_maintenance": "Bảo trì định kỳ"
+        },
+        "actions": {
+          "auto_active": "Tự động bật",
+          "switch_inactive": "Chuyển sang inactive",
+          "schedule_maintenance": "Đặt lịch bảo trì"
+        }
+      }
     },
     "messages": {
       "refresh_success": "Làm mới thành công",

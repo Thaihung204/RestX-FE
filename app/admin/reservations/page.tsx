@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { Tooltip, Select } from "antd";
+import { DropDown } from "@/components/ui/DropDown";
 import reservationService, {
-    ReservationListItem,
-    ReservationDetail,
     PaginatedReservations,
+    ReservationDetail,
+    ReservationListItem,
     ReservationStatus,
 } from "@/lib/services/reservationService";
+import { Select } from "antd";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 // ─── Status actions (keys mapped to i18n) ────────────────────────────────────
 const STATUS_ACTIONS_KEYS: Record<
@@ -441,11 +442,10 @@ export default function ReservationsPage() {
                         />
                     </div>
 
-                    <select
+                    <DropDown
                         value={statusId}
                         onChange={(e) => setStatusId(e.target.value === "" ? "" : Number(e.target.value))}
-                        className="px-3 py-2 rounded-lg text-sm outline-none min-w-[160px]"
-                        style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                        className="px-3 py-2 text-sm min-w-[160px]"
                     >
                         <option value="">{t('admin.reservations.filter.all_status')}</option>
                         {statuses.map((s) => (
@@ -453,7 +453,7 @@ export default function ReservationsPage() {
                                 {t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name })}
                             </option>
                         ))}
-                    </select>
+                    </DropDown>
 
                     <input
                         type="date"

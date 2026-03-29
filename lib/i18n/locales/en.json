@@ -179,6 +179,9 @@
         "placeholder": "Search orders...",
         "placeholder_full": "Search by order ID or table name..."
       },
+      "filter": {
+        "all_tables": "All tables"
+      },
       "create_order_short": "Create Order",
       "stats": {
         "pending": "Pending",
@@ -214,7 +217,6 @@
         "cancelled": "Cancelled"
       },
       "modal": {
-        "order_detail": "Order Details",
         "cart": "Cart",
         "select_table": "Select Table",
         "no_items": "No items yet",
@@ -463,91 +465,6 @@
     }
   },
   "dashboard": {
-    "tables": {
-      "title": "Table management",
-      "subtitle": "Manage tables and reservations",
-      "add_floor": "Add area",
-      "add_table": "Add table",
-      "status": {
-        "available": "Available",
-        "occupied": "Occupied",
-        "reserved": "Reserved",
-        "cleaning": "Cleaning"
-      },
-      "stats": {
-        "total_tables": "Total tables",
-        "available": "Available",
-        "occupied": "Occupied",
-        "reserved": "Reserved"
-      },
-      "card": {
-        "table_name": "Table {{number}}",
-        "floor": "Floor",
-        "capacity": "Capacity: {{count}} seats",
-        "order": "Order",
-        "reserved_at": "Reserved at",
-        "view_details": "View details"
-      },
-      "view": {
-        "grid": "Grid",
-        "map": "Map"
-      },
-      "zones": {
-        "all": "All",
-        "zone_a": "Zone A",
-        "zone_b": "Zone B",
-        "zone_vip": "VIP",
-        "zone": "Zone"
-      },
-      "table": {
-        "seats": "seats",
-        "guests": "guests",
-        "dishes": "dishes",
-        "from": "From",
-        "booked_at": "Booked at",
-        "capacity": "Capacity"
-      },
-      "modal": {
-        "detail": "Details",
-        "open_table": "Open table",
-        "zone": "Area",
-        "guests_count": "Guest count",
-        "start_time": "Start time",
-        "total_amount": "Total amount",
-        "reservation_name": "Reserved by",
-        "reservation_time": "Reservation time",
-        "phone": "Phone",
-        "confirm_open": "Confirm open",
-        "guest_count": "Guests",
-        "capacity": "Capacity",
-        "total": "Total",
-        "reserved_by": "Reserved by"
-      },
-      "actions": {
-        "open_table": "Open table",
-        "add_dish": "Add dish",
-        "transfer_table": "Transfer table",
-        "checkout": "Checkout",
-        "close_table": "Close table",
-        "guest_arrived": "Guest arrived - Open table",
-        "edit_reservation": "Edit reservation",
-        "finish_cleaning": "Finish cleaning"
-      },
-      "messages": {
-        "table_opened": "Opened {table} for {guests} guests",
-        "table_closed": "Closed {table}",
-        "table_ready": "{table} is ready",
-        "enter_guests": "Please enter guest count",
-        "max_guests": "Max {capacity} guests"
-      },
-      "errors": {
-        "cannot_delete_last_area": "Cannot delete the last area.",
-        "cannot_delete_due_to_booking": "Cannot delete because there is a reservation.",
-        "add_failed": "Failed to add table",
-        "create_floor_failed": "Failed to create area"
-      },
-      "confirm_merge": "Merge tables? This will combine capacity and hide the source table."
-    },
     "toasts": {
       "staff": {
         "load_error_title": "Error",
@@ -637,6 +554,7 @@
         "customers": "Customers",
         "staff": "Staff",
         "schedules": "Schedules",
+        "automation": "Automation",
         "settings": "Settings",
         "manage": "Manage",
         "help": "Help"
@@ -1018,15 +936,34 @@
     "tables": {
       "title": "Table Management",
       "subtitle": "Manage restaurant tables and reservations",
+      "search_placeholder": "Search by table number...",
+      "add_floor": "Add floor",
+      "edit_floor": "Edit floor",
+      "delete_floor": "Delete floor",
       "add_table": "Add Table",
       "add_area": "Add Area",
       "add_zone": "Draw Zone",
       "add_area_modal": {
-        "title": "Add New Area",
-        "name_label": "Area Name",
-        "name_placeholder": "e.g. Roof Top",
+        "title": "Add New Floor",
+        "name_label": "Floor Name",
+        "floor_name_label": "Floor Name",
+        "name_placeholder": "e.g. Floor 1, Rooftop",
+        "width_label": "Width (px)",
+        "height_label": "Height (px)",
         "cancel": "Cancel",
-        "submit": "Add Area"
+        "submit": "Add Floor",
+        "errors": {
+          "name_required": "Please enter floor name",
+          "name_min": "Floor name must be at least {{min}} characters",
+          "name_max": "Floor name must be at most {{max}} characters",
+          "name_duplicate": "Floor name already exists",
+          "width_required": "Please enter width",
+          "width_min": "Width must be at least {{min}} px",
+          "width_max": "Width must be at most {{max}} px",
+          "height_required": "Please enter height",
+          "height_min": "Height must be at least {{min}} px",
+          "height_max": "Height must be at most {{max}} px"
+        }
       },
       "add_table_modal": {
         "title": "Create New Table",
@@ -1057,14 +994,18 @@
       },
       "card": {
         "area": "Area",
+        "table_name": "Table {{number}}",
+        "floor": "Floor",
         "capacity": "Capacity: {{count}} seats",
         "order": "Order",
         "reserved_at": "Reserved at",
-        "view_details": "View Details",
-        "table_name": "Table {{number}}"
+        "view_details": "View Details"
       },
       "errors": {
-        "cannot_delete_last_area": "Cannot delete the last area."
+        "cannot_delete_last_area": "Cannot delete the last area.",
+        "cannot_delete_due_to_booking": "Cannot delete because there is a reservation.",
+        "add_failed": "Failed to add table",
+        "create_floor_failed": "Failed to create floor"
       },
       "cubemap_saved": "360° images saved!",
       "cubemap_save_failed": "Failed to save 360° images",
@@ -1621,6 +1562,7 @@
   },
   "common": {
     "cancel": "Cancel",
+    "save": "Save",
     "saving": "Saving...",
     "time": {
       "just_now": "Just now",
@@ -2066,6 +2008,23 @@
       "robot_alt": "AI Robot",
       "add_item": "Add item",
       "input_placeholder": "Ask AI for dish suggestions...",
+      "loading_reply": "Replying...",
+      "empty_state": {
+        "title": "Start a conversation",
+        "subtitle": "Let me suggest dishes that fit your taste."
+      },
+      "errors": {
+        "connection": "I'm having a connection issue, please try again.",
+        "missing_order_info": "Insufficient information to place the order."
+      },
+      "order": {
+        "success": "Order confirmed successfully",
+        "error": "Unable to confirm the order. Please try again."
+      },
+      "order_draft": {
+        "title": "Order",
+        "confirm": "Confirm"
+      },
       "quick_replies": {
         "spicy": "Suggest spicy dishes",
         "combo_two": "Combo for 2",
@@ -2396,6 +2355,152 @@
       }
     }
   },
+  "automation": {
+    "page": {
+      "title": "Trigger Manager",
+      "subtitle": "View and manage your restaurant automation triggers."
+    },
+    "actions": {
+      "add_trigger": "Add Trigger",
+      "edit": "Edit",
+      "delete": "Delete",
+      "delete_confirm_title": "Delete Trigger",
+      "delete_confirm_description": "Are you sure you want to delete trigger \"{{name}}\"?",
+      "delete_confirm_ok": "Delete",
+      "delete_confirm_cancel": "Cancel"
+    },
+    "filter": {
+      "by_object": "Filter by Object"
+    },
+    "summary": {
+      "total_triggers": "{{count}} triggers"
+    },
+    "table": {
+      "live": "Live",
+      "name": "Name",
+      "object": "Object",
+      "description": "Description",
+      "actions": "Actions"
+    },
+    "empty": {
+      "no_triggers": "No triggers found."
+    },
+    "fallback": {
+      "unknown_object": "Unknown Object",
+      "trigger_name": "Trigger {{index}}",
+      "object_name": "Object {{index}}",
+      "empty_description": "-"
+    },
+    "logs": {
+      "fetch_triggers_failed": "Failed to load triggers:",
+      "delete_trigger_failed": "Failed to delete trigger:"
+    },
+    "messages": {
+      "delete_success": "Trigger deleted successfully",
+      "delete_failed": "Failed to delete trigger"
+    },
+    "new": {
+      "page": {
+        "create_title": "Create Trigger",
+        "edit_title": "Edit Trigger"
+      },
+      "sections": {
+        "basic_information": "Basic Information",
+        "criteria": "Criteria",
+        "actions": "Actions",
+        "form_actions": "Actions",
+        "status": "Status",
+        "groups": "Groups"
+      },
+      "fields": {
+        "name": "Name",
+        "description": "Description",
+        "type": "Type",
+        "trigger_object": "Trigger Object",
+        "property_name": "Property Name",
+        "property_value": "Property Value",
+        "criteria_type": "Criteria Type",
+        "logic_type": "Logic Type",
+        "computed_description": "Computed Description",
+        "group_name": "Group name",
+        "groups": "Groups",
+        "action": "Action",
+        "custom_properties": "Custom Properties",
+        "custom_properties_json": "Custom Properties (JSON)"
+      },
+      "placeholders": {
+        "name": "Name",
+        "description": "Description",
+        "group_name": "New Group",
+        "action": "CascadePendingToPreparing",
+        "property_name": "OrderStatusId",
+        "property_value": "Confirmed",
+        "computed_description": "Order status changed to Confirmed"
+      },
+      "actions": {
+        "back_to_list": "Back to automation list",
+        "group": "Group",
+        "criteria": "Criteria",
+        "action": "Action",
+        "remove": "Remove",
+        "close": "Close",
+        "save": "Save",
+        "cancel": "Cancel",
+        "create_trigger": "Create Trigger",
+        "update_trigger": "Update Trigger",
+        "creating": "Creating...",
+        "updating": "Updating..."
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "active_help": "Trigger will run when conditions match",
+        "inactive_help": "Trigger is disabled"
+      },
+      "empty": {
+        "no_criteria": "No criteria defined.",
+        "no_actions": "No actions defined.",
+        "no_groups": "No groups defined."
+      },
+      "modals": {
+        "add_group_title": "Add Group",
+        "add_action_title": "Add Action",
+        "add_criteria_title": "Add Criteria"
+      },
+      "criteria_type_options": {
+        "any_property_change": "AnyPropertyChange",
+        "specific_property_new_value": "SpecificPropertyNewValue",
+        "specific_property_old_value": "SpecificPropertyOldValue",
+        "specific_property_value": "SpecificPropertyValue",
+        "specific_property_value_not_equals": "SpecificPropertyValueNotEquals",
+        "is_greater_than": "IsGreaterThan",
+        "is_less_than": "IsLessThan",
+        "is_updated": "IsUpdated",
+        "contains": "Contains"
+      },
+      "logic_type_options": {
+        "and": "And",
+        "or": "Or"
+      },
+      "fallback": {
+        "type_name": "Type {{index}}",
+        "object_name": "Object {{index}}",
+        "group_name": "Group {{index}}",
+        "action_name": "Action {{index}}"
+      },
+      "messages": {
+        "load_metadata_failed": "Failed to load automation metadata",
+        "trigger_not_found": "Trigger not found",
+        "load_detail_failed": "Failed to load trigger detail",
+        "invalid_json": "Custom properties must be valid JSON",
+        "require_action": "Please add at least one action",
+        "create_success": "Trigger created successfully",
+        "update_success": "Trigger updated successfully",
+        "create_failed": "Failed to create trigger",
+        "update_failed": "Failed to update trigger"
+      }
+    }
+  },
   "tenants": {
     "breadcrumb": {
       "admin": "Admin",
@@ -2412,7 +2517,79 @@
     "tabs": {
       "restaurant_list": "Restaurant List",
       "tenant_requests": "Restaurant Requests",
-      "system_revenue": "System Revenue"
+      "system_revenue": "System Revenue",
+      "business_tools": "Business Tools"
+    },
+    "business_tools": {
+      "title": "Business Tools",
+      "subtitle": "Auto switch tenant status based on schedules and preset rules.",
+      "new_rule": "New Rule",
+      "refresh": "Refresh",
+      "search_placeholder": "Search tenant, business, email...",
+      "sync_tenants": "Sync Tenants",
+      "summary": "Total: {{total}} tenants · Showing: {{showing}}",
+      "stats": {
+        "active_rules": "Active Rules",
+        "scheduled_jobs": "Scheduled Jobs",
+        "maintenance_queue": "Maintenance Queue"
+      },
+      "tags": {
+        "auto": "Auto",
+        "schedule": "Schedule",
+        "manual_trigger": "Manual Trigger"
+      },
+      "table": {
+        "live": "Live",
+        "trigger": "Trigger",
+        "auto_status": "Auto Status",
+        "schedule": "Schedule",
+        "current_status": "Current Status",
+        "next_status": "Next Status",
+        "actions": "Actions",
+        "apply": "Apply",
+        "tooltip_auto_switch": "Auto switch status"
+      },
+      "quick_actions": {
+        "title": "Quick Actions",
+        "subtitle": "Templates to enable or pause tenants in bulk.",
+        "view_all": "View All",
+        "items": {
+          "bulk_activation": {
+            "title": "Bulk activation",
+            "desc": "Enable tenants that meet weekly KPIs."
+          },
+          "scheduled_pause": {
+            "title": "Scheduled pause",
+            "desc": "Move to maintenance at 00:00 daily."
+          },
+          "inactive_reminder": {
+            "title": "Inactive reminder",
+            "desc": "Alert if inactive for more than 7 days."
+          }
+        }
+      },
+      "rule_preview": {
+        "title": "Rule Preview",
+        "subtitle": "Sample workflow for status transitions.",
+        "create": "Create",
+        "items": {
+          "new_signup": "New Signup",
+          "payment_failure": "Payment Failure",
+          "scheduled_downtime": "Scheduled Downtime"
+        },
+        "condition_label": "Condition: {{value}}",
+        "action_label": "Action: {{value}}",
+        "conditions": {
+          "new_tenant": "New tenant within 24h",
+          "failed_payment": "Failed payment twice",
+          "scheduled_maintenance": "Scheduled maintenance"
+        },
+        "actions": {
+          "auto_active": "Auto Active",
+          "switch_inactive": "Switch to inactive",
+          "schedule_maintenance": "Schedule maintenance"
+        }
+      }
     },
     "table": {
       "tenant_info": "Tenant Info",

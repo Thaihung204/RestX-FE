@@ -1,5 +1,6 @@
 "use client";
 
+import { DropDown } from "@/components/ui/DropDown";
 import employeeService from "@/lib/services/employeeService";
 import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
@@ -374,17 +375,12 @@ export default function StaffFormPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.staff.form.position")}
                     </label>
-                    <select
+                    <DropDown
                       name="position"
                       value={formData.position}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        borderColor: "var(--border)",
-                        color: "var(--text)",
-                      }}>
+                    >
                       <option value="" disabled>
                         {t("dashboard.staff.form.select_position", { defaultValue: "Select position" })}
                       </option>
@@ -393,7 +389,7 @@ export default function StaffFormPage() {
                           {position}
                         </option>
                       ))}
-                    </select>
+                    </DropDown>
                   </div>
 
                   <div>
@@ -423,22 +419,17 @@ export default function StaffFormPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.staff.form.role")}
                     </label>
-                    <select
+                    <DropDown
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        borderColor: "var(--border)",
-                        color: "var(--text)",
-                      }}>
+                    >
                       {ROLES.map((role) => (
                         <option key={role} value={role}>
                           {role}
                         </option>
                       ))}
-                    </select>
+                    </DropDown>
                   </div>
 
                   <div className="md:col-span-2">
@@ -513,22 +504,17 @@ export default function StaffFormPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.staff.employment_details.salary_type")}
                     </label>
-                    <select
+                    <DropDown
                       name="salaryType"
                       value={formData.salaryType}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        borderColor: "var(--border)",
-                        color: "var(--text)",
-                      }}>
+                    >
                       {SALARY_TYPES.map((st) => (
                         <option key={st} value={st}>
                           {t(`dashboard.staff.employment_details.salary_types.${st.toLowerCase()}`, { defaultValue: st })}
                         </option>
                       ))}
-                    </select>
+                    </DropDown>
                   </div>
 
                   {/* Termination Date */}
@@ -906,7 +892,7 @@ export default function StaffFormPage() {
                       className="w-full py-3 rounded-lg font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-orange-500/30 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       style={{
                         background: loading ? "#999" : "var(--primary)",
-                        color: "var(--text)"
+                        color: "white"
                       }}>
                       {loading ? (
                         <span className="flex items-center justify-center gap-2">

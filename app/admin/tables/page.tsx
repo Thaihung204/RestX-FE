@@ -12,10 +12,13 @@ import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
 import { tableService, TableStatus, floorService, FloorSummary, CubemapImages } from "@/lib/services/tableService";
 import { usePageLoading } from "@/components/PageTransitionLoader";
 import { App } from "antd";
+import orderSignalRService from "@/lib/services/orderSignalRService";
+import { HubConnectionState } from "@microsoft/signalr";
+import { tenantService } from "@/lib/services/tenantService";
 
 interface Table {
   id: string;
-  number: number;
+  number: string;
   capacity: number;
   status: "available" | "occupied" | "reserved" | "cleaning";
   area: string; // floorName from BE
@@ -53,19 +56,24 @@ interface Table {
 }
 
 type ViewMode = "grid" | "map";
+type ViewMode = "grid" | "map";
 
 export default function TablesPage() {
   const { t } = useTranslation();
 
-  const tDashboard = (key: string, options?: any) => String(t(`dashboard.${key}`, options));
+  const tDashboard = (key: string, options?: any) => String(t(key, { ns: "dashboard", ...options }));
   const { message } = App.useApp();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [tables, setTables] = useState<Table[]>([]);
-  const [qrModal, setQrModal] = useState<{ url: string; number: number; tableId: string } | null>(null);
+  const [qrModal, setQrModal] = useState<{ url: string; number: string; tableId: string } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | Table["status"]>("all");
+  const [floorFilter, setFloorFilter] = useState<string>("all");
+  const [keyword, setKeyword] = useState("");
 
   const statusConfig = {
     available: {
@@ -91,12 +99,21 @@ export default function TablesPage() {
     },
   };
 
+  const filteredTables = tables.filter((table) => {
+    const matchStatus = statusFilter === "all" || table.status === statusFilter;
+    const matchFloor = floorFilter === "all" || table.floorId === floorFilter;
+    const matchKeyword = !keyword.trim() || table.number.toLowerCase().includes(keyword.trim().toLowerCase());
+    return matchStatus && matchFloor && matchKeyword;
+  });
+
   /* BE floors state */
   const [beFloors, setBeFloors] = useState<FloorSummary[]>([]);
   /* Add Area Modal State */
   const [addAreaModalOpen, setAddAreaModalOpen] = useState(false);
+  const [editAreaModalOpen, setEditAreaModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
   const [loading] = useState(false);
+  const [tenantId, setTenantId] = useState<string>("");
   usePageLoading(loading);
 
   // Fetch tables + floors from BE API
@@ -135,7 +152,7 @@ export default function TablesPage() {
 
         return {
           id: item.id,
-          number: parseInt(item.code) || 0,
+          number: item.code || '',
           capacity: item.seatingCapacity,
           status: status,
           area: item.floorName || item.type || 'Indoor',
@@ -172,10 +189,68 @@ export default function TablesPage() {
 
   useEffect(() => {
     fetchTables();
+    tenantService.getTenantConfig(window.location.hostname).then((tenant) => {
+      if (tenant?.id) setTenantId(tenant.id);
+    }).catch(() => {});
   }, []);
 
   // Layout State for Map Mode
   const [layout, setLayout] = useState<Layout | null>(null);
+
+  useEffect(() => {
+    if (!tenantId) return;
+
+    let isMounted = true;
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const handleRealtimeRefresh = (payload: any) => {
+      if (!isMounted) return;
+      const changedTenantId = payload?.tenantId || payload?.order?.tenantId || payload?.reservation?.tenantId;
+      if (changedTenantId && changedTenantId !== tenantId) return;
+
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (!isMounted) return;
+        fetchTables();
+      }, 300);
+    };
+
+    const events = [
+      "tables.created",
+      "tables.updated",
+      "tables.deleted",
+      "tables.status_updated",
+      "reservations.created",
+      "reservations.updated",
+      "reservations.cancelled",
+      "floors.created",
+      "floors.updated",
+      "floors.deleted",
+      "floors.layout_updated",
+    ];
+
+    const setupSignalR = async () => {
+      try {
+        await orderSignalRService.start();
+        const conn = orderSignalRService.getConnection();
+        if (conn.state === HubConnectionState.Connected) {
+          await orderSignalRService.invoke("JoinTenantGroup", tenantId);
+          events.forEach((event) => orderSignalRService.on(event, handleRealtimeRefresh));
+        }
+      } catch (error) {
+        console.error("SignalR: setup tables/floors/reservations failed", error);
+      }
+    };
+
+    setupSignalR();
+
+    return () => {
+      isMounted = false;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      events.forEach((event) => orderSignalRService.off(event, handleRealtimeRefresh));
+      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+    };
+  }, [tenantId]);
 
   // Upload floor background image directly to BE
   const handleFloorImageUpload = async (floorId: string, file: File) => {
@@ -297,7 +372,7 @@ export default function TablesPage() {
 
       const apiData: any = {
         id: tableToUpdate.id,
-        code: tableToUpdate.number.toString(),
+        code: tableToUpdate.number,
         seatingCapacity: tableToUpdate.capacity,
         type: tableToUpdate.area,
         floorId: effectiveFloorId,
@@ -352,7 +427,7 @@ export default function TablesPage() {
 
       const apiData: any = {
         id: tableToUpdate.id,
-        code: tableToUpdate.number.toString(),
+        code: tableToUpdate.number,
         seatingCapacity: tableToUpdate.capacity,
         type: tableToUpdate.area,
         floorId: tableToUpdate.floorId || layout.activeFloorId,
@@ -468,8 +543,16 @@ export default function TablesPage() {
   const handleUpdateTable = async (values: Partial<Table>) => {
     if (selectedTable) {
       // Optimistic
+      const nextFloor = values.area ? beFloors.find((f) => f.id === values.area) : undefined;
       setTables(tables.map(t =>
-        t.id === selectedTable.id ? { ...t, ...values } : t
+        t.id === selectedTable.id
+          ? {
+              ...t,
+              ...values,
+              area: values.area !== undefined ? (nextFloor?.name || t.area) : t.area,
+              floorId: values.area !== undefined ? values.area : t.floorId,
+            }
+          : t
       ));
 
       try {
@@ -485,7 +568,7 @@ export default function TablesPage() {
           // Full update - preserve all fields
           const apiData: any = {
             id: selectedTable.id,
-            code: selectedTable.number.toString(),
+            code: selectedTable.number,
             seatingCapacity: selectedTable.capacity,
             type: selectedTable.area,
             floorId: selectedTable.floorId || layout?.activeFloorId,
@@ -506,9 +589,12 @@ export default function TablesPage() {
           if (selectedTable.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
           else if (selectedTable.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
 
-          if (values.number !== undefined) apiData.code = values.number.toString();
+          if (values.number !== undefined) apiData.code = values.number;
           if (values.capacity !== undefined) apiData.seatingCapacity = values.capacity;
-          if (values.area !== undefined) apiData.type = values.area;
+          if (values.area !== undefined) {
+            apiData.floorId = values.area;
+            apiData.type = beFloors.find((f) => f.id === values.area)?.name || selectedTable.area;
+          }
           if (values.shape !== undefined) apiData.shape = values.shape;
           if (values.width !== undefined) apiData.width = values.width;
           if (values.height !== undefined) apiData.height = values.height;
@@ -528,9 +614,11 @@ export default function TablesPage() {
           }
 
           await tableService.updateTable(selectedTable.id, apiData);
+          await fetchTables();
         }
       } catch (err) {
         console.error("Update failed", err);
+      } finally {
         fetchTables();
       }
       setDrawerOpen(false);
@@ -633,10 +721,10 @@ export default function TablesPage() {
     }
   };
 
-  const handleAddArea = async (name: string) => {
+  const handleAddArea = async (values: { name: string; width: number; height: number }) => {
     // Create a real floor on the BE
     try {
-      await floorService.createFloor({ name, width: 1400, height: 900 });
+      await floorService.createFloor({ name: values.name, width: values.width, height: values.height });
       // Refresh floors from BE
       const updatedFloors = await floorService.getAllFloors();
       setBeFloors(updatedFloors);
@@ -647,6 +735,32 @@ export default function TablesPage() {
       alert(
         tDashboard("tables.errors.create_floor_failed"),
       );
+    }
+  };
+
+  const handleOpenEditFloor = () => {
+    if (!layout?.activeFloorId) return;
+    setSelectedFloorId(layout.activeFloorId);
+    setEditAreaModalOpen(true);
+  };
+
+  const handleEditArea = async (values: { name: string; width: number; height: number }) => {
+    if (!selectedFloorId) return;
+
+    try {
+      await floorService.updateFloor(selectedFloorId, {
+        name: values.name,
+        width: values.width,
+        height: values.height,
+      });
+
+      const updatedFloors = await floorService.getAllFloors();
+      setBeFloors(updatedFloors);
+      setEditAreaModalOpen(false);
+      setSelectedFloorId(null);
+    } catch (err) {
+      console.error('Failed to update floor on BE:', err);
+      alert(tDashboard("tables.errors.update_failed", { defaultValue: "Failed to update floor" }));
     }
   };
 
@@ -695,6 +809,24 @@ export default function TablesPage() {
                 className="px-4 py-2 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium transition-all hover:bg-[var(--bg-base)]">
                 + {tDashboard("tables.add_floor")}
               </button>
+              {viewMode === "map" && layout && (
+                <>
+                  <button
+                    onClick={handleOpenEditFloor}
+                    className="px-4 py-2 bg-[var(--card)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium transition-all hover:bg-[var(--bg-base)]"
+                    disabled={!layout.activeFloorId}
+                  >
+                    {tDashboard("tables.edit_floor")}
+                  </button>
+                  <button
+                    onClick={() => setZoneToDelete(layout.activeFloorId)}
+                    className="px-4 py-2 bg-[var(--card)] border border-red-400/40 text-red-500 rounded-lg font-medium transition-all hover:bg-red-500/10"
+                    disabled={layout.floors.length <= 1}
+                  >
+                    {tDashboard("tables.delete_floor")}
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => setAddModalOpen(true)}
                 className="px-4 py-2 text-white rounded-lg font-medium transition-all"
@@ -772,7 +904,7 @@ export default function TablesPage() {
             {tDashboard("tables.title")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tables.map((table) => (
+            {filteredTables.map((table) => (
               <div
                 key={table.id}
                 onClick={() => handleTableClick(table)}
@@ -962,6 +1094,7 @@ export default function TablesPage() {
         onSave={handleUpdateTable}
         onSaveCubemap={handleSaveCubemap}
         onDelete={handleDeleteTable}
+        floors={beFloors.map(f => ({ id: f.id, name: f.name }))}
       />
 
       {/* Add Table Modal */}
@@ -976,13 +1109,30 @@ export default function TablesPage() {
       < AddAreaModal
         open={addAreaModalOpen}
         onClose={() => setAddAreaModalOpen(false)}
-        onAdd={handleAddArea}
+        onSubmit={handleAddArea}
+        existingNames={beFloors.map((f) => f.name)}
+      />
+
+      < AddAreaModal
+        open={editAreaModalOpen}
+        onClose={() => {
+          setEditAreaModalOpen(false);
+          setSelectedFloorId(null);
+        }}
+        onSubmit={handleEditArea}
+        initialName={beFloors.find(f => f.id === selectedFloorId)?.name || ""}
+        initialWidth={beFloors.find(f => f.id === selectedFloorId)?.width || 1400}
+        initialHeight={beFloors.find(f => f.id === selectedFloorId)?.height || 900}
+        existingNames={beFloors.map((f) => f.name)}
+        showDimensions
+        title={tDashboard("tables.edit_floor")}
+        submitText={t("common.save_changes")}
       />
 
       {/* Delete Confirmation Modal for Table */}
       < DeleteConfirmModal
         open={deleteConfirmOpen}
-        itemName={selectedTable?.number || 0}
+        itemName={selectedTable?.number || ""}
         itemType="Table"
         onClose={() => setDeleteConfirmOpen(false)}
         onConfirm={confirmDelete}

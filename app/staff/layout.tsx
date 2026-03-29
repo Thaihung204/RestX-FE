@@ -1,11 +1,12 @@
 "use client";
 
-import StaffAuthGuard from '@/components/auth/StaffAuthGuard';
+import StaffAuthGuard from "@/components/auth/StaffAuthGuard";
 import {
   BellOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
   DashboardOutlined,
+  FireOutlined,
   HomeOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
@@ -17,25 +18,25 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import {
-    Avatar,
-    Badge,
-    Button,
-    Dropdown,
-    Layout,
-    Menu,
-    Typography,
+  Avatar,
+  Badge,
+  Button,
+  Dropdown,
+  Layout,
+  Menu,
+  Typography,
 } from "antd";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import authService from "../../lib/services/authService";
-import { useAuth } from "../../lib/contexts/AuthContext";
 import { useLanguage } from "../../components/I18nProvider";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
+import { useAuth } from "../../lib/contexts/AuthContext";
+import { useTenant } from "../../lib/contexts/TenantContext";
+import authService from "../../lib/services/authService";
 import ThemeToggle from "../components/ThemeToggle";
 import { useThemeMode } from "../theme/AutoDarkThemeProvider";
-import { useTenant } from "../../lib/contexts/TenantContext";
 
 const { Sider, Content, Header } = Layout;
 const { Text } = Typography;
@@ -57,7 +58,8 @@ export default function StaffLayout({
   const { mode } = useThemeMode();
   const { tenant } = useTenant();
   const tenantName = tenant?.businessName || tenant?.name;
-  const tenantLogoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
+  const tenantLogoUrl =
+    tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
 
   // Derive display info from real user
   const displayName = user?.fullName || user?.name || user?.email || "Staff";
@@ -93,6 +95,11 @@ export default function StaffLayout({
           : t("staff.menu.orders"),
     },
     {
+      key: "/staff/kitchen",
+      icon: <FireOutlined />,
+      label: t("staff.menu.kitchen", { defaultValue: "Kitchen" }),
+    },
+    {
       key: "/staff/checkout",
       icon: <WalletOutlined />,
       label: t("staff.menu.checkout"),
@@ -115,12 +122,23 @@ export default function StaffLayout({
       key: "user-info",
       label: (
         <div style={{ padding: "4px 0", maxWidth: 200 }}>
-          <Text strong style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</Text>
-          <Text type="secondary" style={{ fontSize: 12, display: "block" }}>{displayRole}</Text>
+          <Text
+            strong
+            style={{
+              display: "block",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}>
+            {displayName}
+          </Text>
+          <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+            {displayRole}
+          </Text>
         </div>
       ),
       disabled: true,
-      style: { cursor: "default" }
+      style: { cursor: "default" },
     },
     {
       type: "divider" as const,
@@ -256,9 +274,7 @@ export default function StaffLayout({
             />
           </div>
           {(!collapsed || inDrawer) && (
-            <h2
-              className="font-bold text-lg"
-              style={{ color: "var(--text)" }}>
+            <h2 className="font-bold text-lg" style={{ color: "var(--text)" }}>
               {tenantName || t("staff.sidebar.brand")}
             </h2>
           )}
@@ -279,7 +295,8 @@ export default function StaffLayout({
             <Avatar
               size={44}
               style={{
-                background: "linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)",
+                background:
+                  "linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)",
                 fontSize: 18,
                 fontWeight: 600,
               }}>
@@ -288,7 +305,7 @@ export default function StaffLayout({
             <div>
               <Text
                 style={{
-                  color: 'var(--text)',
+                  color: "var(--text)",
                   fontWeight: 600,
                   fontSize: 14,
                   display: "block",
@@ -297,7 +314,7 @@ export default function StaffLayout({
               </Text>
               <Text
                 style={{
-                  color: 'var(--text-muted)',
+                  color: "var(--text-muted)",
                   fontSize: 12,
                 }}>
                 {displayRole}
@@ -368,7 +385,13 @@ export default function StaffLayout({
 
   return (
     <StaffAuthGuard>
-      <Layout style={{ height: "100dvh", display: "flex", flexDirection: "row", overflow: "hidden" }}>
+      <Layout
+        style={{
+          height: "100dvh",
+          display: "flex",
+          flexDirection: "row",
+          overflow: "hidden",
+        }}>
         {/* Mobile Bottom Navigation */}
         {isDrawerDevice && (
           <div
@@ -656,7 +679,11 @@ export default function StaffLayout({
             }}>
             {children}
             {isDrawerDevice && (
-              <div style={{ height: "calc(90px + env(safe-area-inset-bottom, 0px))" }} />
+              <div
+                style={{
+                  height: "calc(90px + env(safe-area-inset-bottom, 0px))",
+                }}
+              />
             )}
           </Content>
         </Layout>
@@ -715,8 +742,14 @@ export default function StaffLayout({
         [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item:hover {
           background: #f3f4f6 !important;
         }
-        [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item .ant-dropdown-menu-title-content,
-        [data-theme="light"] .ant-dropdown-menu .ant-dropdown-menu-item .anticon {
+        [data-theme="light"]
+          .ant-dropdown-menu
+          .ant-dropdown-menu-item
+          .ant-dropdown-menu-title-content,
+        [data-theme="light"]
+          .ant-dropdown-menu
+          .ant-dropdown-menu-item
+          .anticon {
           color: inherit !important;
         }
 
@@ -731,7 +764,9 @@ export default function StaffLayout({
 
         /* Keep logout red in both themes */
         .ant-dropdown-menu .ant-dropdown-menu-item-danger,
-        .ant-dropdown-menu .ant-dropdown-menu-item-danger .ant-dropdown-menu-title-content,
+        .ant-dropdown-menu
+          .ant-dropdown-menu-item-danger
+          .ant-dropdown-menu-title-content,
         .ant-dropdown-menu .ant-dropdown-menu-item-danger .anticon {
           color: #ff4d4f !important;
         }

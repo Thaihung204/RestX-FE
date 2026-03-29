@@ -1,6 +1,7 @@
 "use client";
 
 import { usePageLoading } from "@/components/PageTransitionLoader";
+import { DropDown } from "@/components/ui/DropDown";
 import employeeService from "@/lib/services/employeeService";
 import { App, Button, Modal } from "antd";
 import Link from "next/link";
@@ -51,45 +52,6 @@ export default function StaffPage() {
 
   const roles = ["Manager", "Staff"];
 
-  const fetchStaffStats = async () => {
-    try {
-      const [activeRes, inactiveRes] = await Promise.all([
-        employeeService.getEmployees({
-          page: 1,
-          itemsPerPage: 1,
-          isActive: true,
-        }),
-        employeeService.getEmployees({
-          page: 1,
-          itemsPerPage: 1,
-          isActive: false,
-        }),
-      ]);
-
-      const extractTotal = (res: any) => {
-        const pd = res.data;
-        return (
-          pd?.totalCount ??
-          res.totalCount ??
-          pd?.items?.length ??
-          pd?.employees?.length ??
-          (Array.isArray(res.data) ? res.data.length : 0) ??
-          0
-        );
-      };
-
-      setTotalActive(extractTotal(activeRes));
-      setTotalInactive(extractTotal(inactiveRes));
-    } catch {
-      setTotalActive(
-        staffList.filter((s) => s.status === "active").length,
-      );
-      setTotalInactive(
-        staffList.filter((s) => s.status === "inactive").length,
-      );
-    }
-  };
-
   const fetchStaffList = async (page: number = 1) => {
     try {
       setLoading(true);
@@ -136,8 +98,9 @@ export default function StaffPage() {
           new Set(mappedData.map((s) => s.position).filter(Boolean)).size
         );
 
-        // Fetch global active/inactive stats from API metadata
-        fetchStaffStats();
+        // Use global active/inactive stats from main API metadata
+        setTotalActive(paginatedData?.totalActive ?? mappedData.filter((s) => s.status === "active").length);
+        setTotalInactive(paginatedData?.totalInactive ?? mappedData.filter((s) => s.status === "inactive").length);
 
         setError(null);
       } else {
@@ -314,39 +277,19 @@ export default function StaffPage() {
                 }}
               />
             </div>
-            <div className="relative sm:w-48">
-              <select
-                value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
-                className="w-full px-4 py-3 pr-10 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all appearance-none cursor-pointer font-medium"
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}>
-                <option value="all">{t("dashboard.staff.all_roles")}</option>
-                {roles.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5"
-                  style={{ color: "var(--text-muted)" }}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
+            <DropDown
+              containerClassName="sm:w-48"
+              value={filterRole}
+              onChange={(e) => setFilterRole(e.target.value)}
+              className="py-3 font-medium"
+            >
+              <option value="all">{t("dashboard.staff.all_roles")}</option>
+              {roles.map((role) => (
+                <option key={role} value={role}>
+                  {role}
+                </option>
+              ))}
+            </DropDown>
           </div>
 
           {/* Stats — totalCount từ API metadata */}

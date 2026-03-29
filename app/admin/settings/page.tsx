@@ -1,5 +1,6 @@
 "use client";
 
+import { DropDown } from "@/components/ui/DropDown";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -259,25 +260,12 @@ export default function SettingsPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.currency")}
                     </label>
-                    <select
-                      className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.borderColor = "var(--primary)")
-                      }
-                      onBlur={(e) =>
-                        (e.currentTarget.style.borderColor = "var(--border)")
-                      }
-                      suppressHydrationWarning>
+                    <DropDown className="py-2" suppressHydrationWarning>
                       <option>USD ($)</option>
                       <option>EUR (€)</option>
                       <option>GBP (£)</option>
                       <option>VND (₫)</option>
-                    </select>
+                    </DropDown>
                   </div>
                   <div>
                     <label
@@ -311,25 +299,12 @@ export default function SettingsPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.timezone")}
                     </label>
-                    <select
-                      className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.borderColor = "var(--primary)")
-                      }
-                      onBlur={(e) =>
-                        (e.currentTarget.style.borderColor = "var(--border)")
-                      }
-                      suppressHydrationWarning>
+                    <DropDown className="py-2" suppressHydrationWarning>
                       <option>UTC-5 (EST)</option>
                       <option>UTC-8 (PST)</option>
                       <option>UTC+7 (ICT)</option>
                       <option>UTC+0 (GMT)</option>
-                    </select>
+                    </DropDown>
                   </div>
                   <div>
                     <label
@@ -337,24 +312,11 @@ export default function SettingsPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.date_format")}
                     </label>
-                    <select
-                      className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.borderColor = "var(--primary)")
-                      }
-                      onBlur={(e) =>
-                        (e.currentTarget.style.borderColor = "var(--border)")
-                      }
-                      suppressHydrationWarning>
+                    <DropDown className="py-2" suppressHydrationWarning>
                       <option>MM/DD/YYYY</option>
                       <option>DD/MM/YYYY</option>
                       <option>YYYY-MM-DD</option>
-                    </select>
+                    </DropDown>
                   </div>
                 </div>
               </div>
