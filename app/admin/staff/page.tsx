@@ -1,7 +1,7 @@
 "use client";
 
 import { usePageLoading } from "@/components/PageTransitionLoader";
-import { AdminSelect } from "@/components/ui/AdminSelect";
+import { DropDown } from "@/components/ui/DropDown";
 import employeeService from "@/lib/services/employeeService";
 import { App, Button, Modal } from "antd";
 import Link from "next/link";
@@ -277,7 +277,7 @@ export default function StaffPage() {
                 }}
               />
             </div>
-            <AdminSelect
+            <DropDown
               containerClassName="sm:w-48"
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
@@ -289,7 +289,7 @@ export default function StaffPage() {
                   {role}
                 </option>
               ))}
-            </AdminSelect>
+            </DropDown>
           </div>
 
           {/* Stats — totalCount từ API metadata */}

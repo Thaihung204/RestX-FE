@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminSelect } from "@/components/ui/AdminSelect";
+import { DropDown } from "@/components/ui/DropDown";
 import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
 import supplierService, { SupplierItem } from "@/lib/services/supplierService";
 import { App } from "antd";
@@ -291,14 +291,14 @@ export default function IngredientFormPage() {
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.unit")} 
                       </label>
-                      <AdminSelect
+                      <DropDown
                         name="unit" value={form.unit} onChange={handleChange}
                         disabled={cannotSave}
                         className="px-3"
                         style={cannotSave ? disabledFieldStyle : fieldStyle}
                       >
                         {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-                      </AdminSelect>
+                      </DropDown>
                     </div>
 
                     <div>
@@ -324,7 +324,7 @@ export default function IngredientFormPage() {
                           {t("dashboard.ingredients.no_suppliers")}
                         </div>
                       ) : (
-                        <AdminSelect
+                        <DropDown
                           name="supplierId"
                           value={form.supplierId ?? ""}
                           onChange={handleChange}
@@ -336,7 +336,7 @@ export default function IngredientFormPage() {
                           {suppliers.map((s) => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                           ))}
-                        </AdminSelect>
+                        </DropDown>
                       )}
                     </div>
 
@@ -353,7 +353,7 @@ export default function IngredientFormPage() {
                           {t("dashboard.ingredients.loading_categories")}
                         </div>
                       ) : (
-                        <AdminSelect
+                        <DropDown
                           name="type"
                           value={form.type ?? ""}
                           onChange={handleChange}
@@ -366,7 +366,7 @@ export default function IngredientFormPage() {
                               {getCategoryLabel(c)}
                             </option>
                           ))}
-                        </AdminSelect>
+                        </DropDown>
                       )}
                     </div>
                   </div>
@@ -414,7 +414,7 @@ export default function IngredientFormPage() {
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.stock_status_label")}
                       </label>
-                      <AdminSelect
+                      <DropDown
                         name="status"
                         value={form.status ?? 0}
                         onChange={handleChange}
@@ -425,7 +425,7 @@ export default function IngredientFormPage() {
                         <option value={0}>{t("dashboard.ingredients.status_values.in_stock")}</option>
                         <option value={1}>{t("dashboard.ingredients.status_values.low_stock")}</option>
                         <option value={2}>{t("dashboard.ingredients.status_values.out_of_stock")}</option>
-                      </AdminSelect>
+                      </DropDown>
                     </div>
                   </div>
 

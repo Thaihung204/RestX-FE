@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminSelect } from "@/components/ui/AdminSelect";
+import { DropDown } from "@/components/ui/DropDown";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -260,12 +260,12 @@ export default function SettingsPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.currency")}
                     </label>
-                    <AdminSelect className="py-2" suppressHydrationWarning>
+                    <DropDown className="py-2" suppressHydrationWarning>
                       <option>USD ($)</option>
                       <option>EUR (€)</option>
                       <option>GBP (£)</option>
                       <option>VND (₫)</option>
-                    </AdminSelect>
+                    </DropDown>
                   </div>
                   <div>
                     <label
@@ -299,12 +299,12 @@ export default function SettingsPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.timezone")}
                     </label>
-                    <AdminSelect className="py-2" suppressHydrationWarning>
+                    <DropDown className="py-2" suppressHydrationWarning>
                       <option>UTC-5 (EST)</option>
                       <option>UTC-8 (PST)</option>
                       <option>UTC+7 (ICT)</option>
                       <option>UTC+0 (GMT)</option>
-                    </AdminSelect>
+                    </DropDown>
                   </div>
                   <div>
                     <label
@@ -312,11 +312,11 @@ export default function SettingsPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.date_format")}
                     </label>
-                    <AdminSelect className="py-2" suppressHydrationWarning>
+                    <DropDown className="py-2" suppressHydrationWarning>
                       <option>MM/DD/YYYY</option>
                       <option>DD/MM/YYYY</option>
                       <option>YYYY-MM-DD</option>
-                    </AdminSelect>
+                    </DropDown>
                   </div>
                 </div>
               </div>

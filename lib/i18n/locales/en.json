@@ -179,6 +179,9 @@
         "placeholder": "Search orders...",
         "placeholder_full": "Search by order ID or table name..."
       },
+      "filter": {
+        "all_tables": "All tables"
+      },
       "create_order_short": "Create Order",
       "stats": {
         "pending": "Pending",
@@ -214,7 +217,6 @@
         "cancelled": "Cancelled"
       },
       "modal": {
-        "order_detail": "Order Details",
         "cart": "Cart",
         "select_table": "Select Table",
         "no_items": "No items yet",
