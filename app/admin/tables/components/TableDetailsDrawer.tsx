@@ -7,10 +7,11 @@ import { useTranslation } from "react-i18next";
 
 interface Table {
   id: string;
-  number: number;
+  number: string;
   capacity: number;
   status: "available" | "occupied" | "reserved" | "cleaning";
   area: string;
+  floorId?: string;
   currentOrder?: string;
   reservationTime?: string;
   shape?: "Square" | "Circle" | "Rectangle" | "Oval";
@@ -20,57 +21,60 @@ interface Table {
   qrCodeUrl?: string;
 }
 
+interface FloorOption {
+  id: string;
+  name: string;
+}
+
 interface TableDetailsDrawerProps {
   open: boolean;
   table: Table | null;
   onClose: () => void;
   onSave: (values: Partial<Table>) => void;
   onDelete?: () => void;
+  floors?: FloorOption[];
 }
 
 const STATUS_OPTIONS = [
   {
-    label: "Available",
+    labelKey: "status_available",
     value: "available",
     color: "#52c41a",
     gradient: "linear-gradient(135deg, #52c41a 0%, #73d13d 100%)",
   },
   {
-    label: "Occupied",
+    labelKey: "status_occupied",
     value: "occupied",
     color: "var(--primary)",
     gradient:
       "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)",
   },
   {
-    label: "Reserved",
+    labelKey: "status_reserved",
     value: "reserved",
     color: "#1890ff",
     gradient: "linear-gradient(135deg, #1890ff 0%, #40a9ff 100%)",
   },
   {
-    label: "Cleaning",
+    labelKey: "status_cleaning",
     value: "cleaning",
     color: "#faad14",
     gradient: "linear-gradient(135deg, #faad14 0%, #ffc53d 100%)",
   },
 ];
 
-const AREA_OPTIONS = [
-  { label: "VIP Section", value: "VIP" },
-  { label: "Indoor Dining", value: "Indoor" },
-  { label: "Outdoor Terrace", value: "Outdoor" },
-];
-
 const SHAPE_OPTIONS = [
-  { label: "Square", value: "Square" },
-  { label: "Circle", value: "Circle" },
-  { label: "Rectangle", value: "Rectangle" },
-  { label: "Oval", value: "Oval" },
+  { labelKey: "shape_square", value: "Square" },
+  { labelKey: "shape_circle", value: "Circle" },
+  { labelKey: "shape_rectangle", value: "Rectangle" },
+  { labelKey: "shape_oval", value: "Oval" },
 ];
 
 // ─── QR Code Section ───────────────────────────────────────────────────────────
-function QRCodeSection({ qrCodeUrl, tableNumber, tableId }: { qrCodeUrl: string; tableNumber: number; tableId: string }) {
+function QRCodeSection({ qrCodeUrl, tableNumber, tableId }: { qrCodeUrl: string; tableNumber: string; tableId: string }) {
+  const { t } = useTranslation();
+  const tDetails = (key: string, options?: Record<string, unknown>) =>
+    t(`tables.details.${key}`, { ns: "dashboard", ...options });
   const [copied, setCopied] = useState(false);
   const [imgError, setImgError] = useState(false);
 
@@ -121,7 +125,7 @@ function QRCodeSection({ qrCodeUrl, tableNumber, tableId }: { qrCodeUrl: string;
           <path d="M14 14h2v2h-2zM18 14h3M14 18v3M18 18h3v3h-3z" />
         </svg>
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
-          QR Code — Bàn {tableNumber}
+          {tDetails("qr_title", { number: tableNumber })}
         </span>
         <span style={{
           marginLeft: 'auto',
@@ -132,7 +136,7 @@ function QRCodeSection({ qrCodeUrl, tableNumber, tableId }: { qrCodeUrl: string;
           borderRadius: 20,
           padding: '2px 8px',
         }}>
-          Scan to order
+          {tDetails("qr_scan")}
         </span>
       </div>
 
@@ -164,7 +168,7 @@ function QRCodeSection({ qrCodeUrl, tableNumber, tableId }: { qrCodeUrl: string;
               <rect x="14" y="3" width="7" height="7" rx="1" />
               <rect x="3" y="14" width="7" height="7" rx="1" />
             </svg>
-            <span style={{ textAlign: 'center' }}>Không tải được QR</span>
+            <span style={{ textAlign: 'center' }}>{tDetails("qr_load_failed")}</span>
           </div>
         ) : (
           <div style={{
@@ -212,7 +216,7 @@ function QRCodeSection({ qrCodeUrl, tableNumber, tableId }: { qrCodeUrl: string;
                   stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
-                Đã copy!
+                {tDetails("copied")}
               </>
             ) : (
               <>
@@ -221,7 +225,7 @@ function QRCodeSection({ qrCodeUrl, tableNumber, tableId }: { qrCodeUrl: string;
                   <rect x="9" y="9" width="13" height="13" rx="2" />
                   <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                 </svg>
-                Copy link
+                {tDetails("copy_link")}
               </>
             )}
           </button>
@@ -252,7 +256,7 @@ function QRCodeSection({ qrCodeUrl, tableNumber, tableId }: { qrCodeUrl: string;
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Tải QR
+            {tDetails("download_qr")}
           </button>
         </div>
       </div>
@@ -266,12 +270,15 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
   onClose,
   onSave,
   onDelete,
+  floors = [],
 }) => {
   const { t } = useTranslation();
+  const tDetails = (key: string, options?: Record<string, unknown>) =>
+    t(`tables.details.${key}`, { ns: "dashboard", ...options });
   const [formData, setFormData] = React.useState({
-    number: 0,
+    number: "",
     capacity: 4,
-    area: "Indoor" as string,
+    area: "" as string,
     status: "available" as "available" | "occupied" | "reserved" | "cleaning",
     shape: "Square" as "Square" | "Circle" | "Rectangle" | "Oval",
     width: 80,
@@ -286,7 +293,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
       setFormData({
         number: table.number,
         capacity: table.capacity,
-        area: table.area,
+        area: table.floorId || floors[0]?.id || "",
         status: table.status,
         shape: table.shape || "Square",
         width: table.width || 80,
@@ -299,14 +306,14 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (formData.number < 1)
-      newErrors.number = t("table_form.errors.number_min");
+    if (!formData.number.trim())
+      newErrors.number = tDetails("errors.number_required");
     if (formData.capacity < 1)
       newErrors.capacity = t("table_form.errors.capacity_min");
     if (formData.capacity > 20)
       newErrors.capacity = t("table_form.errors.capacity_max");
-    if (formData.width < 20) newErrors.width = "Width too small";
-    if (formData.height < 20) newErrors.height = "Height too small";
+    if (formData.width < 20) newErrors.width = tDetails("errors.width_too_small");
+    if (formData.height < 20) newErrors.height = tDetails("errors.height_too_small");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -433,11 +440,11 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                           fontWeight: 700,
                           letterSpacing: "-0.02em",
                         }}>
-                        Table Details
+                        {tDetails("title")}
                       </h2>
                     </div>
                     <p style={{ margin: 0, fontSize: 13, opacity: 0.85 }}>
-                      Manage and update table information
+                      {tDetails("subtitle")}
                     </p>
                   </div>
 
@@ -503,7 +510,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                           letterSpacing: 1.5,
                           fontWeight: 600,
                         }}>
-                        Current Status
+                        {tDetails("current_status")}
                       </p>
                       <p
                         style={{
@@ -512,7 +519,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                           fontWeight: 700,
                           letterSpacing: "-0.02em",
                         }}>
-                        {currentStatus?.label}
+                        {currentStatus ? tDetails(currentStatus.labelKey) : ""}
                       </p>
                     </div>
                   </motion.div>
@@ -540,18 +547,18 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                             color: "var(--text)",
                             marginBottom: 8,
                           }}>
-                          Table Number
+                          {tDetails("table_code")}
                         </label>
                         <input
-                          type="number"
-                          min="1"
+                          type="text"
                           value={formData.number}
                           onChange={(e) => {
                             setFormData({
                               ...formData,
-                              number: parseInt(e.target.value) || 0,
+                              number: e.target.value,
                             });
                           }}
+                          placeholder={tDetails("table_code_placeholder", { defaultValue: "Nhập mã bàn" })}
                           style={{
                             width: "100%",
                             padding: "14px 16px",
@@ -573,7 +580,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                             color: "var(--text)",
                             marginBottom: 8,
                           }}>
-                          Seating Capacity
+                          {tDetails("seating_capacity")}
                         </label>
                         <input
                           type="number"
@@ -602,7 +609,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
                       <div>
                         <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
-                          Shape
+                          {tDetails("shape")}
                         </label>
                         <DropDown
                           value={formData.shape}
@@ -614,13 +621,13 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                           }}
                         >
                           {SHAPE_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            <option key={opt.value} value={opt.value}>{tDetails(opt.labelKey)}</option>
                           ))}
                         </DropDown>
                       </div>
                       <div>
                         <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
-                          Rotation (degrees)
+                          {tDetails("rotation")}
                         </label>
                         <input
                           type="number"
@@ -643,7 +650,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
                       <div>
                         <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
-                          Width (px)
+                          {tDetails("width")}
                         </label>
                         <input
                           type="number"
@@ -662,7 +669,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                       </div>
                       <div>
                         <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
-                          Height (px)
+                          {tDetails("height")}
                         </label>
                         <input
                           type="number"
@@ -695,7 +702,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                           marginBottom: 8,
                           letterSpacing: "-0.01em",
                         }}>
-                        Floor
+                        {tDetails("floor")}
                       </label>
                       <DropDown
                         value={formData.area}
@@ -711,9 +718,9 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                           border: "2px solid var(--border)",
                         }}
                       >
-                        {AREA_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
+                        {floors.map((floor) => (
+                          <option key={floor.id} value={floor.id}>
+                            {floor.name}
                           </option>
                         ))}
                       </DropDown>
@@ -733,7 +740,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                           marginBottom: 12,
                           letterSpacing: "-0.01em",
                         }}>
-                        Table Status
+                        {tDetails("table_status")}
                       </label>
                       <div
                         style={{
@@ -774,7 +781,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                               transition: "all 0.2s",
                               letterSpacing: "-0.01em",
                             }}>
-                            {status.label}
+                            {tDetails(status.labelKey)}
                           </motion.button>
                         ))}
                       </div>
@@ -823,7 +830,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                     strokeWidth="2.5">
                     <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                   </svg>
-                  Delete
+                  {tDetails("delete")}
                 </motion.button>
               )}
               <motion.button
@@ -842,7 +849,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                   cursor: "pointer",
                   letterSpacing: "-0.01em",
                 }}>
-                Cancel
+                {tDetails("cancel")}
               </motion.button>
               <motion.button
                 whileHover={{
@@ -880,7 +887,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                   <polyline points="17 21 17 13 7 13 7 21" />
                   <polyline points="7 3 7 8 15 8" />
                 </svg>
-                Save Changes
+                {tDetails("save_changes")}
               </motion.button>
             </div>
           </motion.div>
