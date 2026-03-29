@@ -20,6 +20,12 @@ interface Table {
   height?: number;
   rotation?: number;
   qrCodeUrl?: string;
+  cubeFrontImageUrl?: string;
+  cubeBackImageUrl?: string;
+  cubeLeftImageUrl?: string;
+  cubeRightImageUrl?: string;
+  cubeTopImageUrl?: string;
+  cubeBottomImageUrl?: string;
 }
 
 interface FloorOption {

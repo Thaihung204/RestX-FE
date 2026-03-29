@@ -56,7 +56,6 @@ interface Table {
 }
 
 type ViewMode = "grid" | "map";
-type ViewMode = "grid" | "map";
 
 export default function TablesPage() {
   const { t } = useTranslation();
