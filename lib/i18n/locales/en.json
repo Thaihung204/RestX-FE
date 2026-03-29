@@ -1007,6 +1007,8 @@
         "add_failed": "Failed to add table",
         "create_floor_failed": "Failed to create floor"
       },
+      "cubemap_saved": "360° images saved!",
+      "cubemap_save_failed": "Failed to save 360° images",
       "status": {
         "available": "Available",
         "occupied": "Occupied",
@@ -1058,7 +1060,11 @@
           "number_required": "Please enter table code",
           "width_too_small": "Width too small",
           "height_too_small": "Height too small"
-        }
+        },
+        "cubemap_title": "360° Images (Cubemap)",
+        "cubemap_set": "Images set",
+        "cubemap_save": "Save 360 images",
+        "cubemap_clear": "Remove all 360° images"
       },
       "view": {
         "grid": "Grid",

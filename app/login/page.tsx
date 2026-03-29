@@ -8,6 +8,8 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../theme/AntdProvider";
 import { useTenant } from "@/lib/contexts/TenantContext";
+import authService from "@/lib/services/authService";
+import axiosInstance from "@/lib/services/axiosInstance";
 
 const HERO_IMAGE_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCQMVZhsaYs2Qw_8QN0YP6pUMn326Srs9wfsj18Q0patddJBVkz5g8pm0S3OhMz-nY-BrDmVA-ghfvRsndeKDyq7w68KAOVQDc5vQo71xWYxvYcQaEm4IFJ6BGYlfoaK6APcvIObkkPn9yvUiw6Iditv27W_j60EhvOhHb3Cwfupw1Ib5bCO6lO0NctemCVio6026jqjhbziRbrzl6OVbYkM0LUSLR_OV1pQf1oH1nNavimugtYDhjEH_oSrIweo29PEMjmlq80Ol4";
 
@@ -29,6 +31,12 @@ export default function LoginPage() {
       return '/restaurant';
     }
   })();
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // State
   const [phone, setPhone] = useState("");
@@ -86,7 +94,6 @@ export default function LoginPage() {
   const checkPhoneNumber = async (phoneNumber: string) => {
     setCheckingPhone(true);
     try {
-      const authService = (await import('@/lib/services/authService')).default;
       const result = await authService.checkPhone(phoneNumber);
 
       setPhoneChecked(true);
@@ -165,8 +172,6 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const authService = (await import('@/lib/services/authService')).default;
-      const axiosInstance = (await import('@/lib/services/axiosInstance')).default;
 
       if (isNewUser) {
         setNameTouched(true);
@@ -271,13 +276,13 @@ export default function LoginPage() {
               />
             </div>
             <span className="auth-heading font-bold uppercase tracking-[0.2em] text-2xl drop-shadow-md">
-              {tenantName || t('login_header.default_title')}
+              {tenantName || (mounted ? t('login_header.default_title') : '')}
             </span>
           </div>
 
           <div className="text-center md:text-left mb-8">
             <h1 className="auth-heading text-3xl font-bold tracking-tight drop-shadow-sm transition-colors">
-              {t('login_page.title') || "Login with Phone"}
+              {mounted ? (t('login_page.title') || "Login with Phone") : ""}
             </h1>
           </div>
 
@@ -390,7 +395,7 @@ export default function LoginPage() {
         {/* Footer */}
         <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none">
           <p className="auth-footer-text">
-            © {new Date().getFullYear()} {tenantName || t('login_header.default_title')}. All rights reserved.
+            © {new Date().getFullYear()} {tenantName || (mounted ? t('login_header.default_title') : '')}. All rights reserved.
           </p>
         </div>
       </div>

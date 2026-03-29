@@ -202,7 +202,7 @@ function ResetPasswordPageContent() {
               />
             </div>
             <span className="auth-heading font-bold uppercase tracking-[0.2em] text-2xl drop-shadow-md">
-              {tenantName || t('login_header.default_title')}
+              {tenantName || (mounted ? t('login_header.default_title') : '')}
             </span>
           </div>
 
@@ -298,7 +298,7 @@ function ResetPasswordPageContent() {
         {/* Footer */}
         <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none">
           <p className="auth-footer-text">
-            © {new Date().getFullYear()} {tenantName || t('login_header.default_title')}. All rights reserved.
+            © {new Date().getFullYear()} {tenantName || (mounted ? t('login_header.default_title') : '')}. All rights reserved.
           </p>
         </div>
       </div>

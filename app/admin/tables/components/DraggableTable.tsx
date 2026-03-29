@@ -15,7 +15,14 @@ export interface TableData {
   height: number;
   rotation: number;
   zoneId?: string;
-  photo360Url?: string;
+  cubemap?: {
+    px: string; // right
+    nx: string; // left
+    py: string; // top
+    ny: string; // bottom
+    pz: string; // front
+    nz: string; // back
+  };
 }
 
 interface DraggableTableProps {

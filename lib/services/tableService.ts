@@ -27,6 +27,59 @@ export interface TableItem {
     defaultViewUrl?: string;
     tableStatusName?: string;
     qrCodeUrl?: string;
+    // Cubemap 360 image URLs (returned by BE after upload)
+    cubeFrontImageUrl?: string;
+    cubeRightImageUrl?: string;
+    cubeLeftImageUrl?: string;
+    cubeTopImageUrl?: string;
+    cubeBackImageUrl?: string;
+    cubeBottomImageUrl?: string;
+}
+
+/** Cubemap images to upload for 360 view */
+export interface CubemapImages {
+    front?: File | null;
+    right?: File | null;
+    left?: File | null;
+    top?: File | null;
+    back?: File | null;
+    bottom?: File | null;
+}
+
+/**
+ * Build a FormData from a Partial<TableItem>.
+ * Required because BE uses [FromForm] for PUT /api/tables/{id}.
+ */
+function buildTableFormData(id: string, table: Partial<TableItem>): FormData {
+    const fd = new FormData();
+    fd.append('Id', id);
+    if (table.code !== undefined) fd.append('Code', table.code);
+    if (table.seatingCapacity !== undefined) fd.append('SeatingCapacity', String(table.seatingCapacity));
+    if (table.type !== undefined) fd.append('Type', table.type);
+    if (table.floorId !== undefined) fd.append('FloorId', table.floorId);
+    if (table.shape !== undefined) fd.append('Shape', table.shape);
+    if (table.positionX !== undefined) fd.append('PositionX', String(table.positionX));
+    if (table.positionY !== undefined) fd.append('PositionY', String(table.positionY));
+    if (table.width !== undefined) fd.append('Width', String(table.width));
+    if (table.height !== undefined) fd.append('Height', String(table.height));
+    if (table.rotation !== undefined) fd.append('Rotation', String(table.rotation));
+    if (table.isActive !== undefined) fd.append('IsActive', String(table.isActive));
+    if (table.tableStatusId !== undefined) fd.append('TableStatusId', String(table.tableStatusId));
+    if (table.tableStatusName !== undefined) fd.append('TableStatusName', table.tableStatusName ?? '');
+    if (table.floorName !== undefined) fd.append('FloorName', table.floorName ?? '');
+    if (table.has3DView !== undefined) fd.append('Has3DView', String(table.has3DView));
+    if (table.viewDescription !== undefined) fd.append('ViewDescription', table.viewDescription ?? '');
+    if (table.defaultViewUrl !== undefined) fd.append('DefaultViewUrl', table.defaultViewUrl ?? '');
+    if (table.qrCodeUrl !== undefined) fd.append('QRCodeUrl', table.qrCodeUrl ?? '');
+    // Pass-through existing cubemap URLs so BE does not clear them
+    fd.append('CubeFrontImageUrl', table.cubeFrontImageUrl ?? '');
+    fd.append('CubeRightImageUrl', table.cubeRightImageUrl ?? '');
+    fd.append('CubeLeftImageUrl', table.cubeLeftImageUrl ?? '');
+    fd.append('CubeTopImageUrl', table.cubeTopImageUrl ?? '');
+    fd.append('CubeBackImageUrl', table.cubeBackImageUrl ?? '');
+    fd.append('CubeBottomImageUrl', table.cubeBottomImageUrl ?? '');
+    fd.append('ClearCubemap', 'false');
+    return fd;
 }
 
 export const tableService = {
@@ -48,11 +101,47 @@ export const tableService = {
         return response.data;
     },
 
-    /** PUT /api/tables/{id} — Requires Admin role */
+    /**
+     * PUT /api/tables/{id} — Requires Admin role
+     * BE uses [FromForm] so we MUST send multipart/form-data (not JSON).
+     */
     updateTable: async (id: string, table: Partial<TableItem>): Promise<TableItem> => {
-        const response = await axiosInstance.put<TableItem>(`/tables/${id}`, table);
+        const fd = buildTableFormData(id, table);
+        const response = await axiosInstance.put<TableItem>(`/tables/${id}`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
         return response.data;
     },
+
+    /**
+     * PUT /api/tables/{id} — multipart/form-data with cubemap image files.
+     * Reuses buildTableFormData then appends new image files and ClearCubemap flag.
+     */
+    updateTableWithCubemap: async (
+        id: string,
+        table: Partial<TableItem>,
+        cubemap: CubemapImages,
+        clearCubemap = false,
+    ): Promise<TableItem> => {
+        const fd = buildTableFormData(id, table);
+
+        // Override ClearCubemap flag set by builder
+        fd.set('ClearCubemap', String(clearCubemap));
+
+        // New cubemap image files
+        if (cubemap.front) fd.append('CubeFrontImage', cubemap.front);
+        if (cubemap.right) fd.append('CubeRightImage', cubemap.right);
+        if (cubemap.left) fd.append('CubeLeftImage', cubemap.left);
+        if (cubemap.top) fd.append('CubeTopImage', cubemap.top);
+        if (cubemap.back) fd.append('CubeBackImage', cubemap.back);
+        if (cubemap.bottom) fd.append('CubeBottomImage', cubemap.bottom);
+
+        const response = await axiosInstance.put<TableItem>(`/tables/${id}`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
 
     /** DELETE /api/tables/{id} — Requires Admin role */
     deleteTable: async (id: string): Promise<void> => {

@@ -55,6 +55,16 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+function setAuthCookie(token: string, rememberMe: boolean) {
+  if (typeof document === 'undefined') return;
+  if (rememberMe) {
+    const maxAge = 8 * 60 * 60; // 8 hours in seconds
+    document.cookie = `accessToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    return;
+  }
+  document.cookie = `accessToken=${token}; path=/; SameSite=Lax`;
+}
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -88,6 +98,8 @@ axiosInstance.interceptors.response.use(
           } else {
             localStorage.setItem('accessToken', accessToken);
           }
+          // Đồng bộ cookie để middleware SSR không redirect sai về /login
+          setAuthCookie(accessToken, !useSession);
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return axiosInstance(originalRequest);
         }
@@ -100,7 +112,15 @@ axiosInstance.interceptors.response.use(
           sessionStorage.removeItem('accessToken');
           sessionStorage.removeItem('refreshToken');
           sessionStorage.removeItem('userInfo');
-          window.location.href = '/login';
+
+          const currentPath = `${window.location.pathname}${window.location.search || ''}`;
+          const encodedRedirect = encodeURIComponent(currentPath || '/');
+          const loginPath =
+            window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/staff')
+              ? '/login-email'
+              : '/login';
+
+          window.location.href = `${loginPath}?redirect=${encodedRedirect}`;
         }
         return Promise.reject(refreshError);
       }

@@ -9,7 +9,7 @@ import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
-import { tableService, TableStatus, floorService, FloorSummary } from "@/lib/services/tableService";
+import { tableService, TableStatus, floorService, FloorSummary, CubemapImages } from "@/lib/services/tableService";
 import { usePageLoading } from "@/components/PageTransitionLoader";
 import { App } from "antd";
 import orderSignalRService from "@/lib/services/orderSignalRService";
@@ -33,11 +33,26 @@ interface Table {
   height: number;
   rotation: number;
   isActive: boolean;
+  cubemap?: {
+    px: string;
+    nx: string;
+    py: string;
+    ny: string;
+    pz: string;
+    nz: string;
+  };
   // Backend optional fields — preserved during updates
   has3DView?: boolean;
   viewDescription?: string;
   defaultViewUrl?: string;
   qrCodeUrl?: string;
+  // Cubemap 360
+  cubeFrontImageUrl?: string;
+  cubeRightImageUrl?: string;
+  cubeLeftImageUrl?: string;
+  cubeTopImageUrl?: string;
+  cubeBackImageUrl?: string;
+  cubeBottomImageUrl?: string;
 }
 
 type ViewMode = "grid" | "map";
@@ -110,11 +125,29 @@ export default function TablesPage() {
 
       setBeFloors(floors);
 
+      const cacheBust = Date.now();
+      const withCacheBust = (url?: string) => {
+        if (!url) return undefined;
+        return `${url}${url.includes('?') ? '&' : '?'}v=${cacheBust}`;
+      };
+
       const mappedTables: Table[] = items.map(item => {
         let status: Table['status'] = 'available';
         if (item.tableStatusId === TableStatus.Reserved) status = 'reserved';
         if (item.tableStatusId === TableStatus.Occupied) status = 'occupied';
         if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
+
+        let cubemap: Table["cubemap"] | undefined;
+        if (item.defaultViewUrl) {
+          try {
+            const parsed = JSON.parse(item.defaultViewUrl);
+            if (parsed?.px && parsed?.nx && parsed?.py && parsed?.ny && parsed?.pz && parsed?.nz) {
+              cubemap = parsed;
+            }
+          } catch {
+            cubemap = undefined;
+          }
+        }
 
         return {
           id: item.id,
@@ -130,10 +163,18 @@ export default function TablesPage() {
           height: Number(item.height) || 80,
           rotation: Number(item.rotation) || 0,
           isActive: item.isActive,
+          cubemap,
           has3DView: item.has3DView,
           viewDescription: item.viewDescription,
           defaultViewUrl: item.defaultViewUrl,
           qrCodeUrl: item.qrCodeUrl,
+          // Cubemap 360
+          cubeFrontImageUrl: withCacheBust(item.cubeFrontImageUrl),
+          cubeRightImageUrl: withCacheBust(item.cubeRightImageUrl),
+          cubeLeftImageUrl: withCacheBust(item.cubeLeftImageUrl),
+          cubeTopImageUrl: withCacheBust(item.cubeTopImageUrl),
+          cubeBackImageUrl: withCacheBust(item.cubeBackImageUrl),
+          cubeBottomImageUrl: withCacheBust(item.cubeBottomImageUrl),
         };
       });
       // DEBUG: show BE positions
@@ -557,6 +598,13 @@ export default function TablesPage() {
           if (values.width !== undefined) apiData.width = values.width;
           if (values.height !== undefined) apiData.height = values.height;
           if (values.rotation !== undefined) apiData.rotation = values.rotation;
+          if (values.cubemap !== undefined) {
+            apiData.defaultViewUrl = JSON.stringify(values.cubemap);
+            apiData.has3DView = Boolean(
+              values.cubemap?.px && values.cubemap?.nx && values.cubemap?.py && values.cubemap?.ny && values.cubemap?.pz && values.cubemap?.nz,
+            );
+            apiData.viewDescription = apiData.has3DView ? "Cubemap 360" : null;
+          }
 
           if (values.status !== undefined) {
             if (values.status === 'available') apiData.tableStatusId = TableStatus.Available;
@@ -580,6 +628,51 @@ export default function TablesPage() {
   const handleDeleteTable = () => {
     if (selectedTable) {
       setDeleteConfirmOpen(true);
+    }
+  };
+
+  const handleSaveCubemap = async (tableId: string, cubemap: CubemapImages, clear: boolean) => {
+    const tableToUpdate = tables.find(t => t.id === tableId);
+    if (!tableToUpdate) return;
+
+    try {
+      const tableData = {
+        id: tableToUpdate.id,
+        code: String(tableToUpdate.number),
+        seatingCapacity: tableToUpdate.capacity,
+        type: tableToUpdate.area,
+        floorId: tableToUpdate.floorId || layout?.activeFloorId,
+        shape: tableToUpdate.shape,
+        positionX: tableToUpdate.positionX,
+        positionY: tableToUpdate.positionY,
+        width: tableToUpdate.width,
+        height: tableToUpdate.height,
+        rotation: tableToUpdate.rotation,
+        isActive: tableToUpdate.isActive,
+        tableStatusId: tableToUpdate.status === 'occupied'
+          ? TableStatus.Occupied
+          : tableToUpdate.status === 'reserved'
+            ? TableStatus.Reserved
+            : TableStatus.Available,
+        has3DView: clear ? false : (Object.values(cubemap).some(Boolean) || tableToUpdate.has3DView),
+        viewDescription: tableToUpdate.viewDescription,
+        defaultViewUrl: tableToUpdate.defaultViewUrl,
+        qrCodeUrl: tableToUpdate.qrCodeUrl,
+        // Pass existing cubemap URLs so BE doesn't clear ones we're not replacing
+        cubeFrontImageUrl: tableToUpdate.cubeFrontImageUrl,
+        cubeRightImageUrl: tableToUpdate.cubeRightImageUrl,
+        cubeLeftImageUrl: tableToUpdate.cubeLeftImageUrl,
+        cubeTopImageUrl: tableToUpdate.cubeTopImageUrl,
+        cubeBackImageUrl: tableToUpdate.cubeBackImageUrl,
+        cubeBottomImageUrl: tableToUpdate.cubeBottomImageUrl,
+      };
+
+      await tableService.updateTableWithCubemap(tableId, tableData, cubemap, clear);
+      message.success(tDashboard('tables.cubemap_saved', { defaultValue: 'Da luu anh 360!' }));
+      await fetchTables();
+    } catch (err) {
+      console.error('Failed to save cubemap:', err);
+      message.error(tDashboard('tables.cubemap_save_failed', { defaultValue: 'Luu anh 360 that bai' }));
     }
   };
 
@@ -709,7 +802,6 @@ export default function TablesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                   </svg>
                 </button>
-
               </div>
               <button
                 onClick={() => setAddAreaModalOpen(true)}
@@ -804,79 +896,6 @@ export default function TablesPage() {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-3 items-center">
-            {/* Search input with icon */}
-            <div className="relative flex-1 min-w-[180px]">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                style={{ color: "var(--text-muted)" }}
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-              </svg>
-              <input
-                type="text"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder={tDashboard("tables.search_placeholder")}
-                className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]/60 transition-all"
-                style={{ color: "var(--text)" }}
-              />
-            </div>
-
-            {/* Status filter */}
-            <div className="relative min-w-[160px]">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                style={{ color: "var(--text-muted)" }}
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M3 4h18M7 8h10M11 12h2" />
-              </svg>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="w-full pl-9 pr-8 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--text)] appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]/60 transition-all"
-              >
-                <option value="all">{tDashboard("tables.filters.all_status")}</option>
-                <option value="available">{tDashboard("tables.status.available")}</option>
-                <option value="occupied">{tDashboard("tables.status.occupied")}</option>
-                <option value="reserved">{tDashboard("tables.status.reserved")}</option>
-                <option value="cleaning">{tDashboard("tables.status.cleaning")}</option>
-              </select>
-              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                style={{ color: "var(--text-muted)" }}
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-
-            {/* Floor filter */}
-            <div className="relative min-w-[160px]">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                style={{ color: "var(--text-muted)" }}
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9" />
-              </svg>
-              <select
-                value={floorFilter}
-                onChange={(e) => setFloorFilter(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--text)] appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]/60 transition-all"
-              >
-                <option value="all">{tDashboard("tables.filters.all_floor")}</option>
-                {beFloors.map((floor) => (
-                  <option key={floor.id} value={floor.id}>{floor.name}</option>
-                ))}
-              </select>
-              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                style={{ color: "var(--text-muted)" }}
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
 
           <h3
             className="text-xl font-bold mb-6"
@@ -1072,6 +1091,7 @@ export default function TablesPage() {
         }
         }
         onSave={handleUpdateTable}
+        onSaveCubemap={handleSaveCubemap}
         onDelete={handleDeleteTable}
         floors={beFloors.map(f => ({ id: f.id, name: f.name }))}
       />

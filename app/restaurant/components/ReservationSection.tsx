@@ -22,6 +22,21 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 const DEFAULT_TIME_SLOTS = ['17:30', '18:00', '18:30', '19:00', '19:30', '20:00'];
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
 
+type CubemapData = NonNullable<TableData['cubemap']>;
+
+const parseCubemapFromDefaultViewUrl = (raw?: string | null): CubemapData | undefined => {
+    if (!raw) return undefined;
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed?.px && parsed?.nx && parsed?.py && parsed?.ny && parsed?.pz && parsed?.nz) {
+            return parsed as CubemapData;
+        }
+        return undefined;
+    } catch {
+        return undefined;
+    }
+};
+
 const parseOpeningHours = (hours?: string | null) => {
     if (!hours) return null;
     const match = hours.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
@@ -225,8 +240,15 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                 // ── Primary Path: GET /api/floors then /api/floors/{id}/layout ──
                 try {
-                    const allFloors = await floorService.getAllFloors();
+                    const [allFloors, allTables] = await Promise.all([
+                        floorService.getAllFloors(),
+                        tableService.getAllTables(),
+                    ]);
                     const activeFloors = allFloors.filter(f => f.isActive !== false);
+
+                    const tableImageMap = new Map(
+                        allTables.map(t => [t.id, t.cubeFrontImageUrl || undefined] as const)
+                    );
 
                     if (activeFloors.length > 0) {
                         const selectedAt = `${booking.date}T${booking.time}:00`;
@@ -253,9 +275,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     height: Number(t.layout.height) || 100,
                                     rotation: Number(t.layout.rotation) || 0,
                                     zoneId: floorSummary.name,
-                                    photo360Url: floorSummary.name?.toLowerCase().includes('vip')
-                                        ? "/images/restaurant/warm_restaurant.webp"
-                                        : "/images/restaurant/bush_restaurant.webp",
+                                    photo360Url: tableImageMap.get(t.id) || undefined,
                                 })
                             );
                             // DEBUG: show BE positions
@@ -316,9 +336,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 height: t.height ?? 100,
                                 rotation: t.rotation ?? 0,
                                 zoneId: typeName,
-                                photo360Url: typeName?.toLowerCase().includes('vip')
-                                    ? "/images/restaurant/warm_restaurant.webp"
-                                    : "/images/restaurant/bush_restaurant.webp",
+                                photo360Url: t.cubeFrontImageUrl || undefined,
                             };
                         });
                         return {
@@ -1073,7 +1091,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             <TablePreview3DModal
                 open={isReservationModalOpen}
                 table={selectedTableForReservation}
-                tableImageUrl={selectedTableForReservation?.photo360Url}
+                tableCubemap={selectedTableForReservation?.cubemap}
                 onClose={() => {
                     setIsReservationModalOpen(false);
                     setSelectedTableForReservation(null);
