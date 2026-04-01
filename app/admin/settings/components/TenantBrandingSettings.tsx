@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  THEME_COLOR_FIELDS,
-  THEME_COLOR_MAP,
-  type ThemeColorField,
-  getThemeDefaults,
+    THEME_COLOR_FIELDS,
+    THEME_COLOR_MAP,
+    type ThemeColorField,
+    getThemeDefaults,
 } from "@/lib/constants/themeDefaults";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
@@ -27,7 +27,11 @@ function detectTenantHostname(): string | null {
   if (hostWithoutPort === "admin.restx.food") return null;
 
   // admin.localhost (dev) → default to demo.restx.food
-  if (hostWithoutPort === "admin.localhost" || hostWithoutPort === "localhost" || hostWithoutPort === "127.0.0.1") {
+  if (
+    hostWithoutPort === "admin.localhost" ||
+    hostWithoutPort === "localhost" ||
+    hostWithoutPort === "127.0.0.1"
+  ) {
     return "demo.restx.food";
   }
 
@@ -160,8 +164,7 @@ function DraggableImagePreview({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-    >
+      onPointerCancel={handlePointerUp}>
       <img
         src={src}
         alt={alt}
@@ -178,8 +181,7 @@ function DraggableImagePreview({
         style={{
           color: "#fff",
           background: "rgba(0,0,0,0.55)",
-        }}
-      >
+        }}>
         {hintText}
       </div>
     </div>
@@ -199,7 +201,11 @@ function resolveTenantId(tenant: TenantConfig): string | undefined {
 export default function TenantBrandingSettings() {
   const { t } = useTranslation("common");
   // TenantContext may be null on admin.* domains (context skips load)
-  const { tenant: contextTenant, loading: tenantLoading, refreshTenant } = useTenant();
+  const {
+    tenant: contextTenant,
+    loading: tenantLoading,
+    refreshTenant,
+  } = useTenant();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(null);
@@ -207,7 +213,9 @@ export default function TenantBrandingSettings() {
   // Self-fetched tenant (when on admin domain where TenantContext returns null)
   const [selfTenant, setSelfTenant] = useState<TenantConfig | null>(null);
   const [selfLoading, setSelfLoading] = useState(false);
-  const [allTenants, setAllTenants] = useState<{ label: string; value: string }[]>([]);
+  const [allTenants, setAllTenants] = useState<
+    { label: string; value: string }[]
+  >([]);
   const [selectedHostname, setSelectedHostname] = useState<string | null>(null);
   const [needsTenantPicker, setNeedsTenantPicker] = useState(false);
 
@@ -224,9 +232,8 @@ export default function TenantBrandingSettings() {
     faviconFile: null as File | null,
   });
 
-  const [colors, setColors] = useState<Record<ThemeColorField, string>>(
-    getThemeDefaults(),
-  );
+  const [colors, setColors] =
+    useState<Record<ThemeColorField, string>>(getThemeDefaults());
 
   const updateColor = (field: ThemeColorField, value: string) =>
     setColors((prev) => ({ ...prev, [field]: value }));
@@ -241,7 +248,11 @@ export default function TenantBrandingSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      message.error(t("dashboard.settings.appearance.invalid_image", { defaultValue: "Please select a valid image file" }));
+      message.error(
+        t("dashboard.settings.appearance.invalid_image", {
+          defaultValue: "Please select a valid image file",
+        }),
+      );
       return;
     }
     if (file.size > maxMB * 1024 * 1024) {
@@ -265,9 +276,18 @@ export default function TenantBrandingSettings() {
   const [faviconPreview, setFaviconPreview] = useState<string>("");
 
   // Preview positioning (client-side visual adjustment)
-  const [logoPosition, setLogoPosition] = useState<ImagePosition>({ x: 50, y: 50 });
-  const [bannerPosition, setBannerPosition] = useState<ImagePosition>({ x: 50, y: 50 });
-  const [faviconPosition, setFaviconPosition] = useState<ImagePosition>({ x: 50, y: 50 });
+  const [logoPosition, setLogoPosition] = useState<ImagePosition>({
+    x: 50,
+    y: 50,
+  });
+  const [bannerPosition, setBannerPosition] = useState<ImagePosition>({
+    x: 50,
+    y: 50,
+  });
+  const [faviconPosition, setFaviconPosition] = useState<ImagePosition>({
+    x: 50,
+    y: 50,
+  });
 
   /** Populate form fields from a tenant config object */
   const populateFromTenant = useCallback((tenantData: TenantConfig) => {
@@ -297,20 +317,23 @@ export default function TenantBrandingSettings() {
   }, []);
 
   /** Fetch tenant by hostname for self-load mode */
-  const fetchTenantByHostname = useCallback(async (hostname: string) => {
-    setSelfLoading(true);
-    try {
-      const data = await tenantService.getTenantConfig(hostname);
-      if (data) {
-        setSelfTenant(data);
-        populateFromTenant(data);
+  const fetchTenantByHostname = useCallback(
+    async (hostname: string) => {
+      setSelfLoading(true);
+      try {
+        const data = await tenantService.getTenantConfig(hostname);
+        if (data) {
+          setSelfTenant(data);
+          populateFromTenant(data);
+        }
+      } catch (err) {
+        console.error("[TenantBranding] Failed to fetch tenant:", err);
+      } finally {
+        setSelfLoading(false);
       }
-    } catch (err) {
-      console.error("[TenantBranding] Failed to fetch tenant:", err);
-    } finally {
-      setSelfLoading(false);
-    }
-  }, [populateFromTenant]);
+    },
+    [populateFromTenant],
+  );
 
   // On mount: decide whether to use context tenant or self-fetch
   useEffect(() => {
@@ -330,14 +353,17 @@ export default function TenantBrandingSettings() {
     } else {
       // Super admin — show tenant picker
       setNeedsTenantPicker(true);
-      tenantService.getAllTenantsForAdmin().then((all) => {
-        setAllTenants(
-          all.map((ten) => ({
-            label: `${ten.businessName || ten.name} (${ten.hostName})`,
-            value: ten.hostName,
-          }))
-        );
-      }).catch(console.error);
+      tenantService
+        .getAllTenantsForAdmin()
+        .then((all) => {
+          setAllTenants(
+            all.map((ten) => ({
+              label: `${ten.businessName || ten.name} (${ten.hostName})`,
+              value: ten.hostName,
+            })),
+          );
+        })
+        .catch(console.error);
     }
   }, [contextTenant, tenantLoading, fetchTenantByHostname, populateFromTenant]);
 
@@ -345,17 +371,23 @@ export default function TenantBrandingSettings() {
   const tenant = contextTenant || selfTenant;
   const isLoading = tenantLoading || selfLoading;
 
-
-
   const handleSave = async () => {
     if (!tenant) {
-      message.warning(t("dashboard.settings.appearance.no_tenant", { defaultValue: "No tenant configuration available" }));
+      message.warning(
+        t("dashboard.settings.appearance.no_tenant", {
+          defaultValue: "No tenant configuration available",
+        }),
+      );
       return;
     }
 
     const tenantId = resolvedTenantId || resolveTenantId(tenant);
     if (!tenantId) {
-      message.error(t("dashboard.settings.appearance.no_tenant_id", { defaultValue: "Tenant ID is missing" }));
+      message.error(
+        t("dashboard.settings.appearance.no_tenant_id", {
+          defaultValue: "Tenant ID is missing",
+        }),
+      );
       return;
     }
 
@@ -370,7 +402,7 @@ export default function TenantBrandingSettings() {
         ...colors,
       };
 
-      console.log('[TenantBranding] Saving with files:', {
+      console.log("[TenantBranding] Saving with files:", {
         logo: formData.logoFile?.name,
         banner: formData.bannerFile?.name,
         favicon: formData.faviconFile?.name,
@@ -382,18 +414,30 @@ export default function TenantBrandingSettings() {
         favicon: formData.faviconFile,
       });
 
-      message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Branding updated successfully!" }));
-      setFormData((prev) => ({ ...prev, logoFile: null, bannerFile: null, faviconFile: null }));
+      message.success(
+        t("dashboard.settings.notifications.success_update", {
+          defaultValue: "Branding updated successfully!",
+        }),
+      );
+      setFormData((prev) => ({
+        ...prev,
+        logoFile: null,
+        bannerFile: null,
+        faviconFile: null,
+      }));
       // Refresh: if we have a context tenant, refresh the context; if self-fetched, re-fetch by hostname
       if (refreshTenant) {
         await refreshTenant();
       } else if (selectedHostname) {
         await fetchTenantByHostname(selectedHostname);
       }
-
     } catch (error) {
       console.error("Failed to update branding:", error);
-      message.error(t("dashboard.settings.notifications.error_update", { defaultValue: "Failed to update branding" }));
+      message.error(
+        t("dashboard.settings.notifications.error_update", {
+          defaultValue: "Failed to update branding",
+        }),
+      );
     } finally {
       setLoading(false);
     }
@@ -401,7 +445,12 @@ export default function TenantBrandingSettings() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-40 rounded-xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+      <div
+        className="flex items-center justify-center h-40 rounded-xl"
+        style={{
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+        }}>
         <div className="flex flex-col items-center gap-2">
           <Spin size="large" />
           <span className="text-sm" style={{ color: "var(--text-muted)" }}>
@@ -429,17 +478,27 @@ export default function TenantBrandingSettings() {
 
       {/* Tenant Picker — shown for super admin (admin.restx.food) */}
       {needsTenantPicker && (
-        <div className="mb-6 p-4 rounded-lg" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-muted)" }}>
+        <div
+          className="mb-6 p-4 rounded-lg"
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+          }}>
+          <label
+            className="block text-sm font-medium mb-2"
+            style={{ color: "var(--text-muted)" }}>
             {t("dashboard.settings.appearance.select_tenant_to_edit", {
               defaultValue: "Select Tenant to Edit",
             })}
           </label>
           <Select
             showSearch
-            placeholder={t("dashboard.settings.appearance.choose_tenant_placeholder", {
-              defaultValue: "Choose a tenant...",
-            })}
+            placeholder={t(
+              "dashboard.settings.appearance.choose_tenant_placeholder",
+              {
+                defaultValue: "Choose a tenant...",
+              },
+            )}
             options={allTenants}
             value={selectedHostname}
             onChange={async (hostname) => {
@@ -448,7 +507,9 @@ export default function TenantBrandingSettings() {
             }}
             style={{ width: "100%" }}
             filterOption={(input, option) =>
-              (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+              (option?.label as string)
+                ?.toLowerCase()
+                .includes(input.toLowerCase())
             }
           />
         </div>
@@ -497,7 +558,9 @@ export default function TenantBrandingSettings() {
                 borderColor: "var(--border)",
                 background: "var(--surface)",
               }}
-              onClick={!logoPreview ? () => logoInputRef.current?.click() : undefined}>
+              onClick={
+                !logoPreview ? () => logoInputRef.current?.click() : undefined
+              }>
               {logoPreview ? (
                 <DraggableImagePreview
                   src={logoPreview}
@@ -541,7 +604,9 @@ export default function TenantBrandingSettings() {
               ref={logoInputRef}
               type="file"
               accept="image/*"
-              onChange={(e) => handleImageChange(e, "logoFile", setLogoPreview, 5)}
+              onChange={(e) =>
+                handleImageChange(e, "logoFile", setLogoPreview, 5)
+              }
               className="hidden"
             />
 
@@ -555,8 +620,7 @@ export default function TenantBrandingSettings() {
                     color: "var(--text)",
                     borderColor: "var(--border)",
                     background: "var(--surface)",
-                  }}
-                >
+                  }}>
                   {t("dashboard.settings.appearance.click_change", {
                     defaultValue: "Change image",
                   })}
@@ -598,7 +662,11 @@ export default function TenantBrandingSettings() {
                 borderColor: "var(--border)",
                 background: "var(--surface)",
               }}
-              onClick={!bannerPreview ? () => bannerInputRef.current?.click() : undefined}>
+              onClick={
+                !bannerPreview
+                  ? () => bannerInputRef.current?.click()
+                  : undefined
+              }>
               {bannerPreview ? (
                 <>
                   <DraggableImagePreview
@@ -611,9 +679,12 @@ export default function TenantBrandingSettings() {
                     onError={(e) =>
                       (e.currentTarget.src = "/images/restaurant/banner.png")
                     }
-                    hintText={t("dashboard.settings.appearance.drag_to_adjust", {
-                      defaultValue: "Drag to adjust",
-                    })}
+                    hintText={t(
+                      "dashboard.settings.appearance.drag_to_adjust",
+                      {
+                        defaultValue: "Drag to adjust",
+                      },
+                    )}
                   />
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     <span className="text-white text-sm font-medium">
@@ -650,7 +721,9 @@ export default function TenantBrandingSettings() {
               ref={bannerInputRef}
               type="file"
               accept="image/*"
-              onChange={(e) => handleImageChange(e, "bannerFile", setBannerPreview, 10)}
+              onChange={(e) =>
+                handleImageChange(e, "bannerFile", setBannerPreview, 10)
+              }
               className="hidden"
             />
 
@@ -671,8 +744,7 @@ export default function TenantBrandingSettings() {
                       color: "var(--text)",
                       borderColor: "var(--border)",
                       background: "var(--surface)",
-                    }}
-                  >
+                    }}>
                     {t("dashboard.settings.appearance.click_change", {
                       defaultValue: "Change image",
                     })}
@@ -693,7 +765,9 @@ export default function TenantBrandingSettings() {
           <label
             className="block text-sm font-medium mb-2"
             style={{ color: "var(--text-muted)" }}>
-            {t("dashboard.settings.appearance.favicon", { defaultValue: "Favicon" })}
+            {t("dashboard.settings.appearance.favicon", {
+              defaultValue: "Favicon",
+            })}
           </label>
           <div className="flex gap-4 items-start">
             {/* Favicon Preview */}
@@ -703,7 +777,11 @@ export default function TenantBrandingSettings() {
                 borderColor: "var(--border)",
                 background: "var(--surface)",
               }}
-              onClick={!faviconPreview ? () => faviconInputRef.current?.click() : undefined}>
+              onClick={
+                !faviconPreview
+                  ? () => faviconInputRef.current?.click()
+                  : undefined
+              }>
               {faviconPreview ? (
                 <DraggableImagePreview
                   src={faviconPreview}
@@ -739,7 +817,9 @@ export default function TenantBrandingSettings() {
               ref={faviconInputRef}
               type="file"
               accept="image/png,image/x-icon,image/svg+xml,image/webp"
-              onChange={(e) => handleImageChange(e, "faviconFile", setFaviconPreview, 1)}
+              onChange={(e) =>
+                handleImageChange(e, "faviconFile", setFaviconPreview, 1)
+              }
               className="hidden"
             />
 
@@ -753,8 +833,7 @@ export default function TenantBrandingSettings() {
                     color: "var(--text)",
                     borderColor: "var(--border)",
                     background: "var(--surface)",
-                  }}
-                >
+                  }}>
                   {t("dashboard.settings.appearance.click_change", {
                     defaultValue: "Change image",
                   })}
@@ -767,7 +846,8 @@ export default function TenantBrandingSettings() {
               </p>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 {t("dashboard.settings.appearance.favicon_format", {
-                  defaultValue: "Recommended: 32x32px or 64x64px, PNG or ICO. Max 1MB.",
+                  defaultValue:
+                    "Recommended: 32x32px or 64x64px, PNG or ICO. Max 1MB.",
                 })}
               </p>
               {formData.faviconFile && (
@@ -809,26 +889,28 @@ export default function TenantBrandingSettings() {
             </p>
 
             {/* Light & Dark Mode Color Groups */}
-            {([
-              {
-                titleKey: "light_mode_colors",
-                defaultTitle: "Light Mode Colors",
-                fields: [
-                  "lightBaseColor",
-                  "lightSurfaceColor",
-                  "lightCardColor",
-                ] as ThemeColorField[],
-              },
-              {
-                titleKey: "dark_mode_colors",
-                defaultTitle: "Dark Mode Colors",
-                fields: [
-                  "darkBaseColor",
-                  "darkSurfaceColor",
-                  "darkCardColor",
-                ] as ThemeColorField[],
-              },
-            ] as const).map(({ titleKey, defaultTitle, fields }) => (
+            {(
+              [
+                {
+                  titleKey: "light_mode_colors",
+                  defaultTitle: "Light Mode Colors",
+                  fields: [
+                    "lightBaseColor",
+                    "lightSurfaceColor",
+                    "lightCardColor",
+                  ] as ThemeColorField[],
+                },
+                {
+                  titleKey: "dark_mode_colors",
+                  defaultTitle: "Dark Mode Colors",
+                  fields: [
+                    "darkBaseColor",
+                    "darkSurfaceColor",
+                    "darkCardColor",
+                  ] as ThemeColorField[],
+                },
+              ] as const
+            ).map(({ titleKey, defaultTitle, fields }) => (
               <div key={titleKey} className="mt-6">
                 <h5
                   className="text-sm font-semibold mb-3"
@@ -931,11 +1013,11 @@ export default function TenantBrandingSettings() {
             }}>
             {loading
               ? t("dashboard.settings.buttons.saving", {
-                defaultValue: "Saving...",
-              })
+                  defaultValue: "Saving...",
+                })
               : t("dashboard.settings.buttons.save_branding", {
-                defaultValue: "Save Changes",
-              })}
+                  defaultValue: "Save Changes",
+                })}
           </button>
         </div>
       </div>

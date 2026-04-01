@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  THEME_COLOR_FIELDS,
-  type ThemeColorField,
-} from "@/lib/constants/themeDefaults";
+import { THEME_COLOR_FIELDS } from "@/lib/constants/themeDefaults";
 import { injectTenantBranding } from "@/lib/hooks/useThemeTokens";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -102,7 +99,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   // Apply tenant branding (theme colors) when tenant is loaded
   useEffect(() => {
     if (!tenant) return;
-    const config: Record<string, string | undefined> = { logoUrl: tenant.logoUrl };
+    const config: Record<string, string | undefined> = {
+      logoUrl: tenant.logoUrl,
+    };
     for (const f of THEME_COLOR_FIELDS) config[f] = (tenant as any)[f];
     injectTenantBranding(config);
   }, [tenant]);

@@ -267,9 +267,7 @@
     "tables": {
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
-      "add_floor": "Thêm tầng",
-      "edit_floor": "Sửa tầng",
-      "delete_floor": "Xóa tầng",
+      "add_floor": "Thêm khu vực",
       "add_table": "Thêm bàn",
       "status": {
         "available": "Trống",
@@ -962,27 +960,23 @@
     "tables": {
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
-      "search_placeholder": "Tìm theo mã bàn...",
-      "add_floor": "Thêm tầng",
-      "edit_floor": "Sửa tầng",
-      "delete_floor": "Xóa tầng",
+      "add_floor": "Thêm khu vực",
       "add_table": "Thêm bàn",
-      "add_area": "Thêm tầng",
+      "add_area": "Thêm khu vực",
       "add_zone": "Vẽ vùng",
       "add_area_modal": {
-        "title": "Thêm tầng mới",
-        "name_label": "Tên tầng",
-        "floor_name_label": "Tên tầng",
-        "name_placeholder": "VD: Tầng 1, Sân thượng",
+        "title": "Thêm khu vực mới",
+        "name_label": "Tên khu vực",
+        "name_placeholder": "VD: Sân thượng",
         "width_label": "Chiều rộng (px)",
         "height_label": "Chiều cao (px)",
         "cancel": "Hủy",
-        "submit": "Thêm tầng",
+        "submit": "Thêm khu vực",
         "errors": {
-          "name_required": "Vui lòng nhập tên tầng",
-          "name_min": "Tên tầng tối thiểu {{min}} ký tự",
-          "name_max": "Tên tầng tối đa {{max}} ký tự",
-          "name_duplicate": "Tên tầng đã tồn tại",
+          "name_required": "Vui lòng nhập tên khu vực",
+          "name_min": "Tên khu vực tối thiểu {{min}} ký tự",
+          "name_max": "Tên khu vực tối đa {{max}} ký tự",
+          "name_duplicate": "Tên khu vực đã tồn tại",
           "width_required": "Vui lòng nhập chiều rộng",
           "width_min": "Chiều rộng tối thiểu {{min}} px",
           "width_max": "Chiều rộng tối đa {{max}} px",
@@ -994,15 +988,15 @@
       "add_table_modal": {
         "title": "Tạo bàn mới",
         "subtitle": "Thêm bàn mới vào sơ đồ nhà hàng",
-        "table_number": "Mã bàn",
-        "table_number_placeholder": "Nhập mã bàn",
+        "table_number": "Số bàn",
+        "table_number_placeholder": "Nhập số bàn",
         "capacity": "Sức chứa",
         "capacity_placeholder": "Số ghế (1-20)",
         "area": "Khu vực ăn uống",
         "cancel": "Hủy",
         "submit": "Tạo bàn",
         "errors": {
-          "number_required": "Yêu cầu nhập mã bàn",
+          "number_required": "Yêu cầu nhập số bàn",
           "capacity_min": "Sức chứa tối thiểu là 1",
           "capacity_max": "Sức chứa tối đa là 20"
         },
@@ -1028,14 +1022,8 @@
         "table_name": "Bàn {{number}}"
       },
       "errors": {
-        "cannot_delete_last_area": "Không thể xóa khu vực cuối cùng.",
-        "add_failed": "Thêm bàn thất bại",
-        "create_floor_failed": "Tạo tầng thất bại",
-        "update_failed": "Cập nhật thất bại",
-        "cannot_delete_due_to_booking": "Không thể xóa bàn này vì có đặt chỗ đang hoạt động"
+        "cannot_delete_last_area": "Không thể xóa khu vực cuối cùng."
       },
-      "cubemap_saved": "Đã lưu ảnh 360!",
-      "cubemap_save_failed": "Lưu ảnh 360 thất bại",
       "status": {
         "available": "Trống",
         "occupied": "Đang dùng",
@@ -1048,50 +1036,6 @@
         "floor_dimensions": "Kích thước tầng",
         "zones": "vùng",
         "tables_on_floor": "bàn trên tầng này"
-      },
-      "filters": {
-        "all_status": "Tất cả trạng thái",
-        "all_floor": "Tất cả tầng"
-      },
-      "details": {
-        "title": "Chi tiết bàn",
-        "subtitle": "Quản lý và cập nhật thông tin bàn",
-        "current_status": "Trạng thái hiện tại",
-        "table_code": "Mã bàn",
-        "seating_capacity": "Sức chứa",
-        "shape": "Hình dạng",
-        "rotation": "Góc xoay (độ)",
-        "width": "Chiều rộng (px)",
-        "height": "Chiều cao (px)",
-        "floor": "Tầng",
-        "no_floor": "Không có tầng",
-        "table_status": "Trạng thái bàn",
-        "delete": "Xóa",
-        "cancel": "Hủy",
-        "save_changes": "Lưu thay đổi",
-        "qr_title": "QR Code — Bàn {{number}}",
-        "qr_scan": "Quét để gọi món",
-        "qr_load_failed": "Không tải được QR",
-        "copied": "Đã copy!",
-        "copy_link": "Sao chép link",
-        "download_qr": "Tải QR",
-        "status_available": "Trống",
-        "status_occupied": "Có khách",
-        "status_reserved": "Đã đặt",
-        "status_cleaning": "Đang dọn",
-        "shape_square": "Vuông",
-        "shape_circle": "Tròn",
-        "shape_rectangle": "Chữ nhật",
-        "shape_oval": "Bầu dục",
-        "errors": {
-          "number_required": "Vui lòng nhập mã bàn",
-          "width_too_small": "Chiều rộng quá nhỏ",
-          "height_too_small": "Chiều cao quá nhỏ"
-        },
-        "cubemap_title": "Ảnh 360° (Cubemap)",
-        "cubemap_set": "Đã có ảnh",
-        "cubemap_save": "Lưu ảnh 360",
-        "cubemap_clear": "Xóa toàn bộ ảnh 360°"
       }
     },
     "staff": {
@@ -1462,6 +1406,26 @@
         "enable_2fa_desc": "Tăng cường bảo mật",
         "danger_zone": "Vùng nguy hiểm",
         "delete_account": "Xóa tài khoản"
+      },
+      "payment": {
+        "title": "Cấu hình PayOS",
+        "fields": {
+          "client_id": "Client ID",
+          "api_key": "API Key",
+          "checksum_key": "Checksum Key"
+        },
+        "validation": {
+          "client_id_required": "Vui lòng nhập Client ID",
+          "api_key_required": "Vui lòng nhập API Key",
+          "checksum_key_required": "Vui lòng nhập Checksum Key"
+        },
+        "actions": {
+          "save_settings": "Lưu"
+        },
+        "empty_state": {
+          "message": "Chưa có cấu hình thanh toán",
+          "description": "Không tìm thấy cấu hình thanh toán cho nhà hàng của bạn. Vui lòng nhập các thông tin bắt buộc (Client ID, API Key, Checksum Key) và lưu lại."
+        }
       },
       "buttons": {
         "cancel": "Hủy",

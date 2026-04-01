@@ -108,9 +108,10 @@ export default function OrdersPage() {
 
         if (hostWithoutPort.endsWith(".localhost")) {
           const subdomain = hostWithoutPort.replace(".localhost", "");
-          const tenantHost = subdomain && subdomain !== "admin"
-            ? `${subdomain}.restx.food`
-            : "demo.restx.food";
+          const tenantHost =
+            subdomain && subdomain !== "admin"
+              ? `${subdomain}.restx.food`
+              : "demo.restx.food";
           const data = await tenantService.getTenantConfig(tenantHost);
           if (isMounted) setTenant(data || null);
           return;
@@ -144,10 +145,8 @@ export default function OrdersPage() {
           new Set(data.map((o) => o.customerId).filter(Boolean)),
         );
 
-        const customersById: Record<
-          string,
-          { name: string; avatar?: string }
-        > = {};
+        const customersById: Record<string, { name: string; avatar?: string }> =
+          {};
         await Promise.all(
           uniqueCustomerIds.map(async (cid) => {
             try {
@@ -165,7 +164,8 @@ export default function OrdersPage() {
             const tableCode = table?.code || o.tableId;
             const distinctCount = o.orderDetails?.length ?? 0;
             const totalQuantity =
-              o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ?? 0;
+              o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ??
+              0;
             const status = mapOrderStatus(o.orderStatusId);
             const paymentStatus = mapPaymentStatus(o.paymentStatusId);
             const customer = customersById[o.customerId];
@@ -296,7 +296,6 @@ export default function OrdersPage() {
       badge: "bg-red-500/10 text-red-500 border-red-500/20",
     },
   };
-
 
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -437,17 +436,19 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[order.status].badge
-                          }`}>
+                        className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                          statusConfig[order.status].badge
+                        }`}>
                         {statusConfig[order.status].text}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${order.paymentStatus === "paid"
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          order.paymentStatus === "paid"
                             ? "bg-green-500/10 text-green-500 border border-green-500/20"
                             : "bg-red-500/10 text-red-500 border border-red-500/20"
-                          }`}>
+                        }`}>
                         {order.paymentStatus === "paid"
                           ? t("dashboard.orders.payment_status.paid")
                           : t("dashboard.orders.payment_status.unpaid")}
@@ -467,12 +468,12 @@ export default function OrdersPage() {
                             color: "var(--primary)",
                           }}
                           onMouseEnter={(e) =>
-                          (e.currentTarget.style.backgroundColor =
-                            "rgba(255,56,11,0.2)")
+                            (e.currentTarget.style.backgroundColor =
+                              "rgba(255,56,11,0.2)")
                           }
                           onMouseLeave={(e) =>
-                          (e.currentTarget.style.backgroundColor =
-                            "rgba(255,56,11,0.1)")
+                            (e.currentTarget.style.backgroundColor =
+                              "rgba(255,56,11,0.1)")
                           }
                           suppressHydrationWarning
                           onClick={async () => {
@@ -485,9 +486,17 @@ export default function OrdersPage() {
                                   const dish = await menuService.getDishById(
                                     d.dishId,
                                   );
-                                  return { id: d.dishId, name: dish.name, quantity: d.quantity };
+                                  return {
+                                    id: d.dishId,
+                                    name: dish.name,
+                                    quantity: d.quantity,
+                                  };
                                 } catch (err) {
-                                  return { id: d.dishId, name: undefined, quantity: d.quantity };
+                                  return {
+                                    id: d.dishId,
+                                    name: undefined,
+                                    quantity: d.quantity,
+                                  };
                                 }
                               }),
                             );

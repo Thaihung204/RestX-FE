@@ -1,24 +1,24 @@
 "use client";
 
 import {
-  CheckCircleOutlined,
-  EyeOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  RiseOutlined,
-  SearchOutlined,
-  ShopOutlined,
+    CheckCircleOutlined,
+    EyeOutlined,
+    MailOutlined,
+    PhoneOutlined,
+    PlusOutlined,
+    ReloadOutlined,
+    RiseOutlined,
+    SearchOutlined,
+    ShopOutlined,
 } from "@ant-design/icons";
 import {
-  App,
-  Avatar,
-  Button,
-  Card,
-  Input,
-  Select,
-  Table
+    App,
+    Avatar,
+    Button,
+    Card,
+    Input,
+    Select,
+    Table
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
@@ -43,10 +43,16 @@ const TenantPage: React.FC = () => {
   const [tenants, setTenants] = useState<ITenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tenants");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    fetchTenants();
+    setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    fetchTenants();
+  }, [mounted]);
 
   const fetchTenants = async () => {
     try {
@@ -211,6 +217,10 @@ const TenantPage: React.FC = () => {
     { key: "requests", label: t("tenants.tabs.tenant_requests"), icon: <CheckCircleOutlined /> },
     { key: "revenue", label: t("tenants.tabs.system_revenue"), icon: <RiseOutlined /> },
   ];
+
+  if (!mounted) {
+    return <div className="min-h-screen" style={{ background: "var(--bg-base)" }} />;
+  }
 
   return (
     <div className="min-h-screen font-sans" style={{ background: "var(--bg-base)", color: "var(--text)" }}>
