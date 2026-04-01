@@ -507,7 +507,7 @@ export const tenantService = {
     const response = await adminAxiosInstance.get<any[]>("/tenants/requests");
 
     // Normalize PascalCase to camelCase (backend returns PascalCase)
-    const normalizedData = response.data.map((item: any, index: number) => {
+    const normalizedData = response.data.map((item: any) => {
       const normalized: any = {};
 
       // Map PascalCase to camelCase
@@ -617,9 +617,64 @@ export const tenantService = {
     await adminAxiosInstance.delete(`/tenants/requests/${id}`);
   },
 
-  // ============ LEGACY METHODS (deprecated, use above instead) ============
+  // ============ PAYMENT SETTINGS API ============
 
-  // ============ LEGACY METHODS (deprecated, use above instead) ============
+  /**
+   * Get payment settings for a tenant
+   * Backend endpoint: GET /api/tenants/{domain}/payment-settings
+   */
+  getPaymentSettings: async (tenantDomain: string): Promise<any> => {
+    try {
+      const response = await adminAxiosInstance.get(
+        `/tenants/${tenantDomain}/payment-settings`,
+      );
+
+      const data = response.data;
+      if (!data) return null;
+
+      return {
+        clientId: data.clientId ?? data.ClientId ?? "",
+        apiKey: data.apiKey ?? data.ApiKey ?? "",
+        checksumKey: data.checksumKey ?? data.ChecksumKey ?? "",
+        returnUrl: data.returnUrl ?? data.ReturnUrl ?? "",
+        cancelUrl: data.cancelUrl ?? data.CancelUrl ?? "",
+      };
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return null; // Not configured yet
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Create payment settings
+   * Backend endpoint: POST /api/tenants/{domain}/payment-settings
+   */
+  createPaymentSettings: async (tenantDomain: string, settings: any): Promise<void> => {
+    await adminAxiosInstance.post(
+      `/tenants/${tenantDomain}/payment-settings`,
+      settings,
+    );
+  },
+
+  /**
+   * Update payment settings
+   * Backend endpoint: PUT /api/tenants/{domain}/payment-settings
+   */
+  updatePaymentSettings: async (tenantDomain: string, settings: any): Promise<void> => {
+    await adminAxiosInstance.put(
+      `/tenants/${tenantDomain}/payment-settings`,
+      settings,
+    );
+  },
+
+  /**
+   * @deprecated Use createPaymentSettings() or updatePaymentSettings() instead
+   */
+  upsertPaymentSettings: async (tenantDomain: string, settings: any): Promise<void> => {
+    await tenantService.updatePaymentSettings(tenantDomain, settings);
+  },
 
   /**
    * @deprecated Use addTenantRequest() instead

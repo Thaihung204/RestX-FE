@@ -299,28 +299,31 @@ export default function OrderManagement() {
     className: "order-detail-status-option",
   }));
 
-  const orderStatusStyleMap = useMemo<Record<OrderStatusUi, { bg: string; border: string; }>>(() => ({
+  const orderStatusStyleMap: Record<
+    OrderStatusUi,
+    { bg: string; border: string; }
+  > = {
     pending: {
-      bg: mode === "dark" ? "rgba(253, 230, 138, 0.1)" : "#FFFBEB",
-      border: mode === "dark" ? "rgba(253, 230, 138, 0.3)" : "#FDE68A",
+      bg: "#FFFBEB",
+      border: "#FDE68A",
     },
     confirmed: {
-      bg: mode === "dark" ? "rgba(191, 219, 254, 0.1)" : "#EFF6FF",
-      border: mode === "dark" ? "rgba(191, 219, 254, 0.3)" : "#BFDBFE",
+      bg: "#EFF6FF",
+      border: "#BFDBFE",
     },
     serving: {
-      bg: mode === "dark" ? "rgba(233, 213, 255, 0.1)" : "#FAF5FF",
-      border: mode === "dark" ? "rgba(233, 213, 255, 0.3)" : "#E9D5FF",
+      bg: "#FAF5FF",
+      border: "#E9D5FF",
     },
     completed: {
-      bg: mode === "dark" ? "rgba(187, 247, 208, 0.1)" : "#F0FDF4",
-      border: mode === "dark" ? "rgba(187, 247, 208, 0.3)" : "#BBF7D0",
+      bg: "#F0FDF4",
+      border: "#BBF7D0",
     },
     cancelled: {
-      bg: mode === "dark" ? "rgba(254, 202, 202, 0.1)" : "#FEF2F2",
-      border: mode === "dark" ? "rgba(254, 202, 202, 0.3)" : "#FECACA",
+      bg: "#FEF2F2",
+      border: "#FECACA",
     }
-  }), [mode]);
+  };
 
   const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] = useState<string>("");
   const [selectedTableId, setSelectedTableId] = useState<string>("all");
@@ -731,19 +734,17 @@ export default function OrderManagement() {
             );
           })
         ) : (
-          <div style={{ gridColumn: "1 / -1" }}>
-            <Empty
-              description={t("staff.orders.empty")}
-              style={{
-                color: mode === "dark" ? undefined : "#4F4F4F",
-              }}
-              styles={{
-                image: {
-                  opacity: mode === "dark" ? 0.65 : 0.4,
-                },
-              }}
-            />
-          </div>
+          <Empty
+            description={t("staff.orders.empty")}
+            style={{
+              color: mode === "dark" ? undefined : "#4F4F4F",
+            }}
+            styles={{
+              image: {
+                opacity: mode === "dark" ? 0.65 : 0.4,
+              },
+            }}
+          />
         )}
       </div>
 
