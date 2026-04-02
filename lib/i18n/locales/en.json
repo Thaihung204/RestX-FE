@@ -331,6 +331,7 @@
       "tables_short": "Tables",
       "orders": "Order Management",
       "orders_short": "Orders",
+      "kitchen": "Kitchen",
       "checkout": "Checkout",
       "attendance": "Attendance",
       "reservations": "Reservations"
@@ -826,6 +827,7 @@
       "dashboard": "Dashboard",
       "main_dashboard": "Main Dashboard",
       "search_placeholder": "Search...",
+      "go_to_staff": "Staff",
       "user_role": "Restaurant Owner"
     },
     "menu": {

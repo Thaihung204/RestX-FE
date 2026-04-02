@@ -7,7 +7,7 @@ import React, { useEffect } from "react";
 /**
  * AdminAuthGuard - Protects admin routes by requiring authentication.
  * Redirects unauthenticated users to /login-email.
- * Also checks that the user has Admin or System Admin role.
+ * Also checks that the user has tenant Admin role (not System Admin).
  */
 export default function AdminAuthGuard({
     children,
@@ -17,9 +17,12 @@ export default function AdminAuthGuard({
     const { user, loading } = useAuth();
     const router = useRouter();
 
-    // Determine if user has admin access
+    // Determine if user has tenant admin access only (exclude System Admin)
     const userRoles = user?.roles || [];
-    const isAdmin = userRoles.some(r => r === 'Admin' || r === 'System Admin');
+    const normalizedRoles = userRoles.map((r) => r.toLowerCase());
+    const normalizedPrimaryRole = String(user?.role || '').toLowerCase();
+    const isSystemAdmin = normalizedRoles.includes('system admin') || normalizedPrimaryRole === 'system admin';
+    const isTenantAdmin = (normalizedRoles.includes('admin') || normalizedPrimaryRole === 'admin') && !isSystemAdmin;
 
     useEffect(() => {
         if (!loading) {
@@ -30,9 +33,11 @@ export default function AdminAuthGuard({
                     : '/admin';
                 const redirect = encodeURIComponent(currentPath);
                 router.replace(`/login-email?redirect=${redirect}`);
-            } else if (!isAdmin) {
+            } else if (!isTenantAdmin) {
                 // Logged in but not admin
-                if (userRoles.some(r => r.toLowerCase() === 'staff')) {
+                if (isSystemAdmin) {
+                    router.replace('/tenants');
+                } else if (userRoles.some(r => r.toLowerCase() === 'staff')) {
                     const staffPath = typeof window !== 'undefined'
                         ? `${window.location.pathname}${window.location.search || ''}`
                         : '/staff';
@@ -42,7 +47,7 @@ export default function AdminAuthGuard({
                 }
             }
         }
-    }, [user, loading, isAdmin, router]);
+    }, [user, loading, isTenantAdmin, isSystemAdmin, userRoles, router]);
 
     // Show loading spinner while checking auth
     if (loading) {
@@ -64,8 +69,8 @@ export default function AdminAuthGuard({
         );
     }
 
-    // Not authenticated or not admin → don't render content (redirecting)
-    if (!user || !isAdmin) {
+    // Not authenticated or not tenant admin → don't render content (redirecting)
+    if (!user || !isTenantAdmin) {
         return null;
     }
 

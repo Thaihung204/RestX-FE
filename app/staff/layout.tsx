@@ -64,6 +64,23 @@ export default function StaffLayout({
   // Derive display info from real user
   const displayName = user?.fullName || user?.name || user?.email || "Staff";
   const displayRole = user?.role || t("staff.sidebar.staff_role");
+
+  // Position-based visibility (apply only for staff users)
+  const normalizedRole = String(user?.role || "").trim().toLowerCase();
+  const normalizedRoles = (user?.roles || []).map((r) =>
+    String(r).trim().toLowerCase()
+  );
+  const isStaffRole =
+    normalizedRole === "staff" || normalizedRoles.includes("staff");
+
+  const normalizedPosition = String(user?.position || "")
+    .trim()
+    .toLowerCase();
+  const isKitchenPosition =
+    normalizedPosition === "kitchen" ||
+    normalizedPosition === "kitchen staff";
+  const isWaiterPosition = normalizedPosition === "waiter";
+
   const initials = displayName
     .split(" ")
     .filter(Boolean)
@@ -72,7 +89,7 @@ export default function StaffLayout({
     .join("");
 
   // Menu items with translations
-  const menuItems = [
+  const allMenuItems = [
     {
       key: "/staff",
       icon: <DashboardOutlined />,
@@ -97,7 +114,7 @@ export default function StaffLayout({
     {
       key: "/staff/kitchen",
       icon: <FireOutlined />,
-      label: t("staff.menu.kitchen", { defaultValue: "Kitchen" }),
+      label: t("staff.menu.kitchen"),
     },
     {
       key: "/staff/checkout",
@@ -115,6 +132,25 @@ export default function StaffLayout({
       label: t("staff.menu.attendance"),
     },
   ];
+
+  const menuItems = allMenuItems.filter((item) => {
+    if (!isStaffRole) return true;
+
+    if (isKitchenPosition) {
+      return ![
+        "/staff/checkout",
+        "/staff/orders",
+        "/staff/reservations",
+        "/staff/tables",
+      ].includes(item.key);
+    }
+
+    if (isWaiterPosition) {
+      return item.key !== "/staff/kitchen";
+    }
+
+    return true;
+  });
 
   // User menu items with translations
   const userMenuItems = [
@@ -203,19 +239,57 @@ export default function StaffLayout({
   };
 
   const handleMenuClick = (e: { key: string }) => {
-    if (pathname !== e.key) {
+    const targetPath = e.key;
+    const canAccess = menuItems.some((item) => item.key === targetPath);
+
+    if (!canAccess) {
+      if (pathname !== "/staff") {
+        triggerPageLoading();
+      }
+      router.push("/staff");
+      if (isDrawerDevice) setDrawerOpen(false);
+      return;
+    }
+
+    if (pathname !== targetPath) {
       triggerPageLoading();
     }
-    router.push(e.key);
+    router.push(targetPath);
     if (isDrawerDevice) setDrawerOpen(false);
   };
+
+  useEffect(() => {
+    if (!isStaffRole) return;
+
+    const hiddenPathsForKitchen = [
+      "/staff/checkout",
+      "/staff/orders",
+      "/staff/reservations",
+      "/staff/tables",
+    ];
+
+    const shouldRedirectKitchen =
+      isKitchenPosition && hiddenPathsForKitchen.includes(pathname);
+    const shouldRedirectWaiter = isWaiterPosition && pathname === "/staff/kitchen";
+
+    if (shouldRedirectKitchen || shouldRedirectWaiter) {
+      triggerPageLoading();
+      router.replace("/staff");
+    }
+  }, [
+    isStaffRole,
+    isKitchenPosition,
+    isWaiterPosition,
+    pathname,
+    router,
+  ]);
 
   const handleUserMenuClick = async (e: { key: string }) => {
     if (e.key === "logout") {
       triggerPageLoading();
       await authService.logoutServer();
       authService.logout();
-      router.replace("/login");
+      router.replace("/login-email");
       return;
     }
 

@@ -325,7 +325,7 @@ const TenantDashboardHeader: React.FC<TenantDashboardHeaderProps> = ({ items, ac
                 onClick: ({ key }) => {
                   if (key === "logout") {
                     adminAuthService.logout();
-                    router.replace("/login");
+                    router.replace("/login-admin");
                   }
                 },
               }}

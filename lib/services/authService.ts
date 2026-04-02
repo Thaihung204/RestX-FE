@@ -34,13 +34,14 @@ export interface RegisterResponse {
 
 export interface User {
   id: string;
-  customerId?: string;  // Customer ID from login response
+  customerId?: string;
   email: string;
-  name?: string;  // Frontend format
-  fullName?: string;  // Backend format
-  role?: string;  // Primary role from backend (e.g., 'Admin', 'Waiter', 'Kitchen Staff', 'Customer', 'System Admin')
-  roles?: string[];  // Backend format (array of roles)
-  phoneNumber?: string;  // Backend format
+  name?: string;
+  fullName?: string;
+  role?: string;  // Primary role from backend (e.g., 'Admin', 'Staff', 'Customer', 'System Admin')
+  roles?: string[];
+  position?: string; // Staff position from auth response (e.g., 'Waiter', 'Kitchen', 'Kitchen Staff')
+  phoneNumber?: string;
   avatar?: string;
 }
 
