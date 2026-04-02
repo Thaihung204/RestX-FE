@@ -115,7 +115,7 @@ const customStyles = `
   }
 
   .branding-preview {
-    border: none;
+    border: 1px solid var(--border);
     border-radius: 10px;
     background: var(--card);
     overflow: hidden;
@@ -1155,7 +1155,7 @@ const TenantEditPage: React.FC = () => {
                                 />
                               ) : (
                                 <div className="branding-preview-empty h-full w-full">
-                                  Click hoặc kéo thả logo vào đây
+                                  {t("tenants.edit.branding.logo_upload_hint")}
                                 </div>
                               )}
                             </div>
@@ -1196,7 +1196,7 @@ const TenantEditPage: React.FC = () => {
                                 />
                               ) : (
                                 <div className="branding-preview-empty h-full w-full">
-                                  Click hoặc kéo thả favicon vào đây
+                                  {t("tenants.edit.branding.favicon_upload_hint")}
                                 </div>
                               )}
                             </div>
@@ -1238,7 +1238,7 @@ const TenantEditPage: React.FC = () => {
                               />
                             ) : (
                               <div className="branding-preview-empty h-full w-full">
-                                Click hoặc kéo thả background vào đây
+                                {t("tenants.edit.branding.background_upload_hint")}
                               </div>
                             )}
                           </div>

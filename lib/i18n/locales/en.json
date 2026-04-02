@@ -2770,7 +2770,10 @@
         "light_card_color": "Component Background (Light)",
         "dark_base_color": "Primary Background (Dark)",
         "dark_surface_color": "Secondary Background (Dark)",
-        "dark_card_color": "Component Background (Dark)"
+        "dark_card_color": "Component Background (Dark)",
+        "logo_upload_hint": "Click or drag and drop logo here",
+        "favicon_upload_hint": "Click or drag and drop favicon here",
+        "background_upload_hint": "Click or drag and drop background here"
       },
       "fields": {
         "secondary_phone": "Secondary Phone",
