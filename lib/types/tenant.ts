@@ -11,6 +11,7 @@ export interface ITenant {
   addressLine4: string;
   ownerEmail: string;
   mailRestaurant: string;
+  logoUrl?: string;
   plan: "basic" | "pro" | "enterprise";
   status: "active" | "inactive" | "maintenance";
   lastActive: string;

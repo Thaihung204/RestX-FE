@@ -16,6 +16,7 @@ export default function ManagePage() {
     | "ingredientCategories"
     | "loyalty"
     | "orderStatus"
+    | "payment"
   >("categories");
 
   return (
@@ -119,6 +120,7 @@ export default function ManagePage() {
 
           {/* Order Status Tab */}
           {activeTab === "orderStatus" && <OrderDetailStatusSettings />}
+
         </div>
       </div>
     </main>
