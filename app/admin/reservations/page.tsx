@@ -10,6 +10,7 @@ import reservationService, {
 import { Select } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import Link from "next/link";
 
 // ─── Status actions (keys mapped to i18n) ────────────────────────────────────
 const STATUS_ACTIONS_KEYS: Record<
@@ -599,7 +600,7 @@ export default function ReservationsPage() {
 
 
                                             <td className="px-4 py-3 whitespace-nowrap text-center">
-                                                <div className="flex justify-center">
+                                                <div className="flex justify-center gap-2">
                                                     <button
                                                         onClick={() => setSelectedId(item.id)}
                                                         className="p-2 rounded-lg transition-all"
@@ -611,6 +612,16 @@ export default function ReservationsPage() {
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                         </svg>
                                                     </button>
+                                                    <Link
+                                                        href={`/admin/reservation/${item.id}`}
+                                                        className="p-2 rounded-lg transition-all"
+                                                        style={{ background: "var(--surface)", color: "var(--text-muted)", border: "1px solid var(--border)" }}
+                                                        title={t('admin.reservations.actions.view_detail')}
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                        </svg>
+                                                    </Link>
                                                 </div>
                                             </td>
                                         </tr>

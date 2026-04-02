@@ -3169,5 +3169,96 @@
       "subtitle": "Khám phá",
       "title": "Tổng quan"
     }
+  },
+  "reservation_detail": {
+    "back": "Quay lại",
+    "breadcrumb": "Chi tiết đặt bàn",
+    "not_found": {
+      "title": "Không tìm thấy đặt bàn",
+      "description": "Đặt bàn này có thể không tồn tại hoặc bạn không có quyền truy cập."
+    },
+    "hero": {
+      "label": "Chi tiết đặt bàn",
+      "created_at": "Tạo lúc:",
+      "time_label": "Giờ",
+      "guests_label": "Khách"
+    },
+    "timeline": {
+      "title": "Tiến trình đặt bàn",
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "checked_in": "Đã check-in",
+      "completed": "Hoàn tất"
+    },
+    "customer": {
+      "title": "Thông tin khách hàng",
+      "subtitle": "Thông tin liên hệ và thành viên",
+      "name": "Họ và tên",
+      "phone": "Số điện thoại",
+      "email": "Email",
+      "type": "Loại khách",
+      "guest": "Khách vãng lai",
+      "member": "Thành viên",
+      "loyalty_points": "Điểm tích lũy"
+    },
+    "booking": {
+      "title": "Thông tin đặt chỗ",
+      "subtitle": "Ngày giờ, bàn và vị trí",
+      "date_time": "Ngày & Giờ",
+      "guests": "Số lượng khách",
+      "guests_unit": "khách",
+      "tables": "Bàn đặt",
+      "capacity": "Sức chứa tổng",
+      "seats_unit": "ghế",
+      "checked_in_at": "Thời gian check-in",
+      "last_updated": "Cập nhật lần cuối",
+      "special_requests": "Yêu cầu đặc biệt"
+    },
+    "deposit": {
+      "label": "Đặt cọc",
+      "pay_now": "Thanh toán cọc",
+      "creating_link": "Đang tạo...",
+      "no_order_warning": "Chưa có order cọc. Vui lòng liên hệ nhà hàng.",
+      "link_opened": "Đã mở link thanh toán cọc.",
+      "link_error": "Không lấy được link thanh toán.",
+      "create_failed": "Tạo link thanh toán thất bại."
+    },
+    "order": {
+      "title": "Thông tin order",
+      "orders_count": "order",
+      "items": "món",
+      "status": "Trạng thái",
+      "no_orders": "Chưa có order nào liên kết với đặt bàn này.",
+      "order_now": "Order ngay",
+      "readonly_note": "Bạn chỉ có quyền xem thông tin. Liên hệ nhà hàng để thay đổi."
+    },
+    "location": {
+      "no_address": "Chưa có địa chỉ",
+      "updating": "Đang cập nhật địa chỉ",
+      "open_maps": "Mở Google Maps"
+    },
+    "code": {
+      "label": "Mã xác nhận",
+      "description": "Xuất trình mã này tại nhà hàng để xác nhận đặt bàn của bạn."
+    },
+    "meta": {
+      "title": "Thông tin bổ sung",
+      "reservation_id": "ID đặt bàn",
+      "tables_count": "Số bàn",
+      "deposit_amount": "Số tiền cọc",
+      "deposit_status": "Trạng thái cọc",
+      "paid": "Đã thanh toán",
+      "unpaid": "Chưa thanh toán"
+    },
+    "admin_note": {
+      "title": "Chế độ xem Admin",
+      "description": "Đây là trang xem chi tiết chỉ đọc cho admin. Dùng danh sách đặt bàn để cập nhật trạng thái, xác nhận hoặc hủy."
+    },
+    "help": {
+      "title": "Cần hỗ trợ?",
+      "description": "Để thay đổi hoặc hủy đặt bàn, vui lòng liên hệ trực tiếp với nhà hàng.",
+      "get_directions": "Chỉ đường"
+    }
   }
 }
+
