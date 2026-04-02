@@ -2733,7 +2733,10 @@
         "light_card_color": "Màu nền thành phần (Sáng)",
         "dark_base_color": "Màu nền chính (Tối)",
         "dark_surface_color": "Màu nền phụ (Tối)",
-        "dark_card_color": "Màu nền thành phần (Tối)"
+        "dark_card_color": "Màu nền thành phần (Tối)",
+        "logo_upload_hint": "Click hoặc kéo thả logo vào đây",
+        "favicon_upload_hint": "Click hoặc kéo thả favicon vào đây",
+        "background_upload_hint": "Click hoặc kéo thả background vào đây"
       },
       "fields": {
         "secondary_phone": "Số điện thoại phụ",

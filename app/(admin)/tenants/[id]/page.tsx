@@ -13,18 +13,20 @@ import {
   PhoneOutlined,
   ShopOutlined,
 } from "@ant-design/icons";
-import type { FormProps } from "antd";
+import type { FormProps, UploadFile } from "antd";
 import {
   App,
   Breadcrumb,
   Button,
   Card,
+  ColorPicker,
   Form,
   Input,
   Modal,
   Spin,
   Switch,
   Typography,
+  Upload,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -104,7 +106,86 @@ const customStyles = `
     flex-shrink: 0;
     color: #6b7280;
   }
+
+  .branding-upload-box {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  .branding-preview {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    overflow: hidden;
+    transition: all 0.2s ease;
+  }
+
+  .tenant-image-dragger.ant-upload-wrapper .ant-upload-drag {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 10px;
+  }
+
+  .tenant-image-dragger.ant-upload-wrapper .ant-upload-btn {
+    padding: 0 !important;
+  }
+
+  .tenant-image-dragger:hover .branding-preview {
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.25);
+  }
+
+  .tenant-form .ant-color-picker {
+    width: 100% !important;
+  }
+
+  .tenant-form .ant-color-picker-trigger {
+    width: 100% !important;
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    height: 44px !important;
+    padding: 0 16px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .tenant-form .ant-color-picker-trigger .ant-color-picker-color-block {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 6px !important;
+  }
+
+  .tenant-form .ant-color-picker-trigger .ant-color-picker-trigger-text {
+    color: var(--text) !important;
+    margin-left: 12px !important;
+  }
+
+  .tenant-form .ant-color-picker-trigger:hover {
+    border-color: #f97316 !important;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1) !important;
+  }
+
+  .branding-preview-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
 `;
+
+const COLOR_FIELD_NAMES: Array<keyof TenantUpdateInput> = [
+  "primaryColor",
+  "lightBaseColor",
+  "lightSurfaceColor",
+  "lightCardColor",
+  "darkBaseColor",
+  "darkSurfaceColor",
+  "darkCardColor",
+];
 
 const TenantEditPage: React.FC = () => {
   const router = useRouter();
@@ -121,7 +202,24 @@ const TenantEditPage: React.FC = () => {
   const [confirmInput, setConfirmInput] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [tenantStatus, setTenantStatus] = useState<boolean>(true);
+  const [logoFileList, setLogoFileList] = useState<UploadFile[]>([]);
+  const [faviconFileList, setFaviconFileList] = useState<UploadFile[]>([]);
+  const [backgroundFileList, setBackgroundFileList] = useState<UploadFile[]>([]);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string>("");
+  const [faviconPreviewUrl, setFaviconPreviewUrl] = useState<string>("");
+  const [backgroundPreviewUrl, setBackgroundPreviewUrl] = useState<string>("");
   const tenantId = params.id as string;
+
+  const getRawFile = (fileList: UploadFile[]): File | null => {
+    const raw = fileList?.[0]?.originFileObj;
+    return raw instanceof File ? raw : null;
+  };
+
+  const toDataUrl = (file: File, setter: (url: string) => void) => {
+    const reader = new FileReader();
+    reader.onloadend = () => setter((reader.result as string) || "");
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     fetchTenantDetails();
@@ -206,7 +304,9 @@ const TenantEditPage: React.FC = () => {
 
       form.setFieldsValue(formValues);
       setFormData(formValues);
-
+      setLogoPreviewUrl(formValues.logoUrl || "");
+      setFaviconPreviewUrl(formValues.faviconUrl || "");
+      setBackgroundPreviewUrl(formValues.backgroundUrl || "");
 
       setTenantStatus(
         typeof data.status === "boolean" ? data.status : data.status === true,
@@ -232,8 +332,14 @@ const TenantEditPage: React.FC = () => {
         ? `${values.hostname}.restx.food`
         : undefined;
 
+      const colorValues = COLOR_FIELD_NAMES.reduce(
+        (acc, field) => ({ ...acc, [field]: form.getFieldValue(field) }),
+        {} as Partial<TenantUpdateInput>,
+      );
+
       const requestData: TenantUpdateInput = {
         ...values,
+        ...colorValues,
         id: tenantId,
         hostname,
         networkIp: formData.networkIp || hostname,
@@ -247,7 +353,11 @@ const TenantEditPage: React.FC = () => {
         modifiedBy: undefined,
       };
 
-      await tenantService.upsertTenant(requestData);
+      await tenantService.upsertTenant(requestData, {
+        logo: getRawFile(logoFileList),
+        favicon: getRawFile(faviconFileList),
+        background: getRawFile(backgroundFileList),
+      });
       message.success(t("tenants.toasts.update_success_message"));
       router.push("/tenants");
     } catch (error: any) {
@@ -1011,28 +1121,90 @@ const TenantEditPage: React.FC = () => {
                     </Title>
                   }>
                   <div className="grid grid-cols-1 gap-4">
-                    <Form.Item
-                      label={
-                        <span
-                          className="text-sm font-semibold"
-                          style={{ color: "var(--text)" }}>
-                          {t("tenants.edit.branding.logo_url")}
-                        </span>
-                      }
-                      name="logoUrl">
-                      <Input size="large" placeholder="https://..." />
-                    </Form.Item>
-                    <Form.Item
-                      label={
-                        <span
-                          className="text-sm font-semibold"
-                          style={{ color: "var(--text)" }}>
-                          {t("tenants.edit.branding.favicon_url")}
-                        </span>
-                      }
-                      name="faviconUrl">
-                      <Input size="large" placeholder="https://..." />
-                    </Form.Item>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--text)" }}>
+                            {t("tenants.edit.branding.logo_url")}
+                          </span>
+                        }
+                        >
+                        <div className="branding-upload-box">
+                          <Upload.Dragger
+                            className="tenant-image-dragger"
+                            accept="image/*"
+                            maxCount={1}
+                            beforeUpload={() => false}
+                            showUploadList={false}
+                            fileList={logoFileList}
+                            onChange={({ fileList }) => {
+                              setLogoFileList(fileList);
+                              const file = fileList?.[0]?.originFileObj;
+                              if (file instanceof File) {
+                                toDataUrl(file, setLogoPreviewUrl);
+                              }
+                            }}>
+                            <div className="branding-preview h-32 flex items-center justify-center">
+                              {logoPreviewUrl ? (
+                                <img
+                                  src={logoPreviewUrl}
+                                  alt="logo preview"
+                                  className="h-24 w-24 object-contain"
+                                />
+                              ) : (
+                                <div className="branding-preview-empty h-full w-full">
+                                  {t("tenants.edit.branding.logo_upload_hint")}
+                                </div>
+                              )}
+                            </div>
+                          </Upload.Dragger>
+                        </div>
+                      </Form.Item>
+
+                      <Form.Item
+                        label={
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--text)" }}>
+                            {t("tenants.edit.branding.favicon_url")}
+                          </span>
+                        }
+                        >
+                        <div className="branding-upload-box">
+                          <Upload.Dragger
+                            className="tenant-image-dragger"
+                            accept="image/*"
+                            maxCount={1}
+                            beforeUpload={() => false}
+                            showUploadList={false}
+                            fileList={faviconFileList}
+                            onChange={({ fileList }) => {
+                              setFaviconFileList(fileList);
+                              const file = fileList?.[0]?.originFileObj;
+                              if (file instanceof File) {
+                                toDataUrl(file, setFaviconPreviewUrl);
+                              }
+                            }}>
+                            <div className="branding-preview h-32 flex items-center justify-center">
+                              {faviconPreviewUrl ? (
+                                <img
+                                  src={faviconPreviewUrl}
+                                  alt="favicon preview"
+                                  className="h-16 w-16 object-contain"
+                                />
+                              ) : (
+                                <div className="branding-preview-empty h-full w-full">
+                                  {t("tenants.edit.branding.favicon_upload_hint")}
+                                </div>
+                              )}
+                            </div>
+                          </Upload.Dragger>
+                        </div>
+                      </Form.Item>
+                    </div>
+
                     <Form.Item
                       label={
                         <span
@@ -1041,87 +1213,162 @@ const TenantEditPage: React.FC = () => {
                           {t("tenants.edit.branding.background_url")}
                         </span>
                       }
-                      name="backgroundUrl">
-                      <Input size="large" placeholder="https://..." />
+                      >
+                      <div className="branding-upload-box">
+                        <Upload.Dragger
+                          className="tenant-image-dragger"
+                          accept="image/*"
+                          maxCount={1}
+                          beforeUpload={() => false}
+                          showUploadList={false}
+                          fileList={backgroundFileList}
+                          onChange={({ fileList }) => {
+                            setBackgroundFileList(fileList);
+                            const file = fileList?.[0]?.originFileObj;
+                            if (file instanceof File) {
+                              toDataUrl(file, setBackgroundPreviewUrl);
+                            }
+                          }}>
+                          <div className="branding-preview h-44 w-full">
+                            {backgroundPreviewUrl ? (
+                              <img
+                                src={backgroundPreviewUrl}
+                                alt="background preview"
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="branding-preview-empty h-full w-full">
+                                {t("tenants.edit.branding.background_upload_hint")}
+                              </div>
+                            )}
+                          </div>
+                        </Upload.Dragger>
+                      </div>
                     </Form.Item>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: "var(--text)" }}>
-                            {t("tenants.edit.branding.primary_color")}
-                          </span>
-                        }
-                        name="primaryColor">
-                        <Input size="large" placeholder="#0EA5E9" />
-                      </Form.Item>
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: "var(--text)" }}>
-                            {t("tenants.edit.branding.light_base_color")}
-                          </span>
-                        }
-                        name="lightBaseColor">
-                        <Input size="large" placeholder="#FB7185" />
-                      </Form.Item>
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: "var(--text)" }}>
-                            {t("tenants.edit.branding.light_surface_color")}
-                          </span>
-                        }
-                        name="lightSurfaceColor">
-                        <Input size="large" placeholder="#FFFBEB" />
-                      </Form.Item>
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: "var(--text)" }}>
-                            {t("tenants.edit.branding.light_card_color")}
-                          </span>
-                        }
-                        name="lightCardColor">
-                        <Input size="large" placeholder="#FFFFFF" />
-                      </Form.Item>
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: "var(--text)" }}>
-                            {t("tenants.edit.branding.dark_base_color")}
-                          </span>
-                        }
-                        name="darkBaseColor">
-                        <Input size="large" placeholder="#0369A1" />
-                      </Form.Item>
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: "var(--text)" }}>
-                            {t("tenants.edit.branding.dark_surface_color")}
-                          </span>
-                        }
-                        name="darkSurfaceColor">
-                        <Input size="large" placeholder="#082F49" />
-                      </Form.Item>
-                      <Form.Item
-                        label={
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: "var(--text)" }}>
-                            {t("tenants.edit.branding.dark_card_color")}
-                          </span>
-                        }
-                        name="darkCardColor">
-                        <Input size="large" placeholder="#0C4A6E" />
-                      </Form.Item>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2">
+                        <Form.Item
+                          label={
+                            <span
+                              className="text-sm font-semibold"
+                              style={{ color: "var(--text)" }}>
+                              {t("tenants.edit.branding.primary_color")}
+                            </span>
+                          }
+                          name="primaryColor"
+                          className="md:col-span-1">
+                          <ColorPicker
+                            showText
+                            size="large"
+                            format="hex"
+                            className="w-full justify-start rounded-xl"
+                          />
+                        </Form.Item>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-4">
+                          <Form.Item
+                            label={
+                              <span
+                                className="text-sm font-semibold"
+                                style={{ color: "var(--text)" }}>
+                                {t("tenants.edit.branding.light_base_color")}
+                              </span>
+                            }
+                            name="lightBaseColor">
+                            <ColorPicker
+                              showText
+                              size="large"
+                              format="hex"
+                              className="w-full justify-start rounded-xl"
+                            />
+                          </Form.Item>
+                          <Form.Item
+                            label={
+                              <span
+                                className="text-sm font-semibold"
+                                style={{ color: "var(--text)" }}>
+                                {t("tenants.edit.branding.light_surface_color")}
+                              </span>
+                            }
+                            name="lightSurfaceColor">
+                            <ColorPicker
+                              showText
+                              size="large"
+                              format="hex"
+                              className="w-full justify-start rounded-xl"
+                            />
+                          </Form.Item>
+                          <Form.Item
+                            label={
+                              <span
+                                className="text-sm font-semibold"
+                                style={{ color: "var(--text)" }}>
+                                {t("tenants.edit.branding.light_card_color")}
+                              </span>
+                            }
+                            name="lightCardColor">
+                            <ColorPicker
+                              showText
+                              size="large"
+                              format="hex"
+                              className="w-full justify-start rounded-xl"
+                            />
+                          </Form.Item>
+                        </div>
+
+                        <div className="space-y-4">
+                          <Form.Item
+                            label={
+                              <span
+                                className="text-sm font-semibold"
+                                style={{ color: "var(--text)" }}>
+                                {t("tenants.edit.branding.dark_base_color")}
+                              </span>
+                            }
+                            name="darkBaseColor">
+                            <ColorPicker
+                              showText
+                              size="large"
+                              format="hex"
+                              className="w-full justify-start rounded-xl"
+                            />
+                          </Form.Item>
+                          <Form.Item
+                            label={
+                              <span
+                                className="text-sm font-semibold"
+                                style={{ color: "var(--text)" }}>
+                                {t("tenants.edit.branding.dark_surface_color")}
+                              </span>
+                            }
+                            name="darkSurfaceColor">
+                            <ColorPicker
+                              showText
+                              size="large"
+                              format="hex"
+                              className="w-full justify-start rounded-xl"
+                            />
+                          </Form.Item>
+                          <Form.Item
+                            label={
+                              <span
+                                className="text-sm font-semibold"
+                                style={{ color: "var(--text)" }}>
+                                {t("tenants.edit.branding.dark_card_color")}
+                              </span>
+                            }
+                            name="darkCardColor">
+                            <ColorPicker
+                              showText
+                              size="large"
+                              format="hex"
+                              className="w-full justify-start rounded-xl"
+                            />
+                          </Form.Item>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </Card>
