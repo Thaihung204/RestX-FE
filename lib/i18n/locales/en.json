@@ -571,36 +571,47 @@
       }
     },
     "kpi": {
-      "bookings": "Today's Bookings",
-      "bookings_subtitle": "{{count}} pending confirmations",
-      "available_tables": "Available Tables",
-      "available_tables_subtitle": "VIP: {{vip}}, Indoor: {{indoor}}, Outdoor: {{outdoor}}",
       "revenue": "Today's Revenue",
-      "revenue_target": "Target: {{target}}",
-      "active_orders": "Active Orders",
-      "active_orders_subtitle": "{{waiting}} waiting, {{progress}} in-progress",
-      "top_dish": "Top Selling Dish",
-      "top_dish_subtitle": "{{count}} orders today",
-      "kitchen_status": "Kitchen Status",
-      "kitchen_queue": "{{count}} orders in queue",
-      "status_busy": "Busy",
-      "status_normal": "Normal"
+      "revenue_subtitle": "Target: {{target}}",
+      "orders": "Today's Orders",
+      "orders_subtitle": "{{completed}} completed · {{processing}} processing",
+      "tables": "Tables & Reservations",
+      "tables_subtitle": "{{available}} available · {{reserved}} reserved",
+      "customers": "Customers",
+      "customers_subtitle": "{{new}} new this month",
+      "staff": "On-duty Staff",
+      "staff_subtitle": "{{waiter}} waiter · {{kitchen}} kitchen"
     },
-    "quick_actions": {
-      "title": "Quick Actions",
-      "subtitle": "Frequently used shortcuts",
-      "add_table": "Add Table",
-      "add_table_desc": "Create new table",
-      "add_dish": "Add Dish",
-      "add_dish_desc": "Add menu item",
-      "add_staff": "Add Staff",
-      "add_staff_desc": "New employee",
-      "view_bookings": "View Bookings",
-      "view_bookings_desc": "All reservations",
-      "inventory": "Inventory",
-      "inventory_desc": "Stock management",
-      "reports": "Reports",
-      "reports_desc": "Analytics & data"
+    "tables_overview": {
+      "title": "Tables & Reservations",
+      "subtitle": "Real-time status",
+      "available": "Available",
+      "serving": "Serving",
+      "reserved": "Reserved",
+      "upcoming": "Upcoming Reservations",
+      "guests": "{{count}} guests",
+      "view_all": "View all reservations"
+    },
+    "customer_insights": {
+      "title": "Customer Insights",
+      "subtitle": "This month's overview",
+      "total_customers": "Total Customers",
+      "new_customers": "New Customers",
+      "returning_rate": "Returning Rate",
+      "view_all": "View all customers"
+    },
+    "staff_overview": {
+      "title": "Staff & Performance",
+      "subtitle": "Today's workforce status",
+      "total_staff": "Total Staff",
+      "on_duty": "On Duty",
+      "day_off": "Day Off",
+      "avg_orders": "Avg Orders/Staff",
+      "positions": {
+        "waiter": "Waiter",
+        "kitchen": "Kitchen"
+      },
+      "view_all": "View all staff"
     },
     "table_status": {
       "title": "Real-time Table Status",
@@ -1625,11 +1636,9 @@
       "total_orders": "Total Orders",
       "orders_suffix": "orders"
     },
-    "area_distribution": {
-      "title": "Area Distribution",
-      "subtitle": "Table allocation by zone",
-      "tables": "Tables",
-      "tables_suffix": "tables"
+    "staff_overview": {
+      "title": "Staff Overview",
+      "subtitle": "Today's workforce"
     }
   },
   "time_slots": {

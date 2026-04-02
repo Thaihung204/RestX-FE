@@ -510,36 +510,42 @@
       }
     },
     "kpi": {
-      "bookings": "Đặt bàn hôm nay",
-      "bookings_subtitle": "{{count}} chờ xác nhận",
-      "available_tables": "Bàn trống",
-      "available_tables_subtitle": "VIP: {{vip}}, Trong nhà: {{indoor}}, Ngoài trời: {{outdoor}}",
       "revenue": "Doanh thu hôm nay",
-      "revenue_target": "Mục tiêu: {{target}}",
-      "active_orders": "Đơn hàng đang xử lý",
-      "active_orders_subtitle": "{{waiting}} chờ, {{progress}} đang làm",
-      "top_dish": "Món ăn bán chạy nhất",
-      "top_dish_subtitle": "{{count}} đơn hôm nay",
-      "kitchen_status": "Trạng thái bếp",
-      "kitchen_queue": "{{count}} đơn hàng đợi",
-      "status_busy": "Bận",
-      "status_normal": "Bình thường"
+      "revenue_subtitle": "Mục tiêu: {{target}}",
+      "orders": "Đơn hàng hôm nay",
+      "orders_subtitle": "{{completed}} hoàn thành · {{processing}} đang xử lý",
+      "reservations": "Đặt bàn hôm nay",
+      "reservations_subtitle": "{{pending}} chờ xác nhận",
+      "new_customers": "Khách hàng mới",
+      "new_customers_subtitle": "Tháng này"
     },
     "quick_actions": {
       "title": "Thao tác nhanh",
       "subtitle": "Các phím tắt thường dùng",
-      "add_table": "Thêm bàn",
-      "add_table_desc": "Tạo bàn mới",
-      "add_dish": "Thêm món",
-      "add_dish_desc": "Thêm vào thực đơn",
-      "add_staff": "Thêm nhân viên",
-      "add_staff_desc": "Nhân viên mới",
-      "view_bookings": "Xem đặt bàn",
-      "view_bookings_desc": "Tất cả đặt bàn",
-      "inventory": "Kho hàng",
-      "inventory_desc": "Quản lý kho",
-      "reports": "Báo cáo",
-      "reports_desc": "Phân tích & dữ liệu"
+      "orders": "Đơn hàng",
+      "orders_desc": "Xem & quản lý",
+      "reservations": "Đặt bàn",
+      "reservations_desc": "Quản lý đặt bàn",
+      "menu": "Thực đơn",
+      "menu_desc": "Quản lý món ăn",
+      "staff": "Nhân viên",
+      "staff_desc": "Quản lý nhân sự",
+      "analytics": "Báo cáo",
+      "analytics_desc": "Phân tích & dữ liệu",
+      "settings": "Cài đặt",
+      "settings_desc": "Cấu hình hệ thống"
+    },
+    "staff_overview": {
+      "title": "Tổng quan nhân viên",
+      "subtitle": "Trạng thái nhân sự hôm nay",
+      "total_staff": "Tổng nhân viên",
+      "on_duty": "Đang làm việc",
+      "day_off": "Nghỉ phép",
+      "positions": {
+        "waiter": "Phục vụ",
+        "kitchen": "Nhà bếp"
+      },
+      "view_all": "Xem tất cả nhân viên"
     },
     "table_status": {
       "title": "Trạng thái bàn thời gian thực",
@@ -1588,11 +1594,9 @@
       "total_orders": "Tổng đơn hàng",
       "orders_suffix": "đơn"
     },
-    "area_distribution": {
-      "title": "Phân bố khu vực",
-      "subtitle": "Phân bổ bàn theo khu vực",
-      "tables": "Bàn",
-      "tables_suffix": "bàn"
+    "staff_overview": {
+      "title": "Tổng quan nhân viên",
+      "subtitle": "Nhân sự hôm nay"
     }
   },
   "time_slots": {

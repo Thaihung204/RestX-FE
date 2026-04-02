@@ -1,11 +1,11 @@
 "use client";
 
-import AreaDistributionChart from "@/components/admin/charts/AreaDistributionChart";
 import OrdersBarChart from "@/components/admin/charts/OrdersBarChart";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import KPISection from "@/components/admin/KPISection";
 import QuickActions from "@/components/admin/QuickActions";
-import TableStatusMap from "@/components/admin/TableStatusMap";
+import StaffOverview from "@/components/admin/StaffOverview";
+
 export default function DashboardPage() {
   return (
     <main
@@ -23,16 +23,10 @@ export default function DashboardPage() {
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
-            <AreaDistributionChart />
+            <StaffOverview />
           </div>
           <div className="lg:col-span-2">
             <QuickActions />
-          </div>
-        </section>
-
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-3">
-            <TableStatusMap />
           </div>
         </section>
       </div>
