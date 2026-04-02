@@ -3,14 +3,16 @@
 import OrderDetailsModal from "@/components/admin/orders/OrderDetailsModal";
 import { usePageLoading } from "@/components/PageTransitionLoader";
 import customerService from "@/lib/services/customerService";
+import employeeService from "@/lib/services/employeeService";
 import menuService from "@/lib/services/menuService";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
+import reservationService from "@/lib/services/reservationService";
 import { tableService, type TableItem } from "@/lib/services/tableService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { type OrderDetailModalItem } from "@/lib/types/order";
 import { HubConnectionState } from "@microsoft/signalr";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 type OrderStatusUi =
@@ -24,15 +26,26 @@ type OrderStatusUi =
 interface OrderRow {
   id: string;
   orderNumber: string;
+  customerId: string;
   customerName: string;
   customerAvatar?: string | null;
   tableCode: string;
-  items: number; // distinct dish count
-  totalQuantity: number; // total quantity of all dishes
+  tableId: string;
+  reservationId?: string | null;
+  handledBy?: string | null;
+  items: number;
+  totalQuantity: number;
+  subTotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  serviceCharge: number;
   total: number;
   status: OrderStatusUi;
   time: string;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
   paymentStatus: "unpaid" | "paid";
+  paymentStatusName?: string | null;
   raw: OrderDto;
 }
 
@@ -48,16 +61,16 @@ export default function OrdersPage() {
     OrderDetailModalItem[] | null
   >(null);
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
+  const [dishNamesById, setDishNamesById] = useState<Record<string, string>>({});
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
 
-  // Map backend enums to UI strings
   const mapOrderStatus = (statusId: number): OrderStatusUi => {
     switch (statusId) {
       case 0:
-        return "pending"; // Reserved
+        return "pending";
       case 1:
-        return "served"; // Serving
+        return "served";
       case 2:
         return "completed";
       case 3:
@@ -140,7 +153,6 @@ export default function OrdersPage() {
       try {
         if (showLoading) setLoading(true);
         const data = await orderService.getAllOrders();
-        // Pre-fetch unique customers referenced by orders to show name/avatar
         const uniqueCustomerIds = Array.from(
           new Set(data.map((o) => o.customerId).filter(Boolean)),
         );
@@ -158,16 +170,52 @@ export default function OrdersPage() {
           }),
         );
 
+        const employeesById: Record<string, string> = {};
+        try {
+          const employeesResp = await employeeService.getEmployees({
+            page: 1,
+            itemsPerPage: 500,
+          });
+          const employeeItems =
+            employeesResp.data?.items ||
+            employeesResp.data?.employees ||
+            employeesResp.data?.data ||
+            employeesResp.employees ||
+            [];
+          employeeItems.forEach((employee) => {
+            employeesById[employee.id] = employee.fullName;
+          });
+        } catch (error) {
+          console.error("Failed to load employees for handledBy mapping:", error);
+        }
+
+        const reservationCodeById: Record<string, string> = {};
+        try {
+          const reservationsResp = await reservationService.getReservations({
+            pageNumber: 1,
+            pageSize: 500,
+          });
+          (reservationsResp.items || []).forEach((reservation) => {
+            reservationCodeById[reservation.id] = reservation.confirmationCode;
+          });
+        } catch (error) {
+          console.error(
+            "Failed to load reservations for reservationId mapping:",
+            error,
+          );
+        }
+
         setOrders(
           data.map((o) => {
             const table = (tablesDict ?? tablesById)[o.tableId];
             const tableCode = table?.code || o.tableId;
             const distinctCount = o.orderDetails?.length ?? 0;
             const totalQuantity =
-              o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ??
-              0;
+              o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ?? 0;
             const status = mapOrderStatus(o.orderStatusId);
-            const paymentStatus = mapPaymentStatus(o.paymentStatusId);
+            const paymentStatus = mapPaymentStatus(
+              o.paymentStatusId ?? o.paymentStatus ?? 0,
+            );
             const customer = customersById[o.customerId];
 
             return {
@@ -176,16 +224,31 @@ export default function OrdersPage() {
                 o.reference && o.reference.trim().length > 0
                   ? o.reference
                   : `#${(o.id ?? "").slice(0, 8)}`,
+              customerId: o.customerId,
               customerName:
                 customer?.name ?? t("dashboard.orders.fallbacks.guest_name"),
               customerAvatar: customer?.avatar ?? null,
               tableCode,
+              tableId: o.tableId,
+              reservationId: o.reservationId
+                ? reservationCodeById[o.reservationId] || o.reservationId
+                : null,
+              handledBy: o.handledBy
+                ? employeesById[o.handledBy] || o.handledBy
+                : null,
               items: distinctCount,
               totalQuantity,
+              subTotal: Number(o.subTotal ?? 0),
+              discountAmount: Number(o.discountAmount ?? 0),
+              taxAmount: Number(o.taxAmount ?? 0),
+              serviceCharge: Number(o.serviceCharge ?? 0),
               total: Number(o.totalAmount ?? 0),
               status,
               time: "",
+              completedAt: o.completedAt ?? null,
+              cancelledAt: o.cancelledAt ?? null,
               paymentStatus,
+              paymentStatusName: o.paymentStatusName ?? null,
               raw: o,
             };
           }),
@@ -212,7 +275,6 @@ export default function OrdersPage() {
   );
 
   useEffect(() => {
-    // Load tables first, then orders so we can map table code
     refreshOrders().catch(console.error);
   }, [refreshOrders]);
 
@@ -297,10 +359,71 @@ export default function OrdersPage() {
     },
   };
 
+  const paymentStatusText = useMemo(
+    () => ({
+      paid: t("dashboard.orders.payment_status.paid"),
+      unpaid: t("dashboard.orders.payment_status.unpaid"),
+    }),
+    [t],
+  );
+
+  const openOrderDetails = useCallback(
+    async (order: OrderRow) => {
+      setSelectedOrder(order);
+      const details = order.raw.orderDetails ?? [];
+
+      const missingDishIds = Array.from(
+        new Set(
+          details
+            .filter(
+              (d) =>
+                !!d.dishId &&
+                !dishNamesById[d.dishId] &&
+                !(d as unknown as { dishName?: string | null }).dishName,
+            )
+            .map((d) => d.dishId),
+        ),
+      );
+
+      const nextDishNames = { ...dishNamesById };
+      if (missingDishIds.length > 0) {
+        const fetched = await Promise.all(
+          missingDishIds.map(async (dishId) => {
+            try {
+              const dish = await menuService.getDishById(dishId);
+              return [dishId, dish.name] as const;
+            } catch {
+              return [dishId, ""] as const;
+            }
+          }),
+        );
+
+        fetched.forEach(([dishId, name]) => {
+          nextDishNames[dishId] = name;
+        });
+        setDishNamesById(nextDishNames);
+      }
+
+      const mapped: OrderDetailModalItem[] = details.map((d) => {
+        const listDishName = (d as unknown as { dishName?: string | null }).dishName;
+        return {
+          id: d.id ?? d.dishId,
+          name: listDishName ?? nextDishNames[d.dishId] ?? undefined,
+          quantity: d.quantity,
+          note: d.note ?? null,
+          status: d.status ?? null,
+        };
+      });
+
+      setSelectedOrderDetails(mapped);
+      setDetailOpen(true);
+    },
+    [dishNamesById],
+  );
+
   return (
     <main className="flex-1 p-6 lg:p-8">
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h2
@@ -314,7 +437,6 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        {/* Orders Table */}
         <div
           className="rounded-xl overflow-hidden"
           style={{
@@ -332,50 +454,29 @@ export default function OrdersPage() {
             <table className="w-full">
               <thead style={{ background: "var(--surface)" }}>
                 <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.order")}
                   </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.customer")}
                   </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.table")}
                   </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.items")}
                   </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.total")}
                   </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.status")}
                   </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.payment")}
                   </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                     {t("dashboard.orders.table.time")}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
-                    {t("dashboard.orders.table.actions")}
                   </th>
                 </tr>
               </thead>
@@ -383,11 +484,11 @@ export default function OrdersPage() {
                 {orders.map((order) => (
                   <tr
                     key={order.id}
-                    className="transition-colors"
-                    style={{ borderBottom: "1px solid var(--border)" }}>
+                    className="transition-colors cursor-pointer hover:bg-[var(--surface)]"
+                    style={{ borderBottom: "1px solid var(--border)" }}
+                    onClick={() => openOrderDetails(order)}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        style={{ color: "var(--primary)", fontWeight: 600 }}>
+                      <span style={{ color: "var(--primary)", fontWeight: 600 }}>
                         {order.orderNumber}
                       </span>
                     </td>
@@ -406,9 +507,7 @@ export default function OrdersPage() {
                             {order.customerName?.charAt(0) ?? "G"}
                           </div>
                         )}
-                        <span
-                          className="font-medium"
-                          style={{ color: "var(--text)" }}>
+                        <span className="font-medium" style={{ color: "var(--text)" }}>
                           {order.customerName}
                         </span>
                       </div>
@@ -449,82 +548,15 @@ export default function OrdersPage() {
                             ? "bg-green-500/10 text-green-500 border border-green-500/20"
                             : "bg-red-500/10 text-red-500 border border-red-500/20"
                         }`}>
-                        {order.paymentStatus === "paid"
-                          ? t("dashboard.orders.payment_status.paid")
-                          : t("dashboard.orders.payment_status.unpaid")}
+                        {order.paymentStatusName && order.paymentStatusName.trim()
+                          ? order.paymentStatusName
+                          : paymentStatusText[order.paymentStatus]}
                       </span>
                     </td>
                     <td
                       className="px-6 py-4 whitespace-nowrap text-sm"
                       style={{ color: "var(--text-muted)" }}>
                       {order.time}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex gap-2">
-                        <button
-                          className="p-2 rounded-lg transition-all"
-                          style={{
-                            backgroundColor: "var(--primary-soft)",
-                            color: "var(--primary)",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "rgba(255,56,11,0.2)")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "rgba(255,56,11,0.1)")
-                          }
-                          suppressHydrationWarning
-                          onClick={async () => {
-                            setSelectedOrder(order);
-                            // load dish names for details
-                            const details = order.raw.orderDetails ?? [];
-                            const mapped = await Promise.all(
-                              details.map(async (d) => {
-                                try {
-                                  const dish = await menuService.getDishById(
-                                    d.dishId,
-                                  );
-                                  return {
-                                    id: d.dishId,
-                                    name: dish.name,
-                                    quantity: d.quantity,
-                                  };
-                                } catch (err) {
-                                  return {
-                                    id: d.dishId,
-                                    name: undefined,
-                                    quantity: d.quantity,
-                                  };
-                                }
-                              }),
-                            );
-                            setSelectedOrderDetails(mapped);
-                            setDetailOpen(true);
-                          }}
-                          title={t("dashboard.orders.actions.view_details")}>
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                        </button>
-                        {/* Edit disabled for admin; orders are view-only here */}
-                      </div>
                     </td>
                   </tr>
                 ))}
@@ -535,10 +567,12 @@ export default function OrdersPage() {
 
         <OrderDetailsModal
           open={detailOpen && !!selectedOrder}
+          order={selectedOrder}
           orderNumber={selectedOrder?.orderNumber ?? ""}
           tableCode={selectedOrder?.tableCode ?? ""}
           total={selectedOrder?.total ?? 0}
           items={selectedOrderDetails ?? []}
+          paymentStatusText={paymentStatusText}
           onClose={() => setDetailOpen(false)}
         />
       </div>

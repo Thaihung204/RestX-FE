@@ -26,6 +26,7 @@ export interface OrderRequestDto {
 export interface OrderDetailDto {
   id?: string;
   dishId: string;
+  dishName?: string | null;
   quantity: number;
   note?: string | null;
   status?: string | null;
@@ -43,6 +44,8 @@ export interface OrderDto {
   reservationId?: string | null;
   orderStatusId: number;
   paymentStatusId: number;
+  paymentStatus?: number;
+  paymentStatusName?: string | null;
   subTotal?: number | null;
   discountAmount?: number | null;
   taxAmount?: number | null;

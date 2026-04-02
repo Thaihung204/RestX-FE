@@ -926,9 +926,26 @@
         "empty": "Đơn hàng này chưa có món nào.",
         "unknown_dish": "Món không xác định",
         "total": "Tổng thanh toán",
+        "fields": {
+          "reference": "Mã đơn",
+          "customer": "Khách hàng",
+          "table": "Bàn",
+          "reservation_id": "Mã đặt chỗ",
+          "handled_by": "Người xử lý",
+          "payment_status": "Trạng thái thanh toán"
+        },
         "columns": {
           "dish": "Món ăn",
+          "status": "Trạng thái",
+          "note": "Ghi chú",
           "qty": "SL"
+        },
+        "summary": {
+          "sub_total": "Tổng",
+          "discount": "Giảm giá",
+          "tax": "Thuế",
+          "service_charge": "Phí dịch vụ",
+          "completed_cancelled": "Hoàn tất / Đã hủy"
         }
       },
       "payment": {

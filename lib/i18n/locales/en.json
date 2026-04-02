@@ -987,9 +987,26 @@
         "empty": "This order has no items yet.",
         "unknown_dish": "Unknown dish",
         "total": "Total payment",
+        "fields": {
+          "reference": "Reference",
+          "customer": "Customer",
+          "table": "Table",
+          "reservation_id": "Reservation Code",
+          "handled_by": "Handled By",
+          "payment_status": "Payment Status"
+        },
         "columns": {
           "dish": "Dish",
+          "status": "Status",
+          "note": "Note",
           "qty": "Qty"
+        },
+        "summary": {
+          "sub_total": "Total",
+          "discount": "Discount",
+          "tax": "Tax",
+          "service_charge": "Service Charge",
+          "completed_cancelled": "Completed / Cancelled"
         }
       },
       "payment": {
