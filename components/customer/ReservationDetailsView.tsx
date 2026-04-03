@@ -19,6 +19,12 @@ interface ReservationDetailsViewProps {
   mode: "admin" | "customer";
 }
 
+interface PanoramaTableImage {
+  tableId: string;
+  tableCode: string;
+  imageUrl: string;
+}
+
 const statusColor: Record<string, string> = {
   PENDING: "var(--warning)",
   CONFIRMED: "var(--primary)",
@@ -307,6 +313,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const [detail, setDetail] = useState<ReservationDetail | null>(null);
   const [relatedOrders, setRelatedOrders] = useState<OrderDto[]>([]);
   const [depositLoading, setDepositLoading] = useState(false);
+  const [panoramaImages, setPanoramaImages] = useState<PanoramaTableImage[]>([]);
 
   const isCustomer = viewMode === "customer";
 
@@ -315,6 +322,24 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     try {
       const d = await reservationService.getReservationById(reservationId);
       setDetail(d);
+
+      if (d.tables?.length) {
+        try {
+          const tableDetails = await Promise.all(
+            d.tables.map(async (tb) => {
+              const table = await tableService.getTableById(tb.id);
+              const imageUrl = table.cubeFrontImageUrl || table.defaultViewUrl || "";
+              return imageUrl ? { tableId: tb.id, tableCode: tb.code, imageUrl } : null;
+            })
+          );
+          setPanoramaImages(tableDetails.filter(Boolean) as PanoramaTableImage[]);
+        } catch {
+          setPanoramaImages([]);
+        }
+      } else {
+        setPanoramaImages([]);
+      }
+
       if (isCustomer) {
         try {
           const orders = await orderService.getAllOrders();
@@ -326,6 +351,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     } catch (err) {
       console.error(err);
       setDetail(null);
+      setPanoramaImages([]);
     } finally {
       setLoading(false);
     }
@@ -693,6 +719,27 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                 </p>
               </div>
             </div>
+
+            {/* Panorama */}
+            {panoramaImages.length > 0 && (
+              <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
+                <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "var(--text-muted)" }}>
+                    {t("reservation_detail.booking.panorama", "Panorama")}
+                  </p>
+                </div>
+                <div className="px-5 pb-5 space-y-3">
+                  {panoramaImages.map((img) => (
+                    <div key={img.tableId} className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
+                      <div className="px-3 py-2 text-xs font-semibold" style={{ color: "var(--text-muted)", borderBottom: "1px solid var(--border)" }}>
+                        Table {img.tableCode}
+                      </div>
+                      <img src={img.imageUrl} alt={`Panorama table ${img.tableCode}`} className="w-full h-40 object-cover" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Location */}
             {tenant?.businessAddressLine1 && (

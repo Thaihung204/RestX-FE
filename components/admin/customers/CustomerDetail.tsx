@@ -105,15 +105,20 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
               {isBirthday && <Cake sx={{ fontSize: 20, color: primaryColor }} className="animate-pulse" />}
             </h2>
             
-            <div className="flex items-center gap-2 text-sm mb-4" style={{ color: "var(--text-muted)" }}>
+            <div className="flex items-center gap-2 text-sm mb-2" style={{ color: "var(--text-muted)" }}>
                <div className="flex items-center gap-1" title={t('customers.detail.member_tier', { tier: customer.vipTier })}>
                  {getVipIcon(customer.vipTier)}
                  <span style={{ color: getVipBadgeColor(customer.vipTier) }} className="font-bold uppercase text-[12px]">
                    {customer.vipTier || 'Member'}
                  </span>
                </div>
-              <span className="w-1 h-1 rounded-full bg-gray-600"></span>
+              <span className="w-1 h-1 rounded-full" style={{ background: "var(--border)" }}></span>
               <span>{t('customers.detail.member_since', { date: formatDate(customer.memberSince) })}</span>
+            </div>
+
+            <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border" style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text-muted)" }}>
+              <span className="text-[11px] uppercase tracking-wider font-semibold">Customer ID</span>
+              <span className="font-mono text-xs" style={{ color: "var(--text)" }}>{customer.id}</span>
             </div>
 
             <div className="flex gap-4 items-center justify-center w-full flex-wrap">
@@ -165,9 +170,9 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
                 <div className="p-2 rounded-lg bg-[var(--surface)]">
                    <History sx={{ fontSize: 16, color: 'gray' }} />
                 </div>
-                <span className="text-sm text-gray-300">{t('customers.detail.last_visit')}</span>
+                <span className="text-sm" style={{ color: "var(--text-muted)" }}>{t('customers.detail.last_visit')}</span>
               </div>
-              <span className="text-sm font-medium text-white">{formatDate(customer.lastVisit)}</span>
+              <span className="text-sm font-medium" style={{ color: "var(--text)" }}>{formatDate(customer.lastVisit)}</span>
             </div>
 
             {/* Favorite Items */}
@@ -177,13 +182,14 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
                     <div className="p-2 rounded-lg bg-[var(--surface)]">
                       <Star sx={{ fontSize: 16, color: 'gray' }} />
                     </div>
-                    <span className="text-sm text-gray-300">{t('customers.detail.favorite_items')}</span>
+                    <span className="text-sm" style={{ color: "var(--text-muted)" }}>{t('customers.detail.favorite_items')}</span>
                  </div>
                  <div className="flex flex-wrap gap-2 pl-[44px]">
                     {customer.favoriteItems.map((item, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 rounded-md text-xs bg-[var(--surface)] text-gray-300 border border-white/10"
+                        className="px-2 py-1 rounded-md text-xs border"
+                        style={{ background: "var(--surface)", color: "var(--text-muted)", borderColor: "var(--border)" }}
                       >
                         {item}
                       </span>
@@ -200,8 +206,8 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
                 <Cake sx={{ fontSize: 20 }} />
               </div>
               <div>
-                <p className="text-sm font-bold text-white">{t('customers.detail.birthday_banner.title')}</p>
-                <p className="text-xs text-gray-400">{t('customers.detail.birthday_banner.subtitle')}</p>
+                <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{t('customers.detail.birthday_banner.title')}</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{t('customers.detail.birthday_banner.subtitle')}</p>
               </div>
             </div>
           )}

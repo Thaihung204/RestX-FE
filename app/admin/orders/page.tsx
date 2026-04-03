@@ -9,9 +9,9 @@ export default function OrdersPage() {
   return (
     <main className="flex-1 p-6 lg:p-8">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h2 className="text-3xl font-bold mb-2" style={{ color: "var(--text)" }}>
+            <h2 className="text-3xl font-bold mb-1" style={{ color: "var(--text)" }}>
               {t("dashboard.orders.title")}
             </h2>
             <p style={{ color: "var(--text-muted)" }}>
@@ -20,7 +20,9 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        <OrderList />
+        <div className="rounded-xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <OrderList />
+        </div>
       </div>
     </main>
   );

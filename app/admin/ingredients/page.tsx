@@ -8,52 +8,34 @@ export default function IngredientsPage() {
   const { t } = useTranslation("common");
 
   return (
-    <main
-      className="flex-1 p-6 lg:p-8"
-      style={{ background: "var(--bg-base)", color: "var(--text)" }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold" style={{ color: "var(--text)" }}>
-            {t("dashboard.ingredients.title")}
-          </h1>
-          <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
-            {t("dashboard.ingredients.subtitle")}
-          </p>
+    <main className="flex-1 p-6 lg:p-8">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 className="text-3xl font-bold mb-1" style={{ color: "var(--text)" }}>
+              {t("dashboard.ingredients.title")}
+            </h2>
+            <p style={{ color: "var(--text-muted)" }}>
+              {t("dashboard.ingredients.subtitle")}
+            </p>
+          </div>
+
+          <Link
+            href="/admin/ingredients/new"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{ background: "var(--primary)", color: "var(--on-primary)" }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
+            </svg>
+            {t("dashboard.ingredients.add_ingredient")}
+          </Link>
         </div>
 
-        <Link href="/admin/ingredients/new">
-              <button
-                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-                style={{ background: "var(--primary)", color: "white" }}
-                onMouseEnter={(e) =>
-                (e.currentTarget.style.background =
-                  "linear-gradient(to right, #B32607)")
-                }
-                onMouseLeave={(e) =>
-                (e.currentTarget.style.background =
-                  "linear-gradient(to right, var(--primary))")
-                }
-                suppressHydrationWarning> 
-                <svg
-                className="w-5 h-5 inline-block mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-                {t("dashboard.ingredients.add_ingredient")}
-              </button>
-            </Link>
+        <div className="rounded-xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <IngredientList />
+        </div>
       </div>
-
-      <IngredientList />
     </main>
   );
 }

@@ -209,7 +209,7 @@ export default function OrderList() {
         setOrders(
           data.map((o) => {
             const table = (tablesDict ?? tablesById)[o.tableId];
-            const tableCode = table?.code || o.tableId;
+            const tableCode = table?.code || t("dashboard.orders.fallbacks.unknown_table", { defaultValue: "Unknown table" });
             const distinctCount = o.orderDetails?.length ?? 0;
             const totalQuantity =
               o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ?? 0;
@@ -456,15 +456,17 @@ export default function OrderList() {
                 <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.orders.table.time")}
                 </th>
+                <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                  {t("dashboard.orders.table.actions", { defaultValue: "Actions" })}
+                </th>
               </tr>
             </thead>
             <tbody style={{ borderColor: "var(--border)" }}>
               {orders.map((order) => (
                 <tr
                   key={order.id}
-                  className="transition-colors cursor-pointer hover:bg-[var(--surface)]"
-                  style={{ borderBottom: "1px solid var(--border)" }}
-                  onClick={() => openOrderDetails(order)}>
+                  className="transition-colors hover:bg-[var(--surface)]"
+                  style={{ borderBottom: "1px solid var(--border)" }}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span style={{ color: "var(--primary)", fontWeight: 600 }}>
                       {order.orderNumber}
@@ -535,6 +537,19 @@ export default function OrderList() {
                     className="px-6 py-4 whitespace-nowrap text-sm"
                     style={{ color: "var(--text-muted)" }}>
                     {order.time}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <button
+                      onClick={() => openOrderDetails(order)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                      style={{ background: "var(--primary-soft)", color: "var(--primary)", border: "1px solid var(--primary-border)" }}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      {t("dashboard.orders.actions.view_detail", { defaultValue: "View detail" })}
+                    </button>
                   </td>
                 </tr>
               ))}
