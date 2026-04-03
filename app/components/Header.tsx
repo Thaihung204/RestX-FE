@@ -90,7 +90,7 @@ const Header: React.FC = () => {
     authService.logout();
     setIsAuthenticated(false);
     setDisplayName("");
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   // Don't render until mounted to prevent FOUC

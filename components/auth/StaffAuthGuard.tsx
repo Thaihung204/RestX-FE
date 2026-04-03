@@ -17,25 +17,29 @@ export default function StaffAuthGuard({
     const { user, loading } = useAuth();
     const router = useRouter();
 
-    // Determine if user has staff access
+    // Determine if user has staff/admin access
     const userRoles = user?.roles || [];
-    const isStaff = userRoles.some(r => r.toLowerCase() === 'staff');
+    const normalizedRoles = userRoles.map((r) => r.toLowerCase());
+    const normalizedPrimaryRole = String(user?.role || "").toLowerCase();
+    const isStaff = normalizedRoles.includes('staff') || normalizedPrimaryRole === 'staff';
+    const isAdmin =
+        normalizedRoles.includes('admin') ||
+        normalizedRoles.includes('system admin') ||
+        normalizedPrimaryRole === 'admin' ||
+        normalizedPrimaryRole === 'system admin';
+    const canAccessStaff = isStaff || isAdmin;
 
     useEffect(() => {
         if (!loading) {
             if (!user) {
                 // Not logged in → redirect to phone login (staff usually use phone)
                 router.replace("/login-email");
-            } else if (!isStaff) {
-                // Logged in but not staff
-                if (userRoles.some(r => r === 'Admin' || r === 'System Admin')) {
-                    router.replace("/admin");
-                } else {
-                    router.replace("/");
-                }
+            } else if (!canAccessStaff) {
+                // Logged in but not staff/admin
+                router.replace("/");
             }
         }
-    }, [user, loading, isStaff, router]);
+    }, [user, loading, canAccessStaff, router]);
 
     // Show loading spinner while checking auth
     if (loading) {
@@ -57,11 +61,11 @@ export default function StaffAuthGuard({
         );
     }
 
-    // Not authenticated or not staff → don't render content (redirecting)
-    if (!user || !isStaff) {
+    // Not authenticated or not allowed role → don't render content (redirecting)
+    if (!user || !canAccessStaff) {
         return null;
     }
 
-    // Authenticated Staff → render children
+    // Authenticated Staff/Admin → render children
     return <>{children}</>;
 }

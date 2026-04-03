@@ -2,12 +2,12 @@
 
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { useLanguage } from "@/components/I18nProvider";
-import { Dropdown } from "antd";
+import { useTenant } from "@/lib/contexts/TenantContext";
+import adminAuthService from "@/lib/services/adminAuthService";
+import { Button, Dropdown } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import adminAuthService from "@/lib/services/adminAuthService";
-import { useTenant } from "@/lib/contexts/TenantContext";
 
 export default function DashboardHeader() {
   const { t } = useTranslation("common");
@@ -16,7 +16,7 @@ export default function DashboardHeader() {
   const { language, changeLanguage } = useLanguage();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [adminName, setAdminName] = useState("Admin");
-  const [adminRole, setAdminRole] = useState("Super Admin");
+  const [adminRole, setAdminRole] = useState("Admin");
   const { tenant } = useTenant();
   const tenantName = tenant?.businessName || tenant?.name;
   const tenantLogoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
@@ -26,7 +26,7 @@ export default function DashboardHeader() {
     if (admin) {
       setAdminName(admin.fullName || admin.email || "Admin");
       const roles = admin.roles || [];
-      setAdminRole(roles.length ? roles.join(", ") : "Super Admin");
+      setAdminRole(roles.length ? roles.join(", ") : "Admin");
     }
   }, []);
 
@@ -41,7 +41,7 @@ export default function DashboardHeader() {
 
   const handleLogout = () => {
     adminAuthService.logout();
-    router.replace("/login");
+    router.replace("/login-email");
   };
 
   return (
@@ -143,6 +143,20 @@ export default function DashboardHeader() {
                 />
               </svg>
             </div>
+
+            <Button
+              type="default"
+              href="/staff"
+              style={{
+                height: 40,
+                borderRadius: 10,
+                fontWeight: 600,
+                borderColor: "var(--border)",
+                color: "var(--text)",
+                background: "var(--surface)",
+              }}>
+              {t("dashboard.header.go_to_staff")}
+            </Button>
 
             {/* Notifications */}
             <button

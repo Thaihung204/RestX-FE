@@ -355,6 +355,7 @@
       "tables_short": "Bàn",
       "orders": "Quản lý Order",
       "orders_short": "Order",
+      "kitchen": "Bếp",
       "checkout": "Thanh toán",
       "attendance": "Chấm công",
       "reservations": "Đặt bàn"
@@ -771,6 +772,7 @@
       "dashboard": "Tổng quan",
       "main_dashboard": "Tổng quan chính",
       "search_placeholder": "Tìm kiếm...",
+      "go_to_staff": "Nhân viên",
       "user_role": "Chủ nhà hàng"
     },
     "menu": {
