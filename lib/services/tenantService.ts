@@ -81,7 +81,6 @@ const mapApiResponseToTenant = (apiTenant: TenantApiResponse): ITenant => {
     addressLine4: apiTenant.businessAddressLine4 || "",
     ownerEmail: "",
     mailRestaurant: apiTenant.businessEmailAddress || "",
-    logoUrl: apiTenant.logoUrl || "",
     plan: "basic",
     status: apiTenant.status ? "active" : "inactive",
     lastActive:
@@ -350,14 +349,9 @@ export const tenantService = {
    */
   createTenant: async (
     input: TenantCreateInput,
-    files?: {
-      logo?: File | null;
-      background?: File | null;
-      favicon?: File | null;
-    },
   ): Promise<TenantApiResponse> => {
     const apiData = mapCreateInputToApi(input);
-    const formData = toFormData(apiData, files);
+    const formData = toFormData(apiData);
     const response = await adminAxiosInstance.post("/tenants", formData, {
       headers: { "Content-Type": undefined },
     });
@@ -627,12 +621,12 @@ export const tenantService = {
 
   /**
    * Get payment settings for a tenant
-   * Backend endpoint: GET /api/tenants/{id}/payment-settings
+   * Backend endpoint: GET /api/tenants/{domain}/payment-settings
    */
-  getPaymentSettings: async (tenantId: string): Promise<any> => {
+  getPaymentSettings: async (tenantDomain: string): Promise<any> => {
     try {
       const response = await adminAxiosInstance.get(
-        `/tenants/${tenantId}/payment-settings`,
+        `/tenants/${tenantDomain}/payment-settings`,
       );
 
       const data = response.data;
@@ -655,22 +649,22 @@ export const tenantService = {
 
   /**
    * Create payment settings
-   * Backend endpoint: POST /api/tenants/{id}/payment-settings
+   * Backend endpoint: POST /api/tenants/{domain}/payment-settings
    */
-  createPaymentSettings: async (tenantId: string, settings: any): Promise<void> => {
+  createPaymentSettings: async (tenantDomain: string, settings: any): Promise<void> => {
     await adminAxiosInstance.post(
-      `/tenants/${tenantId}/payment-settings`,
+      `/tenants/${tenantDomain}/payment-settings`,
       settings,
     );
   },
 
   /**
    * Update payment settings
-   * Backend endpoint: PUT /api/tenants/{id}/payment-settings
+   * Backend endpoint: PUT /api/tenants/{domain}/payment-settings
    */
-  updatePaymentSettings: async (tenantId: string, settings: any): Promise<void> => {
+  updatePaymentSettings: async (tenantDomain: string, settings: any): Promise<void> => {
     await adminAxiosInstance.put(
-      `/tenants/${tenantId}/payment-settings`,
+      `/tenants/${tenantDomain}/payment-settings`,
       settings,
     );
   },
@@ -678,8 +672,8 @@ export const tenantService = {
   /**
    * @deprecated Use createPaymentSettings() or updatePaymentSettings() instead
    */
-  upsertPaymentSettings: async (tenantId: string, settings: any): Promise<void> => {
-    await tenantService.updatePaymentSettings(tenantId, settings);
+  upsertPaymentSettings: async (tenantDomain: string, settings: any): Promise<void> => {
+    await tenantService.updatePaymentSettings(tenantDomain, settings);
   },
 
   /**

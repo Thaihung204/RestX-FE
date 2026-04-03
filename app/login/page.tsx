@@ -216,7 +216,7 @@ export default function LoginPage() {
 
           if (hasRole('Staff')) {
             window.location.href = '/staff';
-          } else if (hasRole('Admin')) {
+          } else if (hasRole('System Admin') || hasRole('Admin')) {
             window.location.href = '/admin';
           } else {
             window.location.href = redirectPath;

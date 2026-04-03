@@ -19,10 +19,7 @@ export default function AdminAuthGuard({
 
     // Determine if user has tenant admin access only (exclude System Admin)
     const userRoles = user?.roles || [];
-    const normalizedRoles = userRoles.map((r) => r.toLowerCase());
-    const normalizedPrimaryRole = String(user?.role || '').toLowerCase();
-    const isSystemAdmin = normalizedRoles.includes('system admin') || normalizedPrimaryRole === 'system admin';
-    const isTenantAdmin = (normalizedRoles.includes('admin') || normalizedPrimaryRole === 'admin') && !isSystemAdmin;
+    const isAdmin = userRoles.some(r => r === 'Admin' || r === 'System Admin');
 
     useEffect(() => {
         if (!loading) {
@@ -33,11 +30,9 @@ export default function AdminAuthGuard({
                     : '/admin';
                 const redirect = encodeURIComponent(currentPath);
                 router.replace(`/login-email?redirect=${redirect}`);
-            } else if (!isTenantAdmin) {
+            } else if (!isAdmin) {
                 // Logged in but not admin
-                if (isSystemAdmin) {
-                    router.replace('/tenants');
-                } else if (userRoles.some(r => r.toLowerCase() === 'staff')) {
+                if (userRoles.some(r => r.toLowerCase() === 'staff')) {
                     const staffPath = typeof window !== 'undefined'
                         ? `${window.location.pathname}${window.location.search || ''}`
                         : '/staff';
@@ -47,7 +42,7 @@ export default function AdminAuthGuard({
                 }
             }
         }
-    }, [user, loading, isTenantAdmin, isSystemAdmin, userRoles, router]);
+    }, [user, loading, isAdmin, router]);
 
     // Show loading spinner while checking auth
     if (loading) {
@@ -70,7 +65,7 @@ export default function AdminAuthGuard({
     }
 
     // Not authenticated or not tenant admin → don't render content (redirecting)
-    if (!user || !isTenantAdmin) {
+    if (!user || !isAdmin) {
         return null;
     }
 
