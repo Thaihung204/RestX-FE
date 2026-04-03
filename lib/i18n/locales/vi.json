@@ -727,23 +727,30 @@
         "subtitle": "Quản lý các trạng thái món ăn, mã và màu sắc",
         "add_status": "Thêm trạng thái",
         "edit_status": "Chỉnh sửa trạng thái",
-        "name": "Chưa có trạng thái món ăn nào",
+        "name": "Tên trạng thái",
         "name_placeholder": "Nhập tên trạng thái",
         "name_required": "Vui lòng nhập tên trạng thái",
         "code": "Mã",
-        "code_placeholder": "VD: PENDING, PROCESSING",
+        "code_placeholder": "Nhập mã trạng thái",
         "code_required": "Vui lòng nhập mã trạng thái",
         "code_format": "Mã chỉ được chứa chữ in hoa và dấu gạch dưới",
         "color": "Màu sắc",
         "color_required": "Vui lòng chọn màu sắc",
+        "color_from_db": "Màu đã dùng",
         "is_active": "Kích hoạt",
         "is_active_desc": "Bật hoặc tắt trạng thái này",
         "is_default": "Mặc định",
         "is_default_desc": "Đặt làm trạng thái mặc định cho món ăn mới",
         "default_note": "Chỉ một trạng thái được đặt làm mặc định. Việc này sẽ thay thế trạng thái mặc định hiện tại.",
+        "confirm_delete": "Xóa trạng thái món ăn",
+        "confirm_delete_desc": "Bạn có chắc chắn muốn xóa trạng thái này?",
+        "status_count": "{{count}} trạng thái",
+        "empty_state_title": "Chưa có trạng thái món ăn nào",
         "tooltip": {
           "current_default": "Mặc định hiện tại",
-          "set_default": "Đặt làm mặc định"
+          "set_default": "Đặt làm mặc định",
+          "edit": "Chỉnh sửa trạng thái",
+          "delete": "Xóa trạng thái"
         },
         "modal_subtitle_edit": "Cập nhật thông tin trạng thái",
         "modal_subtitle_create": "Tạo mới trạng thái",
@@ -755,6 +762,16 @@
           "default": "Mặc định",
           "status": "Trạng thái",
           "actions": "Thao tác"
+        },
+        "actions": {
+          "confirm": "Xác nhận",
+          "cancel": "Hủy"
+        },
+        "errors": {
+          "fetch_failed": "Không thể tải danh sách trạng thái món ăn",
+          "delete_failed": "Không thể xóa trạng thái món ăn",
+          "save_failed": "Không thể lưu trạng thái món ăn",
+          "update_failed": "Không thể cập nhật trạng thái mặc định"
         }
       },
       "notifications": {

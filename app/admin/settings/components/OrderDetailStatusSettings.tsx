@@ -18,10 +18,9 @@ import {
   message,
   Modal,
   Popconfirm,
-  Switch,
   Table,
   Tag,
-  Tooltip,
+  Tooltip
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
@@ -56,7 +55,7 @@ export default function OrderDetailStatusSettings() {
       setStatuses(data);
     } catch (error) {
       console.error("Failed to fetch order detail statuses:", error);
-      messageApi.error(t("dashboard.manage.errors.fetch_failed"));
+      messageApi.error(t("dashboard.manage.order_status.errors.fetch_failed"));
     } finally {
       setLoading(false);
     }
@@ -96,7 +95,7 @@ export default function OrderDetailStatusSettings() {
       fetchStatuses();
     } catch (error: any) {
       console.error("Failed to delete order detail status:", error);
-      messageApi.error(t("dashboard.manage.errors.delete_failed"));
+      messageApi.error(t("dashboard.manage.order_status.errors.delete_failed"));
     }
   };
 
@@ -131,7 +130,7 @@ export default function OrderDetailStatusSettings() {
       fetchStatuses();
     } catch (error: any) {
       if (error?.response) {
-        messageApi.error(t("dashboard.manage.errors.save_failed"));
+        messageApi.error(t("dashboard.manage.order_status.errors.save_failed"));
       }
       console.error("Failed to save order detail status:", error);
     }
@@ -146,7 +145,7 @@ export default function OrderDetailStatusSettings() {
       fetchStatuses();
     } catch (error) {
       console.error("Failed to update default status:", error);
-      messageApi.error(t("dashboard.manage.errors.update_failed"));
+      messageApi.error(t("dashboard.manage.order_status.errors.update_failed"));
     }
   };
 
@@ -190,7 +189,7 @@ export default function OrderDetailStatusSettings() {
             color: "var(--text)",
             border: "1px solid var(--border)",
           }}>
-          #{text}
+          {text}
         </Tag>
       ),
     },
@@ -229,24 +228,29 @@ export default function OrderDetailStatusSettings() {
       width: 150,
       render: (_, record) => (
         <div className="flex justify-end gap-2">
-          <Button
-            type="text"
-            icon={<EditOutlined className="text-blue-500" />}
-            onClick={() => handleEdit(record)}
-            className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-          />
-          <Popconfirm
-            title={t("dashboard.manage.confirm_delete")}
-            onConfirm={() => handleDelete(record.id)}
-            okText={t("common.yes")}
-            cancelText={t("common.no")}
-            okButtonProps={{ danger: true }}>
+          <Tooltip title={t("dashboard.manage.order_status.tooltip.edit")}>
             <Button
               type="text"
-              icon={<DeleteOutlined className="text-red-500" />}
-              className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              style={{ color: "var(--primary)" }}
+              icon={<EditOutlined className="text-blue-500" />}
+              onClick={() => handleEdit(record)}
+              className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
             />
+          </Tooltip>
+          <Popconfirm
+            title={t("dashboard.manage.order_status.confirm_delete")}
+            description={t("dashboard.manage.order_status.confirm_delete_desc")}
+            onConfirm={() => handleDelete(record.id)}
+            okText={t("dashboard.manage.order_status.actions.confirm")}
+            cancelText={t("dashboard.manage.order_status.actions.cancel")}
+            okButtonProps={{ danger: true }}>
+            <Tooltip title={t("dashboard.manage.order_status.tooltip.delete")}>
+              <Button
+                type="text"
+                icon={<DeleteOutlined className="text-red-500" />}
+                className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                style={{ color: "var(--primary)" }}
+              />
+            </Tooltip>
           </Popconfirm>
         </div>
       ),
@@ -355,6 +359,17 @@ export default function OrderDetailStatusSettings() {
           <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
             {t("dashboard.manage.order_status.subtitle")}
           </p>
+          <span
+            className="inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold"
+            style={{
+              background: "var(--surface-subtle)",
+              color: "var(--text-muted)",
+              border: "1px solid var(--border)",
+            }}>
+            {t("dashboard.manage.order_status.status_count", {
+              count: statuses.length,
+            })}
+          </span>
         </div>
         <Button
           type="primary"
@@ -388,7 +403,7 @@ export default function OrderDetailStatusSettings() {
                   <StarOutlined className="text-3xl opacity-50" />
                 </div>
                 <p className="text-lg font-medium">
-                  {t("dashboard.manage.order_status.name")}
+                  {t("dashboard.manage.order_status.empty_state_title")}
                 </p>
                 <p className="text-sm opacity-60">
                   {t("dashboard.manage.order_status.empty_state_desc")}
@@ -471,7 +486,6 @@ export default function OrderDetailStatusSettings() {
               },
             ]}>
             <Input
-              placeholder={t("dashboard.manage.order_status.name_placeholder")}
               size="large"
               className="rounded-xl px-4 py-2.5"
             />
@@ -480,6 +494,7 @@ export default function OrderDetailStatusSettings() {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="code"
+              normalize={(value) => value?.toUpperCase()}
               label={
                 <span className="font-medium" style={{ color: "var(--text)" }}>
                   {t("dashboard.manage.order_status.code")}
@@ -490,24 +505,10 @@ export default function OrderDetailStatusSettings() {
                   required: true,
                   message: t("dashboard.manage.order_status.code_required"),
                 },
-                {
-                  pattern: /^[A-Z_]+$/,
-                  message: t("dashboard.manage.order_status.code_format"),
-                },
               ]}>
               <Input
-                placeholder={t(
-                  "dashboard.manage.order_status.code_placeholder",
-                )}
                 size="large"
-                className="font-mono rounded-xl uppercase px-4 py-2.5"
-                prefix={
-                  <span
-                    className="font-bold mr-1"
-                    style={{ color: "var(--text-muted)" }}>
-                    #
-                  </span>
-                }
+                className="rounded-xl uppercase px-4 py-2.5"
               />
             </Form.Item>
 
@@ -545,7 +546,7 @@ export default function OrderDetailStatusSettings() {
             </Form.Item>
           </div>
 
-          <div
+          {/* <div
             className="p-4 rounded-xl space-y-4 border"
             style={{
               background: "var(--card)",
@@ -588,7 +589,7 @@ export default function OrderDetailStatusSettings() {
                 {t("dashboard.manage.order_status.default_note")}
               </div>
             )}
-          </div>
+          </div> */}
         </Form>
       </Modal>
     </div>
