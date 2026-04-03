@@ -1,16 +1,43 @@
 "use client";
 
-import AreaDistributionChart from "@/components/admin/charts/AreaDistributionChart";
+import KPISection from "@/components/admin/KPISection";
 import OrdersBarChart from "@/components/admin/charts/OrdersBarChart";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
-import KPISection from "@/components/admin/KPISection";
-import QuickActions from "@/components/admin/QuickActions";
-import TableStatusMap from "@/components/admin/TableStatusMap";
+import ReservationList from "@/components/admin/reservations/ReservationList";
+import reservationService, { PaginatedReservations } from "@/lib/services/reservationService";
+import { useCallback, useEffect, useState } from "react";
+
 export default function DashboardPage() {
+  const [reservationData, setReservationData] = useState<PaginatedReservations | null>(null);
+  const [reservationLoading, setReservationLoading] = useState(true);
+  const [reservationPage, setReservationPage] = useState(1);
+
+  const fetchReservations = useCallback(async () => {
+    setReservationLoading(true);
+    try {
+      const result = await reservationService.getReservations({
+        pageNumber: reservationPage,
+        pageSize: 5,
+        sortBy: "reservationDateTime",
+        sortDescending: false,
+      });
+      setReservationData(result);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setReservationLoading(false);
+    }
+  }, [reservationPage]);
+
+  useEffect(() => {
+    fetchReservations();
+  }, [fetchReservations]);
+
   return (
     <main
       className="flex-1 p-6 lg:p-8"
-      style={{ background: "var(--bg-base)", color: "var(--text)" }}>
+      style={{ background: "var(--bg-base)", color: "var(--text)" }}
+    >
       <div className="space-y-6">
         <section>
           <KPISection />
@@ -21,19 +48,13 @@ export default function DashboardPage() {
           <OrdersBarChart />
         </section>
 
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <AreaDistributionChart />
-          </div>
-          <div className="lg:col-span-2">
-            <QuickActions />
-          </div>
-        </section>
-
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-3">
-            <TableStatusMap />
-          </div>
+        <section>
+          <ReservationList
+            data={reservationData}
+            loading={reservationLoading}
+            setPage={setReservationPage}
+            onStatusUpdated={fetchReservations}
+          />
         </section>
       </div>
     </main>

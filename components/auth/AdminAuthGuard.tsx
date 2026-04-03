@@ -7,7 +7,7 @@ import React, { useEffect } from "react";
 /**
  * AdminAuthGuard - Protects admin routes by requiring authentication.
  * Redirects unauthenticated users to /login-email.
- * Also checks that the user has Admin or System Admin role.
+ * Also checks that the user has tenant Admin role (not System Admin).
  */
 export default function AdminAuthGuard({
     children,
@@ -17,7 +17,7 @@ export default function AdminAuthGuard({
     const { user, loading } = useAuth();
     const router = useRouter();
 
-    // Determine if user has admin access
+    // Determine if user has tenant admin access only (exclude System Admin)
     const userRoles = user?.roles || [];
     const isAdmin = userRoles.some(r => r === 'Admin' || r === 'System Admin');
 
@@ -64,7 +64,7 @@ export default function AdminAuthGuard({
         );
     }
 
-    // Not authenticated or not admin → don't render content (redirecting)
+    // Not authenticated or not tenant admin → don't render content (redirecting)
     if (!user || !isAdmin) {
         return null;
     }

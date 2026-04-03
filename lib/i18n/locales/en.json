@@ -331,6 +331,7 @@
       "tables_short": "Tables",
       "orders": "Order Management",
       "orders_short": "Orders",
+      "kitchen": "Kitchen",
       "checkout": "Checkout",
       "attendance": "Attendance",
       "reservations": "Reservations"
@@ -571,36 +572,47 @@
       }
     },
     "kpi": {
-      "bookings": "Today's Bookings",
-      "bookings_subtitle": "{{count}} pending confirmations",
-      "available_tables": "Available Tables",
-      "available_tables_subtitle": "VIP: {{vip}}, Indoor: {{indoor}}, Outdoor: {{outdoor}}",
       "revenue": "Today's Revenue",
-      "revenue_target": "Target: {{target}}",
-      "active_orders": "Active Orders",
-      "active_orders_subtitle": "{{waiting}} waiting, {{progress}} in-progress",
-      "top_dish": "Top Selling Dish",
-      "top_dish_subtitle": "{{count}} orders today",
-      "kitchen_status": "Kitchen Status",
-      "kitchen_queue": "{{count}} orders in queue",
-      "status_busy": "Busy",
-      "status_normal": "Normal"
+      "revenue_subtitle": "Target: {{target}}",
+      "orders": "Today's Orders",
+      "orders_subtitle": "{{completed}} completed · {{processing}} processing",
+      "tables": "Tables & Reservations",
+      "tables_subtitle": "{{available}} available · {{reserved}} reserved",
+      "customers": "Customers",
+      "customers_subtitle": "{{new}} new this month",
+      "staff": "On-duty Staff",
+      "staff_subtitle": "{{waiter}} waiter · {{kitchen}} kitchen"
     },
-    "quick_actions": {
-      "title": "Quick Actions",
-      "subtitle": "Frequently used shortcuts",
-      "add_table": "Add Table",
-      "add_table_desc": "Create new table",
-      "add_dish": "Add Dish",
-      "add_dish_desc": "Add menu item",
-      "add_staff": "Add Staff",
-      "add_staff_desc": "New employee",
-      "view_bookings": "View Bookings",
-      "view_bookings_desc": "All reservations",
-      "inventory": "Inventory",
-      "inventory_desc": "Stock management",
-      "reports": "Reports",
-      "reports_desc": "Analytics & data"
+    "tables_overview": {
+      "title": "Tables & Reservations",
+      "subtitle": "Real-time status",
+      "available": "Available",
+      "serving": "Serving",
+      "reserved": "Reserved",
+      "upcoming": "Upcoming Reservations",
+      "guests": "{{count}} guests",
+      "view_all": "View all reservations"
+    },
+    "customer_insights": {
+      "title": "Customer Insights",
+      "subtitle": "This month's overview",
+      "total_customers": "Total Customers",
+      "new_customers": "New Customers",
+      "returning_rate": "Returning Rate",
+      "view_all": "View all customers"
+    },
+    "staff_overview": {
+      "title": "Staff & Performance",
+      "subtitle": "Today's workforce status",
+      "total_staff": "Total Staff",
+      "on_duty": "On Duty",
+      "day_off": "Day Off",
+      "avg_orders": "Avg Orders/Staff",
+      "positions": {
+        "waiter": "Waiter",
+        "kitchen": "Kitchen"
+      },
+      "view_all": "View all staff"
     },
     "table_status": {
       "title": "Real-time Table Status",
@@ -781,23 +793,30 @@
         "subtitle": "Manage dish statuses, codes, and colors",
         "add_status": "Add Status",
         "edit_status": "Edit Dish Status",
-        "name": "No dish status yet",
+        "name": "Status Name",
         "name_placeholder": "Enter status name",
         "name_required": "Please enter status name",
         "code": "Code",
-        "code_placeholder": "e.g., PENDING, PROCESSING",
+        "code_placeholder": "Enter status code",
         "code_required": "Please enter status code",
         "code_format": "Code must be uppercase letters and underscores only",
         "color": "Color",
         "color_required": "Please select a color",
+        "color_from_db": "Used colors",
         "is_active": "Active Status",
         "is_active_desc": "Enable or disable this status",
         "is_default": "Set as Default",
         "is_default_desc": "Set this as the default status for new dishes",
         "default_note": "Only one status can be set as default. This will replace the current default.",
+        "confirm_delete": "Delete dish status",
+        "confirm_delete_desc": "Are you sure you want to delete this status?",
+        "status_count": "{{count}} statuses",
+        "empty_state_title": "No dish status yet",
         "tooltip": {
           "current_default": "Current Default",
-          "set_default": "Set as Default"
+          "set_default": "Set as Default",
+          "edit": "Edit status",
+          "delete": "Delete status"
         },
         "modal_subtitle_edit": "Update status details",
         "modal_subtitle_create": "Create a new status entry",
@@ -809,6 +828,16 @@
           "default": "Default",
           "status": "Status",
           "actions": "Actions"
+        },
+        "actions": {
+          "confirm": "Confirm",
+          "cancel": "Cancel"
+        },
+        "errors": {
+          "fetch_failed": "Failed to load dish statuses",
+          "delete_failed": "Failed to delete dish status",
+          "save_failed": "Failed to save dish status",
+          "update_failed": "Failed to update default status"
         }
       },
       "notifications": {
@@ -826,6 +855,7 @@
       "dashboard": "Dashboard",
       "main_dashboard": "Main Dashboard",
       "search_placeholder": "Search...",
+      "go_to_staff": "Staff",
       "user_role": "Restaurant Owner"
     },
     "menu": {
@@ -987,26 +1017,9 @@
         "empty": "This order has no items yet.",
         "unknown_dish": "Unknown dish",
         "total": "Total payment",
-        "fields": {
-          "reference": "Reference",
-          "customer": "Customer",
-          "table": "Table",
-          "reservation_id": "Reservation Code",
-          "handled_by": "Handled By",
-          "payment_status": "Payment Status"
-        },
         "columns": {
           "dish": "Dish",
-          "status": "Status",
-          "note": "Note",
           "qty": "Qty"
-        },
-        "summary": {
-          "sub_total": "Total",
-          "discount": "Discount",
-          "tax": "Tax",
-          "service_charge": "Service Charge",
-          "completed_cancelled": "Completed / Cancelled"
         }
       },
       "payment": {
@@ -1688,11 +1701,9 @@
       "total_orders": "Total Orders",
       "orders_suffix": "orders"
     },
-    "area_distribution": {
-      "title": "Area Distribution",
-      "subtitle": "Table allocation by zone",
-      "tables": "Tables",
-      "tables_suffix": "tables"
+    "staff_overview": {
+      "title": "Staff Overview",
+      "subtitle": "Today's workforce"
     }
   },
   "time_slots": {
@@ -2833,10 +2844,7 @@
         "light_card_color": "Component Background (Light)",
         "dark_base_color": "Primary Background (Dark)",
         "dark_surface_color": "Secondary Background (Dark)",
-        "dark_card_color": "Component Background (Dark)",
-        "logo_upload_hint": "Click or drag and drop logo here",
-        "favicon_upload_hint": "Click or drag and drop favicon here",
-        "background_upload_hint": "Click or drag and drop background here"
+        "dark_card_color": "Component Background (Dark)"
       },
       "fields": {
         "secondary_phone": "Secondary Phone",

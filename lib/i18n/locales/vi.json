@@ -355,6 +355,7 @@
       "tables_short": "Bàn",
       "orders": "Quản lý Order",
       "orders_short": "Order",
+      "kitchen": "Bếp",
       "checkout": "Thanh toán",
       "attendance": "Chấm công",
       "reservations": "Đặt bàn"
@@ -510,36 +511,42 @@
       }
     },
     "kpi": {
-      "bookings": "Đặt bàn hôm nay",
-      "bookings_subtitle": "{{count}} chờ xác nhận",
-      "available_tables": "Bàn trống",
-      "available_tables_subtitle": "VIP: {{vip}}, Trong nhà: {{indoor}}, Ngoài trời: {{outdoor}}",
       "revenue": "Doanh thu hôm nay",
-      "revenue_target": "Mục tiêu: {{target}}",
-      "active_orders": "Đơn hàng đang xử lý",
-      "active_orders_subtitle": "{{waiting}} chờ, {{progress}} đang làm",
-      "top_dish": "Món ăn bán chạy nhất",
-      "top_dish_subtitle": "{{count}} đơn hôm nay",
-      "kitchen_status": "Trạng thái bếp",
-      "kitchen_queue": "{{count}} đơn hàng đợi",
-      "status_busy": "Bận",
-      "status_normal": "Bình thường"
+      "revenue_subtitle": "Mục tiêu: {{target}}",
+      "orders": "Đơn hàng hôm nay",
+      "orders_subtitle": "{{completed}} hoàn thành · {{processing}} đang xử lý",
+      "reservations": "Đặt bàn hôm nay",
+      "reservations_subtitle": "{{pending}} chờ xác nhận",
+      "new_customers": "Khách hàng mới",
+      "new_customers_subtitle": "Tháng này"
     },
     "quick_actions": {
       "title": "Thao tác nhanh",
       "subtitle": "Các phím tắt thường dùng",
-      "add_table": "Thêm bàn",
-      "add_table_desc": "Tạo bàn mới",
-      "add_dish": "Thêm món",
-      "add_dish_desc": "Thêm vào thực đơn",
-      "add_staff": "Thêm nhân viên",
-      "add_staff_desc": "Nhân viên mới",
-      "view_bookings": "Xem đặt bàn",
-      "view_bookings_desc": "Tất cả đặt bàn",
-      "inventory": "Kho hàng",
-      "inventory_desc": "Quản lý kho",
-      "reports": "Báo cáo",
-      "reports_desc": "Phân tích & dữ liệu"
+      "orders": "Đơn hàng",
+      "orders_desc": "Xem & quản lý",
+      "reservations": "Đặt bàn",
+      "reservations_desc": "Quản lý đặt bàn",
+      "menu": "Thực đơn",
+      "menu_desc": "Quản lý món ăn",
+      "staff": "Nhân viên",
+      "staff_desc": "Quản lý nhân sự",
+      "analytics": "Báo cáo",
+      "analytics_desc": "Phân tích & dữ liệu",
+      "settings": "Cài đặt",
+      "settings_desc": "Cấu hình hệ thống"
+    },
+    "staff_overview": {
+      "title": "Tổng quan nhân viên",
+      "subtitle": "Trạng thái nhân sự hôm nay",
+      "total_staff": "Tổng nhân viên",
+      "on_duty": "Đang làm việc",
+      "day_off": "Nghỉ phép",
+      "positions": {
+        "waiter": "Phục vụ",
+        "kitchen": "Nhà bếp"
+      },
+      "view_all": "Xem tất cả nhân viên"
     },
     "table_status": {
       "title": "Trạng thái bàn thời gian thực",
@@ -720,23 +727,30 @@
         "subtitle": "Quản lý các trạng thái món ăn, mã và màu sắc",
         "add_status": "Thêm trạng thái",
         "edit_status": "Chỉnh sửa trạng thái",
-        "name": "Chưa có trạng thái món ăn nào",
+        "name": "Tên trạng thái",
         "name_placeholder": "Nhập tên trạng thái",
         "name_required": "Vui lòng nhập tên trạng thái",
         "code": "Mã",
-        "code_placeholder": "VD: PENDING, PROCESSING",
+        "code_placeholder": "Nhập mã trạng thái",
         "code_required": "Vui lòng nhập mã trạng thái",
         "code_format": "Mã chỉ được chứa chữ in hoa và dấu gạch dưới",
         "color": "Màu sắc",
         "color_required": "Vui lòng chọn màu sắc",
+        "color_from_db": "Màu đã dùng",
         "is_active": "Kích hoạt",
         "is_active_desc": "Bật hoặc tắt trạng thái này",
         "is_default": "Mặc định",
         "is_default_desc": "Đặt làm trạng thái mặc định cho món ăn mới",
         "default_note": "Chỉ một trạng thái được đặt làm mặc định. Việc này sẽ thay thế trạng thái mặc định hiện tại.",
+        "confirm_delete": "Xóa trạng thái món ăn",
+        "confirm_delete_desc": "Bạn có chắc chắn muốn xóa trạng thái này?",
+        "status_count": "{{count}} trạng thái",
+        "empty_state_title": "Chưa có trạng thái món ăn nào",
         "tooltip": {
           "current_default": "Mặc định hiện tại",
-          "set_default": "Đặt làm mặc định"
+          "set_default": "Đặt làm mặc định",
+          "edit": "Chỉnh sửa trạng thái",
+          "delete": "Xóa trạng thái"
         },
         "modal_subtitle_edit": "Cập nhật thông tin trạng thái",
         "modal_subtitle_create": "Tạo mới trạng thái",
@@ -748,6 +762,16 @@
           "default": "Mặc định",
           "status": "Trạng thái",
           "actions": "Thao tác"
+        },
+        "actions": {
+          "confirm": "Xác nhận",
+          "cancel": "Hủy"
+        },
+        "errors": {
+          "fetch_failed": "Không thể tải danh sách trạng thái món ăn",
+          "delete_failed": "Không thể xóa trạng thái món ăn",
+          "save_failed": "Không thể lưu trạng thái món ăn",
+          "update_failed": "Không thể cập nhật trạng thái mặc định"
         }
       },
       "notifications": {
@@ -765,6 +789,7 @@
       "dashboard": "Tổng quan",
       "main_dashboard": "Tổng quan chính",
       "search_placeholder": "Tìm kiếm...",
+      "go_to_staff": "Nhân viên",
       "user_role": "Chủ nhà hàng"
     },
     "menu": {
@@ -926,26 +951,9 @@
         "empty": "Đơn hàng này chưa có món nào.",
         "unknown_dish": "Món không xác định",
         "total": "Tổng thanh toán",
-        "fields": {
-          "reference": "Mã đơn",
-          "customer": "Khách hàng",
-          "table": "Bàn",
-          "reservation_id": "Mã đặt chỗ",
-          "handled_by": "Người xử lý",
-          "payment_status": "Trạng thái thanh toán"
-        },
         "columns": {
           "dish": "Món ăn",
-          "status": "Trạng thái",
-          "note": "Ghi chú",
           "qty": "SL"
-        },
-        "summary": {
-          "sub_total": "Tổng",
-          "discount": "Giảm giá",
-          "tax": "Thuế",
-          "service_charge": "Phí dịch vụ",
-          "completed_cancelled": "Hoàn tất / Đã hủy"
         }
       },
       "payment": {
@@ -1651,11 +1659,9 @@
       "total_orders": "Tổng đơn hàng",
       "orders_suffix": "đơn"
     },
-    "area_distribution": {
-      "title": "Phân bố khu vực",
-      "subtitle": "Phân bổ bàn theo khu vực",
-      "tables": "Bàn",
-      "tables_suffix": "bàn"
+    "staff_overview": {
+      "title": "Tổng quan nhân viên",
+      "subtitle": "Nhân sự hôm nay"
     }
   },
   "time_slots": {
@@ -2796,10 +2802,7 @@
         "light_card_color": "Màu nền thành phần (Sáng)",
         "dark_base_color": "Màu nền chính (Tối)",
         "dark_surface_color": "Màu nền phụ (Tối)",
-        "dark_card_color": "Màu nền thành phần (Tối)",
-        "logo_upload_hint": "Click hoặc kéo thả logo vào đây",
-        "favicon_upload_hint": "Click hoặc kéo thả favicon vào đây",
-        "background_upload_hint": "Click hoặc kéo thả background vào đây"
+        "dark_card_color": "Màu nền thành phần (Tối)"
       },
       "fields": {
         "secondary_phone": "Số điện thoại phụ",

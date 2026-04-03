@@ -1,16 +1,16 @@
 "use client";
 
-import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
 import customerService, { Customer } from "@/lib/services/customerService";
+import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
 import {
-  Cake,
-  Cancel,
-  CheckCircle,
-  Close,
-  Email,
-  History,
-  Phone,
-  Star,
+    Cake,
+    Cancel,
+    CheckCircle,
+    Close,
+    Email,
+    History,
+    Phone,
+    Star,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
@@ -58,7 +58,7 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
 
   return createPortal(
     <div 
-      className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/80 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div 
@@ -66,16 +66,14 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.2 }}
-        className="rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative"
-        style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+        className="bg-[#18181b] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative border border-white/10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Simple Header with Close Button */}
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={onClose}
-            className="p-2 rounded-full transition-colors"
-            style={{ color: "var(--text-muted)", background: "var(--surface)" }}
+            className="p-2 rounded-full hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
           >
             <Close sx={{ fontSize: 20 }} />
           </button>
@@ -89,13 +87,12 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
                 <img
                   src={customer.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=random`}
                   alt={customer.name}
-                  className="w-24 h-24 rounded-full border-2 object-cover"
-                  style={{ borderColor: "var(--border)" }}
+                  className="w-24 h-24 rounded-full border-2 border-[#27272a] object-cover"
                 />
               </div>
             </div>
             
-            <h2 className="text-2xl font-bold mb-1 flex items-center gap-2 justify-center" style={{ color: "var(--text)" }}>
+            <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2 justify-center">
               {customer.name}
               {customer.isActive ? (
                 <CheckCircle sx={{ fontSize: 20, color: '#22c55e' }} titleAccess={t('customers.list.status.active')} />
@@ -123,14 +120,12 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
 
             <div className="flex gap-4 items-center justify-center w-full flex-wrap">
               {customer.email && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--surface)] text-xs border"
-                  style={{ color: "var(--text-muted)", borderColor: "var(--border)" }}>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#27272a] text-xs text-gray-300 border border-white/5">
                   <Email sx={{ fontSize: 14, color: primaryColor }} />
                   <span className="truncate max-w-[150px]">{customer.email}</span>
                 </div>
               )}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--surface)] text-xs border"
-                  style={{ color: "var(--text-muted)", borderColor: "var(--border)" }}>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#27272a] text-xs text-gray-300 border border-white/5">
                 <Phone sx={{ fontSize: 14, color: primaryColor }} />
                 <span>{customer.phone}</span>
               </div>
@@ -139,35 +134,28 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
 
           {/* Key Metrics - Simple Grid */}
           <div className="grid grid-cols-3 gap-3 mb-8">
-             <div className="p-3 rounded-xl bg-[var(--surface)] text-center border"
-              style={{ borderColor: "var(--border)" }}>
-              <div className="mb-1 text-[10px] uppercase font-bold tracking-wider"
-                style={{ color: "var(--text-muted)" }}>{t('customers.detail.orders')}</div>
-              <div className="text-xl font-bold" style={{ color: "var(--text)" }}>{customer.totalOrders}</div>
+             <div className="p-3 rounded-xl bg-[#27272a] text-center border border-white/5">
+              <div className="mb-1 text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('customers.detail.orders')}</div>
+              <div className="text-xl font-bold text-white">{customer.totalOrders}</div>
             </div>
-            <div className="p-3 rounded-xl bg-[var(--surface)] text-center border"
-              style={{ borderColor: "var(--border)" }}>
-               <div className="mb-1 text-[10px] uppercase font-bold tracking-wider"
-                style={{ color: "var(--text-muted)" }}>{t('customers.detail.spent')}</div>
-              <div className="text-xl font-bold" style={{ color: primaryColor }}>
+            <div className="p-3 rounded-xl bg-[#27272a] text-center border border-white/5">
+               <div className="mb-1 text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('customers.detail.spent')}</div>
+              <div className="text-xl font-bold text-white" style={{ color: primaryColor }}>
                 {(customer.totalSpent / 1000000).toFixed(1)}M
               </div>
             </div>
-            <div className="p-3 rounded-xl bg-[var(--surface)] text-center border"
-              style={{ borderColor: "var(--border)" }}>
-               <div className="mb-1 text-[10px] uppercase font-bold tracking-wider"
-                style={{ color: "var(--text-muted)" }}>{t('customers.detail.points')}</div>
-              <div className="text-xl font-bold" style={{ color: "var(--text)" }}>{customer.loyaltyPoints}</div>
+            <div className="p-3 rounded-xl bg-[#27272a] text-center border border-white/5">
+               <div className="mb-1 text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('customers.detail.points')}</div>
+              <div className="text-xl font-bold text-white">{customer.loyaltyPoints}</div>
             </div>
           </div>
 
           {/* Additional Info */}
           <div className="space-y-4">
             {/* Last Activity */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface)] border"
-              style={{ borderColor: "var(--border)" }}>
+            <div className="flex items-center justify-between p-3 rounded-xl bg-[#27272a]/50 border border-white/5">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[var(--surface)]">
+                <div className="p-2 rounded-lg bg-[#27272a]">
                    <History sx={{ fontSize: 16, color: 'gray' }} />
                 </div>
                 <span className="text-sm" style={{ color: "var(--text-muted)" }}>{t('customers.detail.last_visit')}</span>
@@ -177,9 +165,9 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
 
             {/* Favorite Items */}
             {customer.favoriteItems && customer.favoriteItems.length > 0 && (
-              <div className="p-3 rounded-xl bg-[var(--surface)]/50 border border-white/5">
+              <div className="p-3 rounded-xl bg-[#27272a]/50 border border-white/5">
                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 rounded-lg bg-[var(--surface)]">
+                    <div className="p-2 rounded-lg bg-[#27272a]">
                       <Star sx={{ fontSize: 16, color: 'gray' }} />
                     </div>
                     <span className="text-sm" style={{ color: "var(--text-muted)" }}>{t('customers.detail.favorite_items')}</span>
@@ -201,7 +189,7 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
           
           {/* Birthday Banner */}
           {isBirthday && (
-            <div className="mt-6 p-3 rounded-xl bg-[var(--surface)] border border-[var(--primary)]/30 flex items-center gap-3">
+            <div className="mt-6 p-3 rounded-xl bg-[#27272a] border border-[var(--primary)]/30 flex items-center gap-3">
               <div className="p-2 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
                 <Cake sx={{ fontSize: 20 }} />
               </div>
