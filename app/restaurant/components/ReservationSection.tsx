@@ -24,17 +24,26 @@ const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
 
 type CubemapData = NonNullable<TableData['cubemap']>;
 
-const parseCubemapFromDefaultViewUrl = (raw?: string | null): CubemapData | undefined => {
-    if (!raw) return undefined;
-    try {
-        const parsed = JSON.parse(raw);
-        if (parsed?.px && parsed?.nx && parsed?.py && parsed?.ny && parsed?.pz && parsed?.nz) {
-            return parsed as CubemapData;
-        }
-        return undefined;
-    } catch {
-        return undefined;
-    }
+type CubemapSource = {
+    cubeRightImageUrl?: string | null;
+    cubeLeftImageUrl?: string | null;
+    cubeTopImageUrl?: string | null;
+    cubeBottomImageUrl?: string | null;
+    cubeFrontImageUrl?: string | null;
+    cubeBackImageUrl?: string | null;
+};
+
+const buildCubemap = (raw: unknown): CubemapData | undefined => {
+    const source = (raw ?? {}) as CubemapSource;
+    const px = source.cubeRightImageUrl || undefined;
+    const nx = source.cubeLeftImageUrl || undefined;
+    const py = source.cubeTopImageUrl || undefined;
+    const ny = source.cubeBottomImageUrl || undefined;
+    const pz = source.cubeFrontImageUrl || undefined;
+    const nz = source.cubeBackImageUrl || undefined;
+
+    if (!px || !nx || !py || !ny || !pz || !nz) return undefined;
+    return { px, nx, py, ny, pz, nz };
 };
 
 const parseOpeningHours = (hours?: string | null) => {
@@ -247,7 +256,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     const activeFloors = allFloors.filter(f => f.isActive !== false);
 
                     const tableImageMap = new Map(
-                        allTables.map(t => [t.id, t.cubeFrontImageUrl || undefined] as const)
+                        allTables.map(t => [t.id, buildCubemap(t)] as const)
                     );
 
                     if (activeFloors.length > 0) {
@@ -262,21 +271,24 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             const layoutData = layoutResult.status === 'fulfilled' ? layoutResult.value : null;
 
                             const tableDataList: TableData[] = (layoutData?.tables ?? []).map(
-                                (t: FloorLayoutTableItem) => ({
-                                    id: t.id,
-                                    tenantId: tenant?.id || 'default',
-                                    name: t.code,
-                                    seats: t.seatingCapacity,
-                                    status: parseLayoutStatus(t.status),
-                                    area: floorSummary.name,
-                                    position: { x: Number(t.layout.x), y: Number(t.layout.y) },
-                                    shape: normalizeShape(t.layout.shape),
-                                    width: Number(t.layout.width) || 100,
-                                    height: Number(t.layout.height) || 100,
-                                    rotation: Number(t.layout.rotation) || 0,
-                                    zoneId: floorSummary.name,
-                                    photo360Url: tableImageMap.get(t.id) || undefined,
-                                })
+                                (t: FloorLayoutTableItem) => {
+                                    const layoutCubemap = buildCubemap(t);
+                                    return {
+                                        id: t.id,
+                                        tenantId: tenant?.id || 'default',
+                                        name: t.code,
+                                        seats: t.seatingCapacity,
+                                        status: parseLayoutStatus(t.status),
+                                        area: floorSummary.name,
+                                        position: { x: Number(t.layout.x), y: Number(t.layout.y) },
+                                        shape: normalizeShape(t.layout.shape),
+                                        width: Number(t.layout.width) || 100,
+                                        height: Number(t.layout.height) || 100,
+                                        rotation: Number(t.layout.rotation) || 0,
+                                        zoneId: floorSummary.name,
+                                        cubemap: layoutCubemap || tableImageMap.get(t.id) || undefined,
+                                    };
+                                }
                             );
                             // DEBUG: show BE positions
                             console.log(`[Restaurant] Floor "${floorSummary.name}" tables:`, tableDataList.map(t => ({ id: t.id, code: t.name, x: t.position.x, y: t.position.y })));
@@ -336,7 +348,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 height: t.height ?? 100,
                                 rotation: t.rotation ?? 0,
                                 zoneId: typeName,
-                                photo360Url: t.cubeFrontImageUrl || undefined,
+                                cubemap: buildCubemap(t),
                             };
                         });
                         return {

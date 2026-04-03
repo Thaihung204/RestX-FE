@@ -1,6 +1,5 @@
 "use client";
 
-import { CubemapImages } from "@/lib/services/tableService";
 import { DropDown } from "@/components/ui/DropDown";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
@@ -26,6 +25,7 @@ interface Table {
   cubeRightImageUrl?: string;
   cubeTopImageUrl?: string;
   cubeBottomImageUrl?: string;
+  defaultViewUrl?: string;
 }
 
 interface FloorOption {
@@ -38,7 +38,7 @@ interface TableDetailsDrawerProps {
   table: Table | null;
   onClose: () => void;
   onSave: (values: Partial<Table>) => void;
-  onSaveCubemap?: (tableId: string, cubemap: CubemapImages, clear: boolean) => Promise<void>;
+  onSavePanorama?: (tableId: string, file: File | null, clear: boolean) => Promise<void>;
   onDelete?: () => void;
   floors?: FloorOption[];
 }
@@ -272,257 +272,54 @@ function QRCodeSection({ qrCodeUrl, tableNumber, tableId }: { qrCodeUrl: string;
   );
 }
 
-// ─── Cubemap Upload Section ────────────────────────────────────────────────────
-const CUBE_FACES: { key: keyof CubemapImages; label: string; urlKey: keyof Table }[] = [
-  { key: 'front',  label: 'Front',  urlKey: 'cubeFrontImageUrl'  },
-  { key: 'back',   label: 'Back',   urlKey: 'cubeBackImageUrl'   },
-  { key: 'left',   label: 'Left',   urlKey: 'cubeLeftImageUrl'   },
-  { key: 'right',  label: 'Right',  urlKey: 'cubeRightImageUrl'  },
-  { key: 'top',    label: 'Top',    urlKey: 'cubeTopImageUrl'    },
-  { key: 'bottom', label: 'Bottom', urlKey: 'cubeBottomImageUrl' },
-];
-
-function CubemapUploadSection({
+function PanoramaSection({
   table,
-  cubemap,
-  setCubemap,
-  previews,
-  setPreviews,
-  clearCubemap,
-  setClearCubemap,
+  panoramaFile,
+  setPanoramaFile,
+  panoramaPreview,
+  setPanoramaPreview,
+  clearPanorama,
+  setClearPanorama,
   saving,
-  onSaveCubemap,
+  onSavePanorama,
 }: {
   table: Table;
-  cubemap: CubemapImages;
-  setCubemap: React.Dispatch<React.SetStateAction<CubemapImages>>;
-  previews: Record<string, string>;
-  setPreviews: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  clearCubemap: boolean;
-  setClearCubemap: (v: boolean) => void;
+  panoramaFile: File | null;
+  setPanoramaFile: (file: File | null) => void;
+  panoramaPreview: string | null;
+  setPanoramaPreview: (url: string | null) => void;
+  clearPanorama: boolean;
+  setClearPanorama: (v: boolean) => void;
   saving: boolean;
-  onSaveCubemap?: (tableId: string, cubemap: CubemapImages, clear: boolean) => Promise<void>;
+  onSavePanorama?: (tableId: string, file: File | null, clear: boolean) => Promise<void>;
 }) {
   const { t } = useTranslation();
-  const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const hasCubemap = CUBE_FACES.some(f => !!(table[f.urlKey] as string | undefined));
-  const hasNewFiles = CUBE_FACES.some(f => !!(cubemap[f.key]));
-
-  const handleFile = (face: keyof CubemapImages, file: File | null) => {
-    setCubemap(prev => ({ ...prev, [face]: file }));
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreviews(prev => ({ ...prev, [face]: url }));
-    } else {
-      setPreviews(prev => { const next = { ...prev }; delete next[face]; return next; });
-    }
-  };
-
-  const currentUrl = (face: typeof CUBE_FACES[0]) =>
-    previews[face.key] || (table[face.urlKey] as string | undefined) || null;
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const currentUrl = panoramaPreview || table.cubeFrontImageUrl || table.defaultViewUrl || null;
 
   return (
-    <motion.div
-      initial={{ scale: 0.96, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay: 0.18 }}
-      style={{
-        marginBottom: 28,
-        borderRadius: 12,
-        border: '1px solid var(--border)',
-        background: 'var(--surface)',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Header */}
-      <div style={{
-        padding: '14px 18px',
-        borderBottom: '1px solid var(--border)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-      }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-          <line x1="12" y1="22.08" x2="12" y2="12" />
-        </svg>
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
-          {t('tables.details.cubemap_title', { ns: 'dashboard', defaultValue: 'Anh 360 (Cubemap)' })}
-        </span>
-        {hasCubemap && (
-          <span style={{
-            marginLeft: 6,
-            fontSize: 10,
-            color: '#52c41a',
-            background: 'rgba(82,196,26,0.12)',
-            border: '1px solid rgba(82,196,26,0.25)',
-            borderRadius: 20,
-            padding: '1px 7px',
-            fontWeight: 600,
-          }}>
-            {t('tables.details.cubemap_set', { ns: 'dashboard', defaultValue: 'Da co anh' })}
-          </span>
-        )}
-        {onSaveCubemap && (hasNewFiles || clearCubemap) && (
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => onSaveCubemap(table.id, cubemap, clearCubemap)}
-            style={{
-              marginLeft: 'auto',
-              padding: '5px 14px',
-              borderRadius: 8,
-              border: 'none',
-              background: saving
-                ? 'var(--border)'
-                : 'linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)',
-              color: '#fff',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: saving ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-              transition: 'opacity 0.2s',
-            }}
-          >
-            {saving ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                <polyline points="17 21 17 13 7 13 7 21" />
-                <polyline points="7 3 7 8 15 8" />
-              </svg>
-            )}
-            {t('tables.details.cubemap_save', { ns: 'dashboard', defaultValue: 'Luu anh 360' })}
+    <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.18 }} style={{ marginBottom: 28, borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', overflow: 'hidden' }}>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t('tables.details.panorama_title', { ns: 'dashboard', defaultValue: 'Ảnh panorama' })}</span>
+        {onSavePanorama && (panoramaFile || clearPanorama) && (
+          <button type="button" disabled={saving} onClick={() => onSavePanorama(table.id, panoramaFile, clearPanorama)} style={{ marginLeft: 'auto', padding: '5px 14px', borderRadius: 8, border: 'none', background: saving ? 'var(--border)' : 'linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}>
+            {t('tables.details.panorama_save', { ns: 'dashboard', defaultValue: 'Lưu ảnh' })}
           </button>
         )}
       </div>
-
-      {/* 3x2 face grid */}
       <div style={{ padding: '16px 18px' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: 10,
-          marginBottom: 12,
-        }}>
-          {CUBE_FACES.map(face => {
-            const url = currentUrl(face);
-            return (
-              <div
-                key={face.key}
-                onClick={() => { if (!clearCubemap) fileRefs.current[face.key]?.click(); }}
-                style={{
-                  position: 'relative',
-                  aspectRatio: '1',
-                  borderRadius: 10,
-                  border: cubemap[face.key]
-                    ? '2px solid var(--primary)'
-                    : '1.5px dashed var(--border)',
-                  background: 'var(--card)',
-                  overflow: 'hidden',
-                  cursor: clearCubemap ? 'not-allowed' : 'pointer',
-                  opacity: clearCubemap ? 0.45 : 1,
-                  transition: 'border-color 0.2s, opacity 0.2s',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {url ? (
-                  <>
-                    <img src={url} alt={face.label}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                    {cubemap[face.key] && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); handleFile(face.key, null); }}
-                        style={{
-                          position: 'absolute', top: 4, right: 4,
-                          width: 20, height: 20,
-                          borderRadius: '50%',
-                          background: 'rgba(0,0,0,0.65)',
-                          border: 'none',
-                          color: '#fff',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', padding: 0,
-                        }}
-                      >
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                          stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                          <path d="M18 6L6 18M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                    <span style={{
-                      position: 'absolute', bottom: 0, left: 0, right: 0,
-                      background: 'rgba(0,0,0,0.55)',
-                      color: '#fff',
-                      fontSize: 9,
-                      fontWeight: 700,
-                      textAlign: 'center',
-                      padding: '3px 0',
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                    }}>{face.label}</span>
-                  </>
-                ) : (
-                  <>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                      stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round">
-                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                    <span style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 4, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                      {face.label}
-                    </span>
-                  </>
-                )}
-                <input
-                  ref={el => { fileRefs.current[face.key] = el; }}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onClick={(e) => { (e.currentTarget as HTMLInputElement).value = ''; }}
-                  onChange={e => handleFile(face.key, e.target.files?.[0] ?? null)}
-                />
-              </div>
-            );
-          })}
+        <div onClick={() => !clearPanorama && fileRef.current?.click()} style={{ borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--card)', minHeight: 180, overflow: 'hidden', cursor: clearPanorama ? 'not-allowed' : 'pointer', opacity: clearPanorama ? 0.5 : 1 }}>
+          {currentUrl ? <img src={currentUrl} alt="Panorama" style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }} /> : <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 12 }}>{t('tables.details.panorama_upload_hint', { ns: 'dashboard', defaultValue: 'Bấm để tải ảnh panorama' })}</div>}
         </div>
-
-        {/* Clear cubemap toggle */}
-        {hasCubemap && (
-          <label style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            cursor: 'pointer',
-            padding: '8px 10px',
-            borderRadius: 8,
-            border: `1px solid ${clearCubemap ? '#ff4d4f40' : 'var(--border)'}`,
-            background: clearCubemap ? 'rgba(255,77,79,0.06)' : 'transparent',
-            transition: 'all 0.2s',
-          }}>
-            <input
-              type="checkbox"
-              checked={clearCubemap}
-              onChange={e => setClearCubemap(e.target.checked)}
-              style={{ accentColor: '#ff4d4f', width: 14, height: 14 }}
-            />
-            <span style={{ fontSize: 12, fontWeight: 600, color: clearCubemap ? '#ff4d4f' : 'var(--text-muted)' }}>
-              {t('tables.details.cubemap_clear', { ns: 'dashboard', defaultValue: 'Xoa toan bo anh 360' })}
-            </span>
-          </label>
-        )}
+        <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onClick={(e) => { (e.currentTarget as HTMLInputElement).value = ''; }} onChange={e => {
+          const file = e.target.files?.[0] ?? null;
+          setPanoramaFile(file);
+          if (file) setPanoramaPreview(URL.createObjectURL(file));
+        }} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 10 }}>
+          <input type="checkbox" checked={clearPanorama} onChange={e => setClearPanorama(e.target.checked)} />
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('tables.details.panorama_clear', { ns: 'dashboard', defaultValue: 'Xóa ảnh panorama hiện tại' })}</span>
+        </label>
       </div>
     </motion.div>
   );
@@ -533,7 +330,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
   table,
   onClose,
   onSave,
-  onSaveCubemap,
+  onSavePanorama,
   onDelete,
   floors = [],
 }) => {
@@ -551,10 +348,10 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
     rotation: 0,
   });
   const [, setErrors] = React.useState<Record<string, string>>({});
-  const [cubemap, setCubemap] = useState<CubemapImages>({});
-  const [cubemapPreviews, setCubemapPreviews] = useState<Record<string, string>>({});
-  const [clearCubemap, setClearCubemap] = useState(false);
-  const [cubemapSaving, setCubemapSaving] = useState(false);
+  const [panoramaFile, setPanoramaFile] = useState<File | null>(null);
+  const [panoramaPreview, setPanoramaPreview] = useState<string | null>(null);
+  const [clearPanorama, setClearPanorama] = useState(false);
+  const [panoramaSaving, setPanoramaSaving] = useState(false);
 
   useEffect(() => {
     if (table) {
@@ -568,12 +365,11 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
         height: table.height || 80,
         rotation: table.rotation || 0,
       });
-      // Reset cubemap state when table changes
-      setCubemap({});
-      setCubemapPreviews({});
-      setClearCubemap(false);
     }
-  }, [table]);
+    setPanoramaFile(null);
+    setPanoramaPreview(null);
+    setClearPanorama(false);
+  }, [table, floors]);
 
 
   const validate = () => {
@@ -596,16 +392,16 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
     e.preventDefault();
     if (!validate() || !table) return;
 
-    const hasCubemapChanges = clearCubemap || Object.values(cubemap).some(Boolean);
-
     setIsSaving(true);
     try {
-      // Save table data first and wait to avoid race condition with cubemap save
       await Promise.resolve(onSave(formData));
-
-      // If there are cubemap files selected or clear flag, save them too
-      if (hasCubemapChanges && onSaveCubemap) {
-        await onSaveCubemap(table.id, cubemap, clearCubemap);
+      if (onSavePanorama && (panoramaFile || clearPanorama)) {
+        setPanoramaSaving(true);
+        try {
+          await onSavePanorama(table.id, panoramaFile, clearPanorama);
+        } finally {
+          setPanoramaSaving(false);
+        }
       }
     } finally {
       setIsSaving(false);
@@ -665,7 +461,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
               style={{
                 background:
                   "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)",
-                padding: "28px",
+                padding: "28px 28px 34px",
                 color: "#fff",
                 position: "relative",
                 overflow: "hidden",
@@ -730,7 +526,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                         {tDetails("title")}
                       </h2>
                     </div>
-                    <p style={{ margin: 0, fontSize: 13, opacity: 0.85 }}>
+                    <p style={{ margin: 0, fontSize: 13, opacity: 0.9, lineHeight: 1.45 }}>
                       {tDetails("subtitle")}
                     </p>
                   </div>
@@ -768,7 +564,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
             </div>
 
             {/* Body */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "28px" }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "22px 28px 28px" }}>
               {table && (
                 <form onSubmit={handleSubmit}>
                   {/* Current Status Card */}
@@ -816,25 +612,17 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                     <QRCodeSection qrCodeUrl={table.qrCodeUrl} tableNumber={table.number} tableId={table.id} />
                   )}
 
-                  {/* Cubemap 360 Section */}
-                  <CubemapUploadSection
+                  {/* Panorama Section */}
+                  <PanoramaSection
                     table={table}
-                    cubemap={cubemap}
-                    setCubemap={setCubemap}
-                    previews={cubemapPreviews}
-                    setPreviews={setCubemapPreviews}
-                    clearCubemap={clearCubemap}
-                    setClearCubemap={setClearCubemap}
-                    saving={cubemapSaving}
-                    onSaveCubemap={
-                      onSaveCubemap
-                        ? async (id, cm, clr) => {
-                            setCubemapSaving(true);
-                            try { await onSaveCubemap(id, cm, clr); }
-                            finally { setCubemapSaving(false); }
-                          }
-                        : undefined
-                    }
+                    panoramaFile={panoramaFile}
+                    setPanoramaFile={setPanoramaFile}
+                    panoramaPreview={panoramaPreview}
+                    setPanoramaPreview={setPanoramaPreview}
+                    clearPanorama={clearPanorama}
+                    setClearPanorama={setClearPanorama}
+                    saving={panoramaSaving}
+                    onSavePanorama={onSavePanorama}
                   />
 
                   {/* Form Fields */}
@@ -1211,7 +999,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                       <polyline points="17 21 17 13 7 13 7 21" />
                       <polyline points="7 3 7 8 15 8" />
                     </svg>
-                    {t('tables.details.save_changes', { ns: 'dashboard', defaultValue: '{tDetails("save_changes")}' })}
+                    {t('tables.details.save_changes', { ns: 'dashboard', defaultValue: 'Save changes' })}
                   </>
                 )}
               </motion.button>

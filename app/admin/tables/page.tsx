@@ -631,7 +631,7 @@ export default function TablesPage() {
     }
   };
 
-  const handleSaveCubemap = async (tableId: string, cubemap: CubemapImages, clear: boolean) => {
+  const handleSavePanorama = async (tableId: string, file: File | null, clear: boolean) => {
     const tableToUpdate = tables.find(t => t.id === tableId);
     if (!tableToUpdate) return;
 
@@ -654,25 +654,28 @@ export default function TablesPage() {
           : tableToUpdate.status === 'reserved'
             ? TableStatus.Reserved
             : TableStatus.Available,
-        has3DView: clear ? false : (Object.values(cubemap).some(Boolean) || tableToUpdate.has3DView),
-        viewDescription: tableToUpdate.viewDescription,
-        defaultViewUrl: tableToUpdate.defaultViewUrl,
+        has3DView: clear ? false : Boolean(file || tableToUpdate.cubeFrontImageUrl || tableToUpdate.defaultViewUrl),
+        viewDescription: clear ? '' : 'Panorama',
+        defaultViewUrl: clear ? '' : (tableToUpdate.cubeFrontImageUrl || tableToUpdate.defaultViewUrl || ''),
         qrCodeUrl: tableToUpdate.qrCodeUrl,
-        // Pass existing cubemap URLs so BE doesn't clear ones we're not replacing
-        cubeFrontImageUrl: tableToUpdate.cubeFrontImageUrl,
-        cubeRightImageUrl: tableToUpdate.cubeRightImageUrl,
-        cubeLeftImageUrl: tableToUpdate.cubeLeftImageUrl,
-        cubeTopImageUrl: tableToUpdate.cubeTopImageUrl,
-        cubeBackImageUrl: tableToUpdate.cubeBackImageUrl,
-        cubeBottomImageUrl: tableToUpdate.cubeBottomImageUrl,
+        cubeFrontImageUrl: clear ? '' : tableToUpdate.cubeFrontImageUrl,
+        cubeRightImageUrl: clear ? '' : tableToUpdate.cubeRightImageUrl,
+        cubeLeftImageUrl: clear ? '' : tableToUpdate.cubeLeftImageUrl,
+        cubeTopImageUrl: clear ? '' : tableToUpdate.cubeTopImageUrl,
+        cubeBackImageUrl: clear ? '' : tableToUpdate.cubeBackImageUrl,
+        cubeBottomImageUrl: clear ? '' : tableToUpdate.cubeBottomImageUrl,
       };
 
-      await tableService.updateTableWithCubemap(tableId, tableData, cubemap, clear);
-      message.success(tDashboard('tables.cubemap_saved', { defaultValue: 'Da luu anh 360!' }));
+      const cubemapPayload: CubemapImages = {
+        front: file,
+      };
+
+      await tableService.updateTableWithCubemap(tableId, tableData, cubemapPayload, clear);
+      message.success(tDashboard('tables.panorama_saved', { defaultValue: 'Đã lưu ảnh panorama!' }));
       await fetchTables();
     } catch (err) {
-      console.error('Failed to save cubemap:', err);
-      message.error(tDashboard('tables.cubemap_save_failed', { defaultValue: 'Luu anh 360 that bai' }));
+      console.error('Failed to save panorama:', err);
+      message.error(tDashboard('tables.panorama_save_failed', { defaultValue: 'Lưu ảnh panorama thất bại' }));
     }
   };
 
@@ -1091,7 +1094,7 @@ export default function TablesPage() {
         }
         }
         onSave={handleUpdateTable}
-        onSaveCubemap={handleSaveCubemap}
+        onSavePanorama={handleSavePanorama}
         onDelete={handleDeleteTable}
         floors={beFloors.map(f => ({ id: f.id, name: f.name }))}
       />

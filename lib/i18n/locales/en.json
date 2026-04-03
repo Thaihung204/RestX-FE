@@ -1125,6 +1125,52 @@
         "floor_dimensions": "Floor Dimensions",
         "zones": "zones",
         "tables_on_floor": "tables on this floor"
+      },
+      "details": {
+        "title": "Table Details",
+        "subtitle": "Review and update table information",
+        "current_status": "Current Status",
+        "status_available": "Available",
+        "status_occupied": "Occupied",
+        "status_reserved": "Reserved",
+        "status_cleaning": "Cleaning",
+        "qr_title": "QR Code Table {{number}}",
+        "qr_scan": "Scan to order",
+        "qr_load_failed": "Failed to load QR",
+        "copy_link": "Copy link",
+        "copied": "Copied",
+        "download_qr": "Download QR",
+        "cubemap_title": "360 Images (Cubemap)",
+        "cubemap_set": "Images set",
+        "cubemap_save": "Save 360 images",
+        "cubemap_clear": "Remove all 360 images",
+        "cubemap_face_front": "Front",
+        "cubemap_face_back": "Back",
+        "cubemap_face_left": "Left",
+        "cubemap_face_right": "Right",
+        "cubemap_face_top": "Top",
+        "cubemap_face_bottom": "Bottom",
+        "table_code": "Table code",
+        "table_code_placeholder": "Enter table code",
+        "seating_capacity": "Seating capacity",
+        "shape": "Shape",
+        "shape_square": "Square",
+        "shape_circle": "Circle",
+        "shape_rectangle": "Rectangle",
+        "shape_oval": "Oval",
+        "rotation": "Rotation",
+        "width": "Width",
+        "height": "Height",
+        "floor": "Floor",
+        "table_status": "Table status",
+        "delete": "Delete table",
+        "cancel": "Cancel",
+        "save_changes": "Save changes",
+        "errors": {
+          "number_required": "Table code is required",
+          "width_too_small": "Width must be at least 20",
+          "height_too_small": "Height must be at least 20"
+        }
       }
     },
     "staff": {
@@ -3186,5 +3232,97 @@
       "subtitle": "Discover",
       "title": "Overview"
     }
+  },
+  "reservation_detail": {
+    "back": "Back",
+    "breadcrumb": "Reservation Details",
+    "not_found": {
+      "title": "Reservation not found",
+      "description": "This reservation may not exist or you may not have access."
+    },
+    "hero": {
+      "label": "Reservation Details",
+      "created_at": "Created at:",
+      "time_label": "Time",
+      "guests_label": "Guests"
+    },
+    "timeline": {
+      "title": "Booking Status",
+      "pending": "Pending Confirmation",
+      "confirmed": "Confirmed",
+      "checked_in": "Checked In",
+      "completed": "Completed"
+    },
+    "customer": {
+      "title": "Customer Information",
+      "subtitle": "Contact and membership details",
+      "name": "Full Name",
+      "phone": "Phone Number",
+      "email": "Email",
+      "type": "Customer Type",
+      "guest": "Walk-in Guest",
+      "member": "Member",
+      "loyalty_points": "Loyalty Points"
+    },
+    "booking": {
+      "title": "Reservation Details",
+      "subtitle": "Date, time, and table information",
+      "date_time": "Date & Time",
+      "guests": "Number of Guests",
+      "guests_unit": "guests",
+      "tables": "Tables",
+      "capacity": "Total Capacity",
+      "seats_unit": "seats",
+      "checked_in_at": "Checked In At",
+      "last_updated": "Last Updated",
+      "special_requests": "Special Requests"
+    },
+    "deposit": {
+      "label": "Deposit",
+      "pay_now": "Pay Deposit",
+      "creating_link": "Creating...",
+      "no_order_warning": "No deposit order found. Please contact the restaurant.",
+      "link_opened": "Payment link opened.",
+      "link_error": "Could not get payment link.",
+      "create_failed": "Failed to create payment link."
+    },
+    "order": {
+      "title": "Order Information",
+      "orders_count": "orders",
+      "items": "items",
+      "status": "Status",
+      "no_orders": "No orders linked to this reservation yet.",
+      "order_now": "Order Now",
+      "readonly_note": "You can only view this reservation. Contact the restaurant for any changes."
+    },
+    "location": {
+      "no_address": "Address not available",
+      "updating": "Address being updated",
+      "open_maps": "Open in Google Maps"
+    },
+    "code": {
+      "label": "Confirmation Code",
+      "description": "Show this code at the restaurant to confirm your reservation."
+    },
+    "meta": {
+      "title": "Additional Information",
+      "reservation_id": "Reservation ID",
+      "tables_count": "Number of Tables",
+      "deposit_amount": "Deposit Amount",
+      "deposit_status": "Deposit Status",
+      "paid": "Paid",
+      "unpaid": "Not Paid"
+    },
+    "admin_note": {
+      "title": "Admin View",
+      "description": "This is a read-only detailed view for admin monitoring. Use the reservations list to update status, confirm, or cancel."
+    },
+    "help": {
+      "title": "Need Help?",
+      "description": "To modify or cancel your reservation, please contact the restaurant directly.",
+      "get_directions": "Get Directions"
+    }
   }
 }
+
+

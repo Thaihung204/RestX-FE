@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Link from 'next/link';
 import reservationService, { ReservationDetail } from '@/lib/services/reservationService';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
@@ -215,6 +216,23 @@ export default function ReservationLookupSection() {
                                     </p>
                                 </div>
                             )}
+
+                            <div className="pt-2 mt-2">
+                                <Link
+                                    href={`/your-reservation/${result.id}`}
+                                    className="flex w-full items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all hover:brightness-110"
+                                    style={{
+                                        background: 'var(--primary)',
+                                        color: 'var(--on-primary)',
+                                        boxShadow: '0 8px 20px var(--primary-glow)',
+                                    }}
+                                >
+                                    {t('landing.lookup.result.view_details', 'View Details')}
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                    </svg>
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 )}

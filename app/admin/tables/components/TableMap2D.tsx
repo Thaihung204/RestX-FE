@@ -34,6 +34,8 @@ interface TableMap2DProps {
   renderTableContent?: (table: TableData) => React.ReactNode;
   readOnly?: boolean;
   selectedTableIds?: string[];
+  hideControls?: boolean;
+  focusOnSelected?: boolean;
 }
 
 /* ══════════════════════════════════════════════
@@ -50,6 +52,8 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   renderTableContent,
   readOnly = false,
   selectedTableIds = [],
+  hideControls = false,
+  focusOnSelected = false,
 }) => {
   const [showGrid, setShowGrid] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,6 +64,11 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
 
   const activeFloor = layout.floors.find((f) => f.id === layout.activeFloorId);
   const selectedSet = React.useMemo(() => new Set(selectedTableIds), [selectedTableIds]);
+  const [hasFocused, setHasFocused] = useState(false);
+
+  useEffect(() => {
+    setHasFocused(false);
+  }, [activeFloor?.id, selectedTableIds.join(',')]);
 
   // ── Auto-fit: scale canvas to fit container ──
   useEffect(() => {
@@ -75,7 +84,45 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
       const scaleX = availW / activeFloor.width;
       const scaleY = availH / activeFloor.height;
       // Fit within container; cap at 1 so we never upscale
-      setScale(Math.min(scaleX, scaleY, 1));
+      let finalScale = Math.min(scaleX, scaleY, 1);
+
+      if (focusOnSelected && selectedSet.size > 0) {
+        const selectedTables = activeFloor.tables.filter(t => selectedSet.has(t.id));
+        if (selectedTables.length > 0) {
+          const minX = Math.min(...selectedTables.map(t => t.position.x));
+          const maxX = Math.max(...selectedTables.map(t => t.position.x + (t.width || 80)));
+          const minY = Math.min(...selectedTables.map(t => t.position.y));
+          const maxY = Math.max(...selectedTables.map(t => t.position.y + (t.height || 80)));
+          
+          const boxW = maxX - minX;
+          const boxH = maxY - minY;
+          // Add tight padding (e.g. 75px on each side)
+          const paddedW = boxW + 150;
+          const paddedH = boxH + 150;
+          
+          finalScale = Math.min(availW / paddedW, availH / paddedH, 3.0);
+          setScale(finalScale);
+
+          // Scroll to center the bounding box exactly once
+          if (!hasFocused) {
+            setHasFocused(true);
+            setTimeout(() => {
+              if (containerRef.current) {
+                const cx = ((minX + maxX) / 2) * finalScale;
+                const cy = ((minY + maxY) / 2) * finalScale;
+                containerRef.current.scrollTo({
+                  left: Math.max(0, cx - availW / 2),
+                  top: Math.max(0, cy - availH / 2),
+                  behavior: 'smooth'
+                });
+              }
+            }, 100);
+          }
+          return;
+        }
+      }
+
+      setScale(finalScale);
     };
 
     updateScale();
@@ -199,59 +246,61 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   return (
     <div className="flex flex-col gap-4 h-full">
       {/* Floor Switcher & Toolbar */}
-      <div className="flex items-center justify-between bg-[var(--card)] p-2 rounded-lg border border-[var(--border)]">
-        <div className="flex items-center gap-2 overflow-x-auto">
-          {layout.floors.map((floor) => (
-            <button
-              key={floor.id}
-              onClick={() => handleFloorSwitch(floor.id)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${layout.activeFloorId === floor.id
-                ? "bg-[var(--primary)] text-white shadow-md"
-                : "text-[var(--text-muted)] hover:bg-[var(--bg-base)] hover:text-[var(--text)]"
-                }`}
-            >
-              {floor.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Upload Button */}
-          {!readOnly && (
-            <>
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/png, image/jpeg"
-                onChange={handleBackgroundImageUpload}
-                className="hidden"
-              />
+      {!hideControls && (
+        <div className="flex items-center justify-between bg-[var(--card)] p-2 rounded-lg border border-[var(--border)]">
+          <div className="flex items-center gap-2 overflow-x-auto">
+            {layout.floors.map((floor) => (
               <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1 text-sm text-[var(--primary)] hover:underline"
+                key={floor.id}
+                onClick={() => handleFloorSwitch(floor.id)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${layout.activeFloorId === floor.id
+                  ? "bg-[var(--primary)] text-white shadow-md"
+                  : "text-[var(--text-muted)] hover:bg-[var(--bg-base)] hover:text-[var(--text)]"
+                  }`}
               >
-                <span className="material-symbols-outlined text-base">cloud_upload</span>
-                {t("dashboard.tables.map.upload_floorplan")}
+                {floor.name}
               </button>
-            </>
-          )}
-          {/* Grid Toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showGrid}
-              onChange={(e) => setShowGrid(e.target.checked)}
-              className="accent-[var(--primary)]"
-            />
-            <span className="text-sm text-[var(--text-muted)]">{t("dashboard.tables.map.show_grid")}</span>
-          </label>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Upload Button */}
+            {!readOnly && (
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/png, image/jpeg"
+                  onChange={handleBackgroundImageUpload}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1 text-sm text-[var(--primary)] hover:underline"
+                >
+                  <span className="material-symbols-outlined text-base">cloud_upload</span>
+                  {t("dashboard.tables.map.upload_floorplan")}
+                </button>
+              </>
+            )}
+            {/* Grid Toggle */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showGrid}
+                onChange={(e) => setShowGrid(e.target.checked)}
+                className="accent-[var(--primary)]"
+              />
+              <span className="text-sm text-[var(--text-muted)]">{t("dashboard.tables.map.show_grid")}</span>
+            </label>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Canvas Container */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-auto bg-[var(--bg-base)] border border-[var(--border)] rounded-xl relative p-4 flex justify-center items-start"
+        className="flex-1 overflow-auto bg-[var(--bg-base)] border border-[var(--border)] rounded-xl relative p-4 block"
       >
         {/* Scaled wrapper — preserves canvas coordinate system */}
         <div
@@ -259,6 +308,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
             width: activeFloor.width * scale,
             height: activeFloor.height * scale,
             flexShrink: 0,
+            margin: '0 auto',
           }}
         >
           {/* The Floor Canvas — always renders at native resolution via transform */}
@@ -312,14 +362,16 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
       </div>
 
       {/* Floor Info Footer */}
-      <div className="flex items-center justify-between text-xs text-[var(--text-muted)] px-1">
-        <div>
-          {t("dashboard.tables.map.floor_dimensions")}: {activeFloor.width}px × {activeFloor.height}px
+      {!hideControls && (
+        <div className="flex items-center justify-between text-xs text-[var(--text-muted)] px-1">
+          <div>
+            {t("dashboard.tables.map.floor_dimensions")}: {activeFloor.width}px × {activeFloor.height}px
+          </div>
+          <div className="flex items-center gap-3">
+            <span>{activeFloor.tables.length} {t("dashboard.tables.map.tables_on_floor")}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span>{activeFloor.tables.length} {t("dashboard.tables.map.tables_on_floor")}</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

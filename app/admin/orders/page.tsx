@@ -301,10 +301,10 @@ export default function OrdersPage() {
     <main className="flex-1 p-6 lg:p-8">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h2
-              className="text-3xl font-bold mb-2"
+              className="text-3xl font-bold mb-1"
               style={{ color: "var(--text)" }}>
               {t("dashboard.orders.title")}
             </h2>
@@ -314,7 +314,8 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        {/* Orders Table */}
+        <div className="rounded-xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          {/* Orders Table */}
         <div
           className="rounded-xl overflow-hidden"
           style={{
@@ -541,6 +542,7 @@ export default function OrdersPage() {
           items={selectedOrderDetails ?? []}
           onClose={() => setDetailOpen(false)}
         />
+        </div>
       </div>
     </main>
   );

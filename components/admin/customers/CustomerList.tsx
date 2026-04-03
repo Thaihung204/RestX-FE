@@ -162,6 +162,9 @@ export default function CustomerList() {
                 <th className="text-center px-6 py-4 text-sm font-semibold" style={{ color: "var(--text)" }}>
                   {t('customers.list.headers.status')}
                 </th>
+                <th className="text-center px-6 py-4 text-sm font-semibold" style={{ color: "var(--text)" }}>
+                  {t('customers.list.headers.actions', { defaultValue: 'Actions' })}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -171,8 +174,7 @@ export default function CustomerList() {
                 return (
                   <tr
                     key={customer.id}
-                    onClick={() => setSelectedCustomer(customer)}
-                    className="cursor-pointer hover:opacity-80 transition-all"
+                    className="hover:opacity-80 transition-all"
                     style={{ 
                       background: isBirthday ? "rgba(251, 191, 36, 0.1)" : "var(--bg-surface)",
                       borderBottom: "1px solid var(--border)",
@@ -255,6 +257,21 @@ export default function CustomerList() {
                         </div>
                       )}
                     </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => setSelectedCustomer(customer)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                        style={{ background: "var(--primary-soft)", color: "var(--primary)", border: "1px solid var(--primary-border)" }}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        {t('customers.list.actions.view_detail', { defaultValue: 'View detail' })}
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -269,8 +286,7 @@ export default function CustomerList() {
             return (
               <div 
                 key={customer.id}
-                onClick={() => setSelectedCustomer(customer)}
-                className="p-4 rounded-lg cursor-pointer hover:opacity-90 transition-all border"
+                className="p-4 rounded-lg hover:opacity-90 transition-all border"
                 style={{ 
                   background: isBirthday ? "rgba(251, 191, 36, 0.1)" : "var(--bg-surface)",
                   borderColor: isBirthday ? "#FBBF24" : "var(--border)",
@@ -338,6 +354,18 @@ export default function CustomerList() {
                         )}
                     </div>
                 </div>
+
+                <button
+                  onClick={() => setSelectedCustomer(customer)}
+                  className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all"
+                  style={{ background: "var(--primary-soft)", color: "var(--primary)", border: "1px solid var(--primary-border)" }}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {t('customers.list.actions.view_detail', { defaultValue: 'View detail' })}
+                </button>
               </div>
             );
           })}
