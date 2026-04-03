@@ -782,23 +782,30 @@
         "subtitle": "Manage dish statuses, codes, and colors",
         "add_status": "Add Status",
         "edit_status": "Edit Dish Status",
-        "name": "No dish status yet",
+        "name": "Status Name",
         "name_placeholder": "Enter status name",
         "name_required": "Please enter status name",
         "code": "Code",
-        "code_placeholder": "e.g., PENDING, PROCESSING",
+        "code_placeholder": "Enter status code",
         "code_required": "Please enter status code",
         "code_format": "Code must be uppercase letters and underscores only",
         "color": "Color",
         "color_required": "Please select a color",
+        "color_from_db": "Used colors",
         "is_active": "Active Status",
         "is_active_desc": "Enable or disable this status",
         "is_default": "Set as Default",
         "is_default_desc": "Set this as the default status for new dishes",
         "default_note": "Only one status can be set as default. This will replace the current default.",
+        "confirm_delete": "Delete dish status",
+        "confirm_delete_desc": "Are you sure you want to delete this status?",
+        "status_count": "{{count}} statuses",
+        "empty_state_title": "No dish status yet",
         "tooltip": {
           "current_default": "Current Default",
-          "set_default": "Set as Default"
+          "set_default": "Set as Default",
+          "edit": "Edit status",
+          "delete": "Delete status"
         },
         "modal_subtitle_edit": "Update status details",
         "modal_subtitle_create": "Create a new status entry",
@@ -810,6 +817,16 @@
           "default": "Default",
           "status": "Status",
           "actions": "Actions"
+        },
+        "actions": {
+          "confirm": "Confirm",
+          "cancel": "Cancel"
+        },
+        "errors": {
+          "fetch_failed": "Failed to load dish statuses",
+          "delete_failed": "Failed to delete dish status",
+          "save_failed": "Failed to save dish status",
+          "update_failed": "Failed to update default status"
         }
       },
       "notifications": {
