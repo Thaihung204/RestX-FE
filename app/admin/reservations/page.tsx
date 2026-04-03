@@ -1,43 +1,26 @@
 "use client";
 
-import ReservationList from "@/components/admin/reservations/ReservationList";
 import { DropDown } from "@/components/ui/DropDown";
 import reservationService, {
   PaginatedReservations,
+  ReservationDetail,
+  ReservationListItem,
   ReservationStatus,
 } from "@/lib/services/reservationService";
+import { Select } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 
-// ─── Status actions (keys mapped to i18n) ────────────────────────────────────
-const STATUS_ACTIONS_KEYS: Record<
-    string,
-    { actionKey: string; nextStatusId: number; color: string }[]
-> = {
-    PENDING: [
-        { actionKey: "confirm", nextStatusId: 2, color: "var(--primary)" },
-        { actionKey: "cancel", nextStatusId: 5, color: "#ef4444" },
-    ],
-    CONFIRMED: [
-        { actionKey: "checkin", nextStatusId: 3, color: "#8b5cf6" },
-        { actionKey: "complete", nextStatusId: 4, color: "#22c55e" },
-        { actionKey: "cancel", nextStatusId: 5, color: "#ef4444" },
-    ],
-    CHECKED_IN: [
-        { actionKey: "complete", nextStatusId: 4, color: "#22c55e" },
-    ],
-    COMPLETED: [],
-    CANCELLED: [],
-};
-
-// Map nextStatusId → status code key for side effects lookup
-const STATUS_ID_TO_CODE: Record<number, string> = {
-    2: "CONFIRMED",
-    3: "CHECKED_IN",
-    4: "COMPLETED",
-    5: "CANCELLED",
-};
+const tableHeaderKeys = [
+  "reservation_code",
+  "customer",
+  "table_floor",
+  "date_time",
+  "guests",
+  "status",
+  "actions",
+] as const;
 
 // ─── Badge component ──────────────────────────────────────────────────────────
 function StatusBadge({ code, name, colorCode }: { code: string; name: string; colorCode: string }) {
@@ -71,11 +54,6 @@ function ReservationDetailModal({
     const [actionLoading, setActionLoading] = useState(false);
     const [allStatuses, setAllStatuses] = useState<ReservationStatus[]>([]);
     const [selectedStatusId, setSelectedStatusId] = useState<number | "">("");
-    const [confirmAction, setConfirmAction] = useState<{
-        actionKey: string;
-        nextStatusId: number;
-        color: string;
-    } | null>(null);
 
     useEffect(() => {
         reservationService.getReservationStatuses()
@@ -184,7 +162,7 @@ function ReservationDetailModal({
                                     value={selectedStatusId !== "" ? selectedStatusId : undefined}
                                     disabled={actionLoading || allStatuses.length === 0}
                                     loading={actionLoading}
-                                    onChange={(val) => handleStatusChange(val)}
+                                    onChange={(val: number) => handleStatusChange(val)}
                                     style={{ minWidth: 180 }}
                                     optionLabelProp="label"
                                     options={allStatuses.map((s) => {
@@ -201,7 +179,7 @@ function ReservationDetailModal({
                                             color,
                                         };
                                     })}
-                                    optionRender={(opt) => (
+                                    optionRender={(opt: any) => (
                                         <div className="flex items-center gap-2">
                                             <span
                                                 className="w-2 h-2 rounded-full shrink-0"
@@ -265,7 +243,7 @@ function ReservationDetailModal({
                                     />
                                     <InfoRow
                                         label={t('admin.reservations.modal.booking.table')}
-                                        value={detail.tables.map(t => `${t.code} (${t.floorName})`).join(", ")}
+                                        value={detail.tables.map((tb) => `${tb.code} (${tb.floorName})`).join(", ")}
                                     />
                                     <InfoRow
                                         label={t('admin.reservations.modal.booking.deposit')}
@@ -329,6 +307,7 @@ export default function ReservationsPage() {
   const [statusId, setStatusId] = useState<number | "">("");
   const [date, setDate] = useState("");
   const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -545,9 +524,9 @@ export default function ReservationsPage() {
 
                                             <td className="px-4 py-3">
                                                 <div className="flex flex-wrap justify-center gap-1.5 max-w-[180px] mx-auto">
-                                                    {item.tables.map((t, i) => (
+                                                    {item.tables.map((tb, i: number) => (
                                                         <span key={i} className="px-1.5 py-0.5 rounded flex items-center gap-1 text-[11px] font-medium" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>
-                                                            {t.code} <span style={{ color: "var(--text-muted)" }}>· {t.floorName}</span>
+                                                            {tb.code} <span style={{ color: "var(--text-muted)" }}>· {tb.floorName}</span>
                                                         </span>
                                                     ))}
                                                 </div>
