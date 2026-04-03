@@ -125,7 +125,7 @@ function LoginEmailPageContent() {
       // If middleware saved a redirect path (e.g. /admin/tables), go there
       if (redirectPath) {
         router.push(redirectPath);
-      } else if (hasRole('Admin')) {
+      } else if (hasRole('System Admin') || hasRole('Admin')) {
         router.push('/admin');
       } else if (hasRole('Staff')) {
         router.push('/staff');
