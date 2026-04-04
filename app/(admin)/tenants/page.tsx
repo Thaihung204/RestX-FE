@@ -2,6 +2,7 @@
 
 import {
     CheckCircleOutlined,
+    CreditCardOutlined,
     EyeOutlined,
     MailOutlined,
     PhoneOutlined,
@@ -26,12 +27,12 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TenantsSystemRevenue from "../../../components/(admin)/tenants/SystemRevenueTab";
-import type { TenantDashboardTabItem } from "../../../components/(admin)/tenants/TenantDashboardHeader";
-import TenantDashboardHeader from "../../../components/(admin)/tenants/TenantDashboardHeader";
+import TenantPaymentSettingsModal from "../../../components/(admin)/tenants/TenantPaymentSettingsModal";
 import TenantRequestList from "../../../components/(admin)/tenants/TenantRequestList";
 import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
 import { tenantService } from "../../../lib/services/tenantService";
 import { ITenant } from "../../../lib/types/tenant";
+import { useTenantLayout } from "./TenantLayoutProvider";
 
 const TenantPage: React.FC = () => {
   const router = useRouter();
@@ -42,12 +43,27 @@ const TenantPage: React.FC = () => {
   const [status, setStatus] = useState<string>("all");
   const [tenants, setTenants] = useState<ITenant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("tenants");
   const [mounted, setMounted] = useState(false);
+
+  const { activeTab, setActiveTab, setTabItems } = useTenantLayout();
+
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<ITenant | null>(null);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    setTabItems([
+      { key: "tenants", label: t("tenants.tabs.restaurant_list"), icon: <ShopOutlined /> },
+      { key: "requests", label: t("tenants.tabs.tenant_requests"), icon: <CheckCircleOutlined /> },
+      { key: "revenue", label: t("tenants.tabs.system_revenue"), icon: <RiseOutlined /> },
+    ]);
+    setActiveTab("tenants");
+    
+    return () => {
+      setTabItems([]);
+      setActiveTab("");
+    };
+  }, [setTabItems, setActiveTab, t]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -85,15 +101,6 @@ const TenantPage: React.FC = () => {
     });
   }, [search, status, tenants]);
 
-  const stats = useMemo(() => {
-    return {
-      total: tenants.length,
-      active: tenants.filter((t) => t.status === "active").length,
-      maintenance: tenants.filter((t) => t.status === "maintenance").length,
-      inactive: tenants.filter((t) => t.status === "inactive").length,
-    };
-  }, [tenants]);
-
   const handleRefresh = async () => {
     await fetchTenants();
   };
@@ -107,6 +114,16 @@ const TenantPage: React.FC = () => {
 
   const handleViewDetails = (record: ITenant) => {
     router.push(`/tenants/${record.id}`);
+  };
+
+  const openPaymentModal = (tenant: ITenant) => {
+    setSelectedTenant(tenant);
+    setPaymentModalOpen(true);
+  };
+
+  const closePaymentModal = () => {
+    setPaymentModalOpen(false);
+    setSelectedTenant(null);
   };
 
   const columns: ColumnsType<ITenant> = [
@@ -195,6 +212,22 @@ const TenantPage: React.FC = () => {
       render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
     },
     {
+      title: t("dashboard.settings.payment.title"),
+      key: "payment",
+      width: 90,
+      align: "center",
+      render: (_, record) => (
+        <Button
+          type="text"
+          shape="circle"
+          icon={<CreditCardOutlined style={{ color: "var(--text-muted)" }} />}
+          onClick={() => openPaymentModal(record)}
+          title={t("dashboard.settings.payment.title")}
+          aria-label={t("dashboard.settings.payment.title")}
+        />
+      ),
+    },
+    {
       title: t("dashboard.tables.card.view_details"),
       key: "actions",
       width: 70,
@@ -212,24 +245,13 @@ const TenantPage: React.FC = () => {
     },
   ];
 
-  const TAB_ITEMS: TenantDashboardTabItem[] = [
-    { key: "tenants", label: t("tenants.tabs.restaurant_list"), icon: <ShopOutlined /> },
-    { key: "requests", label: t("tenants.tabs.tenant_requests"), icon: <CheckCircleOutlined /> },
-    { key: "revenue", label: t("tenants.tabs.system_revenue"), icon: <RiseOutlined /> },
-  ];
-
   if (!mounted) {
-    return <div className="min-h-screen" style={{ background: "var(--bg-base)" }} />;
+    return <div style={{ background: "var(--bg-base)", minHeight: "calc(100vh - 60px)" }} />;
   }
 
   return (
-    <div className="min-h-screen font-sans" style={{ background: "var(--bg-base)", color: "var(--text)" }}>
-      <TenantDashboardHeader
-        items={TAB_ITEMS}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      <main className="px-6 lg:px-8 py-8" style={{ background: "var(--bg-base)", color: "var(--text)" }}>
+    <>
+      <main className="px-6 lg:px-8 py-8" style={{ background: "var(--bg-base)", color: "var(--text)", flex: 1 }}>
         <div className="max-w-7xl mx-auto space-y-6">
 
           {activeTab === "tenants" && (
@@ -285,7 +307,13 @@ const TenantPage: React.FC = () => {
           {activeTab === "revenue" && <TenantsSystemRevenue />}
         </div>
       </main>
-    </div>
+
+      <TenantPaymentSettingsModal
+        open={paymentModalOpen}
+        tenant={selectedTenant}
+        onClose={closePaymentModal}
+      />
+    </>
   );
 };
 
