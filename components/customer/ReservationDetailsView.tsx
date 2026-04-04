@@ -314,6 +314,11 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const [relatedOrders, setRelatedOrders] = useState<OrderDto[]>([]);
   const [depositLoading, setDepositLoading] = useState(false);
   const [panoramaImages, setPanoramaImages] = useState<PanoramaTableImage[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editDateTime, setEditDateTime] = useState("");
+  const [editGuests, setEditGuests] = useState<number>(1);
+  const [editSpecialRequests, setEditSpecialRequests] = useState("");
 
   const isCustomer = viewMode === "customer";
 
@@ -322,6 +327,9 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     try {
       const d = await reservationService.getReservationById(reservationId);
       setDetail(d);
+      setEditDateTime(d.reservationDateTime ? d.reservationDateTime.slice(0, 16) : "");
+      setEditGuests(d.numberOfGuests || 1);
+      setEditSpecialRequests(d.specialRequests || "");
 
       if (d.tables?.length) {
         try {
@@ -360,6 +368,20 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   useEffect(() => { load(); }, [load]);
 
   const firstTableId = detail?.tables?.[0]?.id;
+  const tenantAddress = [
+    tenant?.businessAddressLine1,
+    tenant?.businessAddressLine2,
+    tenant?.businessAddressLine3,
+    tenant?.businessAddressLine4,
+  ]
+    .filter((part): part is string => Boolean(part && part.trim()))
+    .join(", ");
+  const mapSearchUrl = tenantAddress
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tenantAddress)}`
+    : "";
+  const mapEmbedUrl = tenantAddress
+    ? `https://www.google.com/maps?q=${encodeURIComponent(tenantAddress)}&output=embed`
+    : "";
 
   const handlePayDeposit = async () => {
     const unpaid = relatedOrders.find((o) => o.paymentStatusId === 0);
@@ -388,6 +410,64 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     messageApi.success(newLang === "vi" ? "Đã chuyển sang Tiếng Việt" : "Switched to English");
   };
 
+  const handleCancelEdit = () => {
+    if (!detail) return;
+    setEditDateTime(detail.reservationDateTime ? detail.reservationDateTime.slice(0, 16) : "");
+    setEditGuests(detail.numberOfGuests || 1);
+    setEditSpecialRequests(detail.specialRequests || "");
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!detail) return;
+
+    const isLockedStatus = ["COMPLETED", "CANCELLED"].includes(detail.status.code);
+    if (isLockedStatus) {
+      messageApi.warning(t("reservation_detail.edit.locked_status", "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa."));
+      return;
+    }
+
+    if (!editDateTime) {
+      messageApi.warning(t("reservation_detail.edit.date_required", "Vui lòng chọn thời gian"));
+      return;
+    }
+
+    const selectedDate = new Date(editDateTime);
+    if (Number.isNaN(selectedDate.getTime()) || selectedDate.getTime() <= Date.now()) {
+      messageApi.warning(t("reservation_detail.edit.date_in_past", "Thời gian đặt chỗ phải lớn hơn thời điểm hiện tại."));
+      return;
+    }
+
+    const normalizedGuests = Math.max(1, Number(editGuests) || 1);
+    const totalCapacity = (detail.tables || []).reduce((sum, tb) => sum + (tb.capacity || 0), 0);
+    if (totalCapacity > 0 && normalizedGuests > totalCapacity) {
+      messageApi.warning(
+        t(
+          "reservation_detail.edit.guests_exceed_capacity",
+          `Số khách (${normalizedGuests}) vượt quá sức chứa bàn (${totalCapacity}).`
+        )
+      );
+      return;
+    }
+
+    try {
+      setSavingEdit(true);
+      await reservationService.updateReservation(detail.id, {
+        reservationDateTime: selectedDate.toISOString(),
+        numberOfGuests: normalizedGuests,
+        specialRequests: editSpecialRequests?.trim() || undefined,
+      });
+      messageApi.success(t("reservation_detail.edit.save_success", "Cập nhật reservation thành công"));
+      setIsEditing(false);
+      await load();
+    } catch (err) {
+      console.error(err);
+      messageApi.error(t("reservation_detail.edit.save_failed", "Không thể cập nhật reservation"));
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   if (loading) return <Spinner />;
 
   if (!detail) {
@@ -414,6 +494,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const reservationDate = new Date(detail.reservationDateTime);
   const allSteps = ["PENDING", "CONFIRMED", "CHECKED_IN", "COMPLETED"];
   const currIdx = allSteps.indexOf(detail.status.code);
+  const isEditLocked = ["COMPLETED", "CANCELLED"].includes(detail.status.code);
 
   return (
     <main className="min-h-screen reservation-detail-page" style={{ background: "var(--bg-base)" }}>
@@ -630,16 +711,102 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
             {/* Floor Map */}
             <TableMapCard detail={detail} />
 
-            {/* Admin note */}
+            {/* Admin note + edit */}
             {!isCustomer && (
-              <div className="rounded-2xl p-5 flex items-start gap-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <div className="rounded-2xl p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold mb-1" style={{ color: "var(--text)" }}>{t("reservation_detail.admin_note.title")}</p>
+                      <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.admin_note.description")}</p>
+                    </div>
+                  </div>
+
+                  {!isEditing ? (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      disabled={isEditLocked}
+                      className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ background: "var(--primary-soft)", color: "var(--primary)", border: "1px solid var(--primary-border)" }}
+                      title={isEditLocked ? t("reservation_detail.edit.locked_status", "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa.") : undefined}
+                    >
+                      {t("reservation_detail.edit.edit_btn", "Edit")}
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={savingEdit}
+                        className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider"
+                        style={{ background: "var(--surface)", color: "var(--text-muted)", border: "1px solid var(--border)" }}
+                      >
+                        {t("reservation_detail.edit.cancel_btn", "Cancel")}
+                      </button>
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={savingEdit || isEditLocked}
+                        className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ background: "var(--primary)", color: "var(--on-primary)" }}
+                      >
+                        {savingEdit && <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />}
+                        {t("reservation_detail.edit.save_btn", "Save")}
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="text-sm font-semibold mb-1" style={{ color: "var(--text)" }}>{t("reservation_detail.admin_note.title")}</p>
-                  <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.admin_note.description")}</p>
-                </div>
+
+                {isEditLocked && (
+                  <div className="mb-4 rounded-lg px-3 py-2 text-xs font-semibold" style={{ background: "var(--surface)", color: "var(--text-muted)", border: "1px dashed var(--border)" }}>
+                    {t("reservation_detail.edit.locked_status", "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa.")}
+                  </div>
+                )}
+
+                {isEditing && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                        {t("reservation_detail.edit.date_time", "Date & time")}
+                      </span>
+                      <input
+                        type="datetime-local"
+                        value={editDateTime}
+                        onChange={(e) => setEditDateTime(e.target.value)}
+                        className="px-3 py-2 rounded-lg text-sm outline-none"
+                        style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                      />
+                    </label>
+
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                        {t("reservation_detail.edit.guests", "Guests")}
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={editGuests}
+                        onChange={(e) => setEditGuests(Number(e.target.value) || 1)}
+                        className="px-3 py-2 rounded-lg text-sm outline-none"
+                        style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                      />
+                    </label>
+
+                    <label className="flex flex-col gap-1 md:col-span-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                        {t("reservation_detail.edit.special_requests", "Special requests")}
+                      </span>
+                      <textarea
+                        value={editSpecialRequests}
+                        onChange={(e) => setEditSpecialRequests(e.target.value)}
+                        rows={3}
+                        className="px-3 py-2 rounded-lg text-sm outline-none"
+                        style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                      />
+                    </label>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -742,7 +909,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
             )}
 
             {/* Location */}
-            {tenant?.businessAddressLine1 && (
+            {tenantAddress && (
               <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
                 <div className="p-5 flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
@@ -753,19 +920,29 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                   </div>
                   <div className="min-w-0 flex-1">
                     {tenant?.businessName && <p className="text-sm font-bold mb-0.5" style={{ color: "var(--text)" }}>{tenant.businessName}</p>}
-                    <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{tenant.businessAddressLine1}</p>
-                    {tenant?.businessAddressLine1 && (
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tenant.businessAddressLine1)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold mt-2 transition-all"
-                        style={{ color: "var(--primary)" }}
-                      >
-                        {t("reservation_detail.help.get_directions")}
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                      </a>
-                    )}
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{tenantAddress}</p>
+                    <a
+                      href={mapSearchUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold mt-2 transition-all"
+                      style={{ color: "var(--primary)" }}
+                    >
+                      {t("reservation_detail.help.get_directions")}
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    </a>
+                  </div>
+                </div>
+
+                <div className="px-5 pb-5">
+                  <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
+                    <iframe
+                      title="restaurant-location-map"
+                      src={mapEmbedUrl}
+                      className="w-full h-64"
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
                   </div>
                 </div>
               </div>

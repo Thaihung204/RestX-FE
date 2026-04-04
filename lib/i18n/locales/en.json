@@ -24,6 +24,7 @@
       },
       "table_headers": {
         "code": "Booking Code",
+        "reservation_code": "Booking Code",
         "customer": "Customer",
         "table_floor": "Table / Floor",
         "date_time": "Date & Time",

@@ -24,6 +24,7 @@
       },
       "table_headers": {
         "code": "Mã đặt bàn",
+        "reservation_code": "Mã đặt bàn",
         "customer": "Khách hàng",
         "table_floor": "Bàn / Tầng",
         "date_time": "Ngày & Giờ",
