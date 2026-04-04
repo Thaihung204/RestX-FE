@@ -27,23 +27,13 @@ export interface TableItem {
     defaultViewUrl?: string;
     tableStatusName?: string;
     qrCodeUrl?: string;
-    // Cubemap 360 image URLs (returned by BE after upload)
+    // Single panorama image URL (front face)
     cubeFrontImageUrl?: string;
-    cubeRightImageUrl?: string;
-    cubeLeftImageUrl?: string;
-    cubeTopImageUrl?: string;
-    cubeBackImageUrl?: string;
-    cubeBottomImageUrl?: string;
 }
 
-/** Cubemap images to upload for 360 view */
-export interface CubemapImages {
+/** Panorama image upload payload */
+export interface PanoramaImage {
     front?: File | null;
-    right?: File | null;
-    left?: File | null;
-    top?: File | null;
-    back?: File | null;
-    bottom?: File | null;
 }
 
 /**
@@ -71,13 +61,8 @@ function buildTableFormData(id: string, table: Partial<TableItem>): FormData {
     if (table.viewDescription !== undefined) fd.append('ViewDescription', table.viewDescription ?? '');
     if (table.defaultViewUrl !== undefined) fd.append('DefaultViewUrl', table.defaultViewUrl ?? '');
     if (table.qrCodeUrl !== undefined) fd.append('QRCodeUrl', table.qrCodeUrl ?? '');
-    // Pass-through existing cubemap URLs so BE does not clear them
+    // Pass-through panorama URL so BE does not clear it
     fd.append('CubeFrontImageUrl', table.cubeFrontImageUrl ?? '');
-    fd.append('CubeRightImageUrl', table.cubeRightImageUrl ?? '');
-    fd.append('CubeLeftImageUrl', table.cubeLeftImageUrl ?? '');
-    fd.append('CubeTopImageUrl', table.cubeTopImageUrl ?? '');
-    fd.append('CubeBackImageUrl', table.cubeBackImageUrl ?? '');
-    fd.append('CubeBottomImageUrl', table.cubeBottomImageUrl ?? '');
     fd.append('ClearCubemap', 'false');
     return fd;
 }
@@ -114,27 +99,21 @@ export const tableService = {
     },
 
     /**
-     * PUT /api/tables/{id} — multipart/form-data with cubemap image files.
-     * Reuses buildTableFormData then appends new image files and ClearCubemap flag.
+     * PUT /api/tables/{id} — multipart/form-data with single panorama image.
      */
-    updateTableWithCubemap: async (
+    updateTableWithPanorama: async (
         id: string,
         table: Partial<TableItem>,
-        cubemap: CubemapImages,
-        clearCubemap = false,
+        panorama: PanoramaImage,
+        clearPanorama = false,
     ): Promise<TableItem> => {
         const fd = buildTableFormData(id, table);
 
-        // Override ClearCubemap flag set by builder
-        fd.set('ClearCubemap', String(clearCubemap));
+        // Keep BE contract key name
+        fd.set('ClearCubemap', String(clearPanorama));
 
-        // New cubemap image files
-        if (cubemap.front) fd.append('CubeFrontImage', cubemap.front);
-        if (cubemap.right) fd.append('CubeRightImage', cubemap.right);
-        if (cubemap.left) fd.append('CubeLeftImage', cubemap.left);
-        if (cubemap.top) fd.append('CubeTopImage', cubemap.top);
-        if (cubemap.back) fd.append('CubeBackImage', cubemap.back);
-        if (cubemap.bottom) fd.append('CubeBottomImage', cubemap.bottom);
+        // Single panorama image mapped to front face
+        if (panorama.front) fd.append('CubeFrontImage', panorama.front);
 
         const response = await axiosInstance.put<TableItem>(`/tables/${id}`, fd, {
             headers: { 'Content-Type': 'multipart/form-data' },

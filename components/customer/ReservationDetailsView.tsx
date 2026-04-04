@@ -246,7 +246,6 @@ function TableMapCard({ detail }: { detail: ReservationDetail }) {
               height: Number(t.layout.height) || 100,
               rotation: Number(t.layout.rotation) || 0,
               zoneId: floorSummary.name,
-              cubemap: undefined,
             }));
             return {
               id: floorSummary.id,
@@ -313,7 +312,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const [detail, setDetail] = useState<ReservationDetail | null>(null);
   const [relatedOrders, setRelatedOrders] = useState<OrderDto[]>([]);
   const [depositLoading, setDepositLoading] = useState(false);
-  const [panoramaImages, setPanoramaImages] = useState<PanoramaTableImage[]>([]);
+  const [panoramaImage, setPanoramaImage] = useState<PanoramaTableImage | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editDateTime, setEditDateTime] = useState("");
@@ -333,19 +332,15 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
       if (d.tables?.length) {
         try {
-          const tableDetails = await Promise.all(
-            d.tables.map(async (tb) => {
-              const table = await tableService.getTableById(tb.id);
-              const imageUrl = table.cubeFrontImageUrl || table.defaultViewUrl || "";
-              return imageUrl ? { tableId: tb.id, tableCode: tb.code, imageUrl } : null;
-            })
-          );
-          setPanoramaImages(tableDetails.filter(Boolean) as PanoramaTableImage[]);
+          const firstTable = d.tables[0];
+          const table = await tableService.getTableById(firstTable.id);
+          const imageUrl = table.cubeFrontImageUrl || table.defaultViewUrl || "";
+          setPanoramaImage(imageUrl ? { tableId: firstTable.id, tableCode: firstTable.code, imageUrl } : null);
         } catch {
-          setPanoramaImages([]);
+          setPanoramaImage(null);
         }
       } else {
-        setPanoramaImages([]);
+        setPanoramaImage(null);
       }
 
       if (isCustomer) {
@@ -359,7 +354,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     } catch (err) {
       console.error(err);
       setDetail(null);
-      setPanoramaImages([]);
+      setPanoramaImage(null);
     } finally {
       setLoading(false);
     }
@@ -495,6 +490,11 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const allSteps = ["PENDING", "CONFIRMED", "CHECKED_IN", "COMPLETED"];
   const currIdx = allSteps.indexOf(detail.status.code);
   const isEditLocked = ["COMPLETED", "CANCELLED"].includes(detail.status.code);
+  const hasTenantHeroBanner = Boolean(tenant?.backgroundUrl);
+  const heroText = hasTenantHeroBanner ? "#F8FAFC" : "var(--text)";
+  const heroTextMuted = hasTenantHeroBanner ? "rgba(248,250,252,0.82)" : "var(--text-muted)";
+  const heroBorder = hasTenantHeroBanner ? "rgba(248,250,252,0.22)" : "var(--border)";
+  const heroSurface = hasTenantHeroBanner ? "rgba(15,23,42,0.55)" : "var(--surface)";
 
   return (
     <main className="min-h-screen reservation-detail-page" style={{ background: "var(--bg-base)" }}>
@@ -503,11 +503,32 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
       {/* ── Hero Banner ───────────────────────────────────────────────────────── */}
       <div
         className="relative overflow-hidden reservation-hero-banner"
-        style={{ background: `linear-gradient(135deg, color-mix(in srgb, var(--primary) 15%, var(--card)) 0%, var(--card) 65%)` }}
+        style={{
+          background: tenant?.backgroundUrl
+            ? `url(${tenant.backgroundUrl}) center/cover no-repeat`
+            : `linear-gradient(135deg, color-mix(in srgb, var(--primary) 15%, var(--card)) 0%, var(--card) 65%)`,
+        }}
       >
+        {tenant?.backgroundUrl && (
+          <>
+            <div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(135deg, rgba(8,12,24,0.72) 0%, rgba(8,12,24,0.58) 50%, rgba(8,12,24,0.78) 100%)",
+              }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.48) 100%)",
+              }}
+            />
+          </>
+        )}
+
         {/* Ambient orb */}
         <div className="reservation-hero-orb absolute -top-16 -right-16" />
-        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: "linear-gradient(to right, transparent, var(--primary-border), transparent)" }} />
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: tenant?.backgroundUrl ? "linear-gradient(to right, transparent, rgba(255,255,255,0.35), transparent)" : "linear-gradient(to right, transparent, var(--primary-border), transparent)" }} />
 
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-12">
           {/* Top Bar (Breadcrumb + Actions) */}
@@ -518,15 +539,15 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                 id="reservation-back-btn"
                 onClick={() => router.back()}
                 className="flex items-center gap-1.5 text-xs font-medium transition-all hover:opacity-80"
-                style={{ color: "var(--text-muted)" }}
+                style={{ color: heroTextMuted }}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
                 {t("reservation_detail.back")}
               </button>
-              <span style={{ color: "var(--border)" }}>/</span>
-              <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.breadcrumb")}</span>
+              <span style={{ color: heroBorder }}>/</span>
+              <span className="text-xs font-medium" style={{ color: heroTextMuted }}>{t("reservation_detail.breadcrumb")}</span>
             </div>
 
             {/* Actions (Language & Theme) */}
@@ -534,7 +555,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
               <button
                 onClick={handleToggleLanguage}
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-all border"
-                style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--primary)" }}
+                style={{ background: heroSurface, borderColor: heroBorder, color: hasTenantHeroBanner ? "#E2E8F0" : "var(--primary)", backdropFilter: hasTenantHeroBanner ? "blur(6px)" : undefined }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-soft)"; e.currentTarget.style.borderColor = "var(--primary-border)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface)"; e.currentTarget.style.borderColor = "var(--border)"; }}
                 title="Toggle Language"
@@ -545,7 +566,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
               <button
                 onClick={toggleTheme}
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-all border"
-                style={{ background: "var(--surface)", borderColor: "var(--border)", color: mode === "dark" ? "var(--gold)" : "var(--text-muted)" }}
+                style={{ background: heroSurface, borderColor: heroBorder, color: hasTenantHeroBanner ? "#E2E8F0" : mode === "dark" ? "var(--gold)" : "var(--text-muted)", backdropFilter: hasTenantHeroBanner ? "blur(6px)" : undefined }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "var(--warning-soft)"; e.currentTarget.style.borderColor = "var(--warning-border)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface)"; e.currentTarget.style.borderColor = "var(--border)"; }}
                 title="Toggle Theme"
@@ -558,13 +579,13 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
           <div className="flex flex-wrap items-start justify-between gap-8">
             {/* Left: title + badges */}
             <div className="flex-1 min-w-0">
-              <p className="text-xs uppercase tracking-[0.25em] font-bold mb-3" style={{ color: "var(--text-muted)" }}>
+              <p className="text-xs uppercase tracking-[0.25em] font-bold mb-3" style={{ color: heroTextMuted }}>
                 {t("reservation_detail.hero.label")}
               </p>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 italic" style={{ color: "var(--text)" }}>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 italic" style={{ color: heroText }}>
                 #{detail.confirmationCode}
               </h1>
-              <p className="text-sm mb-5" style={{ color: "var(--text-muted)" }}>
+              <p className="text-sm mb-5" style={{ color: heroTextMuted }}>
                 {t("reservation_detail.hero.created_at")} {new Date(detail.createdAt).toLocaleString("vi-VN")}
               </p>
               <div className="flex flex-wrap items-center gap-2">
@@ -586,29 +607,29 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
             {/* Right: date-time chip + table badges */}
             <div className="flex flex-col items-end gap-4 shrink-0">
-              <div className="flex items-center gap-5 px-6 py-5 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "var(--shadow-md)" }}>
+              <div className="flex items-center gap-5 px-6 py-5 rounded-2xl" style={{ background: hasTenantHeroBanner ? "rgba(15,23,42,0.58)" : "var(--card)", border: `1px solid ${heroBorder}`, boxShadow: "var(--shadow-md)", backdropFilter: hasTenantHeroBanner ? "blur(8px)" : undefined }}>
                 <div className="text-center">
                   <p className="text-4xl font-black" style={{ color: "var(--primary)" }}>{reservationDate.getDate()}</p>
-                  <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: "var(--text-muted)" }}>
+                  <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: heroTextMuted }}>
                     {reservationDate.toLocaleString("vi-VN", { month: "short" })} {reservationDate.getFullYear()}
                   </p>
                 </div>
-                <div className="w-px h-12" style={{ background: "var(--border)" }} />
+                <div className="w-px h-12" style={{ background: heroBorder }} />
                 <div className="text-center">
-                  <p className="text-2xl font-black" style={{ color: "var(--text)" }}>
+                  <p className="text-2xl font-black" style={{ color: heroText }}>
                     {reservationDate.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                   </p>
-                  <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.hero.time_label")}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: heroTextMuted }}>{t("reservation_detail.hero.time_label")}</p>
                 </div>
-                <div className="w-px h-12" style={{ background: "var(--border)" }} />
+                <div className="w-px h-12" style={{ background: heroBorder }} />
                 <div className="text-center">
-                  <p className="text-2xl font-black" style={{ color: "var(--text)" }}>{detail.numberOfGuests}</p>
-                  <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.hero.guests_label")}</p>
+                  <p className="text-2xl font-black" style={{ color: heroText }}>{detail.numberOfGuests}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: heroTextMuted }}>{t("reservation_detail.hero.guests_label")}</p>
                 </div>
               </div>
               <div className="flex flex-wrap justify-end gap-1.5">
                 {detail.tables.map((tbl) => (
-                  <span key={tbl.id} className="px-3 py-1 rounded-lg text-xs font-bold" style={{ background: "var(--primary-soft)", color: "var(--primary)", border: "1px solid var(--primary-border)" }}>
+                  <span key={tbl.id} className="px-3 py-1 rounded-lg text-xs font-bold" style={{ background: hasTenantHeroBanner ? "rgba(15,23,42,0.52)" : "var(--primary-soft)", color: hasTenantHeroBanner ? "#E2E8F0" : "var(--primary)", border: `1px solid ${hasTenantHeroBanner ? "rgba(148,163,184,0.4)" : "var(--primary-border)"}`, backdropFilter: hasTenantHeroBanner ? "blur(6px)" : undefined }}>
                     {tbl.code} · {tbl.floorName}
                   </span>
                 ))}
@@ -888,22 +909,20 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
             </div>
 
             {/* Panorama */}
-            {panoramaImages.length > 0 && (
+            {panoramaImage && (
               <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
                 <div className="px-5 pt-5 pb-3 flex items-center justify-between">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "var(--text-muted)" }}>
                     {t("reservation_detail.booking.panorama", "Panorama")}
                   </p>
                 </div>
-                <div className="px-5 pb-5 space-y-3">
-                  {panoramaImages.map((img) => (
-                    <div key={img.tableId} className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
-                      <div className="px-3 py-2 text-xs font-semibold" style={{ color: "var(--text-muted)", borderBottom: "1px solid var(--border)" }}>
-                        Table {img.tableCode}
-                      </div>
-                      <img src={img.imageUrl} alt={`Panorama table ${img.tableCode}`} className="w-full h-40 object-cover" />
+                <div className="px-5 pb-5">
+                  <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
+                    <div className="px-3 py-2 text-xs font-semibold" style={{ color: "var(--text-muted)", borderBottom: "1px solid var(--border)" }}>
+                      Table {panoramaImage.tableCode}
                     </div>
-                  ))}
+                    <img src={panoramaImage.imageUrl} alt={`Panorama table ${panoramaImage.tableCode}`} className="w-full h-40 object-cover" />
+                  </div>
                 </div>
               </div>
             )}

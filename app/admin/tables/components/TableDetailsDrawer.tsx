@@ -20,11 +20,6 @@ interface Table {
   rotation?: number;
   qrCodeUrl?: string;
   cubeFrontImageUrl?: string;
-  cubeBackImageUrl?: string;
-  cubeLeftImageUrl?: string;
-  cubeRightImageUrl?: string;
-  cubeTopImageUrl?: string;
-  cubeBottomImageUrl?: string;
   defaultViewUrl?: string;
 }
 
