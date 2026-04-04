@@ -621,12 +621,12 @@ export const tenantService = {
 
   /**
    * Get payment settings for a tenant
-   * Backend endpoint: GET /api/tenants/{domain}/payment-settings
+   * Backend endpoint: GET /api/tenants/{id}/payment-settings
    */
-  getPaymentSettings: async (tenantDomain: string): Promise<any> => {
+  getPaymentSettings: async (tenantId: string): Promise<any> => {
     try {
       const response = await adminAxiosInstance.get(
-        `/tenants/${tenantDomain}/payment-settings`,
+        `/tenants/${tenantId}/payment-settings`,
       );
 
       const data = response.data;
@@ -649,22 +649,22 @@ export const tenantService = {
 
   /**
    * Create payment settings
-   * Backend endpoint: POST /api/tenants/{domain}/payment-settings
+   * Backend endpoint: POST /api/tenants/{id}/payment-settings
    */
-  createPaymentSettings: async (tenantDomain: string, settings: any): Promise<void> => {
+  createPaymentSettings: async (tenantId: string, settings: any): Promise<void> => {
     await adminAxiosInstance.post(
-      `/tenants/${tenantDomain}/payment-settings`,
+      `/tenants/${tenantId}/payment-settings`,
       settings,
     );
   },
 
   /**
    * Update payment settings
-   * Backend endpoint: PUT /api/tenants/{domain}/payment-settings
+   * Backend endpoint: PUT /api/tenants/{id}/payment-settings
    */
-  updatePaymentSettings: async (tenantDomain: string, settings: any): Promise<void> => {
+  updatePaymentSettings: async (tenantId: string, settings: any): Promise<void> => {
     await adminAxiosInstance.put(
-      `/tenants/${tenantDomain}/payment-settings`,
+      `/tenants/${tenantId}/payment-settings`,
       settings,
     );
   },
@@ -672,8 +672,8 @@ export const tenantService = {
   /**
    * @deprecated Use createPaymentSettings() or updatePaymentSettings() instead
    */
-  upsertPaymentSettings: async (tenantDomain: string, settings: any): Promise<void> => {
-    await tenantService.updatePaymentSettings(tenantDomain, settings);
+  upsertPaymentSettings: async (tenantId: string, settings: any): Promise<void> => {
+    await tenantService.updatePaymentSettings(tenantId, settings);
   },
 
   /**

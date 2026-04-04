@@ -1497,7 +1497,14 @@
         "empty_state": {
           "message": "Chưa có cấu hình thanh toán",
           "description": "Không tìm thấy cấu hình thanh toán cho nhà hàng của bạn. Vui lòng nhập các thông tin bắt buộc (Client ID, API Key, Checksum Key) và lưu lại."
+        },
+        "notifications": {
+          "not_configured": "Chưa có thông tin thanh toán cho nhà hàng này"
         }
+      },
+      "notifications": {
+        "success_update": "Cập nhật thành công",
+        "error_update": "Cập nhật thất bại"
       },
       "buttons": {
         "cancel": "Hủy",

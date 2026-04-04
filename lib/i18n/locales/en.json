@@ -1539,7 +1539,14 @@
         "empty_state": {
           "message": "Payment settings not configured",
           "description": "No payment settings found for your restaurnat. Please enter required information (Client ID, API Key, Checksum Key) and save."
+        },
+        "notifications": {
+          "not_configured": "No payment information configured for this restaurant"
         }
+      },
+      "notifications": {
+        "success_update": "Updated successfully",
+        "error_update": "Update failed"
       },
       "buttons": {
         "cancel": "Cancel",

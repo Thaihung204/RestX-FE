@@ -75,6 +75,8 @@ const TenantDashboardHeaderTabs: React.FC<TenantDashboardHeaderProps> = ({
 };
 
 // --- Main Component: Header ---
+const TENANTS_BRAND_LOGO = "https://res.cloudinary.com/dzz8yqhcr/image/upload/v1773461233/DemoRestaurant/LogoUrl/logo.png";
+
 const TenantDashboardHeader: React.FC<TenantDashboardHeaderProps> = ({ items, activeTab, onTabChange }) => {
   const router = useRouter();
   const { t } = useTranslation();
@@ -91,6 +93,22 @@ const TenantDashboardHeader: React.FC<TenantDashboardHeaderProps> = ({ items, ac
       const roles = admin.roles || [];
       setAdminRole(roles.length ? roles.join(", ") : "Super Admin");
     }
+
+    if (typeof document !== "undefined") {
+      const setOrCreateLink = (rel: string) => {
+        let link = document.querySelector(`link[rel='${rel}']`) as HTMLLinkElement | null;
+        if (!link) {
+          link = document.createElement("link");
+          link.rel = rel;
+          document.head.appendChild(link);
+        }
+        link.href = TENANTS_BRAND_LOGO;
+      };
+
+      setOrCreateLink("icon");
+      setOrCreateLink("shortcut icon");
+      setOrCreateLink("apple-touch-icon");
+    }
   }, []);
 
   return (
@@ -101,11 +119,24 @@ const TenantDashboardHeader: React.FC<TenantDashboardHeaderProps> = ({ items, ac
         borderBottom: "1px solid var(--border)",
         backdropFilter: "blur(8px)",
       }}>
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          {/* Bên trái: Tabs điều hướng */}
-          <div className="min-w-0">
-            <TenantDashboardHeaderTabs items={items} activeTab={activeTab} onTabChange={onTabChange} />
+      <div className="max-w-7xl mx-auto pl-3 pr-6 lg:pl-4 lg:pr-8 py-4">
+        <div className="flex items-center justify-between gap-2">
+
+          <div className="min-w-0 flex-1 flex items-center gap-5">
+            <div className="flex items-center gap-2 shrink-0 mr-1">
+              <img
+                src={TENANTS_BRAND_LOGO}
+                alt="RestX Logo"
+                className="w-9 h-9 rounded-lg object-contain"
+              />
+              <span className="text-[20px] font-extrabold tracking-tight leading-none select-none" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
+                <span style={{ color: "#FFFFFF" }}>Rest</span>
+                <span style={{ color: "#FF380B" }}>X</span>
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <TenantDashboardHeaderTabs items={items} activeTab={activeTab} onTabChange={onTabChange} />
+            </div>
           </div>
 
           {/* Bên phải: Các nút chức năng */}
