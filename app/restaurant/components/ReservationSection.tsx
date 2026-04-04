@@ -8,7 +8,7 @@ import { tableService, floorService, TableStatus, FloorLayoutTableItem } from '@
 import reservationService from '@/lib/services/reservationService';
 import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
-import TablePreview3DModal from './TablePreview3DModal';
+
 import { DatePicker, Select } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
@@ -22,29 +22,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 const DEFAULT_TIME_SLOTS = ['17:30', '18:00', '18:30', '19:00', '19:30', '20:00'];
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
 
-type CubemapData = NonNullable<TableData['cubemap']>;
 
-type CubemapSource = {
-    cubeRightImageUrl?: string | null;
-    cubeLeftImageUrl?: string | null;
-    cubeTopImageUrl?: string | null;
-    cubeBottomImageUrl?: string | null;
-    cubeFrontImageUrl?: string | null;
-    cubeBackImageUrl?: string | null;
-};
-
-const buildCubemap = (raw: unknown): CubemapData | undefined => {
-    const source = (raw ?? {}) as CubemapSource;
-    const px = source.cubeRightImageUrl || undefined;
-    const nx = source.cubeLeftImageUrl || undefined;
-    const py = source.cubeTopImageUrl || undefined;
-    const ny = source.cubeBottomImageUrl || undefined;
-    const pz = source.cubeFrontImageUrl || undefined;
-    const nz = source.cubeBackImageUrl || undefined;
-
-    if (!px || !nx || !py || !ny || !pz || !nz) return undefined;
-    return { px, nx, py, ny, pz, nz };
-};
 
 const parseOpeningHours = (hours?: string | null) => {
     if (!hours) return null;
@@ -147,8 +125,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const { user } = useAuth();
     const [step, setStep] = useState<ReservationStep>(ReservationStep.SEARCH);
     const autoFilledRef = useRef(false);
-    const [selectedTableForReservation, setSelectedTableForReservation] = useState<TableData | null>(null);
-    const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
 
     const { timeSlots } = useMemo(
         () => getTenantReservationConfig(tenant),
@@ -249,15 +225,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                 // ── Primary Path: GET /api/floors then /api/floors/{id}/layout ──
                 try {
-                    const [allFloors, allTables] = await Promise.all([
-                        floorService.getAllFloors(),
-                        tableService.getAllTables(),
-                    ]);
+                    const allFloors = await floorService.getAllFloors();
                     const activeFloors = allFloors.filter(f => f.isActive !== false);
-
-                    const tableImageMap = new Map(
-                        allTables.map(t => [t.id, buildCubemap(t)] as const)
-                    );
 
                     if (activeFloors.length > 0) {
                         const selectedAt = `${booking.date}T${booking.time}:00`;
@@ -272,7 +241,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                             const tableDataList: TableData[] = (layoutData?.tables ?? []).map(
                                 (t: FloorLayoutTableItem) => {
-                                    const layoutCubemap = buildCubemap(t);
                                     return {
                                         id: t.id,
                                         tenantId: tenant?.id || 'default',
@@ -286,7 +254,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         height: Number(t.layout.height) || 100,
                                         rotation: Number(t.layout.rotation) || 0,
                                         zoneId: floorSummary.name,
-                                        cubemap: layoutCubemap || tableImageMap.get(t.id) || undefined,
                                     };
                                 }
                             );
@@ -348,7 +315,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 height: t.height ?? 100,
                                 rotation: t.rotation ?? 0,
                                 zoneId: typeName,
-                                cubemap: buildCubemap(t),
                             };
                         });
                         return {
@@ -824,20 +790,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                             <span className="font-semibold text-[var(--text)]">{table.capacity} {t('landing.booking.table_map.guests')}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="mt-4 flex items-center gap-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const found = layout?.floors.flatMap(f => f.tables).find(t => t.id === table.id) ?? null;
-                                                                if (!found) return;
-                                                                setSelectedTableForReservation(found);
-                                                                setIsReservationModalOpen(true);
-                                                            }}
-                                                            className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--primary-border)] text-[var(--primary)] hover:bg-[var(--primary-faint)] transition"
-                                                        >
-                                                            Xem 360°
-                                                        </button>
-                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -1100,26 +1052,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
             </main>
 
-            <TablePreview3DModal
-                open={isReservationModalOpen}
-                table={selectedTableForReservation}
-                tableCubemap={selectedTableForReservation?.cubemap}
-                onClose={() => {
-                    setIsReservationModalOpen(false);
-                    setSelectedTableForReservation(null);
-                }}
-                onBookNow={() => {
-                    if (!selectedTableForReservation) return;
-                    setSelectedTables([buildSelectedTable(selectedTableForReservation)]);
-                    setIsReservationModalOpen(false);
-                    setStep(ReservationStep.CONFIRMATION);
-                }}
-                onSuccess={(result) => {
-                    setConfirmationCode(result.confirmationCode ?? '');
-                    setReservationId(result.id ?? '');
-                    setStep(ReservationStep.SUCCESS);
-                }}
-            />
 
             <style jsx global>{`
                 .reservation-date-picker.ant-picker {

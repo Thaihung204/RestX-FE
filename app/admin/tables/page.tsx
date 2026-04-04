@@ -9,7 +9,7 @@ import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { TableData as Map2DTableData } from "./components/DraggableTable";
 import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
-import { tableService, TableStatus, floorService, FloorSummary, CubemapImages } from "@/lib/services/tableService";
+import { tableService, TableStatus, floorService, FloorSummary, PanoramaImage } from "@/lib/services/tableService";
 import { usePageLoading } from "@/components/PageTransitionLoader";
 import { App } from "antd";
 import orderSignalRService from "@/lib/services/orderSignalRService";
@@ -33,26 +33,13 @@ interface Table {
   height: number;
   rotation: number;
   isActive: boolean;
-  cubemap?: {
-    px: string;
-    nx: string;
-    py: string;
-    ny: string;
-    pz: string;
-    nz: string;
-  };
   // Backend optional fields — preserved during updates
   has3DView?: boolean;
   viewDescription?: string;
   defaultViewUrl?: string;
   qrCodeUrl?: string;
-  // Cubemap 360
+  // Single panorama image
   cubeFrontImageUrl?: string;
-  cubeRightImageUrl?: string;
-  cubeLeftImageUrl?: string;
-  cubeTopImageUrl?: string;
-  cubeBackImageUrl?: string;
-  cubeBottomImageUrl?: string;
 }
 
 type ViewMode = "grid" | "map";
@@ -137,18 +124,6 @@ export default function TablesPage() {
         if (item.tableStatusId === TableStatus.Occupied) status = 'occupied';
         if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
 
-        let cubemap: Table["cubemap"] | undefined;
-        if (item.defaultViewUrl) {
-          try {
-            const parsed = JSON.parse(item.defaultViewUrl);
-            if (parsed?.px && parsed?.nx && parsed?.py && parsed?.ny && parsed?.pz && parsed?.nz) {
-              cubemap = parsed;
-            }
-          } catch {
-            cubemap = undefined;
-          }
-        }
-
         return {
           id: item.id,
           number: item.code || '',
@@ -163,18 +138,12 @@ export default function TablesPage() {
           height: Number(item.height) || 80,
           rotation: Number(item.rotation) || 0,
           isActive: item.isActive,
-          cubemap,
           has3DView: item.has3DView,
           viewDescription: item.viewDescription,
           defaultViewUrl: item.defaultViewUrl,
           qrCodeUrl: item.qrCodeUrl,
-          // Cubemap 360
+          // Single panorama image
           cubeFrontImageUrl: withCacheBust(item.cubeFrontImageUrl),
-          cubeRightImageUrl: withCacheBust(item.cubeRightImageUrl),
-          cubeLeftImageUrl: withCacheBust(item.cubeLeftImageUrl),
-          cubeTopImageUrl: withCacheBust(item.cubeTopImageUrl),
-          cubeBackImageUrl: withCacheBust(item.cubeBackImageUrl),
-          cubeBottomImageUrl: withCacheBust(item.cubeBottomImageUrl),
         };
       });
       // DEBUG: show BE positions
@@ -598,13 +567,6 @@ export default function TablesPage() {
           if (values.width !== undefined) apiData.width = values.width;
           if (values.height !== undefined) apiData.height = values.height;
           if (values.rotation !== undefined) apiData.rotation = values.rotation;
-          if (values.cubemap !== undefined) {
-            apiData.defaultViewUrl = JSON.stringify(values.cubemap);
-            apiData.has3DView = Boolean(
-              values.cubemap?.px && values.cubemap?.nx && values.cubemap?.py && values.cubemap?.ny && values.cubemap?.pz && values.cubemap?.nz,
-            );
-            apiData.viewDescription = apiData.has3DView ? "Cubemap 360" : null;
-          }
 
           if (values.status !== undefined) {
             if (values.status === 'available') apiData.tableStatusId = TableStatus.Available;
@@ -659,18 +621,13 @@ export default function TablesPage() {
         defaultViewUrl: clear ? '' : (tableToUpdate.cubeFrontImageUrl || tableToUpdate.defaultViewUrl || ''),
         qrCodeUrl: tableToUpdate.qrCodeUrl,
         cubeFrontImageUrl: clear ? '' : tableToUpdate.cubeFrontImageUrl,
-        cubeRightImageUrl: clear ? '' : tableToUpdate.cubeRightImageUrl,
-        cubeLeftImageUrl: clear ? '' : tableToUpdate.cubeLeftImageUrl,
-        cubeTopImageUrl: clear ? '' : tableToUpdate.cubeTopImageUrl,
-        cubeBackImageUrl: clear ? '' : tableToUpdate.cubeBackImageUrl,
-        cubeBottomImageUrl: clear ? '' : tableToUpdate.cubeBottomImageUrl,
       };
 
-      const cubemapPayload: CubemapImages = {
+      const panoramaPayload: PanoramaImage = {
         front: file,
       };
 
-      await tableService.updateTableWithCubemap(tableId, tableData, cubemapPayload, clear);
+      await tableService.updateTableWithPanorama(tableId, tableData, panoramaPayload, clear);
       message.success(tDashboard('tables.panorama_saved', { defaultValue: 'Đã lưu ảnh panorama!' }));
       await fetchTables();
     } catch (err) {

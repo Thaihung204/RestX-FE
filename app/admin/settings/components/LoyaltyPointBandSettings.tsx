@@ -8,13 +8,13 @@ import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
 import {
   Button,
+  ColorPicker,
   Form,
   Input,
   InputNumber,
   message,
   Modal,
   Popconfirm,
-  Radio,
   Table,
 } from "antd";
 import { useEffect, useState } from "react";
@@ -50,6 +50,7 @@ export default function LoyaltyPointBandSettings() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingBand, setEditingBand] = useState<LoyaltyPointBand | null>(null);
   const [form] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
 
   // Default values for new bands
   const defaultValues = {
@@ -68,7 +69,7 @@ export default function LoyaltyPointBandSettings() {
       setBands(data);
     } catch (error) {
       console.error("Failed to fetch loyalty point bands:", error);
-      message.error(
+      messageApi.error(
         t("dashboard.manage.errors.fetch_failed", {
           defaultValue: "Failed to fetch loyalty point bands",
         }),
@@ -107,7 +108,7 @@ export default function LoyaltyPointBandSettings() {
   const handleDelete = async (id: string) => {
     try {
       await loyaltyService.deleteBand(id);
-      message.success(
+      messageApi.success(
         t("dashboard.manage.notifications.delete_success", {
           defaultValue: "Deleted successfully",
         }),
@@ -115,7 +116,7 @@ export default function LoyaltyPointBandSettings() {
       fetchBands();
     } catch (error) {
       console.error("Failed to delete loyalty point band:", error);
-      message.error(
+      messageApi.error(
         t("dashboard.manage.errors.delete_failed", {
           defaultValue: "Failed to delete",
         }),
@@ -132,14 +133,14 @@ export default function LoyaltyPointBandSettings() {
           ...values,
           id: editingBand.id,
         });
-        message.success(
+        messageApi.success(
           t("dashboard.manage.notifications.update_success", {
             defaultValue: "Updated successfully",
           }),
         );
       } else {
         await loyaltyService.createBand(values);
-        message.success(
+        messageApi.success(
           t("dashboard.manage.notifications.create_success", {
             defaultValue: "Created successfully",
           }),
@@ -150,7 +151,7 @@ export default function LoyaltyPointBandSettings() {
       fetchBands();
     } catch (error: any) {
       console.error("Failed to save loyalty point band:", error);
-      message.error(
+      messageApi.error(
         error?.message ||
           t("dashboard.manage.errors.save_failed", {
             defaultValue: "Failed to save loyalty point band",
@@ -163,7 +164,7 @@ export default function LoyaltyPointBandSettings() {
     try {
       const updatedBand = { ...record, isActive: !record.isActive };
       await loyaltyService.updateBand(record.id, updatedBand);
-      message.success(
+      messageApi.success(
         t("dashboard.manage.notifications.update_success", {
           defaultValue: "Updated successfully",
         }),
@@ -171,7 +172,7 @@ export default function LoyaltyPointBandSettings() {
       fetchBands();
     } catch (error) {
       console.error("Failed to update status:", error);
-      message.error(
+      messageApi.error(
         t("dashboard.manage.errors.update_failed", {
           defaultValue: "Failed to update status",
         }),
@@ -287,6 +288,7 @@ export default function LoyaltyPointBandSettings() {
 
   return (
     <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] p-6">
+      {contextHolder}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h3 className="text-lg font-bold text-[var(--text)]">
@@ -345,32 +347,6 @@ export default function LoyaltyPointBandSettings() {
         }}>
         <Form form={form} layout="vertical">
           <Form.Item
-            name="logoColor"
-            label={t("dashboard.manage.loyalty.form.logo", {
-              defaultValue: "Rank Icon",
-            })}
-            rules={[{ required: true }]}>
-            <Radio.Group className="w-full loyalty-rank-radio-group">
-              <div className="grid grid-cols-5 gap-2">
-                {Object.entries(TIER_COLORS).map(([tier, color]) => (
-                  <Radio.Button
-                    key={tier}
-                    value={color}
-                    className="flex flex-col items-center justify-center h-20 !p-1"
-                    style={{ height: "auto", padding: "10px" }}>
-                    <div className="flex flex-col items-center gap-1">
-                      <LoyaltyBandIcon color={color} size={22} />
-                      <span className="text-xs capitalize">
-                        {t(`dashboard.manage.loyalty.badges.${tier}`, { defaultValue: tier })}
-                      </span>
-                    </div>
-                  </Radio.Button>
-                ))}
-              </div>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item
             name="name"
             label={t("dashboard.manage.loyalty.form.name", {
               defaultValue: "Band Name",
@@ -384,6 +360,34 @@ export default function LoyaltyPointBandSettings() {
               },
             ]}>
             <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="logoColor"
+            label={t("dashboard.manage.loyalty.form.logo", {
+              defaultValue: "Rank Color",
+            })}
+            rules={[
+              {
+                required: true,
+                message: t("dashboard.manage.loyalty.form.logo_required", {
+                  defaultValue: "Please choose a color",
+                }),
+              },
+            ]}
+            getValueFromEvent={(value) => value?.toHexString?.() ?? value}>
+            <ColorPicker
+              showText
+              size="large"
+              format="hex"
+              presets={[
+                {
+                  label: t("dashboard.manage.loyalty.badges.default", { defaultValue: "Default badges" }),
+                  colors: Object.values(TIER_COLORS),
+                },
+              ]}
+              className="w-full justify-start rounded-xl"
+            />
           </Form.Item>
 
           <Form.Item
@@ -450,6 +454,24 @@ export default function LoyaltyPointBandSettings() {
             name="isActive"
             label={t("common.status.label", { defaultValue: "Status" })}>
             <StatusToggle t={t} />
+          </Form.Item>
+
+          <Form.Item shouldUpdate noStyle>
+            {({ getFieldValue }) => {
+              const selectedColor = getFieldValue("logoColor") || TIER_COLORS.bronze;
+              const selectedName = getFieldValue("name") || t("dashboard.manage.loyalty.preview.default_name", { defaultValue: "New Rank" });
+              return (
+                <div className="mt-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                    {t("dashboard.manage.loyalty.preview.title", { defaultValue: "Badge preview" })}
+                  </p>
+                  <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5" style={{ border: `1px solid ${selectedColor}55`, background: `${selectedColor}1A` }}>
+                    <LoyaltyBandIcon color={selectedColor} size={18} />
+                    <span className="text-sm font-semibold" style={{ color: selectedColor }}>{selectedName}</span>
+                  </div>
+                </div>
+              );
+            }}
           </Form.Item>
         </Form>
       </Modal>
