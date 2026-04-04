@@ -310,7 +310,7 @@ function PanoramaSection({
       <div style={{ padding: '16px 18px' }}>
         <div onClick={() => !clearPanorama && fileRef.current?.click()} style={{ borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--card)', minHeight: 180, overflow: 'hidden', cursor: clearPanorama ? 'not-allowed' : 'pointer', opacity: clearPanorama ? 0.5 : 1 }}>
           {currentUrl ? <img src={currentUrl} alt="Panorama" style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }} /> : <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 12 }}>{t('tables.details.panorama_upload_hint', { ns: 'dashboard', defaultValue: 'Bấm để tải ảnh panorama' })}</div>}
-        </div>
+              </div>
         <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onClick={(e) => { (e.currentTarget as HTMLInputElement).value = ''; }} onChange={e => {
           const file = e.target.files?.[0] ?? null;
           setPanoramaFile(file);
@@ -319,7 +319,7 @@ function PanoramaSection({
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 10 }}>
           <input type="checkbox" checked={clearPanorama} onChange={e => setClearPanorama(e.target.checked)} />
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('tables.details.panorama_clear', { ns: 'dashboard', defaultValue: 'Xóa ảnh panorama hiện tại' })}</span>
-        </label>
+          </label>
       </div>
     </motion.div>
   );

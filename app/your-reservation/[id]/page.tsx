@@ -1,6 +1,6 @@
 "use client";
 
-import ReservationDetailsView from "@/components/customer/ReservationDetailsView";
+import ReservationDetailsView from "@/components/reservation/ReservationDetailsView";
 import { useParams } from "next/navigation";
 
 export default function CustomerReservationDetailPage() {
