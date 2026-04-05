@@ -1,4 +1,4 @@
-import { Trigger, TriggerObject, TriggerProperty, TriggerType } from "../types/trigger";
+import { Trigger, TriggerActionType, TriggerObject, TriggerProperty, TriggerType } from "../types/trigger";
 import axiosInstance from "./axiosInstance";
 
 const normalizeArray = <T,>(payload: unknown): T[] => {
@@ -30,6 +30,11 @@ export const triggerService = {
   async getTriggerTypes(): Promise<TriggerType[]> {
     const res = await axiosInstance.get("/triggers/types");
     return normalizeArray<TriggerType>(res.data);
+  },
+
+  async getTriggerActionTypes(): Promise<TriggerActionType[]> {
+    const res = await axiosInstance.get("/triggers/actions/types");
+    return normalizeArray<TriggerActionType>(res.data);
   },
 
   async createTriggerObject(payload: unknown) {

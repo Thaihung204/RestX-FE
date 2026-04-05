@@ -130,7 +130,7 @@ const TenantDashboardHeader: React.FC<TenantDashboardHeaderProps> = ({ items, ac
                 className="w-9 h-9 rounded-lg object-contain"
               />
               <span className="text-[20px] font-extrabold tracking-tight leading-none select-none" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
-                <span style={{ color: "#FFFFFF" }}>Rest</span>
+                <span style={{ color: "var(--text)" }}>Rest</span>
                 <span style={{ color: "#FF380B" }}>X</span>
               </span>
             </div>
