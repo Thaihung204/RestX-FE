@@ -1,7 +1,7 @@
 "use client";
 
+import ContentAreaLoader from "@/components/admin/ContentAreaLoader";
 import DishCard, { DishCardItem } from "@/components/admin/menu/DishCard";
-import { usePageLoading } from "@/components/PageTransitionLoader";
 import { DropDown } from "@/components/ui/DropDown";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
@@ -27,7 +27,7 @@ export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  usePageLoading(loading);
+
   const [error, setError] = useState<string | null>(null);
 
   const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
@@ -280,7 +280,8 @@ export default function MenuPage() {
 
   return (
     <main className="flex-1 p-6 lg:p-8">
-      <div className="space-y-6">
+      {loading && <ContentAreaLoader />}
+      {!loading && <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -461,17 +462,7 @@ export default function MenuPage() {
           </div>
         </div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div
-              className="animate-spin rounded-full h-12 w-12 border-b-2"
-              style={{ borderColor: "var(--primary)" }}></div>
-            <p className="ml-4" style={{ color: "var(--text-muted)" }}>
-              {t("dashboard.menu.loading")}
-            </p>
-          </div>
-        )}
+
 
         {/* Error State */}
         {error && !loading && (
@@ -582,7 +573,7 @@ export default function MenuPage() {
             )}
           </>
         )}
-      </div>
+      </div>}
 
       <Modal
         title={
@@ -707,3 +698,4 @@ export default function MenuPage() {
     </main>
   );
 }
+

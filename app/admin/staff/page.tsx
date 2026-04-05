@@ -1,6 +1,6 @@
 "use client";
 
-import { usePageLoading } from "@/components/PageTransitionLoader";
+import ContentAreaLoader from "@/components/admin/ContentAreaLoader";
 import { DropDown } from "@/components/ui/DropDown";
 import employeeService from "@/lib/services/employeeService";
 import { App, Button, Modal } from "antd";
@@ -28,7 +28,7 @@ export default function StaffPage() {
   const { message } = App.useApp();
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
-  usePageLoading(loading);
+
   const [error, setError] = useState<string | null>(null);
 
   // Pagination state
@@ -211,7 +211,8 @@ export default function StaffPage() {
   return (
     <div className="flex-1 flex flex-col bg-[var(--bg-base)]">
       <main className="flex-1 p-6 lg:p-8">
-        <div className="space-y-6">
+        {loading && <ContentAreaLoader />}
+        {!loading && <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
@@ -254,12 +255,7 @@ export default function StaffPage() {
             </Link>
           </div>
 
-          {/* Loading Spinner */}
-          {loading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-            </div>
-          )}
+
 
           {/* Search and Filter */}
           <div className="flex flex-col sm:flex-row gap-4">
@@ -752,7 +748,7 @@ export default function StaffPage() {
               </div>
             </div>
           )}
-        </div>
+        </div>}
       </main>
 
       {/* Status Toggle Confirmation Modal */}

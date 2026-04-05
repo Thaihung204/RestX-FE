@@ -55,13 +55,6 @@ export default function CustomerList() {
 
   const birthdayCount = customers.filter(c => customerService.isBirthday(c.birthday)).length;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -168,7 +161,13 @@ export default function CustomerList() {
               </tr>
             </thead>
             <tbody>
-              {sortedCustomers.map((customer) => {
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-6">
+                    <div className="w-full h-[320px] rounded-xl animate-pulse" style={{ background: "var(--card)", border: "1px solid var(--border)" }} />
+                  </td>
+                </tr>
+              ) : sortedCustomers.map((customer) => {
                 const isBirthday = customerService.isBirthday(customer.birthday);
                 
                 return (
@@ -281,7 +280,9 @@ export default function CustomerList() {
 
         {/* Customer List (Mobile Cards) */}
         <div className="md:hidden space-y-4 p-4">
-          {sortedCustomers.map((customer) => {
+          {loading ? (
+            <div className="w-full h-[220px] rounded-xl animate-pulse" style={{ background: "var(--card)", border: "1px solid var(--border)" }} />
+          ) : sortedCustomers.map((customer) => {
             const isBirthday = customerService.isBirthday(customer.birthday);
             return (
               <div 

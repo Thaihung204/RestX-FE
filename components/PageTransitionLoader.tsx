@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useTenant } from '@/lib/contexts/TenantContext';
 
 // ─── CSS — only things RAF can't do ───────────────────────────────────────────
@@ -383,9 +384,41 @@ const EV_LOADED = 'app:page-loaded';
  * @example
  *   usePageLoading(isLoading)  // isLoading từ useState / SWR / React Query
  */
-export function usePageLoading(isLoading: boolean) {
+export function usePageLoading(
+    isLoading: boolean,
+    options?: { onlyInitial?: boolean; key?: string }
+) {
+    const shouldDispatch = useRef(true);
+
     useEffect(() => {
         if (typeof window === 'undefined') return;
+
+        const isAdminRoute = window.location.pathname.startsWith('/admin');
+        const onlyInitial = options?.onlyInitial ?? isAdminRoute;
+        if (!onlyInitial) {
+            shouldDispatch.current = true;
+            return;
+        }
+
+        const storageKey = `page-loading-once:${options?.key || window.location.pathname}`;
+        const hasShown = sessionStorage.getItem(storageKey) === '1';
+        shouldDispatch.current = !hasShown;
+
+        if (isLoading && shouldDispatch.current) {
+            sessionStorage.setItem(storageKey, '1');
+        }
+    }, [isLoading, options?.onlyInitial, options?.key]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        if (!shouldDispatch.current) {
+            if (!isLoading) {
+                window.dispatchEvent(new CustomEvent(EV_LOADED));
+            }
+            return;
+        }
+
         window.dispatchEvent(new CustomEvent(isLoading ? EV_LOADING : EV_LOADED));
     }, [isLoading]);
 }
@@ -397,6 +430,7 @@ const MIN_VISIBLE_MS = 250;
 
 export function PageTransitionLoader() {
     const { tenant } = useTenant();
+    const pathname = usePathname();
     const brandName = tenant?.businessName || tenant?.name;
     const [loading, setLoading] = useState(false);
 
@@ -443,6 +477,7 @@ export function PageTransitionLoader() {
 
     // ── Trigger 1: Hard refresh (F5 / Ctrl+R) ──
     useEffect(() => {
+        if (pathname?.startsWith('/admin')) return;
         if (!isHardRefresh()) return;
 
         show();
@@ -468,10 +503,11 @@ export function PageTransitionLoader() {
             window.removeEventListener('load', finishWhenReady);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [pathname]);
 
     // ── Trigger 1b: Initial load (non-hard refresh) ──
     useEffect(() => {
+        if (pathname?.startsWith('/admin')) return;
         if (isHardRefresh()) return;
         if (document.readyState === 'complete') return;
 
@@ -509,9 +545,22 @@ export function PageTransitionLoader() {
             window.removeEventListener('load', onLoad);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [pathname]);
 
-    // ── Trigger 2: Slow page content (via usePageLoading hook) ──
+    // ── Trigger 2: Route navigation (admin page switch) ──
+    const prevPathRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!pathname) return;
+
+        if (prevPathRef.current === null) {
+            prevPathRef.current = pathname;
+            return;
+        }
+
+        prevPathRef.current = pathname;
+    }, [pathname]);
+
+    // ── Trigger 3: Slow page content (via usePageLoading hook) ──
     useEffect(() => {
         const handleLoading = () => {
             if (loadingRef.current) return; // already showing
