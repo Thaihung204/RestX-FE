@@ -54,10 +54,8 @@ export default function ReservationList({ data, loading, setPage, onStatusUpdate
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center">
-                    <div className="flex justify-center">
-                      <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--primary)", borderTopColor: "transparent" }} />
-                    </div>
+                  <td colSpan={7} className="px-4 py-6">
+                    <div className="w-full h-[320px] rounded-xl animate-pulse" style={{ background: "var(--surface)", border: "1px solid var(--border)" }} />
                   </td>
                 </tr>
               ) : !data?.items.length ? (

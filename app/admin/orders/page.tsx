@@ -1,7 +1,6 @@
 "use client";
 
 import OrderDetailsModal from "@/components/admin/orders/OrderDetailsModal";
-import { usePageLoading } from "@/components/PageTransitionLoader";
 import customerService from "@/lib/services/customerService";
 import menuService from "@/lib/services/menuService";
 import orderService, { OrderDto } from "@/lib/services/orderService";
@@ -40,7 +39,6 @@ export default function OrdersPage() {
   const { t } = useTranslation("common");
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  usePageLoading(loading);
   const [tablesById, setTablesById] = useState<Record<string, TableItem>>({});
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -134,11 +132,10 @@ export default function OrdersPage() {
   }, []);
 
   const loadOrders = useCallback(
-    async (tablesDict?: Record<string, TableItem>, showLoading = true) => {
+    async (tablesDict?: Record<string, TableItem>) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       try {
-        if (showLoading) setLoading(true);
         const data = await orderService.getAllOrders();
         // Pre-fetch unique customers referenced by orders to show name/avatar
         const uniqueCustomerIds = Array.from(
@@ -193,7 +190,6 @@ export default function OrdersPage() {
       } catch (error) {
         console.error("Failed to load orders:", error);
       } finally {
-        if (showLoading) setLoading(false);
         inFlightRef.current = false;
       }
     },
@@ -205,8 +201,14 @@ export default function OrdersPage() {
       const now = Date.now();
       if (lastRefreshRef.current && now - lastRefreshRef.current < 2000) return;
       lastRefreshRef.current = now;
-      const tablesDict = await loadTables();
-      await loadOrders(tablesDict, showLoading);
+
+      if (showLoading) setLoading(true);
+      try {
+        const tablesDict = await loadTables();
+        await loadOrders(tablesDict);
+      } finally {
+        if (showLoading) setLoading(false);
+      }
     },
     [loadTables, loadOrders],
   );
@@ -381,7 +383,22 @@ export default function OrdersPage() {
                 </tr>
               </thead>
               <tbody style={{ borderColor: "var(--border)" }}>
-                {orders.map((order) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan={9} className="px-6 py-6">
+                      <div
+                        className="w-full rounded-xl animate-pulse"
+                        style={{ background: "var(--surface)", height: 360 }}
+                      />
+                    </td>
+                  </tr>
+                ) : orders.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-6 py-12 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.orders.empty", { defaultValue: "Không có đơn hàng" })}
+                    </td>
+                  </tr>
+                ) : orders.map((order) => (
                   <tr
                     key={order.id}
                     className="transition-colors"

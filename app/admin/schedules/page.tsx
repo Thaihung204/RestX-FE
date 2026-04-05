@@ -196,15 +196,10 @@ export default function SchedulesPage() {
 
             {loading ? (
               <div
-                className="min-h-[400px] rounded-xl flex items-center justify-center border shadow-sm"
+                className="min-h-[400px] rounded-xl border shadow-sm p-4"
                 style={{ background: "var(--card)", borderColor: "var(--border)" }}
               >
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                  <p className="font-medium" style={{ color: "var(--text-muted)" }}>
-                    Loading schedule...
-                  </p>
-                </div>
+                <div className="w-full h-[360px] rounded-xl animate-pulse" style={{ background: "var(--surface)", border: "1px solid var(--border)" }} />
               </div>
             ) : weekSchedule ? (
               <TimeSlotGrid

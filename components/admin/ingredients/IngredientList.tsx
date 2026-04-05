@@ -146,13 +146,6 @@ export default function IngredientList() {
   const activeTabStyle: React.CSSProperties  = { background: "var(--primary)", color: "white" };
   const normalTabStyle: React.CSSProperties  = { background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: "var(--primary)" }} />
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -251,7 +244,13 @@ export default function IngredientList() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => {
+              {loading ? (
+                <tr>
+                  <td colSpan={10} className="px-4 py-6">
+                    <div className="w-full h-[340px] rounded-xl animate-pulse" style={{ background: "var(--card)", border: "1px solid var(--border)" }} />
+                  </td>
+                </tr>
+              ) : filtered.map((item) => {
                 const status = getStatus(item);
                 return (
                   <tr
@@ -386,7 +385,11 @@ export default function IngredientList() {
         </div>
 
         <div className="md:hidden divide-y" style={{ borderColor: "var(--border)" }}>
-          {filtered.map((item) => {
+          {loading ? (
+            <div className="p-4">
+              <div className="w-full h-[220px] rounded-xl animate-pulse" style={{ background: "var(--card)", border: "1px solid var(--border)" }} />
+            </div>
+          ) : filtered.map((item) => {
             const status = getStatus(item);
             return (
               <div
@@ -486,7 +489,7 @@ export default function IngredientList() {
           })}
         </div>
 
-        {filtered.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <div className="text-center py-14">
             <p style={{ color: "var(--text-secondary)" }}>
               {t("dashboard.ingredients.list.empty")}

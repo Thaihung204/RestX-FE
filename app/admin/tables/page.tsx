@@ -100,7 +100,7 @@ export default function TablesPage() {
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
   const [loading] = useState(false);
   const [tenantId, setTenantId] = useState<string>("");
-  usePageLoading(loading);
+  usePageLoading(loading, { onlyInitial: true, key: "admin-tables-initial" });
 
   // Fetch tables + floors from BE API
   const fetchTables = async () => {
