@@ -1,19 +1,19 @@
 "use client";
 
-import customerService, { Customer } from "@/lib/services/customerService";
 import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
+import customerService, {
+  Customer,
+  CustomerResponseDto,
+} from "@/lib/services/customerService";
 import {
-    Cake,
-    Cancel,
-    CheckCircle,
-    Close,
-    Email,
-    History,
-    Phone,
-    Star,
+  Cake,
+  Cancel,
+  CheckCircle,
+  Close,
+  History,
+  Phone,
 } from "@mui/icons-material";
-import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -23,17 +23,54 @@ interface CustomerDetailProps {
 }
 
 export default function CustomerDetail({ customer, onClose }: CustomerDetailProps) {
-  const { t } = useTranslation('common');
-  const isBirthday = customerService.isBirthday(customer.birthday);
+  const { t } = useTranslation("common");
   const primaryColor = "var(--primary)";
+
+  const [customerProfile, setCustomerProfile] = useState<CustomerResponseDto | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
+
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleEscape);
+    };
   }, [onClose]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCustomerById = async () => {
+      if (!customer?.id) return;
+      setIsLoading(true);
+      try {
+        const detail = await customerService.getCustomerProfile(customer.id);
+        if (isMounted) {
+          setCustomerProfile(detail);
+        }
+      } catch {
+        if (isMounted) {
+          setCustomerProfile(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchCustomerById();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [customer?.id]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
@@ -41,167 +78,218 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
     return date.toLocaleDateString("vi-VN");
   };
 
-  const getVipIcon = (tier?: string) => {
-    return <LoyaltyBandIcon color={getVipBadgeColor(tier)} size={20} />;
+  const formatDateTime = (dateString?: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleString("vi-VN");
   };
 
   const getVipBadgeColor = (tier?: string) => {
-     switch(tier) {
-      case 'platinum': return '#E5E7EB'; 
-      case 'gold': return '#EAB308';    
-      case 'silver': return '#9CA3AF';   
-      default: return '#FB923C';         
+    switch (tier?.toLowerCase()) {
+      case "platinum":
+        return "#E5E7EB";
+      case "gold":
+        return "#EAB308";
+      case "silver":
+        return "#9CA3AF";
+      default:
+        return "#FB923C";
     }
   };
+
+  const displayName = customerProfile?.fullName || customer.name;
+  const displayPhone = customerProfile?.phoneNumber || customer.phone || "N/A";
+  const displayAvatar =
+    customer.avatar ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
+  const displayMembership = customerProfile?.membershipLevel || customer.vipTier || "Bronze";
+  const displayPoints = customerProfile?.loyaltyPoints ?? customer.loyaltyPoints ?? 0;
+  const displayTotalOrders = customerProfile?.totalOrders ?? customer.totalOrders ?? 0;
+  const displayTotalReservations = customerProfile?.totalReservations ?? 0;
+  const displayCreatedDate = customerProfile?.createdDate || customer.memberSince;
+  const displayModifiedDate = customerProfile?.modifiedDate || customer.lastVisit;
+  const displayIsActive = customerProfile?.isActive ?? customer.isActive;
+  const isBirthday = customerService.isBirthday(customer.birthday);
+
+  const statusStyles = useMemo(
+    () =>
+      displayIsActive
+        ? {
+            label: t("customers.list.status.active"),
+            icon: <CheckCircle sx={{ fontSize: 16, color: "#22c55e" }} />,
+            color: "#22c55e",
+            bg: "rgba(34, 197, 94, 0.12)",
+            border: "rgba(34, 197, 94, 0.3)",
+          }
+        : {
+            label: t("customers.list.status.inactive"),
+            icon: <Cancel sx={{ fontSize: 16, color: "#ef4444" }} />,
+            color: "#ef4444",
+            bg: "rgba(239, 68, 68, 0.12)",
+            border: "rgba(239, 68, 68, 0.3)",
+          },
+    [displayIsActive, t],
+  );
 
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div 
-      className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/80 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ duration: 0.2 }}
-        className="customer-detail-modal-panel rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Simple Header with Close Button */}
-        <div className="absolute top-4 right-4 z-10">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      onClick={onClose}>
+      <div
+        className="w-full max-w-2xl overflow-hidden rounded-2xl shadow-2xl"
+        style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+        onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-start justify-between gap-4 px-6 py-5 border-b"
+          style={{ borderColor: "var(--border)" }}>
+          <div className="flex items-center gap-4 min-w-0">
+            <img
+              src={displayAvatar}
+              alt={displayName}
+              className="w-14 h-14 rounded-full border object-cover"
+              style={{ borderColor: "var(--border)" }}
+            />
+            <div className="min-w-0">
+              <h3 className="text-xl font-bold truncate" style={{ color: "var(--text)" }}>
+                {displayName}
+              </h3>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
+                  style={{ color: statusStyles.color, background: statusStyles.bg, borderColor: statusStyles.border }}>
+                  {statusStyles.icon}
+                  {statusStyles.label}
+                </span>
+
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
+                  style={{
+                    color: getVipBadgeColor(displayMembership),
+                    background: "var(--surface)",
+                    borderColor: "var(--border)",
+                  }}>
+                  <LoyaltyBandIcon color={getVipBadgeColor(displayMembership)} size={14} />
+                  {String(displayMembership).toUpperCase()}
+                </span>
+
+                {isBirthday && (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
+                    style={{ color: primaryColor, background: "var(--primary-soft)", borderColor: "var(--primary-border)" }}>
+                    <Cake sx={{ fontSize: 14 }} />
+                    {t("customers.list.status.birthday")}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
           <button
+            type="button"
+            className="w-9 h-9 flex items-center justify-center rounded-full transition"
+            style={{ color: "var(--text-muted)", background: "var(--surface)" }}
             onClick={onClose}
-            className="customer-detail-close-btn p-2 rounded-full transition-colors"
-          >
+            aria-label={t("customers.detail.modal.close_aria")}>
             <Close sx={{ fontSize: 20 }} />
           </button>
         </div>
 
-        <div className="p-8">
-          {/* Profile Header - Clean & Centered */}
-          <div className="flex flex-col items-center text-center mb-8">
-            <div className="relative mb-4 group">
-              <div className="relative inline-block">
-                <img
-                  src={customer.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=random`}
-                  alt={customer.name}
-                  className="customer-detail-avatar w-24 h-24 rounded-full border-2 object-cover"
-                />
-              </div>
-            </div>
-            
-            <h2 className="customer-detail-title text-2xl font-bold mb-1 flex items-center gap-2 justify-center">
-              {customer.name}
-              {customer.isActive ? (
-                <CheckCircle sx={{ fontSize: 20, color: '#22c55e' }} titleAccess={t('customers.list.status.active')} />
-              ) : (
-                <Cancel sx={{ fontSize: 20, color: '#ef4444' }} titleAccess={t('customers.list.status.inactive')} />
-              )}
-              {isBirthday && <Cake sx={{ fontSize: 20, color: primaryColor }} className="animate-pulse" />}
-            </h2>
-            
-            <div className="flex items-center gap-2 text-sm mb-2" style={{ color: "var(--text-muted)" }}>
-               <div className="flex items-center gap-1" title={t('customers.detail.member_tier', { tier: customer.vipTier })}>
-                 {getVipIcon(customer.vipTier)}
-                 <span style={{ color: getVipBadgeColor(customer.vipTier) }} className="font-bold uppercase text-[12px]">
-                   {customer.vipTier || 'Member'}
-                 </span>
-               </div>
-              <span className="w-1 h-1 rounded-full" style={{ background: "var(--border)" }}></span>
-              <span>{t('customers.detail.member_since', { date: formatDate(customer.memberSince) })}</span>
-            </div>
-
-            <div className="customer-detail-chip mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border">
-              <span className="text-[11px] uppercase tracking-wider font-semibold">Customer ID</span>
-              <span className="font-mono text-xs" style={{ color: "var(--text)" }}>{customer.id}</span>
-            </div>
-
-            <div className="flex gap-4 items-center justify-center w-full flex-wrap">
-              {customer.email && (
-                <div className="customer-detail-chip flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs border">
-                  <Email sx={{ fontSize: 14, color: primaryColor }} />
-                  <span className="truncate max-w-[150px]">{customer.email}</span>
-                </div>
-              )}
-              <div className="customer-detail-chip flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs border">
-                <Phone sx={{ fontSize: 14, color: primaryColor }} />
-                <span>{customer.phone}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Key Metrics - Simple Grid */}
-          <div className="grid grid-cols-3 gap-3 mb-8">
-             <div className="customer-detail-metric p-3 rounded-xl text-center border">
-              <div className="mb-1 text-[10px] uppercase font-bold tracking-wider" style={{ color: "var(--text-muted)" }}>{t('customers.detail.orders')}</div>
-              <div className="text-xl font-bold" style={{ color: "var(--text)" }}>{customer.totalOrders}</div>
-            </div>
-            <div className="p-3 rounded-xl text-center border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-               <div className="mb-1 text-[10px] uppercase font-bold tracking-wider" style={{ color: "var(--text-muted)" }}>{t('customers.detail.spent')}</div>
-              <div className="text-xl font-bold" style={{ color: primaryColor }}>
-                {(customer.totalSpent / 1000000).toFixed(1)}M
-              </div>
-            </div>
-            <div className="p-3 rounded-xl text-center border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-               <div className="mb-1 text-[10px] uppercase font-bold tracking-wider" style={{ color: "var(--text-muted)" }}>{t('customers.detail.points')}</div>
-              <div className="text-xl font-bold" style={{ color: "var(--text)" }}>{customer.loyaltyPoints}</div>
-            </div>
-          </div>
-
-          {/* Additional Info */}
-          <div className="space-y-4">
-            {/* Last Activity */}
-            <div className="customer-detail-info-card flex items-center justify-between p-3 rounded-xl border">
-              <div className="flex items-center gap-3">
-                <div className="customer-detail-info-icon p-2 rounded-lg">
-                   <History sx={{ fontSize: 16 }} />
-                </div>
-                <span className="text-sm" style={{ color: "var(--text-muted)" }}>{t('customers.detail.last_visit')}</span>
-              </div>
-              <span className="text-sm font-medium" style={{ color: "var(--text)" }}>{formatDate(customer.lastVisit)}</span>
-            </div>
-
-            {/* Favorite Items */}
-            {customer.favoriteItems && customer.favoriteItems.length > 0 && (
-              <div className="customer-detail-info-card p-3 rounded-xl border">
-                 <div className="flex items-center gap-3 mb-3">
-                    <div className="customer-detail-info-icon p-2 rounded-lg">
-                      <Star sx={{ fontSize: 16 }} />
-                    </div>
-                    <span className="text-sm" style={{ color: "var(--text-muted)" }}>{t('customers.detail.favorite_items')}</span>
-                 </div>
-                 <div className="flex flex-wrap gap-2 pl-[44px]">
-                    {customer.favoriteItems.map((item, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 rounded-md text-xs border"
-                        style={{ background: "var(--surface)", color: "var(--text-muted)", borderColor: "var(--border)" }}
-                      >
-                        {item}
-                      </span>
-                    ))}
-                 </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Birthday Banner */}
-          {isBirthday && (
-            <div className="customer-detail-birthday mt-6 p-3 rounded-xl border flex items-center gap-3">
-              <div className="p-2 rounded-full bg-[var(--primary)]/10 text-[var(--primary)]">
-                <Cake sx={{ fontSize: 20 }} />
-              </div>
-              <div>
-                <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{t('customers.detail.birthday_banner.title')}</p>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{t('customers.detail.birthday_banner.subtitle')}</p>
-              </div>
-            </div>
+        <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+          {isLoading && (
+            <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
+              {t("customers.detail.loading")}
+            </p>
           )}
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <div className="rounded-xl border p-4" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
+              <p className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "var(--text-muted)" }}>
+                {t("customers.detail.orders")}
+              </p>
+              <p className="text-2xl font-bold mt-1" style={{ color: "var(--text)" }}>
+                {displayTotalOrders}
+              </p>
+            </div>
+
+            <div className="rounded-xl border p-4" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
+              <p className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "var(--text-muted)" }}>
+                {t("customers.detail.reservations")}
+              </p>
+              <p className="text-2xl font-bold mt-1" style={{ color: "var(--text)" }}>
+                {displayTotalReservations}
+              </p>
+            </div>
+
+            <div className="rounded-xl border p-4" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
+              <p className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "var(--text-muted)" }}>
+                {t("customers.detail.points")}
+              </p>
+              <p className="text-2xl font-bold mt-1" style={{ color: primaryColor }}>
+                {displayPoints}
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+            <div
+              className="px-4 py-3 border-b text-sm font-semibold"
+              style={{ borderColor: "var(--border)", color: "var(--text)", background: "var(--surface)" }}>
+              {t("customers.detail.customer_information")}
+            </div>
+
+            <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+              <div className="px-4 py-3 flex items-center justify-between gap-3">
+                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {t("customers.detail.phone_number")}
+                </span>
+                <span className="text-sm font-medium inline-flex items-center gap-2" style={{ color: "var(--text)" }}>
+                  <Phone sx={{ fontSize: 16, color: primaryColor }} />
+                  {displayPhone}
+                </span>
+              </div>
+
+              <div className="px-4 py-3 flex items-center justify-between gap-3">
+                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {t("customers.detail.registration_date")}
+                </span>
+                <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                  {formatDateTime(displayCreatedDate)}
+                </span>
+              </div>
+
+              <div className="px-4 py-3 flex items-center justify-between gap-3">
+                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {t("customers.detail.last_modified_date")}
+                </span>
+                <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                  {formatDateTime(displayModifiedDate)}
+                </span>
+              </div>
+
+              <div className="px-4 py-3 flex items-center justify-between gap-3">
+                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {t("customers.detail.member_since_label")}
+                </span>
+                <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                  {formatDate(displayCreatedDate)}
+                </span>
+              </div>
+
+              <div className="px-4 py-3 flex items-center justify-between gap-3">
+                <span className="text-sm inline-flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
+                  <History sx={{ fontSize: 16 }} />
+                  {t("customers.detail.last_activity")}
+                </span>
+                <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                  {formatDateTime(displayModifiedDate)}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </div>,
     document.body,
   );

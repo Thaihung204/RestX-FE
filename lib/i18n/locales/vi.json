@@ -85,6 +85,59 @@
         "created_at": "Tạo lúc:",
         "checked_in_at": "Check-in lúc:"
       }
+    },
+    "order_detail": {
+      "title": "Chi tiết đơn hàng",
+      "reference": "Mã đơn: {{reference}}",
+      "id": "ID: {{id}}",
+      "back_to_list": "Quay lại danh sách",
+      "sections": {
+        "customer": "Khách hàng",
+        "order_details": "Chi tiết món",
+        "total": "Tổng tiền"
+      },
+      "status": {
+        "pending": "Chờ xử lý",
+        "serving": "Đang phục vụ",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
+      },
+      "customer": {
+        "full_name": "Họ và tên",
+        "phone": "Số điện thoại",
+        "membership": "Hạng thành viên",
+        "loyalty_points": "Điểm tích lũy",
+        "total_orders": "Tổng đơn hàng",
+        "total_reservations": "Tổng lượt đặt bàn"
+      },
+      "fields": {
+        "order_status": "Trạng thái đơn",
+        "payment_status": "Trạng thái thanh toán",
+        "table": "Bàn",
+        "reservation": "Đặt bàn",
+        "handled_by": "Nhân viên xử lý",
+        "completed_at": "Hoàn tất lúc",
+        "cancelled_at": "Hủy lúc",
+        "item_count": "Số món"
+      },
+      "table_headers": {
+        "dish_name": "Tên món",
+        "quantity": "Số lượng",
+        "price": "Giá",
+        "status": "Trạng thái"
+      },
+      "money": {
+        "sub_total": "Tạm tính",
+        "discount": "Giảm giá",
+        "tax": "Thuế",
+        "service_charge": "Phí dịch vụ",
+        "total": "Tổng cộng"
+      },
+      "messages": {
+        "load_error": "Không thể tải chi tiết đơn hàng.",
+        "not_found": "Không tìm thấy đơn hàng.",
+        "no_items": "Không có món trong đơn hàng."
+      }
     }
   },
   "staff": {
@@ -1972,7 +2025,18 @@
         "title": "Khách hàng có sinh nhật hôm nay!",
         "subtitle": "Đừng quên gửi lời chúc mừng."
       },
-      "member_tier": "Thành viên {{tier}}"
+      "member_tier": "Thành viên {{tier}}",
+      "loading": "Đang tải chi tiết khách hàng...",
+      "reservations": "Lượt đặt bàn",
+      "customer_information": "Thông tin khách hàng",
+      "phone_number": "Số điện thoại",
+      "registration_date": "Ngày đăng ký",
+      "last_modified_date": "Ngày cập nhật gần nhất",
+      "member_since_label": "Thành viên từ",
+      "last_activity": "Hoạt động gần nhất",
+      "modal": {
+        "close_aria": "Đóng popup chi tiết khách hàng"
+      }
     }
   },
   "points_card": {

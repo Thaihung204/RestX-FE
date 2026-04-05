@@ -85,6 +85,59 @@
         "created_at": "Created at:",
         "checked_in_at": "Checked in:"
       }
+    },
+    "order_detail": {
+      "title": "Order Details",
+      "reference": "Order code: {{reference}}",
+      "id": "ID: {{id}}",
+      "back_to_list": "Back to list",
+      "sections": {
+        "customer": "Customer",
+        "order_details": "Order Details",
+        "total": "Total"
+      },
+      "status": {
+        "pending": "Pending",
+        "serving": "Serving",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "customer": {
+        "full_name": "Full Name",
+        "phone": "Phone",
+        "membership": "Membership",
+        "loyalty_points": "Loyalty Points",
+        "total_orders": "Total Orders",
+        "total_reservations": "Total Reservations"
+      },
+      "fields": {
+        "order_status": "Order Status",
+        "payment_status": "Payment Status",
+        "table": "Table",
+        "reservation": "Reservation",
+        "handled_by": "Handled By",
+        "completed_at": "Completed At",
+        "cancelled_at": "Cancelled At",
+        "item_count": "Item Count"
+      },
+      "table_headers": {
+        "dish_name": "Dish Name",
+        "quantity": "Quantity",
+        "price": "Price",
+        "status": "Status"
+      },
+      "money": {
+        "sub_total": "SubTotal",
+        "discount": "Discount",
+        "tax": "Tax",
+        "service_charge": "Service Charge",
+        "total": "Total"
+      },
+      "messages": {
+        "load_error": "Failed to load order details.",
+        "not_found": "Order not found.",
+        "no_items": "No items in this order."
+      }
     }
   },
   "staff": {
@@ -2014,7 +2067,18 @@
         "title": "Customer has birthday today!",
         "subtitle": "Don't forget to send wishes."
       },
-      "member_tier": "Member {{tier}}"
+      "member_tier": "Member {{tier}}",
+      "loading": "Loading customer details...",
+      "reservations": "Reservations",
+      "customer_information": "Customer Information",
+      "phone_number": "Phone Number",
+      "registration_date": "Registration Date",
+      "last_modified_date": "Last Modified Date",
+      "member_since_label": "Member Since",
+      "last_activity": "Last Activity",
+      "modal": {
+        "close_aria": "Close customer detail modal"
+      }
     }
   },
   "points_card": {
