@@ -2665,8 +2665,8 @@
       "year": "Năm"
     },
     "tabs": {
-      "restaurant_list": "Danh sách nhà hàng",
-      "tenant_requests": "Yêu cầu nhà hàng",
+      "restaurant_list": "Tenants",
+      "tenant_requests": "Yêu cầu hợp tác",
       "system_revenue": "Doanh thu hệ thống",
       "business_tools": "Business Tools"
     },
@@ -2880,7 +2880,10 @@
         "light_card_color": "Màu nền thành phần (Sáng)",
         "dark_base_color": "Màu nền chính (Tối)",
         "dark_surface_color": "Màu nền phụ (Tối)",
-        "dark_card_color": "Màu nền thành phần (Tối)"
+        "dark_card_color": "Màu nền thành phần (Tối)",
+        "logo_upload_hint": "Kéo thả logo vào đây hoặc bấm để tải lên",
+        "favicon_upload_hint": "Kéo thả favicon vào đây hoặc bấm để tải lên",
+        "background_upload_hint": "Kéo thả ảnh nền vào đây hoặc bấm để tải lên"
       },
       "fields": {
         "secondary_phone": "Số điện thoại phụ",

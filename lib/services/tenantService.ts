@@ -74,6 +74,7 @@ const mapApiResponseToTenant = (apiTenant: TenantApiResponse): ITenant => {
     hostName: apiTenant.hostname,
     networkIp: apiTenant.networkIp || "",
     businessName: apiTenant.businessName,
+    logoUrl: apiTenant.logoUrl,
     phoneNumber: apiTenant.businessPrimaryPhone || "",
     addressLine1: apiTenant.businessAddressLine1 || "",
     addressLine2: apiTenant.businessAddressLine2 || "",
