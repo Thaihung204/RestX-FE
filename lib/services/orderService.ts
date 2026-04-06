@@ -38,11 +38,13 @@ export interface OrderStatusUpdateRequest {
 export interface OrderDto {
   id?: string;
   reference?: string | null;
-  tableId: string;
+  tableId?: string | null;
   customerId: string;
   reservationId?: string | null;
   orderStatusId: number;
-  paymentStatusId: number;
+  paymentStatusId?: number;
+  paymentStatus?: number;
+  paymentStatusName?: string | null;
   subTotal?: number | null;
   discountAmount?: number | null;
   taxAmount?: number | null;
@@ -52,6 +54,13 @@ export interface OrderDto {
   cancelledAt?: string | null;
   handledBy?: string | null;
   tableIds?: string[];
+  tableSessions?: Array<{
+    tableId?: string | null;
+    table?: {
+      id?: string;
+      code?: string | null;
+    } | null;
+  }>;
   orderDetails: OrderDetailDto[];
 }
 
@@ -65,6 +74,19 @@ const extractOrders = (data: unknown): OrderDto[] => {
 
   return [];
 };
+
+export interface OrderFilterParams {
+  search?: string;
+  reference?: string;
+  tableId?: string;
+  customerId?: string;
+  orderStatusId?: number;
+  paymentStatusId?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
 
 class OrderService {
   async createOrder(payload: OrderRequestDto): Promise<string> {
@@ -97,10 +119,7 @@ class OrderService {
     return extractOrders(response.data);
   }
 
-  async getOrdersByFilter(params: {
-    tableId?: string;
-    paymentStatusId?: number;
-  }): Promise<OrderDto[]> {
+  async getOrdersByFilter(params: OrderFilterParams): Promise<OrderDto[]> {
     const response = await axiosInstance.get("/orders", {
       params,
     });

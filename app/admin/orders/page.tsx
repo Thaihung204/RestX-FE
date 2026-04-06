@@ -7,7 +7,7 @@ import { tableService, type TableItem } from "@/lib/services/tableService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { HubConnectionState } from "@microsoft/signalr";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 type OrderStatusUi =
@@ -33,6 +33,8 @@ interface OrderRow {
   raw: OrderDto;
 }
 
+const PAGE_SIZE = 10;
+
 export default function OrdersPage() {
   const { t } = useTranslation("common");
   const [orders, setOrders] = useState<OrderRow[]>([]);
@@ -41,6 +43,13 @@ export default function OrdersPage() {
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
+
+  const [orderSearch, setOrderSearch] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [tableSearch, setTableSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<OrderStatusUi | "">("");
+  const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">("");
+  const [page, setPage] = useState(1);
 
   const mapOrderStatus = (statusId: number): OrderStatusUi => {
     switch (statusId) {
@@ -66,6 +75,7 @@ export default function OrdersPage() {
       const tables = await tableService.getAllTables();
       const dict: Record<string, TableItem> = {};
       tables.forEach((t) => {
+        if (!t?.id) return;
         dict[t.id] = t;
       });
       setTablesById(dict);
@@ -128,9 +138,28 @@ export default function OrdersPage() {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       try {
-        const data = await orderService.getAllOrders();
+        const statusToId: Record<OrderStatusUi, number> = {
+          pending: 0,
+          served: 1,
+          completed: 2,
+          cancelled: 3,
+          preparing: 0,
+          ready: 0,
+        };
+
+        const data = await orderService.getOrdersByFilter({
+          reference: orderSearch.trim() || undefined,
+          tableId: tableSearch.trim() || undefined,
+          orderStatusId: statusFilter ? statusToId[statusFilter] : undefined,
+          paymentStatusId: paymentFilter ? (paymentFilter === "paid" ? 1 : 0) : undefined,
+        });
+        const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
         const uniqueCustomerIds = Array.from(
-          new Set(data.map((o) => o.customerId).filter(Boolean)),
+          new Set(
+            data
+              .map((o) => o.customerId)
+              .filter((cid): cid is string => !!cid && cid !== EMPTY_GUID),
+          ),
         );
 
         const customersById: Record<string, { name: string; avatar?: string }> =
@@ -148,15 +177,44 @@ export default function OrdersPage() {
 
         setOrders(
           data.map((o) => {
-            const table = (tablesDict ?? tablesById)[o.tableId];
-            const tableCode = table?.code || o.tableId;
+            const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+            const tableSessionIds = (o.tableSessions ?? [])
+              .map((s) => s?.tableId)
+              .filter((id): id is string => !!id && id !== EMPTY_GUID);
+            const tableIds = (o.tableIds ?? []).filter(
+              (id): id is string => !!id && id !== EMPTY_GUID,
+            );
+            const directTableId =
+              o.tableId && o.tableId !== EMPTY_GUID ? o.tableId : undefined;
+
+            const tableLookupIds = [
+              ...tableSessionIds,
+              ...tableIds,
+              ...(directTableId ? [directTableId] : []),
+            ];
+            const table = tableLookupIds
+              .map((id) => (tablesDict ?? tablesById)[id])
+              .find(Boolean);
+            const tableCodeFromSession = (o.tableSessions ?? [])
+              .map((s) => s?.table?.code)
+              .find((code): code is string => !!code);
+            const tableCode =
+              tableCodeFromSession ||
+              table?.code ||
+              table?.tableStatusName ||
+              tableLookupIds[0] ||
+              "—";
             const distinctCount = o.orderDetails?.length ?? 0;
             const totalQuantity =
               o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ??
               0;
             const status = mapOrderStatus(o.orderStatusId);
-            const paymentStatus = mapPaymentStatus(o.paymentStatusId);
+            const paymentStatus = mapPaymentStatus(
+              o.paymentStatusId ?? o.paymentStatus ?? 0,
+            );
             const customer = customersById[o.customerId];
+
+            const hasRealCustomerId = !!o.customerId && o.customerId !== EMPTY_GUID;
 
             return {
               id: o.id ?? "",
@@ -165,14 +223,19 @@ export default function OrdersPage() {
                   ? o.reference
                   : `#${(o.id ?? "").slice(0, 8)}`,
               customerName:
-                customer?.name ?? t("dashboard.orders.fallbacks.guest_name"),
+                customer?.name ??
+                (hasRealCustomerId
+                  ? t("dashboard.orders.fallbacks.unknown_customer", {
+                      defaultValue: "Khách không xác định",
+                    })
+                  : t("dashboard.orders.fallbacks.guest_name")),
               customerAvatar: customer?.avatar ?? null,
               tableCode,
               items: distinctCount,
               totalQuantity,
               total: Number(o.totalAmount ?? 0),
               status,
-              time: "",
+              time: o.completedAt ? new Date(o.completedAt).toLocaleString() : "—",
               paymentStatus,
               raw: o,
             };
@@ -184,7 +247,7 @@ export default function OrdersPage() {
         inFlightRef.current = false;
       }
     },
-    [tablesById, t],
+    [tablesById, t, orderSearch, tableSearch, statusFilter, paymentFilter],
   );
 
   const refreshOrders = useCallback(
@@ -207,6 +270,10 @@ export default function OrdersPage() {
   useEffect(() => {
     refreshOrders().catch(console.error);
   }, [refreshOrders]);
+
+  useEffect(() => {
+    refreshOrders(false).catch(console.error);
+  }, [orderSearch, tableSearch, statusFilter, paymentFilter, refreshOrders]);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -255,6 +322,10 @@ export default function OrdersPage() {
     };
   }, [refreshOrders, tenant?.id]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [orderSearch, customerSearch, tableSearch, statusFilter, paymentFilter]);
+
   const statusConfig = {
     pending: {
       text: t("dashboard.orders.status.pending"),
@@ -282,6 +353,22 @@ export default function OrdersPage() {
     },
   };
 
+  const filteredOrders = useMemo(() => {
+    const customerKeyword = customerSearch.trim().toLowerCase();
+    return orders.filter((order) => {
+      if (!customerKeyword) return true;
+      return order.customerName.toLowerCase().includes(customerKeyword);
+    });
+  }, [orders, customerSearch]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+
+  const pagedOrders = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredOrders.slice(start, start + PAGE_SIZE);
+  }, [currentPage, filteredOrders]);
+
   return (
     <main className="flex-1 p-6 lg:p-8">
       <div className="space-y-6">
@@ -294,6 +381,89 @@ export default function OrdersPage() {
               {t("dashboard.orders.subtitle")}
             </p>
           </div>
+          <button
+            onClick={() => refreshOrders()}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+          >
+            {t("admin.reservations.refresh", { defaultValue: "Làm mới" })}
+          </button>
+        </div>
+
+        <div
+          className="rounded-xl p-4"
+          style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+            <input
+              type="text"
+              placeholder={t("dashboard.orders.table.order", { defaultValue: "Mã đơn" })}
+              value={orderSearch}
+              onChange={(e) => setOrderSearch(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+
+            <input
+              type="text"
+              placeholder={t("dashboard.orders.table.customer", { defaultValue: "Khách hàng" })}
+              value={customerSearch}
+              onChange={(e) => setCustomerSearch(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+
+            <input
+              type="text"
+              placeholder={t("dashboard.orders.table.table", { defaultValue: "Bàn" })}
+              value={tableSearch}
+              onChange={(e) => setTableSearch(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as OrderStatusUi | "")}
+              className="w-full px-3 py-2 rounded-lg text-sm"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            >
+              <option value="">{t("admin.reservations.filter.all_status", { defaultValue: "Tất cả trạng thái" })}</option>
+              <option value="pending">{statusConfig.pending.text}</option>
+              <option value="served">{statusConfig.served.text}</option>
+              <option value="completed">{statusConfig.completed.text}</option>
+              <option value="cancelled">{statusConfig.cancelled.text}</option>
+            </select>
+
+            <select
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value as "" | "paid" | "unpaid")}
+              className="w-full px-3 py-2 rounded-lg text-sm"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            >
+              <option value="">{t("dashboard.orders.table.payment", { defaultValue: "Thanh toán" })}</option>
+              <option value="paid">{t("dashboard.orders.payment_status.paid")}</option>
+              <option value="unpaid">{t("dashboard.orders.payment_status.unpaid")}</option>
+            </select>
+          </div>
+
+          {(orderSearch || customerSearch || tableSearch || statusFilter || paymentFilter) && (
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={() => {
+                  setOrderSearch("");
+                  setCustomerSearch("");
+                  setTableSearch("");
+                  setStatusFilter("");
+                  setPaymentFilter("");
+                }}
+                className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}
+              >
+                {t("admin.reservations.filter.clear", { defaultValue: "Xóa lọc" })}
+              </button>
+            </div>
+          )}
         </div>
 
         <div
@@ -311,15 +481,15 @@ export default function OrdersPage() {
             <table className="w-full">
               <thead style={{ background: "var(--surface)" }}>
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.order")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.customer")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.table")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.items")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.total")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.status")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.payment")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.time")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.actions")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.order")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.customer")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.table")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.items")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.total")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.status")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.payment")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.time")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.actions")}</th>
                 </tr>
               </thead>
               <tbody style={{ borderColor: "var(--border)" }}>
@@ -329,20 +499,20 @@ export default function OrdersPage() {
                       <div className="w-full rounded-xl animate-pulse" style={{ background: "var(--surface)", height: 360 }} />
                     </td>
                   </tr>
-                ) : orders.length === 0 ? (
+                ) : pagedOrders.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-6 py-12 text-center text-sm" style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.orders.empty", { defaultValue: "Không có đơn hàng" })}
                     </td>
                   </tr>
                 ) : (
-                  orders.map((order) => (
+                  pagedOrders.map((order) => (
                     <tr key={order.id} className="transition-colors" style={{ borderBottom: "1px solid var(--border)" }}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span style={{ color: "var(--primary)", fontWeight: 600 }}>{order.orderNumber}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center gap-3">
                           {order.customerAvatar ? (
                             <img src={order.customerAvatar} alt={order.customerName} className="w-8 h-8 rounded-full object-cover" />
                           ) : (
@@ -353,27 +523,27 @@ export default function OrdersPage() {
                           <span className="font-medium" style={{ color: "var(--text)" }}>{order.customerName}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span style={{ color: "var(--text-muted)" }}>
                           {t("dashboard.orders.labels.table_code", { tableCode: order.tableCode })}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span style={{ color: "var(--text-muted)" }}>
                           {t("dashboard.orders.labels.items_count", { count: order.items })}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className="text-green-500 font-bold">
-                          {t("dashboard.orders.labels.total_quantity", { count: order.totalQuantity })}
+                          {order.total.toLocaleString("vi-VN")}₫
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[order.status].badge}`}>
                           {statusConfig[order.status].text}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
                             order.paymentStatus === "paid"
@@ -385,11 +555,11 @@ export default function OrdersPage() {
                             : t("dashboard.orders.payment_status.unpaid")}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: "var(--text-muted)" }}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center" style={{ color: "var(--text-muted)" }}>
                         {order.time}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex gap-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex justify-center gap-2">
                           <Link
                             href={`/admin/orders/${order.id}`}
                             className="p-2 rounded-lg transition-all"
@@ -411,6 +581,56 @@ export default function OrdersPage() {
               </tbody>
             </table>
           </div>
+
+          {!loading && filteredOrders.length > 0 && totalPages > 1 && (
+            <div
+              className="flex items-center justify-between px-4 py-3"
+              style={{ borderTop: "1px solid var(--border)" }}
+            >
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                {t("admin.reservations.pagination.page_info", {
+                  page: currentPage,
+                  total: totalPages,
+                  count: filteredOrders.length,
+                  defaultValue: `Trang ${currentPage}/${totalPages} • ${filteredOrders.length} bản ghi`,
+                })}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                >
+                  {t("admin.reservations.pagination.prev", { defaultValue: "Trước" })}
+                </button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const p = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className="w-8 h-8 rounded-lg text-sm font-medium transition-all"
+                      style={p === currentPage
+                        ? { background: "var(--primary)", color: "white" }
+                        : { background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)" }
+                      }
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                >
+                  {t("admin.reservations.pagination.next", { defaultValue: "Sau" })}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </main>

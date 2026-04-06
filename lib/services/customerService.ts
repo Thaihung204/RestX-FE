@@ -71,7 +71,7 @@ interface ApiResponse<T> {
   data: T;
 }
 
-interface PaginatedResponse<T> {
+export interface PaginatedResponse<T> {
   items: T[];
   totalCount: number;
   pageNumber: number;
@@ -120,8 +120,18 @@ const mapListItemToCustomer = (dto: CustomerListItemDto): Customer => ({
   isActive: dto.isActive,
 });
 
+export interface CustomerPageResult {
+  items: Customer[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 const customerService = {
-  async getAllCustomers(filters?: CustomerFilterParams): Promise<Customer[]> {
+  async getCustomersPaginated(filters?: CustomerFilterParams): Promise<PaginatedResponse<CustomerListItemDto>> {
     const params = new URLSearchParams();
     if (filters) {
       if (filters.search) params.append('search', filters.search);
@@ -139,11 +149,29 @@ const customerService = {
       `/customers${params.toString() ? `?${params.toString()}` : ''}`
     );
 
-    if (response.data.success && response.data.data?.items) {
-      return response.data.data.items.map(mapListItemToCustomer);
+    if (response.data.success && response.data.data) {
+      return response.data.data;
     }
 
     throw new Error(response.data.message || 'Failed to fetch customers');
+  },
+
+  async getAllCustomers(filters?: CustomerFilterParams): Promise<Customer[]> {
+    const pageData = await this.getCustomersPaginated(filters);
+    return pageData.items.map(mapListItemToCustomer);
+  },
+
+  async getCustomersWithMeta(filters?: CustomerFilterParams): Promise<CustomerPageResult> {
+    const pageData = await this.getCustomersPaginated(filters);
+    return {
+      items: pageData.items.map(mapListItemToCustomer),
+      totalCount: pageData.totalCount,
+      pageNumber: pageData.pageNumber,
+      pageSize: pageData.pageSize,
+      totalPages: pageData.totalPages,
+      hasPreviousPage: pageData.hasPreviousPage,
+      hasNextPage: pageData.hasNextPage,
+    };
   },
 
   async getCustomerById(id: string): Promise<Customer | null> {

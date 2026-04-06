@@ -3,27 +3,46 @@
 import customerService, { Customer } from "@/lib/services/customerService";
 import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
 import { Cake, Cancel, CheckCircle } from "@mui/icons-material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CustomerDetail from "./CustomerDetail";
+
+const PAGE_SIZE = 10;
 
 export default function CustomerList() {
   const { t } = useTranslation('common');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [nameSearch, setNameSearch] = useState("");
+  const [emailSearch, setEmailSearch] = useState("");
+  const [phoneSearch, setPhoneSearch] = useState("");
   const [filterTier, setFilterTier] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    loadCustomers();
-  }, []);
-
-  const loadCustomers = async () => {
+  const loadCustomers = async (targetPage = page) => {
     try {
       setLoading(true);
-      const data = await customerService.getAllCustomers();
-      setCustomers(data);
+
+      const search = [nameSearch.trim(), emailSearch.trim(), phoneSearch.trim()]
+        .filter(Boolean)
+        .join(" ");
+
+      const response = await customerService.getCustomersWithMeta({
+        pageNumber: targetPage,
+        pageSize: PAGE_SIZE,
+        search: search || undefined,
+        membershipLevel: filterTier === "all" ? undefined : filterTier.toUpperCase(),
+      });
+
+      setCustomers(response.items);
+      setTotalCount(response.totalCount);
+      setTotalPages(Math.max(1, response.totalPages || 1));
+      if (response.pageNumber !== targetPage) {
+        setPage(response.pageNumber || 1);
+      }
     } catch (error) {
       console.error("Error loading customers:", error);
     } finally {
@@ -31,29 +50,28 @@ export default function CustomerList() {
     }
   };
 
-  // Filter customers
-  const filteredCustomers = customers.filter((customer) => {
-    const matchesSearch = 
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone.includes(searchTerm);
-    
-    const matchesTier = filterTier === "all" || customer.vipTier === filterTier;
-    
-    return matchesSearch && matchesTier;
-  });
+  useEffect(() => {
+    setPage(1);
+  }, [nameSearch, emailSearch, phoneSearch, filterTier]);
 
-  // Sort: birthday customers first
-  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
-    const aIsBirthday = customerService.isBirthday(a.birthday);
-    const bIsBirthday = customerService.isBirthday(b.birthday);
-    
-    if (aIsBirthday && !bIsBirthday) return -1;
-    if (!aIsBirthday && bIsBirthday) return 1;
-    return 0;
-  });
+  useEffect(() => {
+    loadCustomers(page);
+  }, [page, nameSearch, emailSearch, phoneSearch, filterTier]);
 
-  const birthdayCount = customers.filter(c => customerService.isBirthday(c.birthday)).length;
+  const sortedCustomers = useMemo(() => {
+    return [...customers].sort((a, b) => {
+      const aIsBirthday = customerService.isBirthday(a.birthday);
+      const bIsBirthday = customerService.isBirthday(b.birthday);
+
+      if (aIsBirthday && !bIsBirthday) return -1;
+      if (!aIsBirthday && bIsBirthday) return 1;
+      return 0;
+    });
+  }, [customers]);
+
+  const birthdayCount = sortedCustomers.filter((c) => customerService.isBirthday(c.birthday)).length;
+  const currentPage = Math.min(page, totalPages);
+  const pagedCustomers = sortedCustomers;
 
 
   return (
@@ -73,57 +91,76 @@ export default function CustomerList() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="rounded-lg p-6" style={{ background: "var(--bg-surface)" }}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Search */}
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
-              {t('customers.search.label')}
-            </label>
-            <input
-              type="text"
-              placeholder={t('customers.search.placeholder')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border"
-              style={{ 
-                background: "var(--bg-base)", 
-                color: "var(--text)",
-                borderColor: "var(--border)"
-              }}
-            />
-          </div>
+      <div
+        className="rounded-xl p-4"
+        style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+          <input
+            type="text"
+            placeholder={t('customers.list.headers.customer', { defaultValue: 'Tên khách hàng' })}
+            value={nameSearch}
+            onChange={(e) => setNameSearch(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+          />
 
-          {/* VIP Tier Filter */}
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
-              {t('customers.filters.tier')}
-            </label>
-            <select
-              value={filterTier}
-              onChange={(e) => setFilterTier(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border"
-              style={{ 
-                background: "var(--bg-base)", 
-                color: "var(--text)",
-                borderColor: "var(--border)"
+          <input
+            type="text"
+            placeholder={t('customers.list.headers.contact', { defaultValue: 'Email' })}
+            value={emailSearch}
+            onChange={(e) => setEmailSearch(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+          />
+
+          <input
+            type="text"
+            placeholder={t('tenant_requests.form.phone_number', { defaultValue: 'Số điện thoại' })}
+            value={phoneSearch}
+            onChange={(e) => setPhoneSearch(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+          />
+
+          <select
+            value={filterTier}
+            onChange={(e) => setFilterTier(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg text-sm"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+          >
+            <option value="all">{t('customers.filters.all_tiers')}</option>
+            <option value="platinum">Platinum</option>
+            <option value="gold">Vàng</option>
+            <option value="silver">Bạc</option>
+            <option value="bronze">Đồng</option>
+          </select>
+
+          <button
+            onClick={() => loadCustomers(page)}
+            className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+          >
+            {t('admin.reservations.refresh', { defaultValue: 'Làm mới' })}
+          </button>
+        </div>
+
+        {(nameSearch || emailSearch || phoneSearch || filterTier !== "all") && (
+          <div className="mt-3 flex justify-end">
+            <button
+              onClick={() => {
+                setNameSearch("");
+                setEmailSearch("");
+                setPhoneSearch("");
+                setFilterTier("all");
               }}
+              className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}
             >
-              <option value="all">{t('customers.filters.all_tiers')}</option>
-              <option value="platinum">Platinum</option>
-              <option value="gold">Vàng</option>
-              <option value="silver">Bạc</option>
-              <option value="bronze">Đồng</option>
-            </select>
+              {t('admin.reservations.filter.clear', { defaultValue: 'Xóa lọc' })}
+            </button>
           </div>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            {t('customers.list.found_count', { count: sortedCustomers.length })}
-          </p>
-        </div>
+        )}
       </div>
 
       {/* Customer List Container */}
@@ -167,7 +204,7 @@ export default function CustomerList() {
                     <div className="w-full h-[320px] rounded-xl animate-pulse" style={{ background: "var(--card)", border: "1px solid var(--border)" }} />
                   </td>
                 </tr>
-              ) : sortedCustomers.map((customer) => {
+              ) : pagedCustomers.map((customer) => {
                 const isBirthday = customerService.isBirthday(customer.birthday);
                 
                 return (
@@ -281,7 +318,7 @@ export default function CustomerList() {
         <div className="md:hidden space-y-4 p-4">
           {loading ? (
             <div className="w-full h-[220px] rounded-xl animate-pulse" style={{ background: "var(--card)", border: "1px solid var(--border)" }} />
-          ) : sortedCustomers.map((customer) => {
+          ) : pagedCustomers.map((customer) => {
             const isBirthday = customerService.isBirthday(customer.birthday);
             return (
               <div 
@@ -371,11 +408,63 @@ export default function CustomerList() {
           })}
         </div>
 
-        {sortedCustomers.length === 0 && (
+        {!loading && totalCount === 0 && (
           <div className="text-center py-12">
             <p style={{ color: "var(--text-secondary)" }}>
               {t('customers.list.empty')}
             </p>
+          </div>
+        )}
+
+        {!loading && totalCount > 0 && totalPages > 1 && (
+          <div
+            className="flex items-center justify-between px-4 py-3"
+            style={{ borderTop: "1px solid var(--border)" }}
+          >
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+              {t('admin.reservations.pagination.page_info', {
+                page: currentPage,
+                total: totalPages,
+                count: totalCount,
+                defaultValue: `Trang ${currentPage}/${totalPages} • ${totalCount} khách hàng`,
+              })}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              >
+                {t('admin.reservations.pagination.prev', { defaultValue: 'Trước' })}
+              </button>
+
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const p = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className="w-8 h-8 rounded-lg text-sm font-medium transition-all"
+                    style={p === currentPage
+                      ? { background: "var(--primary)", color: "white" }
+                      : { background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)" }
+                    }
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              >
+                {t('admin.reservations.pagination.next', { defaultValue: 'Sau' })}
+              </button>
+            </div>
           </div>
         )}
       </div>
