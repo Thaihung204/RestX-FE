@@ -25,6 +25,14 @@ export interface TriggerProperty {
   operators?: string[];
 }
 
+export interface TriggerActionType {
+  id?: TriggerPrimitiveId;
+  name?: string;
+  code?: string;
+  value?: string;
+  displayName?: string;
+}
+
 export interface Trigger {
   id?: TriggerPrimitiveId;
   name?: string;

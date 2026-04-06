@@ -134,12 +134,33 @@ const TenantPage: React.FC = () => {
       width: 280,
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <Avatar
-            shape="square"
-            size="large"
-            className="shadow-sm rounded-lg bg-[var(--primary)] text-white">
-            {record.name.charAt(0)}
-          </Avatar>
+          {(record as ITenant & { logoUrl?: string }).logoUrl ? (
+            <div
+              className="w-10 h-10 rounded-lg overflow-hidden shadow-sm border"
+              style={{
+                background: "transparent",
+                borderColor: "var(--border)",
+              }}>
+              <img
+                src={(record as ITenant & { logoUrl?: string }).logoUrl}
+                alt={`${record.name} logo`}
+                className="w-full h-full"
+                style={{
+                  objectFit: "contain",
+                  filter: "none",
+                  mixBlendMode: "normal",
+                  background: "transparent",
+                }}
+              />
+            </div>
+          ) : (
+            <Avatar
+              shape="square"
+              size="large"
+              className="shadow-sm rounded-lg bg-[var(--primary)] text-white">
+              {record.name.charAt(0)}
+            </Avatar>
+          )}
           <div className="flex flex-col">
             <span className="font-semibold text-sm" style={{ color: "var(--text)" }}>
               {record.name}

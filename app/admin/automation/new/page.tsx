@@ -74,6 +74,7 @@ export default function NewAutomationTriggerPage() {
 
   const [typeOptions, setTypeOptions] = useState<{ label: string; value: string }[]>([]);
   const [objectOptions, setObjectOptions] = useState<{ label: string; value: string }[]>([]);
+  const [actionTypeOptions, setActionTypeOptions] = useState<{ label: string; value: string }[]>([]);
 
   const [groups, setGroups] = useState<TriggerGroup[]>([]);
   const [actions, setActions] = useState<TriggerAction[]>([]);
@@ -114,9 +115,10 @@ export default function NewAutomationTriggerPage() {
     const loadMeta = async () => {
       setLoadingMeta(true);
       try {
-        const [types, objects] = await Promise.all([
+        const [types, objects, actionTypes] = await Promise.all([
           triggerService.getTriggerTypes(),
           triggerService.getTriggerObjects(),
+          triggerService.getTriggerActionTypes(),
         ]);
 
         const mappedTypes = types.map((x, index) => ({
@@ -137,11 +139,22 @@ export default function NewAutomationTriggerPage() {
           value: String(x.id ?? x.code ?? index + 1),
         }));
 
+        const mappedActionTypes = actionTypes.map((x, index) => ({
+          label:
+            x.displayName ||
+            x.name ||
+            x.code ||
+            t("automation.new.fallback.type_name", { index: index + 1 }),
+          value: String(x.id ?? x.value ?? index + 1),
+        }));
+
         setTypeOptions(mappedTypes);
         setObjectOptions(mappedObjects);
+        setActionTypeOptions(mappedActionTypes);
 
         if (mappedTypes.length > 0) setType((prev) => prev || mappedTypes[0].value);
         if (mappedObjects.length > 0) setTriggerObjectId((prev) => prev || mappedObjects[0].value);
+        if (mappedActionTypes.length > 0) setActionType((prev) => prev || mappedActionTypes[0].value);
       } catch (error) {
         console.error(error);
         message.error(t("automation.new.messages.load_metadata_failed"));
@@ -301,10 +314,6 @@ export default function NewAutomationTriggerPage() {
   const handleSubmitTrigger = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !type || !triggerObjectId) return;
-    if (actions.length === 0) {
-      message.warning(t("automation.new.messages.require_action"));
-      return;
-    }
 
     const payload = {
       name: name.trim(),
@@ -675,7 +684,7 @@ export default function NewAutomationTriggerPage() {
       </main>
 
       {showGroupModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg rounded-xl p-6" style={panelStyle}>
             <h3 className="text-2xl mb-5" style={{ color: "var(--text)" }}>
               {t("automation.new.modals.add_group_title")}
@@ -711,7 +720,7 @@ export default function NewAutomationTriggerPage() {
       )}
 
       {showActionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="w-full max-w-3xl rounded-xl p-6" style={panelStyle}>
             <h3 className="text-2xl mb-5" style={{ color: "var(--text)" }}>
               {t("automation.new.modals.add_action_title")}
@@ -733,14 +742,27 @@ export default function NewAutomationTriggerPage() {
                 <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                   {t("automation.new.fields.type")}
                 </label>
-                <input
-                  type="number"
-                  min={0}
-                  value={actionType}
-                  onChange={(e) => setActionType(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
-                  style={fieldStyle}
-                />
+                {actionTypeOptions.length > 0 ? (
+                  <DropDown
+                    value={actionType}
+                    onChange={(e) => setActionType(e.target.value)}
+                    style={fieldStyle}>
+                    {actionTypeOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </DropDown>
+                ) : (
+                  <input
+                    type="number"
+                    min={0}
+                    value={actionType}
+                    onChange={(e) => setActionType(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
+                    style={fieldStyle}
+                  />
+                )}
               </div>
               <div>
                 <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
@@ -795,7 +817,7 @@ export default function NewAutomationTriggerPage() {
       )}
 
       {showCriteriaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="w-full max-w-3xl rounded-xl p-6" style={panelStyle}>
             <h3 className="text-2xl mb-5" style={{ color: "var(--text)" }}>
               {t("automation.new.modals.add_criteria_title")}

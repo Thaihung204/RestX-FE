@@ -4,6 +4,7 @@ export interface ITenant {
   hostName: string;
   networkIp?: string; // Domain/IP address
   businessName: string;
+  logoUrl?: string;
   phoneNumber: string;
   addressLine1: string;
   addressLine2: string;

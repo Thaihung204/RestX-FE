@@ -2658,8 +2658,8 @@
       "monthly_revenue": "Monthly Revenue"
     },
     "tabs": {
-      "restaurant_list": "Restaurant List",
-      "tenant_requests": "Restaurant Requests",
+      "restaurant_list": "Tenants",
+      "tenant_requests": "Partnership Requests",
       "system_revenue": "System Revenue",
       "business_tools": "Business Tools"
     },
@@ -2916,7 +2916,10 @@
         "light_card_color": "Component Background (Light)",
         "dark_base_color": "Primary Background (Dark)",
         "dark_surface_color": "Secondary Background (Dark)",
-        "dark_card_color": "Component Background (Dark)"
+        "dark_card_color": "Component Background (Dark)",
+        "logo_upload_hint": "Drag and drop logo here, or click to upload",
+        "favicon_upload_hint": "Drag and drop favicon here, or click to upload",
+        "background_upload_hint": "Drag and drop background image here, or click to upload"
       },
       "fields": {
         "secondary_phone": "Secondary Phone",
