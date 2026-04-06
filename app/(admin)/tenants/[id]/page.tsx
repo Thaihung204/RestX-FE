@@ -1,6 +1,7 @@
 "use client";
 
 import VnAddressSelect from "@/components/ui/VnAddressSelect";
+import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantUpdateInput } from "@/lib/types/tenant";
 import {
@@ -521,11 +522,12 @@ const TenantEditPage: React.FC = () => {
                           ),
                         },
                       ]}>
-                      <Input
-                        size="large"
-                        placeholder={t(
-                          "tenants.create.fields.address_line1_placeholder",
-                        )}
+                      <VnStreetAutocomplete
+                        form={form}
+                        fieldName="businessAddressLine1"
+                        cityFieldName="businessAddressLine3"
+                        districtWardFieldName="businessAddressLine2"
+                        placeholder={t("tenants.create.fields.address_line1_placeholder")}
                       />
                     </Form.Item>
                     <VnAddressSelect
@@ -561,22 +563,7 @@ const TenantEditPage: React.FC = () => {
                   <div
                     className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-dashed"
                     style={{ borderColor: "var(--border)" }}>
-                    <Form.Item
-                      label={
-                        <span
-                          className="text-sm font-semibold"
-                          style={{ color: "var(--text)" }}>
-                          {t("tenants.edit.fields.county")}
-                        </span>
-                      }
-                      name="businessCounty">
-                      <Input
-                        size="large"
-                        placeholder={t(
-                          "tenants.edit.fields.county_placeholder",
-                        )}
-                      />
-                    </Form.Item>
+
                     <Form.Item
                       label={
                         <span

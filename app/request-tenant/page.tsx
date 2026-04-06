@@ -1,6 +1,7 @@
 "use client";
 
 import VnAddressSelect from "@/components/ui/VnAddressSelect";
+import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantRequestInput } from "@/lib/types/tenant";
 import type { FormProps } from "antd";
@@ -155,7 +156,13 @@ const RequestTenantPage: React.FC = () => {
             </Title>
 
             <Form.Item label="Address Line 1" name="businessAddressLine1">
-              <Input placeholder="Street address (optional)" />
+              <VnStreetAutocomplete 
+                form={form} 
+                fieldName="businessAddressLine1"
+                cityFieldName="businessAddressLine3"
+                districtWardFieldName="businessAddressLine2"
+                placeholder="Street address (optional)" 
+              />
             </Form.Item>
 
             <VnAddressSelect
