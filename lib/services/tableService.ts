@@ -67,17 +67,45 @@ function buildTableFormData(id: string, table: Partial<TableItem>): FormData {
     return fd;
 }
 
+const extractTables = (payload: unknown): TableItem[] => {
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload as TableItem[];
+
+    const data = payload as Record<string, unknown>;
+    const candidates = [
+        data.data,
+        data.Data,
+        data.items,
+        data.Items,
+        data.tables,
+        data.Tables,
+    ];
+
+    for (const candidate of candidates) {
+        if (Array.isArray(candidate)) return candidate as TableItem[];
+    }
+
+    return [];
+};
+
 export const tableService = {
     /** GET /api/tables — AllowAnonymous */
     getAllTables: async (): Promise<TableItem[]> => {
-        const response = await axiosInstance.get<TableItem[]>('/tables');
-        return response.data;
+        const response = await axiosInstance.get('/tables');
+        return extractTables(response.data);
     },
 
     /** GET /api/tables/{id} — AllowAnonymous */
     getTableById: async (id: string): Promise<TableItem> => {
-        const response = await axiosInstance.get<TableItem>(`/tables/${id}`);
-        return response.data;
+        const response = await axiosInstance.get(`/tables/${id}`);
+        const direct = response.data as TableItem;
+        if (direct && typeof direct === 'object' && 'id' in direct) return direct;
+
+        const data = response.data as Record<string, unknown>;
+        const nested = (data?.data || data?.Data) as TableItem | undefined;
+        if (nested) return nested;
+
+        throw new Error('Invalid table payload');
     },
 
     /** POST /api/tables — Requires Admin role */
