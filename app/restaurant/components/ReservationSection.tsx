@@ -1029,23 +1029,33 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 </span>
                             </div>
                             <div className="h-px bg-[var(--border)]" />
-                            <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                                <span className="material-symbols-outlined text-base text-[var(--text-muted)]">mail</span>
-                                <span className="truncate">{t('landing.booking.success.confirmation_sent')} <span className="text-[var(--text)]">{userDetails.email}</span></span>
-                            </div>
-                            {userDetails.phone && (
-                                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                                    <span className="material-symbols-outlined text-base text-[var(--text-muted)]">phone</span>
-                                    <span>{userDetails.phone}</span>
+
+                            <div className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                                <span className="material-symbols-outlined text-base text-[var(--text-muted)] mt-0.5">mail</span>
+                                <div className="min-w-0">
+                                    <div className="text-xs uppercase tracking-wide">{t('landing.booking.success.confirmation_sent', { defaultValue: 'Email xác nhận gửi tới:' })}</div>
+                                    <div className="text-[var(--text)] font-medium break-all">{userDetails.email || '—'}</div>
                                 </div>
-                            )}
+                            </div>
+
+                            <div className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                                <span className="material-symbols-outlined text-base text-[var(--text-muted)] mt-0.5">phone</span>
+                                <div className="min-w-0">
+                                    <div className="text-xs uppercase tracking-wide">{t('landing.booking.success.phone_label', { defaultValue: 'Phone' })}</div>
+                                    <div className="text-[var(--text)] font-medium">{userDetails.phone || '—'}</div>
+                                </div>
+                            </div>
                         </div>
 
                         <button
-                            onClick={() => window.location.reload()}
-                            className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm"
+                            onClick={() => {
+                                if (!reservationId) return;
+                                window.location.href = `/your-reservation/${reservationId}`;
+                            }}
+                            disabled={!reservationId}
+                            className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                            {t('landing.booking.success.make_another')}
+                            {t('landing.booking.success.view_details', { defaultValue: 'Xem chi tiết' })}
                         </button>
                     </div>
                 )}
