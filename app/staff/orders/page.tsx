@@ -168,7 +168,25 @@ export default function OrderManagement() {
       const dishNameMap = dishNameMapRef.current;
 
       return data.map((order: OrderDto) => {
-        const tableName = tableNameMap[order.tableId] || order.tableId;
+        const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+        const tableIdFromSession = (order.tableSessions ?? [])
+          .map((s) => s?.tableId)
+          .find((id): id is string => !!id && id !== EMPTY_GUID);
+        const tableIdFromList = (order.tableIds ?? []).find(
+          (id): id is string => !!id && id !== EMPTY_GUID,
+        );
+        const resolvedTableId =
+          (order.tableId && order.tableId !== EMPTY_GUID ? order.tableId : undefined) ||
+          tableIdFromSession ||
+          tableIdFromList ||
+          "unknown";
+
+        const tableName =
+          (order.tableSessions ?? [])
+            .map((s) => s?.table?.code)
+            .find((code): code is string => !!code) ||
+          tableNameMap[resolvedTableId] ||
+          resolvedTableId;
 
         const items: OrderItem[] = (order.orderDetails ?? []).map(
           (detail, index) => {
@@ -196,7 +214,7 @@ export default function OrderManagement() {
             order.reference && order.reference.trim().length > 0
               ? order.reference
               : order.id || "",
-          tableId: order.tableId,
+          tableId: resolvedTableId,
           tableName,
           items: summaryItems,
           detailItems: items,
@@ -559,7 +577,7 @@ export default function OrderManagement() {
 
     try {
       const payload: OrderRequestDto = {
-        tableId: targetOrder.raw.tableId,
+        tableId: targetOrder.tableId,
         customerId:
           targetOrder.raw.customerId ||
           "00000000-0000-0000-0000-000000000000",
@@ -569,7 +587,11 @@ export default function OrderManagement() {
         discountAmount: targetOrder.raw.discountAmount ?? 0,
         taxAmount: targetOrder.raw.taxAmount ?? 0,
         serviceCharge: targetOrder.raw.serviceCharge ?? 0,
-        tableIds: targetOrder.raw.tableIds,
+        tableIds: targetOrder.raw.tableIds?.length
+          ? targetOrder.raw.tableIds
+          : targetOrder.tableId !== "unknown"
+            ? [targetOrder.tableId]
+            : undefined,
         orderDetails: [
           ...(targetOrder.raw.orderDetails ?? []).map((d) => ({
             dishId: d.dishId,
