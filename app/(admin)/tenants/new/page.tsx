@@ -1,6 +1,7 @@
 "use client";
 
 import VnAddressSelect from "@/components/ui/VnAddressSelect";
+import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantCreateInput } from "@/lib/types/tenant";
 import {
@@ -343,11 +344,12 @@ const TenantCreatePage: React.FC = () => {
                         ),
                       },
                     ]}>
-                    <Input
-                      size="large"
-                      placeholder={t(
-                        "tenants.create.fields.address_line1_placeholder",
-                      )}
+                    <VnStreetAutocomplete
+                      form={form}
+                      fieldName="addressLine1"
+                      cityFieldName="addressLine3"
+                      districtWardFieldName="addressLine2"
+                      placeholder={t("tenants.create.fields.address_line1_placeholder")}
                     />
                   </Form.Item>
 

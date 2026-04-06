@@ -1,6 +1,7 @@
 "use client";
 
 import VnAddressSelect from "@/components/ui/VnAddressSelect";
+import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantRequestInput } from "@/lib/types/tenant";
 import {
@@ -12,8 +13,6 @@ import {
 import { App, Col, Form, Input, Modal, Row } from "antd";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-
-const { TextArea } = Input;
 
 const customStyles = `
   .tenant-request-form .url-bar {
@@ -75,12 +74,11 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
   const [form] = Form.useForm<TenantRequestInput>();
   const [loading, setLoading] = useState(false);
   const [hostNameValue, setHostNameValue] = useState("");
+
   const handleSubmit = async (values: TenantRequestInput) => {
     setLoading(true);
 
     try {
-      console.log("[TenantRequestForm] Submitting request:", values);
-
       const normalizedHostname = values.hostname?.trim().toLowerCase();
       const requestData: TenantRequestInput = {
         ...values,
@@ -91,13 +89,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
           : normalizedHostname,
       };
 
-      // Call real API
-      const requestId = await tenantService.addTenantRequest(requestData);
-
-      console.log(
-        "[TenantRequestForm] Request created successfully, ID:",
-        requestId,
-      );
+      await tenantService.addTenantRequest(requestData);
 
       message.success({
         content: t("tenant_requests.form.success_message"),
@@ -108,12 +100,6 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
       onSuccess?.();
       onCancel();
     } catch (error: any) {
-      console.error("[TenantRequestForm] Failed to submit request:", error);
-      console.error(
-        "[TenantRequestForm] Error response:",
-        error?.response?.data,
-      );
-
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||
@@ -130,14 +116,9 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
   };
 
   const validateSlug = (_: unknown, value: string) => {
-    if (!value) {
-      return Promise.resolve();
-    }
-
+    if (!value) return Promise.resolve();
     if (!/^[a-z0-9-]+$/.test(value)) {
-      return Promise.reject(
-        new Error(t("tenant_requests.form.hostname_invalid")),
-      );
+      return Promise.reject(new Error(t("tenant_requests.form.hostname_invalid")));
     }
     return Promise.resolve();
   };
@@ -147,9 +128,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
       title={
         <div className="flex items-center gap-2">
           <ShopOutlined className="text-orange-500" />
-          <span>
-            {t("tenant_requests.form.title")}
-          </span>
+          <span>{t("tenant_requests.form.title")}</span>
         </div>
       }
       open={visible}
@@ -160,15 +139,9 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
       confirmLoading={loading}
       width="90%"
       style={{ maxWidth: 700 }}
-      styles={{
-        body: {
-          maxHeight: "75vh",
-          overflowY: "auto",
-          paddingTop: 16,
-          paddingBottom: 16,
-        },
-      }}
-      destroyOnHidden>
+      styles={{ body: { maxHeight: "75vh", overflowY: "auto", paddingTop: 16, paddingBottom: 16 } }}
+      destroyOnHidden
+    >
       <style>{customStyles}</style>
       <div className="py-2 tenant-request-form">
         <p className="mb-4 text-sm" style={{ color: "var(--text-muted)" }}>
@@ -183,15 +156,10 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
                 name="name"
                 rules={[
                   { required: true, message: t("tenant_requests.form.restaurant_name_required") },
-                  {
-                    min: 3,
-                    message: t("tenant_requests.form.restaurant_name_min"),
-                  },
-                ]}>
-                <Input
-                  prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />}
-                  placeholder={t("tenant_requests.form.restaurant_name")}
-                />
+                  { min: 3, message: t("tenant_requests.form.restaurant_name_min") },
+                ]}
+              >
+                <Input prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />} placeholder={t("tenant_requests.form.restaurant_name")} />
               </Form.Item>
             </Col>
 
@@ -211,10 +179,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
                     placeholder={t("tenants.create.fields.host_name")}
                     value={hostNameValue}
                     onChange={(e) => {
-                      const value = e.target.value
-                        .toLowerCase()
-                        .replace(/\s+/g, "-")
-                        .replace(/[^a-z0-9-]/g, "");
+                      const value = e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
                       form.setFieldValue("hostname", value);
                       setHostNameValue(value);
                     }}
@@ -226,10 +191,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
           </Row>
 
           <Form.Item label={t("tenant_requests.form.business_name")} name="businessName">
-            <Input
-              prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />}
-              placeholder={t("tenant_requests.form.business_name")}
-            />
+            <Input prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />} placeholder={t("tenant_requests.form.business_name")} />
           </Form.Item>
 
           <Row gutter={16}>
@@ -237,31 +199,26 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
               <Form.Item
                 label={t("tenant_requests.form.business_email")}
                 name="businessEmailAddress"
-                rules={[
-                  { type: "email", message: t("tenant_requests.form.business_email_invalid") },
-                ]}>
-                <Input
-                  prefix={<MailOutlined style={{ color: "var(--text-muted)" }} />}
-                  placeholder={t("tenant_requests.form.business_email")}
-                  type="email"
-                />
+                rules={[{ type: "email", message: t("tenant_requests.form.business_email_invalid") }]}
+              >
+                <Input prefix={<MailOutlined style={{ color: "var(--text-muted)" }} />} placeholder={t("tenant_requests.form.business_email")} type="email" />
               </Form.Item>
             </Col>
-
             <Col xs={24} md={12}>
               <Form.Item label={t("tenant_requests.form.phone_number")} name="businessPrimaryPhone">
-                <Input
-                  prefix={<PhoneOutlined style={{ color: "var(--text-muted)" }} />}
-                  placeholder={t("tenant_requests.form.phone_number_placeholder")}
-                />
+                <Input prefix={<PhoneOutlined style={{ color: "var(--text-muted)" }} />} placeholder={t("tenant_requests.form.phone_number_placeholder")} />
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item label={t("tenant_requests.form.address_line_1_placeholder")} name="businessAddressLine1">
-            <Input
-              prefix={<EnvironmentOutlined style={{ color: "var(--text-muted)" }} />}
-              placeholder={t("tenant_requests.form.address_line_1_placeholder")}
+            <VnStreetAutocomplete 
+              form={form} 
+              fieldName="businessAddressLine1" 
+              cityFieldName="businessAddressLine3"
+              districtWardFieldName="businessAddressLine2"
+              countryFieldName="businessCountry"
+              placeholder={t("tenant_requests.form.address_line_1_placeholder")} 
             />
           </Form.Item>
 
@@ -273,12 +230,12 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
             countryFieldName="businessCountry"
             required
             cityRequiredMessage={t("tenant_requests.form.city_required", { defaultValue: "Vui lòng chọn tỉnh/thành phố" })}
-            districtRequiredMessage={t("tenant_requests.form.district_required", { defaultValue: "Vui lòng chọn quận/huyện" })}
+            districtRequiredMessage={t("tenant_requests.form.district_required", { defaultValue: "Vui lòng chọn phường/xã" })}
             wardRequiredMessage={t("tenant_requests.form.ward_required", { defaultValue: "Vui lòng chọn phường/xã" })}
           />
 
           <Form.Item label={t("tenant_requests.form.country_placeholder")} name="businessCountry" initialValue="Việt Nam">
-            <Input placeholder={t("tenant_requests.form.country_placeholder")}/>
+            <Input placeholder={t("tenant_requests.form.country_placeholder")} />
           </Form.Item>
         </Form>
       </div>
