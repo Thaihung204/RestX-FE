@@ -181,7 +181,6 @@ export default function CustomerList() {
                     }}
                   >
                     {/* Customer Info */}
-                    {/* Customer Info */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="relative flex-shrink-0">
