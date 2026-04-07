@@ -3,6 +3,7 @@
 import orderDetailStatusService, { OrderDetailStatus } from "@/lib/services/orderDetailStatusService";
 import orderService from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
+import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
@@ -107,6 +108,7 @@ export default function AdminOrderDetailPage() {
   const [order, setOrder] = useState<OrderDetailsResponse | null>(null);
 
   const [availableStatuses, setAvailableStatuses] = useState<OrderDetailStatus[]>([]);
+  const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const inFlightRef = useRef(false);
@@ -115,10 +117,14 @@ export default function AdminOrderDetailPage() {
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const statuses = await orderDetailStatusService.getAllStatuses();
-        setAvailableStatuses(statuses);
+        const [detailStatuses, statuses] = await Promise.all([
+          orderDetailStatusService.getAllStatuses(),
+          orderStatusService.getAllStatuses(),
+        ]);
+        setAvailableStatuses(detailStatuses);
+        setOrderStatuses(statuses);
       } catch (err) {
-        console.error("Failed to load available order detail statuses", err);
+        console.error("Failed to load available statuses", err);
       }
     };
     fetchStatuses();
@@ -340,10 +346,11 @@ export default function AdminOrderDetailPage() {
                       }
                     }}
                   >
-                    <option value={0}>{t("admin.order_detail.status.pending")}</option>
-                    <option value={1}>{t("admin.order_detail.status.served")}</option>
-                    <option value={2}>{t("admin.order_detail.status.completed")}</option>
-                    <option value={3}>{t("admin.order_detail.status.cancelled")}</option>
+                    {orderStatuses.map((status) => (
+                      <option key={status.id} value={Number(status.id)}>
+                        {status.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

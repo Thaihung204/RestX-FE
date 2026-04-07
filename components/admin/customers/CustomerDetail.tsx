@@ -100,6 +100,7 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
   const displayName = customerProfile?.fullName || customer.name;
   const displayPhone = customerProfile?.phoneNumber || customer.phone || "N/A";
   const displayAvatar =
+    customerProfile?.avatarUrl ||
     customer.avatar ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
   const displayMembership = customerProfile?.membershipLevel || customer.vipTier || "Bronze";

@@ -42,15 +42,32 @@ function mapFromBackend(sv: BackendStatusValue): OrderStatus {
   };
 }
 
+let cachedOrderStatuses: OrderStatus[] | null = null;
+let orderStatusesRequest: Promise<OrderStatus[]> | null = null;
+
 class OrderStatusService {
   private get apiBase() {
     return `/statuses/order`;
   }
 
-  async getAllStatuses(): Promise<OrderStatus[]> {
-    const response = await axiosInstance.get<BackendResponse<BackendStatusValue[]>>(this.apiBase);
-    const data = response.data?.data ?? [];
-    return data.map(mapFromBackend);
+  async getAllStatuses(forceRefresh = false): Promise<OrderStatus[]> {
+    if (!forceRefresh && cachedOrderStatuses) return cachedOrderStatuses;
+
+    if (!forceRefresh && orderStatusesRequest) return orderStatusesRequest;
+
+    orderStatusesRequest = axiosInstance
+      .get<BackendResponse<BackendStatusValue[]>>(this.apiBase)
+      .then((response) => {
+        const data = response.data?.data ?? [];
+        const mapped = data.map(mapFromBackend);
+        cachedOrderStatuses = mapped;
+        return mapped;
+      })
+      .finally(() => {
+        orderStatusesRequest = null;
+      });
+
+    return orderStatusesRequest;
   }
 
   async getStatusById(id: string): Promise<OrderStatus> {

@@ -11,7 +11,7 @@ interface CardTableProps {
   isMobile: boolean;
   isUpdatingOrderStatus: boolean;
   orderStatusOptions: { value: number; label: string; className: string }[];
-  orderStatusStyleMap: Record<OrderStatusUi, { bg: string; border: string }>;
+  orderStatusStyleMap: Record<string, { bg: string; border: string }>;
   tableLabel: string;
   onOpenDetail: (order: Order) => void;
   onUpdateOrderStatus: (orderId: string, statusId: OrderStatusId) => void;

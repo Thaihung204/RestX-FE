@@ -3,17 +3,14 @@
 import customerService from "@/lib/services/customerService";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
+import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { HubConnectionState } from "@microsoft/signalr";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-type OrderStatusUi =
-  | "pending"
-  | "served"
-  | "completed"
-  | "cancelled";
+type OrderStatusUi = string;
 
 interface OrderRow {
   id: string;
@@ -34,27 +31,27 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
+  const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
 
-  const mapOrderStatus = (statusId: number): OrderStatusUi => {
-    switch (statusId) {
-      case 0:
-        return "pending";
-      case 1:
-        return "served";
-      case 2:
-        return "completed";
-      case 3:
-        return "cancelled";
-      default:
-        return "pending";
-    }
-  };
+  const mapOrderStatus = useCallback((statusId: number): OrderStatusUi => {
+    const matched = orderStatuses.find((s) => Number(s.id) === Number(statusId));
+    return matched?.code?.toLowerCase() || "pending";
+  }, [orderStatuses]);
 
   const mapPaymentStatus = (statusId: number): "unpaid" | "paid" => {
     return statusId === 1 ? "paid" : "unpaid";
   };
+
+  useEffect(() => {
+    orderStatusService
+      .getAllStatuses()
+      .then((data) => setOrderStatuses(data ?? []))
+      .catch((error) => {
+        console.error("Failed to load order statuses:", error);
+      });
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -108,22 +105,18 @@ export default function OrdersPage() {
       inFlightRef.current = true;
       try {
         const data = await orderService.getAllOrders();
-        const uniqueCustomerIds = Array.from(
-          new Set(data.map((o) => o.customerId).filter(Boolean)),
-        );
-
-        const customersById: Record<string, { name: string; avatar?: string }> =
-          {};
-        await Promise.all(
-          uniqueCustomerIds.map(async (cid) => {
-            try {
-              const c = await customerService.getCustomerById(cid);
-              if (c) customersById[c.id] = { name: c.name, avatar: c.avatar };
-            } catch (err) {
-              console.error("Failed to load customer", cid, err);
-            }
-          }),
-        );
+        const customersById: Record<string, { name: string; avatar?: string }> = {};
+        try {
+          const customers = await customerService.getAllCustomers({
+            pageNumber: 1,
+            pageSize: 1000,
+          });
+          customers.forEach((c) => {
+            customersById[c.id] = { name: c.name, avatar: c.avatar };
+          });
+        } catch (err) {
+          console.error("Failed to load customer list", err);
+        }
 
         setOrders(
           data.map((o) => {
@@ -168,7 +161,7 @@ export default function OrdersPage() {
         inFlightRef.current = false;
       }
     },
-    [t],
+    [mapOrderStatus, t],
   );
 
   const refreshOrders = useCallback(
@@ -238,24 +231,24 @@ export default function OrdersPage() {
     };
   }, [refreshOrders, tenant?.id]);
 
-  const statusConfig = {
-    pending: {
-      text: t("dashboard.orders.status.pending"),
-      badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-    },
-    served: {
-      text: t("dashboard.orders.status.served"),
-      badge: "text-[var(--primary)] border-[var(--primary-border)]",
-    },
-    completed: {
-      text: t("dashboard.orders.status.completed"),
-      badge: "bg-green-500/10 text-green-500 border-green-500/20",
-    },
-    cancelled: {
-      text: t("dashboard.orders.status.cancelled"),
-      badge: "bg-red-500/10 text-red-500 border-red-500/20",
-    },
-  };
+  const statusConfig = useMemo(() => {
+    const fallbackBadge = "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+    const predefinedBadgeByCode: Record<string, string> = {
+      pending: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+      served: "text-[var(--primary)] border-[var(--primary-border)]",
+      completed: "bg-green-500/10 text-green-500 border-green-500/20",
+      cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
+    };
+
+    return orderStatuses.reduce<Record<string, { text: string; badge: string }>>((acc, status) => {
+      const code = status.code?.toLowerCase?.() || status.name?.toLowerCase?.() || String(status.id);
+      acc[code] = {
+        text: status.name,
+        badge: predefinedBadgeByCode[code] || fallbackBadge,
+      };
+      return acc;
+    }, {});
+  }, [orderStatuses]);
 
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -288,12 +281,12 @@ export default function OrdersPage() {
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.order")}</th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.customer")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.items")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.total")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.status")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.payment")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.time")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.actions")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.items")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.total")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.status")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.payment")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.time")}</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.actions")}</th>
                 </tr>
               </thead>
               <tbody style={{ borderColor: "var(--border)" }}>
@@ -327,22 +320,22 @@ export default function OrdersPage() {
                           <span className="font-medium" style={{ color: "var(--text)" }}>{order.customerName}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span style={{ color: "var(--text-muted)" }}>
                           {t("dashboard.orders.labels.items_count", { count: order.items })}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className="text-green-500 font-bold">
                           {t("dashboard.orders.labels.total_quantity", { count: order.totalQuantity })}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[order.status].badge}`}>
-                          {statusConfig[order.status].text}
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${(statusConfig[order.status] || { badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" }).badge}`}>
+                          {(statusConfig[order.status] || { text: order.status || "-", badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" }).text}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
                             order.paymentStatus === "paid"
@@ -354,11 +347,11 @@ export default function OrdersPage() {
                             : t("dashboard.orders.payment_status.unpaid")}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: "var(--text-muted)" }}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center" style={{ color: "var(--text-muted)" }}>
                         {order.time}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex gap-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex gap-2 justify-center">
                           <Link
                             href={`/admin/orders/${order.id}`}
                             className="p-2 rounded-lg transition-all"

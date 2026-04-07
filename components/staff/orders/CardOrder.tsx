@@ -3,8 +3,8 @@ import { Card, Select, Space, Typography } from "antd";
 
 const { Text } = Typography;
 
-export type OrderStatusId = 0 | 1 | 2 | 3;
-export type OrderStatusUi = "pending" | "served" | "completed" | "cancelled";
+export type OrderStatusId = number;
+export type OrderStatusUi = string;
 
 export interface OrderItem {
   id: string;
@@ -37,7 +37,7 @@ interface CardOrderProps {
   isMobile: boolean;
   isUpdatingOrderStatus: boolean;
   orderStatusOptions: { value: number; label: string; className: string }[];
-  orderStatusStyleMap: Record<OrderStatusUi, { bg: string; border: string }>;
+  orderStatusStyleMap: Record<string, { bg: string; border: string }>;
   onOpenDetail: (order: Order) => void;
   onUpdateOrderStatus: (orderId: string, statusId: OrderStatusId) => void;
 }
@@ -52,7 +52,12 @@ export default function CardOrder({
   onOpenDetail,
   onUpdateOrderStatus,
 }: CardOrderProps) {
-  const orderStyle = orderStatusStyleMap[order.orderStatus];
+  const orderStyle =
+    orderStatusStyleMap[order.orderStatus] ||
+    {
+      bg: mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFBEB",
+      border: mode === "dark" ? "rgba(255, 255, 255, 0.16)" : "#FDE68A",
+    };
 
   return (
     <Card
