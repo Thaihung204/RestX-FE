@@ -310,17 +310,13 @@ export default function OrderManagement() {
   }));
 
   const orderStatusStyleMap = useMemo<Record<string, { bg: string; border: string }>>(() => {
-    const fallback = { bg: "#FFFBEB", border: "#FDE68A" };
-    const predefinedByCode: Record<string, { bg: string; border: string }> = {
-      pending: { bg: "#FFFBEB", border: "#FDE68A" },
-      served: { bg: "#EFF6FF", border: "#BFDBFE" },
-      completed: { bg: "#F0FDF4", border: "#BBF7D0" },
-      cancelled: { bg: "#FEF2F2", border: "#FECACA" },
-    };
-
     return orderStatuses.reduce<Record<string, { bg: string; border: string }>>((acc, status) => {
       const code = status.code?.toLowerCase?.() || status.name?.toLowerCase?.() || String(status.id);
-      acc[code] = predefinedByCode[code] || fallback;
+      const hexColor = status.color || "#e5e7eb";
+      acc[code] = {
+        bg: `${hexColor}1A`, // 10% opacity roughly
+        border: `${hexColor}33`, // 20% opacity roughly
+      };
       return acc;
     }, {});
   }, [orderStatuses]);

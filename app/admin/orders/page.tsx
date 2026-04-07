@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-type OrderStatusUi = string;
+
 
 interface OrderRow {
   id: string;
@@ -20,7 +20,7 @@ interface OrderRow {
   items: number;
   totalQuantity: number;
   total: number;
-  status: OrderStatusUi;
+  orderStatusId: number;
   time: string;
   paymentStatus: "unpaid" | "paid";
   raw: OrderDto;
@@ -39,15 +39,12 @@ export default function OrdersPage() {
   const [orderSearch, setOrderSearch] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
   const [tableSearch, setTableSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<OrderStatusUi | "">("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">("");
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
 
-  const mapOrderStatus = useCallback((statusId: number): OrderStatusUi => {
-    const matched = orderStatuses.find((s) => Number(s.id) === Number(statusId));
-    return matched?.code?.toLowerCase() || "pending";
-  }, [orderStatuses]);
+
 
   const mapPaymentStatus = (statusId: number): "unpaid" | "paid" => {
     return statusId === 1 ? "paid" : "unpaid";
@@ -113,19 +110,33 @@ export default function OrdersPage() {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       try {
-        const data = await orderService.getAllOrders();
-        const customersById: Record<string, { name: string; avatar?: string }> = {};
-        try {
-          const customers = await customerService.getAllCustomers({
-            pageNumber: 1,
-            pageSize: 1000,
-          });
-          customers.forEach((c) => {
-            customersById[c.id] = { name: c.name, avatar: c.avatar };
-          });
-        } catch (err) {
-          console.error("Failed to load customer list", err);
-        }
+        const data = await orderService.getOrdersByFilter({
+          reference: orderSearch.trim() || undefined,
+          tableId: tableSearch.trim() || undefined,
+          orderStatusId: statusFilter ? Number(statusFilter) : undefined,
+          paymentStatusId: paymentFilter ? (paymentFilter === "paid" ? 1 : 0) : undefined,
+        });
+        const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+        const uniqueCustomerIds = Array.from(
+          new Set(
+            data
+              .map((o) => o.customerId)
+              .filter((cid): cid is string => !!cid && cid !== EMPTY_GUID),
+          ),
+        );
+
+        const customersById: Record<string, { name: string; avatar?: string }> =
+          {};
+        await Promise.all(
+          uniqueCustomerIds.map(async (cid) => {
+            try {
+              const c = await customerService.getCustomerById(cid);
+              if (c) customersById[c.id] = { name: c.name, avatar: c.avatar };
+            } catch (err) {
+              console.error("Failed to load customer", cid, err);
+            }
+          }),
+        );
 
         setOrders(
           data.map((o) => {
@@ -133,7 +144,7 @@ export default function OrdersPage() {
             const totalQuantity =
               o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ??
               0;
-            const status = mapOrderStatus(o.orderStatusId);
+            const orderStatusId = o.orderStatusId;
             const paymentStatus = mapPaymentStatus(
               o.paymentStatusId ?? o.paymentStatus ?? 0,
             );
@@ -154,7 +165,7 @@ export default function OrdersPage() {
               items: distinctCount,
               totalQuantity,
               total: Number(o.totalAmount ?? 0),
-              status,
+              orderStatusId,
               time: o.createdDate
                 ? new Date(o.createdDate).toLocaleString("vi-VN", {
                     hour: "2-digit",
@@ -175,7 +186,7 @@ export default function OrdersPage() {
         inFlightRef.current = false;
       }
     },
-    [mapOrderStatus],
+    [],
   );
 
   const refreshOrders = useCallback(
@@ -245,24 +256,11 @@ export default function OrdersPage() {
     };
   }, [refreshOrders, tenant?.id]);
 
-  const statusConfig = useMemo(() => {
-    const fallbackBadge = "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-    const predefinedBadgeByCode: Record<string, string> = {
-      pending: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-      served: "text-[var(--primary)] border-[var(--primary-border)]",
-      completed: "bg-green-500/10 text-green-500 border-green-500/20",
-      cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
-    };
+  useEffect(() => {
+    setPage(1);
+  }, [orderSearch, customerSearch, tableSearch, statusFilter, paymentFilter]);
 
-    return orderStatuses.reduce<Record<string, { text: string; badge: string }>>((acc, status) => {
-      const code = status.code?.toLowerCase?.() || status.name?.toLowerCase?.() || String(status.id);
-      acc[code] = {
-        text: status.name,
-        badge: predefinedBadgeByCode[code] || fallbackBadge,
-      };
-      return acc;
-    }, {});
-  }, [orderStatuses]);
+
 
   const filteredOrders = useMemo(() => {
     const orderKeyword = orderSearch.trim().toLowerCase();
@@ -281,7 +279,7 @@ export default function OrdersPage() {
       const tableValue = String(order.raw?.tableId ?? "").toLowerCase();
       const matchesTable = !tableKeyword || tableValue.includes(tableKeyword);
 
-      const matchesStatus = !statusFilter || order.status === statusFilter;
+      const matchesStatus = !statusFilter || String(order.orderStatusId) === statusFilter;
       const matchesPayment = !paymentFilter || order.paymentStatus === paymentFilter;
 
       return matchesOrder && matchesCustomer && matchesTable && matchesStatus && matchesPayment;
@@ -351,14 +349,14 @@ export default function OrdersPage() {
 
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as OrderStatusUi | "")}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm"
               style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
               <option value="">{t("admin.reservations.filter.all_status", { defaultValue: "Tất cả trạng thái" })}</option>
-              {Object.entries(statusConfig).map(([code, cfg]) => (
-                <option key={code} value={code}>
-                  {cfg.text}
+              {orderStatuses.map(status => (
+                <option key={status.id} value={status.id}>
+                  {status.name}
                 </option>
               ))}
             </select>
@@ -461,9 +459,22 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${(statusConfig[order.status] || { badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" }).badge}`}>
-                          {(statusConfig[order.status] || { text: order.status || "-", badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" }).text}
-                        </span>
+                        {(() => {
+                           const st = orderStatuses.find(s => s.id === String(order.orderStatusId));
+                           if (!st) return <span className="text-gray-500">-</span>;
+                           return (
+                             <span 
+                               className="px-3 py-1 rounded-full text-xs font-medium border"
+                               style={{
+                                 backgroundColor: `${st.color}1A`,
+                                 color: st.color,
+                                 borderColor: `${st.color}33`,
+                               }}
+                             >
+                               {st.name}
+                             </span>
+                           );
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span

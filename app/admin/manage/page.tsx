@@ -17,6 +17,7 @@ export default function ManagePage() {
     | "ingredientCategories"
     | "loyalty"
     | "orderDetailStatus"
+    | "orderDetailStatus"
     | "orderStatus"
   >("categories");
 
@@ -72,16 +73,17 @@ export default function ManagePage() {
             {
               id: "orderDetailStatus" as const,
               label: t("dashboard.manage.tabs.order_status", {
-                defaultValue: "Order Status",
+                defaultValue: "Dish Status",
               }),
               icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
             },
             {
               id: "orderStatus" as const,
-              label: "Order Status",
-              icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
+              label: t("dashboard.manage.tabs.order_level_status", {
+                defaultValue: "Order Status",
+              }),
+              icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
             },
-
           ].map((tab) => (
             <button
               key={tab.id}
@@ -110,22 +112,19 @@ export default function ManagePage() {
           ))}
         </div>
 
-        {/* Categories Tab */}
+        {/* Tab Content */}
         <div className="animate-fade-in relative">
           {activeTab === "categories" && <CategorySettings />}
 
-          {/* Ingredient Categories Tab */}
           {activeTab === "ingredientCategories" && (
             <IngredientCategorySettings />
           )}
 
-          {/* Suppliers Tab */}
           {activeTab === "suppliers" && <SupplierSettings />}
 
-          {/* Loyalty Bands Tab */}
           {activeTab === "loyalty" && <LoyaltyPointBandSettings />}
 
-          {/* Order Details Status Tab */}
+          {/* Dish Status Tab */}
           {activeTab === "orderDetailStatus" && <OrderDetailStatusSettings />}
 
           {/* Order Status Tab */}
