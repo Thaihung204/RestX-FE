@@ -9,6 +9,7 @@ import { HubConnectionState } from "@microsoft/signalr";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { message } from "antd";
 
 
 
@@ -461,18 +462,40 @@ export default function OrdersPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {(() => {
                            const st = orderStatuses.find(s => s.id === String(order.orderStatusId));
-                           if (!st) return <span className="text-gray-500">-</span>;
                            return (
-                             <span 
-                               className="px-3 py-1 rounded-full text-xs font-medium border"
+                             <select
+                               className="px-2 py-1 rounded-full text-xs font-medium border cursor-pointer outline-none transition-colors"
                                style={{
-                                 backgroundColor: `${st.color}1A`,
-                                 color: st.color,
-                                 borderColor: `${st.color}33`,
+                                 backgroundColor: st ? `${st.color}1A` : "var(--surface)",
+                                 color: st ? st.color : "var(--text)",
+                                 borderColor: st ? `${st.color}33` : "var(--border)",
+                               }}
+                               value={order.orderStatusId != null ? String(order.orderStatusId) : ""}
+                               onChange={async (e) => {
+                                 if (!e.target.value) return;
+                                 try {
+                                   await orderService.updateOrderStatus(order.id, Number(e.target.value));
+                                   message.success(t("admin.order_detail.messages.update_success", { defaultValue: "Cập nhật trạng thái thành công" }));
+                                 } catch (err) {
+                                   console.error("Failed to update status", err);
+                                   message.error(t("admin.order_detail.messages.update_error", { defaultValue: "Cập nhật lỗi" }));
+                                 }
                                }}
                              >
-                               {st.name}
-                             </span>
+                               {!st && <option value="" disabled>-</option>}
+                               {orderStatuses.map(status => (
+                                 <option 
+                                   key={status.id} 
+                                   value={status.id} 
+                                   style={{ 
+                                     color: 'var(--text)', 
+                                     background: 'var(--card)' 
+                                   }}
+                                 >
+                                   {status.name}
+                                 </option>
+                               ))}
+                             </select>
                            );
                         })()}
                       </td>
