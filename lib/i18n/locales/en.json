@@ -874,7 +874,9 @@
       },
       "order_status": {
         "title": "Dish Status Management",
+        "title_order": "Order Status Management",
         "subtitle": "Manage dish statuses, codes, and colors",
+        "subtitle_order": "Manage order statuses, codes, and colors",
         "add_status": "Add Status",
         "edit_status": "Edit Dish Status",
         "name": "Status Name",

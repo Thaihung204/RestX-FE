@@ -808,7 +808,9 @@
       },
       "order_status": {
         "title": "Quản lý trạng thái món ăn",
+        "title_order": "Quản lý trạng thái đơn hàng",
         "subtitle": "Quản lý các trạng thái món ăn, mã và màu sắc",
+        "subtitle_order": "Quản lý các trạng thái đơn hàng, mã và màu sắc",
         "add_status": "Thêm trạng thái",
         "edit_status": "Chỉnh sửa trạng thái",
         "name": "Tên trạng thái",

@@ -1,10 +1,10 @@
 "use client";
 
+import axiosInstance from "@/lib/services/axiosInstance";
+import { dishService, MenuCategory, MenuItem } from "@/lib/services/dishService";
+import { message } from "antd";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { message } from "antd";
-import { dishService, MenuCategory, MenuItem } from "@/lib/services/dishService";
-import axiosInstance from "@/lib/services/axiosInstance";
 
 interface MenuSelectionModalProps {
   orderId: string;
