@@ -635,6 +635,7 @@ const TenantEditPage: React.FC = () => {
                         fieldName="businessAddressLine1"
                         cityFieldName="businessAddressLine3"
                         districtWardFieldName="businessAddressLine2"
+                        countryFieldName="businessCountry"
                         placeholder={t("tenants.create.fields.address_line1_placeholder")}
                       />
                     </Form.Item>
@@ -642,30 +643,11 @@ const TenantEditPage: React.FC = () => {
                       form={form}
                       cityFieldName="businessAddressLine3"
                       districtWardFieldName="businessAddressLine2"
-                      stateProvinceFieldName="businessAddressLine4"
                       required
                       cityRequiredMessage={t("tenants.create.validation.city_required")}
                       districtRequiredMessage={t("tenants.create.validation.street_name_required")}
                       wardRequiredMessage={t("tenants.create.validation.street_name_required")}
                     />
-
-                    <Form.Item
-                      name="businessAddressLine4"
-                      rules={[
-                        {
-                          required: true,
-                          message: t(
-                            "tenants.create.validation.country_required",
-                          ),
-                        },
-                      ]}>
-                      <Input
-                        size="large"
-                        placeholder={t(
-                          "tenants.create.fields.address_line4_placeholder",
-                        )}
-                      />
-                    </Form.Item>
                   </div>
 
                   <div

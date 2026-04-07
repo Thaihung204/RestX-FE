@@ -173,6 +173,13 @@ export default function VnAddressSelect({
     setProvinceCode(matchedProvince.code);
     setProvinceValue(matchedProvince.name);
 
+    if (countryFieldName) {
+      form.setFieldValue(countryFieldName, countryValue);
+    }
+    if (stateProvinceFieldName) {
+      form.setFieldValue(stateProvinceFieldName, countryValue);
+    }
+
     const prefillWards = async () => {
       let nextWards = wardsCache.get(matchedProvince.code) || [];
       if (!nextWards.length) {

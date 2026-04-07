@@ -84,6 +84,12 @@
         "special_requests": "Yêu cầu đặc biệt",
         "created_at": "Tạo lúc:",
         "checked_in_at": "Check-in lúc:"
+      },
+      "messages": {
+        "checkin_success": "Check-in thanh cong",
+        "checkin_failed": "Khong the check-in reservation",
+        "already_checked_in": "Reservation nay da check-in roi",
+        "checked_in_at": "Da check-in luc"
       }
     },
     "order_detail": {
@@ -322,6 +328,7 @@
         "order_status_updated": "Đã cập nhật trạng thái order",
         "order_status_update_failed": "Cập nhật trạng thái order thất bại"
       },
+      "empty": "Không có đơn hàng nào",
       "payment": {
         "actions": {
           "pay": "Thanh toán",
@@ -3204,6 +3211,8 @@
         "at": "lúc",
         "booking_ref": "Mã đặt bàn",
         "confirmation_sent": "Email xác nhận gửi tới:",
+        "phone_label": "Số điện thoại",
+        "view_details": "Xem chi tiết",
         "make_another": "Đặt bàn mới"
       },
       "hero": {

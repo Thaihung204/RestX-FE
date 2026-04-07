@@ -7,6 +7,12 @@
   --bg-light-base: #FFFFFF;
   --bg-dark-base: #0A0E14;
 
+  /* Dynamic text tokens computed from tenant branding (optional) */
+  --text-light-dynamic: #111111;
+  --text-muted-light-dynamic: #737373;
+  --text-dark-dynamic: #ECECEC;
+  --text-muted-dark-dynamic: #A3A3A3;
+
   --light-surface: #F9FAFB;
   --light-card: #FFFFFF;
   --dark-surface: #1A1F2E;
@@ -18,8 +24,8 @@
   --bg-base: var(--bg-light-base);
 
   /* Text */
-  --text: #111111;
-  --text-muted: #737373;
+  --text: var(--text-light-dynamic);
+  --text-muted: var(--text-muted-light-dynamic);
 
   /* Surfaces - use light mode values */
   --surface: var(--light-surface);
@@ -77,8 +83,8 @@
   --bg-base: var(--bg-dark-base);
 
   /* Text */
-  --text: #ECECEC;
-  --text-muted: #A3A3A3;
+  --text: var(--text-dark-dynamic);
+  --text-muted: var(--text-muted-dark-dynamic);
 
   /* Surfaces - use dark mode values */
   --surface: var(--dark-surface);

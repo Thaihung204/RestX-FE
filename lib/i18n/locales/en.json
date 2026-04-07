@@ -84,6 +84,12 @@
         "special_requests": "Special Requests",
         "created_at": "Created at:",
         "checked_in_at": "Checked in:"
+      },
+      "messages": {
+        "checkin_success": "Checked in successfully",
+        "checkin_failed": "Failed to check in reservation",
+        "already_checked_in": "This reservation has already been checked in",
+        "checked_in_at": "Checked in at"
       }
     },
     "order_detail": {
@@ -322,6 +328,7 @@
         "order_status_updated": "Order status updated",
         "order_status_update_failed": "Failed to update order status"
       },
+      "empty": "No orders found",
       "payment": {
         "actions": {
           "pay": "Pay",
@@ -1065,7 +1072,7 @@
         "customer": "Customer",
         "table": "Table",
         "items": "Items",
-        "total": "Tổng",
+        "total": "Total",
         "status": "Status",
         "payment": "Payment",
         "time": "Time",
@@ -3234,6 +3241,8 @@
         "at": "at",
         "booking_ref": "Booking Ref",
         "confirmation_sent": "Confirmation email sent to:",
+        "phone_label": "Phone",
+        "view_details": "View Details",
         "make_another": "Make Another Booking"
       },
       "hero": {

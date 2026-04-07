@@ -4,10 +4,10 @@ import { TableMap2D, Layout } from "@/app/admin/tables/components/TableMap2D";
 import { tableService, floorService, FloorLayoutTableItem } from "@/lib/services/tableService";
 import { TableData } from "@/app/admin/tables/components/DraggableTable";
 import { useTenant } from "@/lib/contexts/TenantContext";
-import { useThemeMode } from "@/app/theme/AntdProvider";
+
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import paymentService from "@/lib/services/paymentService";
-import reservationService, { ReservationDetail } from "@/lib/services/reservationService";
+import reservationService, { ReservationDetail, ReservationStatus } from "@/lib/services/reservationService";
 import { message } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,32 +66,34 @@ function Spinner() {
 }
 
 // ── Timeline Step ─────────────────────────────────────────────────────────────
-function TimelineStep({ label, done, active, isLast }: { label: string; done?: boolean; active?: boolean; isLast?: boolean }) {
-  const color = done ? "var(--success)" : active ? "var(--primary)" : "var(--border)";
+function TimelineStep({ label, done, active }: { label: string; done?: boolean; active?: boolean }) {
+  const borderColor = done || active ? "#6adf9d" : "var(--border)";
+  const dotColor = done || active ? "#6adf9d" : "#c9ced8";
+
   return (
-    <div className="relative flex flex-col items-center flex-1 min-w-0">
-      {!isLast && (
-        <div className="absolute top-5 left-1/2 w-full h-px" style={{ background: done || active ? "var(--primary)" : "var(--border)", zIndex: 0 }} />
-      )}
+    <div className="relative flex flex-col items-center min-w-0 px-1">
       <div
-        className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center mb-3 transition-all duration-500"
+        className="relative z-20 w-10 h-10 rounded-full flex items-center justify-center mb-3 transition-all duration-300"
         style={{
-          background: done ? "var(--success-soft)" : active ? "var(--primary-soft)" : "var(--surface)",
-          border: `2px solid ${color}`,
-          boxShadow: active ? `0 0 20px var(--primary-glow)` : "none",
+          background: done || active ? "color-mix(in srgb, var(--card) 84%, #6adf9d 16%)" : "var(--card)",
+          border: `2px solid ${borderColor}`,
+          boxShadow: "0 0 0 8px var(--card)",
         }}
       >
         {done ? (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" style={{ color: "var(--success)" }}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" style={{ color: "#6adf9d" }}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-        ) : active ? (
-          <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "var(--primary)" }} />
         ) : (
-          <div className="w-2 h-2 rounded-full" style={{ background: "var(--border)" }} />
+          <div className="w-2.5 h-2.5 rounded-full" style={{ background: dotColor }} />
         )}
       </div>
-      <span className="text-xs font-bold uppercase tracking-widest text-center" style={{ color: done || active ? "var(--text)" : "var(--text-muted)" }}>
+
+      <span
+        className="text-sm font-semibold text-center whitespace-nowrap truncate max-w-full"
+        style={{ color: done || active ? "var(--text)" : "var(--text-muted)" }}
+        title={label}
+      >
         {label}
       </span>
     </div>
@@ -135,7 +137,7 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 }
 
 // ── Order Panel ───────────────────────────────────────────────────────────────
-function OrderPanel({ orders, firstTableId }: { orders: OrderDto[]; firstTableId?: string }) {
+function OrderPanel({ orders, firstTableId, isCustomer }: { orders: OrderDto[]; firstTableId?: string; isCustomer: boolean }) {
   const { t } = useTranslation();
   const totalAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
@@ -149,8 +151,8 @@ function OrderPanel({ orders, firstTableId }: { orders: OrderDto[]; firstTableId
             </svg>
           </div>
           <div>
-            <h3 className="font-bold text-sm" style={{ color: "var(--text)" }}>{t("reservation_detail.order.title")}</h3>
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>{orders.length} {t("reservation_detail.order.orders_count")}</p>
+            <h3 className="font-bold text-sm" style={{ color: "var(--text)" }}>{t("reservation_detail.order.title", { defaultValue: "Đơn hàng" })}</h3>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>{orders.length} {t("reservation_detail.order.orders_count", { defaultValue: "đơn" })}</p>
           </div>
         </div>
         {orders.length > 0 && <span className="text-sm font-black tracking-wide" style={{ color: "var(--primary)" }}>{currency(totalAmount)}</span>}
@@ -164,23 +166,41 @@ function OrderPanel({ orders, firstTableId }: { orders: OrderDto[]; firstTableId
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-sm text-center" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.order.no_orders")}</p>
+            <p className="text-sm text-center" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.order.no_orders", { defaultValue: "Chưa có đơn hàng" })}</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {orders.map((order, i) => (
-              <div key={order.id ?? i} className="flex items-center justify-between px-4 py-3 rounded-xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>{i + 1}</div>
-                  <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>{order.orderDetails?.length ?? 0} {t("reservation_detail.order.items")}</p>
+            {orders.map((order, i) => {
+              const paymentRaw = order.paymentStatusId ?? order.paymentStatus ?? 0;
+              const isPaid = paymentRaw === 1;
+
+              return (
+                <div key={order.id ?? i} className="px-4 py-3 rounded-xl" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black shrink-0" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>{i + 1}</div>
+                      <p className="text-xs font-bold truncate" style={{ color: "var(--text)" }}>
+                        {order.reference || order.id || t("reservation_detail.order.unnamed_order", { defaultValue: "Đơn hàng" })}
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold shrink-0" style={{ color: "var(--primary)" }}>{currency(order.totalAmount)}</span>
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className="px-2 py-1 rounded-lg text-[11px] font-semibold" style={{ background: "var(--card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
+                      {(order.orderDetails?.length ?? 0)} {t("reservation_detail.order.items", { defaultValue: "món" })}
+                    </span>
+                    <span className="px-2 py-1 rounded-lg text-[11px] font-semibold" style={{ background: isPaid ? "var(--success-soft)" : "var(--warning-soft)", color: isPaid ? "var(--success)" : "var(--warning)", border: `1px solid ${isPaid ? "var(--success-border)" : "var(--warning-border)"}` }}>
+                      {order.paymentStatusName || (isPaid ? t("dashboard.orders.payment_status.paid", { defaultValue: "Đã thanh toán" }) : t("dashboard.orders.payment_status.unpaid", { defaultValue: "Chưa thanh toán" }))}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-sm font-bold" style={{ color: "var(--primary)" }}>{currency(order.totalAmount)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
-        {firstTableId && (
+        {isCustomer && firstTableId && (
           <Link
             id="order-now-link"
             href={`/menu/${firstTableId}`}
@@ -190,20 +210,8 @@ function OrderPanel({ orders, firstTableId }: { orders: OrderDto[]; firstTableId
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
             </svg>
-            {t("reservation_detail.order.order_now")}
+            {t("reservation_detail.order.order_now", { defaultValue: "Đặt món ngay" })}
           </Link>
-        )}
-        <p className="text-xs text-center" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.order.readonly_note")}</p>
-
-        {orders.length > 0 && (
-          <div className="rounded-xl p-3" style={{ background: "var(--warning-soft)", border: "1px solid var(--warning-border)" }}>
-            <p className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--warning)" }}>
-              {t("reservation_detail.order.payment_hint_title", "Payment reminder")}
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
-              {t("reservation_detail.order.payment_hint_desc", "Bạn có thể thanh toán đặt cọc trước để giữ bàn chắc chắn trong giờ cao điểm.")}
-            </p>
-          </div>
         )}
       </div>
     </div>
@@ -305,11 +313,12 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const router = useRouter();
   const { tenant } = useTenant();
   const { t, i18n } = useTranslation();
-  const { mode, toggleTheme } = useThemeMode();
+
   const [messageApi, contextHolder] = message.useMessage();
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<ReservationDetail | null>(null);
+  const [statusSteps, setStatusSteps] = useState<ReservationStatus[]>([]);
   const [relatedOrders, setRelatedOrders] = useState<OrderDto[]>([]);
   const [depositLoading, setDepositLoading] = useState(false);
   const [panoramaImage, setPanoramaImage] = useState<PanoramaTableImage | null>(null);
@@ -326,6 +335,21 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     try {
       const d = await reservationService.getReservationById(reservationId);
       setDetail(d);
+
+      try {
+        const statuses = await reservationService.getReservationStatuses();
+        const allowedCodes = new Set(["PENDING", "CONFIRMED", "CANCELLED"]);
+        const normalized = (statuses ?? []).filter(
+          (s) => !!s?.code && allowedCodes.has(s.code.toUpperCase()),
+        );
+        if (normalized.length > 0) {
+          setStatusSteps(normalized);
+        } else {
+          setStatusSteps([]);
+        }
+      } catch {
+        setStatusSteps([]);
+      }
       setEditDateTime(d.reservationDateTime ? d.reservationDateTime.slice(0, 16) : "");
       setEditGuests(d.numberOfGuests || 1);
       setEditSpecialRequests(d.specialRequests || "");
@@ -343,13 +367,11 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
         setPanoramaImage(null);
       }
 
-      if (isCustomer) {
-        try {
-          const orders = await orderService.getAllOrders();
-          setRelatedOrders(orders.filter((o) => o.reservationId === d.id));
-        } catch {
-          setRelatedOrders([]);
-        }
+      try {
+        const orders = await orderService.getAllOrders();
+        setRelatedOrders(orders.filter((o) => o.reservationId === d.id));
+      } catch {
+        setRelatedOrders([]);
       }
     } catch (err) {
       console.error(err);
@@ -363,6 +385,14 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   useEffect(() => { load(); }, [load]);
 
   const firstTableId = detail?.tables?.[0]?.id;
+  const handleBack = () => {
+    if (viewMode === "admin") {
+      router.push("/admin/reservations");
+      return;
+    }
+    router.back();
+  };
+
   const tenantAddress = [
     tenant?.businessAddressLine1,
     tenant?.businessAddressLine2,
@@ -477,7 +507,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
           <h2 className="text-xl font-bold mb-1" style={{ color: "var(--text)" }}>{t("reservation_detail.not_found.title")}</h2>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.not_found.description")}</p>
         </div>
-        <button onClick={() => router.back()} className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:brightness-110" style={{ background: "var(--primary)", color: "var(--on-primary)" }}>
+        <button onClick={handleBack} className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:brightness-110" style={{ background: "var(--primary)", color: "var(--on-primary)" }}>
           {t("reservation_detail.back")}
         </button>
       </div>
@@ -487,14 +517,34 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const sColor = statusColor[detail.status.code] ?? "var(--text)";
   const sBg = statusBg[detail.status.code] ?? "var(--surface)";
   const reservationDate = new Date(detail.reservationDateTime);
-  const allSteps = ["PENDING", "CONFIRMED", "CHECKED_IN", "COMPLETED"];
-  const currIdx = allSteps.indexOf(detail.status.code);
+  const fallbackSteps: ReservationStatus[] = [
+    { id: 1, code: "PENDING", name: t("reservation_detail.timeline.pending", { defaultValue: "Chờ xác nhận" }), colorCode: "" },
+    { id: 2, code: "CONFIRMED", name: t("reservation_detail.timeline.confirmed", { defaultValue: "Đã xác nhận" }), colorCode: "" },
+    { id: 3, code: "CANCELLED", name: t("reservation_detail.timeline.cancelled", { defaultValue: "Đã hủy" }), colorCode: "" },
+  ];
+
+  const allSteps = statusSteps.length > 0 ? statusSteps : fallbackSteps;
+  const currentStatusCode = (detail.status.code || "").toUpperCase();
+  const currIdx = allSteps.findIndex((s) => s.code?.toUpperCase() === currentStatusCode);
   const isEditLocked = ["COMPLETED", "CANCELLED"].includes(detail.status.code);
   const hasTenantHeroBanner = Boolean(tenant?.backgroundUrl);
   const heroText = hasTenantHeroBanner ? "#F8FAFC" : "var(--text)";
   const heroTextMuted = hasTenantHeroBanner ? "rgba(248,250,252,0.82)" : "var(--text-muted)";
   const heroBorder = hasTenantHeroBanner ? "rgba(248,250,252,0.22)" : "var(--border)";
   const heroSurface = hasTenantHeroBanner ? "rgba(15,23,42,0.55)" : "var(--surface)";
+  const reservationSharePath = `/your-reservation/${detail.id}`;
+  const reservationShareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}${reservationSharePath}`
+    : reservationSharePath;
+
+  const handleCopyReservationUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(reservationShareUrl);
+      messageApi.success(t("reservation_detail.share.copy_success", { defaultValue: "Đã copy link reservation" }));
+    } catch {
+      messageApi.error(t("reservation_detail.share.copy_failed", { defaultValue: "Không thể copy link" }));
+    }
+  };
 
   return (
     <main className="min-h-screen reservation-detail-page" style={{ background: "var(--bg-base)" }}>
@@ -527,17 +577,17 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
         )}
 
         {/* Ambient orb */}
-        <div className="reservation-hero-orb absolute -top-16 -right-16" />
+        <div className="reservation-hero-orb absolute -top-16 -right-16 z-0" />
         <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: tenant?.backgroundUrl ? "linear-gradient(to right, transparent, rgba(255,255,255,0.35), transparent)" : "linear-gradient(to right, transparent, var(--primary-border), transparent)" }} />
 
-        <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-12">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-12">
           {/* Top Bar (Breadcrumb + Actions) */}
           <div className="flex items-center justify-between mb-6">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2">
               <button
                 id="reservation-back-btn"
-                onClick={() => router.back()}
+                onClick={handleBack}
                 className="flex items-center gap-1.5 text-xs font-medium transition-all hover:opacity-80"
                 style={{ color: heroTextMuted }}
               >
@@ -550,7 +600,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
               <span className="text-xs font-medium" style={{ color: heroTextMuted }}>{t("reservation_detail.breadcrumb")}</span>
             </div>
 
-            {/* Actions (Language & Theme) */}
+            {/* Actions */}
             <div className="flex items-center gap-3">
               <button
                 onClick={handleToggleLanguage}
@@ -562,18 +612,30 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
               >
                 <span className="text-[10px] font-bold uppercase">{i18n.language === "vi" ? "VI" : "EN"}</span>
               </button>
-              
-              <button
-                onClick={toggleTheme}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-all border"
-                style={{ background: heroSurface, borderColor: heroBorder, color: hasTenantHeroBanner ? "#E2E8F0" : mode === "dark" ? "var(--gold)" : "var(--text-muted)", backdropFilter: hasTenantHeroBanner ? "blur(6px)" : undefined }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--warning-soft)"; e.currentTarget.style.borderColor = "var(--warning-border)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface)"; e.currentTarget.style.borderColor = "var(--border)"; }}
-                title="Toggle Theme"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>{mode === "dark" ? "light_mode" : "dark_mode"}</span>
-              </button>
             </div>
+          </div>
+
+          {/* Share URL */}
+          <div
+            className="mb-6 flex flex-col md:flex-row md:items-center gap-2 md:gap-3 rounded-xl p-3"
+            style={{ background: heroSurface, border: `1px solid ${heroBorder}`, backdropFilter: hasTenantHeroBanner ? "blur(6px)" : undefined }}
+          >
+            <span className="text-[11px] font-bold uppercase tracking-wider shrink-0" style={{ color: heroTextMuted }}>
+              {t("reservation_detail.share.label", { defaultValue: "Reservation URL" })}
+            </span>
+            <input
+              value={reservationShareUrl}
+              readOnly
+              className="flex-1 min-w-0 px-3 py-2 rounded-lg text-xs md:text-sm font-medium"
+              style={{ background: "var(--card)", color: "var(--text)", border: `1px solid ${heroBorder}` }}
+            />
+            <button
+              onClick={handleCopyReservationUrl}
+              className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider shrink-0"
+              style={{ background: "var(--primary)", color: "var(--on-primary)" }}
+            >
+              {t("reservation_detail.share.copy", { defaultValue: "Copy" })}
+            </button>
           </div>
 
           <div className="flex flex-wrap items-start justify-between gap-8">
@@ -652,16 +714,42 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-8" style={{ color: "var(--text-muted)" }}>
                   {t("reservation_detail.timeline.title")}
                 </p>
-                <div className="flex justify-between items-start w-full">
-                  {allSteps.map((step, i) => (
-                    <TimelineStep
-                      key={step}
-                      label={t(`reservation_detail.timeline.${step.toLowerCase()}`)}
-                      done={i < currIdx}
-                      active={i === currIdx}
-                      isLast={i === allSteps.length - 1}
+                <div className="relative w-full">
+                  <div
+                    className="absolute left-0 right-0 z-0"
+                    style={{
+                      top: 20,
+                      height: 2,
+                      background: "var(--border)",
+                      borderRadius: 999,
+                    }}
+                  />
+                  {allSteps.length > 1 && currIdx >= 0 && (
+                    <div
+                      className="absolute left-0 z-0 transition-all duration-500"
+                      style={{
+                        top: 20,
+                        height: 2,
+                        borderRadius: 999,
+                        background: "#6adf9d",
+                        width: `${(currIdx / (allSteps.length - 1)) * 100}%`,
+                      }}
                     />
-                  ))}
+                  )}
+
+                  <div
+                    className="relative z-10 grid items-start w-full"
+                    style={{ gridTemplateColumns: `repeat(${Math.max(allSteps.length, 1)}, minmax(0, 1fr))`, columnGap: 8 }}
+                  >
+                    {allSteps.map((step, i) => (
+                      <TimelineStep
+                        key={step.code || i}
+                        label={step.name || t(`reservation_detail.timeline.${(step.code || "").toLowerCase()}`)}
+                        done={i < currIdx}
+                        active={i === currIdx}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -852,10 +940,8 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
               </div>
             </div>
 
-            {/* Order Section (customer only) */}
-            {isCustomer && (
-              <OrderPanel orders={relatedOrders} firstTableId={firstTableId} />
-            )}
+            {/* Order Section */}
+            <OrderPanel orders={relatedOrders} firstTableId={firstTableId} isCustomer={isCustomer} />
 
             {/* Deposit Status */}
             <div className="rounded-2xl p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>

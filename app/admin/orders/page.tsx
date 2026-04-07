@@ -26,12 +26,21 @@ interface OrderRow {
   raw: OrderDto;
 }
 
+const PAGE_SIZE = 10;
+const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+
 export default function OrdersPage() {
   const { t } = useTranslation("common");
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
   const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
+  const [page, setPage] = useState(1);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [tableSearch, setTableSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<OrderStatusUi | "">("");
+  const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">("");
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
 
@@ -125,8 +134,12 @@ export default function OrdersPage() {
               o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ??
               0;
             const status = mapOrderStatus(o.orderStatusId);
-            const paymentStatus = mapPaymentStatus(o.paymentStatusId);
+            const paymentStatus = mapPaymentStatus(
+              o.paymentStatusId ?? o.paymentStatus ?? 0,
+            );
             const customer = customersById[o.customerId];
+
+            const hasRealCustomerId = !!o.customerId && o.customerId !== EMPTY_GUID;
 
             return {
               id: o.id ?? "",
@@ -135,7 +148,8 @@ export default function OrdersPage() {
                   ? o.reference
                   : `#${(o.id ?? "").slice(0, 8)}`,
               customerName:
-                customer?.name ?? t("dashboard.orders.fallbacks.guest_name"),
+                customer?.name ??
+                (hasRealCustomerId ? "Unknown customer" : "Guest"),
               customerAvatar: customer?.avatar ?? null,
               items: distinctCount,
               totalQuantity,
@@ -161,7 +175,7 @@ export default function OrdersPage() {
         inFlightRef.current = false;
       }
     },
-    [mapOrderStatus, t],
+    [mapOrderStatus],
   );
 
   const refreshOrders = useCallback(
@@ -250,6 +264,38 @@ export default function OrdersPage() {
     }, {});
   }, [orderStatuses]);
 
+  const filteredOrders = useMemo(() => {
+    const orderKeyword = orderSearch.trim().toLowerCase();
+    const customerKeyword = customerSearch.trim().toLowerCase();
+    const tableKeyword = tableSearch.trim().toLowerCase();
+
+    return orders.filter((order) => {
+      const matchesOrder =
+        !orderKeyword ||
+        order.orderNumber.toLowerCase().includes(orderKeyword);
+
+      const matchesCustomer =
+        !customerKeyword ||
+        order.customerName.toLowerCase().includes(customerKeyword);
+
+      const tableValue = String(order.raw?.tableId ?? "").toLowerCase();
+      const matchesTable = !tableKeyword || tableValue.includes(tableKeyword);
+
+      const matchesStatus = !statusFilter || order.status === statusFilter;
+      const matchesPayment = !paymentFilter || order.paymentStatus === paymentFilter;
+
+      return matchesOrder && matchesCustomer && matchesTable && matchesStatus && matchesPayment;
+    });
+  }, [orders, orderSearch, customerSearch, tableSearch, statusFilter, paymentFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+
+  const pagedOrders = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredOrders.slice(start, start + PAGE_SIZE);
+  }, [currentPage, filteredOrders]);
+
   return (
     <main className="flex-1 p-6 lg:p-8">
       <div className="space-y-6">
@@ -262,6 +308,90 @@ export default function OrdersPage() {
               {t("dashboard.orders.subtitle")}
             </p>
           </div>
+          <button
+            onClick={() => refreshOrders()}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+          >
+            {t("admin.reservations.refresh", { defaultValue: "Làm mới" })}
+          </button>
+        </div>
+
+        <div
+          className="rounded-xl p-4"
+          style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+            <input
+              type="text"
+              placeholder={t("dashboard.orders.table.order", { defaultValue: "Mã đơn" })}
+              value={orderSearch}
+              onChange={(e) => setOrderSearch(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+
+            <input
+              type="text"
+              placeholder={t("dashboard.orders.table.customer", { defaultValue: "Khách hàng" })}
+              value={customerSearch}
+              onChange={(e) => setCustomerSearch(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+
+            <input
+              type="text"
+              placeholder={t("dashboard.orders.table.table", { defaultValue: "Bàn" })}
+              value={tableSearch}
+              onChange={(e) => setTableSearch(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            />
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as OrderStatusUi | "")}
+              className="w-full px-3 py-2 rounded-lg text-sm"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            >
+              <option value="">{t("admin.reservations.filter.all_status", { defaultValue: "Tất cả trạng thái" })}</option>
+              {Object.entries(statusConfig).map(([code, cfg]) => (
+                <option key={code} value={code}>
+                  {cfg.text}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value as "" | "paid" | "unpaid")}
+              className="w-full px-3 py-2 rounded-lg text-sm"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+            >
+              <option value="">{t("dashboard.orders.table.payment", { defaultValue: "Thanh toán" })}</option>
+              <option value="paid">{t("dashboard.orders.payment_status.paid")}</option>
+              <option value="unpaid">{t("dashboard.orders.payment_status.unpaid")}</option>
+            </select>
+          </div>
+
+          {(orderSearch || customerSearch || tableSearch || statusFilter || paymentFilter) && (
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={() => {
+                  setOrderSearch("");
+                  setCustomerSearch("");
+                  setTableSearch("");
+                  setStatusFilter("");
+                  setPaymentFilter("");
+                }}
+                className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}
+              >
+                {t("admin.reservations.filter.clear", { defaultValue: "Xóa lọc" })}
+              </button>
+            </div>
+          )}
         </div>
 
         <div
@@ -296,19 +426,19 @@ export default function OrdersPage() {
                       <div className="w-full rounded-xl animate-pulse" style={{ background: "var(--surface)", height: 360 }} />
                     </td>
                   </tr>
-                ) : orders.length === 0 ? (
+                ) : pagedOrders.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-12 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.orders.empty")}
+                      {t("orders.empty", { defaultValue: "No orders found" })}
                     </td>
                   </tr>
                 ) : (
-                  orders.map((order) => (
+                  pagedOrders.map((order) => (
                     <tr key={order.id} className="transition-colors" style={{ borderBottom: "1px solid var(--border)" }}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-left">
                         <span style={{ color: "var(--primary)", fontWeight: 600 }}>{order.orderNumber}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-left">
                         <div className="flex items-center gap-3">
                           {order.customerAvatar ? (
                             <img src={order.customerAvatar} alt={order.customerName} className="w-8 h-8 rounded-full object-cover" />
@@ -327,7 +457,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className="text-green-500 font-bold">
-                          {t("dashboard.orders.labels.total_quantity", { count: order.totalQuantity })}
+                          {order.total.toLocaleString("vi-VN")}₫
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -373,6 +503,56 @@ export default function OrdersPage() {
               </tbody>
             </table>
           </div>
+
+          {!loading && filteredOrders.length > 0 && totalPages > 1 && (
+            <div
+              className="flex items-center justify-between px-4 py-3"
+              style={{ borderTop: "1px solid var(--border)" }}
+            >
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                {t("admin.reservations.pagination.page_info", {
+                  page: currentPage,
+                  total: totalPages,
+                  count: filteredOrders.length,
+                  defaultValue: `Trang ${currentPage}/${totalPages} • ${filteredOrders.length} bản ghi`,
+                })}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                >
+                  {t("admin.reservations.pagination.prev", { defaultValue: "Trước" })}
+                </button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const p = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className="w-8 h-8 rounded-lg text-sm font-medium transition-all"
+                      style={p === currentPage
+                        ? { background: "var(--primary)", color: "white" }
+                        : { background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)" }
+                      }
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                >
+                  {t("admin.reservations.pagination.next", { defaultValue: "Sau" })}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </main>

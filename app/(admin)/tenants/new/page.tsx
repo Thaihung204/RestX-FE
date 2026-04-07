@@ -357,31 +357,12 @@ const TenantCreatePage: React.FC = () => {
                     form={form}
                     cityFieldName="addressLine3"
                     districtWardFieldName="addressLine2"
-                    stateProvinceFieldName="addressLine4"
+                    countryFieldName="country"
                     required
                     cityRequiredMessage={t("tenants.create.validation.city_required")}
                     districtRequiredMessage={t("tenants.create.validation.street_name_required")}
                     wardRequiredMessage={t("tenants.create.validation.street_name_required")}
                   />
-
-                  <Form.Item
-                    name="addressLine4"
-                    initialValue="Việt Nam"
-                    rules={[
-                      {
-                        required: true,
-                        message: t(
-                          "tenants.create.validation.country_required",
-                        ),
-                      },
-                    ]}>
-                    <Input
-                      size="large"
-                      placeholder={t(
-                        "tenants.create.fields.address_line4_placeholder",
-                      )}
-                    />
-                  </Form.Item>
                 </div>
               </Card>
 

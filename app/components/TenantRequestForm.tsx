@@ -4,12 +4,7 @@ import VnAddressSelect from "@/components/ui/VnAddressSelect";
 import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantRequestInput } from "@/lib/types/tenant";
-import {
-  EnvironmentOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  ShopOutlined,
-} from "@ant-design/icons";
+import { MailOutlined, PhoneOutlined, ShopOutlined } from "@ant-design/icons";
 import { App, Col, Form, Input, Modal, Row } from "antd";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -226,7 +221,6 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
             form={form}
             cityFieldName="businessAddressLine3"
             districtWardFieldName="businessAddressLine2"
-            stateProvinceFieldName="businessAddressLine4"
             countryFieldName="businessCountry"
             required
             cityRequiredMessage={t("tenant_requests.form.city_required", { defaultValue: "Vui lòng chọn tỉnh/thành phố" })}
@@ -235,7 +229,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
           />
 
           <Form.Item label={t("tenant_requests.form.country_placeholder")} name="businessCountry" initialValue="Việt Nam">
-            <Input placeholder={t("tenant_requests.form.country_placeholder")} />
+            <Input placeholder={t("tenant_requests.form.country_placeholder")} readOnly />
           </Form.Item>
         </Form>
       </div>
