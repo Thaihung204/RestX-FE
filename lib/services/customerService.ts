@@ -59,6 +59,7 @@ export interface CustomerListItemDto {
   email: string;
   fullName: string;
   phoneNumber?: string;
+  avatarUrl?: string | null;
   membershipLevel: string;
   loyaltyPoints: number;
   isActive: boolean;
@@ -96,7 +97,9 @@ const mapCustomerResponseToCustomer = (dto: CustomerResponseDto): Customer => ({
   name: dto.fullName,
   email: dto.email,
   phone: dto.phoneNumber || '',
-  avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(dto.fullName)}&background=4F46E5&color=fff`,
+  avatar:
+    dto.avatarUrl ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(dto.fullName)}&background=4F46E5&color=fff`,
   totalOrders: dto.totalOrders,
   totalSpent: 0,
   memberSince: dto.createdDate,
@@ -111,7 +114,9 @@ const mapListItemToCustomer = (dto: CustomerListItemDto): Customer => ({
   name: dto.fullName,
   email: dto.email,
   phone: dto.phoneNumber || '',
-  avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(dto.fullName)}&background=4F46E5&color=fff`,
+  avatar:
+    dto.avatarUrl ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(dto.fullName)}&background=4F46E5&color=fff`,
   totalOrders: 0,
   totalSpent: 0,
   memberSince: dto.createdDate,

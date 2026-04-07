@@ -99,12 +99,16 @@
       "back_to_list": "Quay lại danh sách",
       "sections": {
         "customer": "Khách hàng",
+        "order_info": "Thông tin đơn hàng",
+        "reservation": "Đặt bàn",
         "order_details": "Chi tiết món",
+        "payment": "Thanh toán",
+        "selected_items": "Đã chọn ({{count}})",
         "total": "Tổng tiền"
       },
       "status": {
         "pending": "Chờ xử lý",
-        "serving": "Đang phục vụ",
+        "served": "Đã phục vụ",
         "completed": "Hoàn tất",
         "cancelled": "Đã hủy"
       },
@@ -115,6 +119,21 @@
         "loyalty_points": "Điểm tích lũy",
         "total_orders": "Tổng đơn hàng",
         "total_reservations": "Tổng lượt đặt bàn"
+      },
+      "order_info": {
+        "reference": "Mã đơn hàng",
+        "created_date": "Ngày tạo",
+        "status": "Trạng thái đơn hàng"
+      },
+      "reservation": {
+        "confirmation_code": "Mã xác nhận",
+        "date_time": "Thời gian đặt bàn",
+        "guests": "Số khách",
+        "tables": "Bàn",
+        "deposit_amount": "Tiền cọc",
+        "created_at": "Ngày đặt",
+        "contact_name": "Tên liên hệ",
+        "contact_phone": "Số điện thoại liên hệ"
       },
       "fields": {
         "order_status": "Trạng thái đơn",
@@ -130,7 +149,14 @@
         "dish_name": "Tên món",
         "quantity": "Số lượng",
         "price": "Giá",
-        "status": "Trạng thái"
+        "status": "Trạng thái",
+        "created_at": "Thời gian tạo",
+        "note": "Ghi chú"
+      },
+      "actions": {
+        "add_dish": "Thêm món",
+        "confirm_add_dish": "Xác nhận thêm món",
+        "processing": "Đang xử lý..."
       },
       "money": {
         "sub_total": "Tạm tính",
@@ -141,8 +167,14 @@
       },
       "messages": {
         "load_error": "Không thể tải chi tiết đơn hàng.",
+        "update_error": "Cập nhật thất bại.",
+        "add_dish_success": "Đã thêm món vào đơn thành công!",
         "not_found": "Không tìm thấy đơn hàng.",
-        "no_items": "Không có món trong đơn hàng."
+        "no_items": "Không có món trong đơn hàng.",
+        "no_reservation": "Không có thông tin đặt bàn.",
+        "loading": "Đang tải...",
+        "no_image": "Không có ảnh",
+        "no_menu_items": "Không có món ăn nào."
       }
     }
   },
@@ -245,16 +277,18 @@
       "create_order_short": "Tạo Order",
       "stats": {
         "pending": "Chờ xử lý",
-        "preparing": "Đang nấu",
-        "ready": "Sẵn sàng",
+        "served": "Đã phục vụ",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy",
         "pending_items": "món chưa xong",
         "no_orders": "Không có order nào"
       },
       "tabs": {
         "all": "Tất cả",
         "pending": "Chờ xử lý",
-        "preparing": "Đang nấu",
-        "ready": "Sẵn sàng"
+        "served": "Đã phục vụ",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
       },
       "order": {
         "table": "Bàn",
@@ -268,10 +302,6 @@
       },
       "status": {
         "pending": "Chờ xử lý",
-        "confirmed": "Đã xác nhận",
-        "serving": "Đang phục vụ",
-        "preparing": "Đang nấu",
-        "ready": "Sẵn sàng",
         "served": "Đã phục vụ",
         "completed": "Hoàn tất",
         "cancelled": "Đã hủy"
@@ -298,6 +328,7 @@
         "order_status_updated": "Đã cập nhật trạng thái order",
         "order_status_update_failed": "Cập nhật trạng thái order thất bại"
       },
+      "empty": "Không có đơn hàng nào",
       "payment": {
         "actions": {
           "pay": "Thanh toán",
@@ -784,7 +815,9 @@
       },
       "order_status": {
         "title": "Quản lý trạng thái món ăn",
+        "title_order": "Quản lý trạng thái đơn hàng",
         "subtitle": "Quản lý các trạng thái món ăn, mã và màu sắc",
+        "subtitle_order": "Quản lý các trạng thái đơn hàng, mã và màu sắc",
         "add_status": "Thêm trạng thái",
         "edit_status": "Chỉnh sửa trạng thái",
         "name": "Tên trạng thái",
@@ -964,10 +997,9 @@
       "new_order": "Đơn mới",
       "stats": {
         "pending": "Chờ xử lý",
-        "preparing": "Đang nấu",
-        "ready": "Sẵn sàng",
         "served": "Đã phục vụ",
-        "completed": "Hoàn tất"
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
       },
       "table": {
         "order": "Đơn hàng",
@@ -982,8 +1014,6 @@
       },
       "status": {
         "pending": "Chờ xử lý",
-        "preparing": "Đang nấu",
-        "ready": "Sẵn sàng",
         "served": "Đã phục vụ",
         "completed": "Hoàn tất",
         "cancelled": "Đã hủy"

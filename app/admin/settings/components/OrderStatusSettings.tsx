@@ -1,8 +1,6 @@
 "use client";
 
-import orderDetailStatusService, {
-  OrderDetailStatus,
-} from "@/lib/services/orderDetailStatusService";
+import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -26,12 +24,12 @@ import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export default function OrderDetailStatusSettings() {
+export default function OrderStatusSettings() {
   const { t } = useTranslation("common");
-  const [statuses, setStatuses] = useState<OrderDetailStatus[]>([]);
+  const [statuses, setStatuses] = useState<OrderStatus[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingStatus, setEditingStatus] = useState<OrderDetailStatus | null>(
+  const [editingStatus, setEditingStatus] = useState<OrderStatus | null>(
     null,
   );
   const [form] = Form.useForm();
@@ -51,10 +49,10 @@ export default function OrderDetailStatusSettings() {
   const fetchStatuses = async () => {
     setLoading(true);
     try {
-      const data = await orderDetailStatusService.getAllStatuses();
+      const data = await orderStatusService.getAllStatuses();
       setStatuses(data);
     } catch (error) {
-      console.error("Failed to fetch order detail statuses:", error);
+      console.error("Failed to fetch order statuses:", error);
       messageApi.error(t("dashboard.manage.order_status.errors.fetch_failed"));
     } finally {
       setLoading(false);
@@ -82,7 +80,7 @@ export default function OrderDetailStatusSettings() {
     form.resetFields();
   };
 
-  const handleEdit = (status: OrderDetailStatus) => {
+  const handleEdit = (status: OrderStatus) => {
     setEditingStatus(status);
     setModalVisible(true);
     form.setFieldsValue(status);
@@ -90,11 +88,11 @@ export default function OrderDetailStatusSettings() {
 
   const handleDelete = async (id: string) => {
     try {
-      await orderDetailStatusService.deleteStatus(id);
+      await orderStatusService.deleteStatus(id);
       messageApi.success(t("dashboard.manage.notifications.delete_success"));
       fetchStatuses();
     } catch (error: any) {
-      console.error("Failed to delete order detail status:", error);
+      console.error("Failed to delete order status:", error);
       messageApi.error(t("dashboard.manage.order_status.errors.delete_failed"));
     }
   };
@@ -116,13 +114,13 @@ export default function OrderDetailStatusSettings() {
       };
 
       if (editingStatus) {
-        await orderDetailStatusService.updateStatus(editingStatus.id, {
+        await orderStatusService.updateStatus(editingStatus.id, {
           ...statusData,
           id: editingStatus.id,
         });
         messageApi.success(t("dashboard.manage.notifications.update_success"));
       } else {
-        await orderDetailStatusService.createStatus(statusData);
+        await orderStatusService.createStatus(statusData);
         messageApi.success(t("dashboard.manage.notifications.create_success"));
       }
 
@@ -132,15 +130,15 @@ export default function OrderDetailStatusSettings() {
       if (error?.response) {
         messageApi.error(t("dashboard.manage.order_status.errors.save_failed"));
       }
-      console.error("Failed to save order detail status:", error);
+      console.error("Failed to save order status:", error);
     }
   };
 
-  const handleSetDefault = async (record: OrderDetailStatus) => {
+  const handleSetDefault = async (record: OrderStatus) => {
     if (record.isDefault) return;
 
     try {
-      await orderDetailStatusService.setAsDefault(record);
+      await orderStatusService.setAsDefault(record);
       messageApi.success(t("dashboard.manage.notifications.update_success"));
       fetchStatuses();
     } catch (error) {
@@ -149,7 +147,7 @@ export default function OrderDetailStatusSettings() {
     }
   };
 
-  const columns: ColumnsType<OrderDetailStatus> = [
+  const columns: ColumnsType<OrderStatus> = [
     {
       title: t("dashboard.manage.order_status.table.name"),
       dataIndex: "name",
@@ -354,10 +352,10 @@ export default function OrderDetailStatusSettings() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h3 className="text-2xl font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] bg-clip-text text-transparent">
-            {t("dashboard.manage.order_status.title")}
+            {t("dashboard.manage.order_status.title_order")}
           </h3>
           <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
-            {t("dashboard.manage.order_status.subtitle")}
+            {t("dashboard.manage.order_status.subtitle_order")}
           </p>
           {/* <span
             className="inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold"

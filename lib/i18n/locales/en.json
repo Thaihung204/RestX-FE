@@ -99,12 +99,16 @@
       "back_to_list": "Back to list",
       "sections": {
         "customer": "Customer",
+        "order_info": "Order Information",
+        "reservation": "Reservation",
         "order_details": "Order Details",
+        "payment": "Payment",
+        "selected_items": "Selected ({{count}})",
         "total": "Total"
       },
       "status": {
         "pending": "Pending",
-        "serving": "Serving",
+        "served": "Served",
         "completed": "Completed",
         "cancelled": "Cancelled"
       },
@@ -115,6 +119,21 @@
         "loyalty_points": "Loyalty Points",
         "total_orders": "Total Orders",
         "total_reservations": "Total Reservations"
+      },
+      "order_info": {
+        "reference": "Order Reference",
+        "created_date": "Created Date",
+        "status": "Order Status"
+      },
+      "reservation": {
+        "confirmation_code": "Confirmation",
+        "date_time": "Reservation Time",
+        "guests": "Guests",
+        "tables": "Tables",
+        "deposit_amount": "Deposit Amount",
+        "created_at": "Created At",
+        "contact_name": "Contact Name",
+        "contact_phone": "Contact Phone"
       },
       "fields": {
         "order_status": "Order Status",
@@ -130,7 +149,14 @@
         "dish_name": "Dish Name",
         "quantity": "Quantity",
         "price": "Price",
-        "status": "Status"
+        "status": "Status",
+        "created_at": "Created",
+        "note": "Note"
+      },
+      "actions": {
+        "add_dish": "Add Dish",
+        "confirm_add_dish": "Confirm Add Dish",
+        "processing": "Processing..."
       },
       "money": {
         "sub_total": "SubTotal",
@@ -141,8 +167,14 @@
       },
       "messages": {
         "load_error": "Failed to load order details.",
+        "update_error": "Update failed.",
+        "add_dish_success": "Dish added to order successfully!",
         "not_found": "Order not found.",
-        "no_items": "No items in this order."
+        "no_items": "No items in this order.",
+        "no_reservation": "No reservation information.",
+        "loading": "Loading...",
+        "no_image": "No Image",
+        "no_menu_items": "No dishes available."
       }
     }
   },
@@ -245,16 +277,18 @@
       "create_order_short": "Create Order",
       "stats": {
         "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready",
+        "served": "Served",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
         "pending_items": "items not done",
         "no_orders": "No orders found"
       },
       "tabs": {
         "all": "All",
         "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready"
+        "served": "Served",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
       },
       "order": {
         "table": "Table",
@@ -268,10 +302,6 @@
       },
       "status": {
         "pending": "Pending",
-        "confirmed": "Confirmed",
-        "serving": "Serving",
-        "preparing": "Preparing",
-        "ready": "Ready",
         "served": "Served",
         "completed": "Completed",
         "cancelled": "Cancelled"
@@ -298,6 +328,7 @@
         "order_status_updated": "Order status updated",
         "order_status_update_failed": "Failed to update order status"
       },
+      "empty": "No orders found",
       "payment": {
         "actions": {
           "pay": "Pay",
@@ -850,7 +881,9 @@
       },
       "order_status": {
         "title": "Dish Status Management",
+        "title_order": "Order Status Management",
         "subtitle": "Manage dish statuses, codes, and colors",
+        "subtitle_order": "Manage order statuses, codes, and colors",
         "add_status": "Add Status",
         "edit_status": "Edit Dish Status",
         "name": "Status Name",
@@ -1030,17 +1063,16 @@
       "new_order": "New Order",
       "stats": {
         "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready",
         "served": "Served",
-        "completed": "Completed"
+        "completed": "Completed",
+        "cancelled": "Cancelled"
       },
       "table": {
         "order": "Order",
         "customer": "Customer",
         "table": "Table",
         "items": "Items",
-        "total": "Tổng",
+        "total": "Total",
         "status": "Status",
         "payment": "Payment",
         "time": "Time",
@@ -1048,8 +1080,6 @@
       },
       "status": {
         "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready",
         "served": "Served",
         "completed": "Completed",
         "cancelled": "Cancelled"
