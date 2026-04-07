@@ -725,7 +725,8 @@
         "ingredient_categories": "Ingredient Categories",
         "suppliers": "Suppliers",
         "loyalty": "Loyalty Bands",
-        "order_status": "Dish Status"
+        "order_status": "Dish Status",
+        "order_level_status": "Order Status"
       },
       "ingredient_categories": {
         "title": "Ingredient Categories",
@@ -900,6 +901,53 @@
           "update_failed": "Failed to update default status"
         }
       },
+      "order_level_status": {
+        "title": "Order Status Management",
+        "subtitle": "Manage order statuses, codes, and colors",
+        "add_status": "Add Status",
+        "edit_status": "Edit Order Status",
+        "name": "Status Name",
+        "name_placeholder": "Enter status name",
+        "name_required": "Please enter status name",
+        "code": "Code",
+        "code_placeholder": "Enter status code",
+        "code_required": "Please enter status code",
+        "color": "Color",
+        "color_required": "Please select a color",
+        "color_from_db": "Used colors",
+        "is_default": "Set as Default",
+        "is_default_desc": "Set this as the default order status",
+        "confirm_delete": "Delete order status",
+        "confirm_delete_desc": "Are you sure you want to delete this status?",
+        "status_count": "{{count}} statuses",
+        "empty_state_title": "No order statuses yet",
+        "empty_state_desc": "Create a new status to get started",
+        "tooltip": {
+          "current_default": "Current Default",
+          "set_default": "Set as Default",
+          "edit": "Edit status",
+          "delete": "Delete status"
+        },
+        "modal_subtitle_edit": "Update order status details",
+        "modal_subtitle_create": "Create a new order status entry",
+        "table": {
+          "name": "Status Name",
+          "code": "Code",
+          "color": "Color",
+          "default": "Default",
+          "actions": "Actions"
+        },
+        "actions": {
+          "confirm": "Confirm",
+          "cancel": "Cancel"
+        },
+        "errors": {
+          "fetch_failed": "Failed to load order statuses",
+          "delete_failed": "Failed to delete order status",
+          "save_failed": "Failed to save order status",
+          "update_failed": "Failed to update default status"
+        }
+      },
       "notifications": {
         "delete_success": "Deleted successfully",
         "update_success": "Updated successfully",
@@ -1048,9 +1096,8 @@
       },
       "status": {
         "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready",
-        "served": "Served",
+        "confirmed": "Confirmed",
+        "serving": "Serving",
         "completed": "Completed",
         "cancelled": "Cancelled"
       },

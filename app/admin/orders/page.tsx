@@ -12,9 +12,8 @@ import { useTranslation } from "react-i18next";
 
 type OrderStatusUi =
   | "pending"
-  | "preparing"
-  | "ready"
-  | "served"
+  | "confirmed"
+  | "serving"
   | "completed"
   | "cancelled";
 
@@ -56,10 +55,12 @@ export default function OrdersPage() {
       case 0:
         return "pending";
       case 1:
-        return "served";
+        return "confirmed";
       case 2:
-        return "completed";
+        return "serving";
       case 3:
+        return "completed";
+      case 4:
         return "cancelled";
       default:
         return "pending";
@@ -140,11 +141,10 @@ export default function OrdersPage() {
       try {
         const statusToId: Record<OrderStatusUi, number> = {
           pending: 0,
-          served: 1,
-          completed: 2,
-          cancelled: 3,
-          preparing: 0,
-          ready: 0,
+          confirmed: 1,
+          serving: 2,
+          completed: 3,
+          cancelled: 4,
         };
 
         const data = await orderService.getOrdersByFilter({
@@ -331,17 +331,13 @@ export default function OrdersPage() {
       text: t("dashboard.orders.status.pending"),
       badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
     },
-    preparing: {
-      text: t("dashboard.orders.status.preparing"),
+    confirmed: {
+      text: t("dashboard.orders.status.confirmed"),
       badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
     },
-    ready: {
-      text: t("dashboard.orders.status.ready"),
+    serving: {
+      text: t("dashboard.orders.status.serving"),
       badge: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-    },
-    served: {
-      text: t("dashboard.orders.status.served"),
-      badge: "text-[var(--primary)] border-[var(--primary-border)]",
     },
     completed: {
       text: t("dashboard.orders.status.completed"),
@@ -430,7 +426,8 @@ export default function OrdersPage() {
             >
               <option value="">{t("admin.reservations.filter.all_status", { defaultValue: "Tất cả trạng thái" })}</option>
               <option value="pending">{statusConfig.pending.text}</option>
-              <option value="served">{statusConfig.served.text}</option>
+              <option value="confirmed">{statusConfig.confirmed.text}</option>
+              <option value="serving">{statusConfig.serving.text}</option>
               <option value="completed">{statusConfig.completed.text}</option>
               <option value="cancelled">{statusConfig.cancelled.text}</option>
             </select>
