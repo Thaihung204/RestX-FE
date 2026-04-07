@@ -13,6 +13,7 @@ import orderService, {
   OrderRequestDto,
 } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
+import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
 import paymentService from "@/lib/services/paymentService";
 import { tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
@@ -41,14 +42,9 @@ const { Text } = Typography;
 
 type OrderItemStatus = string;
 
-type OrderStatusId = 0 | 1 | 2 | 3 | 4;
+type OrderStatusId = number;
 
-type OrderStatusUi =
-  | "pending"
-  | "confirmed"
-  | "serving"
-  | "completed"
-  | "cancelled";
+type OrderStatusUi = string;
 
 interface OrderItem {
   id: string;
@@ -75,20 +71,12 @@ interface Order {
   raw?: OrderDto;
 }
 
-const mapOrderStatus = (statusId?: number | null): OrderStatusUi => {
-  switch (statusId) {
-    case 1:
-      return "confirmed";
-    case 2:
-      return "serving";
-    case 3:
-      return "completed";
-    case 4:
-      return "cancelled";
-    case 0:
-    default:
-      return "pending";
-  }
+const mapOrderStatus = (
+  statusId: number | null | undefined,
+  statuses: OrderStatus[],
+): OrderStatusUi => {
+  const matched = statuses.find((status) => Number(status.id) === Number(statusId));
+  return matched?.code?.toLowerCase() || "pending";
 };
 
 const aggregateOrderItems = (items: OrderItem[]): OrderItem[] => {
@@ -123,6 +111,7 @@ export default function OrderManagement() {
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
   const [orderDetailStatuses, setOrderDetailStatuses] = useState<OrderDetailStatus[]>([]);
+  const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const statusValueMapRef = useRef<Record<string, string>>({});
   const tableNameMapRef = useRef<Record<string, string>>({});
   const dishNameMapRef = useRef<Record<string, string>>({});
@@ -206,7 +195,7 @@ export default function OrderManagement() {
 
         const summaryItems = aggregateOrderItems(items);
 
-        const status = mapOrderStatus(order.orderStatusId);
+        const status = mapOrderStatus(order.orderStatusId, orderStatuses);
 
         return {
           id: order.id || "",
@@ -232,7 +221,7 @@ export default function OrderManagement() {
         };
       });
     },
-    [normalizeStatusValue],
+    [normalizeStatusValue, orderStatuses],
   );
 
   const fetchOrders = useCallback(async () => {
@@ -263,14 +252,16 @@ export default function OrderManagement() {
     inFlightRef.current = true;
     initializedRef.current = true;
     try {
-      const [statusData, tableData, menuData, orderData] = await Promise.all([
+      const [statusData, orderStatusData, tableData, menuData, orderData] = await Promise.all([
         orderDetailStatusService.getAllStatuses(),
+        orderStatusService.getAllStatuses(),
         tableService.getAllTables(),
         menuService.getMenu(),
         orderService.getAllOrders(),
       ]);
 
       const safeStatuses = statusData ?? [];
+      const safeOrderStatuses = orderStatusData ?? [];
       const safeMenu = menuData ?? [];
       const mappedTables = (tableData ?? []).map((row) => ({
         id: row.id,
@@ -278,6 +269,7 @@ export default function OrderManagement() {
       }));
 
       setOrderDetailStatuses(safeStatuses);
+      setOrderStatuses(safeOrderStatuses);
       setTables(mappedTables);
       setMenuCategories(safeMenu);
 
@@ -317,31 +309,21 @@ export default function OrderManagement() {
     className: "order-detail-status-option",
   }));
 
-  const orderStatusStyleMap: Record<
-    OrderStatusUi,
-    { bg: string; border: string; }
-  > = {
-    pending: {
-      bg: "#FFFBEB",
-      border: "#FDE68A",
-    },
-    confirmed: {
-      bg: "#EFF6FF",
-      border: "#BFDBFE",
-    },
-    serving: {
-      bg: "#FAF5FF",
-      border: "#E9D5FF",
-    },
-    completed: {
-      bg: "#F0FDF4",
-      border: "#BBF7D0",
-    },
-    cancelled: {
-      bg: "#FEF2F2",
-      border: "#FECACA",
-    }
-  };
+  const orderStatusStyleMap = useMemo<Record<string, { bg: string; border: string }>>(() => {
+    const fallback = { bg: "#FFFBEB", border: "#FDE68A" };
+    const predefinedByCode: Record<string, { bg: string; border: string }> = {
+      pending: { bg: "#FFFBEB", border: "#FDE68A" },
+      served: { bg: "#EFF6FF", border: "#BFDBFE" },
+      completed: { bg: "#F0FDF4", border: "#BBF7D0" },
+      cancelled: { bg: "#FEF2F2", border: "#FECACA" },
+    };
+
+    return orderStatuses.reduce<Record<string, { bg: string; border: string }>>((acc, status) => {
+      const code = status.code?.toLowerCase?.() || status.name?.toLowerCase?.() || String(status.id);
+      acc[code] = predefinedByCode[code] || fallback;
+      return acc;
+    }, {});
+  }, [orderStatuses]);
 
   const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] = useState<string>("");
   const [selectedTableId, setSelectedTableId] = useState<string>("all");
@@ -460,7 +442,7 @@ export default function OrderManagement() {
     statusId: OrderStatusId,
   ) => {
     const previousOrders = orders;
-    const nextStatus = mapOrderStatus(statusId);
+    const nextStatus = mapOrderStatus(statusId, orderStatuses);
 
     setOrders((prev) =>
       prev.map((order) =>
@@ -662,13 +644,11 @@ export default function OrderManagement() {
     { id: "bank", label: t("staff.orders.payment.methods.bank") },
   ];
 
-  const orderStatusOptions = [
-    { value: 0, label: t("staff.orders.status.pending"), className: "order-status-option" },
-    { value: 1, label: t("staff.orders.status.confirmed"), className: "order-status-option" },
-    { value: 2, label: t("staff.orders.status.serving"), className: "order-status-option" },
-    { value: 3, label: t("staff.orders.status.completed"), className: "order-status-option" },
-    { value: 4, label: t("staff.orders.status.cancelled"), className: "order-status-option" },
-  ];
+  const orderStatusOptions = orderStatuses.map((status) => ({
+    value: Number(status.id),
+    label: status.name,
+    className: "order-status-option",
+  }));
 
   return (
     <div>

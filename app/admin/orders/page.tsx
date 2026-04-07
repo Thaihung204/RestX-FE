@@ -3,7 +3,7 @@
 import customerService from "@/lib/services/customerService";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
-import { tableService, type TableItem } from "@/lib/services/tableService";
+import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { HubConnectionState } from "@microsoft/signalr";
 import Link from "next/link";
@@ -22,7 +22,6 @@ interface OrderRow {
   orderNumber: string;
   customerName: string;
   customerAvatar?: string | null;
-  tableCode: string;
   items: number;
   totalQuantity: number;
   total: number;
@@ -33,22 +32,22 @@ interface OrderRow {
 }
 
 const PAGE_SIZE = 10;
+const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
 
 export default function OrdersPage() {
   const { t } = useTranslation("common");
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [tablesById, setTablesById] = useState<Record<string, TableItem>>({});
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
-  const inFlightRef = useRef(false);
-  const lastRefreshRef = useRef<number | null>(null);
-
+  const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
+  const [page, setPage] = useState(1);
   const [orderSearch, setOrderSearch] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
   const [tableSearch, setTableSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrderStatusUi | "">("");
   const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">("");
-  const [page, setPage] = useState(1);
+  const inFlightRef = useRef(false);
+  const lastRefreshRef = useRef<number | null>(null);
 
   const mapOrderStatus = (statusId: number): OrderStatusUi => {
     switch (statusId) {
@@ -71,20 +70,13 @@ export default function OrdersPage() {
     return statusId === 1 ? "paid" : "unpaid";
   };
 
-  const loadTables = useCallback(async () => {
-    try {
-      const tables = await tableService.getAllTables();
-      const dict: Record<string, TableItem> = {};
-      tables.forEach((t) => {
-        if (!t?.id) return;
-        dict[t.id] = t;
+  useEffect(() => {
+    orderStatusService
+      .getAllStatuses()
+      .then((data) => setOrderStatuses(data ?? []))
+      .catch((error) => {
+        console.error("Failed to load order statuses:", error);
       });
-      setTablesById(dict);
-      return dict;
-    } catch (error) {
-      console.error("Failed to load tables for orders page:", error);
-      return {} as Record<string, TableItem>;
-    }
   }, []);
 
   useEffect(() => {
@@ -134,8 +126,7 @@ export default function OrdersPage() {
     };
   }, []);
 
-  const loadOrders = useCallback(
-    async (tablesDict?: Record<string, TableItem>) => {
+  const loadOrders = useCallback(async () => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       try {
@@ -177,33 +168,6 @@ export default function OrdersPage() {
 
         setOrders(
           data.map((o) => {
-            const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
-            const tableSessionIds = (o.tableSessions ?? [])
-              .map((s) => s?.tableId)
-              .filter((id): id is string => !!id && id !== EMPTY_GUID);
-            const tableIds = (o.tableIds ?? []).filter(
-              (id): id is string => !!id && id !== EMPTY_GUID,
-            );
-            const directTableId =
-              o.tableId && o.tableId !== EMPTY_GUID ? o.tableId : undefined;
-
-            const tableLookupIds = [
-              ...tableSessionIds,
-              ...tableIds,
-              ...(directTableId ? [directTableId] : []),
-            ];
-            const table = tableLookupIds
-              .map((id) => (tablesDict ?? tablesById)[id])
-              .find(Boolean);
-            const tableCodeFromSession = (o.tableSessions ?? [])
-              .map((s) => s?.table?.code)
-              .find((code): code is string => !!code);
-            const tableCode =
-              tableCodeFromSession ||
-              table?.code ||
-              table?.tableStatusName ||
-              tableLookupIds[0] ||
-              "—";
             const distinctCount = o.orderDetails?.length ?? 0;
             const totalQuantity =
               o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ??
@@ -224,18 +188,21 @@ export default function OrdersPage() {
                   : `#${(o.id ?? "").slice(0, 8)}`,
               customerName:
                 customer?.name ??
-                (hasRealCustomerId
-                  ? t("dashboard.orders.fallbacks.unknown_customer", {
-                      defaultValue: "Khách không xác định",
-                    })
-                  : t("dashboard.orders.fallbacks.guest_name")),
+                (hasRealCustomerId ? "Unknown customer" : "Guest"),
               customerAvatar: customer?.avatar ?? null,
-              tableCode,
               items: distinctCount,
               totalQuantity,
               total: Number(o.totalAmount ?? 0),
               status,
-              time: o.completedAt ? new Date(o.completedAt).toLocaleString() : "—",
+              time: o.createdDate
+                ? new Date(o.createdDate).toLocaleString("vi-VN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })
+                : "",
               paymentStatus,
               raw: o,
             };
@@ -247,7 +214,7 @@ export default function OrdersPage() {
         inFlightRef.current = false;
       }
     },
-    [tablesById, t, orderSearch, tableSearch, statusFilter, paymentFilter],
+    [mapOrderStatus],
   );
 
   const refreshOrders = useCallback(
@@ -258,22 +225,17 @@ export default function OrdersPage() {
 
       if (showLoading) setLoading(true);
       try {
-        const tablesDict = await loadTables();
-        await loadOrders(tablesDict);
+        await loadOrders();
       } finally {
         if (showLoading) setLoading(false);
       }
     },
-    [loadTables, loadOrders],
+    [loadOrders],
   );
 
   useEffect(() => {
     refreshOrders().catch(console.error);
   }, [refreshOrders]);
-
-  useEffect(() => {
-    refreshOrders(false).catch(console.error);
-  }, [orderSearch, tableSearch, statusFilter, paymentFilter, refreshOrders]);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -350,12 +312,28 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = useMemo(() => {
+    const orderKeyword = orderSearch.trim().toLowerCase();
     const customerKeyword = customerSearch.trim().toLowerCase();
+    const tableKeyword = tableSearch.trim().toLowerCase();
+
     return orders.filter((order) => {
-      if (!customerKeyword) return true;
-      return order.customerName.toLowerCase().includes(customerKeyword);
+      const matchesOrder =
+        !orderKeyword ||
+        order.orderNumber.toLowerCase().includes(orderKeyword);
+
+      const matchesCustomer =
+        !customerKeyword ||
+        order.customerName.toLowerCase().includes(customerKeyword);
+
+      const tableValue = String(order.raw?.tableId ?? "").toLowerCase();
+      const matchesTable = !tableKeyword || tableValue.includes(tableKeyword);
+
+      const matchesStatus = !statusFilter || order.status === statusFilter;
+      const matchesPayment = !paymentFilter || order.paymentStatus === paymentFilter;
+
+      return matchesOrder && matchesCustomer && matchesTable && matchesStatus && matchesPayment;
     });
-  }, [orders, customerSearch]);
+  }, [orders, orderSearch, customerSearch, tableSearch, statusFilter, paymentFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -478,9 +456,8 @@ export default function OrdersPage() {
             <table className="w-full">
               <thead style={{ background: "var(--surface)" }}>
                 <tr>
-                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.order")}</th>
-                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.customer")}</th>
-                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.table")}</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.order")}</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.customer")}</th>
                   <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.items")}</th>
                   <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.total")}</th>
                   <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.status")}</th>
@@ -492,24 +469,24 @@ export default function OrdersPage() {
               <tbody style={{ borderColor: "var(--border)" }}>
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-6">
+                    <td colSpan={8} className="px-6 py-6">
                       <div className="w-full rounded-xl animate-pulse" style={{ background: "var(--surface)", height: 360 }} />
                     </td>
                   </tr>
                 ) : pagedOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.orders.empty", { defaultValue: "Không có đơn hàng" })}
+                    <td colSpan={8} className="px-6 py-12 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+                      {t("orders.empty", { defaultValue: "No orders found" })}
                     </td>
                   </tr>
                 ) : (
                   pagedOrders.map((order) => (
                     <tr key={order.id} className="transition-colors" style={{ borderBottom: "1px solid var(--border)" }}>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-6 py-4 whitespace-nowrap text-left">
                         <span style={{ color: "var(--primary)", fontWeight: 600 }}>{order.orderNumber}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="flex items-center justify-center gap-3">
+                      <td className="px-6 py-4 whitespace-nowrap text-left">
+                        <div className="flex items-center gap-3">
                           {order.customerAvatar ? (
                             <img src={order.customerAvatar} alt={order.customerName} className="w-8 h-8 rounded-full object-cover" />
                           ) : (
@@ -522,11 +499,6 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span style={{ color: "var(--text-muted)" }}>
-                          {t("dashboard.orders.labels.table_code", { tableCode: order.tableCode })}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span style={{ color: "var(--text-muted)" }}>
                           {t("dashboard.orders.labels.items_count", { count: order.items })}
                         </span>
                       </td>
@@ -536,8 +508,8 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[order.status].badge}`}>
-                          {statusConfig[order.status].text}
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${(statusConfig[order.status] || { badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" }).badge}`}>
+                          {(statusConfig[order.status] || { text: order.status || "-", badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" }).text}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -556,7 +528,7 @@ export default function OrdersPage() {
                         {order.time}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="flex justify-center gap-2">
+                        <div className="flex gap-2 justify-center">
                           <Link
                             href={`/admin/orders/${order.id}`}
                             className="p-2 rounded-lg transition-all"
@@ -594,7 +566,7 @@ export default function OrdersPage() {
               </p>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => setPage((p: number) => Math.max(1, p - 1))}
                   disabled={currentPage <= 1}
                   className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
@@ -618,7 +590,7 @@ export default function OrdersPage() {
                   );
                 })}
                 <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))}
                   disabled={currentPage >= totalPages}
                   className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}

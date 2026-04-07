@@ -17,6 +17,7 @@ export default function ManagePage() {
     | "ingredientCategories"
     | "loyalty"
     | "orderDetailStatus"
+    | "orderDetailStatus"
     | "orderStatus"
   >("categories");
 

@@ -359,7 +359,7 @@ export default function OrderDetailStatusSettings() {
           <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
             {t("dashboard.manage.order_status.subtitle")}
           </p>
-          <span
+          {/* <span
             className="inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold"
             style={{
               background: "var(--surface-subtle)",
@@ -369,7 +369,7 @@ export default function OrderDetailStatusSettings() {
             {t("dashboard.manage.order_status.status_count", {
               count: statuses.length,
             })}
-          </span>
+          </span> */}
         </div>
         <Button
           type="primary"
@@ -387,11 +387,7 @@ export default function OrderDetailStatusSettings() {
           dataSource={statuses}
           rowKey="id"
           loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: false,
-            placement: ["bottomCenter"],
-          }}
+          pagination={false}
           locale={{
             emptyText: (
               <div
@@ -546,50 +542,6 @@ export default function OrderDetailStatusSettings() {
             </Form.Item>
           </div>
 
-          {/* <div
-            className="p-4 rounded-xl space-y-4 border"
-            style={{
-              background: "var(--card)",
-              borderColor: "var(--border)",
-            }}>
-            <Form.Item name="isDefault" valuePropName="checked" noStyle>
-              <div
-                className="flex items-center justify-between cursor-pointer group"
-                onClick={() =>
-                  form.setFieldValue(
-                    "isDefault",
-                    !form.getFieldValue("isDefault"),
-                  )
-                }>
-                <div className="flex flex-col">
-                  <span
-                    className="font-medium transition-colors"
-                    style={{ color: "var(--text)" }}>
-                    {t("dashboard.manage.order_status.is_default")}
-                  </span>
-                  <span
-                    className="text-sm"
-                    style={{ color: "var(--text-muted)" }}>
-                    {t("dashboard.manage.order_status.is_default_desc")}
-                  </span>
-                </div>
-                <Switch checked={form.getFieldValue("isDefault")} />
-              </div>
-            </Form.Item>
-
-            {(form.getFieldValue("isDefault") || editingStatus?.isDefault) && (
-              <div
-                className="text-sm flex items-center gap-2 p-2 rounded-lg"
-                style={{
-                  color: "var(--warning)",
-                  background: "var(--warning-soft)",
-                  border: "1px solid var(--warning-border)",
-                }}>
-                <StarFilled />
-                {t("dashboard.manage.order_status.default_note")}
-              </div>
-            )}
-          </div> */}
         </Form>
       </Modal>
     </div>

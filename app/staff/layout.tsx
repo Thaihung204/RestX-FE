@@ -700,8 +700,7 @@ export default function StaffLayout({
               {/* Language switcher - hidden on very small screens if needed, or just keep it */}
               <div
                 style={{
-                  display:
-                    isMobile && window.innerWidth < 360 ? "none" : "block",
+                  display: isMobile ? "none" : "block",
                 }}>
                 <LanguageSwitcher />
               </div>

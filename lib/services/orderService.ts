@@ -38,7 +38,8 @@ export interface OrderStatusUpdateRequest {
 export interface OrderDto {
   id?: string;
   reference?: string | null;
-  tableId?: string | null;
+  createdDate?: string | null;
+  tableId: string;
   customerId: string;
   reservationId?: string | null;
   orderStatusId: number;
