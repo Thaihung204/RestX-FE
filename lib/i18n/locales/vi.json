@@ -802,12 +802,18 @@
         "form": {
           "name": "Tên hạng",
           "logo": "Thứ hạng",
+          "logo_required": "Vui lòng chọn màu thứ hạng",
           "range": "Khoảng điểm",
           "max_tooltip": "Để trống nếu không giới hạn",
           "discount": "Phần trăm giảm giá (%)",
           "benefits": "Mô tả ưu đãi"
         },
+        "preview": {
+          "title": "Xem trước huy hiệu",
+          "default_name": "Hạng mới"
+        },
         "badges": {
+          "default": "Màu mặc định",
           "bronze": "Đồng",
           "silver": "Bạc",
           "gold": "Vàng",

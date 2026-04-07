@@ -868,12 +868,18 @@
         "form": {
           "name": "Band Name",
           "logo": "Rank",
+          "logo_required": "Please choose a rank color",
           "range": "Points Range",
           "max_tooltip": "Leave empty for infinite range",
           "discount": "Discount Percentage (%)",
           "benefits": "Benefits Description"
         },
+        "preview": {
+          "title": "Badge preview",
+          "default_name": "New Rank"
+        },
         "badges": {
+          "default": "Default colors",
           "bronze": "Bronze",
           "silver": "Silver",
           "gold": "Gold",
