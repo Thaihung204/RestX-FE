@@ -359,7 +359,7 @@ export default function OrderDetailStatusSettings() {
           <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
             {t("dashboard.manage.order_status.subtitle")}
           </p>
-          <span
+          {/* <span
             className="inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold"
             style={{
               background: "var(--surface-subtle)",
@@ -369,7 +369,7 @@ export default function OrderDetailStatusSettings() {
             {t("dashboard.manage.order_status.status_count", {
               count: statuses.length,
             })}
-          </span>
+          </span> */}
         </div>
         <Button
           type="primary"
@@ -387,11 +387,7 @@ export default function OrderDetailStatusSettings() {
           dataSource={statuses}
           rowKey="id"
           loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: false,
-            placement: ["bottomCenter"],
-          }}
+          pagination={false}
           locale={{
             emptyText: (
               <div

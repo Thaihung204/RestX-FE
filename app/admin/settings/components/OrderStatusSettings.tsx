@@ -2,23 +2,23 @@
 
 import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
 import {
-    DeleteOutlined,
-    EditOutlined,
-    PlusOutlined,
-    StarFilled,
-    StarOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  StarFilled,
+  StarOutlined,
 } from "@ant-design/icons";
 import {
-    Button,
-    ColorPicker,
-    Form,
-    Input,
-    message,
-    Modal,
-    Popconfirm,
-    Table,
-    Tag,
-    Tooltip
+  Button,
+  ColorPicker,
+  Form,
+  Input,
+  message,
+  Modal,
+  Popconfirm,
+  Table,
+  Tag,
+  Tooltip
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
@@ -357,7 +357,7 @@ export default function OrderStatusSettings() {
           <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
             {t("dashboard.manage.order_status.subtitle_order")}
           </p>
-          <span
+          {/* <span
             className="inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold"
             style={{
               background: "var(--surface-subtle)",
@@ -367,7 +367,7 @@ export default function OrderStatusSettings() {
             {t("dashboard.manage.order_status.status_count", {
               count: statuses.length,
             })}
-          </span>
+          </span> */}
         </div>
         <Button
           type="primary"
@@ -385,11 +385,7 @@ export default function OrderStatusSettings() {
           dataSource={statuses}
           rowKey="id"
           loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: false,
-            placement: ["bottomCenter"],
-          }}
+          pagination={false}
           locale={{
             emptyText: (
               <div
