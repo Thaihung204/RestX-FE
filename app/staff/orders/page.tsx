@@ -41,12 +41,11 @@ const { Text } = Typography;
 
 type OrderItemStatus = string;
 
-type OrderStatusId = 0 | 1 | 2 | 3 | 4;
+type OrderStatusId = 0 | 1 | 2 | 3;
 
 type OrderStatusUi =
   | "pending"
-  | "confirmed"
-  | "serving"
+  | "served"
   | "completed"
   | "cancelled";
 
@@ -78,12 +77,10 @@ interface Order {
 const mapOrderStatus = (statusId?: number | null): OrderStatusUi => {
   switch (statusId) {
     case 1:
-      return "confirmed";
+      return "served";
     case 2:
-      return "serving";
-    case 3:
       return "completed";
-    case 4:
+    case 3:
       return "cancelled";
     case 0:
     default:
@@ -307,13 +304,9 @@ export default function OrderManagement() {
       bg: "#FFFBEB",
       border: "#FDE68A",
     },
-    confirmed: {
+    served: {
       bg: "#EFF6FF",
       border: "#BFDBFE",
-    },
-    serving: {
-      bg: "#FAF5FF",
-      border: "#E9D5FF",
     },
     completed: {
       bg: "#F0FDF4",
@@ -642,10 +635,9 @@ export default function OrderManagement() {
 
   const orderStatusOptions = [
     { value: 0, label: t("staff.orders.status.pending"), className: "order-status-option" },
-    { value: 1, label: t("staff.orders.status.confirmed"), className: "order-status-option" },
-    { value: 2, label: t("staff.orders.status.serving"), className: "order-status-option" },
-    { value: 3, label: t("staff.orders.status.completed"), className: "order-status-option" },
-    { value: 4, label: t("staff.orders.status.cancelled"), className: "order-status-option" },
+    { value: 1, label: t("staff.orders.status.served"), className: "order-status-option" },
+    { value: 2, label: t("staff.orders.status.completed"), className: "order-status-option" },
+    { value: 3, label: t("staff.orders.status.cancelled"), className: "order-status-option" },
   ];
 
   return (

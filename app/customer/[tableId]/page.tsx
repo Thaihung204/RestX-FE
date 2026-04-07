@@ -226,18 +226,19 @@ export default function CustomerHomePageByTable() {
             </div>
           </div>
 
-          <CustomerFooter
-            customerProfile={customerProfile}
-            customerName={customerName}
-            phoneNumber={phoneNumber}
-            avatarUrl={avatarUrl}
-            onProfileUpdate={loadCustomerProfile}
-            openProfileSignal={openProfileSignal}
-            position="sticky"
-            tableId={tableId}
-          />
-          <CartModal />
         </div>
+
+        <CustomerFooter
+          customerProfile={customerProfile}
+          customerName={customerName}
+          phoneNumber={phoneNumber}
+          avatarUrl={avatarUrl}
+          onProfileUpdate={loadCustomerProfile}
+          openProfileSignal={openProfileSignal}
+          position="sticky"
+          tableId={tableId}
+        />
+        <CartModal />
       </ConfigProvider>
     </ProtectedRoute>
   );

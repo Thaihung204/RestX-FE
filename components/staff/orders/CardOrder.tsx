@@ -1,10 +1,10 @@
-import { Card, Select, Typography, Space, Divider, Tag } from "antd";
-import { ClockCircleOutlined, DollarOutlined, FileTextOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import { ClockCircleOutlined, FileTextOutlined } from "@ant-design/icons";
+import { Card, Select, Space, Typography } from "antd";
 
 const { Text } = Typography;
 
-export type OrderStatusId = 0 | 1 | 2 | 3 | 4;
-export type OrderStatusUi = "pending" | "confirmed" | "serving" | "completed" | "cancelled";
+export type OrderStatusId = 0 | 1 | 2 | 3;
+export type OrderStatusUi = "pending" | "served" | "completed" | "cancelled";
 
 export interface OrderItem {
   id: string;

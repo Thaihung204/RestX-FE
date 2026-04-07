@@ -3,7 +3,6 @@
 import customerService from "@/lib/services/customerService";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
-import { tableService, type TableItem } from "@/lib/services/tableService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { HubConnectionState } from "@microsoft/signalr";
 import Link from "next/link";
@@ -12,8 +11,6 @@ import { useTranslation } from "react-i18next";
 
 type OrderStatusUi =
   | "pending"
-  | "preparing"
-  | "ready"
   | "served"
   | "completed"
   | "cancelled";
@@ -23,7 +20,6 @@ interface OrderRow {
   orderNumber: string;
   customerName: string;
   customerAvatar?: string | null;
-  tableCode: string;
   items: number;
   totalQuantity: number;
   total: number;
@@ -37,7 +33,6 @@ export default function OrdersPage() {
   const { t } = useTranslation("common");
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [tablesById, setTablesById] = useState<Record<string, TableItem>>({});
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
@@ -60,21 +55,6 @@ export default function OrdersPage() {
   const mapPaymentStatus = (statusId: number): "unpaid" | "paid" => {
     return statusId === 1 ? "paid" : "unpaid";
   };
-
-  const loadTables = useCallback(async () => {
-    try {
-      const tables = await tableService.getAllTables();
-      const dict: Record<string, TableItem> = {};
-      tables.forEach((t) => {
-        dict[t.id] = t;
-      });
-      setTablesById(dict);
-      return dict;
-    } catch (error) {
-      console.error("Failed to load tables for orders page:", error);
-      return {} as Record<string, TableItem>;
-    }
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -123,8 +103,7 @@ export default function OrdersPage() {
     };
   }, []);
 
-  const loadOrders = useCallback(
-    async (tablesDict?: Record<string, TableItem>) => {
+  const loadOrders = useCallback(async () => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       try {
@@ -148,8 +127,6 @@ export default function OrdersPage() {
 
         setOrders(
           data.map((o) => {
-            const table = (tablesDict ?? tablesById)[o.tableId];
-            const tableCode = table?.code || o.tableId;
             const distinctCount = o.orderDetails?.length ?? 0;
             const totalQuantity =
               o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ??
@@ -167,12 +144,19 @@ export default function OrdersPage() {
               customerName:
                 customer?.name ?? t("dashboard.orders.fallbacks.guest_name"),
               customerAvatar: customer?.avatar ?? null,
-              tableCode,
               items: distinctCount,
               totalQuantity,
               total: Number(o.totalAmount ?? 0),
               status,
-              time: "",
+              time: o.createdDate
+                ? new Date(o.createdDate).toLocaleString("vi-VN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })
+                : "",
               paymentStatus,
               raw: o,
             };
@@ -184,7 +168,7 @@ export default function OrdersPage() {
         inFlightRef.current = false;
       }
     },
-    [tablesById, t],
+    [t],
   );
 
   const refreshOrders = useCallback(
@@ -195,13 +179,12 @@ export default function OrdersPage() {
 
       if (showLoading) setLoading(true);
       try {
-        const tablesDict = await loadTables();
-        await loadOrders(tablesDict);
+        await loadOrders();
       } finally {
         if (showLoading) setLoading(false);
       }
     },
-    [loadTables, loadOrders],
+    [loadOrders],
   );
 
   useEffect(() => {
@@ -260,14 +243,6 @@ export default function OrdersPage() {
       text: t("dashboard.orders.status.pending"),
       badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
     },
-    preparing: {
-      text: t("dashboard.orders.status.preparing"),
-      badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    },
-    ready: {
-      text: t("dashboard.orders.status.ready"),
-      badge: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-    },
     served: {
       text: t("dashboard.orders.status.served"),
       badge: "text-[var(--primary)] border-[var(--primary-border)]",
@@ -313,7 +288,6 @@ export default function OrdersPage() {
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.order")}</th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.customer")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.table")}</th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.items")}</th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.total")}</th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.status")}</th>
@@ -325,14 +299,14 @@ export default function OrdersPage() {
               <tbody style={{ borderColor: "var(--border)" }}>
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-6">
+                    <td colSpan={8} className="px-6 py-6">
                       <div className="w-full rounded-xl animate-pulse" style={{ background: "var(--surface)", height: 360 }} />
                     </td>
                   </tr>
                 ) : orders.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.orders.empty", { defaultValue: "Không có đơn hàng" })}
+                    <td colSpan={8} className="px-6 py-12 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.orders.empty")}
                     </td>
                   </tr>
                 ) : (
@@ -352,11 +326,6 @@ export default function OrdersPage() {
                           )}
                           <span className="font-medium" style={{ color: "var(--text)" }}>{order.customerName}</span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span style={{ color: "var(--text-muted)" }}>
-                          {t("dashboard.orders.labels.table_code", { tableCode: order.tableCode })}
-                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span style={{ color: "var(--text-muted)" }}>
