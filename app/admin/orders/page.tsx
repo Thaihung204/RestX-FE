@@ -10,12 +10,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-type OrderStatusUi =
-  | "pending"
-  | "confirmed"
-  | "serving"
-  | "completed"
-  | "cancelled";
+
 
 interface OrderRow {
   id: string;
@@ -25,7 +20,7 @@ interface OrderRow {
   items: number;
   totalQuantity: number;
   total: number;
-  status: OrderStatusUi;
+  orderStatusId: number;
   time: string;
   paymentStatus: "unpaid" | "paid";
   raw: OrderDto;
@@ -44,27 +39,12 @@ export default function OrdersPage() {
   const [orderSearch, setOrderSearch] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
   const [tableSearch, setTableSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<OrderStatusUi | "">("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">("");
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
 
-  const mapOrderStatus = (statusId: number): OrderStatusUi => {
-    switch (statusId) {
-      case 0:
-        return "pending";
-      case 1:
-        return "confirmed";
-      case 2:
-        return "serving";
-      case 3:
-        return "completed";
-      case 4:
-        return "cancelled";
-      default:
-        return "pending";
-    }
-  };
+
 
   const mapPaymentStatus = (statusId: number): "unpaid" | "paid" => {
     return statusId === 1 ? "paid" : "unpaid";
@@ -130,18 +110,10 @@ export default function OrdersPage() {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       try {
-        const statusToId: Record<OrderStatusUi, number> = {
-          pending: 0,
-          confirmed: 1,
-          serving: 2,
-          completed: 3,
-          cancelled: 4,
-        };
-
         const data = await orderService.getOrdersByFilter({
           reference: orderSearch.trim() || undefined,
           tableId: tableSearch.trim() || undefined,
-          orderStatusId: statusFilter ? statusToId[statusFilter] : undefined,
+          orderStatusId: statusFilter ? Number(statusFilter) : undefined,
           paymentStatusId: paymentFilter ? (paymentFilter === "paid" ? 1 : 0) : undefined,
         });
         const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
@@ -172,7 +144,7 @@ export default function OrdersPage() {
             const totalQuantity =
               o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ??
               0;
-            const status = mapOrderStatus(o.orderStatusId);
+            const orderStatusId = o.orderStatusId;
             const paymentStatus = mapPaymentStatus(
               o.paymentStatusId ?? o.paymentStatus ?? 0,
             );
@@ -193,7 +165,7 @@ export default function OrdersPage() {
               items: distinctCount,
               totalQuantity,
               total: Number(o.totalAmount ?? 0),
-              status,
+              orderStatusId,
               time: o.createdDate
                 ? new Date(o.createdDate).toLocaleString("vi-VN", {
                     hour: "2-digit",
@@ -214,7 +186,7 @@ export default function OrdersPage() {
         inFlightRef.current = false;
       }
     },
-    [mapOrderStatus],
+    [],
   );
 
   const refreshOrders = useCallback(
@@ -288,28 +260,7 @@ export default function OrdersPage() {
     setPage(1);
   }, [orderSearch, customerSearch, tableSearch, statusFilter, paymentFilter]);
 
-  const statusConfig = {
-    pending: {
-      text: t("dashboard.orders.status.pending"),
-      badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-    },
-    confirmed: {
-      text: t("dashboard.orders.status.confirmed"),
-      badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    },
-    serving: {
-      text: t("dashboard.orders.status.serving"),
-      badge: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-    },
-    completed: {
-      text: t("dashboard.orders.status.completed"),
-      badge: "bg-green-500/10 text-green-500 border-green-500/20",
-    },
-    cancelled: {
-      text: t("dashboard.orders.status.cancelled"),
-      badge: "bg-red-500/10 text-red-500 border-red-500/20",
-    },
-  };
+
 
   const filteredOrders = useMemo(() => {
     const orderKeyword = orderSearch.trim().toLowerCase();
@@ -328,7 +279,7 @@ export default function OrdersPage() {
       const tableValue = String(order.raw?.tableId ?? "").toLowerCase();
       const matchesTable = !tableKeyword || tableValue.includes(tableKeyword);
 
-      const matchesStatus = !statusFilter || order.status === statusFilter;
+      const matchesStatus = !statusFilter || String(order.orderStatusId) === statusFilter;
       const matchesPayment = !paymentFilter || order.paymentStatus === paymentFilter;
 
       return matchesOrder && matchesCustomer && matchesTable && matchesStatus && matchesPayment;
@@ -398,16 +349,16 @@ export default function OrdersPage() {
 
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as OrderStatusUi | "")}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm"
               style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
               <option value="">{t("admin.reservations.filter.all_status", { defaultValue: "Tất cả trạng thái" })}</option>
-              <option value="pending">{statusConfig.pending.text}</option>
-              <option value="confirmed">{statusConfig.confirmed.text}</option>
-              <option value="serving">{statusConfig.serving.text}</option>
-              <option value="completed">{statusConfig.completed.text}</option>
-              <option value="cancelled">{statusConfig.cancelled.text}</option>
+              {orderStatuses.map(status => (
+                <option key={status.id} value={status.id}>
+                  {status.name}
+                </option>
+              ))}
             </select>
 
             <select
@@ -508,9 +459,22 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${(statusConfig[order.status] || { badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" }).badge}`}>
-                          {(statusConfig[order.status] || { text: order.status || "-", badge: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" }).text}
-                        </span>
+                        {(() => {
+                           const st = orderStatuses.find(s => s.id === String(order.orderStatusId));
+                           if (!st) return <span className="text-gray-500">-</span>;
+                           return (
+                             <span 
+                               className="px-3 py-1 rounded-full text-xs font-medium border"
+                               style={{
+                                 backgroundColor: `${st.color}1A`,
+                                 color: st.color,
+                                 borderColor: `${st.color}33`,
+                               }}
+                             >
+                               {st.name}
+                             </span>
+                           );
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span
