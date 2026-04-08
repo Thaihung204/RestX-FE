@@ -1,8 +1,7 @@
 "use client";
 
-import AddItem from "@/components/staff/orders/AddItem";
-import CardTable from "@/components/staff/orders/CardTable";
-import OrderDetail from "@/components/staff/orders/OrderDetail";
+import CardOrder from "@/components/staff/orders/CardOrder";
+import OrderDetailsPopup from "@/components/staff/orders/OrderDetailsPopup";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import menuService from "@/lib/services/menuService";
 import orderDetailStatusService, {
@@ -34,7 +33,7 @@ import {
   Space,
   Typography
 } from "antd";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
 
@@ -69,7 +68,21 @@ interface Order {
   orderStatusId: OrderStatusId;
   orderStatus: OrderStatusUi;
   raw?: OrderDto;
+  tableSessions?: Array<{
+    id?: string;
+    tableId?: string;
+    tableCode?: string;
+  }>;
 }
+
+type PaymentOrder = {
+  id: string;
+  reference: string;
+  total: number;
+  raw?: {
+    paymentStatusId?: number;
+  };
+};
 
 const mapOrderStatus = (
   statusId: number | null | undefined,
@@ -158,7 +171,14 @@ export default function OrderManagement() {
 
       return data.map((order: OrderDto) => {
         const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
-        const tableIdFromSession = (order.tableSessions ?? [])
+        const tableSessions = ((order as any).tableSessions ?? []) as Array<{
+          id?: string;
+          tableId?: string;
+          tableCode?: string;
+          table?: { code?: string };
+        }>;
+
+        const tableIdFromSession = tableSessions
           .map((s) => s?.tableId)
           .find((id): id is string => !!id && id !== EMPTY_GUID);
         const tableIdFromList = (order.tableIds ?? []).find(
@@ -171,8 +191,8 @@ export default function OrderManagement() {
           "unknown";
 
         const tableName =
-          (order.tableSessions ?? [])
-            .map((s) => s?.table?.code)
+          tableSessions
+            .map((s) => s?.tableCode || s?.table?.code)
             .find((code): code is string => !!code) ||
           tableNameMap[resolvedTableId] ||
           resolvedTableId;
@@ -218,6 +238,11 @@ export default function OrderManagement() {
           orderStatusId: (order.orderStatusId ?? 0) as OrderStatusId,
           orderStatus: status,
           raw: order,
+          tableSessions: tableSessions.map((session) => ({
+            id: session.id,
+            tableId: session.tableId,
+            tableCode: session.tableCode || session.table?.code,
+          })),
         };
       });
     },
@@ -309,22 +334,6 @@ export default function OrderManagement() {
     className: "order-detail-status-option",
   }));
 
-  const orderStatusStyleMap = useMemo<Record<string, { bg: string; border: string }>>(() => {
-    const fallback = { bg: "#FFFBEB", border: "#FDE68A" };
-    const predefinedByCode: Record<string, { bg: string; border: string }> = {
-      pending: { bg: "#FFFBEB", border: "#FDE68A" },
-      served: { bg: "#EFF6FF", border: "#BFDBFE" },
-      completed: { bg: "#F0FDF4", border: "#BBF7D0" },
-      cancelled: { bg: "#FEF2F2", border: "#FECACA" },
-    };
-
-    return orderStatuses.reduce<Record<string, { bg: string; border: string }>>((acc, status) => {
-      const code = status.code?.toLowerCase?.() || status.name?.toLowerCase?.() || String(status.id);
-      acc[code] = predefinedByCode[code] || fallback;
-      return acc;
-    }, {});
-  }, [orderStatuses]);
-
   const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] = useState<string>("");
   const [selectedTableId, setSelectedTableId] = useState<string>("all");
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
@@ -335,7 +344,7 @@ export default function OrderManagement() {
   const [isUpdatingOrderStatus, setIsUpdatingOrderStatus] = useState(false);
   const [isUpdatingDetailStatus, setIsUpdatingDetailStatus] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<PaymentOrder | null>(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState<Order | null>(null);
   const [isOrderDetailModalOpen, setIsOrderDetailModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "bank">("cash");
@@ -412,22 +421,6 @@ export default function OrderManagement() {
   const filteredOrders = orders.filter((order) => {
     return selectedTableId === "all" || order.tableId === selectedTableId;
   });
-
-  const tableCodeMap = useMemo(() => {
-    return tables.reduce<Record<string, string>>((acc, table) => {
-      acc[table.id] = table.name;
-      return acc;
-    }, {});
-  }, [tables]);
-
-  const groupedOrders = useMemo(() => {
-    return filteredOrders.reduce<Record<string, Order[]>>((acc, order) => {
-      const key = order.tableId || "unknown";
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(order);
-      return acc;
-    }, {});
-  }, [filteredOrders]);
 
   useEffect(() => {
     if (!selectedOrderForDetail) return;
@@ -600,7 +593,7 @@ export default function OrderManagement() {
     }
   };
 
-  const openPaymentModal = (order: Order) => {
+  const openPaymentModal = (order: PaymentOrder) => {
     setSelectedOrder(order);
     setCashReceived(order.total);
     setPaymentMethod("cash");
@@ -706,32 +699,46 @@ export default function OrderManagement() {
       </Card>
 
       {/* Order List */}
-      <div style={{ 
-        marginTop: isMobile ? 8 : 12,
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))",
-        gap: isMobile ? 12 : 20,
-        alignItems: "stretch"
-      }}>
-        {Object.keys(groupedOrders).length > 0 ? (
-          Object.entries(groupedOrders).map(([tableId, tableOrders]) => {
-            const tableCode = tableCodeMap[tableId] || tableOrders[0]?.tableName || tableId;
+      <div>
+        {filteredOrders.length > 0 ? (
+          filteredOrders.map((order) => {
+            const defaultStatuses = orderDetailStatuses
+              .filter((s) => s.isDefault)
+              .map((s) => s.code?.toLowerCase() || s.id);
+
+            const filteredDetailItems = order.detailItems.filter((item) => {
+              if (defaultStatuses.length === 0) return true;
+              const nStatus = normalizeStatusValue(item.status).toLowerCase();
+              return defaultStatuses.includes(nStatus);
+            });
+
             return (
-              <CardTable
-                key={tableId}
-                tableCode={tableCode}
-                tableOrders={tableOrders}
-                mode={mode}
+              <CardOrder
+                key={order.id}
+                order={{ ...order, detailItems: filteredDetailItems }}
                 isMobile={isMobile}
-                isUpdatingOrderStatus={isUpdatingOrderStatus}
+                mode={mode as "light" | "dark"}
+                statusOptions={statusOptions}
+                orderStatuses={orderStatuses}
                 orderStatusOptions={orderStatusOptions}
-                orderStatusStyleMap={orderStatusStyleMap}
-                tableLabel={t("staff.orders.order.table")}
-                onOpenDetail={(order) => {
-                  setSelectedOrderForDetail(order);
-                  setIsOrderDetailModalOpen(true);
+                isUpdatingOrderStatus={isUpdatingOrderStatus}
+                isUpdatingDetailStatus={isUpdatingDetailStatus}
+                normalizeStatusValue={normalizeStatusValue}
+                handleUpdateOrderStatus={handleUpdateOrderStatus}
+                handleUpdateDetailStatus={handleUpdateDetailStatus}
+                openPaymentModal={openPaymentModal}
+                onOpenAddItemModal={(orderId) => {
+                  setSelectedOrderIdForAdd(orderId);
+                  setIsAddItemModalOpen(true);
                 }}
-                onUpdateOrderStatus={handleUpdateOrderStatus}
+                onViewDetails={(orderId) => {
+                  const current = orders.find((o) => o.id === orderId);
+                  if (current) {
+                    setSelectedOrderForDetail(current);
+                    setIsOrderDetailModalOpen(true);
+                  }
+                }}
+                t={t}
               />
             );
           })
@@ -750,39 +757,94 @@ export default function OrderManagement() {
         )}
       </div>
 
+      {/* Add Item To Existing Order Modal */}
+      <Modal
+        title={t("staff.orders.modal.add_item")}
+        open={isAddItemModalOpen}
+        onCancel={() => {
+          setIsAddItemModalOpen(false);
+          setCart([]);
+          setSelectedOrderIdForAdd("");
+        }}
+        onOk={handleAddItemsToOrder}
+        okText={t("staff.orders.modal.add_item")}
+        width={900}
+        centered>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={14}>
+            <Select
+              placeholder={t("staff.orders.modal.order_detail")}
+              style={{ width: "100%", marginBottom: 12 }}
+              value={selectedOrderIdForAdd || undefined}
+              onChange={setSelectedOrderIdForAdd}
+              options={orders.map((order) => ({
+                value: order.id,
+                label: `${order.reference} - ${t("staff.orders.order.table")} ${order.tableName}`,
+              }))}
+            />
 
-      {/* Order Detail Modal */}
-      <OrderDetail
-        selectedOrderForDetail={selectedOrderForDetail}
-        isOrderDetailModalOpen={isOrderDetailModalOpen}
-        isMobile={isMobile}
-        mode={mode}
-        isUpdatingOrderStatus={isUpdatingOrderStatus}
-        isUpdatingDetailStatus={isUpdatingDetailStatus}
-        normalizeStatusValue={normalizeStatusValue}
-        statusOptions={statusOptions}
-        orderStatusOptions={orderStatusOptions}
-        totalLabel={t("staff.orders.payment.modal.total_label")}
-        emptyLabel={t("staff.orders.empty")}
-        // addItemLabel={t("staff.orders.modal.add_item")}
-        paymentLabel="Thanh toán"
-        statusLabel="Status"
-        onClose={() => {
-          setIsOrderDetailModalOpen(false);
-          setSelectedOrderForDetail(null);
-        }}
-        onUpdateOrderStatus={handleUpdateOrderStatus}
-        onUpdateDetailStatus={handleUpdateDetailStatus}
-        onOpenPayment={(order) => {
-          setIsOrderDetailModalOpen(false);
-          openPaymentModal(order);
-        }}
-        onAddItem={(orderId) => {
-          setIsOrderDetailModalOpen(false);
-          setSelectedOrderIdForAdd(orderId);
-          setIsAddItemModalOpen(true);
-        }}
-      />
+            <Select
+              style={{ width: "100%", marginBottom: 12 }}
+              value={activeMenuCategory || undefined}
+              onChange={setActiveMenuCategory}
+              options={menuCategories.map((c) => ({
+                value: c.categoryId,
+                label: c.categoryName,
+              }))}
+            />
+
+            <Row gutter={[12, 12]}>
+              {menuCategories
+                .find((c) => c.categoryId === activeMenuCategory)
+                ?.items.map((item) => (
+                  <Col xs={24} sm={12} key={item.id}>
+                    <Card hoverable size="small" onClick={() => addToCart(item)}>
+                      <Text strong>{item.name}</Text>
+                      <div>{item.price.toLocaleString("vi-VN")}đ</div>
+                    </Card>
+                  </Col>
+                ))}
+            </Row>
+          </Col>
+
+          <Col xs={24} md={10}>
+            <Card title={`${t("staff.orders.modal.cart")} (${cart.length})`}>
+              {cart.length > 0 ? (
+                <>
+                  {cart.map((c) => (
+                    <div
+                      key={c.item.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 8,
+                      }}>
+                      <div>
+                        <Text strong>{c.item.name}</Text>
+                        <div>{(c.item.price * c.quantity).toLocaleString("vi-VN")}đ</div>
+                      </div>
+                      <Space>
+                        <Button size="small" onClick={() => updateCartQuantity(c.item.id, -1)}>-</Button>
+                        <Text>{c.quantity}</Text>
+                        <Button size="small" onClick={() => updateCartQuantity(c.item.id, 1)}>+</Button>
+                      </Space>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}>
+                    <Text strong>{t("staff.orders.order.total")}</Text>
+                    <Text strong style={{ color: "var(--primary)" }}>
+                      {cartTotal.toLocaleString("vi-VN")}đ
+                    </Text>
+                  </div>
+                </>
+              ) : (
+                <Empty description={t("staff.orders.modal.no_items")} />
+              )}
+            </Card>
+          </Col>
+        </Row>
+      </Modal>
 
       {/* Payment Modal */}
       <Modal
@@ -956,40 +1018,21 @@ export default function OrderManagement() {
         )}
       </Modal>
 
-      {/* Add Item To Existing Order Modal */}
-      <AddItem
-        isOpen={isAddItemModalOpen}
-        isMobile={isMobile}
-        mode={mode}
-        selectedOrderIdForAdd={selectedOrderIdForAdd}
-        setSelectedOrderIdForAdd={setSelectedOrderIdForAdd}
-        menuCategories={menuCategories}
-        activeMenuCategory={activeMenuCategory}
-        setActiveMenuCategory={setActiveMenuCategory}
-        cart={cart}
-        cartTotal={cartTotal}
-        orders={orders.map((order) => ({
-          id: order.id,
-          reference: order.reference,
-          tableName: order.tableName,
-        }))}
+      <OrderDetailsPopup
+        order={selectedOrderForDetail}
+        isOpen={isOrderDetailModalOpen}
         onClose={() => {
-          setIsAddItemModalOpen(false);
-          setCart([]);
-          setSelectedOrderIdForAdd("");
+          setIsOrderDetailModalOpen(false);
+          setSelectedOrderForDetail(null);
         }}
-        onAddToCart={addToCart}
-        onUpdateCartQuantity={updateCartQuantity}
-        onSubmit={handleAddItemsToOrder}
-        labels={{
-          title: t("staff.orders.modal.add_item"),
-          orderPlaceholder: "",
-          table: t("staff.orders.order.table"),
-          cart: t("staff.orders.modal.cart"),
-          total: t("staff.orders.order.total"),
-          noItems: t("staff.orders.modal.no_items"),
-          addItem: t("staff.orders.modal.add_item"),
-        }}
+        orderStatuses={orderStatuses}
+        statusOptions={statusOptions}
+        isUpdatingDetailStatus={isUpdatingDetailStatus}
+        handleUpdateDetailStatus={handleUpdateDetailStatus}
+        normalizeStatusValue={normalizeStatusValue}
+        isMobile={isMobile}
+        mode={mode as "light" | "dark"}
+        t={t}
       />
 
       <style jsx global>{`
