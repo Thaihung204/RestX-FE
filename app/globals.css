@@ -1367,3 +1367,36 @@ img {
   background: var(--surface);
   border: 1px solid var(--primary-border);
 }
+
+/* =========================================================
+ * Ant Design ColorPicker — theme consistency
+ * Fixes black background on trigger in Loyalty / OrderStatus modals
+ * ========================================================= */
+.ant-color-picker-trigger {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+.ant-color-picker-trigger .ant-color-picker-trigger-text {
+  color: var(--text) !important;
+}
+
+.ant-color-picker-panel {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+.ant-color-picker-panel .ant-color-picker-input-container input {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+.ant-color-picker-panel .ant-color-picker-hex-input input {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+.ant-color-picker-presets-label {
+  color: var(--text-muted) !important;
+}

@@ -408,7 +408,7 @@ export default function StaffKitchenPage() {
                 {t("staff.kitchen.preparing_count", { count: items.filter((o) => (o.status || "").toLowerCase().includes("preparing")).length })}
               </Tag>
             </Space>
-            <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("staff.kitchen.updated_at", { time: updatedAt || "--:--:--" })}</Text>
+            <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("staff.kitchen.updated_at", { time: formatUpdatedAt(updatedAt) })}</Text>
           </div>
 
           <Table
