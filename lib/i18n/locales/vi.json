@@ -212,7 +212,9 @@
         "confirm": "Xác nhận",
         "checkin": "Check-in",
         "complete": "Hoàn tất",
-        "cancel": "Hủy"
+        "cancel": "Hủy",
+        "expand": "Hiển thị",
+        "collapse": "Thu gọn"
       },
       "status": {
         "pending": "Chờ xác nhận",
@@ -273,6 +275,10 @@
       },
       "filter": {
         "all_tables": "Tất cả bàn"
+      },
+      "actions": {
+        "expand": "Hiển thị",
+        "collapse": "Thu gọn"
       },
       "create_order_short": "Tạo Order",
       "stats": {
@@ -353,6 +359,32 @@
           "link_created": "Đã tạo link thanh toán",
           "payment_failed": "Thanh toán thất bại"
         }
+      }
+    },
+    "kitchen": {
+      "title": "Danh sách món cần chuẩn bị",
+      "updated_at": "Cập nhật: {{time}}",
+      "preparing_count": "{{count}} đang chuẩn bị",
+      "columns": {
+        "table": "BÀN",
+        "dish_name": "TÊN MÓN",
+        "note": "GHI CHÚ",
+        "quantity": "SỐ LƯỢNG",
+        "status": "TRẠNG THÁI",
+        "time": "THỜI GIAN"
+      },
+      "status": {
+        "preparing": "Đang chuẩn bị",
+        "ready": "Sẵn sàng",
+        "served": "Đã phục vụ",
+        "cancelled": "Đã hủy"
+      },
+      "empty": {
+        "title": "Chưa có món ăn nào cần chuẩn bị",
+        "description": "Đang chờ các order mới..."
+      },
+      "messages": {
+        "load_error": "Không thể tải dữ liệu món ăn"
       }
     },
     "tables": {

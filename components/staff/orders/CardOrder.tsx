@@ -1,6 +1,7 @@
-import { DollarOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { DollarOutlined, DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 import { Button, Card, Select, Space, Tag, Typography } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
+import { useState } from "react";
 
 const { Text } = Typography;
 
@@ -76,6 +77,16 @@ export default function CardOrder({
   onViewDetails,
   t,
 }: CardOrderProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const textSizes = {
+    table: isMobile ? 14 : 16,
+    reference: isMobile ? 12 : 13,
+    detailHeader: isMobile ? 12 : 13,
+    itemName: isMobile ? 12 : 13,
+    itemNote: isMobile ? 10 : 11,
+    quantity: isMobile ? 11 : 12,
+    total: isMobile ? 14 : 15,
+  };
   const currentStatus = orderStatuses?.find(s => Number(s.id) === order.orderStatusId);
   const styleColor = currentStatus?.color || "#E5E5E5";
   const bgLight = `${styleColor}15`;
@@ -104,7 +115,7 @@ export default function CardOrder({
         transition: "all 0.3s ease",
         cursor: onViewDetails ? "pointer" : "default",
       }}
-      styles={{ body: { padding: isMobile ? 14 : 20 } }}>
+      styles={{ body: { padding: isMobile ? 12 : 16 } }}>
       <div
         style={{
           display: "flex",
@@ -133,8 +144,9 @@ export default function CardOrder({
                 <Text
                   strong
                   style={{
-                    fontSize: isMobile ? 15 : 17,
+                    fontSize: textSizes.table,
                     fontWeight: 500,
+                    lineHeight: 1.3,
                   }}>
                   {t("staff.orders.order.table")} {order.tableSessions?.map((s) => s.tableCode).join(" - ")}
                 </Text>
@@ -144,7 +156,7 @@ export default function CardOrder({
                   <Select
                     value={order.orderStatusId}
                     size="small"
-                    style={{ minWidth: 130 }}
+                    style={{ minWidth: isMobile ? 102 : 116, fontSize: isMobile ? 11 : 12 }}
                     className="order-status-select"
                     onChange={(value) =>
                       handleUpdateOrderStatus(order.id, Number(value))
@@ -156,12 +168,13 @@ export default function CardOrder({
               </div>
               <Text
                 style={{
-                  fontSize: isMobile ? 13 : 14,
+                  fontSize: textSizes.reference,
                   color:
                     mode === "dark"
                       ? "rgba(255, 255, 255, 0.5)"
                       : "rgba(0, 0, 0, 0.5)",
                   fontWeight: 400,
+                  lineHeight: 1.3,
                 }}>
                 {order.reference}
               </Text>
@@ -171,69 +184,98 @@ export default function CardOrder({
           <div style={{ marginBottom: isMobile ? 12 : 16 }}>
             {order.detailItems.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {order.detailItems.map((item) => (
-                  <div
-                    key={item.id}
+                <div
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setIsExpanded((prev) => !prev);
+                  }}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    cursor: "pointer",
+                    padding: isMobile ? "8px 0" : "10px 0",
+                    borderBottom:
+                      mode === "dark"
+                        ? "1px dashed rgba(255, 255, 255, 0.12)"
+                        : "1px dashed #D9D9D9",
+                  }}>
+                  <Text
+                    strong
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 8,
-                      padding: isMobile ? "6px 0" : "8px 0",
-                      borderBottom:
-                        mode === "dark"
-                          ? "1px dashed rgba(255, 255, 255, 0.08)"
-                          : "1px dashed #EDEDED",
+                      fontSize: textSizes.detailHeader,
                     }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Text
-                        style={{
-                          fontSize: isMobile ? 13 : 14,
-                          fontWeight: 500,
-                          display: "block",
-                        }}>
-                        {item.name}
-                      </Text>
-                      {item.note && (
+                    {t("staff.orders.modal.order_detail")} ({order.detailItems.length})
+                  </Text>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={isExpanded ? <UpOutlined /> : <DownOutlined />}
+                    style={{ paddingInline: 4, fontSize: isMobile ? 11 : 12, height: isMobile ? 24 : 26 }}>
+                    {isExpanded ? t("staff.orders.actions.collapse") : t("staff.orders.actions.expand")}
+                  </Button>
+                </div>
+
+                {isExpanded &&
+                  order.detailItems.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={(event) => event.stopPropagation()}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                        padding: isMobile ? "6px 0" : "8px 0",
+                        borderBottom:
+                          mode === "dark"
+                            ? "1px dashed rgba(255, 255, 255, 0.08)"
+                            : "1px dashed #EDEDED",
+                      }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <Text
                           style={{
-                            fontSize: isMobile ? 11 : 12,
-                            color:
-                              mode === "dark"
-                                ? "rgba(255, 255, 255, 0.45)"
-                                : "rgba(0, 0, 0, 0.45)",
+                            fontSize: textSizes.itemName,
+                            fontWeight: 500,
                             display: "block",
+                            lineHeight: 1.3,
                           }}>
-                          {item.note}
+                          {item.name}
                         </Text>
-                      )}
-                    </div>
-                    <Space size={8} style={{ alignItems: "center" }}>
-                      <Tag
-                        style={{
-                          margin: 0,
-                          borderRadius: 8,
-                          fontSize: isMobile ? 12 : 13,
-                        }}>
-                        x{item.quantity}
-                      </Tag>
-                      <div
-                        onClick={(event) => event.stopPropagation()}
-                        onMouseDown={(event) => event.stopPropagation()}>
-                        <Select
-                          value={normalizeStatusValue(item.status)}
-                          size="small"
-                          style={{ minWidth: isMobile ? 110 : 130 }}
-                          onChange={(value) =>
-                            handleUpdateDetailStatus(order.id, item.id, String(value))
-                          }
-                          disabled={isUpdatingDetailStatus}
-                          options={statusOptions}
-                        />
                       </div>
-                    </Space>
-                  </div>
-                ))}
+                      <Space size={isMobile ? 6 : 8} style={{ alignItems: "center" }}>
+                        <Tag
+                          style={{
+                            margin: 0,
+                            borderRadius: 8,
+                            fontSize: textSizes.quantity,
+                            lineHeight: 1.2,
+                            paddingInline: isMobile ? 6 : 8,
+                          }}>
+                          x{item.quantity}
+                        </Tag>
+                        <div
+                          onClick={(event) => event.stopPropagation()}
+                          onMouseDown={(event) => event.stopPropagation()}>
+                          <Select
+                            value={normalizeStatusValue(item.status)}
+                            size="small"
+                            style={{ minWidth: isMobile ? 82 : 98, fontSize: isMobile ? 11 : 12 }}
+                            className="order-detail-status-select"
+                            onChange={(value) =>
+                              handleUpdateDetailStatus(order.id, item.id, String(value))
+                            }
+                            disabled={isUpdatingDetailStatus}
+                            options={statusOptions}
+                            popupMatchSelectWidth={false}
+                          />
+                        </div>
+                      </Space>
+                    </div>
+                  ))}
               </div>
             ) : (
               <Text
@@ -259,7 +301,7 @@ export default function CardOrder({
             }}>
             <Text
               strong
-              style={{ color: "var(--primary)", fontSize: isMobile ? 15 : 16 }}>
+              style={{ color: "var(--primary)", fontSize: textSizes.total }}>
               {order.total.toLocaleString("vi-VN")}đ
             </Text>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -271,9 +313,10 @@ export default function CardOrder({
                   onClick={(e) => { e.stopPropagation(); openPaymentModal(order); }}
                   style={{
                     borderRadius: 6,
-                    minWidth: isMobile ? 110 : 130,
-                    height: 24,
-                    padding: "0 8px",
+                    minWidth: isMobile ? 92 : 118,
+                    height: isMobile ? 26 : 28,
+                    padding: isMobile ? "0 6px" : "0 8px",
+                    fontSize: isMobile ? 11 : 12,
                   }}>
                   {!isMobile ? (t("staff.orders.payment.btn")) : null}
                 </Button>
@@ -284,9 +327,10 @@ export default function CardOrder({
                 onClick={(e) => { e.stopPropagation(); onOpenAddItemModal(order.id); }}
                 style={{
                   borderRadius: 6,
-                  minWidth: isMobile ? 110 : 130,
-                  height: 24,
-                  padding: "0 8px",
+                  minWidth: isMobile ? 92 : 118,
+                  height: isMobile ? 26 : 28,
+                  padding: isMobile ? "0 6px" : "0 8px",
+                  fontSize: isMobile ? 11 : 12,
                 }}>
                 {t("staff.orders.modal.add_item")}
               </Button>

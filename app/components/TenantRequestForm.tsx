@@ -135,6 +135,8 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
       width="90%"
       style={{ maxWidth: 700 }}
       styles={{ body: { maxHeight: "75vh", overflowY: "auto", paddingTop: 16, paddingBottom: 16 } }}
+      mask
+      maskClosable={false}
       destroyOnHidden
     >
       <style>{customStyles}</style>

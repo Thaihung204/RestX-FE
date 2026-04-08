@@ -274,6 +274,10 @@
       "filter": {
         "all_tables": "All tables"
       },
+      "actions": {
+        "expand": "Show",
+        "collapse": "Collapse"
+      },
       "create_order_short": "Create Order",
       "stats": {
         "pending": "Pending",
@@ -353,6 +357,32 @@
           "link_created": "Payment link created",
           "payment_failed": "Payment failed"
         }
+      }
+    },
+    "kitchen": {
+      "title": "Dishes to prepare",
+      "updated_at": "Updated: {{time}}",
+      "preparing_count": "{{count}} preparing",
+      "columns": {
+        "table": "TABLE",
+        "dish_name": "DISH",
+        "note": "NOTE",
+        "quantity": "QUANTITY",
+        "status": "STATUS",
+        "time": "TIME"
+      },
+      "status": {
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served",
+        "cancelled": "Cancelled"
+      },
+      "empty": {
+        "title": "No dishes need preparation",
+        "description": "Waiting for new orders..."
+      },
+      "messages": {
+        "load_error": "Unable to load kitchen items"
       }
     },
     "tables": {

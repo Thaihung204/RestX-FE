@@ -20,6 +20,7 @@ export default function CartModal() {
     orderedItems,
     cartModalOpen,
     activeCartTab,
+    isSubmittingOrder,
     cartItemCount,
     totalOrderAmount,
     updateQuantity,
@@ -347,6 +348,8 @@ export default function CartModal() {
                       type="primary"
                       size="large"
                       onClick={confirmOrder}
+                      loading={isSubmittingOrder}
+                      disabled={isSubmittingOrder}
                       style={{
                         background: "var(--primary)",
                         border: "none",

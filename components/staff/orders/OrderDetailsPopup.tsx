@@ -61,6 +61,16 @@ export default function OrderDetailsPopup({
 }: OrderDetailsPopupProps) {
   if (!order) return null;
 
+  const textSizes = {
+    title: isMobile ? 15 : 17,
+    itemName: isMobile ? 12 : 13,
+    itemNote: isMobile ? 10 : 11,
+    itemPrice: isMobile ? 12 : 13,
+    quantity: isMobile ? 11 : 12,
+    totalLabel: isMobile ? 13 : 14,
+    totalValue: isMobile ? 14 : 16,
+  };
+
   const tableNamesStr = order.tableSessions?.map((s) => s.tableCode).filter(Boolean).join(" - ") || "";
 
   const currentStatus = orderStatuses?.find(
@@ -84,7 +94,7 @@ export default function OrderDetailsPopup({
         className="order-details-popup-modal"
         title={
         <Space size={12} align="center">
-          <Text strong style={{ fontSize: 18 }}>
+          <Text strong style={{ fontSize: textSizes.title, lineHeight: 1.3 }}>
             {t?.("staff.orders.order.table")} {tableNamesStr}
           </Text>
         </Space>
@@ -92,7 +102,7 @@ export default function OrderDetailsPopup({
       open={isOpen}
       onCancel={onClose}
       footer={null}
-      width={600}
+      width={isMobile ? "92vw" : 600}
       centered
       styles={{
         content: {
@@ -109,12 +119,12 @@ export default function OrderDetailsPopup({
         header: {
           backgroundColor: popupStyle.bg,
           borderBottom: "none",
-          padding: isMobile ? "16px 16px 8px" : "16px 24px 8px",
+          padding: isMobile ? "14px 14px 8px" : "16px 20px 8px",
           marginBottom: 0,
         },
         body: {
           backgroundColor: popupStyle.bg,
-          padding: isMobile ? "8px 16px 20px" : "8px 24px 24px",
+          padding: isMobile ? "8px 14px 16px" : "8px 20px 20px",
         },
       } as any}
     >
@@ -147,46 +157,37 @@ export default function OrderDetailsPopup({
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <Text
                       style={{
-                        fontSize: isMobile ? 13 : 14,
+                        fontSize: textSizes.itemName,
                         fontWeight: 500,
                         display: "block",
+                        lineHeight: 1.3,
                       }}>
                       {item.name}
                     </Text>
-                    {item.note && (
-                      <Text
-                        style={{
-                          fontSize: isMobile ? 11 : 12,
-                          color:
-                            mode === "dark"
-                              ? "rgba(255, 255, 255, 0.45)"
-                              : "rgba(0, 0, 0, 0.45)",
-                          display: "block",
-                        }}>
-                        {item.note}
-                      </Text>
-                    )}
                   </div>
                   
-                  <Space size={16} align="center" style={{ marginLeft: 8 }}>
+                  <Space size={isMobile ? 8 : 12} align="center" style={{ marginLeft: 6 }}>
                     <div style={{ textAlign: "right" }}>
                       <Text
                         strong
                         style={{
                           display: "block",
-                          fontSize: isMobile ? 13 : 14,
-                          color: mode === "dark" ? "rgba(255, 255, 255, 0.85)" : "#333", // override global primary text
+                          fontSize: textSizes.itemPrice,
+                          color: mode === "dark" ? "rgba(255, 255, 255, 0.85)" : "#333",
+                          lineHeight: 1.3,
                         }}>
                         {((item.price || 0) * item.quantity).toLocaleString("vi-VN")}đ
                       </Text>
                     </div>
 
-                    <Space size={8} style={{ alignItems: "center" }}>
+                    <Space size={isMobile ? 6 : 8} style={{ alignItems: "center" }}>
                       <Tag
                         style={{
                           margin: 0,
                           borderRadius: 8,
-                          fontSize: isMobile ? 12 : 13,
+                          fontSize: textSizes.quantity,
+                          lineHeight: 1.2,
+                          paddingInline: isMobile ? 6 : 8,
                         }}>
                         x{item.quantity}
                       </Tag>
@@ -196,7 +197,9 @@ export default function OrderDetailsPopup({
                         onChange={(value) => handleUpdateDetailStatus(order.id, item.id, String(value))}
                         disabled={isUpdatingDetailStatus}
                         options={statusOptions}
-                        style={{ minWidth: isMobile ? 100 : 120 }}
+                        style={{ minWidth: isMobile ? 82 : 98, fontSize: isMobile ? 11 : 12 }}
+                        className="order-detail-status-select"
+                        popupMatchSelectWidth={false}
                       />
                     </Space>
                   </Space>
@@ -218,12 +221,12 @@ export default function OrderDetailsPopup({
               ? "1px solid rgba(255, 255, 255, 0.08)"
               : "1px solid #EDEDED",
         }}>
-        <Text strong style={{ fontSize: isMobile ? 15 : 16 }}>
+        <Text strong style={{ fontSize: textSizes.totalLabel }}>
           {t?.("staff.orders.payment.modal.total_label")}
         </Text>
         <Text
           strong
-          style={{ color: "var(--primary)", fontSize: isMobile ? 16 : 18 }}>
+          style={{ color: "var(--primary)", fontSize: textSizes.totalValue }}>
           {order.total.toLocaleString("vi-VN")}đ
         </Text>
       </div>

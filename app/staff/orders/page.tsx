@@ -1,7 +1,9 @@
 "use client";
 
+import AddOrderItem from "@/components/staff/orders/AddOrderItem";
 import CardOrder from "@/components/staff/orders/CardOrder";
 import OrderDetailsPopup from "@/components/staff/orders/OrderDetailsPopup";
+import PaymentOrder from "@/components/staff/orders/PaymentOrder";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import menuService from "@/lib/services/menuService";
 import orderDetailStatusService, {
@@ -26,18 +28,13 @@ import {
   Card,
   Col,
   Empty,
-  InputNumber,
-  Modal,
   Row,
   Select,
   Space,
-  Typography
 } from "antd";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
-
-const { Text } = Typography;
 
 type OrderItemStatus = string;
 
@@ -204,9 +201,9 @@ export default function OrderManagement() {
             return {
               id: detail.id || `${order.id || "order"}-${index}`,
               dishId: detail.dishId,
-              name: dishNameMap[detail.dishId] || detail.dishId,
+              name: detail.dishName || dishNameMap[detail.dishId] || detail.dishId,
               quantity: detail.quantity ?? 0,
-              price: 0,
+              price: Number(detail.dishPrice ?? 0),
               note: detail.note || undefined,
               status: normalizedStatus,
             };
@@ -536,8 +533,6 @@ export default function OrderManagement() {
     });
   };
 
-  const cartTotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
-
   const handleAddItemsToOrder = async () => {
     if (!selectedOrderIdForAdd || cart.length === 0) {
       message.error(t("staff.orders.messages.select_table_and_items"));
@@ -757,266 +752,47 @@ export default function OrderManagement() {
         )}
       </div>
 
-      {/* Add Item To Existing Order Modal */}
-      <Modal
-        title={t("staff.orders.modal.add_item")}
-        open={isAddItemModalOpen}
-        onCancel={() => {
+      <AddOrderItem
+        isOpen={isAddItemModalOpen}
+        onClose={() => {
           setIsAddItemModalOpen(false);
           setCart([]);
           setSelectedOrderIdForAdd("");
         }}
-        onOk={handleAddItemsToOrder}
-        okText={t("staff.orders.modal.add_item")}
-        width={900}
-        centered>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} md={14}>
-            <Select
-              placeholder={t("staff.orders.modal.order_detail")}
-              style={{ width: "100%", marginBottom: 12 }}
-              value={selectedOrderIdForAdd || undefined}
-              onChange={setSelectedOrderIdForAdd}
-              options={orders.map((order) => ({
-                value: order.id,
-                label: `${order.reference} - ${t("staff.orders.order.table")} ${order.tableName}`,
-              }))}
-            />
+        onConfirm={handleAddItemsToOrder}
+        selectedOrderIdForAdd={selectedOrderIdForAdd}
+        setSelectedOrderIdForAdd={setSelectedOrderIdForAdd}
+        orders={orders.map((order) => ({
+          id: order.id,
+          reference: order.reference,
+          tableName: order.tableName,
+        }))}
+        menuCategories={menuCategories}
+        activeMenuCategory={activeMenuCategory}
+        setActiveMenuCategory={setActiveMenuCategory}
+        cart={cart}
+        addToCart={addToCart}
+        updateCartQuantity={updateCartQuantity}
+        t={t}
+      />
 
-            <Select
-              style={{ width: "100%", marginBottom: 12 }}
-              value={activeMenuCategory || undefined}
-              onChange={setActiveMenuCategory}
-              options={menuCategories.map((c) => ({
-                value: c.categoryId,
-                label: c.categoryName,
-              }))}
-            />
-
-            <Row gutter={[12, 12]}>
-              {menuCategories
-                .find((c) => c.categoryId === activeMenuCategory)
-                ?.items.map((item) => (
-                  <Col xs={24} sm={12} key={item.id}>
-                    <Card hoverable size="small" onClick={() => addToCart(item)}>
-                      <Text strong>{item.name}</Text>
-                      <div>{item.price.toLocaleString("vi-VN")}đ</div>
-                    </Card>
-                  </Col>
-                ))}
-            </Row>
-          </Col>
-
-          <Col xs={24} md={10}>
-            <Card title={`${t("staff.orders.modal.cart")} (${cart.length})`}>
-              {cart.length > 0 ? (
-                <>
-                  {cart.map((c) => (
-                    <div
-                      key={c.item.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: 8,
-                      }}>
-                      <div>
-                        <Text strong>{c.item.name}</Text>
-                        <div>{(c.item.price * c.quantity).toLocaleString("vi-VN")}đ</div>
-                      </div>
-                      <Space>
-                        <Button size="small" onClick={() => updateCartQuantity(c.item.id, -1)}>-</Button>
-                        <Text>{c.quantity}</Text>
-                        <Button size="small" onClick={() => updateCartQuantity(c.item.id, 1)}>+</Button>
-                      </Space>
-                    </div>
-                  ))}
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}>
-                    <Text strong>{t("staff.orders.order.total")}</Text>
-                    <Text strong style={{ color: "var(--primary)" }}>
-                      {cartTotal.toLocaleString("vi-VN")}đ
-                    </Text>
-                  </div>
-                </>
-              ) : (
-                <Empty description={t("staff.orders.modal.no_items")} />
-              )}
-            </Card>
-          </Col>
-        </Row>
-      </Modal>
-
-      {/* Payment Modal */}
-      <Modal
-        title={
-          <span style={{ fontSize: 18, fontWeight: 700 }}>
-            {t("staff.orders.payment.modal.title")}
-          </span>
-        }
-        open={isPaymentModalOpen}
-        onCancel={() => {
+      <PaymentOrder
+        isOpen={isPaymentModalOpen}
+        selectedOrder={selectedOrder}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        cashReceived={cashReceived}
+        setCashReceived={setCashReceived}
+        paymentOptions={paymentOptions}
+        isProcessingPayment={isProcessingPayment}
+        onClose={() => {
           setIsPaymentModalOpen(false);
           setSelectedOrder(null);
           setCashReceived(0);
         }}
-        footer={null}
-        centered
-        width={480}
-        styles={{ body: { padding: "20px 24px 32px" } }}>
-        {selectedOrder && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            <div
-              style={{
-                padding: 16,
-                background: "var(--primary-5, #f0f7ff)",
-                borderRadius: 12,
-                border: "1px solid var(--primary-20, #bae7ff)",
-              }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 8,
-                }}>
-                <div>
-                  <Text type="secondary">
-                    {t("staff.orders.payment.modal.order_label")}
-                  </Text>
-                  <Text strong style={{ display: "block", fontSize: 16 }}>
-                    {selectedOrder.reference}
-                  </Text>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <Text type="secondary">
-                    {t("staff.orders.payment.modal.total_label")}
-                  </Text>
-                  <Text
-                    strong
-                    style={{ display: "block", fontSize: 20, color: "var(--primary)" }}>
-                    {selectedOrder.total.toLocaleString("vi-VN")}đ
-                  </Text>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <Text strong style={{ display: "block", marginBottom: 12 }}>
-                {t("staff.orders.payment.modal.method_label")}
-              </Text>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 12,
-                }}>
-                {paymentOptions.map((method) => (
-                  <button
-                    key={method.id}
-                    type="button"
-                    onClick={() => setPaymentMethod(method.id)}
-                    style={{
-                      padding: 12,
-                      textAlign: "center",
-                      borderRadius: 10,
-                      cursor: "pointer",
-                      border:
-                        paymentMethod === method.id
-                          ? "2px solid var(--primary)"
-                          : "1px solid #E5E7EB",
-                      background: paymentMethod === method.id ? "#fff" : "#FAFAFA",
-                      transition: "all 0.2s",
-                    }}>
-                    <Text strong>{method.label}</Text>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {paymentMethod === "cash" && (
-              <div>
-                <Text strong>{t("staff.orders.payment.modal.cash_label")}</Text>
-                <InputNumber
-                  autoFocus
-                  value={cashReceived}
-                  onChange={(value) => setCashReceived(value || 0)}
-                  min={0}
-                  size="large"
-                  style={{ width: "100%", marginTop: 8, fontSize: 18, fontWeight: 600 }}
-                  formatter={(value) =>
-                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                  }
-                  parser={(value) => Number(value?.replace(/,/g, "") || 0)}
-                />
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    marginTop: 12,
-                    flexWrap: "wrap",
-                  }}>
-                  {[ 50000, 100000, 200000, 500000].map((amount) => (
-                    <Button
-                      key={amount}
-                      size="small"
-                      onClick={() => setCashReceived(amount)}
-                      style={{ borderRadius: 6 }}>
-                      {amount.toLocaleString("vi-VN")}
-                    </Button>
-                  ))}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 20,
-                    padding: 12,
-                    borderRadius: 8,
-                    background:
-                      cashReceived >= selectedOrder.total ? "#F6FFED" : "#FFF1F0",
-                    textAlign: "center",
-                  }}>
-                  {cashReceived < selectedOrder.total ? (
-                    <Text type="danger" strong style={{ fontSize: 16 }}>
-                      {t("staff.orders.payment.modal.missing_label")}: {(
-                        selectedOrder.total - cashReceived
-                      ).toLocaleString("vi-VN")}đ
-                    </Text>
-                  ) : (
-                    <div>
-                      <div style={{ color: "#52C41A", fontSize: 14 }}>
-                        {t("staff.orders.payment.modal.change_label")}
-                      </div>
-                      <div
-                        style={{ color: "#52C41A", fontSize: 24, fontWeight: 700 }}>
-                        {(cashReceived - selectedOrder.total).toLocaleString("vi-VN")}đ
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <Button
-              type="primary"
-              size="large"
-              loading={isProcessingPayment}
-              onClick={handlePayment}
-              disabled={paymentMethod === "cash" && cashReceived < selectedOrder.total}
-              style={{
-                width: "100%",
-                height: 50,
-                borderRadius: 12,
-                fontSize: 16,
-                fontWeight: 600,
-                marginTop: 8,
-                boxShadow: "0 4px 12px rgba(24, 144, 255, 0.3)",
-              }}>
-              {t("staff.orders.payment.actions.confirm")}
-            </Button>
-          </div>
-        )}
-      </Modal>
+        onConfirm={handlePayment}
+        t={t}
+      />
 
       <OrderDetailsPopup
         order={selectedOrderForDetail}
@@ -1051,8 +827,31 @@ export default function OrderManagement() {
         .order-status-option.ant-select-item-option-selected {
           background: ${mode === "dark" ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.03)"};
         }
-        .order-status-select .ant-select-selector {
+        .order-status-select .ant-select-selector,
+        .order-detail-status-select .ant-select-selector {
           border-radius: 6px !important;
+          min-height: 24px !important;
+          height: 24px !important;
+          padding: 0 8px !important;
+          align-items: center;
+        }
+        .order-status-select .ant-select-selection-item,
+        .order-detail-status-select .ant-select-selection-item {
+          font-size: 12px !important;
+          line-height: 22px !important;
+        }
+        @media (max-width: 575px) {
+          .order-status-select .ant-select-selector,
+          .order-detail-status-select .ant-select-selector {
+            min-height: 22px !important;
+            height: 22px !important;
+            padding: 0 6px !important;
+          }
+          .order-status-select .ant-select-selection-item,
+          .order-detail-status-select .ant-select-selection-item {
+            font-size: 11px !important;
+            line-height: 20px !important;
+          }
         }
       `}</style>
     </div>

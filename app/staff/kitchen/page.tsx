@@ -3,15 +3,20 @@
 import { useTenant } from "@/lib/contexts/TenantContext";
 import orderService, { OrderDetailListItemDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
-import { ClockCircleOutlined, InfoCircleOutlined, ReloadOutlined } from "@ant-design/icons";
+import { ClockCircleOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
-import { App, Button, Spin } from "antd";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { App, Space, Spin, Table, Tag, Typography } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
+
+const { Text } = Typography;
 
 type KitchenItem = {
   key: string;
+  id: string;
   orderId: string;
-  dishId: string;
+  tableName: string;
   dishName: string;
   quantity: number;
   note?: string;
@@ -19,46 +24,125 @@ type KitchenItem = {
   createdDate?: string;
 };
 
-type WaitTimeInfo = {
-  text: string;
-  bg: string;
-  textCol: string;
-  border: string;
-  isLate?: boolean;
-};
-
 export default function StaffKitchenPage() {
   const { message } = App.useApp();
+  const { t, i18n } = useTranslation();
   const { tenant } = useTenant();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [items, setItems] = useState<KitchenItem[]>([]);
-  const [updatedAt, setUpdatedAt] = useState<string>("");
-
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [doneItems, setDoneItems] = useState<Set<string>>(new Set());
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const messageApiRef = useRef(message);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(timer);
-  }, []);
+    messageApiRef.current = message;
+  }, [message]);
 
-  const mapOrderDetailsToKitchenItems = useCallback((details: OrderDetailListItemDto[]): KitchenItem[] => {
+  const locale = i18n.language === "vi" ? "vi-VN" : "en-US";
+
+  const formatTime = (value?: string) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString(locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+      day: "2-digit",
+      month: "2-digit",
+    });
+  };
+
+  const formatUpdatedAt = (timestamp?: number | null) => {
+    if (!timestamp) return "--:--:--";
+    return new Date(timestamp).toLocaleTimeString(locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
+
+  const statusTagStyle: CSSProperties = {
+    margin: 0,
+    borderRadius: 999,
+    fontWeight: 600,
+    fontSize: 12,
+    lineHeight: "20px",
+    paddingInline: 10,
+  };
+
+  const getStatusTag = (status?: string) => {
+    const normalized = (status || "").toLowerCase();
+
+    if (normalized.includes("preparing")) {
+      return (
+        <Tag color="processing" style={statusTagStyle}>
+          {t("staff.kitchen.status.preparing")}
+        </Tag>
+      );
+    }
+    if (normalized.includes("ready")) {
+      return (
+        <Tag color="success" style={statusTagStyle}>
+          {t("staff.kitchen.status.ready")}
+        </Tag>
+      );
+    }
+    if (normalized.includes("served")) {
+      return (
+        <Tag color="blue" style={statusTagStyle}>
+          {t("staff.kitchen.status.served")}
+        </Tag>
+      );
+    }
+    if (normalized.includes("cancel")) {
+      return (
+        <Tag color="error" style={statusTagStyle}>
+          {t("staff.kitchen.status.cancelled")}
+        </Tag>
+      );
+    }
+
+    return <Tag style={statusTagStyle}>{status || "-"}</Tag>;
+  };
+
+  const mapOrderDetailsToKitchenItems = useCallback((details: OrderDetailListItemDto[], tableMap: Map<string, string>): KitchenItem[] => {
     return (details || []).map((detail, index) => ({
       key: detail.id || `${detail.orderId || "order"}-${detail.dishId || "dish"}-${index}`,
+      id: detail.id || "",
       orderId: detail.orderId || "",
-      dishId: detail.dishId || "",
+      tableName: (detail.orderId && tableMap.get(detail.orderId)) || "-",
       dishName: detail.dishName || detail.dishId || "",
       quantity: detail.quantity ?? 0,
       note: detail.note || undefined,
       status: detail.status || undefined,
       createdDate: detail.createdDate || undefined,
     }));
+  }, []);
+
+  const resolveOrderTableCodes = useCallback((order: { id?: string; tableId?: string; tableIds?: string[]; tableSessions?: Array<{ tableId?: string | null; tableCode?: string | null; table?: { code?: string | null } | null }> }) => {
+    const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+
+    const sessionCodes = (order.tableSessions ?? [])
+      .map((session) => session?.tableCode || session?.table?.code)
+      .filter((code): code is string => !!code && code.trim().length > 0);
+
+    if (sessionCodes.length > 0) {
+      return Array.from(new Set(sessionCodes)).join(" - ");
+    }
+
+    const tableIdFromSession = (order.tableSessions ?? [])
+      .map((session) => session?.tableId)
+      .find((id): id is string => !!id && id !== EMPTY_GUID);
+    const tableIdFromList = (order.tableIds ?? []).find((id): id is string => !!id && id !== EMPTY_GUID);
+    const fallbackTableId =
+      (order.tableId && order.tableId !== EMPTY_GUID ? order.tableId : undefined) ||
+      tableIdFromSession ||
+      tableIdFromList;
+
+    return fallbackTableId ? fallbackTableId.slice(0, 6) : "-";
   }, []);
 
   const loadData = useCallback(
@@ -70,8 +154,16 @@ export default function StaffKitchenPage() {
       }
 
       try {
-        const details = await orderService.getOrderDetailsList();
-        const mapped = mapOrderDetailsToKitchenItems(details).sort((a, b) => {
+        const [details, orders] = await Promise.all([orderService.getOrderDetailsList(), orderService.getAllOrders()]);
+
+        const tableMap = new Map<string, string>();
+        orders.forEach((order) => {
+          if (order.id) {
+            tableMap.set(order.id, resolveOrderTableCodes(order));
+          }
+        });
+
+        const mapped = mapOrderDetailsToKitchenItems(details, tableMap).sort((a, b) => {
           if (!a.createdDate && !b.createdDate) return 0;
           if (!a.createdDate) return 1;
           if (!b.createdDate) return -1;
@@ -79,22 +171,16 @@ export default function StaffKitchenPage() {
         });
 
         setItems(mapped);
-        setUpdatedAt(
-          new Date().toLocaleTimeString("vi-VN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          }),
-        );
+        setUpdatedAt(Date.now());
       } catch (error) {
         console.error("Failed to load kitchen items:", error);
-        message.error("Không thể tải dữ liệu món ăn");
+        messageApiRef.current.error(i18n.t("staff.kitchen.messages.load_error"));
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [mapOrderDetailsToKitchenItems, message],
+    [mapOrderDetailsToKitchenItems, resolveOrderTableCodes],
   );
 
   useEffect(() => {
@@ -152,38 +238,108 @@ export default function StaffKitchenPage() {
     };
   }, [tenant?.id, loadData]);
 
-  const toggleDone = (key: string) => {
-    setDoneItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(key)) {
-        newSet.delete(key);
-      } else {
-        newSet.add(key);
-      }
-      return newSet;
-    });
+  const headerCellStyle: CSSProperties = {
+    fontSize: 13,
+    fontWeight: 700,
+    color: "var(--text-muted)",
+    letterSpacing: 0.2,
   };
 
-  const getWaitTimeInfo = (createdDateStr?: string): WaitTimeInfo => {
-    if (!createdDateStr) {
-      return { text: "Mới", bg: "bg-gray-100", textCol: "text-gray-600", border: "border-gray-200" };
-    }
-
-    const created = new Date(createdDateStr);
-    const diffMs = currentTime.getTime() - created.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 0) {
-      return { text: "Mới", bg: "bg-blue-50", textCol: "text-blue-600", border: "border-blue-200" };
-    }
-    if (diffMins >= 15) {
-      return { text: `${diffMins} phút`, bg: "bg-red-50", textCol: "text-red-600", border: "border-red-200", isLate: true };
-    }
-    if (diffMins >= 5) {
-      return { text: `${diffMins} phút`, bg: "bg-orange-50", textCol: "text-orange-600", border: "border-orange-200" };
-    }
-    return { text: `${diffMins} phút`, bg: "bg-green-50", textCol: "text-green-600", border: "border-green-200" };
-  };
+  const columns: ColumnsType<KitchenItem> = useMemo(
+    () => [
+      {
+        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.table")}</span>,
+        dataIndex: "tableName",
+        key: "tableName",
+        width: 130,
+        render: (value: string) => (
+          <Text style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>{value || "-"}</Text>
+        ),
+      },
+      {
+        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.dish_name")}</span>,
+        key: "dish",
+        dataIndex: "dishName",
+        width: 260,
+        render: (value: string) => (
+          <Text style={{ color: "var(--primary)", fontSize: 15, fontWeight: 700, lineHeight: 1.35 }}>
+            {value || "-"}
+          </Text>
+        ),
+      },
+      {
+        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.note")}</span>,
+        key: "note",
+        dataIndex: "note",
+        width: 240,
+        render: (value?: string) =>
+          value ? (
+            <Tag
+              style={{
+                margin: 0,
+                borderRadius: 999,
+                paddingInline: 10,
+                fontWeight: 600,
+                fontSize: 12,
+                lineHeight: "20px",
+                borderColor: "#ffe58f",
+                background: "#fffbe6",
+                color: "#ad6800",
+                maxWidth: "100%",
+                whiteSpace: "normal",
+              }}
+            >
+              {value}
+            </Tag>
+          ) : (
+            <Text type="secondary" style={{ fontSize: 14 }}>
+              -
+            </Text>
+          ),
+      },
+      {
+        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.quantity")}</span>,
+        dataIndex: "quantity",
+        key: "quantity",
+        width: 120,
+        align: "center",
+        render: (value: number) => (
+          <Tag
+            color="blue"
+            style={{
+              margin: 0,
+              borderRadius: 999,
+              fontWeight: 700,
+              fontSize: 13,
+              lineHeight: "20px",
+              paddingInline: 10,
+            }}
+          >
+            x{value}
+          </Tag>
+        ),
+      },
+      {
+        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.status")}</span>,
+        dataIndex: "status",
+        key: "status",
+        width: 160,
+        align: "center",
+        render: (value?: string) => getStatusTag(value),
+      },
+      {
+        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.time")}</span>,
+        dataIndex: "createdDate",
+        key: "createdDate",
+        width: 180,
+        align: "center",
+        render: (value?: string) => (
+          <Text style={{ fontSize: 14, fontWeight: 500, color: "var(--text-muted)" }}>{formatTime(value)}</Text>
+        ),
+      },
+    ],
+    [i18n.language, t],
+  );
 
   if (loading) {
     return (
@@ -194,11 +350,10 @@ export default function StaffKitchenPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[var(--bg-base)] p-3 md:p-4 lg:p-6 space-y-4 md:space-y-6 transition-colors duration-300">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-[var(--card)] p-4 md:p-5 rounded-2xl shadow-[var(--shadow-sm)] border border-[var(--border)] gap-4 transition-colors duration-300">
+    <div className="min-h-[calc(100vh-64px)] bg-[var(--bg-base)] p-0 transition-colors duration-300">
+      {/* <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-[var(--card)] p-4 md:p-5 rounded-2xl shadow-[var(--shadow-sm)] border border-[var(--border)] gap-4 transition-colors duration-300">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-[var(--text)] m-0 leading-tight">Màn Hình Bếp</h1>
-          {updatedAt ? <p className="text-xs md:text-sm text-[var(--text-muted)] m-0 mt-1">Cập nhật: {updatedAt}</p> : null}
         </div>
         <div className="flex gap-3">
           <Button
@@ -211,89 +366,61 @@ export default function StaffKitchenPage() {
             Làm mới
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-[var(--card)] rounded-2xl shadow-[var(--shadow-sm)] border border-[var(--border)] min-h-[50vh] transition-colors duration-300">
-          <div className="w-20 h-20 bg-[var(--surface)] rounded-full flex items-center justify-center mb-6 shadow-inner border border-[var(--border)]">
-            <ClockCircleOutlined className="text-4xl text-[var(--text-muted)] opacity-50" />
+        <div className="flex flex-col items-center justify-center p-12 bg-[var(--card)] rounded-none shadow-none border-0 min-h-[50vh] transition-colors duration-300">
+          <div className="w-20 h-20 bg-[var(--surface)] rounded-full flex items-center justify-center mb-6 border border-[var(--border)]">
+            <ClockCircleOutlined className="text-[34px] text-[var(--text-muted)] opacity-50" />
           </div>
-          <h2 className="text-xl font-bold text-[var(--text)] mb-2">Chưa có món ăn nào cần chuẩn bị</h2>
-          <p className="text-[var(--text-muted)] text-base">Đang chờ các order mới...</p>
+          <h2 className="text-[22px] leading-[30px] font-semibold text-[var(--text)] mb-2">{t("staff.kitchen.empty.title")}</h2>
+          <p className="text-[15px] leading-6 text-[var(--text-muted)]">{t("staff.kitchen.empty.description")}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-          {items.map((item) => {
-            const isDone = doneItems.has(item.key);
-            const waitInfo = getWaitTimeInfo(item.createdDate);
-
-            return (
-              <div
-                key={item.key}
-                onClick={() => toggleDone(item.key)}
-                className={`flex flex-col p-3 md:p-4 rounded-xl border cursor-pointer select-none transition-all duration-200
-                  ${
-                    isDone
-                      ? "opacity-50 bg-[var(--surface)] border-[var(--border)] grayscale-[50%]"
-                      : "bg-[var(--card)] shadow-[var(--shadow-sm)] hover:shadow-md border-[var(--border)]"
-                  }
-                  ${waitInfo.isLate && !isDone ? "ring-2 ring-red-400 ring-offset-1" : ""}
-                `}
+        <div className="h-[calc(100vh-64px)] w-full">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 10,
+              minHeight: 57,
+              padding: "12px 16px",
+              borderBottom: "1px solid var(--border)",
+              background: "var(--card)",
+            }}
+          >
+            <Space size={12} align="center">
+              <ShoppingCartOutlined style={{ color: "var(--primary)", fontSize: 18 }} />
+              <span style={{ fontSize: 18, lineHeight: "26px", fontWeight: 700, color: "var(--text)" }}>{t("staff.kitchen.title")}</span>
+              <Tag
+                color="orange"
+                style={{
+                  borderRadius: 999,
+                  fontSize: 12,
+                  lineHeight: "20px",
+                  fontWeight: 600,
+                  margin: 0,
+                  paddingInline: 10,
+                }}
               >
-                <div className="flex justify-between items-start mb-2.5">
-                  <span className={`text-xs font-mono font-bold ${isDone ? "text-gray-400" : "text-[var(--text-muted)]"}`}>
-                    #{item.orderId.substring(0, 6).toUpperCase()}
-                  </span>
-                  <span
-                    className={`text-[11px] px-2 py-0.5 rounded-md font-bold whitespace-nowrap transition-colors
-                    ${isDone ? "bg-gray-100 text-gray-400" : `${waitInfo.bg} ${waitInfo.textCol}`}
-                  `}
-                  >
-                    {waitInfo.text}
-                  </span>
-                </div>
+                {t("staff.kitchen.preparing_count", { count: items.filter((o) => (o.status || "").toLowerCase().includes("preparing")).length })}
+              </Tag>
+            </Space>
+            <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("staff.kitchen.updated_at", { time: updatedAt || "--:--:--" })}</Text>
+          </div>
 
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-12 h-12 md:w-14 md:h-14 shrink-0 flex items-center justify-center rounded-lg font-black text-xl md:text-2xl transition-colors
-                      ${
-                        isDone
-                          ? "bg-gray-200 text-gray-500"
-                          : "bg-[var(--primary-soft)] text-[var(--primary)] border border-[var(--primary-border)]"
-                      }
-                    `}
-                  >
-                    {item.quantity}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3
-                      className={`text-base md:text-lg font-bold leading-tight m-0 line-clamp-2 transition-all
-                      ${isDone ? "text-[var(--text-muted)] line-through" : "text-[var(--text)]"}
-                    `}
-                    >
-                      {item.dishName}
-                    </h3>
-                  </div>
-                </div>
-
-                {item.note && (
-                  <div
-                    className={`mt-3 inline-flex items-start gap-1.5 px-2.5 py-1.5 rounded-md text-xs md:text-sm font-semibold w-fit
-                    ${
-                      isDone
-                        ? "bg-gray-100 text-gray-500 line-through"
-                        : "bg-yellow-100 text-yellow-800 border border-yellow-200"
-                    }
-                  `}
-                  >
-                    <InfoCircleOutlined className={`mt-0.5 shrink-0 ${isDone ? "" : "text-yellow-600"}`} />
-                    <span className="leading-snug break-words line-clamp-3">{item.note}</span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          <Table
+            columns={columns}
+            dataSource={items}
+            pagination={false}
+            size="middle"
+            rowKey="key"
+            loading={refreshing}
+            scroll={{ x: 1060, y: "calc(100vh - 64px - 57px - 16px)" }}
+            tableLayout="fixed"
+          />
         </div>
       )}
     </div>
