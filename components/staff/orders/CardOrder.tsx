@@ -207,7 +207,7 @@ export default function CardOrder({
                     style={{
                       fontSize: textSizes.detailHeader,
                     }}>
-                    {t("staff.orders.modal.order_detail")} ({order.detailItems.length})
+                    {t("staff.orders.modal.order_detail")}
                   </Text>
                   <Button
                     type="text"
@@ -318,7 +318,7 @@ export default function CardOrder({
                     padding: isMobile ? "0 6px" : "0 8px",
                     fontSize: isMobile ? 11 : 12,
                   }}>
-                  {!isMobile ? (t("staff.orders.payment.btn")) : null}
+                  {t("staff.orders.payment.btn")}
                 </Button>
               )}
               <Button

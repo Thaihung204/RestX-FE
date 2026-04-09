@@ -319,7 +319,7 @@
         "print": "In hóa đơn",
         "print_short": "In",
         "add_item": "Thêm món",
-        "send_to_kitchen": "Gửi bếp"
+        "order_detail": "Chi tiết đơn"
       },
       "menu": {
         "appetizer": "Khai vị",
@@ -336,6 +336,7 @@
       },
       "empty": "Không có đơn hàng nào",
       "payment": {
+        "btn": "Thanh toán",
         "actions": {
           "pay": "Thanh toán",
           "confirm": "Xác nhận thanh toán"

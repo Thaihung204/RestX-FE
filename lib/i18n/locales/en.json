@@ -317,7 +317,7 @@
         "print": "Print Bill",
         "print_short": "Print",
         "add_item": "Add Item",
-        "send_to_kitchen": "Send to Kitchen"
+        "order_detail": "Order details"
       },
       "menu": {
         "appetizer": "Appetizers",
@@ -334,6 +334,7 @@
       },
       "empty": "No orders found",
       "payment": {
+        "btn": "Pay",
         "actions": {
           "pay": "Pay",
           "confirm": "Confirm payment"
