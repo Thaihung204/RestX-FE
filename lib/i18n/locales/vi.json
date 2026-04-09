@@ -641,7 +641,42 @@
       "reservations": "Đặt bàn hôm nay",
       "reservations_subtitle": "{{pending}} chờ xác nhận",
       "new_customers": "Khách hàng mới",
-      "new_customers_subtitle": "Tháng này"
+      "new_customers_subtitle": "Tháng này",
+      "titles": {
+        "revenue": {
+          "day": "Doanh thu hôm nay",
+          "week": "Doanh thu trong 7 ngày",
+          "month": "Doanh thu trong 1 tháng",
+          "year": "Doanh thu trong 1 năm"
+        },
+        "orders": {
+          "day": "Đơn hàng hôm nay",
+          "week": "Đơn hàng trong 7 ngày",
+          "month": "Đơn hàng trong 1 tháng",
+          "year": "Đơn hàng trong 1 năm"
+        },
+        "reservations": {
+          "day": "Đặt bàn hôm nay",
+          "week": "Đặt bàn trong 7 ngày",
+          "month": "Đặt bàn trong 1 tháng",
+          "year": "Đặt bàn trong 1 năm"
+        },
+        "new_customers": {
+          "day": "Khách hàng mới hôm nay",
+          "week": "Khách hàng mới trong 7 ngày",
+          "month": "Khách hàng mới trong 1 tháng",
+          "year": "Khách hàng mới trong 1 năm"
+        }
+      }
+    },
+    "filters": {
+      "day": "Ngày",
+      "week": "Tuần",
+      "month": "Tháng",
+      "year": "Năm"
+    },
+    "messages": {
+      "overview_load_failed": "Không thể tải dữ liệu tổng quan"
     },
     "quick_actions": {
       "title": "Thao tác nhanh",
@@ -1833,9 +1868,16 @@
     }
   },
   "charts": {
+    "periods": {
+      "last_7_days": "So sánh 7 ngày gần nhất",
+      "last_4_weeks": "So sánh 4 tuần gần nhất",
+      "last_6_months": "So sánh 6 tháng gần nhất",
+      "last_5_years": "So sánh 5 năm gần nhất"
+    },
     "revenue": {
       "title": "Xu hướng doanh thu",
-      "subtitle": "Hiệu suất 7 ngày qua"
+      "subtitle": "Hiệu suất 7 ngày qua",
+      "total_period": "Tổng kỳ"
     },
     "orders": {
       "title": "Tổng quan đơn hàng",

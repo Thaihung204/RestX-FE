@@ -1,75 +1,97 @@
 "use client";
 
+import type { OrderTrendPoint } from "@/lib/services/dashboardService";
 import { useTranslation } from "react-i18next";
 
-const ordersData = [
-  { label: "T2", orders: 45 },
-  { label: "T3", orders: 52 },
-  { label: "T4", orders: 48 },
-  { label: "T5", orders: 63 },
-  { label: "T6", orders: 78 },
-  { label: "T7", orders: 92 },
-  { label: "CN", orders: 67 },
-];
+interface OrdersBarChartProps {
+  data?: OrderTrendPoint[];
+  totalOrders?: number;
+  subtitle?: string;
+}
 
-export default function OrdersBarChart() {
+export default function OrdersBarChart({
+  data = [],
+  totalOrders = 0,
+  subtitle,
+}: OrdersBarChartProps) {
   const { t } = useTranslation();
-  const maxOrders = Math.max(...ordersData.map((d) => d.orders));
-  const totalOrders = ordersData.reduce((s, d) => s + d.orders, 0);
+  const ordersData =
+    data.length > 0 ? data : [{ label: "-", total: 0, date: "" }];
+  const maxOrders = Math.max(1, ...ordersData.map((d) => d.total));
+  const maxLabelLength = Math.max(...ordersData.map((d) => d.label.length));
+  const labelFontSize = maxLabelLength > 8 ? "10px" : "12px";
 
   return (
     <div
       className="rounded-2xl p-5 h-full"
       style={{
-        background: 'var(--card)',
-        border: '1px solid var(--border)',
+        background: "var(--card)",
+        border: "1px solid var(--border)",
       }}>
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h3 className="text-base font-bold mb-0.5" style={{ color: 'var(--text)' }}>
-            {t('charts.orders.title')}
+          <h3
+            className="text-base font-bold mb-0.5"
+            style={{ color: "var(--text)" }}>
+            {t("charts.orders.title")}
           </h3>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            {t('charts.orders.subtitle')}
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            {subtitle ?? t("charts.orders.subtitle")}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-lg font-bold" style={{ color: 'var(--text)' }}>
+          <p className="text-lg font-bold" style={{ color: "var(--text)" }}>
             {totalOrders.toLocaleString("vi-VN")}
           </p>
-          <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--text-muted)' }}>
-            {t('charts.orders.total_orders')}
+          <p
+            className="text-[10px] uppercase tracking-wider font-semibold"
+            style={{ color: "var(--text-muted)" }}>
+            {t("charts.orders.total_orders")}
           </p>
         </div>
       </div>
 
       <div className="relative h-52">
-        <div className="flex items-end justify-between h-full gap-3 px-1">
+        <div
+          className="grid h-full items-end gap-2 px-1"
+          style={{
+            gridTemplateColumns: `repeat(${ordersData.length}, minmax(0, 1fr))`,
+          }}>
           {ordersData.map((item, index) => {
-            const height = (item.orders / maxOrders) * 100;
+            const height = (item.total / maxOrders) * 100;
+            const valueBottom = Math.min(94, Math.max(4, height));
             return (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div className="relative w-full flex items-end justify-center h-40">
+              <div key={index} className="min-w-0 flex flex-col items-center">
+                <div className="relative w-full h-40 flex items-end justify-center">
                   <div
-                    className="w-full max-w-[42px] mx-auto rounded-lg transition-all duration-500 group relative hover:opacity-80"
+                    className="absolute left-1/2 -translate-x-1/2 text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap"
                     style={{
-                      background: 'linear-gradient(to top, var(--primary), #FB923C)',
-                      height: `${height}%`,
+                      bottom: `calc(${valueBottom}% + 6px)`,
+                      background: "var(--card)",
+                      color: "var(--text)",
+                      border: "1px solid var(--border)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                     }}>
-                    <div
-                      className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap"
-                      style={{
-                        background: 'var(--card)',
-                        color: 'var(--text)',
-                        border: '1px solid var(--border)',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                      }}>
-                      {item.orders}
-                    </div>
+                    {item.total}
                   </div>
+                  <div
+                    className="w-full rounded-lg transition-all duration-500 group relative hover:opacity-80"
+                    style={{
+                      background:
+                        "linear-gradient(to top, var(--primary), #FB923C)",
+                      height: `${height}%`,
+                      maxWidth: "34px",
+                      minWidth: "10px",
+                      width: "68%",
+                    }}></div>
                 </div>
-                <div className="mt-2 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                <div
+                  className="mt-2 text-xs font-medium whitespace-nowrap text-center w-full"
+                  style={{
+                    color: "var(--text-muted)",
+                    fontSize: labelFontSize,
+                  }}>
                   {item.label}
                 </div>
               </div>

@@ -697,12 +697,51 @@
       "revenue_subtitle": "Target: {{target}}",
       "orders": "Today's Orders",
       "orders_subtitle": "{{completed}} completed · {{processing}} processing",
+      "reservations": "Today's Reservations",
+      "reservations_subtitle": "{{pending}} pending confirmation",
+      "new_customers": "New Customers",
+      "new_customers_subtitle": "This period",
       "tables": "Tables & Reservations",
       "tables_subtitle": "{{available}} available · {{reserved}} reserved",
       "customers": "Customers",
       "customers_subtitle": "{{new}} new this month",
       "staff": "On-duty Staff",
-      "staff_subtitle": "{{waiter}} waiter · {{kitchen}} kitchen"
+      "staff_subtitle": "{{waiter}} waiter · {{kitchen}} kitchen",
+      "titles": {
+        "revenue": {
+          "day": "Today's revenue",
+          "week": "Revenue in 7 days",
+          "month": "Revenue in 1 month",
+          "year": "Revenue in 1 year"
+        },
+        "orders": {
+          "day": "Today's orders",
+          "week": "Orders in 7 days",
+          "month": "Orders in 1 month",
+          "year": "Orders in 1 year"
+        },
+        "reservations": {
+          "day": "Today's reservations",
+          "week": "Reservations in 7 days",
+          "month": "Reservations in 1 month",
+          "year": "Reservations in 1 year"
+        },
+        "new_customers": {
+          "day": "New customers today",
+          "week": "New customers in 7 days",
+          "month": "New customers in 1 month",
+          "year": "New customers in 1 year"
+        }
+      }
+    },
+    "filters": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "messages": {
+      "overview_load_failed": "Unable to load dashboard overview"
     },
     "tables_overview": {
       "title": "Tables & Reservations",
@@ -1873,9 +1912,16 @@
     }
   },
   "charts": {
+    "periods": {
+      "last_7_days": "Compare last 7 days",
+      "last_4_weeks": "Compare last 4 weeks",
+      "last_6_months": "Compare last 6 months",
+      "last_5_years": "Compare last 5 years"
+    },
     "revenue": {
       "title": "Revenue Trend",
-      "subtitle": "Last 7 days performance"
+      "subtitle": "Last 7 days performance",
+      "total_period": "Total period"
     },
     "orders": {
       "title": "Orders Overview",
