@@ -3,13 +3,16 @@
 import customerService from "@/lib/services/customerService";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
-import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
+import orderStatusService, {
+  OrderStatus,
+} from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
+import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { HubConnectionState } from "@microsoft/signalr";
+import { message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { message } from "antd";
 
 interface OrderRow {
   id: string;
@@ -39,11 +42,12 @@ export default function OrdersPage() {
   const [customerSearch, setCustomerSearch] = useState("");
   const [tableSearch, setTableSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">("");
+  const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">(
+    "",
+  );
+  const [exporting, setExporting] = useState<boolean>(false);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
-
-
 
   const mapPaymentStatus = (statusId: number): "unpaid" | "paid" => {
     return statusId === 1 ? "paid" : "unpaid";
@@ -106,87 +110,89 @@ export default function OrdersPage() {
   }, []);
 
   const loadOrders = useCallback(async () => {
-      if (inFlightRef.current) return;
-      inFlightRef.current = true;
-      try {
-        const data = await orderService.getOrdersByFilter({
-          reference: orderSearch.trim() || undefined,
-          tableId: tableSearch.trim() || undefined,
-          orderStatusId: statusFilter ? Number(statusFilter) : undefined,
-          paymentStatusId: paymentFilter ? (paymentFilter === "paid" ? 1 : 0) : undefined,
-        });
-        const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
-        const uniqueCustomerIds = Array.from(
-          new Set(
-            data
-              .map((o) => o.customerId)
-              .filter((cid): cid is string => !!cid && cid !== EMPTY_GUID),
-          ),
-        );
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    try {
+      const data = await orderService.getOrdersByFilter({
+        reference: orderSearch.trim() || undefined,
+        tableId: tableSearch.trim() || undefined,
+        orderStatusId: statusFilter ? Number(statusFilter) : undefined,
+        paymentStatusId: paymentFilter
+          ? paymentFilter === "paid"
+            ? 1
+            : 0
+          : undefined,
+      });
+      const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+      const uniqueCustomerIds = Array.from(
+        new Set(
+          data
+            .map((o) => o.customerId)
+            .filter((cid): cid is string => !!cid && cid !== EMPTY_GUID),
+        ),
+      );
 
-        const customersById: Record<string, { name: string; avatar?: string }> =
-          {};
-        await Promise.all(
-          uniqueCustomerIds.map(async (cid) => {
-            try {
-              const c = await customerService.getCustomerById(cid);
-              if (c) customersById[c.id] = { name: c.name, avatar: c.avatar };
-            } catch (err) {
-              console.error("Failed to load customer", cid, err);
-            }
-          }),
-        );
+      const customersById: Record<string, { name: string; avatar?: string }> =
+        {};
+      await Promise.all(
+        uniqueCustomerIds.map(async (cid) => {
+          try {
+            const c = await customerService.getCustomerById(cid);
+            if (c) customersById[c.id] = { name: c.name, avatar: c.avatar };
+          } catch (err) {
+            console.error("Failed to load customer", cid, err);
+          }
+        }),
+      );
 
-        setOrders(
-          data.map((o) => {
-            const distinctCount = o.orderDetails?.length ?? 0;
-            const totalQuantity =
-              o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ??
-              0;
-            const orderStatusId = o.orderStatusId;
-            const paymentStatus = mapPaymentStatus(
-              o.paymentStatusId ?? o.paymentStatus ?? 0,
-            );
-            const customer = customersById[o.customerId];
+      setOrders(
+        data.map((o) => {
+          const distinctCount = o.orderDetails?.length ?? 0;
+          const totalQuantity =
+            o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ?? 0;
+          const orderStatusId = o.orderStatusId;
+          const paymentStatus = mapPaymentStatus(
+            o.paymentStatusId ?? o.paymentStatus ?? 0,
+          );
+          const customer = customersById[o.customerId];
 
-            const hasRealCustomerId = !!o.customerId && o.customerId !== EMPTY_GUID;
+          const hasRealCustomerId =
+            !!o.customerId && o.customerId !== EMPTY_GUID;
 
-            return {
-              id: o.id ?? "",
-              orderNumber:
-                o.reference && o.reference.trim().length > 0
-                  ? o.reference
-                  : `#${(o.id ?? "").slice(0, 8)}`,
-              customerName:
-                customer?.name ??
-                (hasRealCustomerId ? "Unknown customer" : "Guest"),
-              customerAvatar: customer?.avatar ?? null,
-              items: distinctCount,
-              totalQuantity,
-              total: Number(o.totalAmount ?? 0),
-              orderStatusId,
-              time: o.createdDate
-                ? new Date(o.createdDate).toLocaleString("vi-VN", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })
-                : "",
-              paymentStatus,
-              raw: o,
-            };
-          }),
-        );
-      } catch (error) {
-        console.error("Failed to load orders:", error);
-      } finally {
-        inFlightRef.current = false;
-      }
-    },
-    [],
-  );
+          return {
+            id: o.id ?? "",
+            orderNumber:
+              o.reference && o.reference.trim().length > 0
+                ? o.reference
+                : `#${(o.id ?? "").slice(0, 8)}`,
+            customerName:
+              customer?.name ??
+              (hasRealCustomerId ? "Unknown customer" : "Guest"),
+            customerAvatar: customer?.avatar ?? null,
+            items: distinctCount,
+            totalQuantity,
+            total: Number(o.totalAmount ?? 0),
+            orderStatusId,
+            time: o.createdDate
+              ? new Date(o.createdDate).toLocaleString("vi-VN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              : "",
+            paymentStatus,
+            raw: o,
+          };
+        }),
+      );
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+    } finally {
+      inFlightRef.current = false;
+    }
+  }, []);
 
   const refreshOrders = useCallback(
     async (showLoading = true) => {
@@ -259,7 +265,37 @@ export default function OrdersPage() {
     setPage(1);
   }, [orderSearch, customerSearch, tableSearch, statusFilter, paymentFilter]);
 
+  const handleExportOrders = useCallback(async () => {
+    setExporting(true);
+    try {
+      const file = await orderService.exportOrders({
+        reference: orderSearch.trim() || undefined,
+        tableId: tableSearch.trim() || undefined,
+        orderStatusId: statusFilter ? Number(statusFilter) : undefined,
+        paymentStatusId: paymentFilter
+          ? paymentFilter === "paid"
+            ? 1
+            : 0
+          : undefined,
+      });
 
+      triggerBrowserDownload(file.blob, file.fileName);
+      message.success(
+        t("admin.orders.export.success", {
+          defaultValue: "Xuất file thành công",
+        }),
+      );
+    } catch (error) {
+      console.error("Failed to export orders:", error);
+      message.error(
+        t("admin.orders.export.error", {
+          defaultValue: "Xuất file thất bại",
+        }),
+      );
+    } finally {
+      setExporting(false);
+    }
+  }, [orderSearch, paymentFilter, statusFilter, t, tableSearch]);
 
   const filteredOrders = useMemo(() => {
     const orderKeyword = orderSearch.trim().toLowerCase();
@@ -268,8 +304,7 @@ export default function OrdersPage() {
 
     return orders.filter((order) => {
       const matchesOrder =
-        !orderKeyword ||
-        order.orderNumber.toLowerCase().includes(orderKeyword);
+        !orderKeyword || order.orderNumber.toLowerCase().includes(orderKeyword);
 
       const matchesCustomer =
         !customerKeyword ||
@@ -278,12 +313,27 @@ export default function OrdersPage() {
       const tableValue = String(order.raw?.tableId ?? "").toLowerCase();
       const matchesTable = !tableKeyword || tableValue.includes(tableKeyword);
 
-      const matchesStatus = !statusFilter || String(order.orderStatusId) === statusFilter;
-      const matchesPayment = !paymentFilter || order.paymentStatus === paymentFilter;
+      const matchesStatus =
+        !statusFilter || String(order.orderStatusId) === statusFilter;
+      const matchesPayment =
+        !paymentFilter || order.paymentStatus === paymentFilter;
 
-      return matchesOrder && matchesCustomer && matchesTable && matchesStatus && matchesPayment;
+      return (
+        matchesOrder &&
+        matchesCustomer &&
+        matchesTable &&
+        matchesStatus &&
+        matchesPayment
+      );
     });
-  }, [orders, orderSearch, customerSearch, tableSearch, statusFilter, paymentFilter]);
+  }, [
+    orders,
+    orderSearch,
+    customerSearch,
+    tableSearch,
+    statusFilter,
+    paymentFilter,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -298,62 +348,110 @@ export default function OrdersPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h2 className="text-3xl font-bold mb-1" style={{ color: "var(--text)" }}>
+            <h2
+              className="text-3xl font-bold mb-1"
+              style={{ color: "var(--text)" }}>
               {t("dashboard.orders.title")}
             </h2>
             <p style={{ color: "var(--text-muted)" }}>
               {t("dashboard.orders.subtitle")}
             </p>
           </div>
-          <button
-            onClick={() => refreshOrders()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-          >
-            {t("admin.reservations.refresh", { defaultValue: "Làm mới" })}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportOrders}
+              disabled={exporting}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
+              style={{
+                background: "var(--primary-soft)",
+                border: "1px solid var(--primary-border)",
+                color: "var(--primary)",
+              }}>
+              {exporting
+                ? t("common.actions.exporting")
+                : t("common.actions.export_excel")}
+            </button>
+
+            <button
+              onClick={() => refreshOrders()}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}>
+              {t("admin.reservations.refresh", { defaultValue: "Làm mới" })}
+            </button>
+          </div>
         </div>
 
         <div
           className="rounded-xl p-4"
-          style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-        >
+          style={{
+            background: "var(--card)",
+            border: "1px solid var(--border)",
+          }}>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
             <input
               type="text"
-              placeholder={t("dashboard.orders.table.order", { defaultValue: "Mã đơn" })}
+              placeholder={t("dashboard.orders.table.order", {
+                defaultValue: "Mã đơn",
+              })}
               value={orderSearch}
               onChange={(e) => setOrderSearch(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}
             />
 
             <input
               type="text"
-              placeholder={t("dashboard.orders.table.customer", { defaultValue: "Khách hàng" })}
+              placeholder={t("dashboard.orders.table.customer", {
+                defaultValue: "Khách hàng",
+              })}
               value={customerSearch}
               onChange={(e) => setCustomerSearch(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}
             />
 
             <input
               type="text"
-              placeholder={t("dashboard.orders.table.table", { defaultValue: "Bàn" })}
+              placeholder={t("dashboard.orders.table.table", {
+                defaultValue: "Bàn",
+              })}
               value={tableSearch}
               onChange={(e) => setTableSearch(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}
             />
 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-            >
-              <option value="">{t("admin.reservations.filter.all_status", { defaultValue: "Tất cả trạng thái" })}</option>
-              {orderStatuses.map(status => (
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}>
+              <option value="">
+                {t("admin.reservations.filter.all_status", {
+                  defaultValue: "Tất cả trạng thái",
+                })}
+              </option>
+              {orderStatuses.map((status) => (
                 <option key={status.id} value={status.id}>
                   {status.name}
                 </option>
@@ -362,17 +460,34 @@ export default function OrdersPage() {
 
             <select
               value={paymentFilter}
-              onChange={(e) => setPaymentFilter(e.target.value as "" | "paid" | "unpaid")}
+              onChange={(e) =>
+                setPaymentFilter(e.target.value as "" | "paid" | "unpaid")
+              }
               className="w-full px-3 py-2 rounded-lg text-sm"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-            >
-              <option value="">{t("dashboard.orders.table.payment", { defaultValue: "Thanh toán" })}</option>
-              <option value="paid">{t("dashboard.orders.payment_status.paid")}</option>
-              <option value="unpaid">{t("dashboard.orders.payment_status.unpaid")}</option>
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}>
+              <option value="">
+                {t("dashboard.orders.table.payment", {
+                  defaultValue: "Thanh toán",
+                })}
+              </option>
+              <option value="paid">
+                {t("dashboard.orders.payment_status.paid")}
+              </option>
+              <option value="unpaid">
+                {t("dashboard.orders.payment_status.unpaid")}
+              </option>
             </select>
           </div>
 
-          {(orderSearch || customerSearch || tableSearch || statusFilter || paymentFilter) && (
+          {(orderSearch ||
+            customerSearch ||
+            tableSearch ||
+            statusFilter ||
+            paymentFilter) && (
             <div className="mt-3 flex justify-end">
               <button
                 onClick={() => {
@@ -383,9 +498,14 @@ export default function OrdersPage() {
                   setPaymentFilter("");
                 }}
                 className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}
-              >
-                {t("admin.reservations.filter.clear", { defaultValue: "Xóa lọc" })}
+                style={{
+                  background: "rgba(239,68,68,0.1)",
+                  color: "#ef4444",
+                  border: "1px solid rgba(239,68,68,0.2)",
+                }}>
+                {t("admin.reservations.filter.clear", {
+                  defaultValue: "Xóa lọc",
+                })}
               </button>
             </div>
           )}
@@ -397,7 +517,9 @@ export default function OrdersPage() {
             background: "var(--card)",
             border: "1px solid var(--border)",
           }}>
-          <div className="p-6" style={{ borderBottom: "1px solid var(--border)" }}>
+          <div
+            className="p-6"
+            style={{ borderBottom: "1px solid var(--border)" }}>
             <h3 className="text-xl font-bold" style={{ color: "var(--text)" }}>
               {t("dashboard.orders.title")}
             </h3>
@@ -406,50 +528,106 @@ export default function OrdersPage() {
             <table className="w-full">
               <thead style={{ background: "var(--surface)" }}>
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.order")}</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.customer")}</th>
-                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.items")}</th>
-                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.total")}</th>
-                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.status")}</th>
-                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.payment")}</th>
-                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.time")}</th>
-                  <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t("dashboard.orders.table.actions")}</th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.orders.table.order")}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.orders.table.customer")}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.orders.table.items")}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.orders.table.total")}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.orders.table.status")}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.orders.table.payment")}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.orders.table.time")}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.orders.table.actions")}
+                  </th>
                 </tr>
               </thead>
               <tbody style={{ borderColor: "var(--border)" }}>
                 {loading ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-6">
-                      <div className="w-full rounded-xl animate-pulse" style={{ background: "var(--surface)", height: 360 }} />
+                      <div
+                        className="w-full rounded-xl animate-pulse"
+                        style={{ background: "var(--surface)", height: 360 }}
+                      />
                     </td>
                   </tr>
                 ) : pagedOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+                    <td
+                      colSpan={8}
+                      className="px-6 py-12 text-center text-sm"
+                      style={{ color: "var(--text-muted)" }}>
                       {t("orders.empty", { defaultValue: "No orders found" })}
                     </td>
                   </tr>
                 ) : (
                   pagedOrders.map((order) => (
-                    <tr key={order.id} className="transition-colors" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <tr
+                      key={order.id}
+                      className="transition-colors"
+                      style={{ borderBottom: "1px solid var(--border)" }}>
                       <td className="px-6 py-4 whitespace-nowrap text-left">
-                        <span style={{ color: "var(--primary)", fontWeight: 600 }}>{order.orderNumber}</span>
+                        <span
+                          style={{ color: "var(--primary)", fontWeight: 600 }}>
+                          {order.orderNumber}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-left">
                         <div className="flex items-center gap-3">
                           {order.customerAvatar ? (
-                            <img src={order.customerAvatar} alt={order.customerName} className="w-8 h-8 rounded-full object-cover" />
+                            <img
+                              src={order.customerAvatar}
+                              alt={order.customerName}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
                           ) : (
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ background: "var(--primary)" }}>
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                              style={{ background: "var(--primary)" }}>
                               {order.customerName?.charAt(0) ?? "G"}
                             </div>
                           )}
-                          <span className="font-medium" style={{ color: "var(--text)" }}>{order.customerName}</span>
+                          <span
+                            className="font-medium"
+                            style={{ color: "var(--text)" }}>
+                            {order.customerName}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span style={{ color: "var(--text-muted)" }}>
-                          {t("dashboard.orders.labels.items_count", { count: order.items })}
+                          {t("dashboard.orders.labels.items_count", {
+                            count: order.items,
+                          })}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -459,42 +637,70 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {(() => {
-                           const st = orderStatuses.find(s => s.id === String(order.orderStatusId));
-                           return (
-                             <select
-                               className="px-2 py-1 rounded-full text-xs font-medium border cursor-pointer outline-none transition-colors"
-                               style={{
-                                 backgroundColor: st ? `${st.color}1A` : "var(--surface)",
-                                 color: st ? st.color : "var(--text)",
-                                 borderColor: st ? `${st.color}33` : "var(--border)",
-                               }}
-                               value={order.orderStatusId != null ? String(order.orderStatusId) : ""}
-                               onChange={async (e) => {
-                                 if (!e.target.value) return;
-                                 try {
-                                   await orderService.updateOrderStatus(order.id, Number(e.target.value));
-                                   message.success(t("admin.order_detail.messages.update_success", { defaultValue: "Cập nhật trạng thái thành công" }));
-                                 } catch (err) {
-                                   console.error("Failed to update status", err);
-                                   message.error(t("admin.order_detail.messages.update_error", { defaultValue: "Cập nhật lỗi" }));
-                                 }
-                               }}
-                             >
-                               {!st && <option value="" disabled>-</option>}
-                               {orderStatuses.map(status => (
-                                 <option 
-                                   key={status.id} 
-                                   value={status.id} 
-                                   style={{ 
-                                     color: 'var(--text)', 
-                                     background: 'var(--card)' 
-                                   }}
-                                 >
-                                   {status.name}
-                                 </option>
-                               ))}
-                             </select>
-                           );
+                          const st = orderStatuses.find(
+                            (s) => s.id === String(order.orderStatusId),
+                          );
+                          return (
+                            <select
+                              className="px-2 py-1 rounded-full text-xs font-medium border cursor-pointer outline-none transition-colors"
+                              style={{
+                                backgroundColor: st
+                                  ? `${st.color}1A`
+                                  : "var(--surface)",
+                                color: st ? st.color : "var(--text)",
+                                borderColor: st
+                                  ? `${st.color}33`
+                                  : "var(--border)",
+                              }}
+                              value={
+                                order.orderStatusId != null
+                                  ? String(order.orderStatusId)
+                                  : ""
+                              }
+                              onChange={async (e) => {
+                                if (!e.target.value) return;
+                                try {
+                                  await orderService.updateOrderStatus(
+                                    order.id,
+                                    Number(e.target.value),
+                                  );
+                                  message.success(
+                                    t(
+                                      "admin.order_detail.messages.update_success",
+                                      {
+                                        defaultValue:
+                                          "Cập nhật trạng thái thành công",
+                                      },
+                                    ),
+                                  );
+                                } catch (err) {
+                                  console.error("Failed to update status", err);
+                                  message.error(
+                                    t(
+                                      "admin.order_detail.messages.update_error",
+                                      { defaultValue: "Cập nhật lỗi" },
+                                    ),
+                                  );
+                                }
+                              }}>
+                              {!st && (
+                                <option value="" disabled>
+                                  -
+                                </option>
+                              )}
+                              {orderStatuses.map((status) => (
+                                <option
+                                  key={status.id}
+                                  value={status.id}
+                                  style={{
+                                    color: "var(--text)",
+                                    background: "var(--card)",
+                                  }}>
+                                  {status.name}
+                                </option>
+                              ))}
+                            </select>
+                          );
                         })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -509,7 +715,9 @@ export default function OrdersPage() {
                             : t("dashboard.orders.payment_status.unpaid")}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center" style={{ color: "var(--text-muted)" }}>
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-sm text-center"
+                        style={{ color: "var(--text-muted)" }}>
                         {order.time}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -522,9 +730,23 @@ export default function OrdersPage() {
                               color: "var(--primary)",
                             }}
                             title={t("dashboard.orders.actions.view_details")}>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
                             </svg>
                           </Link>
                         </div>
@@ -539,8 +761,7 @@ export default function OrdersPage() {
           {!loading && filteredOrders.length > 0 && totalPages > 1 && (
             <div
               className="flex items-center justify-between px-4 py-3"
-              style={{ borderTop: "1px solid var(--border)" }}
-            >
+              style={{ borderTop: "1px solid var(--border)" }}>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                 {t("admin.reservations.pagination.page_info", {
                   page: currentPage,
@@ -554,33 +775,50 @@ export default function OrdersPage() {
                   onClick={() => setPage((p: number) => Math.max(1, p - 1))}
                   disabled={currentPage <= 1}
                   className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
-                  style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-                >
-                  {t("admin.reservations.pagination.prev", { defaultValue: "Trước" })}
+                  style={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text)",
+                  }}>
+                  {t("admin.reservations.pagination.prev", {
+                    defaultValue: "Trước",
+                  })}
                 </button>
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const p = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                  const p =
+                    Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
                   return (
                     <button
                       key={p}
                       onClick={() => setPage(p)}
                       className="w-8 h-8 rounded-lg text-sm font-medium transition-all"
-                      style={p === currentPage
-                        ? { background: "var(--primary)", color: "white" }
-                        : { background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)" }
-                      }
-                    >
+                      style={
+                        p === currentPage
+                          ? { background: "var(--primary)", color: "white" }
+                          : {
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              color: "var(--text-muted)",
+                            }
+                      }>
                       {p}
                     </button>
                   );
                 })}
                 <button
-                  onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setPage((p: number) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage >= totalPages}
                   className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
-                  style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-                >
-                  {t("admin.reservations.pagination.next", { defaultValue: "Sau" })}
+                  style={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text)",
+                  }}>
+                  {t("admin.reservations.pagination.next", {
+                    defaultValue: "Sau",
+                  })}
                 </button>
               </div>
             </div>

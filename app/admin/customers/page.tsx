@@ -1,10 +1,36 @@
 "use client";
 
-import CustomerList from "@/components/admin/customers/CustomerList";
+import CustomerList, {
+  CustomerListHandle,
+} from "@/components/admin/customers/CustomerList";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function CustomersPage() {
   const { t } = useTranslation('common');
+  const customerListRef = useRef<CustomerListHandle | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const handleRefresh = async () => {
+    if (!customerListRef.current) return;
+    setRefreshing(true);
+    try {
+      await customerListRef.current.refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleExport = async () => {
+    if (!customerListRef.current) return;
+    setExporting(true);
+    try {
+      await customerListRef.current.exportExcel();
+    } finally {
+      setExporting(false);
+    }
+  };
   
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -18,10 +44,41 @@ export default function CustomersPage() {
           {t('customers.subtitle')}
         </p>
           </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
+              style={{
+                background: "var(--primary-soft)",
+                border: "1px solid var(--primary-border)",
+                color: "var(--primary)",
+              }}
+            >
+              {exporting
+                ? t("common.actions.exporting", { defaultValue: "Đang xuất..." })
+                : t("common.actions.export_excel", { defaultValue: "Xuất Excel" })}
+            </button>
+
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}
+            >
+              {refreshing
+                ? t("common.actions.loading", { defaultValue: "Đang tải..." })
+                : t("admin.reservations.refresh", { defaultValue: "Làm mới" })}
+            </button>
+          </div>
       </div>
 
         <div className="rounded-xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-      <CustomerList />
+      <CustomerList ref={customerListRef} />
         </div>
       </div>
     </main>

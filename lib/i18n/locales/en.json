@@ -1879,7 +1879,9 @@
       "title": "Actions",
       "yes": "Yes",
       "no": "No",
-      "create_order": "Create New Order"
+      "create_order": "Create New Order",
+      "export_excel": "Export Excel",
+      "exporting": "Exporting..."
     },
     "language": "Language",
     "english": "English",

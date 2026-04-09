@@ -1,3 +1,7 @@
+import {
+  DownloadableFile,
+  getFileNameFromContentDisposition,
+} from "@/lib/utils/fileDownload";
 import axiosInstance from "./axiosInstance";
 
 // Backend DTOs (mirrors server DTOs)
@@ -160,12 +164,33 @@ class OrderService {
   }
 
   async getOrderDetailsList(): Promise<OrderDetailListItemDto[]> {
-    const response = await axiosInstance.get<OrderDetailListItemDto[]>("/orders/details");
+    const response =
+      await axiosInstance.get<OrderDetailListItemDto[]>("/orders/details");
     return Array.isArray(response.data) ? response.data : [];
+  }
+
+  async exportOrders(
+    params: OrderFilterParams = {},
+  ): Promise<DownloadableFile> {
+    const response = await axiosInstance.get<Blob>("/orders/export/csv", {
+      params,
+      responseType: "blob",
+    });
+
+    const contentDisposition = response.headers?.["content-disposition"] as
+      | string
+      | undefined;
+
+    return {
+      blob: response.data,
+      fileName: getFileNameFromContentDisposition(
+        contentDisposition,
+        `orders_${Date.now()}.xlsx`,
+      ),
+    };
   }
 }
 
 const orderService = new OrderService();
 
 export default orderService;
-
