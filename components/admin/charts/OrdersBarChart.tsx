@@ -20,6 +20,8 @@ export default function OrdersBarChart({
   const maxOrders = Math.max(1, ...ordersData.map((d) => d.total));
   const maxLabelLength = Math.max(...ordersData.map((d) => d.label.length));
   const labelFontSize = maxLabelLength > 8 ? "10px" : "12px";
+  const barMaxHeightPercent = 82;
+  const labelGapPx = 8;
 
   return (
     <div
@@ -59,15 +61,17 @@ export default function OrdersBarChart({
             gridTemplateColumns: `repeat(${ordersData.length}, minmax(0, 1fr))`,
           }}>
           {ordersData.map((item, index) => {
-            const height = (item.total / maxOrders) * 100;
-            const valueBottom = Math.min(94, Math.max(4, height));
+            const rawHeight = (item.total / maxOrders) * barMaxHeightPercent;
+            const height = item.total > 0 ? Math.max(3, rawHeight) : 0;
+            const valueBottom = height;
             return (
               <div key={index} className="min-w-0 flex flex-col items-center">
                 <div className="relative w-full h-40 flex items-end justify-center">
                   <div
                     className="absolute left-1/2 -translate-x-1/2 text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap"
                     style={{
-                      bottom: `calc(${valueBottom}% + 6px)`,
+                      bottom: `calc(${valueBottom}% + ${labelGapPx}px)`,
+                      zIndex: 20,
                       background: "var(--card)",
                       color: "var(--text)",
                       border: "1px solid var(--border)",
@@ -78,6 +82,7 @@ export default function OrdersBarChart({
                   <div
                     className="w-full rounded-lg transition-all duration-500 group relative hover:opacity-80"
                     style={{
+                      zIndex: 10,
                       background:
                         "linear-gradient(to top, var(--primary), #FB923C)",
                       height: `${height}%`,
