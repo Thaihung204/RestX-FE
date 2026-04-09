@@ -20,7 +20,7 @@ export default function OrdersBarChart({
   const maxOrders = Math.max(1, ...ordersData.map((d) => d.total));
   const maxLabelLength = Math.max(...ordersData.map((d) => d.label.length));
   const labelFontSize = maxLabelLength > 8 ? "10px" : "12px";
-  const barMaxHeightPercent = 82;
+  const barMaxHeightPercent = 102;
   const labelGapPx = 8;
 
   return (
