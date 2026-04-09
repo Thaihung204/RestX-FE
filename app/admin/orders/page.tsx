@@ -11,8 +11,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { message } from "antd";
 
-
-
 interface OrderRow {
   id: string;
   orderNumber: string;

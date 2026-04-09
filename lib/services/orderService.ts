@@ -26,6 +26,8 @@ export interface OrderRequestDto {
 export interface OrderDetailDto {
   id?: string;
   dishId: string;
+  dishName?: string;
+  dishPrice?: number;
   quantity: number;
   note?: string | null;
   status?: string | null;
@@ -33,6 +35,18 @@ export interface OrderDetailDto {
 
 export interface OrderStatusUpdateRequest {
   statusId: number;
+}
+
+export interface OrderDetailsItemDto {
+  id: string;
+  dishId: string;
+  dishName: string;
+  dishPrice: number;
+  quantity: number;
+  note?: string | null;
+  status?: string | null;
+  orderId: string;
+  createdDate?: string | null;
 }
 
 export interface OrderDto {
@@ -56,7 +70,9 @@ export interface OrderDto {
   handledBy?: string | null;
   tableIds?: string[];
   tableSessions?: Array<{
+    id?: string;
     tableId?: string | null;
+    tableCode?: string | null;
     table?: {
       id?: string;
       code?: string | null;
@@ -87,6 +103,17 @@ export interface OrderFilterParams {
   pageSize?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+}
+
+export interface OrderDetailListItemDto {
+  id?: string;
+  orderId?: string;
+  dishId?: string;
+  dishName?: string;
+  quantity?: number;
+  note?: string | null;
+  status?: string | null;
+  createdDate?: string | null;
 }
 
 class OrderService {
@@ -130,6 +157,11 @@ class OrderService {
   async getOrderById(id: string): Promise<OrderDto> {
     const response = await axiosInstance.get<OrderDto>(`/orders/${id}`);
     return response.data;
+  }
+
+  async getOrderDetailsList(): Promise<OrderDetailListItemDto[]> {
+    const response = await axiosInstance.get<OrderDetailListItemDto[]>("/orders/details");
+    return Array.isArray(response.data) ? response.data : [];
   }
 }
 

@@ -22,6 +22,7 @@ interface CartContextType {
   orderedItems: CartItem[];
   cartModalOpen: boolean;
   activeCartTab: string;
+  isSubmittingOrder: boolean;
 
   // Order context
   orderTableId?: string;
@@ -59,6 +60,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
   const [cartModalOpen, setCartModalOpen] = useState(false);
   const [activeCartTab, setActiveCartTab] = useState<string>("1");
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [orderTableId, setOrderTableId] = useState<string | undefined>();
   const [orderCustomerId, setOrderCustomerId] = useState<string | undefined>();
 
@@ -141,19 +143,42 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const [allOrders, menuData] = await Promise.all([
-        orderService.getOrdersByFilter({
-          tableId: orderTableId,
-          paymentStatusId: 0,
-        }),
+        orderService.getAllOrders(),
         menuService.getMenu(),
       ]);
 
+      const now = new Date();
+      const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+
       const orders = allOrders.filter((order) => {
-        const matchesTable =
+        const sessions = (order.tableSessions ?? []) as Array<{
+          tableId?: string | null;
+          isActive?: boolean | null;
+          startedAt?: string | null;
+          endedAt?: string | null;
+        }>;
+
+        const matchesSessionTable = sessions.some((session) => {
+          if (!session?.tableId || session.tableId === EMPTY_GUID) return false;
+          if (session.tableId !== orderTableId) return false;
+
+          const startedOk = !session.startedAt || new Date(session.startedAt) <= now;
+          const notEnded = !session.endedAt || new Date(session.endedAt) > now;
+          const activeByWindow = startedOk && notEnded;
+
+          // Ưu tiên isActive nếu backend có set, fallback theo time window
+          return session.isActive ?? activeByWindow;
+        });
+
+        const fallbackMatchByIds =
           order.tableId === orderTableId ||
-          (order.tableIds && order.tableIds.includes(orderTableId!));
-        const matchesPayment = order.paymentStatusId === 0;
-        return matchesTable && matchesPayment;
+          (order.tableIds && order.tableIds.includes(orderTableId));
+
+        const matchesTable = matchesSessionTable || fallbackMatchByIds;
+        const matchesPayment = (order.paymentStatusId ?? order.paymentStatus ?? 0) === 0;
+        const isNotDone = !order.completedAt && !order.cancelledAt;
+
+        return matchesTable && matchesPayment && isNotDone;
       });
 
       const dishLookup = new Map<
@@ -219,6 +244,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Order actions
   const confirmOrder = useCallback(async () => {
+    if (isSubmittingOrder) {
+      return;
+    }
+
     if (cartItems.length === 0) {
       messageApi.warning("Giỏ hàng đang trống!");
       return;
@@ -228,6 +257,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       messageApi.error("Không tìm thấy thông tin bàn. Vui lòng quét lại QR.");
       return;
     }
+
+    setIsSubmittingOrder(true);
 
     try {
       const orderDetails = cartItems.map((cartItem) => ({
@@ -257,8 +288,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           ? `Đặt món thất bại: ${serverMsg}`
           : "Đặt món thất bại. Vui lòng thử lại.",
       );
+    } finally {
+      setIsSubmittingOrder(false);
     }
-  }, [cartItems, fetchOrderedItems, messageApi, orderTableId, orderCustomerId, totalCartAmount]);
+  }, [cartItems, fetchOrderedItems, isSubmittingOrder, messageApi, orderTableId, orderCustomerId, totalCartAmount]);
 
   const requestPayment = useCallback(() => {
     if (orderedItems.length === 0) {
@@ -340,6 +373,7 @@ useEffect(() => {
       orderedItems,
       cartModalOpen,
       activeCartTab,
+      isSubmittingOrder,
       orderTableId,
       orderCustomerId,
       setOrderContext,
@@ -362,6 +396,7 @@ useEffect(() => {
       orderedItems,
       cartModalOpen,
       activeCartTab,
+      isSubmittingOrder,
       orderTableId,
       orderCustomerId,
       cartItemCount,
