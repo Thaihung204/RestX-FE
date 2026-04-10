@@ -362,7 +362,7 @@ export default function OrdersPage() {
               <DownloadOutlined />
               {exporting
                 ? t("common.actions.exporting_report")
-                : t("common.actions.export_report")}
+                : t("dashboard.actions.export_report")}
             </button>
 
             <button
