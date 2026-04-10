@@ -15,15 +15,13 @@ import orderService, {
   OrderRequestDto,
 } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
-import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
+import orderStatusService, {
+  OrderStatus,
+} from "@/lib/services/orderStatusService";
 import paymentService from "@/lib/services/paymentService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import { HubConnectionState } from "@microsoft/signalr";
-import {
-  App,
-  Empty,
-  Space,
-} from "antd";
+import { App, Empty, Space } from "antd";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
@@ -77,7 +75,9 @@ const mapOrderStatus = (
   statusId: number | null | undefined,
   statuses: OrderStatus[],
 ): OrderStatusUi => {
-  const matched = statuses.find((status) => Number(status.id) === Number(statusId));
+  const matched = statuses.find(
+    (status) => Number(status.id) === Number(statusId),
+  );
   return matched?.code?.toLowerCase() || "pending";
 };
 
@@ -111,7 +111,9 @@ export default function OrderManagement() {
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
-  const [orderDetailStatuses, setOrderDetailStatuses] = useState<OrderDetailStatus[]>([]);
+  const [orderDetailStatuses, setOrderDetailStatuses] = useState<
+    OrderDetailStatus[]
+  >([]);
   const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const statusValueMapRef = useRef<Record<string, string>>({});
   const dishNameMapRef = useRef<Record<string, string>>({});
@@ -164,7 +166,9 @@ export default function OrderManagement() {
           (id): id is string => !!id && id !== EMPTY_GUID,
         );
         const resolvedTableId =
-          (order.tableId && order.tableId !== EMPTY_GUID ? order.tableId : undefined) ||
+          (order.tableId && order.tableId !== EMPTY_GUID
+            ? order.tableId
+            : undefined) ||
           tableIdFromSession ||
           tableIdFromList ||
           "unknown";
@@ -172,8 +176,7 @@ export default function OrderManagement() {
         const tableName =
           tableSessions
             .map((s) => s?.tableCode || s?.table?.code)
-            .find((code): code is string => !!code) ||
-          resolvedTableId;
+            .find((code): code is string => !!code) || resolvedTableId;
 
         const items: OrderItem[] = (order.orderDetails ?? []).map(
           (detail, index) => {
@@ -182,7 +185,8 @@ export default function OrderManagement() {
             return {
               id: detail.id || `${order.id || "order"}-${index}`,
               dishId: detail.dishId,
-              name: detail.dishName || dishNameMap[detail.dishId] || detail.dishId,
+              name:
+                detail.dishName || dishNameMap[detail.dishId] || detail.dishId,
               quantity: detail.quantity ?? 0,
               price: Number(detail.dishPrice ?? 0),
               note: detail.note || undefined,
@@ -243,7 +247,12 @@ export default function OrderManagement() {
   const refreshOrders = useCallback(
     async (force = false) => {
       const now = Date.now();
-      if (!force && lastRefreshRef.current && now - lastRefreshRef.current < 2000) return;
+      if (
+        !force &&
+        lastRefreshRef.current &&
+        now - lastRefreshRef.current < 2000
+      )
+        return;
       lastRefreshRef.current = now;
       await fetchOrders();
     },
@@ -255,12 +264,13 @@ export default function OrderManagement() {
     inFlightRef.current = true;
     initializedRef.current = true;
     try {
-      const [statusData, orderStatusData, menuData, orderData] = await Promise.all([
-        orderDetailStatusService.getAllStatuses(),
-        orderStatusService.getAllStatuses(),
-        menuService.getMenu(),
-        orderService.getAllOrders(),
-      ]);
+      const [statusData, orderStatusData, menuData, orderData] =
+        await Promise.all([
+          orderDetailStatusService.getAllStatuses(),
+          orderStatusService.getAllStatuses(),
+          menuService.getMenu(),
+          orderService.getAllOrders(),
+        ]);
 
       const safeStatuses = statusData ?? [];
       const safeOrderStatuses = orderStatusData ?? [];
@@ -285,7 +295,6 @@ export default function OrderManagement() {
     loadInitialData();
   }, [loadInitialData]);
 
-
   const statusOptions = orderDetailStatuses.map((status) => ({
     value: status.code?.toLowerCase() || status.id,
     label: (
@@ -305,7 +314,8 @@ export default function OrderManagement() {
     className: "order-detail-status-option",
   }));
 
-  const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] = useState<string>("");
+  const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] =
+    useState<string>("");
   const [selectedTableId, setSelectedTableId] = useState<string>("all");
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [cart, setCart] = useState<{ item: DishItem; quantity: number }[]>([]);
@@ -316,7 +326,8 @@ export default function OrderManagement() {
   const [isUpdatingDetailStatus, setIsUpdatingDetailStatus] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PaymentOrder | null>(null);
-  const [selectedOrderForDetail, setSelectedOrderForDetail] = useState<Order | null>(null);
+  const [selectedOrderForDetail, setSelectedOrderForDetail] =
+    useState<Order | null>(null);
   const [isOrderDetailModalOpen, setIsOrderDetailModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "bank">("cash");
   const [cashReceived, setCashReceived] = useState<number>(0);
@@ -406,7 +417,9 @@ export default function OrderManagement() {
 
   useEffect(() => {
     if (!selectedOrderForDetail) return;
-    const latestOrder = orders.find((order) => order.id === selectedOrderForDetail.id);
+    const latestOrder = orders.find(
+      (order) => order.id === selectedOrderForDetail.id,
+    );
     if (latestOrder) {
       setSelectedOrderForDetail(latestOrder);
     }
@@ -464,14 +477,10 @@ export default function OrderManagement() {
         return {
           ...order,
           detailItems: order.detailItems.map((item) =>
-            item.id === detailId
-              ? { ...item, status: normalizedValue }
-              : item,
+            item.id === detailId ? { ...item, status: normalizedValue } : item,
           ),
           items: order.items.map((item) =>
-            item.id === detailId
-              ? { ...item, status: normalizedValue }
-              : item,
+            item.id === detailId ? { ...item, status: normalizedValue } : item,
           ),
         };
       }),
@@ -532,11 +541,9 @@ export default function OrderManagement() {
 
     try {
       const payload: OrderRequestDto = {
-        id: selectedOrderIdForAdd,
         tableId: targetOrder.tableId,
         customerId:
-          targetOrder.raw.customerId ||
-          "00000000-0000-0000-0000-000000000000",
+          targetOrder.raw.customerId || "00000000-0000-0000-0000-000000000000",
         orderDetails: cart.map((c) => ({
           dishId: c.item.id,
           quantity: c.quantity,
@@ -578,7 +585,9 @@ export default function OrderManagement() {
         await paymentService.payByCash(selectedOrder.id, cashReceived);
         message.success(t("staff.orders.payment.messages.cash_success"));
       } else {
-        const response = await paymentService.createPaymentLink(selectedOrder.id);
+        const response = await paymentService.createPaymentLink(
+          selectedOrder.id,
+        );
         if (response.checkoutUrl) {
           window.open(response.checkoutUrl, "_blank", "noopener,noreferrer");
         }
@@ -765,7 +774,8 @@ export default function OrderManagement() {
         .order-detail-status-option,
         .order-status-option {
           padding: 2px 3px !important;
-          border-bottom: 1px solid ${mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "#EDEDED"};
+          border-bottom: 1px solid
+            ${mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "#EDEDED"};
           display: flex;
           align-items: center;
         }
@@ -775,7 +785,9 @@ export default function OrderManagement() {
         }
         .order-detail-status-option.ant-select-item-option-selected,
         .order-status-option.ant-select-item-option-selected {
-          background: ${mode === "dark" ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.03)"};
+          background: ${mode === "dark"
+            ? "rgba(255, 255, 255, 0.06)"
+            : "rgba(0, 0, 0, 0.03)"};
         }
         .order-status-select .ant-select-selector,
         .order-detail-status-select .ant-select-selector {
