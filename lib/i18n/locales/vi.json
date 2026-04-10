@@ -359,6 +359,15 @@
           "cash_success": "Thanh toán tiền mặt thành công",
           "link_created": "Đã tạo link thanh toán",
           "payment_failed": "Thanh toán thất bại"
+        },
+        "discount": {
+          "applying": "Đang áp dụng giảm giá...",
+          "membership_applied": "Đã áp dụng giảm giá thành viên",
+          "apply_button": "Áp dụng giảm giá",
+          "subtotal": "Tạm tính",
+          "level": "Hạng thành viên",
+          "amount": "Số tiền giảm",
+          "no_discount": "Không có giảm giá thành viên"
         }
       }
     },

@@ -357,6 +357,15 @@
           "cash_success": "Cash payment successful",
           "link_created": "Payment link created",
           "payment_failed": "Payment failed"
+        },
+        "discount": {
+          "applying": "Applying discount...",
+          "membership_applied": "Membership discount applied",
+          "apply_button": "Apply discount",
+          "subtotal": "Subtotal",
+          "level": "Membership",
+          "amount": "Discount amount",
+          "no_discount": "No membership discount available"
         }
       }
     },
