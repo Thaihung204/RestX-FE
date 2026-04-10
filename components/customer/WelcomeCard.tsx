@@ -8,14 +8,12 @@ const { useBreakpoint } = Grid;
 
 interface WelcomeCardProps {
   customerName?: string;
-  tableNumber: string;
   rank?: string;
   onClick?: () => void;
 }
 
 const WelcomeCard: React.FC<WelcomeCardProps> = ({
   customerName,
-  tableNumber,
   rank,
   onClick,
 }) => {
@@ -89,43 +87,17 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({
               gap: 8,
             }}>
             <CrownFilled style={{ color: "var(--gold)" }} />
-            <Text style={{ color: "var(--gold)", fontSize: isSmallPhone ? 12 : 13 }}>
+            <Text
+              style={{
+                color: "var(--gold)",
+                fontSize: isSmallPhone ? 12 : 13,
+              }}>
               {rank
                 ? t(
-                  `customer_page.welcome_card.rank_${rank.toLowerCase()}`,
-                  rank,
-                )
+                    `customer_page.welcome_card.rank_${rank.toLowerCase()}`,
+                    rank,
+                  )
                 : t("customer_page.welcome_card.gold_member")}
-            </Text>
-          </div>
-        </div>
-
-        <div style={{ textAlign: isSmallPhone ? "left" : "right", width: isSmallPhone ? "100%" : "auto" }}>
-          <div
-            style={{
-              background: "var(--primary-soft)",
-              border: "1px solid var(--primary-border)",
-              borderRadius: 16,
-              padding: isSmallPhone ? "9px 14px" : "10px 20px",
-              backdropFilter: "blur(4px)",
-            }}>
-            <Text
-              style={{
-                display: "block",
-                color: "var(--primary)",
-                fontSize: 12,
-                marginBottom: 2,
-              }}>
-              {t("customer_page.welcome_card.table_label")}
-            </Text>
-            <Text
-              style={{
-                color: "var(--text)",
-                fontSize: 24,
-                fontWeight: 800,
-                lineHeight: 1,
-              }}>
-              {tableNumber}
             </Text>
           </div>
         </div>
