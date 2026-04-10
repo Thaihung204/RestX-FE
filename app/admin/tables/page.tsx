@@ -20,7 +20,7 @@ interface Table {
   id: string;
   number: string;
   capacity: number;
-  status: "available" | "occupied" | "reserved" | "cleaning";
+  status: "available" | "occupied";
   area: string; // floorName from BE
   floorId?: string; // BE floor GUID
   currentOrder?: string;
@@ -73,16 +73,6 @@ export default function TablesPage() {
       badge:
         "bg-[var(--primary-soft)] text-[var(--primary)] border-[var(--primary-border)]",
     },
-    reserved: {
-      color: "bg-blue-500",
-      text: tDashboard("tables.status.reserved"),
-      badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    },
-    cleaning: {
-      color: "bg-red-500",
-      text: tDashboard("tables.status.cleaning"),
-      badge: "bg-red-500/10 text-red-500 border-red-500/20",
-    },
   };
 
   const filteredTables = tables.filter((table) => {
@@ -120,9 +110,7 @@ export default function TablesPage() {
 
       const mappedTables: Table[] = items.map(item => {
         let status: Table['status'] = 'available';
-        if (item.tableStatusId === TableStatus.Reserved) status = 'reserved';
         if (item.tableStatusId === TableStatus.Occupied) status = 'occupied';
-        if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
 
         return {
           id: item.id,
@@ -251,7 +239,7 @@ export default function TablesPage() {
           tenantId: 'tenant-1',
           name: tDashboard('tables.card.table_name', { number: table.number }),
           seats: table.capacity,
-          status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
+          status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : 'DISABLED',
           area: table.area,
           position: { x: table.positionX, y: table.positionY },
           shape: table.shape as any,
@@ -287,7 +275,7 @@ export default function TablesPage() {
             tenantId: 'tenant-1',
             name: tDashboard('tables.card.table_name', { number: table.number }),
             seats: table.capacity,
-            status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : table.status === 'reserved' ? 'RESERVED' : table.status === 'cleaning' ? 'CLEANING' : 'DISABLED',
+            status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : 'DISABLED',
             area: table.area,
             position: { x: table.positionX, y: table.positionY },
             shape: table.shape as any,
@@ -355,7 +343,6 @@ export default function TablesPage() {
       };
 
       if (tableToUpdate.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
-      else if (tableToUpdate.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
 
       console.log('[Admin] Saving table position:', { tableId, x: position.x, y: position.y, floorId: effectiveFloorId });
       await tableService.updateTable(tableId, apiData);
@@ -410,7 +397,6 @@ export default function TablesPage() {
       };
 
       if (tableToUpdate.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
-      else if (tableToUpdate.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
 
       await tableService.updateTable(tableId, apiData);
 
@@ -529,7 +515,6 @@ export default function TablesPage() {
         if (keys.length === 1 && keys[0] === 'status' && values.status) {
           let statusId = TableStatus.Available;
           if (values.status === 'occupied') statusId = TableStatus.Occupied;
-          else if (values.status === 'reserved') statusId = TableStatus.Reserved;
 
           await tableService.updateStatus(selectedTable.id, statusId);
         } else {
@@ -555,7 +540,6 @@ export default function TablesPage() {
           };
 
           if (selectedTable.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
-          else if (selectedTable.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
 
           if (values.number !== undefined) apiData.code = values.number;
           if (values.capacity !== undefined) apiData.seatingCapacity = values.capacity;
@@ -571,7 +555,6 @@ export default function TablesPage() {
           if (values.status !== undefined) {
             if (values.status === 'available') apiData.tableStatusId = TableStatus.Available;
             else if (values.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
-            else if (values.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
           }
 
           await tableService.updateTable(selectedTable.id, apiData);
@@ -613,9 +596,7 @@ export default function TablesPage() {
         isActive: tableToUpdate.isActive,
         tableStatusId: tableToUpdate.status === 'occupied'
           ? TableStatus.Occupied
-          : tableToUpdate.status === 'reserved'
-            ? TableStatus.Reserved
-            : TableStatus.Available,
+          : TableStatus.Available,
         has3DView: clear ? false : Boolean(file || tableToUpdate.cubeFrontImageUrl || tableToUpdate.defaultViewUrl),
         viewDescription: clear ? '' : 'Panorama',
         defaultViewUrl: clear ? '' : (tableToUpdate.cubeFrontImageUrl || tableToUpdate.defaultViewUrl || ''),
@@ -806,11 +787,11 @@ export default function TablesPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl p-4 bg-[var(--card)] border border-green-500/20">
+            <div className="rounded-xl p-4 bg-[var(--card)] border border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.available")}</p>
-                  <p className="text-3xl font-bold text-green-500 mt-1">{tables.filter(t => t.status === 'available').length}</p>
+                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.total_tables")}</p>
+                  <p className="text-3xl font-bold text-[var(--text)] mt-1">{tables.length}</p>
                 </div>
               </div>
             </div>
@@ -822,11 +803,11 @@ export default function TablesPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl p-4 bg-[var(--card)] border border-blue-500/20">
+            <div className="rounded-xl p-4 bg-[var(--card)] border border-green-500/20">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.reserved")}</p>
-                  <p className="text-3xl font-bold text-blue-500 mt-1">{tables.filter(t => t.status === 'reserved').length}</p>
+                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.available")}</p>
+                  <p className="text-3xl font-bold text-green-500 mt-1">{tables.filter(t => t.status === 'available').length}</p>
                 </div>
               </div>
             </div>
@@ -847,7 +828,7 @@ export default function TablesPage() {
                 readOnly={false}
                 selectedTableIds={selectedTable?.id ? [selectedTable.id] : []}
                 renderTableContent={(table) => {
-                  const hasOrder = table.status === "OCCUPIED" || table.status === "RESERVED";
+                  const hasOrder = table.status === "OCCUPIED";
                   return hasOrder && (
                     <div className="absolute -top-1 -right-1 bg-red-500 w-3 h-3 rounded-full" />
                   );

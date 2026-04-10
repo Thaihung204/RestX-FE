@@ -9,7 +9,7 @@ interface Table {
   id: string;
   number: string;
   capacity: number;
-  status: "available" | "occupied" | "reserved" | "cleaning";
+  status: "available" | "occupied";
   area: string;
   floorId?: string;
   currentOrder?: string;
@@ -51,18 +51,6 @@ const STATUS_OPTIONS = [
     color: "var(--primary)",
     gradient:
       "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)",
-  },
-  {
-    labelKey: "status_reserved",
-    value: "reserved",
-    color: "#1890ff",
-    gradient: "linear-gradient(135deg, #1890ff 0%, #40a9ff 100%)",
-  },
-  {
-    labelKey: "status_cleaning",
-    value: "cleaning",
-    color: "#faad14",
-    gradient: "linear-gradient(135deg, #faad14 0%, #ffc53d 100%)",
   },
 ];
 
@@ -336,7 +324,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
     number: "",
     capacity: 4,
     area: "" as string,
-    status: "available" as "available" | "occupied" | "reserved" | "cleaning",
+    status: "available" as "available" | "occupied",
     shape: "Square" as "Square" | "Circle" | "Rectangle" | "Oval",
     width: 80,
     height: 80,

@@ -9,7 +9,7 @@ import reservationService from '@/lib/services/reservationService';
 import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
 
-import { DatePicker, Select } from 'antd';
+import { DatePicker, TimePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -215,11 +215,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 };
 
                 /** Convert numeric-string status from BE floor layout to TableData status */
-                const parseLayoutStatus = (s: string): 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'CLEANING' => {
+                const parseLayoutStatus = (s: string): 'AVAILABLE' | 'OCCUPIED' => {
                     const normalized = s?.toLowerCase();
-                    if (s === '3' || normalized === 'cleaning') return 'CLEANING';
-                    if (s === '2' || normalized === 'occupied') return 'OCCUPIED';
-                    if (s === '1' || normalized === 'reserved') return 'RESERVED';
+                    if (s === '1' || normalized === 'occupied') return 'OCCUPIED';
                     return 'AVAILABLE';
                 };
 
@@ -295,10 +293,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                         const maxX = Math.max(...floorTables.map(t => (t.positionX ?? 0) + (t.width ?? 100)), 800);
                         const maxY = Math.max(...floorTables.map(t => (t.positionY ?? 0) + (t.height ?? 100)), 600);
                         const tableDataList: TableData[] = floorTables.map(t => {
-                            let status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'CLEANING' = 'AVAILABLE';
-                            if (t.tableStatusName?.toLowerCase() === 'cleaning') status = 'CLEANING';
-                            else if (t.tableStatusId === TableStatus.Occupied) status = 'OCCUPIED';
-                            else if (t.tableStatusId === TableStatus.Reserved) status = 'RESERVED';
+                            let status: 'AVAILABLE' | 'OCCUPIED' = 'AVAILABLE';
+                            if (t.tableStatusId === TableStatus.Occupied) status = 'OCCUPIED';
                             return {
                                 id: t.id,
                                 tenantId: tenant?.id || 'default',
@@ -559,27 +555,36 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                                 <div className="pill-segment">
                                     <span className="pill-label">{t('landing.booking.form.preferred_time')}</span>
-                                        <Select
+                                    <TimePicker
                                         className="reservation-time-select pill-control"
                                         classNames={{ popup: { root: 'reservation-time-popup' } }}
-                                            value={booking.time}
-                                            onChange={(value) => setBooking({ ...booking, time: value })}
-                                            notFoundContent={<div className="text-center py-4 text-sm" style={{color: 'var(--text-muted)'}}>{t('landing.booking.form.no_slots')}</div>}
-                                            options={(() => {
-                                                const today = getTodayLocalDate();
-                                                return timeSlots
-                                                    .filter((slot) => {
-                                                        if (booking.date !== today) return true;
-                                                        const [h, m] = slot.split(':').map(Number);
-                                                        const slotDate = new Date();
-                                                        slotDate.setHours(h, m, 0, 0);
-                                                        return slotDate.getTime() > Date.now();
-                                                    })
-                                                    .map((slot) => ({ label: slot, value: slot }));
-                                            })()}
-                                            prefix={<span className="material-symbols-outlined text-[var(--primary)]">schedule</span>}
-                                            suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">expand_more</span>}
-                                        />
+                                        value={dayjs(booking.time, 'HH:mm')}
+                                        format="HH:mm"
+                                        minuteStep={5}
+                                        allowClear={false}
+                                        showNow={false}
+                                        suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">expand_more</span>}
+                                        onChange={(value) => {
+                                            if (!value) return;
+                                            setBooking({ ...booking, time: value.format('HH:mm') });
+                                        }}
+                                        disabledTime={() => {
+                                            const today = getTodayLocalDate();
+                                            if (booking.date !== today) return {};
+
+                                            const now = dayjs();
+                                            const currentHour = now.hour();
+                                            const currentMinute = now.minute();
+
+                                            return {
+                                                disabledHours: () => Array.from({ length: currentHour }, (_, i) => i),
+                                                disabledMinutes: (selectedHour: number) => {
+                                                    if (selectedHour !== currentHour) return [];
+                                                    return Array.from({ length: currentMinute + 1 }, (_, i) => i);
+                                                },
+                                            };
+                                        }}
+                                    />
                                 </div>
 
                                 <div className="pill-divider" />
@@ -701,9 +706,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     {[
                                         { bg: 'bg-[#f6ffed]', border: 'border-[#52c41a]', label: 'Available' },
                                         { bg: 'bg-[var(--primary-soft)]', border: 'border-[var(--primary)] shadow-md shadow-[var(--primary-glow)]', label: 'Selected' },
-                                        { bg: 'bg-[#fff1f0]', border: 'border-[#ff4d4f] diagonal-stripe opacity-60', label: 'Occupied' },
-                                        { bg: 'bg-[#e6f7ff]', border: 'border-[#1890ff]', label: 'Reserved' },
-                                        { bg: 'bg-[#fff7e6]', border: 'border-[#faad14]', label: 'Cleaning' }
+                                        { bg: 'bg-[#fff1f0]', border: 'border-[#ff4d4f] diagonal-stripe opacity-60', label: 'Occupied' }
                                     ].map((legend, i) => (
                                         <div key={i} className="flex items-center gap-4">
                                             <div className={`w-6 h-6 rounded-lg border-2 ${legend.bg} ${legend.border}`} />
@@ -1238,8 +1241,13 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     color: var(--text-muted) !important;
                 }
 
+                .pill-control .ant-picker-input {
+                    justify-content: center;
+                }
+
                 .pill-control .ant-picker-input > input {
-                    padding-left: 4px;
+                    padding-left: 0;
+                    text-align: center;
                 }
 
                 .pill-control .ant-select-arrow,
@@ -1353,24 +1361,55 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     overscroll-behavior: contain;
                 }
 
+                .reservation-time-popup .ant-picker-panel-container,
+                .reservation-time-popup .ant-picker-panel,
+                .reservation-time-popup .ant-picker-time-panel,
+                .reservation-time-popup .ant-picker-content,
+                .reservation-time-popup .ant-picker-footer {
+                    background: var(--card) !important;
+                    color: var(--text) !important;
+                    border-color: var(--border) !important;
+                }
+
+                .reservation-time-popup .ant-picker-time-panel-column > li {
+                    color: var(--text-muted) !important;
+                }
+
+                .reservation-time-popup .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+                    background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
+                    color: var(--text) !important;
+                    border-radius: 8px !important;
+                }
+
+                .reservation-time-popup .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-disabled {
+                    opacity: 0.35;
+                }
+
+                .reservation-time-popup .ant-picker-now-btn {
+                    color: var(--primary) !important;
+                }
+
+                .reservation-time-popup .ant-picker-ok button {
+                    color: var(--on-primary) !important;
+                    background: var(--primary) !important;
+                    border-color: var(--primary) !important;
+                }
+
                 .reservation-time-popup .rc-virtual-list-holder,
                 .reservation-guest-popup .rc-virtual-list-holder {
                     overscroll-behavior: contain;
                 }
 
-                .reservation-time-popup .ant-select-item,
                 .reservation-guest-popup .ant-select-item {
                     color: var(--text) !important;
                     border-radius: 8px !important;
                     font-weight: 600 !important;
                 }
 
-                .reservation-time-popup .ant-select-item-option-active,
                 .reservation-guest-popup .ant-select-item-option-active {
                     background: var(--surface-subtle) !important;
                 }
 
-                .reservation-time-popup .ant-select-item-option-selected,
                 .reservation-guest-popup .ant-select-item-option-selected {
                     background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
                     color: var(--text) !important;

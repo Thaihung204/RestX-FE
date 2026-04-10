@@ -1,962 +1,885 @@
 'use client';
 
+import orderService, { OrderDto } from '@/lib/services/orderService';
+import orderSignalRService from '@/lib/services/orderSignalRService';
+import orderStatusService from '@/lib/services/orderStatusService';
+import reservationService, { ReservationListItem } from '@/lib/services/reservationService';
 import { floorService, FloorSummary, tableService, TableStatus as TableStatusEnum } from '@/lib/services/tableService';
-import React, { useCallback, useEffect, useState } from 'react';
-import { TableData as Map2DTableData } from '../../admin/tables/components/DraggableTable';
-import { Floor, Layout, TableMap2D } from '../../admin/tables/components/TableMap2D';
-import { useThemeMode } from '../../theme/AntdProvider';
-
+import { useTenant } from '@/lib/contexts/TenantContext';
 import {
-    CheckCircleOutlined,
-    ClockCircleOutlined,
-    DollarOutlined,
-    EditOutlined,
-    ExclamationCircleOutlined,
-    PlusOutlined,
-    ShoppingCartOutlined,
-    SwapOutlined,
-    TableOutlined,
-    UserOutlined
+  CalendarOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  DollarOutlined,
+  FireOutlined,
+  LoginOutlined,
+  PhoneOutlined,
+  ShoppingCartOutlined,
+  TableOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
+import { HubConnectionState } from '@microsoft/signalr';
 import {
-    Button,
-    Card,
-    Col,
-    Divider,
-    Flex,
-    Form,
-    InputNumber,
-    message,
-    Modal,
-    Row,
-    Space,
-    Tabs,
-    Tag,
-    Typography,
+  Button,
+  Card,
+  Col,
+  Divider,
+  Input,
+  message,
+  Modal,
+  Row,
+  Select,
+  Tag,
+  Typography,
 } from 'antd';
+import { motion, AnimatePresence } from 'framer-motion';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useThemeMode } from '../../theme/AntdProvider';
 
 const { Title, Text } = Typography;
 
-// Table status types
-type TableStatus = 'available' | 'occupied' | 'reserved' | 'cleaning';
+type TableStatus = 'available' | 'occupied';
 
-interface TableData {
+interface TableActivityData {
   id: string;
   name: string;
   zone: string;
   floorId?: string;
+  floorName?: string;
   capacity: number;
-  positionX?: number;
-  positionY?: number;
   status: TableStatus;
   guests?: number;
-  startTime?: string;
-  order?: {
-    id: string;
-    items: number;
-    total: number;
-  };
-  reservation?: {
-    name: string;
-    time: string;
-    phone: string;
-  };
+  startAt?: string;
+  durationMinutes?: number;
+  orderId?: string;
+  orderReference?: string;
+  orderTotal?: number;
+  orderItemCount?: number;
+  orderStatusName?: string;
+  orderStatusColor?: string;
+  paymentStatusName?: string;
+  customerName?: string;
+  reservationCode?: string;
+  reservationId?: string;
+  reservationTime?: string;
+  reservationGuests?: number;
+  reservationContactName?: string;
+  reservationContactPhone?: string;
+  reservationStatusName?: string;
+  positionX?: number;
+  positionY?: number;
 }
 
-const getStatusConfig = (mode: 'light' | 'dark', t: (key: string) => string) => {
-  const isDark = mode === 'dark';
-  return {
-    available: {
-      color: '#52c41a',
-      bgColor: isDark ? 'rgba(82, 196, 26, 0.15)' : '#f6ffed',
-      text: t('staff.tables.status.available'),
-      icon: <CheckCircleOutlined />,
-    },
-    occupied: {
-      color: 'var(--primary)',
-      bgColor: isDark ? 'rgba(255, 56, 11, 0.15)' : 'rgba(255, 56, 11, 0.08)',
-      text: t('staff.tables.status.occupied'),
-      icon: <UserOutlined />,
-    },
-    reserved: {
-      color: '#1890ff',
-      bgColor: isDark ? 'rgba(24, 144, 255, 0.15)' : '#e6f7ff',
-      text: t('staff.tables.status.reserved'),
-      icon: <ClockCircleOutlined />,
-    },
-    cleaning: {
-      color: 'var(--primary)',
-      bgColor: isDark ? 'rgba(250, 173, 20, 0.15)' : '#fffbe6',
-      text: t('staff.tables.status.cleaning'),
-      icon: <ExclamationCircleOutlined />,
-    },
-  } as Record<TableStatus, { color: string; bgColor: string; text: string; icon: React.ReactNode }>;
-};
+const getTableStatusConfig = (mode: 'light' | 'dark') => ({
+  available: {
+    color: '#52c41a',
+    bg: mode === 'dark' ? 'rgba(82,196,26,0.12)' : '#f6ffed',
+    border: mode === 'dark' ? 'rgba(82,196,26,0.3)' : '#b7eb8f',
+    label: 'staff.floor_activity.status.available',
+    icon: <CheckCircleOutlined />,
+    pulse: false,
+  },
+  occupied: {
+    color: 'var(--primary)',
+    bg: mode === 'dark' ? 'rgba(255,56,11,0.13)' : 'rgba(255,56,11,0.07)',
+    border: mode === 'dark' ? 'rgba(255,56,11,0.35)' : 'rgba(255,56,11,0.25)',
+    label: 'staff.floor_activity.status.occupied',
+    icon: <UserOutlined />,
+    pulse: true,
+  },
+});
 
-type ViewMode = 'grid' | 'map';
+function tint(color: string, percent: number): string {
+  return `color-mix(in srgb, ${color} ${percent}%, transparent)`;
+}
 
-export default function TableManagement() {
-  const { mode } = useThemeMode();
+export default function TablesPage() {
   const { t } = useTranslation();
-  const [messageApi, contextHolder] = message.useMessage();
-  const [tables, setTables] = useState<TableData[]>([]);
-  const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isOpenTableModal, setIsOpenTableModal] = useState(false);
-  const [activeZone, setActiveZone] = useState('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [beFloors, setBeFloors] = useState<FloorSummary[]>([]);
-  const [layout, setLayout] = useState<Layout | null>(null);
+  const { mode } = useThemeMode();
+  const { tenant } = useTenant();
 
-  const [form] = Form.useForm();
+  const [tables, setTables] = useState<TableActivityData[]>([]);
+  const [floors, setFloors] = useState<FloorSummary[]>([]);
+  const [activeFloorId, setActiveFloorId] = useState<string>('all');
+  const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
+  const [reservationKeyword, setReservationKeyword] = useState('');
+  const [reservationStatusFilter, setReservationStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'checkin'>('all');
+  const [selectedTable, setSelectedTable] = useState<TableActivityData | null>(null);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const inFlightRef = useRef(false);
 
-  // Fetch tables + floors
-  const fetchTables = useCallback(async () => {
+  // Viewport
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  const statusConfig = getTableStatusConfig(mode);
+
+  // Fetch all data
+  const fetchData = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     try {
-      const [items, floors] = await Promise.all([
-        tableService.getAllTables(),
-        floorService.getAllFloors(),
+      const safe = async <T,>(promise: Promise<T>, fallback: T, label: string): Promise<T> => {
+        try {
+          return await promise;
+        } catch (error) {
+          console.warn(`${label} unavailable in tables page:`, error);
+          return fallback;
+        }
+      };
+
+      const [tableData, floorData, orderStatusData, orderData, reservationData] = await Promise.all([
+        safe(tableService.getAllTables(), [], 'Tables'),
+        safe(floorService.getAllFloors(), [], 'Floors'),
+        safe(orderStatusService.getAllStatuses(), [], 'Order statuses'),
+        safe(orderService.getAllOrders(), [], 'Orders'),
+        safe(
+          reservationService.getReservations({
+            pageNumber: 1,
+            pageSize: 200
+          }),
+          {
+            items: [],
+            totalCount: 0,
+            pageNumber: 1,
+            pageSize: 200,
+            totalPages: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+          'Reservations'
+        ),
       ]);
 
-      setBeFloors(floors);
+      setFloors(floorData);
 
-      const mappedTables: TableData[] = items.map(item => {
+      // Build order map: tableId -> latest active order (skip completed/cancelled for non-occupied tables)
+      const orderMap = new Map<string, OrderDto>();
+      for (const order of orderData) {
+        const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
+        const tableId =
+          (order.tableId && order.tableId !== EMPTY_GUID ? order.tableId : undefined) ||
+          (order.tableSessions ?? []).map((s) => s?.tableId).find((id): id is string => !!id && id !== EMPTY_GUID) ||
+          (order.tableIds ?? []).find((id): id is string => !!id && id !== EMPTY_GUID);
+
+        if (!tableId) continue;
+
+        // Skip cancelled orders only — completed orders still matter for occupied tables
+        if (order.cancelledAt) continue;
+
+        const current = orderMap.get(tableId);
+        if (!current) {
+          orderMap.set(tableId, order);
+          continue;
+        }
+
+        const currentTime = new Date(current.createdDate || 0).getTime();
+        const nextTime = new Date(order.createdDate || 0).getTime();
+        if (nextTime >= currentTime) {
+          orderMap.set(tableId, order);
+        }
+      }
+
+      // Build reservation map: include all reservations except cancelled/no-show
+      const reservationMap = new Map<string, ReservationListItem>();
+
+      for (const reservation of reservationData.items ?? []) {
+        // Exclude only cancelled and no-show reservations, keep everything else
+        // so occupied tables still show their reservation info
+        const code = reservation.status?.code?.toUpperCase();
+        if (code === 'CANCELLED' || code === 'NO_SHOW' || code === 'NOSHOW') continue;
+
+        for (const table of reservation.tables ?? []) {
+          if (!reservationMap.has(table.id)) {
+            reservationMap.set(table.id, reservation);
+          }
+        }
+      }
+
+      const mapped: TableActivityData[] = tableData.map((item) => {
+        // BE only has Available(0) and Occupied(1)
         let status: TableStatus = 'available';
-        if (item.tableStatusId === TableStatusEnum.Reserved) status = 'reserved';
         if (item.tableStatusId === TableStatusEnum.Occupied) status = 'occupied';
-        if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
+
+        const order = orderMap.get(item.id);
+        let reservation = reservationMap.get(item.id);
+
+        // If table has an active order linked to a reservation, prioritize that reservation
+        if (order?.reservationId) {
+          const linkedRes = (reservationData.items ?? []).find(r => r.id === order.reservationId);
+          if (linkedRes) reservation = linkedRes;
+        }
+
+        // Only attach order data to occupied tables
+        const isOccupied = status === 'occupied';
+        const matchedStatus = isOccupied && order
+          ? orderStatusData.find((s) => Number(s.id) === Number(order.orderStatusId))
+          : undefined;
+
+        const startAt = isOccupied ? (order?.createdDate || undefined) : undefined;
 
         return {
           id: item.id,
           name: item.code,
-          zone: item.floorName || item.type || 'Other',
+          zone: item.type || 'Other',
           floorId: item.floorId,
+          floorName: item.floorName,
           capacity: item.seatingCapacity,
           positionX: Number(item.positionX) || 0,
           positionY: Number(item.positionY) || 0,
           status,
-          guests: item.tableStatusId === TableStatusEnum.Occupied ? 2 : undefined,
-          startTime: item.tableStatusId === TableStatusEnum.Occupied ? '18:30' : undefined,
-          order: item.tableStatusId === TableStatusEnum.Occupied ? { id: 'ORD-MOCK', items: 3, total: 150000 } : undefined,
+          guests: undefined,
+          startAt,
+          // Order data — only for occupied tables
+          orderId: isOccupied ? order?.id : undefined,
+          orderReference: isOccupied ? (order?.reference || undefined) : undefined,
+          orderTotal: isOccupied && order ? Number(order.totalAmount || 0) : undefined,
+          orderItemCount: isOccupied && order ? (order.orderDetails?.length ?? 0) : undefined,
+          orderStatusName: matchedStatus?.name,
+          orderStatusColor: matchedStatus?.color,
+          paymentStatusName: isOccupied ? (order?.paymentStatusName || undefined) : undefined,
+          customerName: isOccupied
+            ? (order?.customerName?.trim() || (order?.customerId ? `Customer #${order.customerId.slice(0, 8)}` : undefined))
+            : undefined,
+          // Reservation data — only for reserved tables
+          reservationCode: reservation?.confirmationCode,
+          reservationId: reservation?.id,
+          reservationTime: reservation?.reservationDateTime,
+          reservationGuests: reservation?.numberOfGuests,
+          reservationContactName: reservation?.contactName,
+          reservationContactPhone: reservation?.contactPhone,
+          reservationStatusName: reservation?.status?.name,
         };
       });
-      setTables(mappedTables);
-    } catch (error) {
-      console.error('Failed to fetch tables:', error);
-      messageApi.error(t('staff.orders.messages.fetch_tables_failed') || 'Failed to fetch tables');
+
+      setTables(mapped);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error('Tables page fetch failed:', err);
+    } finally {
+      inFlightRef.current = false;
     }
-  }, [messageApi, t]);
-
-  useEffect(() => {
-    fetchTables();
-  }, [fetchTables]);
-
-  useEffect(() => {
-    if (beFloors.length === 0 && tables.length === 0) return;
-
-    const floors: Floor[] = beFloors.map((bf) => ({
-      id: bf.id,
-      name: bf.name,
-      width: Number(bf.width) || 1400,
-      height: Number(bf.height) || 900,
-      backgroundImage: bf.imageUrl || undefined,
-      tables: tables
-        .filter((table) => table.floorId === bf.id)
-        .map((table) => ({
-          id: table.id,
-          tenantId: 'tenant-1',
-          name: table.name,
-          seats: table.capacity,
-          status:
-            table.status === 'available'
-              ? 'AVAILABLE'
-              : table.status === 'occupied'
-                ? 'OCCUPIED'
-                : table.status === 'reserved'
-                  ? 'RESERVED'
-                  : 'DISABLED',
-          area: table.zone,
-          position: { x: table.positionX || 0, y: table.positionY || 0 },
-          shape: 'Rectangle',
-          width: 100,
-          height: 100,
-          rotation: 0,
-        } as Map2DTableData)),
-    }));
-
-    if (floors.length === 0) return;
-
-    setLayout((prev) => ({
-      id: 'staff-layout',
-      name: 'Staff View',
-      activeFloorId: prev?.activeFloorId && floors.some((f) => f.id === prev.activeFloorId) ? prev.activeFloorId : floors[0].id,
-      floors,
-    }));
-  }, [tables, beFloors]);
-
-  // Check mobile viewport
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const statusConfig = getStatusConfig(mode, t);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  const filteredTables = activeZone === 'all'
+  // SignalR realtime updates
+  useEffect(() => {
+    if (!tenant?.id) return;
+    const tenantId = tenant.id;
+    let debounceTimer: ReturnType<typeof setTimeout>;
+    let mounted = true;
+
+    const handleChange = (payload: unknown) => {
+      if (!mounted) return;
+      const p = payload as Record<string, unknown>;
+      const changedTenantId = (p?.tenantId || (p?.order as Record<string, unknown>)?.tenantId) as string | undefined;
+      if (changedTenantId && changedTenantId !== tenantId) return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => { if (mounted) fetchData(); }, 500);
+    };
+
+    const events = [
+      'orders.created',
+      'orders.updated',
+      'orders.deleted',
+      'reservations.created',
+      'reservations.updated',
+      'reservations.deleted',
+      'reservations.checkedin',
+      'tables.updated',
+    ];
+
+    const setup = async () => {
+      try {
+        await orderSignalRService.start();
+        const conn = orderSignalRService.getConnection();
+        if (conn.state === HubConnectionState.Connected) {
+          await orderSignalRService.invoke('JoinTenantGroup', tenantId);
+          events.forEach((e) => orderSignalRService.on(e, handleChange));
+        }
+      } catch (e) { console.error('SignalR tables page:', e); }
+    };
+    setup();
+
+    return () => {
+      mounted = false;
+      clearTimeout(debounceTimer);
+      events.forEach((e) => orderSignalRService.off(e, handleChange));
+      orderSignalRService.invoke('LeaveTenantGroup', tenantId).catch(() => { });
+    };
+  }, [tenant?.id, fetchData]);
+
+  const handleCheckIn = async (confirmationCode: string) => {
+    setIsCheckingIn(true);
+    try {
+      await reservationService.checkInReservation(confirmationCode);
+      message.success(t('staff.floor_activity.modal.checkin_success'));
+      setSelectedTable(null);
+      await fetchData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      message.error(msg || t('staff.floor_activity.modal.checkin_error'));
+    } finally {
+      setIsCheckingIn(false);
+    }
+  };
+
+  // Filter tables by active floor + reservation code + reservation status
+  const reservationKeywordNormalized = reservationKeyword.trim().toLowerCase();
+  const floorFilteredTables = activeFloorId === 'all'
     ? tables
-    : tables.filter(t => (t.floorId || t.zone) === activeZone);
+    : tables.filter((t) => t.floorId === activeFloorId);
 
-  const handleTableClick = (table: TableData) => {
-    setSelectedTable(table);
-    setIsModalOpen(true);
-  };
+  const keywordFilteredTables = reservationKeywordNormalized
+    ? floorFilteredTables.filter((t) =>
+      (t.reservationCode || '').toLowerCase().includes(reservationKeywordNormalized)
+    )
+    : floorFilteredTables;
 
-  const handleMap2DTableClick = (mapTable: Map2DTableData) => {
-    const foundTable = tables.find(t => t.id === mapTable.id);
-    if (foundTable) {
-      handleTableClick(foundTable);
-    }
-  };
+  const filteredTables = keywordFilteredTables.filter((t) => {
+    if (reservationStatusFilter === 'all') return true;
+    const statusName = (t.reservationStatusName || '').toLowerCase();
+    if (reservationStatusFilter === 'pending') return statusName.includes('pending');
+    if (reservationStatusFilter === 'confirmed') return statusName.includes('confirm');
+    if (reservationStatusFilter === 'checkin') return statusName.includes('check') || statusName.includes('arrived');
+    return true;
+  });
 
-  const handleOpenTable = () => {
-    if (selectedTable) {
-      setIsModalOpen(false);
-      setIsOpenTableModal(true);
-    }
-  };
+  // Practical staff metrics
+  const statsAvailable = filteredTables.filter((t) => t.status === 'available').length;
+  const statsHasReservation = filteredTables.filter((t) => t.status === 'available' && !!(t.reservationCode || t.reservationContactName)).length;
 
-  const handleConfirmOpenTable = async (values: { guests: number }) => {
-    if (selectedTable) {
-      try {
-        await tableService.updateStatus(selectedTable.id, TableStatusEnum.Occupied);
-        // If there is an API to set guests, call it here. For now, we only update status.
-        messageApi.success(t('staff.tables.messages.table_opened', { table: selectedTable.name, guests: values.guests }));
-        await fetchTables();
-        setIsOpenTableModal(false);
-        form.resetFields();
-      } catch (error) {
-        console.error("Failed to open table:", error);
-        messageApi.error("Failed to open table");
-      }
-    }
-  };
-
-  const handleCloseTable = async () => {
-    if (selectedTable) {
-      try {
-        // Attempt to set status to cleaning via updateTable if supported, or just Available
-        // Using updateTable with tableStatusName check
-        await tableService.updateTable(selectedTable.id, { tableStatusName: 'Cleaning' });
-        messageApi.success(t('staff.tables.messages.table_closed', { table: selectedTable.name }));
-        await fetchTables();
-        setIsModalOpen(false);
-      } catch (error) {
-        console.error("Failed to close table:", error);
-        messageApi.error("Failed to close table");
-      }
-    }
-  };
-
-  const handleFinishCleaning = async () => {
-    if (selectedTable) {
-      try {
-        await tableService.updateStatus(selectedTable.id, TableStatusEnum.Available);
-        messageApi.success(t('staff.tables.messages.table_ready', { table: selectedTable.name }));
-        await fetchTables();
-        setIsModalOpen(false);
-      } catch (error) {
-        console.error("Failed to finish cleaning:", error);
-        messageApi.error("Failed to update status");
-      }
-    }
-  };
-
-  const renderTableCard = (table: TableData) => {
-    const config = statusConfig[table.status];
-
-    return (
-      <div style={{ width: '100%', height: '100%' }}>
-        <Card
-          hoverable
-          onClick={() => handleTableClick(table)}
-          style={{
-            borderRadius: 12,
-            border: `2px solid ${config.color}20`,
-            background: config.bgColor,
-            cursor: 'pointer',
-            transition: 'all 0.3s',
-            height: '100%',
-            minHeight: isMobile ? 180 : 220,
-            width: '100%',
-            overflow: 'hidden',
-          }}
-          styles={{ body: { padding: isMobile ? 14 : 20, height: '100%', display: 'flex', flexDirection: 'column' } }}
-        >
-          <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column' }}>
-            {/* Table Icon */}
-            <div
-              style={{
-                width: isMobile ? 48 : 64,
-                height: isMobile ? 48 : 64,
-                borderRadius: 12,
-                background: `${config.color}15`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 12px',
-                border: `2px solid ${config.color}30`,
-              }}
-            >
-              <TableOutlined style={{ fontSize: isMobile ? 20 : 28, color: config.color }} />
-            </div>
-
-            {/* Table Name */}
-            <Title level={isMobile ? 5 : 4} style={{ margin: '0 0 4px', color: 'var(--text)', fontSize: isMobile ? 16 : undefined }}>
-              {table.name}
-            </Title>
-
-            {/* Capacity */}
-            <Text style={{ fontSize: isMobile ? 13 : 14, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)', fontWeight: 400 }}>
-              <UserOutlined /> {table.capacity} {t('staff.tables.table.seats')}
-            </Text>
-
-            {/* Status Tag */}
-            <div style={{ marginTop: 12 }}>
-              <Tag
-                icon={config.icon}
-                color={config.color}
-                style={{
-                  borderRadius: 12,
-                  padding: '4px 12px',
-                  fontWeight: 500,
-                  border: 'none',
-                }}
-              >
-                {config.text}
-              </Tag>
-            </div>
-
-            {/* Additional Info - Spacer for equal heights */}
-            <div style={{ flex: 1, minHeight: 12 }} />
-
-            {/* Additional Info */}
-            {table.status === 'occupied' && table.startTime && (
-              <div style={{ marginTop: 'auto', padding: '8px', background: 'var(--card)', borderRadius: 8 }}>
-                <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  <ClockCircleOutlined /> {t('staff.tables.table.from')} {table.startTime}
-                </Text>
-                <br />
-                <Text style={{ fontSize: 14, color: 'var(--primary)', fontWeight: 500 }}>
-                  {table.guests} {t('staff.tables.table.guests')} • {table.order?.items} {t('staff.tables.table.dishes')}
-                </Text>
-              </div>
-            )}
-
-            {table.status === 'reserved' && table.reservation && (
-              <div style={{ marginTop: 'auto', padding: '8px', background: 'var(--card)', borderRadius: 8 }}>
-                <Text style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {t('staff.tables.table.booked_at')} {table.reservation.time}
-                </Text>
-                <br />
-                <Text style={{ fontSize: 14, color: '#1890ff', fontWeight: 500 }}>
-                  {table.reservation.name}
-                </Text>
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
-    );
-  };
+  // Group by floor for "all" view, or just show flat
+  const tableGroups: { label: string; id: string; tables: TableActivityData[] }[] =
+    activeFloorId === 'all'
+      ? [
+        ...floors.map((floor) => ({
+          label: floor.name,
+          id: floor.id,
+          tables: filteredTables.filter((t) => t.floorId === floor.id),
+        })),
+        {
+          label: t('staff.floor_activity.no_floor'),
+          id: '__no_floor__',
+          tables: filteredTables.filter((t) => !t.floorId || !floors.some((f) => f.id === t.floorId)),
+        },
+      ].filter((g) => g.tables.length > 0)
+      : [
+        {
+          label: floors.find((f) => f.id === activeFloorId)?.name || activeFloorId,
+          id: activeFloorId,
+          tables: filteredTables,
+        },
+      ];
 
   return (
-    <div>
-      {contextHolder}
-      {/* Header Stats */}
-      {/* ... (existing stats render) ... */}
-
-      <Card
-        style={{
-          borderRadius: 12,
-          border: '1px solid var(--border)',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-          overflow: 'hidden',
-        }}
-        styles={{ body: { padding: isMobile ? 12 : 24 } }}
+    <div className="floor-activity-root">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="floor-activity-header"
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 12 : 16 }}>
-          <Tabs
-            activeKey={activeZone}
-            onChange={setActiveZone}
-            size={isMobile ? 'small' : 'middle'}
-            items={[
-              { key: 'all', label: `${t('staff.tables.zones.all')} (${tables.length})` },
-              ...beFloors.map((floor) => ({
-                key: floor.id,
-                label: `${floor.name} (${tables.filter((tb) => tb.floorId === floor.id || (!tb.floorId && tb.zone === floor.name)).length})`,
-              })),
-            ]}
-          />
-
-          <div className="flex gap-2">
-            <Button
-              type={viewMode === 'grid' ? 'primary' : 'default'}
-              onClick={() => setViewMode('grid')}
-              icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              }
-            >
-              {t('staff.tables.view.grid')}
-            </Button>
-            <Button
-              type={viewMode === 'map' ? 'primary' : 'default'}
-              onClick={() => setViewMode('map')}
-              icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                </svg>
-              }
-            >
-              {t('staff.tables.view.map')}
-            </Button>
+        <div className="floor-activity-header-left">
+          <div className="floor-activity-title-row">
+            <span className="floor-activity-live-dot" />
+            <Title level={isMobile ? 5 : 4} style={{ margin: 0, color: 'var(--text)' }}>
+              {t('staff.menu.tables')}
+            </Title>
           </div>
+          <Text style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+            {t('staff.floor_activity.last_updated')}: {lastUpdated.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </Text>
         </div>
 
-        {viewMode === 'grid' ? (
-          <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]}>
-            {filteredTables.map(table => (
-              <Col xs={12} sm={8} md={6} lg={6} xl={4} key={table.id} style={{ display: 'flex' }}>
-                {renderTableCard(table)}
-              </Col>
-            ))}
-          </Row>
-        ) : layout ? (
-          <div style={{ position: 'relative' }}>
-            <div
-              style={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                zIndex: 10,
-                padding: '6px 10px',
-                borderRadius: 999,
-                fontSize: 12,
-                fontWeight: 600,
-                background: mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-                color: 'var(--text)',
-                border: '1px solid var(--border)',
-                backdropFilter: 'blur(4px)',
-              }}
-            >
-              View only
-            </div>
+        <div className="floor-activity-header-right" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Input
+            allowClear
+            value={reservationKeyword}
+            onChange={(e) => setReservationKeyword(e.target.value)}
+            placeholder={t('staff.floor_activity.search_placeholder')}
+            style={{ width: isMobile ? 170 : 240, borderRadius: 10 }}
+          />
+          <Select
+            value={reservationStatusFilter}
+            onChange={(value) => setReservationStatusFilter(value)}
+            style={{ width: isMobile ? 150 : 190 }}
+            options={[
+              { value: 'all', label: t('staff.floor_activity.filter.all') },
+              { value: 'pending', label: t('staff.floor_activity.filter.pending') },
+              { value: 'confirmed', label: t('staff.floor_activity.filter.confirmed') },
+              { value: 'checkin', label: t('staff.floor_activity.filter.checkin') },
+            ]}
+          />
+        </div>
+      </motion.div>
 
-            <TableMap2D
-              layout={layout}
-              onLayoutChange={setLayout}
-              onTableClick={handleMap2DTableClick}
-              onTablePositionChange={() => { }}
-              readOnly
-              renderTableContent={(table) => {
-                const hasOrder = table.status === 'OCCUPIED' || table.status === 'RESERVED';
-                return (
-                  hasOrder && (
+      {/* Stats Row */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.08 }}
+      >
+        <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
+          {[
+            { label: t('staff.floor_activity.stats.occupied'), value: filteredTables.filter((t) => t.status === 'occupied').length, color: 'var(--primary)', icon: <UserOutlined />, bg: 'rgba(255,56,11,0.08)' },
+            { label: t('staff.floor_activity.stats.available'), value: statsAvailable, color: '#52c41a', icon: <CheckCircleOutlined />, bg: 'rgba(82,196,26,0.08)' },
+            { label: t('staff.floor_activity.stats.has_reservation'), value: statsHasReservation, color: '#1890ff', icon: <ClockCircleOutlined />, bg: 'rgba(24,144,255,0.08)' },
+          ].map((stat, i) => (
+            <Col xs={12} sm={8} key={i}>
+              <motion.div
+                whileHover={!isMobile ? { y: -3 } : undefined}
+                transition={{ duration: 0.2 }}
+              >
+                <Card
+                  style={{
+                    borderRadius: isMobile ? 12 : 16,
+                    border: '1px solid var(--border)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    height: '100%',
+                  }}
+                  styles={{ body: { padding: isMobile ? '14px 16px' : '18px 20px' } }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 14 }}>
                     <div style={{
-                      position: 'absolute',
-                      top: -8,
-                      right: -8,
-                      background: 'var(--primary)',
-                      color: 'white',
-                      borderRadius: '50%',
-                      width: 20,
-                      height: 20,
+                      width: isMobile ? 36 : 44,
+                      height: isMobile ? 36 : 44,
+                      borderRadius: 10,
+                      background: stat.bg,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: 10,
-                      fontWeight: 'bold',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      fontSize: isMobile ? 16 : 20,
+                      color: stat.color,
+                      flexShrink: 0,
                     }}>
-                      !
+                      {stat.icon}
                     </div>
-                  )
-                );
-              }}
-            />
-          </div>
-        ) : (
-          <div className="py-10 text-center" style={{ color: 'var(--text-muted)' }}>
-            {t('staff.tables.messages.fetch_tables_failed')}
-          </div>
-        )}
-      </Card>
-      {/* Table Detail Modal */}
-      <Modal
-        title={
-          <Space>
-            <TableOutlined style={{ color: 'var(--primary)' }} />
-            <span>{t('staff.tables.modal.detail')} {selectedTable?.name}</span>
-          </Space>
-        }
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        footer={null}
-        width={isMobile ? '95%' : 500}
-        centered
-        style={{
-          backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
-          borderRadius: 12,
-        }}
-        styles={{
-          header: {
-            backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
-            borderRadius: '12px 12px 0 0',
-            padding: '16px 24px',
-            paddingRight: '56px',
-          },
-          body: { backgroundColor: mode === 'dark' ? '#0A0E14' : '#FFFFFF' },
-          footer: {
-            borderRadius: '0 0 12px 12px',
-          },
-          mask: {
-            background: mode === 'dark' ? 'rgba(0, 0, 0, 0.92)' : 'rgba(0, 0, 0, 0.45)',
-            backdropFilter: 'none',
-            WebkitBackdropFilter: 'none',
-            filter: 'none',
-          },
-        }}
+                    <div>
+                      <Text style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-muted)', display: 'block' }}>{stat.label}</Text>
+                      <Text style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: stat.color, lineHeight: 1.1 }}>{stat.value}</Text>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            </Col>
+          ))}
+        </Row>
+      </motion.div>
+
+
+      {/* Floor Tabs */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.18 }}
       >
-        {selectedTable && (
-          <div>
-            {/* Status Badge */}
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <div
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 12,
-                  background: statusConfig[selectedTable.status].bgColor,
-                  border: `3px solid ${statusConfig[selectedTable.status].color}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 12px',
-                }}
+        <div className="floor-activity-tabs-wrap">
+          {[
+            { id: 'all', name: t('staff.floor_activity.all_floors'), count: tables.length },
+            ...floors.map((f) => ({
+              id: f.id,
+              name: f.name,
+              count: tables.filter((t) => t.floorId === f.id).length,
+            })),
+          ].map((tab) => {
+            const isActive = activeFloorId === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveFloorId(tab.id)}
+                className={`floor-activity-tab ${isActive ? 'floor-activity-tab--active' : ''}`}
               >
-                <TableOutlined
-                  style={{
-                    fontSize: 36,
-                    color: statusConfig[selectedTable.status].color,
-                  }}
-                />
-              </div>
-              <Tag
-                color={statusConfig[selectedTable.status].color}
-                style={{ fontSize: 14, padding: '4px 16px', borderRadius: 20 }}
-              >
-                {statusConfig[selectedTable.status].text}
-              </Tag>
-            </div>
+                <span>{tab.name}</span>
+                <span className={`floor-activity-tab-badge ${isActive ? 'floor-activity-tab-badge--active' : ''}`}>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </motion.div>
 
-            {/* Info Grid */}
-            <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
-              <Col span={12}>
-                <Card
-                  size="small"
-                  style={{
-                    borderRadius: 16,
-                    background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
-                    border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
-                    overflow: 'hidden',
-                    boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
-                    transition: 'all 0.2s ease',
-                  }}
-                  styles={{ body: { padding: '16px 20px' } }}
-                >
-                  <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                    Floor
+      {/* Table Groups */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeFloorId + reservationKeywordNormalized}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25 }}
+        >
+          {tableGroups.map((group) => (
+            <div key={group.id} style={{ marginBottom: isMobile ? 20 : 28 }}>
+              {(activeFloorId === 'all' || tableGroups.length > 1) && (
+                <div className="floor-activity-group-header">
+                  <FireOutlined style={{ color: 'var(--primary)', fontSize: 14 }} />
+                  <Text style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{group.label}</Text>
+                  <div className="floor-activity-group-divider" />
+                  <Text style={{ fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>
+                    {group.tables.filter((t) => t.status === 'occupied').length}/{group.tables.length} {t('staff.floor_activity.occupied_suffix')}
                   </Text>
-                  <Text strong style={{ fontSize: 16, display: 'block' }}>{selectedTable.zone}</Text>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card
-                  size="small"
-                  style={{
-                    borderRadius: 16,
-                    background: mode === 'dark' ? 'var(--card)' : '#FFFFFF',
-                    border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #E5E7EB',
-                    overflow: 'hidden',
-                    boxShadow: mode === 'dark' ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
-                    transition: 'all 0.2s ease',
-                  }}
-                  styles={{ body: { padding: '16px 20px' } }}
-                >
-                  <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                    {t('staff.tables.modal.capacity')}
-                  </Text>
-                  <Text strong style={{ fontSize: 16, display: 'block' }}>{selectedTable.capacity} {t('staff.tables.table.guests')}</Text>
-                </Card>
-              </Col>
-            </Row>
-
-            {/* Occupied Info */}
-            {selectedTable.status === 'occupied' && selectedTable.order && (
-              <Card
-                size="small"
-                style={{
-                  borderRadius: 12,
-                  background: mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : 'rgba(255, 56, 11, 0.08)',
-                  border: `1px solid ${mode === 'dark' ? 'rgba(255, 56, 11, 0.3)' : 'rgba(255, 56, 11, 0.2)'}`,
-                  marginBottom: 24,
-                }}
-                styles={{ body: { padding: '20px 24px' } }}
-              >
-                <Row gutter={[16, 0]}>
-                  <Col span={8}>
-                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      {t('staff.tables.modal.guest_count')}
-                    </Text>
-                    <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2 }}>
-                      {selectedTable.guests}
-                    </Text>
-                  </Col>
-                  <Col span={8}>
-                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      {t('staff.tables.modal.start_time')}
-                    </Text>
-                    <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2 }}>
-                      {selectedTable.startTime}
-                    </Text>
-                  </Col>
-                  <Col span={8}>
-                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      {t('staff.tables.modal.total')}
-                    </Text>
-                    <Text strong style={{ fontSize: 20, display: 'block', lineHeight: 1.2, color: 'var(--primary)' }}>
-                      {selectedTable.order.total.toLocaleString('vi-VN')}đ
-                    </Text>
-                  </Col>
-                </Row>
-              </Card>
-            )}
-
-            {/* Reserved Info */}
-            {selectedTable.status === 'reserved' && selectedTable.reservation && (
-              <Card
-                size="small"
-                style={{
-                  borderRadius: 16,
-                  background: mode === 'dark'
-                    ? 'linear-gradient(135deg, rgba(24, 144, 255, 0.15) 0%, rgba(24, 144, 255, 0.1) 100%)'
-                    : 'linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%)',
-                  border: `1px solid ${mode === 'dark' ? 'rgba(24, 144, 255, 0.3)' : '#91d5ff'}`,
-                  marginBottom: 20,
-                  overflow: 'hidden',
-                  boxShadow: mode === 'dark' ? 'none' : '0 2px 12px rgba(24, 144, 255, 0.1)',
-                }}
-                styles={{ body: { padding: '20px 24px' } }}
-              >
-                <Flex vertical gap={16} style={{ width: '100%' }}>
-                  <div>
-                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 6, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      {t('staff.tables.modal.reserved_by')}
-                    </Text>
-                    <Text strong style={{ fontSize: 15, display: 'block' }}>{selectedTable.reservation.name}</Text>
-                  </div>
-                  <div>
-                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 6, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      {t('staff.tables.modal.reservation_time')}
-                    </Text>
-                    <Text strong style={{ fontSize: 15, display: 'block' }}>{selectedTable.reservation.time}</Text>
-                  </div>
-                  <div>
-                    <Text style={{ fontSize: 13, display: 'block', marginBottom: 6, fontWeight: 400, color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)' }}>
-                      {t('staff.tables.modal.phone')}
-                    </Text>
-                    <Text strong style={{ fontSize: 15, display: 'block' }}>{selectedTable.reservation.phone}</Text>
-                  </div>
-                </Flex>
-              </Card>
-            )}
-
-            {/* Actions */}
-            <Divider />
-            <Flex vertical gap={12} style={{ width: '100%' }}>
-              {selectedTable.status === 'available' && (
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  size="large"
-                  block
-                  onClick={handleOpenTable}
-                  style={{
-                    borderRadius: 12,
-                    height: 48,
-                    fontWeight: 500,
-                    background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
-                    border: 'none',
-                  }}
-                >
-                  {t('staff.tables.actions.open_table')}
-                </Button>
+                </div>
               )}
 
-              {selectedTable.status === 'occupied' && (
-                <>
-                  <Button
-                    type="primary"
-                    icon={<ShoppingCartOutlined />}
-                    size="large"
-                    block
-                    style={{
-                      borderRadius: 12,
-                      height: 48,
-                      fontWeight: 600,
-                      background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
-                      border: 'none',
-                    }}
-                  >
-                    {t('staff.tables.actions.add_dish')}
-                  </Button>
-                  <Row gutter={12}>
-                    <Col span={12}>
-                      <Button
-                        icon={<SwapOutlined />}
-                        size="large"
-                        block
-                        style={{ borderRadius: 12, height: 48 }}
+              <Row gutter={[isMobile ? 10 : 14, isMobile ? 10 : 14]}>
+                {group.tables.map((table, ti) => {
+                  const cfg = statusConfig[table.status];
+                  return (
+                    <Col xs={12} sm={8} md={6} lg={4} xl={4} key={table.id}>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.92 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.25, delay: Math.min(ti * 0.03, 0.3) }}
+                        whileHover={!isMobile ? { y: -4, transition: { duration: 0.18 } } : undefined}
+                        style={{ height: '100%' }}
                       >
-                        {t('staff.tables.actions.transfer_table')}
-                      </Button>
+                        <div
+                          className="floor-activity-table-card"
+                          style={{
+                            background: cfg.bg,
+                            borderColor: cfg.border,
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => setSelectedTable(table)}
+                        >
+                          {/* Pulse ring for occupied */}
+                          {table.status === 'occupied' && (
+                            <span className="floor-activity-pulse-ring" />
+                          )}
+
+                          {/* Top spacer/status row — keep consistent card layout */}
+                          <div className="floor-activity-table-top" style={{ justifyContent: 'flex-end' }}>
+                            {table.status === 'occupied' && table.orderStatusName ? (
+                              <span
+                                className="floor-activity-order-status-badge"
+                                style={{
+                                  background: table.orderStatusColor ? tint(table.orderStatusColor, 13) : 'var(--surface)',
+                                  color: table.orderStatusColor || 'var(--text-muted)',
+                                  border: `1px solid ${table.orderStatusColor ? tint(table.orderStatusColor, 26) : 'var(--border)'}`,
+                                }}
+                              >
+                                {table.orderStatusName}
+                              </span>
+                            ) : (
+                              <span className="floor-activity-order-status-badge" style={{ visibility: 'hidden' }}>
+                                Placeholder
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Table number — focal point, POS-style */}
+                          <div
+                            className="table-card-number-badge"
+                            style={{
+                              background: table.status === 'occupied' ? 'rgba(255,255,255,0.72)' : tint(cfg.color, 15),
+                              border: table.status === 'occupied' ? `2px solid ${tint(cfg.color, 40)}` : `2px solid ${tint(cfg.color, 28)}`,
+                              boxShadow: table.status === 'occupied' ? `0 0 0 1px ${tint(cfg.color, 22)} inset` : undefined,
+                            }}
+                          >
+                            <Text style={{ fontSize: 9, fontWeight: 700, color: cfg.color, opacity: 0.65, letterSpacing: 1.5, textTransform: 'uppercase', lineHeight: 1 }}>
+                              {t('staff.floor_activity.table_label')}
+                            </Text>
+                            <Text style={{ fontSize: isMobile ? 26 : 30, fontWeight: 900, color: cfg.color, lineHeight: 1.05 }}>
+                              {table.name}
+                            </Text>
+                          </div>
+
+                          {/* Capacity — clearly labeled */}
+                          <div className="table-card-capacity-row">
+                            <UserOutlined style={{ fontSize: 12, color: 'var(--text-muted)' }} />
+                            <Text style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>
+                              {table.capacity} {t('staff.floor_activity.seats_label')}
+                            </Text>
+                          </div>
+
+                          {/* Status tag */}
+                          <Tag
+                            style={{
+                              borderRadius: 20,
+                              fontSize: 11,
+                              padding: '2px 10px',
+                              border: 'none',
+                              background: tint(cfg.color, 20),
+                              color: cfg.color,
+                              marginTop: 4,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {cfg.icon} {t(cfg.label)}
+                          </Tag>
+
+                          {/* Time/detail row — always reserve space for consistent card height */}
+                          <div className="floor-activity-table-detail floor-activity-table-detail--fixed">
+                            {table.status === 'occupied' && table.startAt ? (
+                              <div className="floor-activity-detail-row">
+                                <ClockCircleOutlined style={{ fontSize: 10, color: 'var(--text-muted)' }} />
+                                <Text style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                  {new Date(table.startAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                </Text>
+                              </div>
+                            ) : table.status !== 'occupied' && table.reservationTime ? (
+                              <div className="floor-activity-detail-row">
+                                <CalendarOutlined style={{ fontSize: 10, color: '#1890ff' }} />
+                                <Text style={{ fontSize: 11, color: '#1890ff' }}>
+                                  {new Date(table.reservationTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                </Text>
+                              </div>
+                            ) : (
+                              <div className="floor-activity-detail-row" style={{ visibility: 'hidden' }}>
+                                <ClockCircleOutlined style={{ fontSize: 10 }} />
+                                <Text style={{ fontSize: 11 }}>00:00</Text>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
                     </Col>
-                    <Col span={12}>
+                  );
+                })}
+              </Row>
+            </div>
+          ))}
+
+          {tableGroups.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>
+              <TableOutlined style={{ fontSize: 40, marginBottom: 12, opacity: 0.4 }} />
+              <div>{t('staff.floor_activity.no_tables')}</div>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      <Modal
+        open={!!selectedTable}
+        onCancel={() => setSelectedTable(null)}
+        footer={null}
+        width={isMobile ? '95%' : 560}
+        centered
+        closable
+        wrapClassName="table-detail-modal-wrap"
+        styles={{
+          body: { padding: 0 },
+          mask: { backdropFilter: 'blur(2px)' },
+        }}
+      >
+        {selectedTable && (() => {
+          const cfg = statusConfig[selectedTable.status];
+          const hasReservation = !!(selectedTable.reservationCode || selectedTable.reservationContactName || selectedTable.reservationTime);
+          const hasOrder = !!(selectedTable.orderId && (selectedTable.orderStatusName || (selectedTable.orderItemCount ?? 0) > 0 || (selectedTable.orderTotal ?? 0) > 0));
+
+          return (
+            <div className="table-modal-root">
+              {/* Hero Banner */}
+              <div className="table-modal-hero" style={{ background: `linear-gradient(135deg, ${tint(cfg.color, 22)} 0%, ${tint(cfg.color, 8)} 100%)`, borderBottom: `1px solid ${tint(cfg.color, 25)}` }}>
+                <div className="table-modal-hero-icon" style={{ background: tint(cfg.color, 18), border: `2px solid ${tint(cfg.color, 35)}` }}>
+                  <TableOutlined style={{ fontSize: 32, color: cfg.color }} />
+                </div>
+                <div className="table-modal-hero-info">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>{selectedTable.name}</Title>
+                    <Tag
+                      style={{
+                        borderRadius: 20,
+                        padding: '3px 12px',
+                        border: 'none',
+                        background: `${cfg.color}20`,
+                        color: cfg.color,
+                        fontWeight: 700,
+                        fontSize: 12,
+                      }}
+                    >
+                      {cfg.icon} {t(cfg.label)}
+                    </Tag>
+                  </div>
+                  <div style={{ display: 'flex', gap: 16, marginTop: 6, flexWrap: 'wrap' }}>
+                    <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                      <UserOutlined style={{ marginRight: 5 }} />{selectedTable.capacity} {t('staff.floor_activity.modal.seats')}
+                    </Text>
+                    {selectedTable.floorName && (
+                      <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                        <TableOutlined style={{ marginRight: 5 }} />{selectedTable.floorName}
+                      </Text>
+                    )}
+                    {selectedTable.status === 'occupied' && selectedTable.startAt && (
+                      <Text style={{ fontSize: 13, color: cfg.color, fontWeight: 600 }}>
+                        <ClockCircleOutlined style={{ marginRight: 5 }} />{new Date(selectedTable.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                      </Text>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="table-modal-body">
+
+                {/* Reservation Section */}
+                {hasReservation && (
+                  <div className="table-modal-section">
+                    <div className="table-modal-section-header">
+                      <div className="table-modal-section-icon" style={{ background: 'rgba(24,144,255,0.12)', color: '#1890ff' }}>
+                        <CalendarOutlined />
+                      </div>
+                      <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>Reservation</Text>
+                      {selectedTable.reservationCode && (
+                        <span className="table-modal-code-badge">#{selectedTable.reservationCode}</span>
+                      )}
+                      {selectedTable.reservationStatusName && (
+                        <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>
+                          {selectedTable.reservationStatusName}
+                        </Tag>
+                      )}
+                    </div>
+
+                    <div className="table-modal-info-grid">
+                      {(selectedTable.reservationContactName || selectedTable.customerName) && (
+                        <div className="table-modal-info-row">
+                          <span className="table-modal-info-label"><UserOutlined /> {t('staff.floor_activity.modal.reserved_by')}</span>
+                          <span className="table-modal-info-value">{selectedTable.reservationContactName || selectedTable.customerName}</span>
+                        </div>
+                      )}
+                      {selectedTable.reservationContactPhone && (
+                        <div className="table-modal-info-row">
+                          <span className="table-modal-info-label"><PhoneOutlined /> {t('staff.floor_activity.modal.phone')}</span>
+                          <span className="table-modal-info-value" style={{ fontFamily: 'monospace' }}>{selectedTable.reservationContactPhone}</span>
+                        </div>
+                      )}
+                      {selectedTable.reservationTime && (
+                        <div className="table-modal-info-row">
+                          <span className="table-modal-info-label"><ClockCircleOutlined /> {t('staff.floor_activity.modal.reservation_time')}</span>
+                          <span className="table-modal-info-value">{new Date(selectedTable.reservationTime).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                        </div>
+                      )}
+                      {selectedTable.reservationGuests != null && (
+                        <div className="table-modal-info-row">
+                          <span className="table-modal-info-label"><UserOutlined /> {t('staff.floor_activity.modal.guest_count')}</span>
+                          <span className="table-modal-info-value">{selectedTable.reservationGuests} {t('staff.floor_activity.modal.guests')}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Check-in action */}
+                    {selectedTable.reservationCode && selectedTable.status === 'available' && (
                       <Button
-                        icon={<DollarOutlined />}
-                        size="large"
+                        type="primary"
+                        icon={<LoginOutlined />}
+                        loading={isCheckingIn}
+                        onClick={() => handleCheckIn(selectedTable.reservationCode!)}
                         block
+                        size="large"
                         style={{
+                          marginTop: 12,
                           borderRadius: 12,
-                          height: 48,
-                          background: '#52c41a',
-                          color: '#fff',
-                          border: 'none',
+                          height: 44,
+                          fontWeight: 700,
+                          fontSize: 14,
                         }}
                       >
-                        {t('staff.tables.actions.checkout')}
+                        {t('staff.floor_activity.modal.checkin_btn')}
                       </Button>
-                    </Col>
-                  </Row>
-                  <Button
-                    danger
-                    size="large"
-                    block
-                    onClick={handleCloseTable}
-                    style={{ borderRadius: 12, height: 48 }}
-                  >
-                    {t('staff.tables.actions.close_table')}
-                  </Button>
-                </>
-              )}
+                    )}
+                  </div>
+                )}
 
-              {selectedTable.status === 'reserved' && (
-                <>
-                  <Button
-                    type="primary"
-                    icon={<CheckCircleOutlined />}
-                    size="large"
-                    block
-                    onClick={handleOpenTable}
-                    style={{
-                      borderRadius: 12,
-                      height: 48,
-                      fontWeight: 500,
-                      background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
-                      border: 'none',
-                    }}
-                  >
-                    {t('staff.tables.actions.guest_arrived')}
-                  </Button>
-                  <Button
-                    icon={<EditOutlined />}
-                    size="large"
-                    block
-                    style={{ borderRadius: 12, height: 48 }}
-                  >
-                    {t('staff.tables.actions.edit_reservation')}
-                  </Button>
-                </>
-              )}
+                {/* Order Section */}
+                {hasOrder && (
+                  <>
+                    {hasReservation && <Divider style={{ margin: '0 0 16px' }} />}
+                    <div className="table-modal-section">
+                      <div className="table-modal-section-header">
+                        <div className="table-modal-section-icon" style={{ background: 'rgba(255,56,11,0.1)', color: 'var(--primary)' }}>
+                          <ShoppingCartOutlined />
+                        </div>
+                        <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>Order</Text>
+                        {selectedTable.orderReference && (
+                          <span className="table-modal-code-badge" style={{ background: 'rgba(255,56,11,0.1)', color: 'var(--primary)', border: '1px solid rgba(255,56,11,0.2)' }}>
+                            #{selectedTable.orderReference}
+                          </span>
+                        )}
+                        {selectedTable.orderStatusName && (
+                          <Tag
+                            style={{
+                              marginLeft: 'auto',
+                              borderRadius: 12,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              background: selectedTable.orderStatusColor ? `${selectedTable.orderStatusColor}20` : undefined,
+                              color: selectedTable.orderStatusColor || undefined,
+                              border: selectedTable.orderStatusColor ? `1px solid ${selectedTable.orderStatusColor}40` : undefined,
+                            }}
+                          >
+                            {selectedTable.orderStatusName}
+                          </Tag>
+                        )}
+                      </div>
 
-              {selectedTable.status === 'cleaning' && (
-                <Button
-                  type="primary"
-                  icon={<CheckCircleOutlined />}
-                  size="large"
-                  block
-                  onClick={handleFinishCleaning}
-                  style={{
-                    borderRadius: 12,
-                    height: 48,
-                    fontWeight: 500,
-                    background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
-                    border: 'none',
-                  }}
-                >
-                  {t('staff.tables.actions.finish_cleaning')}
-                </Button>
-              )}
-            </Flex>
-          </div>
-        )}
-      </Modal>
+                      <div className="table-modal-info-grid">
+                        {selectedTable.customerName && (
+                          <div className="table-modal-info-row">
+                            <span className="table-modal-info-label"><UserOutlined /> {t('staff.floor_activity.modal.customer')}</span>
+                            <span className="table-modal-info-value">{selectedTable.customerName}</span>
+                          </div>
+                        )}
+                        {(selectedTable.orderItemCount ?? 0) > 0 && (
+                          <div className="table-modal-info-row">
+                            <span className="table-modal-info-label"><ShoppingCartOutlined /> {t('staff.floor_activity.items')}</span>
+                            <span className="table-modal-info-value">{selectedTable.orderItemCount} {t('staff.floor_activity.items')}</span>
+                          </div>
+                        )}
+                        {(selectedTable.orderTotal ?? 0) > 0 && (
+                          <div className="table-modal-info-row">
+                            <span className="table-modal-info-label"><DollarOutlined /> {t('staff.floor_activity.modal.total')}</span>
+                            <span className="table-modal-info-value" style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 15 }}>{selectedTable.orderTotal!.toLocaleString('vi-VN')}d</span>
+                          </div>
+                        )}
+                        {selectedTable.startAt && (
+                          <div className="table-modal-info-row">
+                            <span className="table-modal-info-label"><ClockCircleOutlined /> {t('staff.floor_activity.modal.start_time')}</span>
+                            <span className="table-modal-info-value">{new Date(selectedTable.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                          </div>
+                        )}
+                        {selectedTable.paymentStatusName && (
+                          <div className="table-modal-info-row">
+                            <span className="table-modal-info-label"><DollarOutlined /> {t('staff.floor_activity.modal.payment')}</span>
+                            <span className="table-modal-info-value">{selectedTable.paymentStatusName}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
 
-      {/* Open Table Modal */}
-      <Modal
-        title={t('staff.tables.modal.open_table')}
-        open={isOpenTableModal}
-        onCancel={() => {
-          setIsOpenTableModal(false);
-          form.resetFields();
-        }}
-        footer={null}
-        width={isMobile ? '95%' : 400}
-        centered
-        style={{
-          backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-          border: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
-          borderRadius: 12,
-        }}
-        styles={{
-          header: {
-            backgroundColor: mode === 'dark' ? '#1A1A1A' : '#FFFFFF',
-            borderBottom: mode === 'dark' ? '1px solid rgba(255, 122, 0, 0.2)' : '1px solid #E5E7EB',
-            borderRadius: '12px 12px 0 0',
-            padding: '16px 24px',
-            paddingRight: '56px',
-          },
-          body: { backgroundColor: mode === 'dark' ? '#0A0E14' : '#FFFFFF' },
-          footer: {
-            borderRadius: '0 0 12px 12px',
-          },
-          mask: {
-            background: mode === 'dark' ? 'rgba(0, 0, 0, 0.92)' : 'rgba(0, 0, 0, 0.45)',
-            backdropFilter: 'none',
-            WebkitBackdropFilter: 'none',
-            filter: 'none',
-          },
-        }}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleConfirmOpenTable}
-          initialValues={{ guests: 2 }}
-        >
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 16,
-                background: '#f6ffed',
-                border: '2px solid #52c41a',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 12px',
-              }}
-            >
-              <TableOutlined style={{ fontSize: 28, color: '#52c41a' }} />
+                {/* Empty state — no reservation, no order */}
+                {!hasReservation && !hasOrder && (
+                  <div style={{ textAlign: 'center', padding: '24px 0 8px', color: 'var(--text-muted)' }}>
+                    {selectedTable.status === 'occupied' ? (
+                      <>
+                        <UserOutlined style={{ fontSize: 32, color: cfg.color, marginBottom: 8, display: 'block' }} />
+                        <Text style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t(cfg.label)}</Text>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a', marginBottom: 8, display: 'block' }} />
+                        <Text style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('staff.floor_activity.status.available')}</Text>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-            <Title level={4} style={{ margin: 0 }}>
-              {selectedTable?.name}
-            </Title>
-            <Text type="secondary">{t('staff.tables.table.capacity')}: {selectedTable?.capacity} {t('staff.tables.table.guests')}</Text>
-          </div>
-
-          <Form.Item
-            name="guests"
-            label={t('staff.tables.modal.guests_count')}
-            rules={[
-              { required: true, message: t('staff.tables.messages.enter_guests') },
-              {
-                type: 'number',
-                max: selectedTable?.capacity,
-                message: t('staff.tables.messages.max_guests', { capacity: selectedTable?.capacity }),
-              },
-            ]}
-          >
-            <InputNumber
-              min={1}
-              max={selectedTable?.capacity}
-              size="large"
-              style={{ width: '100%', borderRadius: 12 }}
-              addonAfter={t('staff.tables.table.guests')}
-            />
-          </Form.Item>
-
-          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              block
-              style={{
-                borderRadius: 12,
-                height: 48,
-                fontWeight: 600,
-                background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
-                border: 'none',
-              }}
-            >
-              {t('staff.tables.modal.confirm_open')}
-            </Button>
-          </Form.Item>
-        </Form>
+          );
+        })()}
       </Modal>
-
-      <style jsx global>{`
-        /* Modal border radius */
-        .ant-modal-content {
-          border-radius: 12px !important;
-          overflow: hidden !important;
-        }
-        
-        /* Modal close button positioning - inside header */
-        .ant-modal-close {
-          top: 16px !important;
-          right: 20px !important;
-          width: 32px !important;
-          height: 32px !important;
-          border-radius: 8px !important;
-          background: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'} !important;
-          transition: all 0.2s ease !important;
-        }
-        .ant-modal-close:hover {
-          background: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'} !important;
-        }
-        .ant-modal-close-x {
-          width: 32px !important;
-          height: 32px !important;
-          line-height: 32px !important;
-          font-size: 16px !important;
-          color: ${mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.65)'} !important;
-        }
-        .ant-modal-close:hover .ant-modal-close-x {
-          color: ${mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.85)'} !important;
-        }
-      `}</style>
-
     </div>
   );
 }
-

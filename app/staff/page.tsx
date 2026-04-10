@@ -324,7 +324,7 @@ export default function StaffDashboard() {
       dataIndex: 'time',
       key: 'time',
       width: '22%',
-      render: (time: number) => <Text type="secondary" style={{ fontSize: 14 }}>{t('common.time.minutes_ago', { count: time })}</Text>,
+      render: (time: number) => <Text type="secondary" style={{ fontSize: 14 }}>{t('time.minutes_ago', { count: time })}</Text>,
     },
   ];
 
@@ -467,7 +467,7 @@ export default function StaffDashboard() {
                           }}
                           className="welcome-btn-primary"
                         >
-                          {t('common.actions.create_order')}
+                          {t('actions.create_order')}
                         </Button>
                       </Link>
                     </Flex>
