@@ -1,4 +1,4 @@
-import { DollarOutlined, DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
+import { DownOutlined, UpOutlined } from "@ant-design/icons";
 import { Button, Card, Select, Space, Tag, Typography } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
 import { useState } from "react";
@@ -54,8 +54,6 @@ interface CardOrderProps {
     detailId: string,
     statusValue: string,
   ) => void;
-  openPaymentModal: (order: Order) => void;
-  onOpenAddItemModal: (orderId: string) => void;
   onViewDetails?: (orderId: string) => void;
   t: (key: string) => string;
 }
@@ -72,12 +70,10 @@ export default function CardOrder({
   normalizeStatusValue,
   handleUpdateOrderStatus,
   handleUpdateDetailStatus,
-  openPaymentModal,
-  onOpenAddItemModal,
   onViewDetails,
   t,
 }: CardOrderProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const textSizes = {
     table: isMobile ? 14 : 16,
     reference: isMobile ? 12 : 13,
@@ -299,42 +295,11 @@ export default function CardOrder({
               gap: isMobile ? 8 : 16,
               flexWrap: "wrap",
             }}>
-            <Text
+            {/* <Text
               strong
               style={{ color: "var(--primary)", fontSize: textSizes.total }}>
               {order.total.toLocaleString("vi-VN")}đ
-            </Text>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              {order.raw?.paymentStatusId !== 1 && (
-                <Button
-                  icon={<DollarOutlined />}
-                  size="small"
-                  type="primary"
-                  onClick={(e) => { e.stopPropagation(); openPaymentModal(order); }}
-                  style={{
-                    borderRadius: 6,
-                    minWidth: isMobile ? 92 : 118,
-                    height: isMobile ? 26 : 28,
-                    padding: isMobile ? "0 6px" : "0 8px",
-                    fontSize: isMobile ? 11 : 12,
-                  }}>
-                  {t("staff.orders.payment.btn")}
-                </Button>
-              )}
-              <Button
-                icon={<PlusOutlined />}
-                size="small"
-                onClick={(e) => { e.stopPropagation(); onOpenAddItemModal(order.id); }}
-                style={{
-                  borderRadius: 6,
-                  minWidth: isMobile ? 92 : 118,
-                  height: isMobile ? 26 : 28,
-                  padding: isMobile ? "0 6px" : "0 8px",
-                  fontSize: isMobile ? 11 : 12,
-                }}>
-                {t("staff.orders.modal.add_item")}
-              </Button>
-            </div>
+            </Text> */}
           </div>
         </div>
       </div>

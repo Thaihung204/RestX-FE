@@ -2,6 +2,7 @@
 
 import AddOrderItem from "@/components/staff/orders/AddOrderItem";
 import CardOrder from "@/components/staff/orders/CardOrder";
+import FilterOrder from "@/components/staff/orders/FilterOrder";
 import OrderDetailsPopup from "@/components/staff/orders/OrderDetailsPopup";
 import PaymentOrder from "@/components/staff/orders/PaymentOrder";
 import { useTenant } from "@/lib/contexts/TenantContext";
@@ -16,20 +17,11 @@ import orderService, {
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
 import paymentService from "@/lib/services/paymentService";
-import { tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
-import {
-  PlusOutlined
-} from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
 import {
   App,
-  Button,
-  Card,
-  Col,
   Empty,
-  Row,
-  Select,
   Space,
 } from "antd";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -116,14 +108,12 @@ export default function OrderManagement() {
   const { t } = useTranslation();
   const { tenant } = useTenant();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [tables, setTables] = useState<{ id: string; name: string }[]>([]);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
   const [orderDetailStatuses, setOrderDetailStatuses] = useState<OrderDetailStatus[]>([]);
   const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const statusValueMapRef = useRef<Record<string, string>>({});
-  const tableNameMapRef = useRef<Record<string, string>>({});
   const dishNameMapRef = useRef<Record<string, string>>({});
   const initializedRef = useRef(false);
 
@@ -135,13 +125,6 @@ export default function OrderManagement() {
       if (codeKey) acc[codeKey] = value;
       if (nameKey) acc[nameKey] = value;
       acc[status.id] = value;
-      return acc;
-    }, {});
-  }, []);
-
-  const buildTableNameMap = useCallback((rows: { id: string; name: string }[]) => {
-    return rows.reduce<Record<string, string>>((acc, row) => {
-      acc[row.id] = row.name;
       return acc;
     }, {});
   }, []);
@@ -163,7 +146,6 @@ export default function OrderManagement() {
 
   const mapOrders = useCallback(
     (data: OrderDto[]) => {
-      const tableNameMap = tableNameMapRef.current;
       const dishNameMap = dishNameMapRef.current;
 
       return data.map((order: OrderDto) => {
@@ -191,7 +173,6 @@ export default function OrderManagement() {
           tableSessions
             .map((s) => s?.tableCode || s?.table?.code)
             .find((code): code is string => !!code) ||
-          tableNameMap[resolvedTableId] ||
           resolvedTableId;
 
         const items: OrderItem[] = (order.orderDetails ?? []).map(
@@ -274,10 +255,9 @@ export default function OrderManagement() {
     inFlightRef.current = true;
     initializedRef.current = true;
     try {
-      const [statusData, orderStatusData, tableData, menuData, orderData] = await Promise.all([
+      const [statusData, orderStatusData, menuData, orderData] = await Promise.all([
         orderDetailStatusService.getAllStatuses(),
         orderStatusService.getAllStatuses(),
-        tableService.getAllTables(),
         menuService.getMenu(),
         orderService.getAllOrders(),
       ]);
@@ -285,18 +265,12 @@ export default function OrderManagement() {
       const safeStatuses = statusData ?? [];
       const safeOrderStatuses = orderStatusData ?? [];
       const safeMenu = menuData ?? [];
-      const mappedTables = (tableData ?? []).map((row) => ({
-        id: row.id,
-        name: `${row.code}`,
-      }));
 
       setOrderDetailStatuses(safeStatuses);
       setOrderStatuses(safeOrderStatuses);
-      setTables(mappedTables);
       setMenuCategories(safeMenu);
 
       statusValueMapRef.current = buildStatusValueMap(safeStatuses);
-      tableNameMapRef.current = buildTableNameMap(mappedTables);
       dishNameMapRef.current = buildDishNameMap(safeMenu);
 
       setOrders(mapOrders(orderData ?? []));
@@ -305,7 +279,7 @@ export default function OrderManagement() {
     } finally {
       inFlightRef.current = false;
     }
-  }, [buildDishNameMap, buildStatusValueMap, buildTableNameMap, mapOrders]);
+  }, [buildDishNameMap, buildStatusValueMap, mapOrders]);
 
   useEffect(() => {
     loadInitialData();
@@ -416,7 +390,18 @@ export default function OrderManagement() {
   }, []);
 
   const filteredOrders = orders.filter((order) => {
-    return selectedTableId === "all" || order.tableId === selectedTableId;
+    if (selectedTableId === "all") return true;
+
+    const tableCodes =
+      order.tableSessions
+        ?.map((session) => session.tableCode)
+        .filter((code): code is string => !!code) ?? [];
+
+    if (tableCodes.length > 0) {
+      return tableCodes.includes(selectedTableId);
+    }
+
+    return order.tableName === selectedTableId;
   });
 
   useEffect(() => {
@@ -547,35 +532,19 @@ export default function OrderManagement() {
 
     try {
       const payload: OrderRequestDto = {
+        id: selectedOrderIdForAdd,
         tableId: targetOrder.tableId,
         customerId:
           targetOrder.raw.customerId ||
           "00000000-0000-0000-0000-000000000000",
-        orderStatusId: targetOrder.raw.orderStatusId,
-        paymentStatusId: targetOrder.raw.paymentStatusId,
-        reservationId: targetOrder.raw.reservationId ?? null,
-        discountAmount: targetOrder.raw.discountAmount ?? 0,
-        taxAmount: targetOrder.raw.taxAmount ?? 0,
-        serviceCharge: targetOrder.raw.serviceCharge ?? 0,
-        tableIds: targetOrder.raw.tableIds?.length
-          ? targetOrder.raw.tableIds
-          : targetOrder.tableId !== "unknown"
-            ? [targetOrder.tableId]
-            : undefined,
-        orderDetails: [
-          ...(targetOrder.raw.orderDetails ?? []).map((d) => ({
-            dishId: d.dishId,
-            quantity: d.quantity,
-            note: d.note ?? undefined,
-          })),
-          ...cart.map((c) => ({
-            dishId: c.item.id,
-            quantity: c.quantity,
-          })),
-        ],
+        orderDetails: cart.map((c) => ({
+          dishId: c.item.id,
+          quantity: c.quantity,
+          note: "",
+        })),
       };
 
-      await orderService.updateOrder(selectedOrderIdForAdd, payload);
+      await orderService.createOrder(payload);
 
       message.success(t("staff.orders.messages.order_created"));
       setIsAddItemModalOpen(false);
@@ -638,60 +607,35 @@ export default function OrderManagement() {
     className: "order-status-option",
   }));
 
+  const tableFilterOptions = Array.from(
+    new Set(
+      orders.flatMap((order) => {
+        const codes =
+          order.tableSessions
+            ?.map((session) => session.tableCode)
+            .filter((code): code is string => !!code) ?? [];
+
+        return codes.length > 0 ? codes : [order.tableName];
+      }),
+    ),
+  ).map((tableCode) => ({
+    value: tableCode,
+    label: `${t("staff.orders.order.table")} ${tableCode}`,
+  }));
+
   return (
     <div>
       {/* Search & Filter */}
-      <Card
-        style={{
-          borderRadius: 12,
-          border:
-            mode === "dark"
-              ? "1px solid rgba(255, 255, 255, 0.1)"
-              : "1px solid #E5E5E5",
-          marginBottom: isMobile ? 16 : 24,
-          background: mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFFFF",
-          boxShadow:
-            mode === "dark"
-              ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-              : "0 2px 8px rgba(0, 0, 0, 0.08)",
-        }}
-        styles={{ body: { padding: isMobile ? 16 : "20px 28px" } }}>
-        <Row gutter={[12, 12]} align="middle">
-          <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-            <Select
-              size={isMobile ? "middle" : "large"}
-              style={{ width: "100%" }}
-              value={selectedTableId}
-              onChange={(value) => setSelectedTableId(String(value))}
-              options={[
-                { value: "all", label: t("staff.orders.filter.all_tables") },
-                ...tables.map((table) => ({
-                  value: table.id,
-                  label: `${t("staff.orders.order.table")} ${table.name}`,
-                })),
-              ]}
-            />
-          </Col>
-          <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-            <Button
-              type="primary"
-              size={isMobile ? "middle" : "large"}
-              icon={<PlusOutlined />}
-              onClick={() => setIsAddItemModalOpen(true)}
-              block={isMobile || isTablet}
-              style={{
-                borderRadius: 12,
-                height: isMobile ? 40 : 48,
-                fontWeight: 600,
-                background: "linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)",
-                border: "none",
-                width: "100%",
-              }}>
-              {t("staff.orders.modal.add_item")}
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+      <FilterOrder
+        selectedTableId={selectedTableId}
+        tableFilterOptions={tableFilterOptions}
+        onChangeTable={setSelectedTableId}
+        onAddItem={() => setIsAddItemModalOpen(true)}
+        isMobile={isMobile}
+        isTablet={isTablet}
+        mode={mode as "light" | "dark"}
+        t={t}
+      />
 
       {/* Order List */}
       <div>
@@ -721,11 +665,6 @@ export default function OrderManagement() {
                 normalizeStatusValue={normalizeStatusValue}
                 handleUpdateOrderStatus={handleUpdateOrderStatus}
                 handleUpdateDetailStatus={handleUpdateDetailStatus}
-                openPaymentModal={openPaymentModal}
-                onOpenAddItemModal={(orderId) => {
-                  setSelectedOrderIdForAdd(orderId);
-                  setIsAddItemModalOpen(true);
-                }}
                 onViewDetails={(orderId) => {
                   const current = orders.find((o) => o.id === orderId);
                   if (current) {
@@ -766,6 +705,10 @@ export default function OrderManagement() {
           id: order.id,
           reference: order.reference,
           tableName: order.tableName,
+          tableCodes:
+            order.tableSessions
+              ?.map((session) => session.tableCode)
+              .filter((code): code is string => !!code) ?? [],
         }))}
         menuCategories={menuCategories}
         activeMenuCategory={activeMenuCategory}
@@ -806,6 +749,13 @@ export default function OrderManagement() {
         isUpdatingDetailStatus={isUpdatingDetailStatus}
         handleUpdateDetailStatus={handleUpdateDetailStatus}
         normalizeStatusValue={normalizeStatusValue}
+        openPaymentModal={openPaymentModal}
+        onOpenAddItemModal={(orderId) => {
+          setSelectedOrderIdForAdd(orderId);
+          setIsOrderDetailModalOpen(false);
+          setSelectedOrderForDetail(null);
+          setIsAddItemModalOpen(true);
+        }}
         isMobile={isMobile}
         mode={mode as "light" | "dark"}
         t={t}

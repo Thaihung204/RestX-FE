@@ -42,9 +42,7 @@ export default function OrdersPage() {
   const [customerSearch, setCustomerSearch] = useState("");
   const [tableSearch, setTableSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">(
-    "",
-  );
+  const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">("");
   const [exporting, setExporting] = useState<boolean>(false);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
@@ -517,13 +515,7 @@ export default function OrdersPage() {
             background: "var(--card)",
             border: "1px solid var(--border)",
           }}>
-          <div
-            className="p-6"
-            style={{ borderBottom: "1px solid var(--border)" }}>
-            <h3 className="text-xl font-bold" style={{ color: "var(--text)" }}>
-              {t("dashboard.orders.title")}
-            </h3>
-          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead style={{ background: "var(--surface)" }}>

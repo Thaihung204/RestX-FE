@@ -1,4 +1,5 @@
-import { Modal, Select, Space, Tag, Typography } from "antd";
+import { DollarOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Modal, Select, Space, Tag, Typography } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
 
 const { Text } = Typography;
@@ -18,6 +19,9 @@ interface Order {
   detailItems: OrderItem[];
   total: number;
   orderStatusId: number;
+  raw?: {
+    paymentStatusId?: number;
+  };
   tableSessions?: Array<{
     id?: string;
     tableId?: string;
@@ -41,6 +45,8 @@ interface OrderDetailsPopupProps {
   isUpdatingDetailStatus: boolean;
   normalizeStatusValue: (status: string) => string;
   handleUpdateDetailStatus: (orderId: string, detailId: string, statusValue: string) => void;
+  openPaymentModal: (order: Order) => void;
+  onOpenAddItemModal: (orderId: string) => void;
   isMobile?: boolean;
   mode?: "light" | "dark";
   t?: (key: string, options?: any) => string;
@@ -55,6 +61,8 @@ export default function OrderDetailsPopup({
   isUpdatingDetailStatus,
   normalizeStatusValue,
   handleUpdateDetailStatus,
+  openPaymentModal,
+  onOpenAddItemModal,
   isMobile = false,
   mode = "light",
   t,
@@ -229,6 +237,46 @@ export default function OrderDetailsPopup({
           style={{ color: "var(--primary)", fontSize: textSizes.totalValue }}>
           {order.total.toLocaleString("vi-VN")}đ
         </Text>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: 8,
+          flexWrap: "wrap",
+          marginTop: isMobile ? 12 : 14,
+        }}>
+        {order.raw?.paymentStatusId !== 1 && (
+          <Button
+            icon={<DollarOutlined />}
+            size="small"
+            type="primary"
+            onClick={() => openPaymentModal(order)}
+            style={{
+              borderRadius: 6,
+              minWidth: isMobile ? 92 : 118,
+              height: isMobile ? 26 : 28,
+              padding: isMobile ? "0 6px" : "0 8px",
+              fontSize: isMobile ? 11 : 12,
+            }}>
+            {t?.("staff.orders.payment.btn")}
+          </Button>
+        )}
+        <Button
+          icon={<PlusOutlined />}
+          size="small"
+          onClick={() => onOpenAddItemModal(order.id)}
+          style={{
+            borderRadius: 6,
+            minWidth: isMobile ? 92 : 118,
+            height: isMobile ? 26 : 28,
+            padding: isMobile ? "0 6px" : "0 8px",
+            fontSize: isMobile ? 11 : 12,
+          }}>
+          {t?.("staff.orders.modal.add_item")}
+        </Button>
       </div>
     </Modal>
 
