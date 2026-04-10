@@ -66,6 +66,7 @@ type PaymentOrder = {
   id: string;
   reference: string;
   total: number;
+  customerId?: string;
   raw?: {
     paymentStatusId?: number;
   };
@@ -401,6 +402,12 @@ export default function OrderManagement() {
   }, []);
 
   const filteredOrders = orders.filter((order) => {
+    const paymentStatus = (order.raw as any)?.paymentStatus;
+    const paymentStatusId = (order.raw as any)?.paymentStatusId;
+
+    // Chỉ hiển thị order chưa thanh toán
+    if (paymentStatus !== 0 && paymentStatusId !== 0) return false;
+
     if (selectedTableId === "all") return true;
 
     const tableCodes =
@@ -565,7 +572,15 @@ export default function OrderManagement() {
   };
 
   const openPaymentModal = (order: PaymentOrder) => {
-    setSelectedOrder(order);
+    setIsOrderDetailModalOpen(false);
+    setSelectedOrderForDetail(null);
+    setSelectedOrder({
+      ...order,
+      customerId:
+        order.customerId ||
+        (order as any).raw?.customerId ||
+        undefined,
+    });
     setCashReceived(order.total);
     setPaymentMethod("cash");
     setIsPaymentModalOpen(true);
@@ -677,6 +692,8 @@ export default function OrderManagement() {
                 onViewDetails={(orderId) => {
                   const current = orders.find((o) => o.id === orderId);
                   if (current) {
+                    setIsPaymentModalOpen(false);
+                    setSelectedOrder(null);
                     setSelectedOrderForDetail(current);
                     setIsOrderDetailModalOpen(true);
                   }

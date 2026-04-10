@@ -120,6 +120,42 @@ export interface OrderDetailListItemDto {
   createdDate?: string | null;
 }
 
+export interface ApplyDiscountRequest {
+  promotionCode?: string | null;
+  applyMembership: boolean;
+}
+
+export interface DiscountBreakdown {
+  promotionDiscount: number;
+  membershipDiscount: number;
+}
+
+export interface AppliedPromotionInfo {
+  code: string;
+  name: string;
+  discountType: string;
+  discountValue: number;
+  maxDiscountAmount: number;
+}
+
+export interface AppliedMembershipInfo {
+  level: string;
+  discountPercentage: number;
+}
+
+export interface ApplyDiscountResponse {
+  orderId: string;
+  subTotal: number;
+  breakdown: DiscountBreakdown;
+  discountAmount: number;
+  taxAmount: number;
+  serviceCharge: number;
+  totalAmount: number;
+  appliedPromotion: AppliedPromotionInfo | null;
+  promotionError: string | null;
+  appliedMembership: AppliedMembershipInfo | null;
+}
+
 class OrderService {
   async createOrder(payload: OrderRequestDto): Promise<string> {
     const response = await axiosInstance.post<string>("/orders", payload);
@@ -188,6 +224,17 @@ class OrderService {
         `orders_${Date.now()}.xlsx`,
       ),
     };
+  }
+
+  async applyDiscount(
+    orderId: string,
+    request: ApplyDiscountRequest,
+  ): Promise<ApplyDiscountResponse> {
+    const response = await axiosInstance.put<ApplyDiscountResponse>(
+      `/orders/${orderId}/discount`,
+      request,
+    );
+    return response.data;
   }
 }
 
