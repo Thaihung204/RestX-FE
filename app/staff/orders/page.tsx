@@ -1,8 +1,10 @@
 "use client";
 
-import AddItem from "@/components/staff/orders/AddItem";
-import CardTable from "@/components/staff/orders/CardTable";
-import OrderDetail from "@/components/staff/orders/OrderDetail";
+import AddOrderItem from "@/components/staff/orders/AddOrderItem";
+import CardOrder from "@/components/staff/orders/CardOrder";
+import FilterOrder from "@/components/staff/orders/FilterOrder";
+import OrderDetailsPopup from "@/components/staff/orders/OrderDetailsPopup";
+import PaymentOrder from "@/components/staff/orders/PaymentOrder";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import menuService from "@/lib/services/menuService";
 import orderDetailStatusService, {
@@ -13,32 +15,16 @@ import orderService, {
   OrderRequestDto,
 } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
-import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
+import orderStatusService, {
+  OrderStatus,
+} from "@/lib/services/orderStatusService";
 import paymentService from "@/lib/services/paymentService";
-import { tableService } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
-import {
-  PlusOutlined
-} from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
-import {
-  App,
-  Button,
-  Card,
-  Col,
-  Empty,
-  InputNumber,
-  Modal,
-  Row,
-  Select,
-  Space,
-  Typography
-} from "antd";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { App, Empty, Space } from "antd";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
-
-const { Text } = Typography;
 
 type OrderItemStatus = string;
 
@@ -69,13 +55,30 @@ interface Order {
   orderStatusId: OrderStatusId;
   orderStatus: OrderStatusUi;
   raw?: OrderDto;
+  tableSessions?: Array<{
+    id?: string;
+    tableId?: string;
+    tableCode?: string;
+  }>;
 }
+
+type PaymentOrder = {
+  id: string;
+  reference: string;
+  total: number;
+  customerId?: string;
+  raw?: {
+    paymentStatusId?: number;
+  };
+};
 
 const mapOrderStatus = (
   statusId: number | null | undefined,
   statuses: OrderStatus[],
 ): OrderStatusUi => {
-  const matched = statuses.find((status) => Number(status.id) === Number(statusId));
+  const matched = statuses.find(
+    (status) => Number(status.id) === Number(statusId),
+  );
   return matched?.code?.toLowerCase() || "pending";
 };
 
@@ -106,16 +109,29 @@ export default function OrderManagement() {
   const { t } = useTranslation();
   const { tenant } = useTenant();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [tables, setTables] = useState<{ id: string; name: string }[]>([]);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
-  const [orderDetailStatuses, setOrderDetailStatuses] = useState<OrderDetailStatus[]>([]);
+  const [orderDetailStatuses, setOrderDetailStatuses] = useState<
+    OrderDetailStatus[]
+  >([]);
   const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const statusValueMapRef = useRef<Record<string, string>>({});
-  const tableNameMapRef = useRef<Record<string, string>>({});
   const dishNameMapRef = useRef<Record<string, string>>({});
   const initializedRef = useRef(false);
+
+  const getTodayOrderQuery = useCallback(() => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+
+    return {
+      Status: 0,
+      From: `${yyyy}-${mm}-${dd}T00:00:00Z`,
+      To: `${yyyy}-${mm}-${dd}T23:59:59Z`,
+    };
+  }, []);
 
   const buildStatusValueMap = useCallback((statuses: OrderDetailStatus[]) => {
     return statuses.reduce<Record<string, string>>((acc, status) => {
@@ -125,13 +141,6 @@ export default function OrderManagement() {
       if (codeKey) acc[codeKey] = value;
       if (nameKey) acc[nameKey] = value;
       acc[status.id] = value;
-      return acc;
-    }, {});
-  }, []);
-
-  const buildTableNameMap = useCallback((rows: { id: string; name: string }[]) => {
-    return rows.reduce<Record<string, string>>((acc, row) => {
-      acc[row.id] = row.name;
       return acc;
     }, {});
   }, []);
@@ -153,29 +162,35 @@ export default function OrderManagement() {
 
   const mapOrders = useCallback(
     (data: OrderDto[]) => {
-      const tableNameMap = tableNameMapRef.current;
       const dishNameMap = dishNameMapRef.current;
 
       return data.map((order: OrderDto) => {
         const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
-        const tableIdFromSession = (order.tableSessions ?? [])
+        const tableSessions = ((order as any).tableSessions ?? []) as Array<{
+          id?: string;
+          tableId?: string;
+          tableCode?: string;
+          table?: { code?: string };
+        }>;
+
+        const tableIdFromSession = tableSessions
           .map((s) => s?.tableId)
           .find((id): id is string => !!id && id !== EMPTY_GUID);
         const tableIdFromList = (order.tableIds ?? []).find(
           (id): id is string => !!id && id !== EMPTY_GUID,
         );
         const resolvedTableId =
-          (order.tableId && order.tableId !== EMPTY_GUID ? order.tableId : undefined) ||
+          (order.tableId && order.tableId !== EMPTY_GUID
+            ? order.tableId
+            : undefined) ||
           tableIdFromSession ||
           tableIdFromList ||
           "unknown";
 
         const tableName =
-          (order.tableSessions ?? [])
-            .map((s) => s?.table?.code)
-            .find((code): code is string => !!code) ||
-          tableNameMap[resolvedTableId] ||
-          resolvedTableId;
+          tableSessions
+            .map((s) => s?.tableCode || s?.table?.code)
+            .find((code): code is string => !!code) || resolvedTableId;
 
         const items: OrderItem[] = (order.orderDetails ?? []).map(
           (detail, index) => {
@@ -184,9 +199,10 @@ export default function OrderManagement() {
             return {
               id: detail.id || `${order.id || "order"}-${index}`,
               dishId: detail.dishId,
-              name: dishNameMap[detail.dishId] || detail.dishId,
+              name:
+                detail.dishName || dishNameMap[detail.dishId] || detail.dishId,
               quantity: detail.quantity ?? 0,
-              price: 0,
+              price: Number(detail.dishPrice ?? 0),
               note: detail.note || undefined,
               status: normalizedStatus,
             };
@@ -218,6 +234,11 @@ export default function OrderManagement() {
           orderStatusId: (order.orderStatusId ?? 0) as OrderStatusId,
           orderStatus: status,
           raw: order,
+          tableSessions: tableSessions.map((session) => ({
+            id: session.id,
+            tableId: session.tableId,
+            tableCode: session.tableCode || session.table?.code,
+          })),
         };
       });
     },
@@ -228,19 +249,24 @@ export default function OrderManagement() {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
-      const data = await orderService.getAllOrders();
+      const data = await orderService.getAllOrders(getTodayOrderQuery());
       setOrders(mapOrders(data ?? []));
     } catch (error) {
       console.error("Failed to fetch orders:", error);
     } finally {
       inFlightRef.current = false;
     }
-  }, [mapOrders]);
+  }, [getTodayOrderQuery, mapOrders]);
 
   const refreshOrders = useCallback(
     async (force = false) => {
       const now = Date.now();
-      if (!force && lastRefreshRef.current && now - lastRefreshRef.current < 2000) return;
+      if (
+        !force &&
+        lastRefreshRef.current &&
+        now - lastRefreshRef.current < 2000
+      )
+        return;
       lastRefreshRef.current = now;
       await fetchOrders();
     },
@@ -252,29 +278,23 @@ export default function OrderManagement() {
     inFlightRef.current = true;
     initializedRef.current = true;
     try {
-      const [statusData, orderStatusData, tableData, menuData, orderData] = await Promise.all([
-        orderDetailStatusService.getAllStatuses(),
-        orderStatusService.getAllStatuses(),
-        tableService.getAllTables(),
-        menuService.getMenu(),
-        orderService.getAllOrders(),
-      ]);
+      const [statusData, orderStatusData, menuData, orderData] =
+        await Promise.all([
+          orderDetailStatusService.getAllStatuses(),
+          orderStatusService.getAllStatuses(),
+          menuService.getMenu(),
+          orderService.getAllOrders(getTodayOrderQuery()),
+        ]);
 
       const safeStatuses = statusData ?? [];
       const safeOrderStatuses = orderStatusData ?? [];
       const safeMenu = menuData ?? [];
-      const mappedTables = (tableData ?? []).map((row) => ({
-        id: row.id,
-        name: `${row.code}`,
-      }));
 
       setOrderDetailStatuses(safeStatuses);
       setOrderStatuses(safeOrderStatuses);
-      setTables(mappedTables);
       setMenuCategories(safeMenu);
 
       statusValueMapRef.current = buildStatusValueMap(safeStatuses);
-      tableNameMapRef.current = buildTableNameMap(mappedTables);
       dishNameMapRef.current = buildDishNameMap(safeMenu);
 
       setOrders(mapOrders(orderData ?? []));
@@ -283,12 +303,11 @@ export default function OrderManagement() {
     } finally {
       inFlightRef.current = false;
     }
-  }, [buildDishNameMap, buildStatusValueMap, buildTableNameMap, mapOrders]);
+  }, [buildDishNameMap, buildStatusValueMap, getTodayOrderQuery, mapOrders]);
 
   useEffect(() => {
     loadInitialData();
   }, [loadInitialData]);
-
 
   const statusOptions = orderDetailStatuses.map((status) => ({
     value: status.code?.toLowerCase() || status.id,
@@ -309,19 +328,8 @@ export default function OrderManagement() {
     className: "order-detail-status-option",
   }));
 
-  const orderStatusStyleMap = useMemo<Record<string, { bg: string; border: string }>>(() => {
-    return orderStatuses.reduce<Record<string, { bg: string; border: string }>>((acc, status) => {
-      const code = status.code?.toLowerCase?.() || status.name?.toLowerCase?.() || String(status.id);
-      const hexColor = status.color || "#e5e7eb";
-      acc[code] = {
-        bg: `${hexColor}1A`, // 10% opacity roughly
-        border: `${hexColor}33`, // 20% opacity roughly
-      };
-      return acc;
-    }, {});
-  }, [orderStatuses]);
-
-  const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] = useState<string>("");
+  const [selectedOrderIdForAdd, setSelectedOrderIdForAdd] =
+    useState<string>("");
   const [selectedTableId, setSelectedTableId] = useState<string>("all");
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [cart, setCart] = useState<{ item: DishItem; quantity: number }[]>([]);
@@ -331,8 +339,9 @@ export default function OrderManagement() {
   const [isUpdatingOrderStatus, setIsUpdatingOrderStatus] = useState(false);
   const [isUpdatingDetailStatus, setIsUpdatingDetailStatus] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [selectedOrderForDetail, setSelectedOrderForDetail] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<PaymentOrder | null>(null);
+  const [selectedOrderForDetail, setSelectedOrderForDetail] =
+    useState<Order | null>(null);
   const [isOrderDetailModalOpen, setIsOrderDetailModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "bank">("cash");
   const [cashReceived, setCashReceived] = useState<number>(0);
@@ -406,28 +415,31 @@ export default function OrderManagement() {
   }, []);
 
   const filteredOrders = orders.filter((order) => {
-    return selectedTableId === "all" || order.tableId === selectedTableId;
+    const paymentStatus = (order.raw as any)?.paymentStatus;
+    const paymentStatusId = (order.raw as any)?.paymentStatusId;
+
+    // Chỉ hiển thị order chưa thanh toán
+    if (paymentStatus !== 0 && paymentStatusId !== 0) return false;
+
+    if (selectedTableId === "all") return true;
+
+    const tableCodes =
+      order.tableSessions
+        ?.map((session) => session.tableCode)
+        .filter((code): code is string => !!code) ?? [];
+
+    if (tableCodes.length > 0) {
+      return tableCodes.includes(selectedTableId);
+    }
+
+    return order.tableName === selectedTableId;
   });
-
-  const tableCodeMap = useMemo(() => {
-    return tables.reduce<Record<string, string>>((acc, table) => {
-      acc[table.id] = table.name;
-      return acc;
-    }, {});
-  }, [tables]);
-
-  const groupedOrders = useMemo(() => {
-    return filteredOrders.reduce<Record<string, Order[]>>((acc, order) => {
-      const key = order.tableId || "unknown";
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(order);
-      return acc;
-    }, {});
-  }, [filteredOrders]);
 
   useEffect(() => {
     if (!selectedOrderForDetail) return;
-    const latestOrder = orders.find((order) => order.id === selectedOrderForDetail.id);
+    const latestOrder = orders.find(
+      (order) => order.id === selectedOrderForDetail.id,
+    );
     if (latestOrder) {
       setSelectedOrderForDetail(latestOrder);
     }
@@ -485,14 +497,10 @@ export default function OrderManagement() {
         return {
           ...order,
           detailItems: order.detailItems.map((item) =>
-            item.id === detailId
-              ? { ...item, status: normalizedValue }
-              : item,
+            item.id === detailId ? { ...item, status: normalizedValue } : item,
           ),
           items: order.items.map((item) =>
-            item.id === detailId
-              ? { ...item, status: normalizedValue }
-              : item,
+            item.id === detailId ? { ...item, status: normalizedValue } : item,
           ),
         };
       }),
@@ -539,8 +547,6 @@ export default function OrderManagement() {
     });
   };
 
-  const cartTotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
-
   const handleAddItemsToOrder = async () => {
     if (!selectedOrderIdForAdd || cart.length === 0) {
       message.error(t("staff.orders.messages.select_table_and_items"));
@@ -557,33 +563,15 @@ export default function OrderManagement() {
       const payload: OrderRequestDto = {
         tableId: targetOrder.tableId,
         customerId:
-          targetOrder.raw.customerId ||
-          "00000000-0000-0000-0000-000000000000",
-        orderStatusId: targetOrder.raw.orderStatusId,
-        paymentStatusId: targetOrder.raw.paymentStatusId,
-        reservationId: targetOrder.raw.reservationId ?? null,
-        discountAmount: targetOrder.raw.discountAmount ?? 0,
-        taxAmount: targetOrder.raw.taxAmount ?? 0,
-        serviceCharge: targetOrder.raw.serviceCharge ?? 0,
-        tableIds: targetOrder.raw.tableIds?.length
-          ? targetOrder.raw.tableIds
-          : targetOrder.tableId !== "unknown"
-            ? [targetOrder.tableId]
-            : undefined,
-        orderDetails: [
-          ...(targetOrder.raw.orderDetails ?? []).map((d) => ({
-            dishId: d.dishId,
-            quantity: d.quantity,
-            note: d.note ?? undefined,
-          })),
-          ...cart.map((c) => ({
-            dishId: c.item.id,
-            quantity: c.quantity,
-          })),
-        ],
+          targetOrder.raw.customerId || "00000000-0000-0000-0000-000000000000",
+        orderDetails: cart.map((c) => ({
+          dishId: c.item.id,
+          quantity: c.quantity,
+          note: "",
+        })),
       };
 
-      await orderService.updateOrder(selectedOrderIdForAdd, payload);
+      await orderService.createOrder(payload);
 
       message.success(t("staff.orders.messages.order_created"));
       setIsAddItemModalOpen(false);
@@ -596,8 +584,16 @@ export default function OrderManagement() {
     }
   };
 
-  const openPaymentModal = (order: Order) => {
-    setSelectedOrder(order);
+  const openPaymentModal = (order: PaymentOrder) => {
+    setIsOrderDetailModalOpen(false);
+    setSelectedOrderForDetail(null);
+    setSelectedOrder({
+      ...order,
+      customerId:
+        order.customerId ||
+        (order as any).raw?.customerId ||
+        undefined,
+    });
     setCashReceived(order.total);
     setPaymentMethod("cash");
     setIsPaymentModalOpen(true);
@@ -617,7 +613,9 @@ export default function OrderManagement() {
         await paymentService.payByCash(selectedOrder.id, cashReceived);
         message.success(t("staff.orders.payment.messages.cash_success"));
       } else {
-        const response = await paymentService.createPaymentLink(selectedOrder.id);
+        const response = await paymentService.createPaymentLink(
+          selectedOrder.id,
+        );
         if (response.checkoutUrl) {
           window.open(response.checkoutUrl, "_blank", "noopener,noreferrer");
         }
@@ -646,88 +644,74 @@ export default function OrderManagement() {
     className: "order-status-option",
   }));
 
+  const tableFilterOptions = Array.from(
+    new Set(
+      orders.flatMap((order) => {
+        const codes =
+          order.tableSessions
+            ?.map((session) => session.tableCode)
+            .filter((code): code is string => !!code) ?? [];
+
+        return codes.length > 0 ? codes : [order.tableName];
+      }),
+    ),
+  ).map((tableCode) => ({
+    value: tableCode,
+    label: `${t("staff.orders.order.table")} ${tableCode}`,
+  }));
+
   return (
     <div>
       {/* Search & Filter */}
-      <Card
-        style={{
-          borderRadius: 12,
-          border:
-            mode === "dark"
-              ? "1px solid rgba(255, 255, 255, 0.1)"
-              : "1px solid #E5E5E5",
-          marginBottom: isMobile ? 16 : 24,
-          background: mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "#FFFFFF",
-          boxShadow:
-            mode === "dark"
-              ? "0 2px 8px rgba(0, 0, 0, 0.3)"
-              : "0 2px 8px rgba(0, 0, 0, 0.08)",
-        }}
-        styles={{ body: { padding: isMobile ? 16 : "20px 28px" } }}>
-        <Row gutter={[12, 12]} align="middle">
-          <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-            <Select
-              size={isMobile ? "middle" : "large"}
-              style={{ width: "100%" }}
-              value={selectedTableId}
-              onChange={(value) => setSelectedTableId(String(value))}
-              options={[
-                { value: "all", label: t("staff.orders.filter.all_tables") },
-                ...tables.map((table) => ({
-                  value: table.id,
-                  label: `${t("staff.orders.order.table")} ${table.name}`,
-                })),
-              ]}
-            />
-          </Col>
-          <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-            <Button
-              type="primary"
-              size={isMobile ? "middle" : "large"}
-              icon={<PlusOutlined />}
-              onClick={() => setIsAddItemModalOpen(true)}
-              block={isMobile || isTablet}
-              style={{
-                borderRadius: 12,
-                height: isMobile ? 40 : 48,
-                fontWeight: 600,
-                background: "linear-gradient(135deg, var(--primary) 0%, #FF6B3B 100%)",
-                border: "none",
-                width: "100%",
-              }}>
-              {t("staff.orders.modal.add_item")}
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+      <FilterOrder
+        selectedTableId={selectedTableId}
+        tableFilterOptions={tableFilterOptions}
+        onChangeTable={setSelectedTableId}
+        onAddItem={() => setIsAddItemModalOpen(true)}
+        isMobile={isMobile}
+        isTablet={isTablet}
+        mode={mode as "light" | "dark"}
+        t={t}
+      />
 
       {/* Order List */}
-      <div style={{ 
-        marginTop: isMobile ? 8 : 12,
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))",
-        gap: isMobile ? 12 : 20,
-        alignItems: "stretch"
-      }}>
-        {Object.keys(groupedOrders).length > 0 ? (
-          Object.entries(groupedOrders).map(([tableId, tableOrders]) => {
-            const tableCode = tableCodeMap[tableId] || tableOrders[0]?.tableName || tableId;
+      <div>
+        {filteredOrders.length > 0 ? (
+          filteredOrders.map((order) => {
+            const defaultStatuses = orderDetailStatuses
+              .filter((s) => s.isDefault)
+              .map((s) => s.code?.toLowerCase() || s.id);
+
+            const filteredDetailItems = order.detailItems.filter((item) => {
+              if (defaultStatuses.length === 0) return true;
+              const nStatus = normalizeStatusValue(item.status).toLowerCase();
+              return defaultStatuses.includes(nStatus);
+            });
+
             return (
-              <CardTable
-                key={tableId}
-                tableCode={tableCode}
-                tableOrders={tableOrders}
-                mode={mode}
+              <CardOrder
+                key={order.id}
+                order={{ ...order, detailItems: filteredDetailItems }}
                 isMobile={isMobile}
-                isUpdatingOrderStatus={isUpdatingOrderStatus}
+                mode={mode as "light" | "dark"}
+                statusOptions={statusOptions}
+                orderStatuses={orderStatuses}
                 orderStatusOptions={orderStatusOptions}
-                orderStatusStyleMap={orderStatusStyleMap}
-                tableLabel={t("staff.orders.order.table")}
-                onOpenDetail={(order) => {
-                  setSelectedOrderForDetail(order);
-                  setIsOrderDetailModalOpen(true);
+                isUpdatingOrderStatus={isUpdatingOrderStatus}
+                isUpdatingDetailStatus={isUpdatingDetailStatus}
+                normalizeStatusValue={normalizeStatusValue}
+                handleUpdateOrderStatus={handleUpdateOrderStatus}
+                handleUpdateDetailStatus={handleUpdateDetailStatus}
+                onViewDetails={(orderId) => {
+                  const current = orders.find((o) => o.id === orderId);
+                  if (current) {
+                    setIsPaymentModalOpen(false);
+                    setSelectedOrder(null);
+                    setSelectedOrderForDetail(current);
+                    setIsOrderDetailModalOpen(true);
+                  }
                 }}
-                onUpdateOrderStatus={handleUpdateOrderStatus}
+                t={t}
               />
             );
           })
@@ -746,253 +730,82 @@ export default function OrderManagement() {
         )}
       </div>
 
-
-      {/* Order Detail Modal */}
-      <OrderDetail
-        selectedOrderForDetail={selectedOrderForDetail}
-        isOrderDetailModalOpen={isOrderDetailModalOpen}
-        isMobile={isMobile}
-        mode={mode}
-        isUpdatingOrderStatus={isUpdatingOrderStatus}
-        isUpdatingDetailStatus={isUpdatingDetailStatus}
-        normalizeStatusValue={normalizeStatusValue}
-        statusOptions={statusOptions}
-        orderStatusOptions={orderStatusOptions}
-        totalLabel={t("staff.orders.payment.modal.total_label")}
-        emptyLabel={t("staff.orders.empty")}
-        // addItemLabel={t("staff.orders.modal.add_item")}
-        paymentLabel="Thanh toán"
-        statusLabel="Status"
-        onClose={() => {
-          setIsOrderDetailModalOpen(false);
-          setSelectedOrderForDetail(null);
-        }}
-        onUpdateOrderStatus={handleUpdateOrderStatus}
-        onUpdateDetailStatus={handleUpdateDetailStatus}
-        onOpenPayment={(order) => {
-          setIsOrderDetailModalOpen(false);
-          openPaymentModal(order);
-        }}
-        onAddItem={(orderId) => {
-          setIsOrderDetailModalOpen(false);
-          setSelectedOrderIdForAdd(orderId);
-          setIsAddItemModalOpen(true);
-        }}
-      />
-
-      {/* Payment Modal */}
-      <Modal
-        title={
-          <span style={{ fontSize: 18, fontWeight: 700 }}>
-            {t("staff.orders.payment.modal.title")}
-          </span>
-        }
-        open={isPaymentModalOpen}
-        onCancel={() => {
-          setIsPaymentModalOpen(false);
-          setSelectedOrder(null);
-          setCashReceived(0);
-        }}
-        footer={null}
-        centered
-        width={480}
-        styles={{ body: { padding: "20px 24px 32px" } }}>
-        {selectedOrder && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            <div
-              style={{
-                padding: 16,
-                background: "var(--primary-5, #f0f7ff)",
-                borderRadius: 12,
-                border: "1px solid var(--primary-20, #bae7ff)",
-              }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 8,
-                }}>
-                <div>
-                  <Text type="secondary">
-                    {t("staff.orders.payment.modal.order_label")}
-                  </Text>
-                  <Text strong style={{ display: "block", fontSize: 16 }}>
-                    {selectedOrder.reference}
-                  </Text>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <Text type="secondary">
-                    {t("staff.orders.payment.modal.total_label")}
-                  </Text>
-                  <Text
-                    strong
-                    style={{ display: "block", fontSize: 20, color: "var(--primary)" }}>
-                    {selectedOrder.total.toLocaleString("vi-VN")}đ
-                  </Text>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <Text strong style={{ display: "block", marginBottom: 12 }}>
-                {t("staff.orders.payment.modal.method_label")}
-              </Text>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 12,
-                }}>
-                {paymentOptions.map((method) => (
-                  <button
-                    key={method.id}
-                    type="button"
-                    onClick={() => setPaymentMethod(method.id)}
-                    style={{
-                      padding: 12,
-                      textAlign: "center",
-                      borderRadius: 10,
-                      cursor: "pointer",
-                      border:
-                        paymentMethod === method.id
-                          ? "2px solid var(--primary)"
-                          : "1px solid #E5E7EB",
-                      background: paymentMethod === method.id ? "#fff" : "#FAFAFA",
-                      transition: "all 0.2s",
-                    }}>
-                    <Text strong>{method.label}</Text>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {paymentMethod === "cash" && (
-              <div>
-                <Text strong>{t("staff.orders.payment.modal.cash_label")}</Text>
-                <InputNumber
-                  autoFocus
-                  value={cashReceived}
-                  onChange={(value) => setCashReceived(value || 0)}
-                  min={0}
-                  size="large"
-                  style={{ width: "100%", marginTop: 8, fontSize: 18, fontWeight: 600 }}
-                  formatter={(value) =>
-                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                  }
-                  parser={(value) => Number(value?.replace(/,/g, "") || 0)}
-                />
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    marginTop: 12,
-                    flexWrap: "wrap",
-                  }}>
-                  {[ 50000, 100000, 200000, 500000].map((amount) => (
-                    <Button
-                      key={amount}
-                      size="small"
-                      onClick={() => setCashReceived(amount)}
-                      style={{ borderRadius: 6 }}>
-                      {amount.toLocaleString("vi-VN")}
-                    </Button>
-                  ))}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 20,
-                    padding: 12,
-                    borderRadius: 8,
-                    background:
-                      cashReceived >= selectedOrder.total ? "#F6FFED" : "#FFF1F0",
-                    textAlign: "center",
-                  }}>
-                  {cashReceived < selectedOrder.total ? (
-                    <Text type="danger" strong style={{ fontSize: 16 }}>
-                      {t("staff.orders.payment.modal.missing_label")}: {(
-                        selectedOrder.total - cashReceived
-                      ).toLocaleString("vi-VN")}đ
-                    </Text>
-                  ) : (
-                    <div>
-                      <div style={{ color: "#52C41A", fontSize: 14 }}>
-                        {t("staff.orders.payment.modal.change_label")}
-                      </div>
-                      <div
-                        style={{ color: "#52C41A", fontSize: 24, fontWeight: 700 }}>
-                        {(cashReceived - selectedOrder.total).toLocaleString("vi-VN")}đ
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <Button
-              type="primary"
-              size="large"
-              loading={isProcessingPayment}
-              onClick={handlePayment}
-              disabled={paymentMethod === "cash" && cashReceived < selectedOrder.total}
-              style={{
-                width: "100%",
-                height: 50,
-                borderRadius: 12,
-                fontSize: 16,
-                fontWeight: 600,
-                marginTop: 8,
-                boxShadow: "0 4px 12px rgba(24, 144, 255, 0.3)",
-              }}>
-              {t("staff.orders.payment.actions.confirm")}
-            </Button>
-          </div>
-        )}
-      </Modal>
-
-      {/* Add Item To Existing Order Modal */}
-      <AddItem
+      <AddOrderItem
         isOpen={isAddItemModalOpen}
-        isMobile={isMobile}
-        mode={mode}
-        selectedOrderIdForAdd={selectedOrderIdForAdd}
-        setSelectedOrderIdForAdd={setSelectedOrderIdForAdd}
-        menuCategories={menuCategories}
-        activeMenuCategory={activeMenuCategory}
-        setActiveMenuCategory={setActiveMenuCategory}
-        cart={cart}
-        cartTotal={cartTotal}
-        orders={orders.map((order) => ({
-          id: order.id,
-          reference: order.reference,
-          tableName: order.tableName,
-        }))}
         onClose={() => {
           setIsAddItemModalOpen(false);
           setCart([]);
           setSelectedOrderIdForAdd("");
         }}
-        onAddToCart={addToCart}
-        onUpdateCartQuantity={updateCartQuantity}
-        onSubmit={handleAddItemsToOrder}
-        labels={{
-          title: t("staff.orders.modal.add_item"),
-          orderPlaceholder: "",
-          table: t("staff.orders.order.table"),
-          cart: t("staff.orders.modal.cart"),
-          total: t("staff.orders.order.total"),
-          noItems: t("staff.orders.modal.no_items"),
-          addItem: t("staff.orders.modal.add_item"),
+        onConfirm={handleAddItemsToOrder}
+        selectedOrderIdForAdd={selectedOrderIdForAdd}
+        setSelectedOrderIdForAdd={setSelectedOrderIdForAdd}
+        orders={orders.map((order) => ({
+          id: order.id,
+          reference: order.reference,
+          tableName: order.tableName,
+          tableCodes:
+            order.tableSessions
+              ?.map((session) => session.tableCode)
+              .filter((code): code is string => !!code) ?? [],
+        }))}
+        menuCategories={menuCategories}
+        activeMenuCategory={activeMenuCategory}
+        setActiveMenuCategory={setActiveMenuCategory}
+        cart={cart}
+        addToCart={addToCart}
+        updateCartQuantity={updateCartQuantity}
+        t={t}
+      />
+
+      <PaymentOrder
+        isOpen={isPaymentModalOpen}
+        selectedOrder={selectedOrder}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        cashReceived={cashReceived}
+        setCashReceived={setCashReceived}
+        paymentOptions={paymentOptions}
+        isProcessingPayment={isProcessingPayment}
+        onClose={() => {
+          setIsPaymentModalOpen(false);
+          setSelectedOrder(null);
+          setCashReceived(0);
         }}
+        onConfirm={handlePayment}
+        t={t}
+      />
+
+      <OrderDetailsPopup
+        order={selectedOrderForDetail}
+        isOpen={isOrderDetailModalOpen}
+        onClose={() => {
+          setIsOrderDetailModalOpen(false);
+          setSelectedOrderForDetail(null);
+        }}
+        orderStatuses={orderStatuses}
+        statusOptions={statusOptions}
+        isUpdatingDetailStatus={isUpdatingDetailStatus}
+        handleUpdateDetailStatus={handleUpdateDetailStatus}
+        normalizeStatusValue={normalizeStatusValue}
+        openPaymentModal={openPaymentModal}
+        onOpenAddItemModal={(orderId) => {
+          setSelectedOrderIdForAdd(orderId);
+          setIsOrderDetailModalOpen(false);
+          setSelectedOrderForDetail(null);
+          setIsAddItemModalOpen(true);
+        }}
+        isMobile={isMobile}
+        mode={mode as "light" | "dark"}
+        t={t}
       />
 
       <style jsx global>{`
         .order-detail-status-option,
         .order-status-option {
           padding: 2px 3px !important;
-          border-bottom: 1px solid ${mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "#EDEDED"};
+          border-bottom: 1px solid
+            ${mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "#EDEDED"};
           display: flex;
           align-items: center;
         }
@@ -1002,10 +815,35 @@ export default function OrderManagement() {
         }
         .order-detail-status-option.ant-select-item-option-selected,
         .order-status-option.ant-select-item-option-selected {
-          background: ${mode === "dark" ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.03)"};
+          background: ${mode === "dark"
+            ? "rgba(255, 255, 255, 0.06)"
+            : "rgba(0, 0, 0, 0.03)"};
         }
-        .order-status-select .ant-select-selector {
+        .order-status-select .ant-select-selector,
+        .order-detail-status-select .ant-select-selector {
           border-radius: 6px !important;
+          min-height: 24px !important;
+          height: 24px !important;
+          padding: 0 8px !important;
+          align-items: center;
+        }
+        .order-status-select .ant-select-selection-item,
+        .order-detail-status-select .ant-select-selection-item {
+          font-size: 12px !important;
+          line-height: 22px !important;
+        }
+        @media (max-width: 575px) {
+          .order-status-select .ant-select-selector,
+          .order-detail-status-select .ant-select-selector {
+            min-height: 22px !important;
+            height: 22px !important;
+            padding: 0 6px !important;
+          }
+          .order-status-select .ant-select-selection-item,
+          .order-detail-status-select .ant-select-selection-item {
+            font-size: 11px !important;
+            line-height: 20px !important;
+          }
         }
       `}</style>
     </div>

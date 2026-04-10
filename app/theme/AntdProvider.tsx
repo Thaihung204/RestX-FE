@@ -2,11 +2,11 @@
 
 import { App as AntdApp, ConfigProvider, theme } from "antd";
 import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from "react";
 import { darkTheme, lightTheme, ThemeMode } from "./themeConfig";
 
@@ -468,12 +468,6 @@ export default function AntdProvider({
           box-shadow: var(--shadow-sm) !important;
         }
 
-        /* Modal styling */
-        .ant-modal-content {
-          background: var(--card) !important;
-          border-color: var(--border) !important;
-        }
-
         /* Popconfirm/Popover - force follow current CSS variables */
         .ant-popover,
         .ant-popconfirm {
@@ -493,11 +487,6 @@ export default function AntdProvider({
         .ant-popover .ant-popover-title,
         .ant-popover .ant-popover-description {
           color: var(--text) !important;
-        }
-        
-        .ant-modal-header {
-          background: var(--card) !important;
-          border-bottom-color: var(--border) !important;
         }
         
         .ant-modal-title {

@@ -274,6 +274,10 @@
       "filter": {
         "all_tables": "All tables"
       },
+      "actions": {
+        "expand": "Show",
+        "collapse": "Collapse"
+      },
       "create_order_short": "Create Order",
       "stats": {
         "pending": "Pending",
@@ -313,7 +317,7 @@
         "print": "Print Bill",
         "print_short": "Print",
         "add_item": "Add Item",
-        "send_to_kitchen": "Send to Kitchen"
+        "order_detail": "Order details"
       },
       "menu": {
         "appetizer": "Appetizers",
@@ -330,6 +334,7 @@
       },
       "empty": "No orders found",
       "payment": {
+        "btn": "Pay",
         "actions": {
           "pay": "Pay",
           "confirm": "Confirm payment"
@@ -352,7 +357,42 @@
           "cash_success": "Cash payment successful",
           "link_created": "Payment link created",
           "payment_failed": "Payment failed"
+        },
+        "discount": {
+          "applying": "Applying discount...",
+          "membership_applied": "Membership discount applied",
+          "apply_button": "Apply discount",
+          "subtotal": "Subtotal",
+          "level": "Membership",
+          "amount": "Discount amount",
+          "no_discount": "No membership discount available"
         }
+      }
+    },
+    "kitchen": {
+      "title": "Dishes to prepare",
+      "updated_at": "Updated: {{time}}",
+      "preparing_count": "{{count}} preparing",
+      "columns": {
+        "table": "TABLE",
+        "dish_name": "DISH",
+        "note": "NOTE",
+        "quantity": "QUANTITY",
+        "status": "STATUS",
+        "time": "TIME"
+      },
+      "status": {
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served",
+        "cancelled": "Cancelled"
+      },
+      "empty": {
+        "title": "No dishes need preparation",
+        "description": "Waiting for new orders..."
+      },
+      "messages": {
+        "load_error": "Unable to load kitchen items"
       }
     },
     "tables": {
@@ -718,12 +758,56 @@
       "revenue_subtitle": "Target: {{target}}",
       "orders": "Today's Orders",
       "orders_subtitle": "{{completed}} completed · {{processing}} processing",
+      "reservations": "Today's Reservations",
+      "reservations_subtitle": "{{pending}} pending confirmation",
+      "new_customers": "New Customers",
+      "new_customers_subtitle": "This period",
       "tables": "Tables & Reservations",
       "tables_subtitle": "{{available}} available · {{reserved}} reserved",
       "customers": "Customers",
       "customers_subtitle": "{{new}} new this month",
       "staff": "On-duty Staff",
-      "staff_subtitle": "{{waiter}} waiter · {{kitchen}} kitchen"
+      "staff_subtitle": "{{waiter}} waiter · {{kitchen}} kitchen",
+      "titles": {
+        "revenue": {
+          "day": "Today's revenue",
+          "week": "Revenue in 7 days",
+          "month": "Revenue in 1 month",
+          "year": "Revenue in 1 year"
+        },
+        "orders": {
+          "day": "Today's orders",
+          "week": "Orders in 7 days",
+          "month": "Orders in 1 month",
+          "year": "Orders in 1 year"
+        },
+        "reservations": {
+          "day": "Today's reservations",
+          "week": "Reservations in 7 days",
+          "month": "Reservations in 1 month",
+          "year": "Reservations in 1 year"
+        },
+        "new_customers": {
+          "day": "New customers today",
+          "week": "New customers in 7 days",
+          "month": "New customers in 1 month",
+          "year": "New customers in 1 year"
+        }
+      }
+    },
+    "filters": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "actions": {
+      "export_report": "Export Report"
+    },
+    "messages": {
+      "overview_load_failed": "Unable to load dashboard overview",
+      "export_success": "Report exported successfully",
+      "export_failed": "Failed to export report"
     },
     "tables_overview": {
       "title": "Tables & Reservations",
@@ -1860,7 +1944,15 @@
       "title": "Actions",
       "yes": "Yes",
       "no": "No",
-      "create_order": "Create New Order"
+      "create_order": "Create New Order",
+      "export_excel": "Export Excel",
+      "exporting": "Exporting...",
+      "export_report": "Download report",
+      "exporting_report": "Downloading report..."
+    },
+    "messages": {
+      "export_success": "Report downloaded successfully",
+      "export_failed": "Failed to download report"
     },
     "language": "Language",
     "english": "English",
@@ -1894,9 +1986,16 @@
     }
   },
   "charts": {
+    "periods": {
+      "last_7_days": "Compare last 7 days",
+      "last_4_weeks": "Compare last 4 weeks",
+      "last_6_months": "Compare last 6 months",
+      "last_5_years": "Compare last 5 years"
+    },
     "revenue": {
       "title": "Revenue Trend",
-      "subtitle": "Last 7 days performance"
+      "subtitle": "Last 7 days performance",
+      "total_period": "Total period"
     },
     "orders": {
       "title": "Orders Overview",
@@ -1962,7 +2061,7 @@
     },
     "hero": {
       "tag": "All-in-one Restaurant Ops Platform",
-      "title": "Optimize restaurant operations with Restaurant Platform",
+      "title": "Optimize restaurant operations with RestX",
       "description": "Manage tables, orders, kitchen, inventory and reports on a single platform.",
       "get_started": "Get Started",
       "watch_demo": "Watch Demo",
@@ -3540,6 +3639,11 @@
       "title": "Need Help?",
       "description": "To modify or cancel your reservation, please contact the restaurant directly.",
       "get_directions": "Get Directions"
+    }
+  },
+  "common": {
+    "actions": {
+      "exporting": "Exporting..."
     }
   }
 }

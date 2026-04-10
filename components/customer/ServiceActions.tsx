@@ -3,11 +3,12 @@ import {
   FileTextOutlined,
   SmileOutlined
 } from "@ant-design/icons";
-import { Col, Row, Typography } from "antd";
+import { Col, Grid, Row, Typography } from "antd";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 interface ServiceActionsProps {
   onRequestBill?: () => void;
@@ -20,6 +21,7 @@ interface ActionButtonProps {
   title: string;
   onClick?: () => void;
   isActive?: boolean;
+  isSmallPhone?: boolean;
 }
 
 const ActionButton: React.FC<ActionButtonProps> = ({
@@ -27,6 +29,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   title,
   onClick,
   isActive = false,
+  isSmallPhone = false,
 }) => {
   return (
     <div
@@ -37,7 +40,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
           ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)"
           : "var(--surface)",
         borderRadius: 20,
-        padding: "24px 16px",
+        padding: isSmallPhone ? "18px 12px" : "24px 16px",
         cursor: "pointer",
         textAlign: "center",
         transition: "all 0.3s ease",
@@ -47,13 +50,13 @@ const ActionButton: React.FC<ActionButtonProps> = ({
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 12
+        gap: isSmallPhone ? 10 : 12
       }}
     // Lưu ý: Hover effects nên xử lý bằng CSS class hoặc CSS-in-JS library, 
     // ở đây dùng style inline cơ bản.
     >
       <div style={{
-        fontSize: 28,
+        fontSize: isSmallPhone ? 22 : 28,
         color: isActive ? "var(--text-inverse)" : "var(--primary)",
         filter: isActive ? "drop-shadow(0 2px 4px var(--modal-overlay))" : "none"
       }}>
@@ -61,7 +64,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       </div>
       <Text style={{
         color: isActive ? "var(--text)" : "var(--text-muted)",
-        fontSize: 13,
+        fontSize: isSmallPhone ? 12 : 13,
         fontWeight: 600,
         lineHeight: 1.4
       }}>
@@ -77,9 +80,12 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({
   onGiveFeedback,
 }) => {
   const { t } = useTranslation();
+  const screens = useBreakpoint();
+  const isSmallPhone = !screens.sm;
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <Row gutter={[16, 16]} style={{ flex: 1 }}>
+      <Row gutter={[isSmallPhone ? 10 : 16, isSmallPhone ? 10 : 16]} style={{ flex: 1 }}>
         <Col span={12}>
           <ActionButton
             icon={<BellOutlined />}

@@ -6,17 +6,37 @@ import axiosInstance from "./axiosInstance";
  */
 class MenuService {
   private readonly BASE_PATH = "/dishes";
+  private menuCache: MenuCategory[] | null = null;
+  private menuRequest: Promise<MenuCategory[]> | null = null;
 
   /**
    * Fetch menu with all categories and dishes
    * @returns Promise with menu data grouped by categories
    */
-  async getMenu(): Promise<MenuCategory[]> {
+  async getMenu(options?: { forceRefresh?: boolean }): Promise<MenuCategory[]> {
+    const forceRefresh = options?.forceRefresh ?? false;
+
+    if (!forceRefresh && this.menuCache) {
+      return this.menuCache;
+    }
+
+    if (!forceRefresh && this.menuRequest) {
+      return this.menuRequest;
+    }
+
     try {
-      const response = await axiosInstance.get<MenuCategory[]>(
-        `${this.BASE_PATH}/menu`,
-      );
-      return response.data;
+      const request = axiosInstance
+        .get<MenuCategory[]>(`${this.BASE_PATH}/menu`)
+        .then((response) => {
+          this.menuCache = response.data;
+          return response.data;
+        })
+        .finally(() => {
+          this.menuRequest = null;
+        });
+
+      this.menuRequest = request;
+      return request;
     } catch (error) {
       console.error("Error fetching menu:", error);
       throw new Error("Failed to fetch menu data");

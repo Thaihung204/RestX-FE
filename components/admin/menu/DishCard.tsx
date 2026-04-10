@@ -9,6 +9,7 @@ export interface DishCardItem {
   price: number;
   image: string;
   description: string;
+  isActive: boolean;
   available: boolean;
   isBestSeller: boolean;
 }
@@ -25,6 +26,8 @@ interface DishCardProps {
     price: string;
     edit: string;
     ingredients: string;
+    active: string;
+    inactive: string;
     activate: string;
     deactivate: string;
     status_icon_label: string;
@@ -93,7 +96,7 @@ export default function DishCard({
             {labels.bestSeller}
           </div>
         )}
-        {!item.available && (
+        {!item.isActive && (
           <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
             <span className="px-4 py-2 bg-red-500 text-white rounded-lg font-bold">
               {labels.outOfStock}
@@ -116,6 +119,10 @@ export default function DishCard({
               {item.description || labels.noDescription}
             </p>
           </div>
+          <span
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium ml-2 ${item.isActive ? "bg-green-500/10 text-green-500" : "bg-gray-500/10 text-gray-500"}`}>
+            {item.isActive ? labels.active : labels.inactive}
+          </span>
         </div>
 
         <div className="flex items-center justify-between mt-3 gap-1">
@@ -133,8 +140,8 @@ export default function DishCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-4">
-          <Link href={`/admin/menu/${item.id}`} className="col-span-1">
+        <div className="flex gap-2 mt-4">
+          <Link href={`/admin/menu/${item.id}`} className="flex-1">
             <button
               className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
               style={{
@@ -142,12 +149,10 @@ export default function DishCard({
                 color: "var(--primary)",
               }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  "rgba(255,56,11,0.2)")
+                (e.currentTarget.style.backgroundColor = "rgba(255,56,11,0.2)")
               }
               onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  "rgba(255,56,11,0.1)")
+                (e.currentTarget.style.backgroundColor = "rgba(255,56,11,0.1)")
               }
               suppressHydrationWarning>
               {labels.edit}
@@ -155,7 +160,7 @@ export default function DishCard({
           </Link>
           <button
             onClick={() => onAddIngredients(item)}
-            className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
+            className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all"
             style={{
               background: "var(--surface)",
               color: "var(--text)",
@@ -174,52 +179,47 @@ export default function DishCard({
           </button>
           <button
             onClick={() => onToggleStatus(item)}
-            className="col-span-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+            className="px-3 py-2.5 rounded-lg transition-all font-medium text-sm"
             style={{
-              background: item.available
-                ? "rgba(239, 68, 68, 0.08)"
+              backgroundColor: item.isActive
+                ? "rgba(239, 68, 68, 0.1)"
                 : "rgba(34, 197, 94, 0.1)",
-              color: item.available ? "#ef4444" : "#16a34a",
-              border: "1px solid var(--border)",
+              color: item.isActive ? "rgb(239, 68, 68)" : "rgb(34, 197, 94)",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = item.available
-                ? "rgba(239, 68, 68, 0.16)"
-                : "rgba(34, 197, 94, 0.18)";
-              e.currentTarget.style.borderColor = item.available
-                ? "rgba(239, 68, 68, 0.3)"
-                : "rgba(34, 197, 94, 0.3)";
+              if (item.isActive) {
+                e.currentTarget.style.backgroundColor = "rgb(239, 68, 68)";
+              } else {
+                e.currentTarget.style.backgroundColor = "rgb(34, 197, 94)";
+              }
+              e.currentTarget.style.color = "white";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = item.available
-                ? "rgba(239, 68, 68, 0.08)"
-                : "rgba(34, 197, 94, 0.1)";
-              e.currentTarget.style.borderColor = "var(--border)";
+              if (item.isActive) {
+                e.currentTarget.style.backgroundColor =
+                  "rgba(239, 68, 68, 0.1)";
+                e.currentTarget.style.color = "rgb(239, 68, 68)";
+              } else {
+                e.currentTarget.style.backgroundColor =
+                  "rgba(34, 197, 94, 0.1)";
+                e.currentTarget.style.color = "rgb(34, 197, 94)";
+              }
             }}
+            title={item.isActive ? labels.deactivate : labels.activate}
             suppressHydrationWarning>
             <span className="sr-only">{labels.status_icon_label}</span>
             <svg
-              className="w-4 h-4 inline-block mr-2"
+              className="w-4 h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24">
-              {item.available ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M18 12H6"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v12m6-6H6"
-                />
-              )}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
             </svg>
-            {item.available ? labels.deactivate : labels.activate}
           </button>
         </div>
       </div>
