@@ -1,5 +1,6 @@
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
-import { Button, Card, Col, Modal, Row, Select, Space, Typography } from "antd";
+import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Card, Col, Modal, Row, Select, Typography } from "antd";
 
 const { Text } = Typography;
 
@@ -7,6 +8,7 @@ interface OrderOption {
   id: string;
   reference: string;
   tableName: string;
+  tableCodes?: string[];
 }
 
 interface AddOrderItemProps {
@@ -62,10 +64,24 @@ export default function AddOrderItem({
             style={{ width: "100%", marginBottom: 10 }}
             value={selectedOrderIdForAdd || undefined}
             onChange={setSelectedOrderIdForAdd}
-            options={orders.map((order) => ({
-              value: order.id,
-              label: `${order.reference} - ${t("staff.orders.order.table")} ${order.tableName}`,
-            }))}
+            getPopupContainer={(triggerNode) =>
+              triggerNode.parentElement || document.body
+            }
+            listHeight={220}
+            virtual={false}
+            styles={{ popup: { root: { overscrollBehavior: "contain" } } }}
+            onPopupScroll={(event) => event.stopPropagation()}
+            options={orders.map((order) => {
+              const tableLabel =
+                order.tableCodes && order.tableCodes.length > 0
+                  ? order.tableCodes.join(" - ")
+                  : order.tableName;
+
+              return {
+                value: order.id,
+                label: `${order.reference} - ${t("staff.orders.order.table")} ${tableLabel}`,
+              };
+            })}
           />
 
           <Select
@@ -87,29 +103,93 @@ export default function AddOrderItem({
 
                 return (
                   <Col xs={24} sm={12} key={item.id}>
-                    <Card hoverable size="small">
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        <div>
-                          <Text strong style={{ fontSize: 13 }}>{item.name}</Text>
-                          <div style={{ fontSize: 12 }}>{item.price.toLocaleString("vi-VN")}đ</div>
+                    <Card
+                      hoverable
+                      size="small"
+                      styles={{ body: { padding: 10 } }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 8,
+                        }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <Text
+                            strong
+                            style={{
+                              fontSize: 13,
+                              display: "block",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}>
+                            {item.name}
+                          </Text>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "var(--primary)",
+                              fontWeight: 600,
+                            }}>
+                            {item.price.toLocaleString("vi-VN")}đ
+                          </div>
                         </div>
 
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <Text style={{ fontSize: 12 }}>
-                            {t("staff.orders.modal.cart")}: <strong>{currentQty}</strong>
-                          </Text>
-                          <Space size={6}>
+                        {currentQty > 0 ? (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                              flexShrink: 0,
+                            }}>
                             <Button
                               size="small"
-                              disabled={currentQty <= 0}
-                              onClick={() => updateCartQuantity(item.id, -1)}>
-                              -
-                            </Button>
-                            <Button size="small" type="primary" onClick={() => addToCart(item)}>
-                              +
-                            </Button>
-                          </Space>
-                        </div>
+                              shape="circle"
+                              type="text"
+                              icon={<MinusOutlined />}
+                              onClick={() => updateCartQuantity(item.id, -1)}
+                              style={{
+                                border: "1px solid var(--border)",
+                                color: "var(--text)",
+                                width: 28,
+                                height: 28,
+                              }}
+                            />
+                            <Text
+                              style={{
+                                minWidth: 18,
+                                textAlign: "center",
+                                fontSize: 12,
+                                fontWeight: 700,
+                              }}>
+                              {currentQty}
+                            </Text>
+                            <Button
+                              size="small"
+                              shape="circle"
+                              type="text"
+                              icon={<PlusOutlined />}
+                              onClick={() => updateCartQuantity(item.id, 1)}
+                              style={{
+                                border: "1px solid var(--border)",
+                                color: "var(--text)",
+                                width: 28,
+                                height: 28,
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <Button
+                            size="small"
+                            type="primary"
+                            shape="circle"
+                            icon={<PlusOutlined />}
+                            onClick={() => addToCart(item)}
+                            style={{ flexShrink: 0 }}
+                          />
+                        )}
                       </div>
                     </Card>
                   </Col>

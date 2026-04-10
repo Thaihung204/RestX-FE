@@ -30,6 +30,8 @@ export default function CustomerHomePageByTable() {
   const router = useRouter();
   const screens = useBreakpoint();
   const isSmallPhone = !screens.sm;
+  const pageHorizontalPadding = isSmallPhone ? 12 : 16;
+  const sectionSpacing = isSmallPhone ? 20 : 24;
   const params = useParams();
   const rawTableId = params?.tableId;
   const tableId = Array.isArray(rawTableId) ? rawTableId[0] : rawTableId || "";
@@ -177,9 +179,9 @@ export default function CustomerHomePageByTable() {
               style={{
                 maxWidth: 1200,
                 margin: "0 auto",
-                padding: "0 12px",
+                padding: `0 ${pageHorizontalPadding}px`,
                 position: "absolute",
-                bottom: 64,
+                bottom: isSmallPhone ? 52 : 64,
                 left: 0,
                 right: 0,
               }}
@@ -196,12 +198,12 @@ export default function CustomerHomePageByTable() {
             style={{
               maxWidth: 1200,
               margin: "0 auto",
-              padding: "0 16px",
+              padding: `0 ${pageHorizontalPadding}px`,
               position: "relative",
               zIndex: 2,
             }}
           >
-            <Space orientation="vertical" size={24} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={sectionSpacing} style={{ width: "100%" }}>
               <WelcomeCard
                 customerName={customerName}
                 tableNumber={tableLabel}
@@ -212,12 +214,12 @@ export default function CustomerHomePageByTable() {
               <MenuCTA onViewMenu={handleViewMenu} />
             </Space>
 
-            <div style={{ textAlign: "center", marginTop: 32, opacity: 0.5 }}>
+            <div style={{ textAlign: "center", marginTop: isSmallPhone ? 24 : 32, opacity: 0.5 }}>
               <Text
                 style={{
                   color: "var(--text-muted)",
-                  fontSize: 12,
-                  letterSpacing: 2,
+                  fontSize: isSmallPhone ? 11 : 12,
+                  letterSpacing: isSmallPhone ? 1.5 : 2,
                   textTransform: "uppercase",
                 }}
               >

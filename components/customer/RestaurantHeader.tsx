@@ -1,8 +1,9 @@
 import { ClockCircleFilled, PhoneFilled, StarFilled } from "@ant-design/icons";
-import { Typography, Tag } from "antd";
+import { Grid, Tag, Typography } from "antd";
 import React from "react";
 
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 interface RestaurantHeaderProps {
   restaurantName: string;
@@ -15,10 +16,13 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
   phone,
   hours,
 }) => {
+  const screens = useBreakpoint();
+  const isSmallPhone = !screens.sm;
+
   return (
     <div style={{ textAlign: "center" }}>
         {/* Badge */}
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: isSmallPhone ? 10 : 12 }}>
             <Tag 
                 color="gold" 
                 style={{ 

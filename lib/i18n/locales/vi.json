@@ -1835,7 +1835,9 @@
       "title": "Thao tác",
       "yes": "Có",
       "no": "Không",
-      "create_order": "Tạo Order mới"
+      "create_order": "Tạo Order mới",
+      "export_excel": "Xuất Excel",
+      "exporting": "Đang xuất..."
     },
     "language": "Ngôn ngữ",
     "english": "English",

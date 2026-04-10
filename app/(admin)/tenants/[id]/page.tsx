@@ -9,7 +9,7 @@ import {
   ExclamationCircleOutlined,
   MailOutlined,
   PhoneOutlined,
-  ShopOutlined
+  ShopOutlined,
 } from "@ant-design/icons";
 import type { FormProps, UploadFile } from "antd";
 import {
@@ -23,7 +23,7 @@ import {
   Spin,
   Switch,
   Typography,
-  Upload
+  Upload,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -31,7 +31,8 @@ import { useTranslation } from "react-i18next";
 
 const { TextArea } = Input;
 const { Title, Paragraph } = Typography;
-const TENANTS_BRAND_LOGO = "https://res.cloudinary.com/dzz8yqhcr/image/upload/v1773461233/DemoRestaurant/LogoUrl/logo.png";
+const TENANTS_BRAND_LOGO =
+  "https://res.cloudinary.com/dzz8yqhcr/image/upload/v1773461233/DemoRestaurant/LogoUrl/logo.png";
 
 const customStyles = `
   .tenant-delete-modal .ant-modal-root,
@@ -185,6 +186,27 @@ const COLOR_FIELD_NAMES: Array<keyof TenantUpdateInput> = [
   "darkCardColor",
 ];
 
+const toHexColorString = (value: unknown): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "toHexString" in value &&
+    typeof (value as { toHexString?: unknown }).toHexString === "function"
+  ) {
+    return (value as { toHexString: () => string }).toHexString();
+  }
+
+  return undefined;
+};
+
 const TenantEditPage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
@@ -200,7 +222,9 @@ const TenantEditPage: React.FC = () => {
   const [tenantStatus, setTenantStatus] = useState<boolean>(true);
   const [logoFileList, setLogoFileList] = useState<UploadFile[]>([]);
   const [faviconFileList, setFaviconFileList] = useState<UploadFile[]>([]);
-  const [backgroundFileList, setBackgroundFileList] = useState<UploadFile[]>([]);
+  const [backgroundFileList, setBackgroundFileList] = useState<UploadFile[]>(
+    [],
+  );
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string>("");
   const [faviconPreviewUrl, setFaviconPreviewUrl] = useState<string>("");
   const [backgroundPreviewUrl, setBackgroundPreviewUrl] = useState<string>("");
@@ -221,7 +245,9 @@ const TenantEditPage: React.FC = () => {
     if (typeof document === "undefined") return;
 
     const setOrCreateLink = (rel: string) => {
-      let link = document.querySelector(`link[rel='${rel}']`) as HTMLLinkElement | null;
+      let link = document.querySelector(
+        `link[rel='${rel}']`,
+      ) as HTMLLinkElement | null;
       if (!link) {
         link = document.createElement("link");
         link.rel = rel;
@@ -254,7 +280,6 @@ const TenantEditPage: React.FC = () => {
     };
   }, [deleteModalVisible]);
 
-
   const fetchTenantDetails = async () => {
     try {
       setInitialLoading(true);
@@ -266,8 +291,7 @@ const TenantEditPage: React.FC = () => {
         return;
       }
 
-      const cleanHostname =
-        data.hostname?.replace(/\.restx\.food$/i, "") || "";
+      const cleanHostname = data.hostname?.replace(/\.restx\.food$/i, "") || "";
 
       const formValues: Partial<TenantUpdateInput> = {
         name: data.name,
@@ -346,10 +370,16 @@ const TenantEditPage: React.FC = () => {
         ? `${values.hostname}.restx.food`
         : undefined;
 
-      const colorValues = COLOR_FIELD_NAMES.reduce(
-        (acc, field) => ({ ...acc, [field]: form.getFieldValue(field) }),
-        {} as Partial<TenantUpdateInput>,
-      );
+      const colorValues = COLOR_FIELD_NAMES.reduce((acc, field) => {
+        const rawValue = form.getFieldValue(field);
+        const normalizedValue = toHexColorString(rawValue);
+        const fallbackValue =
+          typeof rawValue === "string" ? rawValue : undefined;
+        return {
+          ...acc,
+          [field]: normalizedValue ?? fallbackValue,
+        };
+      }, {} as Partial<TenantUpdateInput>);
 
       const requestData: TenantUpdateInput = {
         ...values,
@@ -429,7 +459,6 @@ const TenantEditPage: React.FC = () => {
         className="px-6 lg:px-8 py-8 flex-1"
         style={{ background: "var(--bg-base)", color: "var(--text)" }}>
         <div className="max-w-7xl mx-auto space-y-6">
-
           {/* --- Main Form --- */}
           <Spin spinning={initialLoading} size="large">
             <Form
@@ -489,7 +518,9 @@ const TenantEditPage: React.FC = () => {
                       name="prefix">
                       <Input
                         size="large"
-                        placeholder={t("tenants.create.fields.prefix_placeholder")}
+                        placeholder={t(
+                          "tenants.create.fields.prefix_placeholder",
+                        )}
                       />
                     </Form.Item>
 
@@ -636,7 +667,9 @@ const TenantEditPage: React.FC = () => {
                         cityFieldName="businessAddressLine3"
                         districtWardFieldName="businessAddressLine2"
                         countryFieldName="businessCountry"
-                        placeholder={t("tenants.create.fields.address_line1_placeholder")}
+                        placeholder={t(
+                          "tenants.create.fields.address_line1_placeholder",
+                        )}
                       />
                     </Form.Item>
                     <VnAddressSelect
@@ -644,16 +677,21 @@ const TenantEditPage: React.FC = () => {
                       cityFieldName="businessAddressLine3"
                       districtWardFieldName="businessAddressLine2"
                       required
-                      cityRequiredMessage={t("tenants.create.validation.city_required")}
-                      districtRequiredMessage={t("tenants.create.validation.street_name_required")}
-                      wardRequiredMessage={t("tenants.create.validation.street_name_required")}
+                      cityRequiredMessage={t(
+                        "tenants.create.validation.city_required",
+                      )}
+                      districtRequiredMessage={t(
+                        "tenants.create.validation.street_name_required",
+                      )}
+                      wardRequiredMessage={t(
+                        "tenants.create.validation.street_name_required",
+                      )}
                     />
                   </div>
 
                   <div
                     className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-dashed"
                     style={{ borderColor: "var(--border)" }}>
-
                     <Form.Item
                       label={
                         <span
@@ -767,14 +805,18 @@ const TenantEditPage: React.FC = () => {
                     boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
                   }}
                   title={
-                    <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
+                    <Title
+                      level={5}
+                      style={{ margin: 0, color: "var(--text)" }}>
                       {t("tenants.edit.tenant_settings.title")}
                     </Title>
                   }>
                   <Form.Item name="tenantSettings">
                     <TextArea
                       rows={4}
-                      placeholder={t("tenants.edit.tenant_settings.placeholder")}
+                      placeholder={t(
+                        "tenants.edit.tenant_settings.placeholder",
+                      )}
                     />
                   </Form.Item>
                 </Card>
@@ -787,7 +829,9 @@ const TenantEditPage: React.FC = () => {
                     boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
                   }}
                   title={
-                    <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
+                    <Title
+                      level={5}
+                      style={{ margin: 0, color: "var(--text)" }}>
                       {t("tenants.edit.system_fields.title")}
                     </Title>
                   }>
@@ -855,7 +899,6 @@ const TenantEditPage: React.FC = () => {
                     </Title>
                   }>
                   <div className="grid grid-cols-1 gap-4">
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Form.Item
                         label={
@@ -929,7 +972,9 @@ const TenantEditPage: React.FC = () => {
                                 />
                               ) : (
                                 <div className="branding-preview-empty h-full w-full">
-                                  {t("tenants.edit.branding.favicon_upload_hint")}
+                                  {t(
+                                    "tenants.edit.branding.favicon_upload_hint",
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -970,7 +1015,9 @@ const TenantEditPage: React.FC = () => {
                               />
                             ) : (
                               <div className="branding-preview-empty h-full w-full">
-                                {t("tenants.edit.branding.background_upload_hint")}
+                                {t(
+                                  "tenants.edit.branding.background_upload_hint",
+                                )}
                               </div>
                             )}
                           </div>
@@ -1212,7 +1259,6 @@ const TenantEditPage: React.FC = () => {
             background: "var(--modal-overlay)",
           },
         }}>
-
         <div className="py-4 space-y-4">
           <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-4">
             <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">

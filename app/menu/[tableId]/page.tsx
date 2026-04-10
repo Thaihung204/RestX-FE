@@ -51,6 +51,8 @@ export default function MenuPage() {
   const { t } = useTranslation("common");
   const screens = useBreakpoint();
   const isSmallPhone = !screens.sm;
+  const pageHorizontalPadding = isSmallPhone ? 12 : 16;
+  const sectionGap = isSmallPhone ? 24 : 32;
   const router = useRouter();
   const params = useParams();
   
@@ -442,14 +444,14 @@ export default function MenuPage() {
               onClick={() => router.push(`/customer/${tableId}`)}
               style={{
                 position: "absolute",
-                top: 16,
-                left: 16,
+                top: isSmallPhone ? 12 : 16,
+                left: pageHorizontalPadding,
                 background: "var(--modal-overlay)",
                 backdropFilter: "blur(8px)",
                 border: "1px solid var(--border)",
                 color: "var(--text)",
-                height: 40,
-                width: 40,
+                height: isSmallPhone ? 36 : 40,
+                width: isSmallPhone ? 36 : 40,
                 borderRadius: 12,
                 display: "flex",
                 alignItems: "center",
@@ -461,17 +463,17 @@ export default function MenuPage() {
             <div
               style={{
                 position: "absolute",
-                bottom: 20,
-                left: 12,
-                right: 12,
+                bottom: isSmallPhone ? 16 : 20,
+                left: pageHorizontalPadding,
+                right: pageHorizontalPadding,
                 maxWidth: 1200,
                 margin: "0 auto",
               }}>
               <Text
                 style={{
                   color: "var(--primary)",
-                  letterSpacing: 2,
-                  fontSize: 12,
+                  letterSpacing: isSmallPhone ? 1.5 : 2,
+                  fontSize: isSmallPhone ? 11 : 12,
                   fontWeight: 700,
                   textTransform: "uppercase",
                 }}>
@@ -479,7 +481,12 @@ export default function MenuPage() {
               </Text>
               <Title
                 level={2}
-                style={{ margin: "4px 0 0", color: "var(--text)" }}>
+                style={{
+                  margin: "4px 0 0",
+                  color: "var(--text)",
+                  fontSize: isSmallPhone ? 28 : 32,
+                  lineHeight: isSmallPhone ? 1.2 : 1.15,
+                }}>
                 {t("menu_page.title")}
               </Title>
             </div>
@@ -492,13 +499,15 @@ export default function MenuPage() {
                 background: "var(--bg-base)",
                 backdropFilter: "blur(16px)",
                 borderBottom: "1px solid var(--border)",
-                padding: "12px 16px",
+                padding: isSmallPhone
+                  ? `10px ${pageHorizontalPadding}px`
+                  : `12px ${pageHorizontalPadding}px`,
                 boxShadow: "var(--shadow-md)",
                 zIndex: 100,
               }}>
               <div style={{ maxWidth: 1200, margin: "0 auto" }}>
                 <Input
-                  size="large"
+                  size={isSmallPhone ? "middle" : "large"}
                   placeholder={t("menu_page.search_placeholder")}
                   prefix={<SearchOutlined />}
                   value={searchText}
@@ -519,10 +528,12 @@ export default function MenuPage() {
             style={{
               maxWidth: 1200,
               margin: "0 auto",
-              padding: isSmallPhone ? "16px 10px" : "20px 12px",
+              padding: isSmallPhone
+                ? `16px ${pageHorizontalPadding}px`
+                : `20px ${pageHorizontalPadding}px`,
             }}>
             {/* Hiển thị phẳng các category và dishes */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: sectionGap }}>
               {categoriesWithDishes.map((categoryGroup) => (
                 <div
                   key={categoryGroup.category.id}
