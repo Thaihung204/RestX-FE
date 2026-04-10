@@ -85,13 +85,38 @@ export interface OrderDto {
   orderDetails: OrderDetailDto[];
 }
 
+const isOrderDtoLike = (value: unknown): value is OrderDto => {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<OrderDto>;
+  return Array.isArray(candidate.orderDetails);
+};
+
 const extractOrders = (data: unknown): OrderDto[] => {
   if (!data) return [];
   if (Array.isArray(data)) return data as OrderDto[];
 
   const record = data as Record<string, unknown>;
+
+  // Common API wrapper support: { data: ... } / { Data: ... }
+  const wrappedData = (record.data || record.Data) as unknown;
+  if (Array.isArray(wrappedData)) return wrappedData as OrderDto[];
+  if (wrappedData && typeof wrappedData === "object") {
+    const wrappedRecord = wrappedData as Record<string, unknown>;
+    const wrappedOrders = (wrappedRecord.orders ||
+      wrappedRecord.Orders) as unknown;
+    if (Array.isArray(wrappedOrders)) return wrappedOrders as OrderDto[];
+    if (isOrderDtoLike(wrappedData)) {
+      return [wrappedData];
+    }
+  }
+
   const orders = (record.orders || record.Orders) as unknown;
   if (Array.isArray(orders)) return orders as OrderDto[];
+
+  // Single-order payload support
+  if (isOrderDtoLike(data)) {
+    return [data];
+  }
 
   return [];
 };
@@ -107,6 +132,12 @@ export interface OrderFilterParams {
   pageSize?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+}
+
+export interface StaffOrderQueryParams {
+  Status?: number;
+  From?: string;
+  To?: string;
 }
 
 export interface OrderDetailListItemDto {
@@ -182,8 +213,10 @@ class OrderService {
     );
   }
 
-  async getAllOrders(): Promise<OrderDto[]> {
-    const response = await axiosInstance.get("/orders");
+  async getAllOrders(params?: StaffOrderQueryParams): Promise<OrderDto[]> {
+    const response = await axiosInstance.get("/orders", {
+      params,
+    });
     return extractOrders(response.data);
   }
 
@@ -191,6 +224,13 @@ class OrderService {
     const response = await axiosInstance.get("/orders", {
       params,
     });
+    return extractOrders(response.data);
+  }
+
+  async getOrdersByTable(tableId: string): Promise<OrderDto[]> {
+    const response = await axiosInstance.get(
+      `/orders/table/${encodeURIComponent(tableId)}`,
+    );
     return extractOrders(response.data);
   }
 

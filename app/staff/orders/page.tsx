@@ -120,6 +120,19 @@ export default function OrderManagement() {
   const dishNameMapRef = useRef<Record<string, string>>({});
   const initializedRef = useRef(false);
 
+  const getTodayOrderQuery = useCallback(() => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+
+    return {
+      Status: 0,
+      From: `${yyyy}-${mm}-${dd}T00:00:00Z`,
+      To: `${yyyy}-${mm}-${dd}T23:59:59Z`,
+    };
+  }, []);
+
   const buildStatusValueMap = useCallback((statuses: OrderDetailStatus[]) => {
     return statuses.reduce<Record<string, string>>((acc, status) => {
       const codeKey = status.code?.toLowerCase();
@@ -236,14 +249,14 @@ export default function OrderManagement() {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
-      const data = await orderService.getAllOrders();
+      const data = await orderService.getAllOrders(getTodayOrderQuery());
       setOrders(mapOrders(data ?? []));
     } catch (error) {
       console.error("Failed to fetch orders:", error);
     } finally {
       inFlightRef.current = false;
     }
-  }, [mapOrders]);
+  }, [getTodayOrderQuery, mapOrders]);
 
   const refreshOrders = useCallback(
     async (force = false) => {
@@ -270,7 +283,7 @@ export default function OrderManagement() {
           orderDetailStatusService.getAllStatuses(),
           orderStatusService.getAllStatuses(),
           menuService.getMenu(),
-          orderService.getAllOrders(),
+          orderService.getAllOrders(getTodayOrderQuery()),
         ]);
 
       const safeStatuses = statusData ?? [];
@@ -290,7 +303,7 @@ export default function OrderManagement() {
     } finally {
       inFlightRef.current = false;
     }
-  }, [buildDishNameMap, buildStatusValueMap, mapOrders]);
+  }, [buildDishNameMap, buildStatusValueMap, getTodayOrderQuery, mapOrders]);
 
   useEffect(() => {
     loadInitialData();

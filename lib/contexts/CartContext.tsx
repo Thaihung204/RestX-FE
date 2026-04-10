@@ -12,6 +12,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useTenant } from "./TenantContext";
@@ -59,10 +60,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
   const [cartModalOpen, setCartModalOpen] = useState(false);
-  const [activeCartTab, setActiveCartTab] = useState<string>("1");
+  const [activeCartTab, setActiveCartTabState] = useState<string>("1");
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [orderTableId, setOrderTableId] = useState<string | undefined>();
   const [orderCustomerId, setOrderCustomerId] = useState<string | undefined>();
+  const loadedOrderTableIdRef = useRef<string | undefined>(undefined);
 
   // Computed values
   const cartItemCount = useMemo(
@@ -142,44 +144,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!orderTableId) return;
 
     try {
-      const [allOrders, menuData] = await Promise.all([
-        orderService.getAllOrders(),
+      const [orders, menuData] = await Promise.all([
+        orderService.getOrdersByTable(orderTableId),
         menuService.getMenu(),
       ]);
-
-      const now = new Date();
-      const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
-
-      const orders = allOrders.filter((order) => {
-        const sessions = (order.tableSessions ?? []) as Array<{
-          tableId?: string | null;
-          isActive?: boolean | null;
-          startedAt?: string | null;
-          endedAt?: string | null;
-        }>;
-
-        const matchesSessionTable = sessions.some((session) => {
-          if (!session?.tableId || session.tableId === EMPTY_GUID) return false;
-          if (session.tableId !== orderTableId) return false;
-
-          const startedOk = !session.startedAt || new Date(session.startedAt) <= now;
-          const notEnded = !session.endedAt || new Date(session.endedAt) > now;
-          const activeByWindow = startedOk && notEnded;
-
-          // Ưu tiên isActive nếu backend có set, fallback theo time window
-          return session.isActive ?? activeByWindow;
-        });
-
-        const fallbackMatchByIds =
-          order.tableId === orderTableId ||
-          (order.tableIds && order.tableIds.includes(orderTableId));
-
-        const matchesTable = matchesSessionTable || fallbackMatchByIds;
-        const matchesPayment = (order.paymentStatusId ?? order.paymentStatus ?? 0) === 0;
-        const isNotDone = !order.completedAt && !order.cancelledAt;
-
-        return matchesTable && matchesPayment && isNotDone;
-      });
 
       const dishLookup = new Map<
         string,
@@ -210,9 +178,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         order.orderDetails?.forEach((detail) => {
           const dish = dishLookup.get(detail.dishId);
           const quantity = detail.quantity || 0;
-          const status = detail.status || "Pending";
+          if (quantity <= 0) return;
+
+          const status = detail.status?.trim() || "Pending";
           const aggregationKey = `${detail.dishId}__${status.toLowerCase()}`;
           const existing = aggregatedByDishAndStatus.get(aggregationKey);
+          const fallbackPrice =
+            typeof detail.dishPrice === "number"
+              ? detail.dishPrice.toString()
+              : "0";
 
           if (existing) {
             aggregatedByDishAndStatus.set(aggregationKey, {
@@ -224,8 +198,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
           aggregatedByDishAndStatus.set(aggregationKey, {
             id: detail.dishId,
-            name: dish?.name || `Dish ${detail.dishId.slice(0, 8)}`,
-            price: dish?.price || "0",
+            name:
+              dish?.name ||
+              detail.dishName ||
+              `Dish ${detail.dishId.slice(0, 8)}`,
+            price: dish?.price || fallbackPrice,
             quantity,
             category: "food",
             categoryId: dish?.categoryId || "",
@@ -275,8 +252,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       await orderService.createOrder(payload);
 
       setCartItems([]);
-      setActiveCartTab("2");
-      await fetchOrderedItems();
       messageApi.success(
         "Đặt món thành công! Yêu cầu đã được gửi đến nhân viên.",
       );
@@ -291,7 +266,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsSubmittingOrder(false);
     }
-  }, [cartItems, fetchOrderedItems, isSubmittingOrder, messageApi, orderTableId, orderCustomerId, totalCartAmount]);
+  }, [cartItems, isSubmittingOrder, messageApi, orderTableId, orderCustomerId]);
 
   const requestPayment = useCallback(() => {
     if (orderedItems.length === 0) {
@@ -304,59 +279,104 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!orderTableId) return;
+    if (loadedOrderTableIdRef.current === orderTableId) return;
+
+    loadedOrderTableIdRef.current = orderTableId;
     fetchOrderedItems();
   }, [orderTableId, fetchOrderedItems]);
 
-useEffect(() => {
-  if (!orderTableId || !tenant?.id) return;
-
-  const tenantId = tenant.id;
-  let isMounted = true;
-
-  // BE broadcast: { id, order: { tableId, tableIds, ... } }
-  const handleOrderChange = (payload: any) => {
-    const changedTableId = payload?.tableId || payload?.order?.tableId;
-    const changedTableIds = payload?.order?.tableIds as string[] | undefined;
-    if (
-      changedTableId &&
-      changedTableId !== orderTableId &&
-      (!changedTableIds || !changedTableIds.includes(orderTableId!))
-    ) return;
-    if (isMounted) fetchOrderedItems();
-  };
-
-  const events = ["orders.created", "orders.updated", "orders.deleted"];
-
-  const setupSignalR = async () => {
-    try {
-      await orderSignalRService.start();
-      
-      const conn = orderSignalRService.getConnection();
-      if (conn.state === HubConnectionState.Connected) {
-        await orderSignalRService.invoke("JoinTenantGroup", tenantId);
-        
-        events.forEach((event) => orderSignalRService.on(event, handleOrderChange));
-        console.log("SignalR: Listening to order events for tenant:", tenantId);
-      }
-    } catch (error) {
-      console.error("SignalR: Setup failed", error);
-    }
-  };
-
-  setupSignalR();
-
-  // Clean up
-  return () => {
-    isMounted = false;
-    events.forEach((event) => orderSignalRService.off(event, handleOrderChange));
-    orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
-  };
-}, [orderTableId, tenant?.id, fetchOrderedItems]);
-
   useEffect(() => {
-    if (!cartModalOpen || activeCartTab !== "2") return;
-    fetchOrderedItems();
-  }, [cartModalOpen, activeCartTab, fetchOrderedItems]);
+    if (!orderTableId || !tenant?.id) return;
+
+    const tenantId = tenant.id;
+    let isMounted = true;
+    const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+
+    // Supports multiple payload shapes:
+    // - { id, order: {...} }
+    // - { id, result: {...} }
+    // - { ...order }
+    const handleOrderChange = (payload: any) => {
+      const orderPayload = payload?.order || payload?.result || payload;
+      const changedTableId = orderPayload?.tableId as string | undefined;
+      const changedTableIds = orderPayload?.tableIds as string[] | undefined;
+      const changedTableSessions = orderPayload?.tableSessions as
+        | Array<{ tableId?: string | null }>
+        | undefined;
+
+      const matchesDirectTable =
+        !!changedTableId &&
+        changedTableId !== EMPTY_GUID &&
+        changedTableId === orderTableId;
+
+      const matchesTableIds =
+        Array.isArray(changedTableIds) &&
+        changedTableIds.includes(orderTableId);
+
+      const matchesTableSessions =
+        Array.isArray(changedTableSessions) &&
+        changedTableSessions.some(
+          (session) => session?.tableId === orderTableId,
+        );
+
+      // Some events (e.g. delete) may not contain table info; refresh defensively.
+      const hasNoTableHints =
+        !changedTableId &&
+        (!Array.isArray(changedTableIds) || changedTableIds.length === 0) &&
+        (!Array.isArray(changedTableSessions) ||
+          changedTableSessions.length === 0);
+
+      if (
+        !matchesDirectTable &&
+        !matchesTableIds &&
+        !matchesTableSessions &&
+        !hasNoTableHints
+      ) {
+        return;
+      }
+
+      if (!isMounted) return;
+      fetchOrderedItems();
+    };
+
+    const events = ["orders.created", "orders.updated", "orders.deleted"];
+
+    const setupSignalR = async () => {
+      try {
+        await orderSignalRService.start();
+
+        const conn = orderSignalRService.getConnection();
+        if (conn.state === HubConnectionState.Connected) {
+          await orderSignalRService.invoke("JoinTenantGroup", tenantId);
+
+          events.forEach((event) =>
+            orderSignalRService.on(event, handleOrderChange),
+          );
+          console.log(
+            "SignalR: Listening to order events for tenant:",
+            tenantId,
+          );
+        }
+      } catch (error) {
+        console.error("SignalR: Setup failed", error);
+      }
+    };
+
+    setupSignalR();
+
+    // Clean up
+    return () => {
+      isMounted = false;
+      events.forEach((event) =>
+        orderSignalRService.off(event, handleOrderChange),
+      );
+      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+    };
+  }, [orderTableId, tenant?.id, fetchOrderedItems]);
+
+  const setActiveCartTab = useCallback((tab: string) => {
+    setActiveCartTabState(tab);
+  }, []);
 
   // Modal actions
   const openCartModal = useCallback(() => {
@@ -411,6 +431,7 @@ useEffect(() => {
       fetchOrderedItems,
       openCartModal,
       closeCartModal,
+      setActiveCartTab,
       setOrderContext,
     ],
   );

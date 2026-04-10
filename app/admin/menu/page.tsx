@@ -90,6 +90,12 @@ export default function MenuPage() {
               : null) ||
             "/placeholder-dish.jpg",
           description: item.description || "",
+          isActive:
+            item.isActive !== undefined
+              ? item.isActive
+              : item.available !== undefined
+                ? item.available
+                : true,
           available:
             item.isActive !== undefined
               ? item.isActive
@@ -143,7 +149,7 @@ export default function MenuPage() {
   }, []);
 
   const handleToggleStatus = async (item: DishCardItem) => {
-    const nextStatus = !item.available;
+    const nextStatus = !item.isActive;
     modal.confirm({
       title: nextStatus
         ? t("dashboard.menu.ingredients.status.activate_title")
@@ -386,7 +392,7 @@ export default function MenuPage() {
                     {t("dashboard.menu.stats.available")}
                   </p>
                   <p className="text-3xl font-bold text-green-500 mt-1">
-                    {menuItems.filter((i) => i.available).length}
+                    {menuItems.filter((i) => i.isActive).length}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
@@ -586,6 +592,12 @@ export default function MenuPage() {
                           ingredients: t(
                             "dashboard.menu.ingredients.actions.ingredients",
                           ),
+                          active: t("common.active", {
+                            defaultValue: "Active",
+                          }),
+                          inactive: t("common.inactive", {
+                            defaultValue: "Inactive",
+                          }),
                           activate: t(
                             "dashboard.menu.ingredients.actions.activate",
                           ),
