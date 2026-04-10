@@ -75,13 +75,13 @@ export default function CardOrder({
 }: CardOrderProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const textSizes = {
-    table: isMobile ? 14 : 16,
-    reference: isMobile ? 12 : 13,
-    detailHeader: isMobile ? 12 : 13,
-    itemName: isMobile ? 12 : 13,
-    itemNote: isMobile ? 10 : 11,
-    quantity: isMobile ? 11 : 12,
-    total: isMobile ? 14 : 15,
+    table: isMobile ? 16 : 18,
+    reference: isMobile ? 14 : 15,
+    detailHeader: isMobile ? 14 : 15,
+    itemName: isMobile ? 14 : 15,
+    itemNote: isMobile ? 12 : 13,
+    quantity: isMobile ? 13 : 14,
+    total: isMobile ? 16 : 17 ,
   };
   const currentStatus = orderStatuses?.find(s => Number(s.id) === order.orderStatusId);
   const styleColor = currentStatus?.color || "#E5E5E5";
@@ -231,7 +231,7 @@ export default function CardOrder({
                             ? "1px dashed rgba(255, 255, 255, 0.08)"
                             : "1px dashed #EDEDED",
                       }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ flex: 1, minWidth: 0, paddingLeft: 12 }}>
                         <Text
                           style={{
                             fontSize: textSizes.itemName,

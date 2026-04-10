@@ -70,13 +70,13 @@ export default function OrderDetailsPopup({
   if (!order) return null;
 
   const textSizes = {
-    title: isMobile ? 15 : 17,
-    itemName: isMobile ? 12 : 13,
-    itemNote: isMobile ? 10 : 11,
-    itemPrice: isMobile ? 12 : 13,
-    quantity: isMobile ? 11 : 12,
-    totalLabel: isMobile ? 13 : 14,
-    totalValue: isMobile ? 14 : 16,
+    title: isMobile ? 17 : 19,
+    itemName: isMobile ? 14 : 15,
+    itemNote: isMobile ? 12 : 13,
+    itemPrice: isMobile ? 14 : 15,
+    quantity: isMobile ? 13 : 14,
+    totalLabel: isMobile ? 15 : 16,
+    totalValue: isMobile ? 16 : 18,
   };
 
   const tableNamesStr = order.tableSessions?.map((s) => s.tableCode).filter(Boolean).join(" - ") || "";

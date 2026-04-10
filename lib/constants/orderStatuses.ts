@@ -2,7 +2,7 @@ export interface MockOrderStatus {
   id: string;
   name: string;
   colorCode: string;
-  code: string;
+  // code: string;
   isDefault: boolean;
 }
 
@@ -11,21 +11,21 @@ export const MOCK_ORDER_STATUSES: MockOrderStatus[] = [
     id: "0",
     name: "Open",
     colorCode: "#faad14",
-    code: "OPEN",
+    // code: "OPEN",
     isDefault: true,
   },
   {
     id: "1",
     name: "Completed",
     colorCode: "#52c41a",
-    code: "COMPLETED",
+    // code: "COMPLETED",
     isDefault: false,
   },
   {
     id: "2",
     name: "Cancelled",
     colorCode: "#ff4d4f",
-    code: "CANCELLED",
+    // code: "CANCELLED",
     isDefault: false,
   },
 ];

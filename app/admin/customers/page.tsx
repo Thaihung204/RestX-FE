@@ -74,7 +74,7 @@ export default function CustomersPage() {
               }}>
               <ReloadOutlined />
               {refreshing
-                ? t("common.actions.loading", { defaultValue: "Đang tải..." })
+                ? t("common.loading", { defaultValue: "Đang tải..." })
                 : t("admin.reservations.refresh", { defaultValue: "Làm mới" })}
             </button>
           </div>

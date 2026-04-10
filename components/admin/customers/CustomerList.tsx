@@ -102,18 +102,10 @@ const CustomerList = forwardRef<CustomerListHandle>(
         });
 
         triggerBrowserDownload(file.blob, file.fileName);
-        message.success(
-          t("customers.export.success", {
-            defaultValue: "Xuất file thành công",
-          }),
-        );
+        message.success(t("common.messages.export_success"));
       } catch (error) {
         console.error("Error exporting customers:", error);
-        message.error(
-          t("customers.export.error", {
-            defaultValue: "Xuất file thất bại",
-          }),
-        );
+        message.error(t("common.messages.export_failed"));
       } finally {
         setExporting(false);
       }

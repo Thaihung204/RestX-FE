@@ -109,6 +109,12 @@ export interface OrderFilterParams {
   sortOrder?: "asc" | "desc";
 }
 
+export interface StaffOrderQueryParams {
+  Status?: number;
+  From?: string;
+  To?: string;
+}
+
 export interface OrderDetailListItemDto {
   id?: string;
   orderId?: string;
@@ -182,8 +188,10 @@ class OrderService {
     );
   }
 
-  async getAllOrders(): Promise<OrderDto[]> {
-    const response = await axiosInstance.get("/orders");
+  async getAllOrders(params?: StaffOrderQueryParams): Promise<OrderDto[]> {
+    const response = await axiosInstance.get("/orders", {
+      params,
+    });
     return extractOrders(response.data);
   }
 
