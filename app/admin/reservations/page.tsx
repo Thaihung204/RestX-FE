@@ -2,12 +2,13 @@
 
 import { DropDown } from "@/components/ui/DropDown";
 import reservationService, {
-    PaginatedReservations,
-    ReservationDetail,
-    ReservationListItem,
-    ReservationStatus,
+  PaginatedReservations,
+  ReservationDetail,
+  ReservationListItem,
+  ReservationStatus,
 } from "@/lib/services/reservationService";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
+import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Select, message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -463,18 +464,10 @@ export default function ReservationsPage() {
       });
 
       triggerBrowserDownload(file.blob, file.fileName);
-      message.success(
-        t("admin.reservations.export.success", {
-          defaultValue: "Xuất file thành công",
-        }),
-      );
+      message.success(t("common.messages.export_success"));
     } catch (error) {
       console.error("Failed to export reservations:", error);
-      message.error(
-        t("admin.reservations.export.error", {
-          defaultValue: "Xuất file thất bại",
-        }),
-      );
+      message.error(t("common.messages.export_failed"));
     } finally {
       setExporting(false);
     }
@@ -514,9 +507,10 @@ export default function ReservationsPage() {
                 border: "1px solid var(--primary-border)",
                 color: "var(--primary)",
               }}>
+              <DownloadOutlined />
               {exporting
-                ? t("common.actions.exporting")
-                : t("common.actions.export_excel")}
+                ? t("common.actions.exporting_report")
+                : t("common.actions.export_report")}
             </button>
 
             <button
@@ -527,6 +521,7 @@ export default function ReservationsPage() {
                 border: "1px solid var(--border)",
                 color: "var(--text)",
               }}>
+              <ReloadOutlined />
               {t("admin.reservations.refresh")}
             </button>
           </div>

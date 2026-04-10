@@ -3,6 +3,7 @@
 import CustomerList, {
   CustomerListHandle,
 } from "@/components/admin/customers/CustomerList";
+import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -56,13 +57,10 @@ export default function CustomersPage() {
                 border: "1px solid var(--primary-border)",
                 color: "var(--primary)",
               }}>
+              <DownloadOutlined />
               {exporting
-                ? t("common.actions.exporting", {
-                    defaultValue: "Đang xuất...",
-                  })
-                : t("common.actions.export_excel", {
-                    defaultValue: "Xuất Excel",
-                  })}
+                ? t("common.actions.exporting_report")
+                : t("common.actions.export_report")}
             </button>
 
             <button
@@ -74,6 +72,7 @@ export default function CustomersPage() {
                 border: "1px solid var(--border)",
                 color: "var(--text)",
               }}>
+              <ReloadOutlined />
               {refreshing
                 ? t("common.actions.loading", { defaultValue: "Đang tải..." })
                 : t("admin.reservations.refresh", { defaultValue: "Làm mới" })}

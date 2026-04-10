@@ -741,8 +741,13 @@
       "month": "Month",
       "year": "Year"
     },
+    "actions": {
+      "export_report": "Export Report"
+    },
     "messages": {
-      "overview_load_failed": "Unable to load dashboard overview"
+      "overview_load_failed": "Unable to load dashboard overview",
+      "export_success": "Report exported successfully",
+      "export_failed": "Failed to export report"
     },
     "tables_overview": {
       "title": "Tables & Reservations",
@@ -1881,7 +1886,13 @@
       "no": "No",
       "create_order": "Create New Order",
       "export_excel": "Export Excel",
-      "exporting": "Exporting..."
+      "exporting": "Exporting...",
+      "export_report": "Download report",
+      "exporting_report": "Downloading report..."
+    },
+    "messages": {
+      "export_success": "Report downloaded successfully",
+      "export_failed": "Failed to download report"
     },
     "language": "Language",
     "english": "English",
@@ -3568,6 +3579,11 @@
       "title": "Need Help?",
       "description": "To modify or cancel your reservation, please contact the restaurant directly.",
       "get_directions": "Get Directions"
+    }
+  },
+  "common": {
+    "actions": {
+      "exporting": "Exporting..."
     }
   }
 }

@@ -676,8 +676,13 @@
       "month": "Tháng",
       "year": "Năm"
     },
+    "actions": {
+      "export_report": "Xuất báo cáo"
+    },
     "messages": {
-      "overview_load_failed": "Không thể tải dữ liệu tổng quan"
+      "overview_load_failed": "Không thể tải dữ liệu tổng quan",
+      "export_success": "Xuất báo cáo thành công",
+      "export_failed": "Xuất báo cáo thất bại"
     },
     "quick_actions": {
       "title": "Thao tác nhanh",
@@ -1837,7 +1842,13 @@
       "no": "Không",
       "create_order": "Tạo Order mới",
       "export_excel": "Xuất Excel",
-      "exporting": "Đang xuất..."
+      "exporting": "Đang xuất...",
+      "export_report": "Tải báo cáo",
+      "exporting_report": "Đang tải báo cáo..."
+    },
+    "messages": {
+      "export_success": "Tải báo cáo thành công",
+      "export_failed": "Tải báo cáo thất bại"
     },
     "language": "Ngôn ngữ",
     "english": "English",
@@ -3536,6 +3547,11 @@
       "title": "Cần hỗ trợ?",
       "description": "Để thay đổi hoặc hủy đặt bàn, vui lòng liên hệ trực tiếp với nhà hàng.",
       "get_directions": "Chỉ đường"
+    }
+  },
+  "common": {
+    "actions": {
+      "exporting": "Đang xuất..."
     }
   }
 }

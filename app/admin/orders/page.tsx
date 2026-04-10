@@ -8,6 +8,7 @@ import orderStatusService, {
 } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
+import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import Link from "next/link";
@@ -29,7 +30,6 @@ interface OrderRow {
 }
 
 const PAGE_SIZE = 10;
-const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
 
 export default function OrdersPage() {
   const { t } = useTranslation("common");
@@ -42,7 +42,9 @@ export default function OrdersPage() {
   const [customerSearch, setCustomerSearch] = useState("");
   const [tableSearch, setTableSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">("");
+  const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">(
+    "",
+  );
   const [exporting, setExporting] = useState<boolean>(false);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
@@ -278,18 +280,10 @@ export default function OrdersPage() {
       });
 
       triggerBrowserDownload(file.blob, file.fileName);
-      message.success(
-        t("admin.orders.export.success", {
-          defaultValue: "Xuất file thành công",
-        }),
-      );
+      message.success(t("common.messages.export_success"));
     } catch (error) {
       console.error("Failed to export orders:", error);
-      message.error(
-        t("admin.orders.export.error", {
-          defaultValue: "Xuất file thất bại",
-        }),
-      );
+      message.error(t("common.messages.export_failed"));
     } finally {
       setExporting(false);
     }
@@ -365,9 +359,10 @@ export default function OrdersPage() {
                 border: "1px solid var(--primary-border)",
                 color: "var(--primary)",
               }}>
+              <DownloadOutlined />
               {exporting
-                ? t("common.actions.exporting")
-                : t("common.actions.export_excel")}
+                ? t("common.actions.exporting_report")
+                : t("common.actions.export_report")}
             </button>
 
             <button
@@ -378,6 +373,7 @@ export default function OrdersPage() {
                 border: "1px solid var(--border)",
                 color: "var(--text)",
               }}>
+              <ReloadOutlined />
               {t("admin.reservations.refresh", { defaultValue: "Làm mới" })}
             </button>
           </div>
@@ -515,7 +511,6 @@ export default function OrdersPage() {
             background: "var(--card)",
             border: "1px solid var(--border)",
           }}>
-
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead style={{ background: "var(--surface)" }}>

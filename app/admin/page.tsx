@@ -11,9 +11,13 @@ import dashboardService, {
   OrderTrendPoint,
   RevenueTrendPoint,
 } from "@/lib/services/dashboardService";
+import reportService, { ReportType } from "@/lib/services/reportService";
 import reservationService, {
   PaginatedReservations,
 } from "@/lib/services/reservationService";
+import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
+import { DownloadOutlined } from "@ant-design/icons";
+import { App } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -29,6 +33,13 @@ const filterToApiType: Record<DashboardFilterOption, DashboardFilterType> = {
   week: "week",
   month: "month",
   year: "year",
+};
+
+const filterToReportType: Record<DashboardFilterOption, ReportType> = {
+  day: "weekly",
+  week: "weekly",
+  month: "monthly",
+  year: "yearly",
 };
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
@@ -306,6 +317,7 @@ const normalizeOrderChartData = (
 };
 
 export default function DashboardPage() {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const [reservationData, setReservationData] =
     useState<PaginatedReservations | null>(null);
@@ -319,6 +331,7 @@ export default function DashboardPage() {
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [dashboardFilter, setDashboardFilter] =
     useState<DashboardFilterOption>("week");
+  const [exportingReport, setExportingReport] = useState(false);
 
   const filterOptions: DashboardFilterOption[] = [
     "day",
@@ -425,6 +438,23 @@ export default function DashboardPage() {
     }
   }, [reservationPage]);
 
+  const handleExportReport = useCallback(async () => {
+    setExportingReport(true);
+    try {
+      const file = await reportService.exportReport({
+        reportType: filterToReportType[dashboardFilter],
+      });
+
+      triggerBrowserDownload(file.blob, file.fileName);
+      message.success(t("dashboard.messages.export_success"));
+    } catch (error) {
+      console.error("Failed to export report:", error);
+      message.error(t("dashboard.messages.export_failed"));
+    } finally {
+      setExportingReport(false);
+    }
+  }, [dashboardFilter, message, t]);
+
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
@@ -438,8 +468,8 @@ export default function DashboardPage() {
       className="flex-1 p-6 lg:p-8"
       style={{ background: "var(--bg-base)", color: "var(--text)" }}>
       <div className="space-y-6">
-        <section>
-          <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-2">
             {filterOptions.map((option) => {
               const isActive = dashboardFilter === option;
 
@@ -461,6 +491,27 @@ export default function DashboardPage() {
               );
             })}
           </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleExportReport}
+              disabled={exportingReport}
+              className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:opacity-50"
+              style={{
+                background: "var(--primary-soft)",
+                border: "1px solid var(--primary-border)",
+                color: "var(--primary)",
+              }}>
+              <DownloadOutlined />
+              {exportingReport
+                ? t("common.actions.exporting")
+                : t("dashboard.actions.export_report")}
+            </button>
+          </div>
+        </div>
+
+        <section>
 
           {dashboardError && (
             <p className="text-sm mb-3" style={{ color: "#ef4444" }}>
