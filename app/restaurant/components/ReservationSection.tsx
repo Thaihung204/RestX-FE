@@ -146,6 +146,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [layout, setLayout] = useState<Layout | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(false);
     const [selectedTables, setSelectedTables] = useState<Table[]>([]);
+    const [selectedPanorama, setSelectedPanorama] = useState<{ tableId: string; tableLabel: string; imageUrl: string } | null>(null);
     const [userDetails, setUserDetails] = useState<UserDetails>({
         name: '',
         phone: '',
@@ -354,12 +355,34 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 rotation: table.rotation || 0,
     });
 
-    const handleMapTableClick = (table: TableData) => {
+    const handleMapTableClick = async (table: TableData) => {
+        const alreadySelected = selectedTables.some(t => t.id === table.id);
+
         setSelectedTables(prev => {
-            const exists = prev.some(t => t.id === table.id);
-            if (exists) return prev.filter(t => t.id !== table.id);
+            if (alreadySelected) return prev.filter(t => t.id !== table.id);
             return [...prev, buildSelectedTable(table)];
         });
+
+        if (alreadySelected) {
+            setSelectedPanorama(null);
+            return;
+        }
+
+        try {
+            const fullTable = await tableService.getTableById(table.id);
+            const imageUrl = fullTable?.cubeFrontImageUrl || fullTable?.defaultViewUrl || '';
+            if (imageUrl) {
+                setSelectedPanorama({
+                    tableId: table.id,
+                    tableLabel: table.name,
+                    imageUrl,
+                });
+            } else {
+                setSelectedPanorama(null);
+            }
+        } catch {
+            setSelectedPanorama(null);
+        }
     };
 
     // --- Gemini Integration ---
@@ -800,6 +823,19 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         <div className="reservation-empty-warning">
                                             <span className="material-symbols-outlined">info</span>
                                             <span>{t('landing.booking.table_map.no_table_selected')}</span>
+                                        </div>
+                                    )}
+
+                                    {selectedPanorama && (
+                                        <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--surface)]">
+                                            <div className="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] border-b border-[var(--border)]">
+                                                360 View · Table {selectedPanorama.tableLabel}
+                                            </div>
+                                            <img
+                                                src={selectedPanorama.imageUrl}
+                                                alt={`Panorama table ${selectedPanorama.tableLabel}`}
+                                                className="w-full h-40 object-cover"
+                                            />
                                         </div>
                                     )}
                                 </div>

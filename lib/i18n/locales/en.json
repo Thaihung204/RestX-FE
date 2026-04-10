@@ -652,6 +652,8 @@
       "title": "Table management",
       "subtitle": "Manage tables and reservations",
       "add_floor": "Add area",
+      "edit_floor": "Edit area",
+      "delete_floor": "Delete area",
       "add_table": "Add table",
       "status": {
         "available": "Available",

@@ -401,6 +401,8 @@
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
       "add_floor": "Thêm khu vực",
+      "edit_floor": "Sửa khu vực",
+      "delete_floor": "Xóa khu vực",
       "add_table": "Thêm bàn",
       "status": {
         "available": "Trống",
@@ -1264,6 +1266,8 @@
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
       "add_floor": "Thêm khu vực",
+      "edit_floor": "Sửa khu vực",
+      "delete_floor": "Xóa khu vực",
       "add_table": "Thêm bàn",
       "add_area": "Thêm khu vực",
       "add_zone": "Vẽ vùng",
