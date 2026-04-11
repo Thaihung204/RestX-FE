@@ -2,6 +2,7 @@
 
 import StaffAuthGuard from "@/components/auth/StaffAuthGuard";
 import {
+  ApartmentOutlined,
   BellOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
@@ -13,7 +14,7 @@ import {
   MenuUnfoldOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
-  TableOutlined,
+
   UserOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
@@ -78,7 +79,9 @@ export default function StaffLayout({
     .toLowerCase();
   const isKitchenPosition =
     normalizedPosition === "kitchen" ||
-    normalizedPosition === "kitchen staff";
+    normalizedPosition === "kitchen staff" ||
+    normalizedPosition.includes("kitchen") ||
+    normalizedPosition === "chef";
   const isWaiterPosition = normalizedPosition === "waiter";
 
   const initials = displayName
@@ -96,20 +99,20 @@ export default function StaffLayout({
       label: t("staff.menu.dashboard"),
     },
     {
-      key: "/staff/tables",
-      icon: <TableOutlined />,
-      label:
-        isMobile || isTablet
-          ? t("staff.menu.tables_short")
-          : t("staff.menu.tables"),
-    },
-    {
       key: "/staff/orders",
       icon: <ShoppingCartOutlined />,
       label:
         isMobile || isTablet
           ? t("staff.menu.orders_short")
           : t("staff.menu.orders"),
+    },
+    {
+      key: "/staff/tables",
+      icon: <ApartmentOutlined />,
+      label:
+        isMobile || isTablet
+          ? t("staff.menu.tables_short")
+          : t("staff.menu.tables"),
     },
     {
       key: "/staff/kitchen",
@@ -566,7 +569,7 @@ export default function StaffLayout({
           style={{
             flex: 1,
             minWidth: 0,
-            height: "100%",
+            minHeight: 0,
             overflowY: "auto",
             overflowX: "hidden",
             WebkitOverflowScrolling: "touch",

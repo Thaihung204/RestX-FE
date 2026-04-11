@@ -2,8 +2,7 @@ import axiosInstance from './axiosInstance';
 
 export enum TableStatus {
     Available = 0,
-    Reserved = 1,
-    Occupied = 2
+    Occupied = 1
 }
 
 export interface TableItem {
@@ -197,7 +196,7 @@ export interface FloorLayoutTableItem {
     id: string;
     code: string;
     seatingCapacity: number;
-    /** Numeric enum as string: "0"=Available, "1"=Reserved, "2"=Occupied */
+    /** Numeric enum as string: "0"=Available, "1"=Occupied */
     status: string;
     layout: {
         x: number;

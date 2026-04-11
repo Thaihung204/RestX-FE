@@ -59,6 +59,8 @@ export interface OrderDto {
   createdDate?: string | null;
   tableId: string;
   customerId: string;
+  customerName?: string | null;
+  customerEmail?: string | null;
   reservationId?: string | null;
   orderStatusId: number;
   paymentStatusId?: number;

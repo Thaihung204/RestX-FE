@@ -373,7 +373,7 @@ const HeroSection: React.FC = () => {
                       {[
                         { table: 'A02', total: 'đ750.000', status: t('staff.orders.status.pending'), color: 'var(--primary)', bar: 88 },
                         { table: 'B01', total: 'đ1.25M', status: t('staff.orders.status.served'), color: '#52c41a', bar: 72 },
-                        { table: 'VIP01', total: 'đ3.48M', status: t('staff.tables.status.reserved'), color: '#1890ff', bar: 64 },
+                        { table: 'VIP01', total: 'đ3.48M', status: t('staff.tables.status.occupied'), color: 'var(--primary)', bar: 64 },
                       ].map((order, i) => (
                         <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

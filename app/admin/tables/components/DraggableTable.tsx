@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useRef } from "react";
 
-type TableStatus = "AVAILABLE" | "OCCUPIED" | "RESERVED" | "CLEANING" | "DISABLED" | "SELECTED";
+type TableStatus = "AVAILABLE" | "OCCUPIED" | "DISABLED" | "SELECTED";
 
 export interface TableData {
   id: string;
@@ -38,16 +38,7 @@ const STATUS_CONFIG = {
     fill: "#fff1f0",
     text: "#ff4d4f",
   },
-  RESERVED: {
-    stroke: "#1890ff",
-    fill: "#e6f7ff",
-    text: "#1890ff",
-  },
-  CLEANING: {
-    stroke: "#faad14",
-    fill: "#fff7e6",
-    text: "#faad14",
-  },
+
   DISABLED: {
     stroke: "#d9d9d9",
     fill: "#f5f5f5",

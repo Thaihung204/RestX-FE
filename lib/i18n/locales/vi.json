@@ -401,6 +401,8 @@
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
       "add_floor": "Thêm khu vực",
+      "edit_floor": "Sửa khu vực",
+      "delete_floor": "Xóa khu vực",
       "add_table": "Thêm bàn",
       "status": {
         "available": "Trống",
@@ -484,14 +486,16 @@
     },
     "menu": {
       "dashboard": "Tổng quan",
-      "tables": "Quản lý bàn",
+      "tables": "Bàn",
       "tables_short": "Bàn",
       "orders": "Quản lý Order",
       "orders_short": "Order",
       "kitchen": "Bếp",
       "checkout": "Thanh toán",
       "attendance": "Chấm công",
-      "reservations": "Đặt bàn"
+      "reservations": "Đặt bàn",
+      "floor_activity": "Hoạt động sàn",
+      "floor_activity_short": "Sàn"
     },
     "user_menu": {
       "profile": "Thông tin cá nhân",
@@ -619,6 +623,55 @@
         "checkout_success": "Chấm công ra lúc {time}",
         "break_start_success": "Bắt đầu nghỉ giải lao lúc {time}",
         "break_end_success": "Kết thúc nghỉ giải lao lúc {time}"
+      }
+    },
+    "floor_activity": {
+      "title": "B\u00e0n",
+      "last_updated": "C\u1eadp nh\u1eadt l\u00fac",
+      "refresh": "L\u00e0m m\u1edbi",
+      "all_floors": "T\u1ea5t c\u1ea3 t\u1ea7ng",
+      "no_floor": "Ch\u01b0a ph\u00e2n t\u1ea7ng",
+      "no_tables": "Kh\u00f4ng c\u00f3 b\u00e0n n\u00e0o",
+      "occupied_suffix": "b\u00e0n \u0111ang ph\u1ee5c v\u1ee5",
+      "reserved_label": "\u0110\u00e3 \u0111\u1eb7t tr\u01b0\u1edbc",
+      "cleaning_label": "\u0110ang d\u1ecdn d\u1eb9p",
+      "items": "m\u00f3n",
+      "occupancy_rate": "T\u1ef7 l\u1ec7 l\u1ea5p \u0111\u1ea7y",
+      "active_revenue": "Doanh thu \u0111ang ph\u1ee5c v\u1ee5",
+      "search_placeholder": "T\u00ecm m\u00e3 reservation...",
+      "table_label": "B\u00c0N",
+      "seats_label": "ch\u1ed7 ng\u1ed3i",
+      "filter": {
+        "all": "T\u1ea5t c\u1ea3 tr\u1ea1ng th\u00e1i",
+        "pending": "Ch\u1edd x\u00e1c nh\u1eadn",
+        "confirmed": "\u0110\u00e3 x\u00e1c nh\u1eadn",
+        "checkin": "Check-in"
+      },
+      "status": {
+        "available": "Tr\u1ed1ng",
+        "occupied": "C\u00f3 kh\u00e1ch",
+        "reserved": "\u0110\u00e3 \u0111\u1eb7t",
+        "cleaning": "\u0110ang d\u1ecdn"
+      },
+      "stats": {
+        "occupied": "\u0110ang ph\u1ee5c v\u1ee5",
+        "available": "Tr\u1ed1ng",
+        "has_reservation": "C\u00f3 \u0111\u1eb7t b\u00e0n"
+      },
+      "modal": {
+        "reserved_by": "Ng\u01b0\u1eddi \u0111\u1eb7t",
+        "phone": "S\u1ed1 \u0111i\u1ec7n tho\u1ea1i",
+        "reservation_time": "Th\u1eddi gian \u0111\u1eb7t",
+        "guest_count": "S\u1ed1 kh\u00e1ch",
+        "total": "T\u1ed5ng ti\u1ec1n",
+        "start_time": "B\u1eaft \u0111\u1ea7u",
+        "payment": "Thanh to\u00e1n",
+        "seats": "ch\u1ed7 ng\u1ed3i",
+        "guests": "kh\u00e1ch",
+        "checkin_btn": "Check-in",
+        "checkin_success": "Check-in th\u00e0nh c\u00f4ng!",
+        "checkin_error": "Check-in th\u1ea5t b\u1ea1i",
+        "customer": "Kh\u00e1ch h\u00e0ng"
       }
     }
   },
@@ -1213,6 +1266,8 @@
       "title": "Quản lý bàn",
       "subtitle": "Quản lý bàn và đặt bàn",
       "add_floor": "Thêm khu vực",
+      "edit_floor": "Sửa khu vực",
+      "delete_floor": "Xóa khu vực",
       "add_table": "Thêm bàn",
       "add_area": "Thêm khu vực",
       "add_zone": "Vẽ vùng",

@@ -458,14 +458,16 @@
     },
     "menu": {
       "dashboard": "Dashboard",
-      "tables": "Table Management",
+      "tables": "Tables",
       "tables_short": "Tables",
       "orders": "Order Management",
       "orders_short": "Orders",
       "kitchen": "Kitchen",
       "checkout": "Checkout",
       "attendance": "Attendance",
-      "reservations": "Reservations"
+      "reservations": "Reservations",
+      "floor_activity": "Floor Activity",
+      "floor_activity_short": "Floor"
     },
     "user_menu": {
       "profile": "Profile",
@@ -594,6 +596,55 @@
         "break_start_success": "Break started at {time}",
         "break_end_success": "Break ended at {time}"
       }
+    },
+    "floor_activity": {
+      "title": "Tables",
+      "last_updated": "Updated at",
+      "refresh": "Refresh",
+      "all_floors": "All Floors",
+      "no_floor": "No Floor Assigned",
+      "no_tables": "No tables found",
+      "occupied_suffix": "tables serving",
+      "reserved_label": "Reserved",
+      "cleaning_label": "Being cleaned",
+      "items": "items",
+      "occupancy_rate": "Occupancy Rate",
+      "active_revenue": "Active Revenue",
+      "search_placeholder": "Search reservation code...",
+      "table_label": "TABLE",
+      "seats_label": "seats",
+      "filter": {
+        "all": "All statuses",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "checkin": "Check-in"
+      },
+      "status": {
+        "available": "Available",
+        "occupied": "Occupied",
+        "reserved": "Reserved",
+        "cleaning": "Cleaning"
+      },
+      "stats": {
+        "occupied": "Occupied",
+        "available": "Available",
+        "has_reservation": "Has Reservation"
+      },
+      "modal": {
+        "reserved_by": "Reserved by",
+        "phone": "Phone",
+        "reservation_time": "Reservation time",
+        "guest_count": "Guests",
+        "total": "Total",
+        "start_time": "Started",
+        "payment": "Payment",
+        "seats": "seats",
+        "guests": "guests",
+        "checkin_btn": "Check-in",
+        "checkin_success": "Check-in successful!",
+        "checkin_error": "Check-in failed",
+        "customer": "Customer"
+      }
     }
   },
   "dashboard": {
@@ -601,6 +652,8 @@
       "title": "Table management",
       "subtitle": "Manage tables and reservations",
       "add_floor": "Add area",
+      "edit_floor": "Edit area",
+      "delete_floor": "Delete area",
       "add_table": "Add table",
       "status": {
         "available": "Available",
@@ -3596,5 +3649,3 @@
     }
   }
 }
-
-

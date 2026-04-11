@@ -6,12 +6,16 @@ import { TableData } from "@/app/admin/tables/components/DraggableTable";
 import { useTenant } from "@/lib/contexts/TenantContext";
 
 import orderService, { OrderDto } from "@/lib/services/orderService";
+import orderSignalRService from "@/lib/services/orderSignalRService";
+import dishService from "@/lib/services/dishService";
+import customerService from "@/lib/services/customerService";
 import paymentService from "@/lib/services/paymentService";
 import reservationService, { ReservationDetail, ReservationStatus } from "@/lib/services/reservationService";
-import { message } from "antd";
+import { Drawer, Tag, message } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { HubConnectionState } from "@microsoft/signalr";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 interface ReservationDetailsViewProps {
@@ -23,6 +27,42 @@ interface PanoramaTableImage {
   tableId: string;
   tableCode: string;
   imageUrl: string;
+}
+
+interface TableActivityDish {
+  key: string;
+  dishId?: string;
+  name: string;
+  quantity: number;
+  notes: string[];
+}
+
+interface TableActivityOrderSummary {
+  orderId: string;
+  reference: string;
+  totalAmount: number;
+  paymentStatusLabel: string;
+  isPaid: boolean;
+  createdAt?: string | null;
+  itemCount: number;
+}
+
+interface TableActivityDetail {
+  tableId: string;
+  tableCode: string;
+  floorName: string;
+  guestDisplayName: string;
+  guests: number;
+  currentDishes: TableActivityDish[];
+  totalQuantity: number;
+  ordersCount: number;
+  unpaidOrdersCount: number;
+  estimatedAmount: number;
+  currentStatusLabel: string;
+  statusTone: "success" | "processing" | "warning" | "default";
+  openedAt?: string | null;
+  latestOrderAt?: string | null;
+  orderSummaries: TableActivityOrderSummary[];
 }
 
 const statusColor: Record<string, string> = {
@@ -219,9 +259,277 @@ function OrderPanel({ orders, firstTableId, isCustomer }: { orders: OrderDto[]; 
 }
 
 // ── Table Map Card ─────────────────────────────────────────────────────────────
-function TableMapCard({ detail }: { detail: ReservationDetail }) {
+function TableMapCard({
+  detail,
+  relatedOrders,
+  viewMode,
+}: {
+  detail: ReservationDetail;
+  relatedOrders: OrderDto[];
+  viewMode: "admin" | "customer";
+}) {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { tenant } = useTenant();
   const [layout, setLayout] = useState<Layout | null>(null);
   const [loadingMap, setLoadingMap] = useState(false);
+  const [selectedTableActivity, setSelectedTableActivity] = useState<TableActivityDetail | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [dishNameMap, setDishNameMap] = useState<Record<string, string>>({});
+  const [customerNameMap, setCustomerNameMap] = useState<Record<string, string>>({});
+  const [ordersSource, setOrdersSource] = useState<OrderDto[]>(relatedOrders);
+  const [isRealtimeSyncing, setIsRealtimeSyncing] = useState(false);
+
+  const dishNameCacheRef = useRef<Record<string, string>>({});
+  const customerNameCacheRef = useRef<Record<string, string>>({});
+  const tableActivityCacheRef = useRef<Record<string, TableActivityDetail>>({});
+
+  useEffect(() => {
+    setOrdersSource(relatedOrders);
+  }, [relatedOrders]);
+
+  useEffect(() => {
+    let active = true;
+    const loadDishNames = async () => {
+      if (Object.keys(dishNameCacheRef.current).length > 0) {
+        setDishNameMap(dishNameCacheRef.current);
+        return;
+      }
+      try {
+        const menu = await dishService.getMenu();
+        const flatItems = (menu ?? []).flatMap((cat) => cat.items ?? []);
+        const nextMap: Record<string, string> = {};
+        flatItems.forEach((dish) => {
+          if (dish.id) {
+            nextMap[dish.id] = dish.name || dish.id;
+          }
+        });
+        dishNameCacheRef.current = nextMap;
+        if (active) setDishNameMap(nextMap);
+      } catch {
+        if (active) setDishNameMap(dishNameCacheRef.current || {});
+      }
+    };
+    loadDishNames();
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadCustomerNames = async () => {
+      const uniqueCustomerIds = Array.from(new Set((ordersSource ?? []).map((o) => o.customerId).filter(Boolean)));
+      if (uniqueCustomerIds.length === 0) {
+        if (active) setCustomerNameMap(customerNameCacheRef.current || {});
+        return;
+      }
+
+      const missingIds = uniqueCustomerIds.filter((id) => !customerNameCacheRef.current[id]);
+      if (missingIds.length === 0) {
+        if (active) setCustomerNameMap({ ...customerNameCacheRef.current });
+        return;
+      }
+
+      const entries = await Promise.all(
+        missingIds.map(async (customerId) => {
+          try {
+            const profile = await customerService.getCustomerProfile(customerId);
+            return [customerId, profile?.fullName || customerId] as const;
+          } catch {
+            return [customerId, customerId] as const;
+          }
+        }),
+      );
+      entries.forEach(([id, name]) => {
+        customerNameCacheRef.current[id] = name;
+      });
+      if (!active) return;
+      setCustomerNameMap({ ...customerNameCacheRef.current });
+    };
+
+    loadCustomerNames();
+    return () => { active = false; };
+  }, [ordersSource]);
+
+  const handleTableActivityClick = useCallback((table: TableData) => {
+    const cached = tableActivityCacheRef.current[table.id];
+    if (cached) {
+      setSelectedTableActivity(cached);
+      setDrawerOpen(true);
+      return;
+    }
+
+    const relatedTableOrders = ordersSource.filter((order) => {
+      const matchedByMainTable = order.tableId === table.id;
+      const matchedByTableIds = (order.tableIds ?? []).includes(table.id);
+      const matchedBySessions = (order.tableSessions ?? []).some(
+        (session) => session?.tableId === table.id || session?.table?.id === table.id,
+      );
+      return matchedByMainTable || matchedByTableIds || matchedBySessions;
+    });
+
+    const rawGuests = Number(detail.numberOfGuests || 0);
+    const tableCapacity = Number(table.seats || 0);
+    const guests = rawGuests > 0 && tableCapacity > 0
+      ? Math.min(rawGuests, tableCapacity)
+      : rawGuests || tableCapacity || 0;
+
+    const dishMap = new Map<string, TableActivityDish>();
+    let totalQuantity = 0;
+    let estimatedAmount = 0;
+
+    relatedTableOrders.forEach((order, orderIndex) => {
+      estimatedAmount += Number(order.totalAmount || 0);
+      (order.orderDetails ?? []).forEach((item, detailIndex) => {
+        const quantity = Number(item.quantity || 0);
+        if (!quantity) return;
+        totalQuantity += quantity;
+
+        const dishKey = item.dishId || `dish-${orderIndex}-${detailIndex}`;
+        const dishLabel = item.dishId
+          ? (dishNameMap[item.dishId] || `${t("reservation_detail.floor_activity.dish", { defaultValue: "Món" })} ${item.dishId.slice(0, 8)}`)
+          : t("reservation_detail.floor_activity.unknown_dish", { defaultValue: "Món chưa rõ" });
+
+        const current = dishMap.get(dishKey);
+        if (current) {
+          current.quantity += quantity;
+          if (item.note && item.note.trim()) {
+            current.notes.push(item.note.trim());
+          }
+        } else {
+          dishMap.set(dishKey, {
+            key: dishKey,
+            dishId: item.dishId,
+            name: dishLabel,
+            quantity,
+            notes: item.note && item.note.trim() ? [item.note.trim()] : [],
+          });
+        }
+      });
+    });
+
+    const currentDishes = Array.from(dishMap.values()).sort((a, b) => b.quantity - a.quantity);
+    const unpaidOrdersCount = relatedTableOrders.filter((order) => (order.paymentStatusId ?? order.paymentStatus ?? 0) === 0).length;
+
+    const latestOrder = [...relatedTableOrders]
+      .sort((a, b) => new Date(b.createdDate || 0).getTime() - new Date(a.createdDate || 0).getTime())[0];
+    const firstOrder = [...relatedTableOrders]
+      .sort((a, b) => new Date(a.createdDate || 0).getTime() - new Date(b.createdDate || 0).getTime())[0];
+
+    const dominantCustomerId = relatedTableOrders[0]?.customerId;
+    const dominantCustomerName = dominantCustomerId
+      ? (customerNameMap[dominantCustomerId] || detail.contact.name)
+      : detail.contact.name;
+
+    const statusLabelMap: Record<string, string> = {
+      AVAILABLE: t("reservation_detail.floor_activity.status_available", { defaultValue: "Sẵn sàng" }),
+      OCCUPIED: t("reservation_detail.floor_activity.status_occupied", { defaultValue: "Đang phục vụ" }),
+      RESERVED: t("reservation_detail.floor_activity.status_reserved", { defaultValue: "Đã đặt" }),
+      CLEANING: t("reservation_detail.floor_activity.status_cleaning", { defaultValue: "Đang dọn" }),
+      DISABLED: t("reservation_detail.floor_activity.status_disabled", { defaultValue: "Tạm khóa" }),
+      SELECTED: t("reservation_detail.floor_activity.status_selected", { defaultValue: "Đang chọn" }),
+    };
+
+    const statusToneMap: Record<string, "success" | "processing" | "warning" | "default"> = {
+      AVAILABLE: "success",
+      OCCUPIED: "processing",
+      RESERVED: "warning",
+      CLEANING: "warning",
+      DISABLED: "default",
+      SELECTED: "processing",
+    };
+
+    const orderSummaries: TableActivityOrderSummary[] = relatedTableOrders.map((order, idx) => {
+      const isPaid = (order.paymentStatusId ?? order.paymentStatus ?? 0) === 1;
+      return {
+        orderId: order.id || `order-${idx}`,
+        reference: order.reference || order.id || `#${idx + 1}`,
+        totalAmount: Number(order.totalAmount || 0),
+        paymentStatusLabel: order.paymentStatusName || (isPaid ? t("dashboard.orders.payment_status.paid", { defaultValue: "Đã thanh toán" }) : t("dashboard.orders.payment_status.unpaid", { defaultValue: "Chưa thanh toán" })),
+        isPaid,
+        createdAt: order.createdDate,
+        itemCount: (order.orderDetails ?? []).reduce((sum, item) => sum + Number(item.quantity || 0), 0),
+      };
+    }).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+    const nextActivity: TableActivityDetail = {
+      tableId: table.id,
+      tableCode: table.name,
+      floorName: table.area,
+      guestDisplayName: guests > 1 ? `${dominantCustomerName} (+${guests - 1})` : dominantCustomerName,
+      guests,
+      currentDishes,
+      totalQuantity,
+      ordersCount: relatedTableOrders.length,
+      unpaidOrdersCount,
+      estimatedAmount,
+      currentStatusLabel: statusLabelMap[table.status] || table.status,
+      statusTone: statusToneMap[table.status] || "default",
+      openedAt: firstOrder?.createdDate || null,
+      latestOrderAt: latestOrder?.createdDate || null,
+      orderSummaries,
+    };
+
+    tableActivityCacheRef.current[table.id] = nextActivity;
+    setSelectedTableActivity(nextActivity);
+    setDrawerOpen(true);
+  }, [customerNameMap, detail.contact.name, detail.numberOfGuests, dishNameMap, ordersSource, t]);
+
+  useEffect(() => {
+    tableActivityCacheRef.current = {};
+  }, [ordersSource, detail.updatedAt]);
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+    const tenantId = tenant.id;
+    let mounted = true;
+    let debounceTimer: ReturnType<typeof setTimeout>;
+
+    const handleOrderChanged = (payload: unknown) => {
+      const eventPayload = payload as Record<string, unknown>;
+      const changedTenantId = (eventPayload?.tenantId || (eventPayload?.order as Record<string, unknown>)?.tenantId) as string | undefined;
+      if (changedTenantId && changedTenantId !== tenantId) return;
+
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(async () => {
+        if (!mounted) return;
+        try {
+          setIsRealtimeSyncing(true);
+          const orders = await orderService.getAllOrders();
+          const nextOrders = orders.filter((o) => o.reservationId === detail.id);
+          setOrdersSource(nextOrders);
+        } catch (err) {
+          console.warn("Realtime floor activity sync failed", err);
+        } finally {
+          if (mounted) setIsRealtimeSyncing(false);
+        }
+      }, 350);
+    };
+
+    const events = ["orders.created", "orders.updated", "orders.deleted"];
+
+    const setupRealtime = async () => {
+      try {
+        await orderSignalRService.start();
+        const conn = orderSignalRService.getConnection();
+        if (!mounted) return;
+        if (conn.state === HubConnectionState.Connected) {
+          await orderSignalRService.invoke("JoinTenantGroup", tenantId);
+          events.forEach((eventName) => orderSignalRService.on(eventName, handleOrderChanged));
+        }
+      } catch (err) {
+        console.warn("Failed to setup order realtime", err);
+      }
+    };
+
+    setupRealtime();
+
+    return () => {
+      mounted = false;
+      clearTimeout(debounceTimer);
+      events.forEach((eventName) => orderSignalRService.off(eventName, handleOrderChanged));
+      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => { });
+    };
+  }, [detail.id, tenant?.id]);
 
   useEffect(() => {
     let active = true;
@@ -242,9 +550,7 @@ function TableMapCard({ detail }: { detail: ReservationDetail }) {
               tenantId: "default",
               name: t.code,
               seats: t.seatingCapacity,
-              status: t.status === "3" || t.status?.toLowerCase() === "cleaning" ? "CLEANING"
-                : t.status === "2" || t.status?.toLowerCase() === "occupied" ? "OCCUPIED"
-                  : t.status === "1" || t.status?.toLowerCase() === "reserved" ? "RESERVED" : "AVAILABLE",
+              status: t.status === "1" || t.status?.toLowerCase() === "occupied" ? "OCCUPIED" : "AVAILABLE",
               area: floorSummary.name,
               position: { x: Number(t.layout.x), y: Number(t.layout.y) },
               shape: (t.layout.shape === "Round" || t.layout.shape === "Circle" ? "Circle"
@@ -288,7 +594,16 @@ function TableMapCard({ detail }: { detail: ReservationDetail }) {
           </div>
         ) : layout ? (
           <div className="absolute inset-0 p-1 pointer-events-auto">
-            <TableMap2D layout={layout} onLayoutChange={() => { }} onTableClick={() => { }} onTablePositionChange={() => { }} readOnly hideControls={true} focusOnSelected={true} selectedTableIds={detail.tables.map((t) => t.id)} />
+            <TableMap2D
+              layout={layout}
+              onLayoutChange={() => { }}
+              onTableClick={handleTableActivityClick}
+              onTablePositionChange={() => { }}
+              readOnly
+              hideControls={true}
+              focusOnSelected={true}
+              selectedTableIds={detail.tables.map((t) => t.id)}
+            />
           </div>
         ) : (
           <div className="h-full flex items-center justify-center">
@@ -304,6 +619,135 @@ function TableMapCard({ detail }: { detail: ReservationDetail }) {
           </div>
         )}
       </div>
+
+      <Drawer
+        open={drawerOpen && !!selectedTableActivity}
+        onClose={() => {
+          setDrawerOpen(false);
+          setSelectedTableActivity(null);
+        }}
+        title={
+          selectedTableActivity
+            ? `${t("reservation_detail.floor_activity.title", { defaultValue: "Floor activity" })} · ${selectedTableActivity.tableCode}`
+            : t("reservation_detail.floor_activity.title", { defaultValue: "Floor activity" })
+        }
+        size="large"
+      >
+        {selectedTableActivity && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                  {t("reservation_detail.floor_activity.current_guest", { defaultValue: "Đang ngồi" })}
+                </p>
+                <p className="text-sm font-black" style={{ color: "var(--text)" }}>{selectedTableActivity.guestDisplayName}</p>
+              </div>
+              <Tag color={selectedTableActivity.statusTone}>{selectedTableActivity.currentStatusLabel}</Tag>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-lg px-3 py-2" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <p className="text-[10px] font-bold uppercase" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.floor_activity.guests", { defaultValue: "Khách" })}</p>
+                <p className="text-sm font-black" style={{ color: "var(--text)" }}>{selectedTableActivity.guests}</p>
+              </div>
+              <div className="rounded-lg px-3 py-2" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <p className="text-[10px] font-bold uppercase" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.floor_activity.orders", { defaultValue: "Đơn" })}</p>
+                <p className="text-sm font-black" style={{ color: "var(--text)" }}>{selectedTableActivity.ordersCount}</p>
+              </div>
+              <div className="rounded-lg px-3 py-2" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <p className="text-[10px] font-bold uppercase" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.floor_activity.items", { defaultValue: "Món" })}</p>
+                <p className="text-sm font-black" style={{ color: "var(--text)" }}>{selectedTableActivity.totalQuantity}</p>
+              </div>
+              <div className="rounded-lg px-3 py-2" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <p className="text-[10px] font-bold uppercase" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.floor_activity.unpaid", { defaultValue: "Chưa TT" })}</p>
+                <p className="text-sm font-black" style={{ color: "var(--text)" }}>{selectedTableActivity.unpaidOrdersCount}</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl p-3 space-y-2" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+              <p className="text-[11px] font-bold" style={{ color: "var(--text-muted)" }}>
+                {t("reservation_detail.floor_activity.current_dishes", { defaultValue: "Món đang phục vụ" })}
+              </p>
+              {selectedTableActivity.currentDishes.length === 0 ? (
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.floor_activity.no_dishes", { defaultValue: "Chưa có món" })}</p>
+              ) : (
+                <div className="space-y-2 max-h-52 overflow-auto pr-1">
+                  {selectedTableActivity.currentDishes.map((dish) => (
+                    <div key={dish.key} className="rounded-lg p-2" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="truncate pr-2" style={{ color: "var(--text)" }}>{dish.name}</span>
+                        <span className="font-bold" style={{ color: "var(--primary)" }}>x{dish.quantity}</span>
+                      </div>
+                      {dish.notes.length > 0 && (
+                        <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                          {t("reservation_detail.floor_activity.kitchen_note", { defaultValue: "Ghi chú" })}: {dish.notes.join("; ")}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-xl p-3 space-y-2" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+              <p className="text-[11px] font-bold" style={{ color: "var(--text-muted)" }}>
+                {t("reservation_detail.floor_activity.orders_detail", { defaultValue: "Đơn theo bàn" })}
+              </p>
+              <div className="space-y-2 max-h-56 overflow-auto pr-1">
+                {selectedTableActivity.orderSummaries.map((order) => (
+                  <div key={order.orderId} className="rounded-lg p-2" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{order.reference}</p>
+                      <Tag color={order.isPaid ? "success" : "warning"}>{order.paymentStatusLabel}</Tag>
+                    </div>
+                    <div className="flex items-center justify-between text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                      <span>{order.itemCount} {t("reservation_detail.order.items", { defaultValue: "món" })}</span>
+                      <span>{order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "—"}</span>
+                    </div>
+                    <p className="text-sm font-black mt-1" style={{ color: "var(--primary)" }}>{currency(order.totalAmount)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-sm" style={{ color: "var(--text-muted)" }}>
+              <span>{t("reservation_detail.floor_activity.opened_at", { defaultValue: "Mở bàn" })}: {selectedTableActivity.openedAt ? new Date(selectedTableActivity.openedAt).toLocaleString("vi-VN") : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm" style={{ color: "var(--text-muted)" }}>
+              <span>{t("reservation_detail.floor_activity.latest_order", { defaultValue: "Đơn gần nhất" })}: {selectedTableActivity.latestOrderAt ? new Date(selectedTableActivity.latestOrderAt).toLocaleString("vi-VN") : "—"}</span>
+              <span className="font-black" style={{ color: "var(--primary)" }}>{currency(selectedTableActivity.estimatedAmount)}</span>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {selectedTableActivity.orderSummaries[0]?.orderId && viewMode === "admin" && (
+                <button
+                  type="button"
+                  onClick={() => router.push(`/admin/orders/${selectedTableActivity.orderSummaries[0].orderId}`)}
+                  className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider"
+                  style={{ background: "var(--primary)", color: "var(--on-primary)" }}
+                >
+                  {t("reservation_detail.floor_activity.goto_order_detail", { defaultValue: "Đi tới Order Detail" })}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => router.push(viewMode === "admin" ? "/admin/pos" : `/menu/${selectedTableActivity.tableId}`)}
+                className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider"
+                style={{ background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }}
+              >
+                {t("reservation_detail.floor_activity.goto_pos", { defaultValue: "Đi tới POS" })}
+              </button>
+
+              {isRealtimeSyncing && (
+                <span className="text-xs self-center" style={{ color: "var(--text-muted)" }}>
+                  {t("reservation_detail.floor_activity.syncing", { defaultValue: "Đang đồng bộ realtime..." })}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 }
@@ -818,7 +1262,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
             </div>
 
             {/* Floor Map */}
-            <TableMapCard detail={detail} />
+            <TableMapCard detail={detail} relatedOrders={relatedOrders} viewMode={viewMode} />
 
             {/* Admin note + edit */}
             {!isCustomer && (
