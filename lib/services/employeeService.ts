@@ -93,33 +93,123 @@ export interface EmployeeListResponseDto {
 }
 
 class EmployeeService {
+  private employeesListCache = new Map<string, EmployeeListResponseDto>();
+
+  private employeesListInFlight = new Map<
+    string,
+    Promise<EmployeeListResponseDto>
+  >();
+
+  private employeeByIdCache = new Map<string, EmployeeResponseDto>();
+
+  private employeeByIdInFlight = new Map<
+    string,
+    Promise<EmployeeResponseDto>
+  >();
+
+  private getEmployeesCacheKey(filter?: EmployeeFilterParams): string {
+    return JSON.stringify({
+      page: filter?.page || 1,
+      itemsPerPage: filter?.itemsPerPage || 12,
+      position: filter?.position ?? null,
+      isActive: filter?.isActive ?? null,
+      hireDateFrom: filter?.hireDateFrom ?? null,
+      hireDateTo: filter?.hireDateTo ?? null,
+    });
+  }
+
+  private invalidateEmployeeCache(id?: string): void {
+    this.employeesListCache.clear();
+    this.employeesListInFlight.clear();
+
+    if (id) {
+      this.employeeByIdCache.delete(id);
+      this.employeeByIdInFlight.delete(id);
+      return;
+    }
+
+    this.employeeByIdCache.clear();
+    this.employeeByIdInFlight.clear();
+  }
+
   async getEmployees(
     filter?: EmployeeFilterParams,
   ): Promise<EmployeeListResponseDto> {
-    const response = await axiosInstance.get("/employees", {
-      params: {
-        // Keep both legacy and new param names to match API
-        page: filter?.page || 1,
-        pageNumber: filter?.page || 1,
-        itemsPerPage: filter?.itemsPerPage || 12,
-        pageSize: filter?.itemsPerPage || 12,
-        ...(filter?.position !== undefined && { position: filter.position }),
-        ...(filter?.isActive !== undefined && { isActive: filter.isActive }),
-        ...(filter?.hireDateFrom !== undefined && { hireDateFrom: filter.hireDateFrom }),
-        ...(filter?.hireDateTo !== undefined && { hireDateTo: filter.hireDateTo }),
-      },
-    });
-    return response.data;
+    const cacheKey = this.getEmployeesCacheKey(filter);
+
+    const cached = this.employeesListCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const inFlight = this.employeesListInFlight.get(cacheKey);
+    if (inFlight) {
+      return inFlight;
+    }
+
+    const request = axiosInstance
+      .get("/employees", {
+        params: {
+          // Keep both legacy and new param names to match API
+          page: filter?.page || 1,
+          pageNumber: filter?.page || 1,
+          itemsPerPage: filter?.itemsPerPage || 12,
+          pageSize: filter?.itemsPerPage || 12,
+          ...(filter?.position !== undefined && { position: filter.position }),
+          ...(filter?.isActive !== undefined && { isActive: filter.isActive }),
+          ...(filter?.hireDateFrom !== undefined && {
+            hireDateFrom: filter.hireDateFrom,
+          }),
+          ...(filter?.hireDateTo !== undefined && {
+            hireDateTo: filter.hireDateTo,
+          }),
+        },
+      })
+      .then((response) => {
+        const data = response.data as EmployeeListResponseDto;
+        this.employeesListCache.set(cacheKey, data);
+        return data;
+      })
+      .finally(() => {
+        this.employeesListInFlight.delete(cacheKey);
+      });
+
+    this.employeesListInFlight.set(cacheKey, request);
+    return request;
   }
 
   async getEmployeeById(id: string): Promise<EmployeeResponseDto> {
-    const response = await axiosInstance.get(`/employees/${id}`);
-    const body = response.data as
-      | EmployeeResponseDto
-      | { data?: EmployeeResponseDto };
-    return body && typeof body === "object" && "data" in body && body.data
-      ? body.data
-      : (body as EmployeeResponseDto);
+    const cached = this.employeeByIdCache.get(id);
+    if (cached) {
+      return cached;
+    }
+
+    const inFlight = this.employeeByIdInFlight.get(id);
+    if (inFlight) {
+      return inFlight;
+    }
+
+    const request = axiosInstance
+      .get(`/employees/${id}`)
+      .then((response) => {
+        const body = response.data as
+          | EmployeeResponseDto
+          | { data?: EmployeeResponseDto };
+
+        const parsed =
+          body && typeof body === "object" && "data" in body && body.data
+            ? body.data
+            : (body as EmployeeResponseDto);
+
+        this.employeeByIdCache.set(id, parsed);
+        return parsed;
+      })
+      .finally(() => {
+        this.employeeByIdInFlight.delete(id);
+      });
+
+    this.employeeByIdInFlight.set(id, request);
+    return request;
   }
 
   async createEmployee(
@@ -139,6 +229,7 @@ class EmployeeService {
     const response = await axiosInstance.post("/employees", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+    this.invalidateEmployeeCache();
     return response.data;
   }
 
@@ -158,8 +249,7 @@ class EmployeeService {
       formData.append("TerminationDate", employee.terminationDate);
     if (employee.salary !== undefined)
       formData.append("Salary", employee.salary.toString());
-    if (employee.salaryType)
-      formData.append("SalaryType", employee.salaryType);
+    if (employee.salaryType) formData.append("SalaryType", employee.salaryType);
     if (employee.isActive !== undefined)
       formData.append("IsActive", employee.isActive.toString());
 
@@ -174,11 +264,13 @@ class EmployeeService {
     const response = await axiosInstance.put(`/employees/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+    this.invalidateEmployeeCache(id);
     return response.data;
   }
 
   async deleteEmployee(id: string): Promise<void> {
     await axiosInstance.delete(`/employees/${id}`);
+    this.invalidateEmployeeCache(id);
   }
 
   async toggleEmployeeStatus(
@@ -188,6 +280,7 @@ class EmployeeService {
     const response = await axiosInstance.patch(`/employees/${id}/status`, {
       isActive,
     });
+    this.invalidateEmployeeCache(id);
     return response.data;
   }
 }

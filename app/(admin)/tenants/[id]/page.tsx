@@ -1,5 +1,6 @@
 "use client";
 
+import StatusToggle from "@/components/ui/StatusToggle";
 import VnAddressSelect from "@/components/ui/VnAddressSelect";
 import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
@@ -21,7 +22,6 @@ import {
   Input,
   Modal,
   Spin,
-  Switch,
   Typography,
   Upload,
 } from "antd";
@@ -1176,11 +1176,10 @@ const TenantEditPage: React.FC = () => {
                           : t("tenants.edit.fields.status_inactive")}
                       </span>
                     </div>
-                    <Switch
+                    <StatusToggle
                       checked={tenantStatus}
-                      onChange={setTenantStatus}
-                      checkedChildren={t("tenants.filter.active")}
-                      unCheckedChildren={t("tenants.filter.inactive")}
+                      onChange={() => setTenantStatus((prev) => !prev)}
+                      ariaLabel={t("tenants.edit.fields.status")}
                     />
                   </div>
                   <Button
