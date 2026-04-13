@@ -81,24 +81,119 @@ export interface DishListResponseDto {
 }
 
 class DishService {
+  private dishListCache = new Map<string, DishListResponseDto>();
+
+  private dishListInFlight = new Map<string, Promise<DishListResponseDto>>();
+
+  private dishByIdCache = new Map<string, DishResponseDto>();
+
+  private dishByIdInFlight = new Map<string, Promise<DishResponseDto>>();
+
+  private menuCache: MenuCategory[] | null = null;
+
+  private menuInFlight: Promise<MenuCategory[]> | null = null;
+
+  private getDishListCacheKey(page: number, itemsPerPage: number): string {
+    return `${page}:${itemsPerPage}`;
+  }
+
+  private invalidateDishCache(id?: string): void {
+    this.dishListCache.clear();
+    this.dishListInFlight.clear();
+    this.menuCache = null;
+    this.menuInFlight = null;
+
+    if (id) {
+      this.dishByIdCache.delete(id);
+      this.dishByIdInFlight.delete(id);
+      return;
+    }
+
+    this.dishByIdCache.clear();
+    this.dishByIdInFlight.clear();
+  }
+
   async getDishes(
     page: number = 1,
     itemsPerPage: number = 100,
   ): Promise<DishListResponseDto> {
-    const response = await axiosInstance.get("/dishes", {
-      params: { page, itemsPerPage },
-    });
-    return response.data;
+    const cacheKey = this.getDishListCacheKey(page, itemsPerPage);
+
+    const cached = this.dishListCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const inFlight = this.dishListInFlight.get(cacheKey);
+    if (inFlight) {
+      return inFlight;
+    }
+
+    const request = axiosInstance
+      .get("/dishes", {
+        params: { page, itemsPerPage },
+      })
+      .then((response) => {
+        const data = response.data as DishListResponseDto;
+        this.dishListCache.set(cacheKey, data);
+        return data;
+      })
+      .finally(() => {
+        this.dishListInFlight.delete(cacheKey);
+      });
+
+    this.dishListInFlight.set(cacheKey, request);
+    return request;
   }
 
   async getDishById(id: string): Promise<DishResponseDto> {
-    const response = await axiosInstance.get(`/dishes/${id}`);
-    return response.data;
+    const cached = this.dishByIdCache.get(id);
+    if (cached) {
+      return cached;
+    }
+
+    const inFlight = this.dishByIdInFlight.get(id);
+    if (inFlight) {
+      return inFlight;
+    }
+
+    const request = axiosInstance
+      .get(`/dishes/${id}`)
+      .then((response) => {
+        const data = response.data as DishResponseDto;
+        this.dishByIdCache.set(id, data);
+        return data;
+      })
+      .finally(() => {
+        this.dishByIdInFlight.delete(id);
+      });
+
+    this.dishByIdInFlight.set(id, request);
+    return request;
   }
 
   async getMenu(): Promise<MenuCategory[]> {
-    const response = await axiosInstance.get("/dishes/menu");
-    return response.data;
+    if (this.menuCache) {
+      return this.menuCache;
+    }
+
+    if (this.menuInFlight) {
+      return this.menuInFlight;
+    }
+
+    const request = axiosInstance
+      .get("/dishes/menu")
+      .then((response) => {
+        const data = response.data as MenuCategory[];
+        this.menuCache = data;
+        return data;
+      })
+      .finally(() => {
+        this.menuInFlight = null;
+      });
+
+    this.menuInFlight = request;
+    return request;
   }
 
   /**
@@ -113,6 +208,7 @@ class DishService {
     }
 
     const response = await axiosInstance.post("/dishes", formData);
+    this.invalidateDishCache();
     return response.data;
   }
 
@@ -128,6 +224,7 @@ class DishService {
     }
 
     const response = await axiosInstance.put(`/dishes/${id}`, formData);
+    this.invalidateDishCache(id);
     return response.data;
   }
 
@@ -185,6 +282,7 @@ class DishService {
 
   async deleteDish(id: string): Promise<void> {
     await axiosInstance.delete(`/dishes/${id}`);
+    this.invalidateDishCache(id);
   }
 
   async uploadDishImage(
@@ -228,6 +326,7 @@ class DishService {
       })),
     });
 
+    this.invalidateDishCache(id);
     return response;
   }
 }

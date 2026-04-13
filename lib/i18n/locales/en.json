@@ -1246,6 +1246,23 @@
           "fetch_ingredients": "Failed to load ingredients",
           "fetch_recipes": "Failed to load dish ingredients"
         }
+      },
+      "dish_status": {
+        "title": "Dish Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "enabled": "ENABLED",
+        "disabled": "DISABLED",
+        "can_order": "Customers can order this dish",
+        "cannot_order": "This dish is currently unavailable"
+      },
+      "errors": {
+        "load_failed": "Failed to load menu items",
+        "name_required": "Dish name is required",
+        "category_required": "Please select a category",
+        "price_invalid": "Price must be a positive number",
+        "detail_load_failed": "Failed to load dish details",
+        "retry_hint": "Please try again later"
       }
     },
     "orders": {

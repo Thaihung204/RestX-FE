@@ -2,9 +2,10 @@
 
 import MultiImageUpload from "@/components/MultiImageUpload";
 import { DropDown } from "@/components/ui/DropDown";
+import StatusToggle from "@/components/ui/StatusToggle";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
-import { message, Modal } from "antd";
+import { message } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -124,9 +125,7 @@ export default function MenuItemFormPage() {
         ]);
       }
     } catch {
-      setError(
-        t("dashboard.menu.errors.detail_load_failed"),
-      );
+      setError(t("dashboard.menu.errors.detail_load_failed"));
       message.error(t("dashboard.menu.toasts.detail_error_message"));
     } finally {
       setLoading(false);
@@ -142,18 +141,14 @@ export default function MenuItemFormPage() {
 
       // Validation
       if (!formData.name.trim()) {
-        setError(
-          t("dashboard.menu.errors.name_required"),
-        );
+        setError(t("dashboard.menu.errors.name_required"));
         message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
       }
 
       if (!formData.categoryId) {
-        setError(
-          t("dashboard.menu.errors.category_required"),
-        );
+        setError(t("dashboard.menu.errors.category_required"));
         message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
@@ -164,9 +159,7 @@ export default function MenuItemFormPage() {
         formData.price.replace(/\./g, "").replace(/,/g, "."),
       );
       if (!formData.price || priceValue <= 0 || isNaN(priceValue)) {
-        setError(
-          t("dashboard.menu.errors.price_invalid"),
-        );
+        setError(t("dashboard.menu.errors.price_invalid"));
         message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
@@ -276,44 +269,23 @@ export default function MenuItemFormPage() {
 
   const handleToggleStatus = () => {
     const nextStatus = !formData.isActive;
-    Modal.confirm({
-      title: nextStatus
-        ? t("dashboard.menu.ingredients.status.activate_title")
-        : t("dashboard.menu.ingredients.status.deactivate_title"),
-      content: (
-        <>
-          {nextStatus
-            ? t("dashboard.menu.ingredients.status.activate_confirm", {
+    dishService
+      .toggleDishStatus(id, nextStatus)
+      .then(() => {
+        message.success(
+          nextStatus
+            ? t("dashboard.menu.ingredients.status.activate_success", {
                 name: formData.name,
               })
-            : t("dashboard.menu.ingredients.status.deactivate_confirm", {
+            : t("dashboard.menu.ingredients.status.deactivate_success", {
                 name: formData.name,
-              })}
-        </>
-      ),
-      okText: nextStatus
-        ? t("dashboard.menu.ingredients.status.activate_action")
-        : t("dashboard.menu.ingredients.status.deactivate_action"),
-      okType: nextStatus ? "primary" : "danger",
-      cancelText: t("dashboard.menu.modal.cancel"),
-      onOk: async () => {
-        try {
-          await dishService.toggleDishStatus(id, nextStatus);
-          message.success(
-            nextStatus
-              ? t("dashboard.menu.ingredients.status.activate_success", {
-                  name: formData.name,
-                })
-              : t("dashboard.menu.ingredients.status.deactivate_success", {
-                  name: formData.name,
-                }),
-          );
-          setFormData((prev) => ({ ...prev, isActive: nextStatus }));
-        } catch (err: any) {
-          message.error(t("dashboard.menu.ingredients.status.update_failed"));
-        }
-      },
-    });
+              }),
+        );
+        setFormData((prev) => ({ ...prev, isActive: nextStatus }));
+      })
+      .catch(() => {
+        message.error(t("dashboard.menu.ingredients.status.update_failed"));
+      });
   };
 
   const handleChange = (
@@ -455,8 +427,7 @@ export default function MenuItemFormPage() {
                         value={formData.categoryId}
                         onChange={handleChange}
                         required
-                        className="py-3"
-                      >
+                        className="py-3">
                         <option value="">Select a category</option>
                         {categories.map((cat) => (
                           <option key={cat.id} value={cat.id}>
@@ -479,8 +450,7 @@ export default function MenuItemFormPage() {
                         value={formData.unit}
                         onChange={handleChange}
                         required
-                        className="py-3"
-                      >
+                        className="py-3">
                         <option value="portion">Portion</option>
                         <option value="plate">Plate</option>
                         <option value="bowl">Bowl</option>
@@ -716,37 +686,6 @@ export default function MenuItemFormPage() {
                         <p
                           className="font-medium text-sm"
                           style={{ color: "var(--text)" }}>
-                          Available for Order
-                        </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: "var(--text-muted)" }}>
-                          Customers can order this item
-                        </p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="isActive"
-                          checked={formData.isActive}
-                          onChange={handleChange}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
-                          style={{
-                            backgroundColor: formData.isActive
-                              ? "var(--primary)"
-                              : "#4b5563",
-                          }}></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p
-                          className="font-medium text-sm"
-                          style={{ color: "var(--text)" }}>
                           Auto-Disable by Stock
                         </p>
                         <p
@@ -793,6 +732,116 @@ export default function MenuItemFormPage() {
                     maxCount={5}
                   />
                 </div>
+
+                {!isNewItem && (
+                  <div
+                    className="rounded-xl p-5 shadow-sm"
+                    style={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                    }}>
+                    <h3
+                      className="text-lg font-semibold mb-4 flex items-center gap-2"
+                      style={{ color: "var(--text)" }}>
+                      <span className="w-1 h-5 bg-orange-500 rounded-full"></span>
+                      {t("dashboard.menu.dish_status.title", {
+                        defaultValue: "Dish Status",
+                      })}
+                    </h3>
+
+                    <div
+                      className="flex items-center justify-between p-4 rounded-lg"
+                      style={{ background: "var(--surface)" }}>
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center"
+                          style={{
+                            background: formData.isActive
+                              ? "rgba(34, 197, 94, 0.1)"
+                              : "rgba(239, 68, 68, 0.1)",
+                          }}>
+                          {formData.isActive ? (
+                            <svg
+                              className="w-5 h-5 text-green-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-5 h-5 text-red-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span
+                              className="font-semibold"
+                              style={{ color: "var(--text)" }}>
+                              {formData.isActive
+                                ? t("dashboard.menu.dish_status.active", {
+                                    defaultValue: "Active",
+                                  })
+                                : t("dashboard.menu.dish_status.inactive", {
+                                    defaultValue: "Inactive",
+                                  })}
+                            </span>
+                            <span
+                              className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                              style={{
+                                background: formData.isActive
+                                  ? "rgba(34, 197, 94, 0.15)"
+                                  : "rgba(239, 68, 68, 0.15)",
+                                color: formData.isActive
+                                  ? "#22c55e"
+                                  : "#ef4444",
+                              }}>
+                              {formData.isActive
+                                ? t("dashboard.menu.dish_status.enabled", {
+                                    defaultValue: "Enabled",
+                                  })
+                                : t("dashboard.menu.dish_status.disabled", {
+                                    defaultValue: "Disabled",
+                                  })}
+                            </span>
+                          </div>
+                          <p
+                            className="text-sm"
+                            style={{ color: "var(--text-muted)" }}>
+                            {formData.isActive
+                              ? t("dashboard.menu.dish_status.can_order", {
+                                  defaultValue: "Customers can order this dish",
+                                })
+                              : t("dashboard.menu.dish_status.cannot_order", {
+                                  defaultValue:
+                                    "This dish is currently unavailable",
+                                })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <StatusToggle
+                        checked={formData.isActive}
+                        onChange={() => handleToggleStatus()}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -808,42 +857,15 @@ export default function MenuItemFormPage() {
                 }}>
                 Cancel
               </button>
-              {!isNewItem && (
-                <button
-                  type="button"
-                  onClick={handleToggleStatus}
-                  className="flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-all shadow-lg"
-                  style={{
-                    background: formData.isActive
-                      ? "linear-gradient(to right, #EF4444, #DC2626)"
-                      : "linear-gradient(to right, #16A34A, #22C55E)",
-                    boxShadow: formData.isActive
-                      ? "0 10px 15px -3px rgba(239, 68, 68, 0.2), 0 4px 6px -4px rgba(239, 68, 68, 0.2)"
-                      : "0 10px 15px -3px rgba(34, 197, 94, 0.2), 0 4px 6px -4px rgba(34, 197, 94, 0.2)",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = formData.isActive
-                      ? "linear-gradient(to right, #DC2626, #B91C1C)"
-                      : "linear-gradient(to right, #15803D, #16A34A)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = formData.isActive
-                      ? "linear-gradient(to right, #EF4444, #DC2626)"
-                      : "linear-gradient(to right, #16A34A, #22C55E)")
-                  }>
-                  {formData.isActive
-                    ? t("dashboard.menu.ingredients.actions.deactivate")
-                    : t("dashboard.menu.ingredients.actions.activate")}
-                </button>
-              )}
+
               <button
                 type="submit"
                 disabled={loading}
                 className="flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: "var(--primary)", color: "white"
-                }}
-                >
+                  background: "var(--primary)",
+                  color: "white",
+                }}>
                 {isNewItem ? "Create Menu Item" : "Update Menu Item"}
               </button>
             </div>

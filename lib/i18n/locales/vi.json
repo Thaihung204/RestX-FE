@@ -1178,6 +1178,23 @@
           "fetch_ingredients": "Không thể tải danh sách nguyên liệu",
           "fetch_recipes": "Không thể tải nguyên liệu của món"
         }
+      },
+      "dish_status": {
+        "title": "Trạng thái món ăn",
+        "active": "Hoạt động",
+        "inactive": "Ngừng hoạt động",
+        "enabled": "ĐANG BẬT",
+        "disabled": "ĐÃ TẮT",
+        "can_order": "Khách hàng có thể gọi món này",
+        "cannot_order": "Món ăn này hiện không khả dụng"
+      },
+      "errors": {
+        "load_failed": "Không thể tải danh sách món ăn",
+        "name_required": "Tên món ăn là bắt buộc",
+        "category_required": "Vui lòng chọn danh mục",
+        "price_invalid": "Giá phải là số dương",
+        "detail_load_failed": "Không thể tải thông tin món ăn",
+        "retry_hint": "Vui lòng thử lại sau"
       }
     },
     "orders": {
