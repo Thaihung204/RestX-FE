@@ -1,6 +1,5 @@
 "use client";
 
-import customerService from "@/lib/services/customerService";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
@@ -19,7 +18,6 @@ interface OrderRow {
   id: string;
   orderNumber: string;
   customerName: string;
-  customerAvatar?: string | null;
   items: number;
   totalQuantity: number;
   total: number;
@@ -123,28 +121,6 @@ export default function OrdersPage() {
             : 0
           : undefined,
       });
-      const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
-      const uniqueCustomerIds = Array.from(
-        new Set(
-          data
-            .map((o) => o.customerId)
-            .filter((cid): cid is string => !!cid && cid !== EMPTY_GUID),
-        ),
-      );
-
-      const customersById: Record<string, { name: string; avatar?: string }> =
-        {};
-      await Promise.all(
-        uniqueCustomerIds.map(async (cid) => {
-          try {
-            const c = await customerService.getCustomerById(cid);
-            if (c) customersById[c.id] = { name: c.name, avatar: c.avatar };
-          } catch (err) {
-            console.error("Failed to load customer", cid, err);
-          }
-        }),
-      );
-
       setOrders(
         data.map((o) => {
           const distinctCount = o.orderDetails?.length ?? 0;
@@ -154,10 +130,7 @@ export default function OrdersPage() {
           const paymentStatus = mapPaymentStatus(
             o.paymentStatusId ?? o.paymentStatus ?? 0,
           );
-          const customer = customersById[o.customerId];
-
-          const hasRealCustomerId =
-            !!o.customerId && o.customerId !== EMPTY_GUID;
+          const customerNameFromOrder = o.customerName?.trim();
 
           return {
             id: o.id ?? "",
@@ -165,10 +138,7 @@ export default function OrdersPage() {
               o.reference && o.reference.trim().length > 0
                 ? o.reference
                 : `#${(o.id ?? "").slice(0, 8)}`,
-            customerName:
-              customer?.name ??
-              (hasRealCustomerId ? "Unknown customer" : "Guest"),
-            customerAvatar: customer?.avatar ?? null,
+            customerName: customerNameFromOrder || "Guest",
             items: distinctCount,
             totalQuantity,
             total: Number(o.totalAmount ?? 0),
@@ -589,26 +559,11 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-left">
-                        <div className="flex items-center gap-3">
-                          {order.customerAvatar ? (
-                            <img
-                              src={order.customerAvatar}
-                              alt={order.customerName}
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                              style={{ background: "var(--primary)" }}>
-                              {order.customerName?.charAt(0) ?? "G"}
-                            </div>
-                          )}
-                          <span
-                            className="font-medium"
-                            style={{ color: "var(--text)" }}>
-                            {order.customerName}
-                          </span>
-                        </div>
+                        <span
+                          className="font-medium"
+                          style={{ color: "var(--text)" }}>
+                          {order.customerName}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span style={{ color: "var(--text-muted)" }}>
