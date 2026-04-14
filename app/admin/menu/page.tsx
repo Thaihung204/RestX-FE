@@ -20,7 +20,7 @@ interface MenuItem extends DishCardItem {
 
 export default function MenuPage() {
   const { t } = useTranslation();
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
 
   const formatPrice = (price: number) => {
     return price.toLocaleString("vi-VN");
@@ -150,44 +150,31 @@ export default function MenuPage() {
 
   const handleToggleStatus = async (item: DishCardItem) => {
     const nextStatus = !item.isActive;
-    modal.confirm({
-      title: nextStatus
-        ? t("dashboard.menu.ingredients.status.activate_title")
-        : t("dashboard.menu.ingredients.status.deactivate_title"),
-      content: (
-        <>
-          {nextStatus
-            ? t("dashboard.menu.ingredients.status.activate_confirm", {
-                name: item.name,
-              })
-            : t("dashboard.menu.ingredients.status.deactivate_confirm", {
-                name: item.name,
-              })}
-        </>
-      ),
-      okText: nextStatus
-        ? t("dashboard.menu.ingredients.status.activate_action")
-        : t("dashboard.menu.ingredients.status.deactivate_action"),
-      okType: nextStatus ? "primary" : "danger",
-      cancelText: t("dashboard.menu.modal.cancel"),
-      onOk: async () => {
-        try {
-          await dishService.toggleDishStatus(item.id, nextStatus);
-          message.success(
-            nextStatus
-              ? t("dashboard.menu.ingredients.status.activate_success", {
-                  name: item.name,
-                })
-              : t("dashboard.menu.ingredients.status.deactivate_success", {
-                  name: item.name,
-                }),
-          );
-          await fetchMenuItems();
-        } catch {
-          message.error(t("dashboard.menu.ingredients.status.update_failed"));
-        }
-      },
-    });
+    try {
+      await dishService.toggleDishStatus(item.id, nextStatus);
+      message.success(
+        nextStatus
+          ? t("dashboard.menu.ingredients.status.activate_success", {
+              name: item.name,
+            })
+          : t("dashboard.menu.ingredients.status.deactivate_success", {
+              name: item.name,
+            }),
+      );
+      setMenuItems((prev) =>
+        prev.map((dish) =>
+          dish.id === item.id
+            ? {
+                ...dish,
+                isActive: nextStatus,
+                available: nextStatus,
+              }
+            : dish,
+        ),
+      );
+    } catch {
+      message.error(t("dashboard.menu.ingredients.status.update_failed"));
+    }
   };
 
   const handleOpenIngredients = async (item: DishCardItem) => {
