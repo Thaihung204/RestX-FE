@@ -1258,7 +1258,9 @@
           "cash_insufficient": "Số tiền khách đưa không đủ",
           "cash_success": "Thanh toán tiền mặt thành công",
           "link_created": "Đã tạo link thanh toán",
-          "payment_failed": "Thanh toán thất bại"
+          "payment_failed": "Thanh toán thất bại",
+          "payos_return_success": "Thanh toán PayOS thành công",
+          "payos_return_cancel": "Bạn đã hủy thanh toán PayOS"
         }
       }
     },
@@ -1765,12 +1767,16 @@
         "fields": {
           "client_id": "Client ID",
           "api_key": "API Key",
-          "checksum_key": "Checksum Key"
+          "checksum_key": "Checksum Key",
+          "return_url": "Return URL",
+          "cancel_url": "Cancel URL"
         },
         "validation": {
           "client_id_required": "Vui lòng nhập Client ID",
           "api_key_required": "Vui lòng nhập API Key",
-          "checksum_key_required": "Vui lòng nhập Checksum Key"
+          "checksum_key_required": "Vui lòng nhập Checksum Key",
+          "return_url_required": "Vui lòng nhập Return URL",
+          "cancel_url_required": "Vui lòng nhập Cancel URL"
         },
         "actions": {
           "save_settings": "Lưu"

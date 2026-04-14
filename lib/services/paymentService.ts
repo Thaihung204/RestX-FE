@@ -15,6 +15,8 @@ export interface CreatePaymentLinkResponse {
   paymentId: string;
   orderCode: number;
   checkoutUrl: string;
+  returnUrl?: string;
+  cancelUrl?: string;
 }
 
 export interface PaymentDetail {
