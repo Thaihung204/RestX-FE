@@ -10,8 +10,6 @@ interface PaymentGatewaySettings {
   clientId: string;
   apiKey: string;
   checksumKey: string;
-  returnUrl: string;
-  cancelUrl: string;
 }
 
 interface TenantPaymentSettingsModalProps {
@@ -19,24 +17,6 @@ interface TenantPaymentSettingsModalProps {
   tenant: ITenant | null;
   onClose: () => void;
 }
-
-const normalizeHost = (host: string): string =>
-  host.trim().replace(/^https?:\/\//i, "").replace(/\/+$/g, "");
-
-const buildTenantOrigin = (tenant: ITenant | null): string => {
-  const host = tenant?.hostName || tenant?.networkIp || "";
-  const normalizedHost = normalizeHost(host);
-  if (!normalizedHost) return "";
-  return `https://${normalizedHost}`;
-};
-
-const buildAutoUrls = (tenant: ITenant | null) => {
-  const origin = buildTenantOrigin(tenant);
-  return {
-    returnUrl: origin ? `${origin}/staff/orders?payos=success` : "",
-    cancelUrl: origin ? `${origin}/staff/orders?payos=cancel` : "",
-  };
-};
 
 export default function TenantPaymentSettingsModal({
   open,
@@ -64,8 +44,6 @@ export default function TenantPaymentSettingsModal({
     clientId: settings.clientId?.trim() || "",
     apiKey: settings.apiKey?.trim() || "",
     checksumKey: settings.checksumKey?.trim() || "",
-    returnUrl: settings.returnUrl?.trim() || "",
-    cancelUrl: settings.cancelUrl?.trim() || "",
   });
 
   const isSameSettings = (
@@ -78,9 +56,7 @@ export default function TenantPaymentSettingsModal({
     return (
       normalizedLeft.clientId === normalizedRight.clientId &&
       normalizedLeft.apiKey === normalizedRight.apiKey &&
-      normalizedLeft.checksumKey === normalizedRight.checksumKey &&
-      normalizedLeft.returnUrl === normalizedRight.returnUrl &&
-      normalizedLeft.cancelUrl === normalizedRight.cancelUrl
+      normalizedLeft.checksumKey === normalizedRight.checksumKey
     );
   };
 
@@ -90,7 +66,6 @@ export default function TenantPaymentSettingsModal({
 
       setLoading(true);
       form.resetFields();
-      const autoUrls = buildAutoUrls(tenant);
 
       try {
         const settings = await tenantService.getPaymentSettings(tenant.id);
@@ -99,8 +74,6 @@ export default function TenantPaymentSettingsModal({
             clientId: settings.clientId || "",
             apiKey: settings.apiKey || "",
             checksumKey: settings.checksumKey || "",
-            returnUrl: autoUrls.returnUrl,
-            cancelUrl: autoUrls.cancelUrl,
           });
           form.setFieldsValue(normalized);
           setInitialSettings(normalized);
@@ -110,10 +83,7 @@ export default function TenantPaymentSettingsModal({
             clientId: "",
             apiKey: "",
             checksumKey: "",
-            returnUrl: autoUrls.returnUrl,
-            cancelUrl: autoUrls.cancelUrl,
           });
-          form.setFieldsValue(emptySettings);
           setInitialSettings(emptySettings);
           setHasExistingSettings(false);
           showNoPaymentInfoToast();
@@ -134,17 +104,7 @@ export default function TenantPaymentSettingsModal({
   const handleSubmit = async (values: PaymentGatewaySettings) => {
     if (!tenant?.id || saving) return;
 
-    const autoUrls = buildAutoUrls(tenant);
-    const normalizedValues = normalizeSettings({
-      ...values,
-      returnUrl: autoUrls.returnUrl,
-      cancelUrl: autoUrls.cancelUrl,
-    });
-
-    if (!normalizedValues.returnUrl || !normalizedValues.cancelUrl) {
-      message.error(t("dashboard.settings.notifications.error_update"));
-      return;
-    }
+    const normalizedValues = normalizeSettings(values);
 
     if (isSameSettings(initialSettings, normalizedValues)) {
       onClose();
@@ -262,12 +222,6 @@ export default function TenantPaymentSettingsModal({
           ]}>
           <Input.Password size="large" disabled={loading || saving} />
         </Form.Item>
-
-        <div className="mb-4 text-sm text-gray-500">
-          {buildTenantOrigin(tenant)
-            ? `Return/Cancel URL is auto-generated from hostname: ${buildTenantOrigin(tenant)}/staff/orders?payos=...`
-            : "Tenant hostname is missing, so Return/Cancel URL cannot be auto-generated."}
-        </div>
 
         <div className="flex justify-end gap-2 mt-4">
           <Button onClick={onClose} disabled={saving || loading}>
