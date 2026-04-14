@@ -22,6 +22,7 @@ import paymentService from "@/lib/services/paymentService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import { HubConnectionState } from "@microsoft/signalr";
 import { App, Empty, Space } from "antd";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
@@ -107,6 +108,9 @@ export default function OrderManagement() {
   const { message } = App.useApp();
   const { mode } = useThemeMode();
   const { t } = useTranslation();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { tenant } = useTenant();
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
@@ -354,6 +358,26 @@ export default function OrderManagement() {
   }, [menuCategories, activeMenuCategory]);
 
   useEffect(() => {
+    const payosStatus = searchParams.get("payos");
+    if (!payosStatus) return;
+
+    if (payosStatus === "success") {
+      message.success(t("staff.orders.payment.messages.payos_return_success"));
+      refreshOrders(true);
+    } else if (payosStatus === "cancel") {
+      message.warning(t("staff.orders.payment.messages.payos_return_cancel"));
+    }
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("payos");
+    const nextUrl = nextParams.toString()
+      ? `${pathname}?${nextParams.toString()}`
+      : pathname;
+
+    router.replace(nextUrl);
+  }, [searchParams, pathname, router, message, t, refreshOrders]);
+
+  useEffect(() => {
     if (!tenant?.id) return;
 
     const tenantId = tenant.id;
@@ -590,9 +614,7 @@ export default function OrderManagement() {
     setSelectedOrder({
       ...order,
       customerId:
-        order.customerId ||
-        (order as any).raw?.customerId ||
-        undefined,
+        order.customerId || (order as any).raw?.customerId || undefined,
     });
     setCashReceived(order.total);
     setPaymentMethod("cash");
@@ -617,7 +639,8 @@ export default function OrderManagement() {
           selectedOrder.id,
         );
         if (response.checkoutUrl) {
-          window.open(response.checkoutUrl, "_blank", "noopener,noreferrer");
+          window.location.assign(response.checkoutUrl);
+          return;
         }
         message.success(t("staff.orders.payment.messages.link_created"));
       }
