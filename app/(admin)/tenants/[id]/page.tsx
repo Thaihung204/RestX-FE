@@ -368,7 +368,7 @@ const TenantEditPage: React.FC = () => {
         typeof data.status === "boolean" ? data.status : data.status === true,
       );
 
-      await fetchPaymentSettings(data.hostname, data.networkIp);
+      await fetchPaymentSettings();
     } catch (error) {
       console.error("Failed to fetch tenant details:", error);
       message.error(t("tenants.toasts.detail_error_message"));
@@ -378,10 +378,7 @@ const TenantEditPage: React.FC = () => {
     }
   };
 
-  const fetchPaymentSettings = async (
-    _hostname?: string,
-    _networkIp?: string,
-  ) => {
+  const fetchPaymentSettings = async () => {
     setPaymentLoading(true);
 
     try {
