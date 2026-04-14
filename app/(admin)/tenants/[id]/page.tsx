@@ -34,6 +34,14 @@ const { Title, Paragraph } = Typography;
 const TENANTS_BRAND_LOGO =
   "https://res.cloudinary.com/dzz8yqhcr/image/upload/v1773461233/DemoRestaurant/LogoUrl/logo.png";
 
+interface PaymentGatewaySettings {
+  clientId: string;
+  apiKey: string;
+  checksumKey: string;
+  returnUrl: string;
+  cancelUrl: string;
+}
+
 const customStyles = `
   .tenant-delete-modal .ant-modal-root,
   .tenant-delete-modal .ant-modal-mask,
@@ -207,12 +215,44 @@ const toHexColorString = (value: unknown): string | undefined => {
   return undefined;
 };
 
+const normalizeHost = (host?: string): string =>
+  (host || "")
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/+$/g, "");
+
+const isIpAddress = (value: string): boolean =>
+  /^\d{1,3}(?:\.\d{1,3}){3}$/.test(value);
+
+const buildTenantOrigin = (hostname?: string, networkIp?: string): string => {
+  const rawHost = normalizeHost(hostname || networkIp);
+  if (!rawHost) return "";
+
+  const host =
+    rawHost.includes(".") || isIpAddress(rawHost)
+      ? rawHost
+      : `${rawHost}.restx.food`;
+
+  return `https://${host}`;
+};
+
+const normalizePaymentSettings = (
+  settings: PaymentGatewaySettings,
+): PaymentGatewaySettings => ({
+  clientId: settings.clientId?.trim() || "",
+  apiKey: settings.apiKey?.trim() || "",
+  checksumKey: settings.checksumKey?.trim() || "",
+  returnUrl: settings.returnUrl?.trim() || "",
+  cancelUrl: settings.cancelUrl?.trim() || "",
+});
+
 const TenantEditPage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
   const { t } = useTranslation();
   const { message } = App.useApp();
   const [form] = Form.useForm<TenantUpdateInput>();
+  const [paymentForm] = Form.useForm<PaymentGatewaySettings>();
   const [formData, setFormData] = useState<Partial<TenantUpdateInput>>({});
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -228,6 +268,10 @@ const TenantEditPage: React.FC = () => {
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string>("");
   const [faviconPreviewUrl, setFaviconPreviewUrl] = useState<string>("");
   const [backgroundPreviewUrl, setBackgroundPreviewUrl] = useState<string>("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [hasExistingPaymentSettings, setHasExistingPaymentSettings] =
+    useState(false);
+  const [paymentOrigin, setPaymentOrigin] = useState("");
   const tenantId = params.id as string;
 
   const getRawFile = (fileList: UploadFile[]): File | null => {
@@ -349,12 +393,62 @@ const TenantEditPage: React.FC = () => {
       setTenantStatus(
         typeof data.status === "boolean" ? data.status : data.status === true,
       );
+
+      await fetchPaymentSettings(data.hostname, data.networkIp);
     } catch (error) {
       console.error("Failed to fetch tenant details:", error);
       message.error(t("tenants.toasts.detail_error_message"));
       router.push("/tenants");
     } finally {
       setInitialLoading(false);
+    }
+  };
+
+  const fetchPaymentSettings = async (
+    hostname?: string,
+    networkIp?: string,
+  ) => {
+    setPaymentLoading(true);
+
+    const origin = buildTenantOrigin(hostname, networkIp);
+    setPaymentOrigin(origin);
+
+    const autoUrls = {
+      returnUrl: origin ? `${origin}/staff/orders?payos=success` : "",
+      cancelUrl: origin ? `${origin}/staff/orders?payos=cancel` : "",
+    };
+
+    try {
+      const settings = await tenantService.getPaymentSettings(tenantId);
+      if (settings) {
+        const normalized = normalizePaymentSettings({
+          clientId: settings.clientId || "",
+          apiKey: settings.apiKey || "",
+          checksumKey: settings.checksumKey || "",
+          returnUrl: autoUrls.returnUrl,
+          cancelUrl: autoUrls.cancelUrl,
+        });
+
+        paymentForm.setFieldsValue(normalized);
+        setHasExistingPaymentSettings(true);
+      } else {
+        const emptySettings = normalizePaymentSettings({
+          clientId: "",
+          apiKey: "",
+          checksumKey: "",
+          returnUrl: autoUrls.returnUrl,
+          cancelUrl: autoUrls.cancelUrl,
+        });
+
+        paymentForm.setFieldsValue(emptySettings);
+        setHasExistingPaymentSettings(false);
+      }
+    } catch (error) {
+      console.error("Failed to fetch payment settings:", error);
+      setHasExistingPaymentSettings(false);
+      message.error(t("dashboard.settings.notifications.error_update"));
+    } finally {
+      setPaymentLoading(false);
     }
   };
 
@@ -397,11 +491,107 @@ const TenantEditPage: React.FC = () => {
         modifiedBy: undefined,
       };
 
+      const saveOrigin = buildTenantOrigin(
+        hostname || formData.hostname,
+        requestData.networkIp || formData.networkIp,
+      );
+      const paymentValues = normalizePaymentSettings({
+        ...paymentForm.getFieldsValue(),
+        returnUrl: saveOrigin ? `${saveOrigin}/staff/orders?payos=success` : "",
+        cancelUrl: saveOrigin ? `${saveOrigin}/staff/orders?payos=cancel` : "",
+      });
+
+      const hasAnyPaymentCredential = [
+        paymentValues.clientId,
+        paymentValues.apiKey,
+        paymentValues.checksumKey,
+      ].some(Boolean);
+      const hasAllPaymentCredential = [
+        paymentValues.clientId,
+        paymentValues.apiKey,
+        paymentValues.checksumKey,
+      ].every(Boolean);
+
+      if (hasAnyPaymentCredential && !hasAllPaymentCredential) {
+        message.error(
+          t("dashboard.settings.notifications.error_update", {
+            defaultValue: "Please fill all payment credentials before saving.",
+          }),
+        );
+        return;
+      }
+
+      if (
+        hasAllPaymentCredential &&
+        (!paymentValues.returnUrl || !paymentValues.cancelUrl)
+      ) {
+        message.error(t("dashboard.settings.notifications.error_update"));
+        return;
+      }
+
       await tenantService.upsertTenant(requestData, {
         logo: getRawFile(logoFileList),
         favicon: getRawFile(faviconFileList),
         background: getRawFile(backgroundFileList),
       });
+
+      if (hasAllPaymentCredential) {
+        try {
+          console.log("[tenant-edit] Saving payment settings payload:", {
+            tenantId,
+            endpoint: `/tenants/${tenantId}/payment-settings`,
+            method: hasExistingPaymentSettings ? "PUT" : "POST",
+            payload: paymentValues,
+          });
+
+          if (hasExistingPaymentSettings) {
+            await tenantService.updatePaymentSettings(tenantId, paymentValues);
+          } else {
+            await tenantService.createPaymentSettings(tenantId, paymentValues);
+          }
+
+          setHasExistingPaymentSettings(true);
+        } catch (error: any) {
+          let fallbackSucceeded = false;
+
+          try {
+            if (
+              error?.response?.status === 400 ||
+              error?.response?.status === 404 ||
+              error?.response?.status === 409
+            ) {
+              if (hasExistingPaymentSettings) {
+                await tenantService.createPaymentSettings(
+                  tenantId,
+                  paymentValues,
+                );
+              } else {
+                await tenantService.updatePaymentSettings(
+                  tenantId,
+                  paymentValues,
+                );
+              }
+
+              setHasExistingPaymentSettings(true);
+              fallbackSucceeded = true;
+            }
+          } catch (fallbackError) {
+            console.error(
+              "Fallback save payment settings failed:",
+              fallbackError,
+            );
+            message.error(t("dashboard.settings.notifications.error_update"));
+            return;
+          }
+
+          if (!fallbackSucceeded) {
+            console.error("Failed to save payment settings:", error);
+            message.error(t("dashboard.settings.notifications.error_update"));
+            return;
+          }
+        }
+      }
+
       message.success(t("tenants.toasts.update_success_message"));
       router.push("/tenants");
     } catch (error: any) {
@@ -1151,6 +1341,95 @@ const TenantEditPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                </Card>
+
+                <Card
+                  style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "16px",
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                  }}
+                  title={
+                    <Title
+                      level={5}
+                      style={{ margin: 0, color: "var(--text)" }}>
+                      {t("dashboard.settings.payment.title")}
+                    </Title>
+                  }>
+                  <Form
+                    form={paymentForm}
+                    layout="vertical"
+                    className="tenant-form">
+                    <Form.Item
+                      label={t("dashboard.settings.payment.fields.client_id")}
+                      name="clientId"
+                      rules={[
+                        {
+                          required: true,
+                          message: t(
+                            "dashboard.settings.payment.validation.client_id_required",
+                          ),
+                        },
+                      ]}>
+                      <Input
+                        size="large"
+                        disabled={paymentLoading || loading}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={t("dashboard.settings.payment.fields.api_key")}
+                      name="apiKey"
+                      rules={[
+                        {
+                          required: true,
+                          message: t(
+                            "dashboard.settings.payment.validation.api_key_required",
+                          ),
+                        },
+                      ]}>
+                      <Input.Password
+                        size="large"
+                        disabled={paymentLoading || loading}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={t(
+                        "dashboard.settings.payment.fields.checksum_key",
+                      )}
+                      name="checksumKey"
+                      rules={[
+                        {
+                          required: true,
+                          message: t(
+                            "dashboard.settings.payment.validation.checksum_key_required",
+                          ),
+                        },
+                      ]}>
+                      <Input.Password
+                        size="large"
+                        disabled={paymentLoading || loading}
+                      />
+                    </Form.Item>
+
+                    {/* <Form.Item
+                      label={t("dashboard.settings.payment.fields.return_url", {
+                        defaultValue: "Return URL",
+                      })}
+                      name="returnUrl">
+                      <Input size="large" disabled />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={t("dashboard.settings.payment.fields.cancel_url", {
+                        defaultValue: "Cancel URL",
+                      })}
+                      name="cancelUrl">
+                      <Input size="large" disabled />
+                    </Form.Item> */}
+                  </Form>
                 </Card>
 
                 {/* Action Buttons */}
