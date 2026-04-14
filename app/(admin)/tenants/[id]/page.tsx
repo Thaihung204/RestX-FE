@@ -38,8 +38,6 @@ interface PaymentGatewaySettings {
   clientId: string;
   apiKey: string;
   checksumKey: string;
-  returnUrl: string;
-  cancelUrl: string;
 }
 
 const customStyles = `
@@ -215,35 +213,12 @@ const toHexColorString = (value: unknown): string | undefined => {
   return undefined;
 };
 
-const normalizeHost = (host?: string): string =>
-  (host || "")
-    .trim()
-    .replace(/^https?:\/\//i, "")
-    .replace(/\/+$/g, "");
-
-const isIpAddress = (value: string): boolean =>
-  /^\d{1,3}(?:\.\d{1,3}){3}$/.test(value);
-
-const buildTenantOrigin = (hostname?: string, networkIp?: string): string => {
-  const rawHost = normalizeHost(hostname || networkIp);
-  if (!rawHost) return "";
-
-  const host =
-    rawHost.includes(".") || isIpAddress(rawHost)
-      ? rawHost
-      : `${rawHost}.restx.food`;
-
-  return `https://${host}`;
-};
-
 const normalizePaymentSettings = (
   settings: PaymentGatewaySettings,
 ): PaymentGatewaySettings => ({
   clientId: settings.clientId?.trim() || "",
   apiKey: settings.apiKey?.trim() || "",
   checksumKey: settings.checksumKey?.trim() || "",
-  returnUrl: settings.returnUrl?.trim() || "",
-  cancelUrl: settings.cancelUrl?.trim() || "",
 });
 
 const TenantEditPage: React.FC = () => {
@@ -271,7 +246,6 @@ const TenantEditPage: React.FC = () => {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [hasExistingPaymentSettings, setHasExistingPaymentSettings] =
     useState(false);
-  const [paymentOrigin, setPaymentOrigin] = useState("");
   const tenantId = params.id as string;
 
   const getRawFile = (fileList: UploadFile[]): File | null => {
@@ -405,18 +379,10 @@ const TenantEditPage: React.FC = () => {
   };
 
   const fetchPaymentSettings = async (
-    hostname?: string,
-    networkIp?: string,
+    _hostname?: string,
+    _networkIp?: string,
   ) => {
     setPaymentLoading(true);
-
-    const origin = buildTenantOrigin(hostname, networkIp);
-    setPaymentOrigin(origin);
-
-    const autoUrls = {
-      returnUrl: origin ? `${origin}/staff/orders?payos=success` : "",
-      cancelUrl: origin ? `${origin}/staff/orders?payos=cancel` : "",
-    };
 
     try {
       const settings = await tenantService.getPaymentSettings(tenantId);
@@ -425,8 +391,6 @@ const TenantEditPage: React.FC = () => {
           clientId: settings.clientId || "",
           apiKey: settings.apiKey || "",
           checksumKey: settings.checksumKey || "",
-          returnUrl: autoUrls.returnUrl,
-          cancelUrl: autoUrls.cancelUrl,
         });
 
         paymentForm.setFieldsValue(normalized);
@@ -436,8 +400,6 @@ const TenantEditPage: React.FC = () => {
           clientId: "",
           apiKey: "",
           checksumKey: "",
-          returnUrl: autoUrls.returnUrl,
-          cancelUrl: autoUrls.cancelUrl,
         });
 
         paymentForm.setFieldsValue(emptySettings);
@@ -491,15 +453,9 @@ const TenantEditPage: React.FC = () => {
         modifiedBy: undefined,
       };
 
-      const saveOrigin = buildTenantOrigin(
-        hostname || formData.hostname,
-        requestData.networkIp || formData.networkIp,
+      const paymentValues = normalizePaymentSettings(
+        paymentForm.getFieldsValue(),
       );
-      const paymentValues = normalizePaymentSettings({
-        ...paymentForm.getFieldsValue(),
-        returnUrl: saveOrigin ? `${saveOrigin}/staff/orders?payos=success` : "",
-        cancelUrl: saveOrigin ? `${saveOrigin}/staff/orders?payos=cancel` : "",
-      });
 
       const hasAnyPaymentCredential = [
         paymentValues.clientId,
@@ -518,14 +474,6 @@ const TenantEditPage: React.FC = () => {
             defaultValue: "Please fill all payment credentials before saving.",
           }),
         );
-        return;
-      }
-
-      if (
-        hasAllPaymentCredential &&
-        (!paymentValues.returnUrl || !paymentValues.cancelUrl)
-      ) {
-        message.error(t("dashboard.settings.notifications.error_update"));
         return;
       }
 
