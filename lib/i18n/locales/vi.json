@@ -45,7 +45,7 @@
         "checkin": "Check-in",
         "complete": "Hoàn tất",
         "quick_cancel": "Hủy nhanh",
-        "view_detail": "Xem chi tiết & thao tác"
+        "view_detail": "Xem chi tiết"
       },
       "side_effects": {
         "CONFIRMED": "Bàn sẽ chuyển sang trạng thái Đặt trước",
