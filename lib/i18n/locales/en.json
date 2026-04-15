@@ -630,6 +630,9 @@
         "available": "Available",
         "has_reservation": "Has Reservation"
       },
+      "no_session_tables": "No tables are booked in this session.",
+      "session_filter_desc": "You can switch sessions to view other tables.",
+      "session_filter_hint": "The list is currently filtered by the active session.",
       "modal": {
         "reserved_by": "Reserved by",
         "phone": "Phone",

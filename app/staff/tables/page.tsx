@@ -132,7 +132,7 @@ function tint(color: string, percent: number): string {
   return `color-mix(in srgb, ${color} ${percent}%, transparent)`;
 }
 
-export default function TablesPage() {
+export default function TablesPage({ showAllActivities = false, showFilters = false }: { showAllActivities?: boolean; showFilters?: boolean } = {}) {
   const { t } = useTranslation();
   const { mode } = useThemeMode();
   const { tenant } = useTenant();
@@ -143,7 +143,6 @@ export default function TablesPage() {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
   const [reservationKeyword, setReservationKeyword] = useState('');
-  const [reservationStatusFilter, setReservationStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'checkin'>('all');
   const [sessionFilter, setSessionFilter] = useState<string>(() => getCurrentSession(SESSIONS));
   const [selectedTable, setSelectedTable] = useState<TableActivityData | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
@@ -452,39 +451,24 @@ export default function TablesPage() {
     )
     : floorFilteredTables;
 
-  const filteredTables = keywordFilteredTables.filter((t) => {
-    // Status Filter
-    if (reservationStatusFilter !== 'all') {
-      const statusName = (t.reservationStatusName || '').toLowerCase();
-      if (reservationStatusFilter === 'pending' && !statusName.includes('pending')) return false;
-      if (reservationStatusFilter === 'confirmed' && !statusName.includes('confirm')) return false;
-      if (reservationStatusFilter === 'checkin' && !statusName.includes('check') && !statusName.includes('arrived')) return false;
-    }
+  const activeSessionFilter = showAllActivities ? 'all' : (sessionFilter === 'all' ? getCurrentSession(SESSIONS) : sessionFilter);
+  const isSessionFiltered = !showAllActivities && activeSessionFilter !== 'all';
+  const canShowFilters = showFilters || showAllActivities;
 
-    // Session Filter
-    if (sessionFilter !== 'all' && sessionFilter !== '') {
-      if (!t.reservationTime) {
-        // If they pick a specific shift, should we hide tables without reservations?
-        // Or should we just hide tables that HAVE reservations in OTHER shifts?
-        // Usually, filtering by shift implies "I want to see tables and their reservations for this shift".
-        // If we strictly hide tables that don't have reservations in this shift, we return false here.
-        // Let's filter out tables that have NO reservation in this session IF they specifically want to see the session's reservations.
-      }
-      if (t.reservationTime) {
-        const sessionDef = SESSIONS.find(s => s.value === sessionFilter);
-        if (sessionDef) {
-          const resDate = new Date(t.reservationTime);
-          const resMins = resDate.getHours() * 60 + resDate.getMinutes();
-          const [sH, sM] = sessionDef.startTime.split(':').map(Number);
-          const [eH, eM] = sessionDef.endTime.split(':').map(Number);
-          // If the reservation time is outside the selected shift, filter out the table
-          if (resMins < sH * 60 + sM || resMins > eH * 60 + eM) {
-            return false;
-          }
-        }
-      }
-    }
-    return true;
+  const filteredTables = keywordFilteredTables.filter((t) => {
+    if (showAllActivities) return true;
+
+    const reservationTime = t.reservationTime;
+    if (!reservationTime) return false;
+
+    const sessionDef = SESSIONS.find(s => s.value === activeSessionFilter);
+    if (!sessionDef) return true;
+
+    const resDate = new Date(reservationTime);
+    const resMins = resDate.getHours() * 60 + resDate.getMinutes();
+    const [sH, sM] = sessionDef.startTime.split(':').map(Number);
+    const [eH, eM] = sessionDef.endTime.split(':').map(Number);
+    return resMins >= sH * 60 + sM && resMins < eH * 60 + eM;
   });
 
   // Practical staff metrics
@@ -513,6 +497,7 @@ export default function TablesPage() {
           tables: filteredTables,
         },
       ];
+  const hasSessionResults = tableGroups.length > 0;
 
   return (
     <div className="floor-activity-root">
@@ -529,10 +514,12 @@ export default function TablesPage() {
             <Title level={isMobile ? 5 : 4} style={{ margin: 0, color: 'var(--text)' }}>
               {t('staff.menu.tables')}
             </Title>
+
           </div>
           <Text style={{ color: 'var(--text-muted)', fontSize: 13 }}>
             {t('staff.floor_activity.last_updated')}: {lastUpdated.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </Text>
+
         </div>
 
         <div className="floor-activity-header-right" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -544,24 +531,14 @@ export default function TablesPage() {
               placeholder={t('staff.floor_activity.search_placeholder')}
               style={{ width: isMobile ? 170 : 240, borderRadius: 10 }}
             />
-            <Select
-              value={reservationStatusFilter}
-              onChange={(value) => setReservationStatusFilter(value)}
-              style={{ width: isMobile ? 150 : 190 }}
-              options={[
-                { value: 'all', label: t('staff.floor_activity.filter.all') },
-                { value: 'pending', label: t('staff.floor_activity.filter.pending') },
-                { value: 'confirmed', label: t('staff.floor_activity.filter.confirmed') },
-                { value: 'checkin', label: t('staff.floor_activity.filter.checkin') },
-              ]}
-              listHeight={250}
-            />
-            <Select
-              value={sessionFilter}
-              onChange={(value) => setSessionFilter(value)}
-              style={{ width: isMobile ? 130 : 180 }}
-              options={SESSIONS.map(s => ({ value: s.value, label: s.label }))}
-            />
+            {canShowFilters && (
+              <Select
+                value={sessionFilter}
+                onChange={(value: string) => setSessionFilter(value)}
+                style={{ width: isMobile ? 130 : 180 }}
+                options={SESSIONS.map(s => ({ value: s.value, label: s.label }))}
+              />
+            )}
           </ConfigProvider>
         </div>
       </motion.div>
@@ -661,7 +638,7 @@ export default function TablesPage() {
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25 }}
         >
-          {tableGroups.map((group) => (
+          {hasSessionResults ? tableGroups.map((group) => (
             <div key={group.id} style={{ marginBottom: isMobile ? 20 : 28 }}>
               {(activeFloorId === 'all' || tableGroups.length > 1) && (
                 <div className="floor-activity-group-header">
@@ -801,12 +778,22 @@ export default function TablesPage() {
                 })}
               </Row>
             </div>
-          ))}
-
-          {tableGroups.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>
+          ))
+          : (
+            <div style={{ textAlign: 'center', padding: '56px 0', color: 'var(--text-muted)' }}>
               <TableOutlined style={{ fontSize: 40, marginBottom: 12, opacity: 0.4 }} />
-              <div>{t('staff.floor_activity.no_tables')}</div>
+              <div style={{ fontWeight: 600, color: 'var(--text)' }}>
+                {isSessionFiltered
+                  ? t('staff.floor_activity.no_session_tables', { defaultValue: 'Không có bàn nào được đặt trong phiên này.' })
+                  : t('staff.floor_activity.no_tables')}
+              </div>
+              {isSessionFiltered && (
+                <div style={{ marginTop: 6, fontSize: 13 }}>
+                  {t('staff.floor_activity.session_filter_desc', {
+                    defaultValue: 'Bạn có thể đổi phiên để xem các bàn khác.'
+                  })}
+                </div>
+              )}
             </div>
           )}
         </motion.div>
