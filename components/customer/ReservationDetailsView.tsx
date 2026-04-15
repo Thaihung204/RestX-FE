@@ -861,7 +861,8 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
       setDepositLoading(true);
       const res = await paymentService.createPaymentLink(unpaid.id);
       if (res.checkoutUrl) {
-        window.open(res.checkoutUrl, "_blank", "noopener,noreferrer");
+        window.location.assign(res.checkoutUrl);
+        return;
         messageApi.success(t("reservation_detail.deposit.link_opened"));
       } else {
         messageApi.error(t("reservation_detail.deposit.link_error"));

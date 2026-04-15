@@ -1,5 +1,6 @@
 "use client";
 
+import StatusToggle from "@/components/ui/StatusToggle";
 import Link from "next/link";
 
 export interface DishCardItem {
@@ -106,15 +107,16 @@ export default function DishCard({
       </div>
 
       <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
+        <div className="flex items-start justify-between mb-2 gap-2">
+          <div className="flex-1 min-w-0">
             <h3
-              className="text-base font-bold mb-1 line-clamp-1"
+              className="text-base font-bold mb-1 truncate"
               style={{ color: "var(--text)" }}>
               {item.name}
             </h3>
             <p
-              className="text-xs line-clamp-2"
+              className="text-xs truncate"
+              title={item.description || labels.noDescription}
               style={{ color: "var(--text-muted)" }}>
               {item.description || labels.noDescription}
             </p>
@@ -140,10 +142,10 @@ export default function DishCard({
           </div>
         </div>
 
-        <div className="flex gap-2 mt-4">
-          <Link href={`/admin/menu/${item.id}`} className="flex-1">
+        <div className="flex flex-nowrap items-center gap-2 mt-4 min-w-0">
+          <Link href={`/admin/menu/${item.id}`} className="flex-1 min-w-0">
             <button
-              className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
+              className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all truncate whitespace-nowrap"
               style={{
                 backgroundColor: "rgba(255,56,11,0.1)",
                 color: "var(--primary)",
@@ -160,7 +162,7 @@ export default function DishCard({
           </Link>
           <button
             onClick={() => onAddIngredients(item)}
-            className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+            className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm font-medium transition-all truncate whitespace-nowrap"
             style={{
               background: "var(--surface)",
               color: "var(--text)",
@@ -177,50 +179,11 @@ export default function DishCard({
             suppressHydrationWarning>
             {labels.ingredients}
           </button>
-          <button
-            onClick={() => onToggleStatus(item)}
-            className="px-3 py-2.5 rounded-lg transition-all font-medium text-sm"
-            style={{
-              backgroundColor: item.isActive
-                ? "rgba(239, 68, 68, 0.1)"
-                : "rgba(34, 197, 94, 0.1)",
-              color: item.isActive ? "rgb(239, 68, 68)" : "rgb(34, 197, 94)",
-            }}
-            onMouseEnter={(e) => {
-              if (item.isActive) {
-                e.currentTarget.style.backgroundColor = "rgb(239, 68, 68)";
-              } else {
-                e.currentTarget.style.backgroundColor = "rgb(34, 197, 94)";
-              }
-              e.currentTarget.style.color = "white";
-            }}
-            onMouseLeave={(e) => {
-              if (item.isActive) {
-                e.currentTarget.style.backgroundColor =
-                  "rgba(239, 68, 68, 0.1)";
-                e.currentTarget.style.color = "rgb(239, 68, 68)";
-              } else {
-                e.currentTarget.style.backgroundColor =
-                  "rgba(34, 197, 94, 0.1)";
-                e.currentTarget.style.color = "rgb(34, 197, 94)";
-              }
-            }}
-            title={item.isActive ? labels.deactivate : labels.activate}
-            suppressHydrationWarning>
-            <span className="sr-only">{labels.status_icon_label}</span>
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-          </button>
+          <StatusToggle
+            checked={item.isActive}
+            onChange={() => onToggleStatus(item)}
+            ariaLabel={item.isActive ? labels.deactivate : labels.activate}
+          />
         </div>
       </div>
     </div>

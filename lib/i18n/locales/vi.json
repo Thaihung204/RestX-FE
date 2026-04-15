@@ -1179,6 +1179,23 @@
           "fetch_ingredients": "Không thể tải danh sách nguyên liệu",
           "fetch_recipes": "Không thể tải nguyên liệu của món"
         }
+      },
+      "dish_status": {
+        "title": "Trạng thái món ăn",
+        "active": "Hoạt động",
+        "inactive": "Ngừng hoạt động",
+        "enabled": "ĐANG BẬT",
+        "disabled": "ĐÃ TẮT",
+        "can_order": "Khách hàng có thể gọi món này",
+        "cannot_order": "Món ăn này hiện không khả dụng"
+      },
+      "errors": {
+        "load_failed": "Không thể tải danh sách món ăn",
+        "name_required": "Tên món ăn là bắt buộc",
+        "category_required": "Vui lòng chọn danh mục",
+        "price_invalid": "Giá phải là số dương",
+        "detail_load_failed": "Không thể tải thông tin món ăn",
+        "retry_hint": "Vui lòng thử lại sau"
       }
     },
     "orders": {
@@ -1259,7 +1276,9 @@
           "cash_insufficient": "Số tiền khách đưa không đủ",
           "cash_success": "Thanh toán tiền mặt thành công",
           "link_created": "Đã tạo link thanh toán",
-          "payment_failed": "Thanh toán thất bại"
+          "payment_failed": "Thanh toán thất bại",
+          "payos_return_success": "Thanh toán PayOS thành công",
+          "payos_return_cancel": "Bạn đã hủy thanh toán PayOS"
         }
       }
     },
@@ -1766,12 +1785,16 @@
         "fields": {
           "client_id": "Client ID",
           "api_key": "API Key",
-          "checksum_key": "Checksum Key"
+          "checksum_key": "Checksum Key",
+          "return_url": "Return URL",
+          "cancel_url": "Cancel URL"
         },
         "validation": {
           "client_id_required": "Vui lòng nhập Client ID",
           "api_key_required": "Vui lòng nhập API Key",
-          "checksum_key_required": "Vui lòng nhập Checksum Key"
+          "checksum_key_required": "Vui lòng nhập Checksum Key",
+          "return_url_required": "Vui lòng nhập Return URL",
+          "cancel_url_required": "Vui lòng nhập Cancel URL"
         },
         "actions": {
           "save_settings": "Lưu"

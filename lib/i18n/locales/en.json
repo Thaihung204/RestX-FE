@@ -1247,6 +1247,23 @@
           "fetch_ingredients": "Failed to load ingredients",
           "fetch_recipes": "Failed to load dish ingredients"
         }
+      },
+      "dish_status": {
+        "title": "Dish Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "enabled": "ENABLED",
+        "disabled": "DISABLED",
+        "can_order": "Customers can order this dish",
+        "cannot_order": "This dish is currently unavailable"
+      },
+      "errors": {
+        "load_failed": "Failed to load menu items",
+        "name_required": "Dish name is required",
+        "category_required": "Please select a category",
+        "price_invalid": "Price must be a positive number",
+        "detail_load_failed": "Failed to load dish details",
+        "retry_hint": "Please try again later"
       }
     },
     "orders": {
@@ -1327,7 +1344,9 @@
           "cash_insufficient": "Cash received is not enough",
           "cash_success": "Cash payment successful",
           "link_created": "Payment link created",
-          "payment_failed": "Payment failed"
+          "payment_failed": "Payment failed",
+          "payos_return_success": "PayOS payment completed successfully",
+          "payos_return_cancel": "PayOS payment was cancelled"
         }
       }
     },
@@ -1808,12 +1827,16 @@
         "fields": {
           "client_id": "Client ID",
           "api_key": "API Key",
-          "checksum_key": "Checksum Key"
+          "checksum_key": "Checksum Key",
+          "return_url": "Return URL",
+          "cancel_url": "Cancel URL"
         },
         "validation": {
           "client_id_required": "Client ID is required",
           "api_key_required": "API Key is required",
-          "checksum_key_required": "Checksum Key is required"
+          "checksum_key_required": "Checksum Key is required",
+          "return_url_required": "Return URL is required",
+          "cancel_url_required": "Cancel URL is required"
         },
         "actions": {
           "save_settings": "Save"

@@ -1,33 +1,23 @@
 "use client";
 
 import {
-    CheckCircleOutlined,
-    CreditCardOutlined,
-    EyeOutlined,
-    MailOutlined,
-    PhoneOutlined,
-    PlusOutlined,
-    ReloadOutlined,
-    RiseOutlined,
-    SearchOutlined,
-    ShopOutlined,
+  CheckCircleOutlined,
+  EyeOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  RiseOutlined,
+  SearchOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
-import {
-    App,
-    Avatar,
-    Button,
-    Card,
-    Input,
-    Select,
-    Table
-} from "antd";
+import { App, Avatar, Button, Card, Input, Select, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TenantsSystemRevenue from "../../../components/(admin)/tenants/SystemRevenueTab";
-import TenantPaymentSettingsModal from "../../../components/(admin)/tenants/TenantPaymentSettingsModal";
 import TenantRequestList from "../../../components/(admin)/tenants/TenantRequestList";
 import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
 import { tenantService } from "../../../lib/services/tenantService";
@@ -47,18 +37,27 @@ const TenantPage: React.FC = () => {
 
   const { activeTab, setActiveTab, setTabItems } = useTenantLayout();
 
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [selectedTenant, setSelectedTenant] = useState<ITenant | null>(null);
-
   useEffect(() => {
     setMounted(true);
     setTabItems([
-      { key: "tenants", label: t("tenants.tabs.restaurant_list"), icon: <ShopOutlined /> },
-      { key: "requests", label: t("tenants.tabs.tenant_requests"), icon: <CheckCircleOutlined /> },
-      { key: "revenue", label: t("tenants.tabs.system_revenue"), icon: <RiseOutlined /> },
+      {
+        key: "tenants",
+        label: t("tenants.tabs.restaurant_list"),
+        icon: <ShopOutlined />,
+      },
+      {
+        key: "requests",
+        label: t("tenants.tabs.tenant_requests"),
+        icon: <CheckCircleOutlined />,
+      },
+      {
+        key: "revenue",
+        label: t("tenants.tabs.system_revenue"),
+        icon: <RiseOutlined />,
+      },
     ]);
     setActiveTab("tenants");
-    
+
     return () => {
       setTabItems([]);
       setActiveTab("");
@@ -116,16 +115,6 @@ const TenantPage: React.FC = () => {
     router.push(`/tenants/${record.id}`);
   };
 
-  const openPaymentModal = (tenant: ITenant) => {
-    setSelectedTenant(tenant);
-    setPaymentModalOpen(true);
-  };
-
-  const closePaymentModal = () => {
-    setPaymentModalOpen(false);
-    setSelectedTenant(null);
-  };
-
   const columns: ColumnsType<ITenant> = [
     {
       title: t("tenants.table.tenant_info"),
@@ -162,7 +151,9 @@ const TenantPage: React.FC = () => {
             </Avatar>
           )}
           <div className="flex flex-col">
-            <span className="font-semibold text-sm" style={{ color: "var(--text)" }}>
+            <span
+              className="font-semibold text-sm"
+              style={{ color: "var(--text)" }}>
               {record.name}
             </span>
             <span className="text-xs" style={{ color: "var(--text-muted)" }}>
@@ -211,7 +202,9 @@ const TenantPage: React.FC = () => {
       key: "hostName",
       width: 220,
       render: (hostName: string) => {
-        const url = hostName.startsWith("http") ? hostName : `https://${hostName}`;
+        const url = hostName.startsWith("http")
+          ? hostName
+          : `https://${hostName}`;
         return (
           <a
             href={url}
@@ -233,22 +226,6 @@ const TenantPage: React.FC = () => {
       render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
     },
     {
-      title: t("dashboard.settings.payment.title"),
-      key: "payment",
-      width: 90,
-      align: "center",
-      render: (_, record) => (
-        <Button
-          type="text"
-          shape="circle"
-          icon={<CreditCardOutlined style={{ color: "var(--text-muted)" }} />}
-          onClick={() => openPaymentModal(record)}
-          title={t("dashboard.settings.payment.title")}
-          aria-label={t("dashboard.settings.payment.title")}
-        />
-      ),
-    },
-    {
       title: t("dashboard.tables.card.view_details"),
       key: "actions",
       width: 70,
@@ -267,30 +244,75 @@ const TenantPage: React.FC = () => {
   ];
 
   if (!mounted) {
-    return <div style={{ background: "var(--bg-base)", minHeight: "calc(100vh - 60px)" }} />;
+    return (
+      <div
+        style={{
+          background: "var(--bg-base)",
+          minHeight: "calc(100vh - 60px)",
+        }}
+      />
+    );
   }
 
   return (
     <>
-      <main className="px-6 lg:px-8 py-8" style={{ background: "var(--bg-base)", color: "var(--text)", flex: 1 }}>
+      <main
+        className="px-6 lg:px-8 py-8"
+        style={{ background: "var(--bg-base)", color: "var(--text)", flex: 1 }}>
         <div className="max-w-7xl mx-auto space-y-6">
-
           {activeTab === "tenants" && (
-            <Card variant="borderless" className="shadow-md overflow-hidden" styles={{ body: { padding: 0 } }} style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-              <div className="p-3 md:p-4 flex flex-col lg:flex-row gap-3 justify-between" style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}>
+            <Card
+              variant="borderless"
+              className="shadow-md overflow-hidden"
+              styles={{ body: { padding: 0 } }}
+              style={{
+                background: "var(--card)",
+                borderColor: "var(--border)",
+              }}>
+              <div
+                className="p-3 md:p-4 flex flex-col lg:flex-row gap-3 justify-between"
+                style={{
+                  borderBottom: "1px solid var(--border)",
+                  background: "var(--card)",
+                }}>
                 <div className="flex flex-col sm:flex-row flex-1 gap-2 max-w-3xl">
-                  <Input allowClear placeholder={t("tenants.filter.search_placeholder")} prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full sm:flex-1" />
-                  <Select className="w-full sm:w-44" value={status} onChange={setStatus} options={STATUS_OPTIONS_TRANSLATED} />
+                  <Input
+                    allowClear
+                    placeholder={t("tenants.filter.search_placeholder")}
+                    prefix={
+                      <SearchOutlined style={{ color: "var(--text-muted)" }} />
+                    }
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full sm:flex-1"
+                  />
+                  <Select
+                    className="w-full sm:w-44"
+                    value={status}
+                    onChange={setStatus}
+                    options={STATUS_OPTIONS_TRANSLATED}
+                  />
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    {t("tenants.filter.total_filtered", { total: tenants.length, filtered: filteredData.length })}
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--text-muted)" }}>
+                    {t("tenants.filter.total_filtered", {
+                      total: tenants.length,
+                      filtered: filteredData.length,
+                    })}
                   </span>
-                  <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={loading}>
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleRefresh}
+                    loading={loading}>
                     {t("tenants.filter.refresh")}
                   </Button>
                   <Link href="/tenants/new">
-                    <Button type="primary" icon={<PlusOutlined />} className="shadow-orange-900/20 shadow-lg border-none">
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      className="shadow-orange-900/20 shadow-lg border-none">
                       {t("tenants.add_tenant")}
                     </Button>
                   </Link>
@@ -313,7 +335,11 @@ const TenantPage: React.FC = () => {
                   pagination={{
                     pageSize: 10,
                     showSizeChanger: true,
-                    showTotal: (total) => <span style={{ color: "var(--text-muted)" }}>{t("tenants.table.total", { count: total })}</span>,
+                    showTotal: (total) => (
+                      <span style={{ color: "var(--text-muted)" }}>
+                        {t("tenants.table.total", { count: total })}
+                      </span>
+                    ),
                     className: "px-3 md:px-4 pb-3",
                     responsive: true,
                     showLessItems: true,
@@ -328,12 +354,6 @@ const TenantPage: React.FC = () => {
           {activeTab === "revenue" && <TenantsSystemRevenue />}
         </div>
       </main>
-
-      <TenantPaymentSettingsModal
-        open={paymentModalOpen}
-        tenant={selectedTenant}
-        onClose={closePaymentModal}
-      />
     </>
   );
 };
