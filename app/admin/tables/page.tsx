@@ -11,7 +11,7 @@ import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
 import { tableService, TableStatus, floorService, FloorSummary, PanoramaImage } from "@/lib/services/tableService";
 import { usePageLoading } from "@/components/PageTransitionLoader";
-import { App } from "antd";
+import { App, Spin } from "antd";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import { HubConnectionState } from "@microsoft/signalr";
 import { tenantService } from "@/lib/services/tenantService";
@@ -90,6 +90,7 @@ export default function TablesPage() {
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
   const [loading] = useState(false);
   const [tenantId, setTenantId] = useState<string>("");
+  const [isUploadingPanorama, setIsUploadingPanorama] = useState(false);
   usePageLoading(loading, { onlyInitial: true, key: "admin-tables-initial" });
 
   // Fetch tables + floors from BE API
@@ -565,8 +566,6 @@ export default function TablesPage() {
       } finally {
         fetchTables();
       }
-      setDrawerOpen(false);
-      setSelectedTable(null);
     }
   };
 
@@ -608,12 +607,37 @@ export default function TablesPage() {
         front: file,
       };
 
-      await tableService.updateTableWithPanorama(tableId, tableData, panoramaPayload, clear);
-      message.success(tDashboard('tables.panorama_saved', { defaultValue: 'Đã lưu ảnh panorama!' }));
-      await fetchTables();
+      setIsUploadingPanorama(true);
+
+      try {
+        const result = await tableService.updateTableWithPanorama(tableId, tableData, panoramaPayload, clear);
+        setIsUploadingPanorama(false);
+        message.success(tDashboard('tables.panorama_saved', { defaultValue: 'Lưu ảnh panorama thành công!' }));
+
+        // Update local state directly from BE response instead of refetching all tables
+        const cacheBust = Date.now();
+        const withCB = (url?: string) => {
+          if (!url) return undefined;
+          return `${url}${url.includes('?') ? '&' : '?'}v=${cacheBust}`;
+        };
+        setTables(prev => prev.map(t => {
+          if (t.id !== tableId) return t;
+          return {
+            ...t,
+            cubeFrontImageUrl: withCB(result.cubeFrontImageUrl),
+            defaultViewUrl: result.defaultViewUrl || (clear ? '' : t.defaultViewUrl),
+            has3DView: result.has3DView ?? !clear,
+          };
+        }));
+      } catch (err) {
+        setIsUploadingPanorama(false);
+        throw err;
+      }
     } catch (err) {
       console.error('Failed to save panorama:', err);
       message.error(tDashboard('tables.panorama_save_failed', { defaultValue: 'Lưu ảnh panorama thất bại' }));
+      // Only refetch all tables on error to restore consistent state
+      await fetchTables();
     }
   };
 
@@ -706,6 +730,7 @@ export default function TablesPage() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[var(--bg-base)]">
+      <Spin fullscreen spinning={isUploadingPanorama} tip={tDashboard('tables.panorama_saving', { defaultValue: 'Đang tải ảnh panorama lên hệ thống...' })} size="large" />
       <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="space-y-6">
           <div className="flex items-center justify-between">

@@ -8,6 +8,7 @@ import { tableService, floorService, TableStatus, FloorLayoutTableItem } from '@
 import reservationService from '@/lib/services/reservationService';
 import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
+import TablePreview3DModal from './TablePreview3DModal';
 
 import { DatePicker, TimePicker } from 'antd';
 import dayjs from 'dayjs';
@@ -146,7 +147,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [layout, setLayout] = useState<Layout | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(false);
     const [selectedTables, setSelectedTables] = useState<Table[]>([]);
-    const [selectedPanorama, setSelectedPanorama] = useState<{ tableId: string; tableLabel: string; imageUrl: string } | null>(null);
+    const [panoramaMap, setPanoramaMap] = useState<Map<string, { tableLabel: string; imageUrl: string }>>(new Map());
+    const [is3DModalOpen, setIs3DModalOpen] = useState(false);
+    const [panoramaTableData, setPanoramaTableData] = useState<TableData | null>(null);
+    const [active360TableId, setActive360TableId] = useState<string | null>(null);
     const [userDetails, setUserDetails] = useState<UserDetails>({
         name: '',
         phone: '',
@@ -253,6 +257,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         height: Number(t.layout.height) || 100,
                                         rotation: Number(t.layout.rotation) || 0,
                                         zoneId: floorSummary.name,
+                                        photo360Url: (t as any).cubeFrontImageUrl || (
+                                            floorSummary.name?.toLowerCase().includes('vip')
+                                                ? "/images/restaurant/warm_restaurant.webp"
+                                                : "/images/restaurant/bush_restaurant.webp"
+                                        ),
                                     };
                                 }
                             );
@@ -312,6 +321,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 height: t.height ?? 100,
                                 rotation: t.rotation ?? 0,
                                 zoneId: typeName,
+                                photo360Url: t.cubeFrontImageUrl || (
+                                    typeName?.toLowerCase().includes('vip')
+                                        ? "/images/restaurant/warm_restaurant.webp"
+                                        : "/images/restaurant/bush_restaurant.webp"
+                                ),
                             };
                         });
                         return {
@@ -364,24 +378,45 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         });
 
         if (alreadySelected) {
-            setSelectedPanorama(null);
+            // Remove panorama entry for this table
+            setPanoramaMap(prev => {
+                const next = new Map(prev);
+                next.delete(table.id);
+                return next;
+            });
+            if (active360TableId === table.id) {
+                setIs3DModalOpen(false);
+                setPanoramaTableData(null);
+                setActive360TableId(null);
+            }
             return;
         }
 
         try {
             const fullTable = await tableService.getTableById(table.id);
+            console.log('[ReservationSection] getTableById response:', {
+                id: fullTable?.id,
+                code: fullTable?.code,
+                defaultViewUrl: fullTable?.defaultViewUrl,
+                cubeFrontImageUrl: fullTable?.cubeFrontImageUrl,
+                has3DView: fullTable?.has3DView,
+            });
+            // Panorama 360 (equirectangular) — check both fields (admin may upload to either)
             const imageUrl = fullTable?.cubeFrontImageUrl || fullTable?.defaultViewUrl || '';
             if (imageUrl) {
-                setSelectedPanorama({
-                    tableId: table.id,
-                    tableLabel: table.name,
-                    imageUrl,
+                setPanoramaMap(prev => {
+                    const next = new Map(prev);
+                    next.set(table.id, {
+                        tableLabel: table.name,
+                        imageUrl,
+                    });
+                    return next;
                 });
-            } else {
-                setSelectedPanorama(null);
+                setPanoramaTableData(table);
+                setActive360TableId(table.id);
             }
-        } catch {
-            setSelectedPanorama(null);
+        } catch (err) {
+            console.warn('[ReservationSection] Failed to fetch table details for 360:', err);
         }
     };
 
@@ -441,6 +476,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         setStep(ReservationStep.TABLE_SELECTION);
     };
 
+
+    // The old inline THREE.js panorama viewer has been replaced by TablePreview3DModal
 
     const handleCompleteReservation = async () => {
         if (selectedTables.length === 0) return;
@@ -793,7 +830,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     {selectedTables.length > 0 ? (
                                         <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
                                             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-xs text-[var(--text-muted)] flex items-center justify-between gap-4">
-                                                <span className="uppercase tracking-[0.2em] font-semibold">Tổng sức chứa</span>
+                                                <span className="uppercase tracking-[0.2em] font-semibold">{t('landing.booking.table_map.total_capacity')}</span>
                                                 <span className="inline-flex items-center justify-center text-[var(--primary)] font-bold text-sm px-3 py-1 rounded-full bg-[var(--primary-faint)] border border-[var(--primary-border)] leading-none text-center whitespace-nowrap min-h-[28px]">
                                                     {totalSelectedCapacity} {t('landing.booking.table_map.guests')}
                                                 </span>
@@ -801,7 +838,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             {selectedTables.map(table => (
                                                 <div key={table.id} className="bg-[var(--primary-faint)] rounded-2xl p-6 border border-[var(--primary-border)]">
                                                     <div className="flex items-center justify-between mb-4">
-                                                        <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-[0.2em]">Selected Table</span>
+                                                        <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-[0.2em]">{t('landing.booking.table_map.selected_table_label')}</span>
                                                         <span className="text-2xl font-bold text-[var(--primary)] leading-none">{table.label}</span>
                                                     </div>
                                                     <div className="space-y-3">
@@ -816,6 +853,33 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                             <span className="font-semibold text-[var(--text)]">{table.capacity} {t('landing.booking.table_map.guests')}</span>
                                                         </div>
                                                     </div>
+                                                    {panoramaMap.has(table.id) && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setActive360TableId(table.id);
+                                                                setPanoramaTableData({
+                                                                    id: table.id,
+                                                                    tenantId: '',
+                                                                    name: table.label,
+                                                                    seats: table.capacity,
+                                                                    status: 'AVAILABLE',
+                                                                    area: table.zone,
+                                                                    position: { x: table.x || 0, y: table.y || 0 },
+                                                                    shape: table.shape === 'Round' ? 'Circle' : 'Rectangle',
+                                                                    width: table.width || 80,
+                                                                    height: table.height || 80,
+                                                                    rotation: table.rotation || 0,
+                                                                } as TableData);
+                                                                setIs3DModalOpen(true);
+                                                            }}
+                                                            className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:brightness-110"
+                                                            style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}
+                                                        >
+                                                            <span className="material-symbols-outlined text-base">3d_rotation</span>
+                                                            {t('landing.booking.table_map.view_360', 'Xem 360')}
+                                                        </button>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -826,18 +890,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         </div>
                                     )}
 
-                                    {selectedPanorama && (
-                                        <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--surface)]">
-                                            <div className="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] border-b border-[var(--border)]">
-                                                360 View · Table {selectedPanorama.tableLabel}
-                                            </div>
-                                            <img
-                                                src={selectedPanorama.imageUrl}
-                                                alt={`Panorama table ${selectedPanorama.tableLabel}`}
-                                                className="w-full h-40 object-cover"
-                                            />
-                                        </div>
-                                    )}
                                 </div>
 
                                 <button
@@ -1101,6 +1153,20 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
             </main>
 
+
+            <TablePreview3DModal
+                open={is3DModalOpen}
+                table={panoramaTableData}
+                tableImageUrl={active360TableId ? panoramaMap.get(active360TableId)?.imageUrl : undefined}
+                onClose={() => setIs3DModalOpen(false)}
+                onBookNow={() => {
+                    setIs3DModalOpen(false);
+                    setStep(ReservationStep.CONFIRMATION);
+                }}
+                onBackToMap={() => {
+                    setIs3DModalOpen(false);
+                }}
+            />
 
             <style jsx global>{`
                 .reservation-date-picker.ant-picker {

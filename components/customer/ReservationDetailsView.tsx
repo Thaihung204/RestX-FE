@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { HubConnectionState } from "@microsoft/signalr";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import TablePreview3DModal from "@/app/restaurant/components/TablePreview3DModal";
 
 interface ReservationDetailsViewProps {
   reservationId: string;
@@ -766,6 +767,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const [relatedOrders, setRelatedOrders] = useState<OrderDto[]>([]);
   const [depositLoading, setDepositLoading] = useState(false);
   const [panoramaImage, setPanoramaImage] = useState<PanoramaTableImage | null>(null);
+  const [is3DModalOpen, setIs3DModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editDateTime, setEditDateTime] = useState("");
@@ -1445,15 +1447,49 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                   <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "var(--text-muted)" }}>
                     {t("reservation_detail.booking.panorama", "Panorama")}
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => setIs3DModalOpen(true)}
+                    className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider"
+                    style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}
+                  >
+                    {t("reservation_detail.booking.view_360", "Xem 360")}
+                  </button>
                 </div>
                 <div className="px-5 pb-5">
                   <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
                     <div className="px-3 py-2 text-xs font-semibold" style={{ color: "var(--text-muted)", borderBottom: "1px solid var(--border)" }}>
                       Table {panoramaImage.tableCode}
                     </div>
-                    <img src={panoramaImage.imageUrl} alt={`Panorama table ${panoramaImage.tableCode}`} className="w-full h-40 object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setIs3DModalOpen(true)}
+                      className="w-full block cursor-pointer"
+                    >
+                      <img src={panoramaImage.imageUrl} alt={`Panorama table ${panoramaImage.tableCode}`} className="w-full h-40 object-cover" />
+                    </button>
                   </div>
                 </div>
+                <TablePreview3DModal
+                  open={is3DModalOpen}
+                  table={panoramaImage ? {
+                    id: panoramaImage.tableId,
+                    tenantId: tenant?.id || 'default',
+                    name: panoramaImage.tableCode,
+                    seats: detail?.tables?.find(t => t.id === panoramaImage.tableId)?.capacity || 0,
+                    status: 'AVAILABLE' as const,
+                    area: detail?.tables?.find(t => t.id === panoramaImage.tableId)?.floorName || '',
+                    position: { x: 0, y: 0 },
+                    shape: 'Rectangle' as const,
+                    width: 100,
+                    height: 100,
+                    rotation: 0,
+                    zoneId: '',
+                  } : null}
+                  tableImageUrl={panoramaImage.imageUrl}
+                  onClose={() => setIs3DModalOpen(false)}
+                  onBookNow={() => setIs3DModalOpen(false)}
+                />
               </div>
             )}
 

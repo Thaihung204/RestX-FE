@@ -804,6 +804,7 @@
         "dashboard": "Tổng quan",
         "analytics": "Phân tích",
         "tables": "Bàn",
+        "activity": "Hoạt động",
         "reservations": "Đặt bàn",
         "menu": "Thực đơn",
         "ingredients": "Nguyên liệu",
@@ -3462,11 +3463,26 @@
         "floor": "Tầng",
         "capacity": "Sức chứa",
         "no_table_selected": "Chưa chọn bàn nào",
-        "info_timer": "Vui lòng chọn bàn trên sơ đồ",
-        "confirm_table": "Xác nhận bàn",
-        "mobile_selected": "Đã chọn",
-        "mobile_none": "Chưa chọn bàn",
-        "mobile_confirm": "Xong"
+        "info_timer": "Vui l\u00f2ng ch\u1ecdn b\u00e0n tr\u00ean s\u01a1 \u0111\u1ed3",
+        "confirm_table": "X\u00e1c nh\u1eadn b\u00e0n",
+        "mobile_selected": "\u0110\u00e3 ch\u1ecdn",
+        "mobile_none": "Ch\u01b0a ch\u1ecdn b\u00e0n",
+        "mobile_confirm": "Xong",
+        "view_360": "Xem 360",
+        "total_capacity": "T\u1ed5ng s\u1ee9c ch\u1ee9a",
+        "selected_table_label": "B\u00e0n \u0111\u00e3 ch\u1ecdn"
+      },
+      "panorama": {
+        "loading": "\u0110ang t\u1ea3i \u1ea3nh 360...",
+        "not_ready": "\u1ea2nh 360 ch\u01b0a s\u1eb5n s\u00e0ng",
+        "no_image": "B\u00e0n n\u00e0y ch\u01b0a c\u00f3 \u1ea3nh 360.",
+        "load_failed": "Kh\u00f4ng th\u1ec3 t\u1ea3i \u1ea3nh 360. Vui l\u00f2ng th\u1eed l\u1ea1i sau.",
+        "table_label": "B\u00e0n {{name}}",
+        "status_available": "C\u00f2n tr\u1ed1ng",
+        "status_occupied": "\u0110ang c\u00f3 kh\u00e1ch",
+        "drag_hint": "K\u00e9o \u0111\u1ec3 xoay - Cu\u1ed9n \u0111\u1ec3 zoom",
+        "back_to_map": "Quay l\u1ea1i s\u01a1 \u0111\u1ed3",
+        "book_now": "\u0110\u1eb7t b\u00e0n n\u00e0y"
       },
       "footer": {
         "tagline": "Dịch vụ đẳng cấp quốc tế"
@@ -3565,7 +3581,9 @@
       "seats_unit": "ghế",
       "checked_in_at": "Thời gian check-in",
       "last_updated": "Cập nhật lần cuối",
-      "special_requests": "Yêu cầu đặc biệt"
+      "special_requests": "Yêu cầu đặc biệt",
+      "panorama": "Panorama",
+      "view_360": "Xem 360"
     },
     "deposit": {
       "label": "Đặt cọc",
@@ -3616,6 +3634,10 @@
   "common": {
     "actions": {
       "exporting": "Đang xuất..."
+    },
+    "theme": {
+      "switch_to_light": "Chế độ Sáng",
+      "switch_to_dark": "Chế độ Tối"
     }
   }
 }

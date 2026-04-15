@@ -4,6 +4,7 @@ import { DropDown } from "@/components/ui/DropDown";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Spin } from "antd";
 
 interface Table {
   id: string;
@@ -285,8 +286,14 @@ function PanoramaSection({
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t('tables.details.panorama_title', { ns: 'dashboard', defaultValue: 'Ảnh panorama' })}</span>
         {onSavePanorama && (panoramaFile || clearPanorama) && (
-          <button type="button" disabled={saving} onClick={() => onSavePanorama(table.id, panoramaFile, clearPanorama)} style={{ marginLeft: 'auto', padding: '5px 14px', borderRadius: 8, border: 'none', background: saving ? 'var(--border)' : 'linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}>
-            {t('tables.details.panorama_save', { ns: 'dashboard', defaultValue: 'Lưu ảnh' })}
+          <button type="button" disabled={saving} onClick={() => onSavePanorama(table.id, panoramaFile, clearPanorama)} style={{ marginLeft: 'auto', padding: '5px 14px', borderRadius: 8, border: 'none', background: saving ? 'var(--border)' : 'linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)', color: saving ? 'var(--text-muted)' : '#fff', fontSize: 12, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            {saving && (
+              <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+              </svg>
+            )}
+            {saving ? 'Đang lưu...' : t('tables.details.panorama_save', { ns: 'dashboard', defaultValue: 'Lưu ảnh' })}
           </button>
         )}
       </div>
@@ -304,6 +311,105 @@ function PanoramaSection({
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('tables.details.panorama_clear', { ns: 'dashboard', defaultValue: 'Xóa ảnh panorama hiện tại' })}</span>
           </label>
       </div>
+    </motion.div>
+  );
+}
+
+function DynamicLoadingOverlay({ isSaving }: { isSaving: boolean }) {
+  const { t } = useTranslation();
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (!isSaving) {
+      setStep(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setStep(prev => (prev < 3 ? prev + 1 : 3));
+    }, 4500); // Changes every 4.5 seconds
+
+    return () => clearInterval(timer);
+  }, [isSaving]);
+
+  if (!isSaving) return null;
+
+  const OVERLAY_STATES = [
+    { 
+      text: t('tables.details.saving_step1', { ns: 'dashboard', defaultValue: 'Đang lưu thay đổi...' }), 
+      icon: <Spin size="large" /> 
+    },
+    { 
+      text: t('tables.details.saving_step2', { ns: 'dashboard', defaultValue: 'Đang xử lý hình ảnh độ phân giải cao...' }), 
+      icon: (
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="w-4 h-4 bg-white rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+          <div className="w-4 h-4 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+          <div className="w-4 h-4 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+        </div>
+      )
+    },
+    { 
+      text: t('tables.details.saving_step3', { ns: 'dashboard', defaultValue: 'Đang tải lên máy chủ Cloudinary...' }), 
+      icon: (
+        <div style={{ position: 'relative', width: '48px', height: '48px' }}>
+          <div className="absolute inset-0 border-4 border-t-[var(--primary)] border-r-transparent border-b-[var(--primary)] border-l-transparent rounded-full animate-spin"></div>
+          <div className="absolute inset-2 border-4 border-t-transparent border-r-white border-b-transparent border-l-white rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}></div>
+        </div>
+      )
+    },
+    { 
+      text: t('tables.details.saving_step4', { ns: 'dashboard', defaultValue: 'Sẽ hơi lâu đấy, cảm phiền đợi xíu nhé...' }), 
+      icon: (
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <div className="w-3 h-3 bg-red-400 rounded-full animate-ping"></div>
+          <div className="w-3 h-3 bg-orange-400 rounded-full animate-ping" style={{ animationDelay: '0.3s' }}></div>
+          <div className="w-3 h-3 bg-[var(--primary)] rounded-full animate-ping" style={{ animationDelay: '0.6s' }}></div>
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "rgba(0, 0, 0, 0.7)",
+        backdropFilter: "blur(8px)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 28,
+      }}>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.5, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{ height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          {OVERLAY_STATES[step].icon}
+        </motion.div>
+      </AnimatePresence>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -20, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{ color: "#fff", fontSize: 17, fontWeight: 500, letterSpacing: "0.2px", textAlign: 'center' }}
+        >
+          {OVERLAY_STATES[step].text}
+        </motion.div>
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -392,12 +498,26 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
     }
   };
 
+  const handlePanoramaSaveClick = async (tableId: string, file: File | null, clear: boolean) => {
+    if (!onSavePanorama) return;
+    setPanoramaSaving(true);
+    try {
+      await onSavePanorama(tableId, file, clear);
+      setPanoramaFile(null);
+      setPanoramaPreview(null);
+      setClearPanorama(false);
+    } finally {
+      setPanoramaSaving(false);
+    }
+  };
+
   const currentStatus = STATUS_OPTIONS.find((s) => s.value === formData.status);
 
   return (
     <AnimatePresence>
       {open && (
         <>
+          <DynamicLoadingOverlay isSaving={isSaving} />
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -605,7 +725,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                     clearPanorama={clearPanorama}
                     setClearPanorama={setClearPanorama}
                     saving={panoramaSaving}
-                    onSavePanorama={onSavePanorama}
+                    onSavePanorama={handlePanoramaSaveClick}
                   />
 
                   {/* Form Fields */}
@@ -944,20 +1064,18 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                   padding: "13px 20px",
                   borderRadius: 10,
                   border: "none",
-                  background: isSaving
-                    ? "var(--border)"
-                    : "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)",
+                  background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)",
                   color: "#fff",
                   fontSize: 14,
                   fontWeight: 600,
-                  cursor: isSaving ? "not-allowed" : "pointer",
+                  cursor: isSaving ? "wait" : "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 8,
-                  boxShadow: isSaving ? "none" : "0 4px 16px var(--primary-glow)",
+                  boxShadow: isSaving ? "0 2px 8px var(--primary-glow)" : "0 4px 16px var(--primary-glow)",
                   letterSpacing: "-0.01em",
-                  opacity: isSaving ? 0.7 : 1,
+                  opacity: isSaving ? 0.8 : 1,
                   transition: "all 0.2s",
                 }}>
                 {isSaving ? (

@@ -759,6 +759,220 @@ textarea::placeholder {
   font-weight: 600;
 }
 
+/* =========================================================
+ * Table 360 Panorama Modal
+ * ========================================================= */
+.table-360-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  background: #000;
+}
+
+.table-360-viewer-container {
+  position: absolute;
+  inset: 0;
+}
+
+.table-360-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: #000;
+  z-index: 5;
+}
+
+.table-360-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary, #6366f1);
+  animation: spin 0.8s linear infinite;
+}
+
+.table-360-loading-text {
+  font-size: 13px;
+  color: #555;
+}
+
+.table-360-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 6;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.table-360-error-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.table-360-error-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Top header bar */
+.table-360-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+}
+
+.table-360-back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.table-360-back-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.table-360-header-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+}
+
+.table-360-header-subtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 1px;
+}
+
+.table-360-badge {
+  margin-left: auto;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Drag hint pill */
+.table-360-hint {
+  position: absolute;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  transition: opacity 0.5s;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Bottom action bar */
+.table-360-action-bar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
+}
+
+.table-360-action-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  backdrop-filter: blur(12px);
+  transition: background 0.2s, transform 0.15s;
+}
+
+.table-360-action-secondary:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.table-360-action-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--primary);
+  border: none;
+  color: var(--on-primary);
+  box-shadow: 0 4px 20px var(--primary-glow, rgba(99, 102, 241, 0.45));
+  transition: filter 0.2s, transform 0.15s;
+}
+
+.table-360-action-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .table-360-action-bar {
+    flex-direction: column;
+    width: calc(100% - 32px);
+    bottom: 16px;
+  }
+
+  .table-360-action-secondary,
+  .table-360-action-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-360-hint {
+    bottom: 160px;
+  }
+}
+
 /* Enable hardware acceleration for smooth animations */
 * {
   will-change: auto;
@@ -1408,6 +1622,22 @@ img {
 .floor-activity-root {
   padding: 0;
 }
+
+.admin-layout-content {
+  min-width: 0;
+  padding: 0;
+}
+
+.admin-layout-content > * {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .admin-layout-content {
+    padding: 0;
+  }
+}
+
 
 /* Header */
 .floor-activity-header {
