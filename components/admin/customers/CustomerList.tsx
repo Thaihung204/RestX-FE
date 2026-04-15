@@ -2,6 +2,7 @@
 
 import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
 import customerService, { Customer } from "@/lib/services/customerService";
+import loyaltyService, { LoyaltyPointBand } from "@/lib/services/loyaltyService";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { Cake, Cancel, CheckCircle } from "@mui/icons-material";
 import { message } from "antd";
@@ -38,6 +39,14 @@ const CustomerList = forwardRef<CustomerListHandle>(
     const [page, setPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
+    const [bands, setBands] = useState<LoyaltyPointBand[]>([]);
+
+    useEffect(() => {
+      loyaltyService
+        .getAllBands()
+        .then((data) => setBands(data))
+        .catch(console.error);
+    }, []);
 
     const loadCustomers = useCallback(
       async (targetPage = page) => {
@@ -57,7 +66,7 @@ const CustomerList = forwardRef<CustomerListHandle>(
             pageSize: PAGE_SIZE,
             search: search || undefined,
             membershipLevel:
-              filterTier === "all" ? undefined : filterTier.toUpperCase(),
+              filterTier === "all" ? undefined : filterTier,
           });
 
           setCustomers(response.items);
@@ -96,7 +105,7 @@ const CustomerList = forwardRef<CustomerListHandle>(
         const file = await customerService.exportCustomers({
           search: search || undefined,
           membershipLevel:
-            filterTier === "all" ? undefined : filterTier.toUpperCase(),
+            filterTier === "all" ? undefined : filterTier,
         });
 
         triggerBrowserDownload(file.blob, file.fileName);
@@ -220,10 +229,11 @@ const CustomerList = forwardRef<CustomerListHandle>(
                 color: "var(--text)",
               }}>
               <option value="all">{t("customers.filters.all_tiers")}</option>
-              <option value="platinum">Platinum</option>
-              <option value="gold">Vàng</option>
-              <option value="silver">Bạc</option>
-              <option value="bronze">Đồng</option>
+              {bands.map((band) => (
+                <option key={band.id} value={band.name}>
+                  {band.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -231,26 +241,26 @@ const CustomerList = forwardRef<CustomerListHandle>(
             emailSearch ||
             phoneSearch ||
             filterTier !== "all") && (
-            <div className="mt-3 flex justify-end">
-              <button
-                onClick={() => {
-                  setNameSearch("");
-                  setEmailSearch("");
-                  setPhoneSearch("");
-                  setFilterTier("all");
-                }}
-                className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                style={{
-                  background: "rgba(239,68,68,0.1)",
-                  color: "#ef4444",
-                  border: "1px solid rgba(239,68,68,0.2)",
-                }}>
-                {t("admin.reservations.filter.clear", {
-                  defaultValue: "Xóa lọc",
-                })}
-              </button>
-            </div>
-          )}
+              <div className="mt-3 flex justify-end">
+                <button
+                  onClick={() => {
+                    setNameSearch("");
+                    setEmailSearch("");
+                    setPhoneSearch("");
+                    setFilterTier("all");
+                  }}
+                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    background: "rgba(239,68,68,0.1)",
+                    color: "#ef4444",
+                    border: "1px solid rgba(239,68,68,0.2)",
+                  }}>
+                  {t("admin.reservations.filter.clear", {
+                    defaultValue: "Xóa lọc",
+                  })}
+                </button>
+              </div>
+            )}
         </div>
 
         {/* Customer List Container */}
@@ -300,7 +310,7 @@ const CustomerList = forwardRef<CustomerListHandle>(
                   <th
                     className="px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap text-center"
                     style={{ color: "var(--text-muted)" }}>
-                    {t("customers.list.headers.actions", { defaultValue: "Actions" })}
+                    {t("customers.list.headers.actions", { defaultValue: "Thao tác" })}
                   </th>
                 </tr>
               </thead>
@@ -323,49 +333,49 @@ const CustomerList = forwardRef<CustomerListHandle>(
 
                     return (
                       <tr key={customer.id} className="transition-colors hover:bg-[var(--surface)]" style={{ borderBottom: "1px solid var(--border)" }}>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-[var(--surface)] flex items-center justify-center border border-[var(--border)]">
-                          <img src={avatarSrc} alt={customer.name} className="w-full h-full object-cover" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.name}</p>
-                          <p className="text-xs" style={{ color: "var(--text-muted)" }}>{customer.phone || "-"}</p>
-                        </div>
-                      </div>
-                    </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-[var(--surface)] flex items-center justify-center border border-[var(--border)]">
+                              <img src={avatarSrc} alt={customer.name} className="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.name}</p>
+                              <p className="text-xs" style={{ color: "var(--text-muted)" }}>{customer.phone || "-"}</p>
+                            </div>
+                          </div>
+                        </td>
 
-                    <td className="px-4 py-3">
-                      <p className="text-sm break-all" style={{ color: "var(--text)" }}>{contactValue}</p>
-                    </td>
+                        <td className="px-4 py-3">
+                          <p className="text-sm break-all" style={{ color: "var(--text)" }}>{contactValue}</p>
+                        </td>
 
-                    <td className="px-4 py-3">
-                      <div className="flex justify-center"><LoyaltyBandIcon color={customerService.getVipTierColor(customer.vipTier)} size={24} /></div>
-                    </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-center"><LoyaltyBandIcon color={customerService.getVipTierColor(customer.vipTier)} size={24} /></div>
+                        </td>
 
-                    <td className="px-4 py-3 whitespace-nowrap text-center"><p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.totalOrders}</p></td>
+                        <td className="px-4 py-3 whitespace-nowrap text-center"><p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.totalOrders}</p></td>
 
-                    <td className="px-4 py-3 whitespace-nowrap text-center"><p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.totalSpent.toLocaleString("vi-VN")}₫</p></td>
+                        <td className="px-4 py-3 whitespace-nowrap text-center"><p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.totalSpent.toLocaleString("vi-VN")}₫</p></td>
 
-                    <td className="px-4 py-3 whitespace-nowrap text-center"><p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.loyaltyPoints}</p></td>
+                        <td className="px-4 py-3 whitespace-nowrap text-center"><p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.loyaltyPoints}</p></td>
 
-                    <td className="px-4 py-3 whitespace-nowrap text-center">
-                      <div className="flex justify-center">
-                        {customer.isActive ? <CheckCircle sx={{ fontSize: 20, color: "#22c55e" }} /> : <Cancel sx={{ fontSize: 20, color: "#ef4444" }} />}
-                      </div>
-                    </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-center">
+                          <div className="flex justify-center">
+                            {customer.isActive ? <CheckCircle sx={{ fontSize: 20, color: "#22c55e" }} /> : <Cancel sx={{ fontSize: 20, color: "#ef4444" }} />}
+                          </div>
+                        </td>
 
-                    <td className="px-4 py-3 whitespace-nowrap text-center">
-                      <div className="flex justify-center">
-                        <button onClick={() => setSelectedCustomer(customer)} className="p-2 rounded-lg transition-all" style={{ background: "var(--primary-soft)", color: "var(--primary)" }} title={t("customers.list.actions.view_detail", { defaultValue: "View detail" })}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                        <td className="px-4 py-3 whitespace-nowrap text-center">
+                          <div className="flex justify-center">
+                            <button onClick={() => setSelectedCustomer(customer)} className="p-2 rounded-lg transition-all" style={{ background: "var(--primary-soft)", color: "var(--primary)" }} title={t("customers.list.actions.view_detail", { defaultValue: "View detail" })}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
                     );
                   })
                 )}
@@ -409,9 +419,9 @@ const CustomerList = forwardRef<CustomerListHandle>(
 
                     <button onClick={() => setSelectedCustomer(customer)} className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all" style={{ background: "var(--primary-soft)", color: "var(--primary)", border: "1px solid var(--primary-border)" }} title={t("customers.list.actions.view_detail", { defaultValue: "View detail" })}>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
                     </button>
                   </div>
                 );
@@ -466,10 +476,10 @@ const CustomerList = forwardRef<CustomerListHandle>(
                         p === currentPage
                           ? { background: "var(--primary)", color: "white" }
                           : {
-                              background: "var(--surface)",
-                              border: "1px solid var(--border)",
-                              color: "var(--text-muted)",
-                            }
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text-muted)",
+                          }
                       }>
                       {p}
                     </button>
