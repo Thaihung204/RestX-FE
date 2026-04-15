@@ -630,6 +630,9 @@
         "available": "Available",
         "has_reservation": "Has Reservation"
       },
+      "no_session_tables": "No tables are booked in this session.",
+      "session_filter_desc": "You can switch sessions to view other tables.",
+      "session_filter_hint": "The list is currently filtered by the active session.",
       "modal": {
         "reserved_by": "Reserved by",
         "phone": "Phone",
@@ -872,6 +875,7 @@
         "dashboard": "Dashboard",
         "analytics": "Analytics",
         "tables": "Tables",
+        "activity": "Activity",
         "reservations": "Reservations",
         "menu": "Menu",
         "ingredients": "Ingredients",
@@ -3519,7 +3523,22 @@
         "confirm_table": "Confirm Table",
         "mobile_selected": "Selected",
         "mobile_none": "None",
-        "mobile_confirm": "Done"
+        "mobile_confirm": "Done",
+        "view_360": "View 360",
+        "total_capacity": "Total Capacity",
+        "selected_table_label": "Selected Table"
+      },
+      "panorama": {
+        "loading": "Loading 360 image...",
+        "not_ready": "360 image not ready",
+        "no_image": "This table does not have a 360 image yet.",
+        "load_failed": "Could not load 360 image. Please try again later.",
+        "table_label": "Table {{name}}",
+        "status_available": "Available",
+        "status_occupied": "Occupied",
+        "drag_hint": "Drag to rotate - Scroll to zoom",
+        "back_to_map": "Back to map",
+        "book_now": "Book this table"
       },
       "footer": {
         "tagline": "World-class Dining Experience"
@@ -3618,7 +3637,9 @@
       "seats_unit": "seats",
       "checked_in_at": "Checked In At",
       "last_updated": "Last Updated",
-      "special_requests": "Special Requests"
+      "special_requests": "Special Requests",
+      "panorama": "Panorama",
+      "view_360": "View 360"
     },
     "deposit": {
       "label": "Deposit",
@@ -3669,6 +3690,10 @@
   "common": {
     "actions": {
       "exporting": "Exporting..."
+    },
+    "theme": {
+      "switch_to_light": "Switch to Light Mode",
+      "switch_to_dark": "Switch to Dark Mode"
     }
   }
 }

@@ -31,6 +31,7 @@ import {
   Select,
   Tag,
   Typography,
+  ConfigProvider,
 } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -38,6 +39,43 @@ import { useTranslation } from 'react-i18next';
 import { useThemeMode } from '../../theme/AntdProvider';
 
 const { Title, Text } = Typography;
+
+export const SESSIONS = [
+  { value: 'all', label: 'Tất cả (All)', startTime: '00:00', endTime: '23:59' },
+  { value: 'morning', label: 'Sáng (08:00 - 12:00)', startTime: '08:00', endTime: '12:00' },
+  { value: 'noon', label: 'Trưa (12:00 - 17:00)', startTime: '12:00', endTime: '17:00' },
+  { value: 'evening', label: 'Tối (17:00 - 22:00)', startTime: '17:00', endTime: '22:00' }
+];
+
+export const getCurrentSession = (sessions: typeof SESSIONS) => {
+  const now = new Date();
+  const currentTotal = now.getHours() * 60 + now.getMinutes();
+
+  for (const s of sessions) {
+    if (s.value === 'all') continue;
+    const [sH, sM] = s.startTime.split(':').map(Number);
+    const [eH, eM] = s.endTime.split(':').map(Number);
+    if (currentTotal >= sH * 60 + sM && currentTotal < eH * 60 + eM) {
+      return s.value;
+    }
+  }
+
+  let closestSession = sessions[1].value; // Default to first actual session
+  let minDiff = Infinity;
+  for (const s of sessions) {
+    if (s.value === 'all') continue;
+    const [eH, eM] = s.endTime.split(':').map(Number);
+    const endTotal = eH * 60 + eM;
+    if (endTotal <= currentTotal) {
+      const diff = currentTotal - endTotal;
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestSession = s.value;
+      }
+    }
+  }
+  return closestSession;
+};
 
 type TableStatus = 'available' | 'occupied';
 
@@ -94,7 +132,7 @@ function tint(color: string, percent: number): string {
   return `color-mix(in srgb, ${color} ${percent}%, transparent)`;
 }
 
-export default function TablesPage() {
+export default function TablesPage({ showAllActivities = false, showFilters = false }: { showAllActivities?: boolean; showFilters?: boolean } = {}) {
   const { t } = useTranslation();
   const { mode } = useThemeMode();
   const { tenant } = useTenant();
@@ -105,7 +143,7 @@ export default function TablesPage() {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
   const [reservationKeyword, setReservationKeyword] = useState('');
-  const [reservationStatusFilter, setReservationStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'checkin'>('all');
+  const [sessionFilter, setSessionFilter] = useState<string>(() => getCurrentSession(SESSIONS));
   const [selectedTable, setSelectedTable] = useState<TableActivityData | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const inFlightRef = useRef(false);
@@ -134,15 +172,23 @@ export default function TablesPage() {
         }
       };
 
+      // Build order time range: scope to today (or current session if selected)
+      const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const orderParams: { From?: string; To?: string } = {
+        From: `${today}T00:00:00`,
+        To: `${today}T23:59:59`,
+      };
+
       const [tableData, floorData, orderStatusData, orderData, reservationData] = await Promise.all([
         safe(tableService.getAllTables(), [], 'Tables'),
         safe(floorService.getAllFloors(), [], 'Floors'),
         safe(orderStatusService.getAllStatuses(), [], 'Order statuses'),
-        safe(orderService.getAllOrders(), [], 'Orders'),
+        safe(orderService.getAllOrders(orderParams), [], 'Orders'),
         safe(
           reservationService.getReservations({
             pageNumber: 1,
-            pageSize: 200
+            pageSize: 200,
+            date: new Date().toLocaleDateString('en-CA') // YYYY-MM-DD local time
           }),
           {
             items: [],
@@ -186,14 +232,61 @@ export default function TablesPage() {
         }
       }
 
+      // Fetch missing reservations referenced by active orders
+      const missingResIds = new Set<string>();
+      for (const order of orderMap.values()) {
+        if (order.reservationId && !reservationData.items.some(r => r.id === order.reservationId)) {
+          missingResIds.add(order.reservationId);
+        }
+      }
+      
+      if (missingResIds.size > 0) {
+        const extraReservations = await Promise.all(
+          Array.from(missingResIds).map(id => safe(reservationService.getReservationById(id), null as any, 'Extra Reservation'))
+        );
+        for (const res of extraReservations) {
+          if (res) {
+            reservationData.items.push({
+              id: res.id,
+              confirmationCode: res.confirmationCode,
+              reservationDateTime: res.reservationDateTime,
+              numberOfGuests: res.numberOfGuests,
+              contactName: res.contact?.name,
+              contactPhone: res.contact?.phone,
+              isGuest: res.contact?.isGuest,
+              status: res.status,
+              tables: res.tables,
+            } as any);
+          }
+        }
+      }
+
       // Build reservation map: include all reservations except cancelled/no-show
       const reservationMap = new Map<string, ReservationListItem>();
+
+      const activeSessionObj = SESSIONS.find(s => s.value === sessionFilter);
+      let sH = 0, sM = 0, eH = 24, eM = 0;
+      if (activeSessionObj && activeSessionObj.value !== 'all') {
+         [sH, sM] = activeSessionObj.startTime.split(':').map(Number);
+         [eH, eM] = activeSessionObj.endTime.split(':').map(Number);
+      }
 
       for (const reservation of reservationData.items ?? []) {
         // Exclude only cancelled and no-show reservations, keep everything else
         // so occupied tables still show their reservation info
         const code = reservation.status?.code?.toUpperCase();
         if (code === 'CANCELLED' || code === 'NO_SHOW' || code === 'NOSHOW') continue;
+
+        // FILTER BY SESSION
+        if (activeSessionObj && activeSessionObj.value !== 'all') {
+           const resTime = new Date(reservation.reservationDateTime);
+           const resTotal = resTime.getHours() * 60 + resTime.getMinutes();
+           const startTotal = sH * 60 + sM;
+           const endTotal = eH * 60 + eM;
+           if (resTotal < startTotal || resTotal >= endTotal) {
+              continue; // skip reservations outside current session
+           }
+        }
 
         for (const table of reservation.tables ?? []) {
           if (!reservationMap.has(table.id)) {
@@ -265,11 +358,24 @@ export default function TablesPage() {
     } finally {
       inFlightRef.current = false;
     }
-  }, []);
+  }, [sessionFilter]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Auto-switch session filter when real time crosses a shift boundary
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const current = getCurrentSession(SESSIONS);
+      setSessionFilter(prev => {
+        // Only auto-switch if user hasn't manually picked 'all'
+        if (prev !== 'all' && prev !== current) return current;
+        return prev;
+      });
+    }, 60_000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
 
   // SignalR realtime updates
   useEffect(() => {
@@ -345,13 +451,24 @@ export default function TablesPage() {
     )
     : floorFilteredTables;
 
+  const activeSessionFilter = showAllActivities ? 'all' : (sessionFilter === 'all' ? getCurrentSession(SESSIONS) : sessionFilter);
+  const isSessionFiltered = !showAllActivities && activeSessionFilter !== 'all';
+  const canShowFilters = showFilters || showAllActivities;
+
   const filteredTables = keywordFilteredTables.filter((t) => {
-    if (reservationStatusFilter === 'all') return true;
-    const statusName = (t.reservationStatusName || '').toLowerCase();
-    if (reservationStatusFilter === 'pending') return statusName.includes('pending');
-    if (reservationStatusFilter === 'confirmed') return statusName.includes('confirm');
-    if (reservationStatusFilter === 'checkin') return statusName.includes('check') || statusName.includes('arrived');
-    return true;
+    if (showAllActivities) return true;
+
+    const reservationTime = t.reservationTime;
+    if (!reservationTime) return false;
+
+    const sessionDef = SESSIONS.find(s => s.value === activeSessionFilter);
+    if (!sessionDef) return true;
+
+    const resDate = new Date(reservationTime);
+    const resMins = resDate.getHours() * 60 + resDate.getMinutes();
+    const [sH, sM] = sessionDef.startTime.split(':').map(Number);
+    const [eH, eM] = sessionDef.endTime.split(':').map(Number);
+    return resMins >= sH * 60 + sM && resMins < eH * 60 + eM;
   });
 
   // Practical staff metrics
@@ -380,6 +497,7 @@ export default function TablesPage() {
           tables: filteredTables,
         },
       ];
+  const hasSessionResults = tableGroups.length > 0;
 
   return (
     <div className="floor-activity-root">
@@ -396,31 +514,32 @@ export default function TablesPage() {
             <Title level={isMobile ? 5 : 4} style={{ margin: 0, color: 'var(--text)' }}>
               {t('staff.menu.tables')}
             </Title>
+
           </div>
           <Text style={{ color: 'var(--text-muted)', fontSize: 13 }}>
             {t('staff.floor_activity.last_updated')}: {lastUpdated.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </Text>
+
         </div>
 
         <div className="floor-activity-header-right" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <Input
-            allowClear
-            value={reservationKeyword}
-            onChange={(e) => setReservationKeyword(e.target.value)}
-            placeholder={t('staff.floor_activity.search_placeholder')}
-            style={{ width: isMobile ? 170 : 240, borderRadius: 10 }}
-          />
-          <Select
-            value={reservationStatusFilter}
-            onChange={(value) => setReservationStatusFilter(value)}
-            style={{ width: isMobile ? 150 : 190 }}
-            options={[
-              { value: 'all', label: t('staff.floor_activity.filter.all') },
-              { value: 'pending', label: t('staff.floor_activity.filter.pending') },
-              { value: 'confirmed', label: t('staff.floor_activity.filter.confirmed') },
-              { value: 'checkin', label: t('staff.floor_activity.filter.checkin') },
-            ]}
-          />
+          <ConfigProvider theme={mode === 'dark' ? undefined : { token: { colorBgContainer: '#ffffff', colorText: '#000000' } }}>
+            <Input
+              allowClear
+              value={reservationKeyword}
+              onChange={(e) => setReservationKeyword(e.target.value)}
+              placeholder={t('staff.floor_activity.search_placeholder')}
+              style={{ width: isMobile ? 170 : 240, borderRadius: 10 }}
+            />
+            {canShowFilters && (
+              <Select
+                value={sessionFilter}
+                onChange={(value: string) => setSessionFilter(value)}
+                style={{ width: isMobile ? 130 : 180 }}
+                options={SESSIONS.map(s => ({ value: s.value, label: s.label }))}
+              />
+            )}
+          </ConfigProvider>
         </div>
       </motion.div>
 
@@ -519,7 +638,7 @@ export default function TablesPage() {
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25 }}
         >
-          {tableGroups.map((group) => (
+          {hasSessionResults ? tableGroups.map((group) => (
             <div key={group.id} style={{ marginBottom: isMobile ? 20 : 28 }}>
               {(activeFloorId === 'all' || tableGroups.length > 1) && (
                 <div className="floor-activity-group-header">
@@ -621,7 +740,17 @@ export default function TablesPage() {
 
                           {/* Time/detail row — always reserve space for consistent card height */}
                           <div className="floor-activity-table-detail floor-activity-table-detail--fixed">
-                            {table.status === 'occupied' && table.startAt ? (
+                            {table.reservationCode ? (
+                              <div className="floor-activity-detail-row">
+                                <CalendarOutlined style={{ fontSize: 10, color: '#1890ff' }} />
+                                <Text style={{ fontSize: 11, color: '#1890ff', marginRight: 4 }}>
+                                  {new Date(table.reservationTime!).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                </Text>
+                                <Text style={{ fontSize: 11, color: '#1890ff', fontWeight: 600 }}>
+                                  #{table.reservationCode}
+                                </Text>
+                              </div>
+                            ) : table.status === 'occupied' && table.startAt ? (
                               <div className="floor-activity-detail-row">
                                 <ClockCircleOutlined style={{ fontSize: 10, color: 'var(--text-muted)' }} />
                                 <Text style={{ fontSize: 11, color: 'var(--text-muted)' }}>
@@ -649,12 +778,22 @@ export default function TablesPage() {
                 })}
               </Row>
             </div>
-          ))}
-
-          {tableGroups.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>
+          ))
+          : (
+            <div style={{ textAlign: 'center', padding: '56px 0', color: 'var(--text-muted)' }}>
               <TableOutlined style={{ fontSize: 40, marginBottom: 12, opacity: 0.4 }} />
-              <div>{t('staff.floor_activity.no_tables')}</div>
+              <div style={{ fontWeight: 600, color: 'var(--text)' }}>
+                {isSessionFiltered
+                  ? t('staff.floor_activity.no_session_tables', { defaultValue: 'Không có bàn nào được đặt trong phiên này.' })
+                  : t('staff.floor_activity.no_tables')}
+              </div>
+              {isSessionFiltered && (
+                <div style={{ marginTop: 6, fontSize: 13 }}>
+                  {t('staff.floor_activity.session_filter_desc', {
+                    defaultValue: 'Bạn có thể đổi phiên để xem các bàn khác.'
+                  })}
+                </div>
+              )}
             </div>
           )}
         </motion.div>
@@ -711,9 +850,20 @@ export default function TablesPage() {
                         <TableOutlined style={{ marginRight: 5 }} />{selectedTable.floorName}
                       </Text>
                     )}
-                    {selectedTable.status === 'occupied' && selectedTable.startAt && (
+                    {selectedTable.status === 'occupied' && (
                       <Text style={{ fontSize: 13, color: cfg.color, fontWeight: 600 }}>
-                        <ClockCircleOutlined style={{ marginRight: 5 }} />{new Date(selectedTable.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                        {selectedTable.reservationCode ? (
+                           <>
+                             <CalendarOutlined style={{ marginRight: 5 }} />
+                             {new Date(selectedTable.reservationTime!).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                             <span style={{ marginLeft: 8 }}>#{selectedTable.reservationCode}</span>
+                           </>
+                        ) : selectedTable.startAt ? (
+                           <>
+                             <ClockCircleOutlined style={{ marginRight: 5 }} />
+                             {new Date(selectedTable.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                           </>
+                        ) : null}
                       </Text>
                     )}
                   </div>
@@ -842,7 +992,7 @@ export default function TablesPage() {
                             <span className="table-modal-info-value" style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 15 }}>{selectedTable.orderTotal!.toLocaleString('vi-VN')}d</span>
                           </div>
                         )}
-                        {selectedTable.startAt && (
+                        {!hasReservation && selectedTable.startAt && (
                           <div className="table-modal-info-row">
                             <span className="table-modal-info-label"><ClockCircleOutlined /> {t('staff.floor_activity.modal.start_time')}</span>
                             <span className="table-modal-info-value">{new Date(selectedTable.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>

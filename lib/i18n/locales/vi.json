@@ -626,52 +626,55 @@
       }
     },
     "floor_activity": {
-      "title": "B\u00e0n",
-      "last_updated": "C\u1eadp nh\u1eadt l\u00fac",
-      "refresh": "L\u00e0m m\u1edbi",
-      "all_floors": "T\u1ea5t c\u1ea3 t\u1ea7ng",
-      "no_floor": "Ch\u01b0a ph\u00e2n t\u1ea7ng",
-      "no_tables": "Kh\u00f4ng c\u00f3 b\u00e0n n\u00e0o",
-      "occupied_suffix": "b\u00e0n \u0111ang ph\u1ee5c v\u1ee5",
-      "reserved_label": "\u0110\u00e3 \u0111\u1eb7t tr\u01b0\u1edbc",
-      "cleaning_label": "\u0110ang d\u1ecdn d\u1eb9p",
-      "items": "m\u00f3n",
-      "occupancy_rate": "T\u1ef7 l\u1ec7 l\u1ea5p \u0111\u1ea7y",
-      "active_revenue": "Doanh thu \u0111ang ph\u1ee5c v\u1ee5",
-      "search_placeholder": "T\u00ecm m\u00e3 reservation...",
-      "table_label": "B\u00c0N",
-      "seats_label": "ch\u1ed7 ng\u1ed3i",
+      "title": "Bàn",
+      "last_updated": "Cập nhật lúc",
+      "refresh": "Làm mới",
+      "all_floors": "Tất cả tầng",
+      "no_floor": "Chưa phân tầng",
+      "no_tables": "Không có bàn nào",
+      "no_session_tables": "Không có bàn nào được đặt trong phiên này.",
+      "session_filter_desc": "Bạn có thể đổi phiên để xem các bàn khác.",
+      "session_filter_hint": "Danh sách đang được lọc theo phiên làm việc hiện tại.",
+      "occupied_suffix": "bàn đang phục vụ",
+      "reserved_label": "Đã đặt trước",
+      "cleaning_label": "Đang dọn dẹp",
+      "items": "món",
+      "occupancy_rate": "Tỷ lệ lấp đầy",
+      "active_revenue": "Doanh thu đang phục vụ",
+      "search_placeholder": "Tìm mã reservation...",
+      "table_label": "BÀN",
+      "seats_label": "chỗ ngồi",
       "filter": {
-        "all": "T\u1ea5t c\u1ea3 tr\u1ea1ng th\u00e1i",
-        "pending": "Ch\u1edd x\u00e1c nh\u1eadn",
-        "confirmed": "\u0110\u00e3 x\u00e1c nh\u1eadn",
+        "all": "Tất cả trạng thái",
+        "pending": "Chờ xác nhận",
+        "confirmed": "Đã xác nhận",
         "checkin": "Check-in"
       },
       "status": {
-        "available": "Tr\u1ed1ng",
-        "occupied": "C\u00f3 kh\u00e1ch",
+        "available": "Trống",
+        "occupied": "Có khách",
         "reserved": "\u0110\u00e3 \u0111\u1eb7t",
-        "cleaning": "\u0110ang d\u1ecdn"
+        "cleaning": "Đang dọn"
       },
       "stats": {
-        "occupied": "\u0110ang ph\u1ee5c v\u1ee5",
+        "occupied": "Đang phục vụ",
         "available": "Tr\u1ed1ng",
-        "has_reservation": "C\u00f3 \u0111\u1eb7t b\u00e0n"
+        "has_reservation": "Có đặt bàn"
       },
       "modal": {
-        "reserved_by": "Ng\u01b0\u1eddi \u0111\u1eb7t",
-        "phone": "S\u1ed1 \u0111i\u1ec7n tho\u1ea1i",
-        "reservation_time": "Th\u1eddi gian \u0111\u1eb7t",
-        "guest_count": "S\u1ed1 kh\u00e1ch",
-        "total": "T\u1ed5ng ti\u1ec1n",
-        "start_time": "B\u1eaft \u0111\u1ea7u",
-        "payment": "Thanh to\u00e1n",
+        "reserved_by": "Người đặt",
+        "phone": "Số điện thoại",
+        "reservation_time": "Thời gian đặt",
+        "guest_count": "Số khách",
+        "total": "Tổng tiền",
+        "start_time": "Bắt đầu",
+        "payment": "Thanh toán",
         "seats": "ch\u1ed7 ng\u1ed3i",
-        "guests": "kh\u00e1ch",
+        "guests": "khách",
         "checkin_btn": "Check-in",
-        "checkin_success": "Check-in th\u00e0nh c\u00f4ng!",
-        "checkin_error": "Check-in th\u1ea5t b\u1ea1i",
-        "customer": "Kh\u00e1ch h\u00e0ng"
+        "checkin_success": "Check-in thành công!",
+        "checkin_error": "Check-in thất bại",
+        "customer": "Khách hàng"
       }
     }
   },
@@ -804,6 +807,7 @@
         "dashboard": "Tổng quan",
         "analytics": "Phân tích",
         "tables": "Bàn",
+        "activity": "Hoạt động",
         "reservations": "Đặt bàn",
         "menu": "Thực đơn",
         "ingredients": "Nguyên liệu",
@@ -3485,11 +3489,26 @@
         "floor": "Tầng",
         "capacity": "Sức chứa",
         "no_table_selected": "Chưa chọn bàn nào",
-        "info_timer": "Vui lòng chọn bàn trên sơ đồ",
-        "confirm_table": "Xác nhận bàn",
-        "mobile_selected": "Đã chọn",
-        "mobile_none": "Chưa chọn bàn",
-        "mobile_confirm": "Xong"
+        "info_timer": "Vui l\u00f2ng ch\u1ecdn b\u00e0n tr\u00ean s\u01a1 \u0111\u1ed3",
+        "confirm_table": "X\u00e1c nh\u1eadn b\u00e0n",
+        "mobile_selected": "\u0110\u00e3 ch\u1ecdn",
+        "mobile_none": "Ch\u01b0a ch\u1ecdn b\u00e0n",
+        "mobile_confirm": "Xong",
+        "view_360": "Xem 360",
+        "total_capacity": "T\u1ed5ng s\u1ee9c ch\u1ee9a",
+        "selected_table_label": "B\u00e0n \u0111\u00e3 ch\u1ecdn"
+      },
+      "panorama": {
+        "loading": "\u0110ang t\u1ea3i \u1ea3nh 360...",
+        "not_ready": "\u1ea2nh 360 ch\u01b0a s\u1eb5n s\u00e0ng",
+        "no_image": "B\u00e0n n\u00e0y ch\u01b0a c\u00f3 \u1ea3nh 360.",
+        "load_failed": "Kh\u00f4ng th\u1ec3 t\u1ea3i \u1ea3nh 360. Vui l\u00f2ng th\u1eed l\u1ea1i sau.",
+        "table_label": "B\u00e0n {{name}}",
+        "status_available": "C\u00f2n tr\u1ed1ng",
+        "status_occupied": "\u0110ang c\u00f3 kh\u00e1ch",
+        "drag_hint": "K\u00e9o \u0111\u1ec3 xoay - Cu\u1ed9n \u0111\u1ec3 zoom",
+        "back_to_map": "Quay l\u1ea1i s\u01a1 \u0111\u1ed3",
+        "book_now": "\u0110\u1eb7t b\u00e0n n\u00e0y"
       },
       "footer": {
         "tagline": "Dịch vụ đẳng cấp quốc tế"
@@ -3588,7 +3607,9 @@
       "seats_unit": "ghế",
       "checked_in_at": "Thời gian check-in",
       "last_updated": "Cập nhật lần cuối",
-      "special_requests": "Yêu cầu đặc biệt"
+      "special_requests": "Yêu cầu đặc biệt",
+      "panorama": "Panorama",
+      "view_360": "Xem 360"
     },
     "deposit": {
       "label": "Đặt cọc",
@@ -3639,6 +3660,10 @@
   "common": {
     "actions": {
       "exporting": "Đang xuất..."
+    },
+    "theme": {
+      "switch_to_light": "Chế độ Sáng",
+      "switch_to_dark": "Chế độ Tối"
     }
   }
 }
