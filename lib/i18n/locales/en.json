@@ -341,7 +341,8 @@
         "modal": {
           "title": "Payment",
           "order_label": "Order",
-          "total_label": "Total",
+          "total_label": "Subtotal",
+          "final_total_label": "Total due",
           "method_label": "Payment method",
           "cash_label": "Cash received",
           "change_label": "Change",
@@ -358,13 +359,18 @@
           "payment_failed": "Payment failed"
         },
         "discount": {
+          "title": "Discounts",
           "applying": "Applying discount...",
           "membership_applied": "Membership discount applied",
+          "membership_label": "Discount by membership rank",
           "apply_button": "Apply discount",
           "subtotal": "Subtotal",
           "level": "Membership",
           "amount": "Discount amount",
-          "no_discount": "No membership discount available"
+          "no_discount": "No membership discount available",
+          "no_promotions": "No promotion codes available",
+          "min_order": "Min. order",
+          "or": "or"
         }
       }
     },
@@ -1164,7 +1170,8 @@
         "suppliers": "Suppliers",
         "loyalty": "Loyalty Bands",
         "order_status": "Dish Status",
-        "order_level_status": "Order Status"
+        "order_level_status": "Order Status",
+        "promotions": "Promotions"
       },
       "ingredient_categories": {
         "title": "Ingredient Categories",
@@ -1394,6 +1401,38 @@
           "update_failed": "Failed to update default status"
         }
       },
+      "promotion": {
+        "title": "Promotions",
+        "desc": "Manage promotions and discount codes",
+        "add": "Add New Promotion",
+        "edit": "Edit Promotion",
+        "code": "Code",
+        "name": "Name",
+        "discount": "Discount",
+        "discount_type": "Discount Type",
+        "discount_value": "Discount Value",
+        "max_discount": "Max Discount Amount",
+        "min_order": "Min Order Amount",
+        "usage_limit": "Usage Limit",
+        "usage_per_customer": "Usage Per Customer",
+        "apply": "Apply",
+        "valid_date": "Valid From - To",
+        "valid_from": "Valid From",
+        "valid_to": "Valid To",
+        "status": "Status",
+        "toasts": {
+          "fetch_error": "Unable to load promotions",
+          "required_fields": "Please fill in required fields",
+          "create_success": "Promotion created successfully",
+          "update_success": "Promotion updated successfully",
+          "save_error": "Unable to save promotion",
+          "delete_success": "Promotion deleted successfully",
+          "delete_error": "Unable to delete promotion",
+          "activate_success": "Promotion activated",
+          "deactivate_success": "Promotion deactivated",
+          "status_error": "Unable to update status"
+        }
+      },
       "notifications": {
         "delete_success": "Deleted successfully",
         "update_success": "Updated successfully",
@@ -1620,6 +1659,29 @@
       }
     },
     "staff": {
+      "menu": {
+        "dashboard": "Dashboard",
+        "orders": "Orders",
+        "orders_short": "Orders",
+        "tables": "Tables",
+        "tables_short": "Tables",
+        "kitchen": "Kitchen",
+        "checkout": "Checkout",
+        "reservations": "Reservations",
+        "attendance": "Attendance"
+      },
+      "user_menu": {
+        "profile": "Profile",
+        "settings": "Settings",
+        "logout": "Logout"
+      },
+      "sidebar": {
+        "brand": "Demo Restaurant",
+        "staff_role": "Staff",
+        "working": "Working",
+        "started": "Started",
+        "today": "Today"
+      },
       "title": "Staff Management",
       "subtitle": "Manage your restaurant team members",
       "add_staff": "Add Staff",

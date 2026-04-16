@@ -6,6 +6,7 @@ import CategorySettings from "../settings/components/CategorySettings";
 import IngredientCategorySettings from "../settings/components/IngredientCategorySettings";
 import LoyaltyPointBandSettings from "../settings/components/LoyaltyPointBandSettings";
 import OrderDetailStatusSettings from "../settings/components/OrderDetailStatusSettings";
+import PromotionSettings from "../settings/components/PromotionSettings";
 import SupplierSettings from "../settings/components/SupplierSettings";
 
 export default function ManagePage() {
@@ -16,7 +17,7 @@ export default function ManagePage() {
     | "ingredientCategories"
     | "loyalty"
     | "orderDetailStatus"
-    | "orderDetailStatus"
+    | "promotions"
   >("categories");
 
   return (
@@ -75,6 +76,13 @@ export default function ManagePage() {
               }),
               icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
             },
+            {
+              id: "promotions" as const,
+              label: t("dashboard.manage.tabs.promotions", {
+                defaultValue: "Promotions",
+              }),
+              icon: "M12 8c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0 2c2.67 0 8 1.34 8 4v2H4v-2c0-2.66 5.33-4 8-4zm-6 5H0v4h6zm24-4h-6v4h6z",
+            },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -118,6 +126,8 @@ export default function ManagePage() {
           {/* Dish Status Tab */}
           {activeTab === "orderDetailStatus" && <OrderDetailStatusSettings />}
 
+          {/* Promotions Tab */}
+          {activeTab === "promotions" && <PromotionSettings />}
         </div>
       </div>
     </main>

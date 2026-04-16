@@ -48,9 +48,11 @@ interface Order {
   reference: string;
   tableId: string;
   tableName: string;
+  customerId?: string;
   items: OrderItem[];
   detailItems: OrderItem[];
   createdAt: string;
+  subTotal: number;
   total: number;
   notes?: string;
   orderStatusId: OrderStatusId;
@@ -66,9 +68,20 @@ interface Order {
 type PaymentOrder = {
   id: string;
   reference: string;
+  subTotal: number;
   total: number;
   customerId?: string;
   raw?: {
+    paymentStatusId?: number;
+  };
+};
+
+type OrderForPaymentTrigger = {
+  id: string;
+  reference: string;
+  total: number;
+  raw?: {
+    customerId?: string;
     paymentStatusId?: number;
   };
 };
@@ -234,6 +247,7 @@ export default function OrderManagement() {
               })
             : "",
           total: Number(order.totalAmount || 0),
+          subTotal: Number(order.subTotal ?? order.totalAmount ?? 0),
           notes: undefined,
           orderStatusId: (order.orderStatusId ?? 0) as OrderStatusId,
           orderStatus: status,
@@ -608,15 +622,24 @@ export default function OrderManagement() {
     }
   };
 
-  const openPaymentModal = (order: PaymentOrder) => {
+  const openPaymentModal = (order: OrderForPaymentTrigger) => {
+    const matchedOrder = orders.find((o) => o.id === order.id);
+    const source = matchedOrder ?? order;
+
     setIsOrderDetailModalOpen(false);
     setSelectedOrderForDetail(null);
     setSelectedOrder({
-      ...order,
+      id: source.id,
+      reference: source.reference,
+      total: source.total,
+      subTotal: matchedOrder?.subTotal ?? source.total,
       customerId:
-        order.customerId || (order as any).raw?.customerId || undefined,
+        matchedOrder?.customerId || source.raw?.customerId || undefined,
+      raw: {
+        paymentStatusId: source.raw?.paymentStatusId,
+      },
     });
-    setCashReceived(order.total);
+    setCashReceived(source.total);
     setPaymentMethod("cash");
     setIsPaymentModalOpen(true);
   };
@@ -684,7 +707,7 @@ export default function OrderManagement() {
   }));
 
   return (
-    <div>
+    <div className="staff-orders-page">
       {/* Search & Filter */}
       <FilterOrder
         selectedTableId={selectedTableId}
@@ -866,6 +889,22 @@ export default function OrderManagement() {
           .order-detail-status-select .ant-select-selection-item {
             font-size: 11px !important;
             line-height: 20px !important;
+          }
+        }
+
+        @media (max-width: 992px) {
+          .staff-orders-page .ant-typography,
+          .staff-orders-page .ant-btn,
+          .staff-orders-page .ant-input,
+          .staff-orders-page .ant-input-number-input,
+          .staff-orders-page .ant-select-selection-item,
+          .staff-orders-page .ant-select-item-option-content,
+          .staff-orders-page .ant-empty-description,
+          .staff-orders-page p,
+          .staff-orders-page span,
+          .staff-orders-page label,
+          .staff-orders-page button {
+            font-size: calc(100% + 2px);
           }
         }
       `}</style>
