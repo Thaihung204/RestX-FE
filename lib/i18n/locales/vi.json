@@ -669,7 +669,8 @@
         "reserved": "Đã đặt",
         "cleaning": "Đang dọn",
         "active": "Đang hoạt động",
-        "inactive": "Đã kết thúc"
+        "inactive": "Đã kết thúc",
+        "not_started": "Chưa bắt đầu"
       },
       "stats": {
         "occupied": "Đang phục vụ",
@@ -3792,6 +3793,8 @@
         "booking_ref": "Mã đặt bàn",
         "confirmation_sent": "Email xác nhận gửi tới:",
         "phone_label": "Số điện thoại",
+        "pay_deposit_now": "Thanh toán cọc ngay",
+        "deposit_deadline": "Hạn thanh toán cọc",
         "view_details": "Xem chi tiết",
         "make_another": "Đặt bàn mới"
       },
@@ -3964,7 +3967,13 @@
       "no_order_warning": "Chưa có order cọc. Vui lòng liên hệ nhà hàng.",
       "link_opened": "Đã mở link thanh toán cọc.",
       "link_error": "Không lấy được link thanh toán.",
-      "create_failed": "Tạo link thanh toán thất bại."
+      "create_failed": "Tạo link thanh toán thất bại.",
+      "already_paid": "Khoản cọc đã được thanh toán.",
+      "deadline_label": "Hạn thanh toán",
+      "deadline_passed": "Đã quá hạn thanh toán cọc.",
+      "deadline_over": "Quá hạn",
+      "payment_link_label": "Link thanh toán cọc",
+      "open_payment_link": "Mở link thanh toán"
     },
     "order": {
       "title": "Thông tin order",

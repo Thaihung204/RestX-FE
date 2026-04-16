@@ -111,8 +111,16 @@ export default function StaffLayout({
       icon: <ApartmentOutlined />,
       label:
         isMobile || isTablet
-          ? t("staff.menu.activity_short")
-          : t("staff.menu.activity"),
+          ? t("staff.menu.activity_short", {
+              defaultValue: t("dashboard.staff.menu.tables_short", {
+                defaultValue: "Tables",
+              }),
+            })
+          : t("staff.menu.activity", {
+              defaultValue: t("dashboard.staff.menu.tables", {
+                defaultValue: "Tables",
+              }),
+            }),
     },
     {
       key: "/staff/kitchen",

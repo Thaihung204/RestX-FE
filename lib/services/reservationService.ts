@@ -61,6 +61,8 @@ export interface CreateReservationResponse {
   status: ReservationStatus;
   depositAmount: number;
   depositPaid: boolean;
+  paymentDeadline?: string | null;
+  checkoutUrl?: string | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -133,9 +135,21 @@ export interface ReservationDetail {
   status: ReservationStatus;
   depositAmount: number;
   depositPaid: boolean;
+  paymentDeadline?: string | null;
+  checkoutUrl?: string | null;
   checkedInAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ReservationDepositStatus {
+  reservationId: string;
+  depositAmount: number;
+  paymentDeadline?: string | null;
+  isPaid: boolean;
+  checkoutUrl?: string | null;
+  paymentStatus?: number | null;
+  paymentStatusName?: string | null;
 }
 
 // ─────────────────────────────────────────────
@@ -272,6 +286,35 @@ export const reservationService = {
 
   checkInReservation: async (id: string): Promise<void> => {
     await axiosInstance.post(`/reservations/${id}/checkin`);
+  },
+
+  /** GET /api/reservations/{id}/deposit-status (fallback: /deposit) — trạng thái đặt cọc */
+  getDepositStatus: async (id: string): Promise<ReservationDepositStatus> => {
+    const unwrap = (payload: unknown): ReservationDepositStatus => {
+      const raw = payload as { data?: ReservationDepositStatus } | ReservationDepositStatus;
+      return (raw as { data?: ReservationDepositStatus })?.data ?? (raw as ReservationDepositStatus);
+    };
+
+    try {
+      const response = await axiosInstance.get<ApiEnvelope<ReservationDepositStatus> | ReservationDepositStatus>(
+        `/reservations/${id}/deposit-status`,
+      );
+      return unwrap(response.data);
+    } catch {
+      const response = await axiosInstance.get<ApiEnvelope<ReservationDepositStatus> | ReservationDepositStatus>(
+        `/reservations/${id}/deposit`,
+      );
+      return unwrap(response.data);
+    }
+  },
+
+  /** POST /api/reservations/{id}/deposit/pay — tạo link thanh toán cọc */
+  createDepositPaymentLink: async (id: string): Promise<{ checkoutUrl: string | null }> => {
+    const response = await axiosInstance.post<ApiEnvelope<{ checkoutUrl: string | null }> | { checkoutUrl: string | null }>(
+      `/reservations/${id}/deposit/pay`,
+    );
+    const raw = response.data as { data?: { checkoutUrl: string | null } } | { checkoutUrl: string | null };
+    return (raw as { data?: { checkoutUrl: string | null } })?.data ?? (raw as { checkoutUrl: string | null });
   },
 
   completeReservation: async (id: string): Promise<void> => {

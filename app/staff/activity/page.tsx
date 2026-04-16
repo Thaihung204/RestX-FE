@@ -655,7 +655,11 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           <div className="floor-activity-title-row">
             <span className="floor-activity-live-dot" />
             <Title level={isMobile ? 5 : 4} style={{ margin: 0, color: 'var(--text)' }}>
-              {t('staff.menu.activity')}
+              {t('staff.menu.activity', {
+                defaultValue: t('staff.floor_activity.title', {
+                  defaultValue: t('dashboard.staff.menu.tables', { defaultValue: 'Tables' }),
+                }),
+              })}
             </Title>
           </div>
           <Text style={{ color: 'var(--text-muted)', fontSize: 13 }}>
@@ -922,6 +926,9 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           const selectedMergedTableNames = getMergedTableNames(selectedTable);
           const selectedMergedTableCount = selectedMergedTableNames.length;
           const isSelectedTableMerged = selectedMergedTableCount > 1;
+          const hasSessionFootprint = Boolean(selectedTable.sessionId || selectedTable.sessionStartedAt || selectedTable.sessionEndedAt);
+          const isSessionActive = selectedTable.sessionIsActive === true;
+          const isSessionEnded = Boolean(selectedTable.sessionEndedAt) || (selectedTable.sessionIsActive === false && hasSessionFootprint);
 
           return (
             <div className="table-modal-root">
@@ -978,13 +985,17 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                     <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>
                       {t('staff.floor_activity.modal.session', { defaultValue: 'Phiên bàn' })}
                     </Text>
-                    {selectedTable.sessionIsActive ? (
+                    {isSessionActive ? (
                       <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }} color="green">
                         {t('staff.floor_activity.status.active', { defaultValue: 'Đang hoạt động' })}
                       </Tag>
-                    ) : (
+                    ) : isSessionEnded ? (
                       <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }}>
                         {t('staff.floor_activity.status.inactive', { defaultValue: 'Đã kết thúc' })}
+                      </Tag>
+                    ) : (
+                      <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600, border: 'none' }} color="blue">
+                        {t('staff.floor_activity.status.not_started', { defaultValue: 'Chưa bắt đầu' })}
                       </Tag>
                     )}
                   </div>

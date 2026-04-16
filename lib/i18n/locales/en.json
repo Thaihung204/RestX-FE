@@ -638,7 +638,8 @@
         "reserved": "Reserved",
         "cleaning": "Cleaning",
         "active": "Active",
-        "inactive": "Ended"
+        "inactive": "Ended",
+        "not_started": "Not started"
       },
       "stats": {
         "occupied": "Occupied",
@@ -3735,6 +3736,8 @@
         "booking_ref": "Booking Ref",
         "confirmation_sent": "Confirmation email sent to:",
         "phone_label": "Phone",
+        "pay_deposit_now": "Pay deposit now",
+        "deposit_deadline": "Deposit payment deadline",
         "view_details": "View Details",
         "make_another": "Make Another Booking"
       },
@@ -3907,7 +3910,13 @@
       "no_order_warning": "No deposit order found. Please contact the restaurant.",
       "link_opened": "Payment link opened.",
       "link_error": "Could not get payment link.",
-      "create_failed": "Failed to create payment link."
+      "create_failed": "Failed to create payment link.",
+      "already_paid": "This deposit has already been paid.",
+      "deadline_label": "Payment deadline",
+      "deadline_passed": "The deposit payment deadline has passed.",
+      "deadline_over": "Expired",
+      "payment_link_label": "Deposit payment link",
+      "open_payment_link": "Open payment link"
     },
     "order": {
       "title": "Order Information",

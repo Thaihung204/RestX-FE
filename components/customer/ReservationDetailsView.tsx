@@ -9,8 +9,7 @@ import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import dishService from "@/lib/services/dishService";
 import customerService from "@/lib/services/customerService";
-import paymentService from "@/lib/services/paymentService";
-import reservationService, { ReservationDetail, ReservationStatus } from "@/lib/services/reservationService";
+import reservationService, { ReservationDepositStatus, ReservationDetail, ReservationStatus } from "@/lib/services/reservationService";
 import { Drawer, Tag, message } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -83,6 +82,43 @@ const statusBg: Record<string, string> = {
 };
 
 const currency = (v?: number) => `${(v || 0).toLocaleString("vi-VN")}đ`;
+
+const normalizeReservationDetail = (detail: ReservationDetail): ReservationDetail => {
+  const raw = detail as ReservationDetail & {
+    depositPaid?: boolean;
+    paymentDeadline?: string | null;
+    checkoutUrl?: string | null;
+  };
+
+  return {
+    ...detail,
+    depositAmount: Number(detail.depositAmount || 0),
+    depositPaid: Boolean(raw.depositPaid),
+    paymentDeadline: raw.paymentDeadline ?? null,
+    checkoutUrl: raw.checkoutUrl ?? null,
+  };
+};
+
+const mergeDepositStatusIntoDetail = (
+  detail: ReservationDetail,
+  depositStatus?: ReservationDepositStatus | null,
+): ReservationDetail => {
+  if (!depositStatus) return detail;
+
+  return {
+    ...detail,
+    depositAmount:
+      typeof depositStatus.depositAmount === "number"
+        ? Number(depositStatus.depositAmount)
+        : detail.depositAmount,
+    depositPaid:
+      typeof depositStatus.isPaid === "boolean"
+        ? depositStatus.isPaid
+        : detail.depositPaid,
+    paymentDeadline: depositStatus.paymentDeadline ?? detail.paymentDeadline ?? null,
+    checkoutUrl: depositStatus.checkoutUrl ?? detail.checkoutUrl ?? null,
+  };
+};
 
 // ── Spinner ───────────────────────────────────────────────────────────────────
 function Spinner() {
@@ -780,7 +816,17 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     setLoading(true);
     try {
       const d = await reservationService.getReservationById(reservationId);
-      setDetail(d);
+      let normalizedDetail = normalizeReservationDetail(d);
+
+      try {
+        const depositStatus = await reservationService.getDepositStatus(normalizedDetail.id);
+        normalizedDetail = mergeDepositStatusIntoDetail(normalizedDetail, depositStatus);
+      } catch (depositError) {
+        // Keep reservation detail fallback when deposit status endpoint is unavailable for current auth context.
+        console.warn("Deposit status unavailable:", depositError);
+      }
+
+      setDetail(normalizedDetail);
 
       try {
         const statuses = await reservationService.getReservationStatuses();
@@ -796,13 +842,13 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
       } catch {
         setStatusSteps([]);
       }
-      setEditDateTime(d.reservationDateTime ? d.reservationDateTime.slice(0, 16) : "");
-      setEditGuests(d.numberOfGuests || 1);
-      setEditSpecialRequests(d.specialRequests || "");
+      setEditDateTime(normalizedDetail.reservationDateTime ? normalizedDetail.reservationDateTime.slice(0, 16) : "");
+      setEditGuests(normalizedDetail.numberOfGuests || 1);
+      setEditSpecialRequests(normalizedDetail.specialRequests || "");
 
-      if (d.tables?.length) {
+      if (normalizedDetail.tables?.length) {
         try {
-          const firstTable = d.tables[0];
+          const firstTable = normalizedDetail.tables[0];
           const table = await tableService.getTableById(firstTable.id);
           const imageUrl = table.cubeFrontImageUrl || table.defaultViewUrl || "";
           setPanoramaImage(imageUrl ? { tableId: firstTable.id, tableCode: firstTable.code, imageUrl } : null);
@@ -815,7 +861,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
       try {
         const orders = await orderService.getAllOrders();
-        setRelatedOrders(orders.filter((o) => o.reservationId === d.id));
+        setRelatedOrders(orders.filter((o) => o.reservationId === normalizedDetail.id));
       } catch {
         setRelatedOrders([]);
       }
@@ -855,21 +901,48 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     : "";
 
   const handlePayDeposit = async () => {
-    const unpaid = relatedOrders.find((o) => o.paymentStatusId === 0);
-    if (!unpaid?.id) { messageApi.warning(t("reservation_detail.deposit.no_order_warning")); return; }
+    if (!detail) return;
+
+    if (detail.depositPaid) {
+      messageApi.info(t("reservation_detail.deposit.already_paid", { defaultValue: "Khoản cọc đã được thanh toán." }));
+      return;
+    }
+
+    if (detail.paymentDeadline) {
+      const deadlineTime = new Date(detail.paymentDeadline).getTime();
+      if (!Number.isNaN(deadlineTime) && deadlineTime <= Date.now()) {
+        messageApi.warning(t("reservation_detail.deposit.deadline_passed", { defaultValue: "Đã quá hạn thanh toán cọc." }));
+        return;
+      }
+    }
+
     try {
       setDepositLoading(true);
-      const res = await paymentService.createPaymentLink(unpaid.id);
-      if (res.checkoutUrl) {
-        window.location.assign(res.checkoutUrl);
+      if (detail.checkoutUrl) {
+        window.location.assign(detail.checkoutUrl);
         return;
-        messageApi.success(t("reservation_detail.deposit.link_opened"));
+      }
+
+      const res = await reservationService.createDepositPaymentLink(detail.id);
+      if (res.checkoutUrl) {
+        setDetail((prev) =>
+          prev
+            ? {
+                ...prev,
+                checkoutUrl: res.checkoutUrl,
+              }
+            : prev,
+        );
+
+        window.location.assign(res.checkoutUrl);
       } else {
         messageApi.error(t("reservation_detail.deposit.link_error"));
       }
     } catch (err) {
       console.error(err);
-      messageApi.error(t("reservation_detail.deposit.create_failed"));
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      const beMessage = axiosError?.response?.data?.message;
+      messageApi.error(beMessage || t("reservation_detail.deposit.create_failed"));
     } finally {
       setDepositLoading(false);
     }
@@ -974,6 +1047,15 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const currentStatusCode = (detail.status.code || "").toUpperCase();
   const currIdx = allSteps.findIndex((s) => s.code?.toUpperCase() === currentStatusCode);
   const isEditLocked = ["COMPLETED", "CANCELLED"].includes(detail.status.code);
+  const depositDeadlineDate = detail.paymentDeadline ? new Date(detail.paymentDeadline) : null;
+  const hasDepositDeadline = Boolean(depositDeadlineDate && !Number.isNaN(depositDeadlineDate.getTime()));
+  const isDepositDeadlinePassed = hasDepositDeadline ? depositDeadlineDate!.getTime() <= Date.now() : false;
+  const isDepositPaymentAllowed =
+    isCustomer &&
+    !detail.depositPaid &&
+    detail.depositAmount > 0 &&
+    !isDepositDeadlinePassed &&
+    !isEditLocked;
   const hasTenantHeroBanner = Boolean(tenant?.backgroundUrl);
   const heroText = hasTenantHeroBanner ? "#F8FAFC" : "var(--text)";
   const heroTextMuted = hasTenantHeroBanner ? "rgba(248,250,252,0.82)" : "var(--text-muted)";
@@ -1403,7 +1485,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                     <p className="text-lg font-black" style={{ color: "var(--text)" }}>{currency(detail.depositAmount)}</p>
                   </div>
                 </div>
-                {isCustomer && !detail.depositPaid && (
+                {isDepositPaymentAllowed && (
                   <button
                     id="pay-deposit-btn"
                     onClick={handlePayDeposit}
@@ -1419,9 +1501,13 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                     {depositLoading ? t("reservation_detail.deposit.creating_link") : t("reservation_detail.deposit.pay_now")}
                   </button>
                 )}
-                {!isCustomer && (
+                {!isDepositPaymentAllowed && (
                   <span className="px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest opacity-50 cursor-default" style={{ background: "var(--surface)", color: detail.depositPaid ? "var(--success)" : "var(--danger)", border: `1px solid ${detail.depositPaid ? "var(--success-border)" : "var(--danger-border)"}` }}>
-                    {detail.depositPaid ? "Paid" : "Unpaid"}
+                    {detail.depositPaid
+                      ? t("reservation_detail.meta.paid", { defaultValue: "Paid" })
+                      : isDepositDeadlinePassed
+                        ? t("reservation_detail.deposit.deadline_over", { defaultValue: "Deadline Over" })
+                        : t("reservation_detail.meta.unpaid", { defaultValue: "Unpaid" })}
                   </span>
                 )}
               </div>
@@ -1438,6 +1524,32 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                     ? t("reservation_detail.deposit.paid_desc", "Khoản đặt cọc đã được thanh toán thành công.")
                     : t("reservation_detail.deposit.unpaid_desc", "Bạn chưa thanh toán đặt cọc. Hãy thanh toán sớm để giữ bàn.")}
                 </p>
+                {hasDepositDeadline && (
+                  <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                    {t("reservation_detail.deposit.deadline_label", { defaultValue: "Hạn thanh toán" })}: {depositDeadlineDate?.toLocaleString("vi-VN")}
+                  </p>
+                )}
+                {detail.checkoutUrl && !detail.depositPaid && (
+                  <div className="mt-2 rounded-xl px-3 py-2" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                    <p className="text-[11px] font-semibold mb-1" style={{ color: "var(--text-muted)" }}>
+                      {t("reservation_detail.deposit.payment_link_label", { defaultValue: "Link thanh toán cọc" })}
+                    </p>
+                    <a
+                      href={detail.checkoutUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold break-all hover:underline"
+                      style={{ color: "var(--primary)" }}
+                    >
+                      {t("reservation_detail.deposit.open_payment_link", { defaultValue: "Mở link thanh toán" })}
+                    </a>
+                  </div>
+                )}
+                {isDepositDeadlinePassed && !detail.depositPaid && (
+                  <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>
+                    {t("reservation_detail.deposit.deadline_passed", { defaultValue: "Đã quá hạn thanh toán cọc." })}
+                  </p>
+                )}
               </div>
             </div>
 
