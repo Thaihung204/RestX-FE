@@ -2150,11 +2150,75 @@
       }
     },
     "analytics": {
-      "title": "Analytics Dashboard",
-      "subtitle": "Detailed insights and performance metrics",
+      "title": "AI Strategy Report",
+      "subtitle": "AI analyzes dashboard data and provides detailed business strategies",
       "page_title": "Analytics Page",
       "coming_soon": "Advanced analytics features coming soon",
-      "under_development": "Under Development"
+      "under_development": "Under Development",
+      "createNew": "Create New Report",
+      "generating": "Generating report...",
+      "filter": {
+        "by": "Analyze by"
+      },
+      "time": {
+        "justNow": "Just now",
+        "minutesAgo": "minutes ago",
+        "hoursAgo": "hours ago",
+        "daysAgo": "days ago"
+      },
+      "success": {
+        "generate": "Report generated successfully"
+      },
+      "error": {
+        "generate": "Failed to generate report"
+      },
+      "empty": {
+        "title": "No strategy report yet",
+        "subtitle": "Click \"Create New Report\" button to let AI analyze data and provide business strategies"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "menu": "Menu",
+        "marketing": "Marketing & Customer",
+        "actionPlan": "Action Plan"
+      },
+      "sections": {
+        "risks": "Hidden Risks",
+        "opportunities": "Hidden Opportunities",
+        "menuOptimization": "Menu Optimization",
+        "marketingStrategy": "Marketing Strategy",
+        "customerStrategy": "Customer Strategy",
+        "executionPlan": "Execution Plan",
+        "currentTrend": "Current Trend",
+        "promoStrategy": "Promotion Strategy",
+        "upcomingEvents": "Upcoming Events"
+      },
+      "impact": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "labels": {
+        "action": "Action:",
+        "time": "Time:"
+      },
+      "summary": {
+        "title": "Strategy Summary",
+        "alerts": "alerts",
+        "generatedAt": "Generated at:"
+      },
+      "stats": {
+        "alerts": "Alerts",
+        "opportunities": "Opportunities",
+        "risks": "Risks",
+        "actions": "Actions"
+      },
+      "menu": {
+        "trendingDish": "Trending Dish:",
+        "timeBasedDishes": "Time-Based Dishes",
+        "suggestedAdditions": "Suggested Additions",
+        "comboSuggestions": "Combo Suggestions"
+      }
     }
   },
   "common": {
