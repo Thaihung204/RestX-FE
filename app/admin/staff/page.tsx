@@ -511,42 +511,59 @@ export default function StaffPage() {
                     </div>
 
                     {/* Employee Info */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <p
-                          className="text-xs mb-1"
-                          style={{ color: "var(--text-muted)" }}>
-                          {t("dashboard.staff.employee_code")}
-                        </p>
-                        <p
-                          className="font-medium text-sm"
-                          style={{ color: "var(--text)" }}>
-                          {member.code || "N/A"}
-                        </p>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="grid grid-cols-2 gap-4 flex-1">
+                        <div>
+                          <p
+                            className="text-xs mb-1"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("dashboard.staff.employee_code")}
+                          </p>
+                          <p
+                            className="font-medium text-sm"
+                            style={{ color: "var(--text)" }}>
+                            {member.code || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-xs mb-1"
+                            style={{ color: "var(--text-muted)" }}>
+                            {t("dashboard.staff.hire_date")}
+                          </p>
+                          <p
+                            className="font-medium text-sm"
+                            style={{ color: "var(--text)" }}>
+                            {new Date(member.joinDate).toLocaleDateString(
+                              "vi-VN",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              },
+                            )}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p
-                          className="text-xs mb-1"
-                          style={{ color: "var(--text-muted)" }}>
-                          {t("dashboard.staff.hire_date")}
-                        </p>
-                        <p
-                          className="font-medium text-sm"
-                          style={{ color: "var(--text)" }}>
-                          {new Date(member.joinDate).toLocaleDateString(
-                            "vi-VN",
-                            {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            },
-                          )}
-                        </p>
-                      </div>
+                      <StatusToggle
+                        checked={member.status === "active"}
+                        onChange={() =>
+                          handleToggleStatus(
+                            member.id,
+                            member.name,
+                            member.status,
+                          )
+                        }
+                        ariaLabel={
+                          member.status === "active"
+                            ? t("dashboard.staff.deactivate")
+                            : t("dashboard.staff.activate")
+                        }
+                      />
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                       <Link
                         href={`/admin/staff/${member.id}`}
                         className="flex-1 py-2.5 rounded-lg transition-all font-medium text-sm text-center flex items-center justify-center gap-2"
@@ -578,21 +595,6 @@ export default function StaffPage() {
                           />
                         </svg>
                       </Link>
-                      <StatusToggle
-                        checked={member.status === "active"}
-                        onChange={() =>
-                          handleToggleStatus(
-                            member.id,
-                            member.name,
-                            member.status,
-                          )
-                        }
-                        ariaLabel={
-                          member.status === "active"
-                            ? t("dashboard.staff.deactivate")
-                            : t("dashboard.staff.activate")
-                        }
-                      />
                     </div>
                   </div>
                 </div>
