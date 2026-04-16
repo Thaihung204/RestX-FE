@@ -3,6 +3,7 @@
 import { CloseOutlined, LogoutOutlined, MenuOutlined, TeamOutlined } from "@ant-design/icons";
 import { Button, Divider, Drawer, Layout, Menu, Space } from "antd";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import { useThemeMode } from "../theme/AntdProvider";
@@ -19,7 +20,7 @@ const Header: React.FC = () => {
   const { t } = useTranslation();
   const { tenant } = useTenant();
 
-  const tenantName = tenant?.businessName || tenant?.name;
+  const tenantName = "RestX";
   const tenantLogoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
 
   const navItems = [
@@ -33,7 +34,7 @@ const Header: React.FC = () => {
     },
     {
       key: "about",
-      label: <a href="#about-us">{t("homepage.header.about", "About Us")}</a>,
+      label: <a href="#about-us">{t("homepage.header.about")}</a>,
     },
     {
       key: "testimonials",
@@ -85,14 +86,6 @@ const Header: React.FC = () => {
     };
   }, []);
 
-  const handleLogout = async () => {
-    await authService.logoutServer();
-    authService.logout();
-    setIsAuthenticated(false);
-    setDisplayName("");
-    window.location.href = "/login";
-  };
-
   // Don't render until mounted to prevent FOUC
   if (!mounted) {
     return null;
@@ -142,7 +135,7 @@ const Header: React.FC = () => {
             height: 64,
           }}>
           {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
             <div
               style={{
                 width: 38,
@@ -154,7 +147,7 @@ const Header: React.FC = () => {
               }}>
               <img
                 src={tenantLogoUrl}
-                alt={tenantName || "Restaurant Logo"}
+                alt={t("homepage.header.logo_alt")}
                 className="app-logo-img"
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
                 onError={(e) => {
@@ -168,9 +161,9 @@ const Header: React.FC = () => {
                 fontWeight: 700,
                 color: mode === "dark" ? "#ECECEC" : "#111111",
               }}>
-              {tenantName || t("homepage.header.brand", { defaultValue: "Restaurant" })}
+              {tenantName || t("homepage.header.brand")}
             </span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           {!isMobile && (
@@ -195,94 +188,9 @@ const Header: React.FC = () => {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}>
-                <Button
-                  type="text"
-                  href="/staff"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    height: 40,
-                    padding: "0 16px",
-                    color: "var(--primary)",
-                    background: "rgba(255, 56, 11, 0.08)",
-                    borderRadius: 20,
-                  }}>
-                  <TeamOutlined style={{ marginRight: 6 }} />{" "}
-                  {t("homepage.header.staff")}
-                </Button>
               </motion.div>
               <LanguageSwitcher />
               <ThemeToggle />
-              {!isAuthenticated ? (
-                <>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}>
-                    <Button
-                      type="text"
-                      href="/login"
-                      style={{
-                        fontWeight: 600,
-                        fontSize: 15,
-                        height: 40,
-                        padding: "0 20px",
-                        color: mode === "dark" ? "#ECECEC" : "#111111",
-                      }}>
-                      {t("homepage.header.login")}
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{
-                      scale: 1.05,
-                      boxShadow: "0 8px 25px rgba(255, 56, 11, 0.45)",
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{ borderRadius: 20 }}>
-                    <Button
-                      type="primary"
-                      href="/register"
-                      style={{
-                        fontWeight: 600,
-                        fontSize: 15,
-                        height: 40,
-                        padding: "0 24px",
-                        background:
-                          "linear-gradient(135deg, var(--primary) 0%, #CC2D08 100%)",
-                        border: "none",
-                        boxShadow: "0 4px 14px rgba(255, 56, 11, 0.35)",
-                      }}>
-                      {t("homepage.header.signup")}
-                    </Button>
-                  </motion.div>
-                </>
-              ) : (
-                <>
-                  <span
-                    style={{
-                      fontWeight: 600,
-                      fontSize: 14,
-                      color: mode === "dark" ? "#ECECEC" : "#111111",
-                      maxWidth: 180,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}>
-                    {displayName || "User"}
-                  </span>
-                  <Button
-                    type="text"
-                    onClick={handleLogout}
-                    icon={<LogoutOutlined />}
-                    style={{
-                      fontWeight: 600,
-                      fontSize: 14,
-                      height: 40,
-                      color: "var(--primary)",
-                    }}>
-                    {t("staff.user_menu.logout")}
-                  </Button>
-                </>
-              )}
             </Space>
           )}
 
@@ -301,7 +209,7 @@ const Header: React.FC = () => {
       {/* Mobile Drawer */}
       <Drawer
         title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Link href="/" onClick={() => setDrawerOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
             <div
               style={{
                 width: 32,
@@ -313,7 +221,7 @@ const Header: React.FC = () => {
               }}>
               <img
                 src={tenantLogoUrl}
-                alt={tenantName || "Restaurant Logo"}
+                alt={t("homepage.header.logo_alt")}
                 className="app-logo-img"
                 style={{
                   width: "100%",
@@ -332,9 +240,9 @@ const Header: React.FC = () => {
                 fontSize: 18,
                 color: mode === "dark" ? "#ECECEC" : "#111111",
               }}>
-              {tenantName || t("homepage.header.brand", { defaultValue: "Restaurant" })}
+              {tenantName || t("homepage.header.brand")}
             </span>
-          </div>
+          </Link>
         }
         placement="right"
         onClose={() => setDrawerOpen(false)}
@@ -379,58 +287,6 @@ const Header: React.FC = () => {
           }}>
           <LanguageSwitcher />
           <ThemeToggle />
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {!isAuthenticated ? (
-            <>
-              <Button
-                block
-                size="large"
-                href="/login"
-                style={{
-                  fontWeight: 600,
-                  height: 48,
-                  borderRadius: 50,
-                  borderColor: "#E5E7EB",
-                }}>
-                {t("homepage.header.login")}
-              </Button>
-              <Button
-                type="primary"
-                block
-                size="large"
-                href="/register"
-                style={{
-                  fontWeight: 600,
-                  height: 48,
-                  borderRadius: 50,
-                  background: "linear-gradient(135deg, var(--primary) 0%, #CC2D08 100%)",
-                  border: "none",
-                  boxShadow: "0 4px 14px rgba(255, 56, 11, 0.35)",
-                }}>
-                {t("homepage.header.signup")}
-              </Button>
-            </>
-          ) : (
-            <>
-              <div style={{ fontWeight: 600, textAlign: "center", color: "var(--text)" }}>
-                {displayName || "User"}
-              </div>
-              <Button
-                danger
-                block
-                size="large"
-                icon={<LogoutOutlined />}
-                onClick={handleLogout}
-                style={{
-                  fontWeight: 600,
-                  height: 48,
-                  borderRadius: 50,
-                }}>
-                {t("staff.user_menu.logout")}
-              </Button>
-            </>
-          )}
         </div>
       </Drawer>
     </>

@@ -1,18 +1,19 @@
 'use client';
 
+import { useTenant } from '@/lib/contexts/TenantContext';
 import {
-    ApiOutlined,
-    BarChartOutlined,
-    FileTextOutlined,
-    InboxOutlined,
-    ShopOutlined,
-    TableOutlined,
+  ApiOutlined,
+  BarChartOutlined,
+  FileTextOutlined,
+  InboxOutlined,
+  ShopOutlined,
+  TableOutlined,
 } from '@ant-design/icons';
 import { Card, Col, Flex, Row, Typography } from 'antd';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTenant } from '@/lib/contexts/TenantContext';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -31,41 +32,43 @@ const FeatureSection: React.FC = () => {
   const tenantName = tenant?.businessName || tenant?.name;
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
+  const routeByIndex = ['/tour/analytics', '/tour/tables', '/tour/menu', '/tour/reservations', '/tour/customer', '/tour/staff-ops'];
+
   const features: Feature[] = [
     {
-      icon: <TableOutlined style={{ fontSize: 36 }} />,
-      title: t('homepage.features.items.table_management.title'),
-      description: t('homepage.features.items.table_management.description'),
+      icon: <BarChartOutlined style={{ fontSize: 36 }} />,
+      title: t('homepage.features.items.analytics.title'),
+      description: t('homepage.features.items.analytics.description'),
       color: 'var(--primary)',
     },
     {
-      icon: <FileTextOutlined style={{ fontSize: 36 }} />,
-      title: t('homepage.features.items.order_kot.title'),
-      description: t('homepage.features.items.order_kot.description'),
+      icon: <TableOutlined style={{ fontSize: 36 }} />,
+      title: t('homepage.features.items.tables.title'),
+      description: t('homepage.features.items.tables.description'),
       color: '#10B981',
     },
     {
-      icon: <InboxOutlined style={{ fontSize: 36 }} />,
-      title: t('homepage.features.items.inventory.title'),
-      description: t('homepage.features.items.inventory.description'),
+      icon: <FileTextOutlined style={{ fontSize: 36 }} />,
+      title: t('homepage.features.items.menu.title'),
+      description: t('homepage.features.items.menu.description'),
       color: '#6366F1',
     },
     {
-      icon: <BarChartOutlined style={{ fontSize: 36 }} />,
-      title: t('homepage.features.items.reports.title'),
-      description: t('homepage.features.items.reports.description'),
+      icon: <InboxOutlined style={{ fontSize: 36 }} />,
+      title: t('homepage.features.items.reservations.title'),
+      description: t('homepage.features.items.reservations.description'),
       color: '#F59E0B',
     },
     {
       icon: <ShopOutlined style={{ fontSize: 36 }} />,
-      title: t('homepage.features.items.multi_branch.title'),
-      description: t('homepage.features.items.multi_branch.description'),
+      title: t('homepage.features.items.customer.title'),
+      description: t('homepage.features.items.customer.description'),
       color: '#EC4899',
     },
     {
       icon: <ApiOutlined style={{ fontSize: 36 }} />,
-      title: t('homepage.features.items.integration.title'),
-      description: t('homepage.features.items.integration.description'),
+      title: t('homepage.features.items.staff_ops.title'),
+      description: t('homepage.features.items.staff_ops.description'),
       color: '#14B8A6',
     },
   ];
@@ -196,7 +199,7 @@ const FeatureSection: React.FC = () => {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}>
-                {tenantName || t('homepage.features.brand', { defaultValue: 'Restaurant' })}
+                {tenantName || t('homepage.features.brand')}
               </span>
             </Title>
             <Paragraph
@@ -235,22 +238,24 @@ const FeatureSection: React.FC = () => {
                     transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
                     style={{ height: '100%', willChange: 'transform' }}
                   >
-                    <Card
-                      style={{
-                        height: '100%',
-                        borderRadius: 20,
-                        border: hoveredIndex === index ? `2px solid ${feature.color}30` : '2px solid transparent',
-                        transition: 'all 0.3s ease',
-                        background: hoveredIndex === index
-                          ? `linear-gradient(135deg, ${feature.color}05 0%, var(--card) 100%)`
-                          : 'var(--card)',
-                        boxShadow: hoveredIndex === index
-                          ? `0 20px 40px ${feature.color}15`
-                          : '0 4px 20px rgba(0, 0, 0, 0.05)',
-                        outline: hoveredIndex !== index ? '1px solid var(--border)' : 'none',
-                      }}
-                      styles={{ body: { padding: 28 } }}
-                    >
+                    <Link href={routeByIndex[index]} prefetch style={{ display: 'block', height: '100%' }}>
+                      <Card
+                        style={{
+                          height: '100%',
+                          borderRadius: 20,
+                          border: hoveredIndex === index ? `2px solid ${feature.color}30` : '2px solid transparent',
+                          transition: 'all 0.3s ease',
+                          background: hoveredIndex === index
+                            ? `linear-gradient(135deg, ${feature.color}05 0%, var(--card) 100%)`
+                            : 'var(--card)',
+                          boxShadow: hoveredIndex === index
+                            ? `0 20px 40px ${feature.color}15`
+                            : '0 4px 20px rgba(0, 0, 0, 0.05)',
+                          outline: hoveredIndex !== index ? '1px solid var(--border)' : 'none',
+                          cursor: 'pointer',
+                        }}
+                        styles={{ body: { padding: 28 } }}
+                      >
                       <Flex vertical gap={16}>
                         <motion.div
                           initial="rest"
@@ -305,6 +310,7 @@ const FeatureSection: React.FC = () => {
                         </motion.div>
                       </Flex>
                     </Card>
+                    </Link>
                   </motion.div>
                 </motion.div>
               </Col>
