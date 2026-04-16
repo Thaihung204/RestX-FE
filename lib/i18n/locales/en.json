@@ -653,6 +653,235 @@
         "checkin_error": "Check-in failed",
         "customer": "Customer"
       }
+    },
+    "menu": {
+      "stats": {
+        "setup_suffix": " steps",
+        "setup_label": "Simple setup",
+        "menu_items_label": "Menu items per catalog",
+        "reload_suffix": " reload",
+        "realtime_label": "Instant updates"
+      },
+      "features": {
+        "step_1": {
+          "tag": "Step 01 — Categories",
+          "title_highlight": "Customize categories",
+          "title_suffix": "for your restaurant menu",
+          "description": "Create and arrange flexible categories — Main dishes, Appetizers, Desserts, Drinks. Add items to each group with full details and images.",
+          "image_alt": "Category management",
+          "bullets": {
+            "create_category": "Create categories and custom names",
+            "add_dish": "Add dishes to each category",
+            "reorder_display": "Reorder display sequence via drag and drop"
+          }
+        },
+        "step_2": {
+          "tag": "Step 02 — Dishes",
+          "title_prefix": "Manage",
+          "title_highlight": "dishes",
+          "title_suffix": "comprehensively",
+          "description": "Add, edit, and control each dish with complete details: name, description, price, image, and real-time visibility status.",
+          "image_alt": "Dish management",
+          "bullets": {
+            "edit_info": "Edit dish information and pricing",
+            "attach_multi_category": "Attach one dish to multiple categories",
+            "toggle_visibility": "Instantly show/hide dishes without reload"
+          }
+        },
+        "step_3": {
+          "tag": "Step 03 — Ingredients",
+          "title_prefix": "Control",
+          "title_highlight": "ingredients",
+          "title_suffix": "and inventory",
+          "description": "Bind ingredients to each dish and track stock in real time. The system automatically alerts when stock runs low so the kitchen can act early.",
+          "image_alt": "Ingredient management",
+          "bullets": {
+            "bind_ingredients": "Bind specific ingredients to each dish",
+            "low_stock_alert": "Automatic low-stock alerts",
+            "auto_hide_out_of_stock": "Automatically hide dishes when ingredients run out"
+          }
+        }
+      }
+    },
+    "customer": {
+      "section_1": {
+        "title": "Instant QR ordering",
+        "description": "Customers simply scan the QR code at the table, browse the full menu, and place orders on their phone — no app and no waiting for staff.",
+        "stats": {
+          "wait_seconds": "Wait seconds",
+          "menu_items": "Menu items",
+          "order_steps": "Steps to order"
+        },
+        "cards": {
+          "qr": {
+            "title": "Instant QR scan",
+            "description": "Each table has its own QR code. Scan and open the menu immediately without app download or sign-in."
+          },
+          "realtime": {
+            "title": "Real-time updates",
+            "description": "Dish status and ready-to-serve notifications are shown directly on the customer's phone."
+          },
+          "loyalty": {
+            "title": "Automatic loyalty points",
+            "description": "Every order automatically earns member points. Customers can track points and redeem offers at the table."
+          }
+        }
+      },
+      "section_2": {
+        "title": "Membership tiers & exclusive offers",
+        "description": "Membership tiers are upgraded automatically based on spending. The higher the tier, the better the perks.",
+        "points_path_title": "Points progression",
+        "tiers": {
+          "bronze": { "name": "Bronze", "discount": "3% off", "points": "From 0 points" },
+          "silver": { "name": "Silver", "discount": "5% off", "points": "From 500 points" },
+          "gold": { "name": "Gold", "discount": "8% off", "points": "From 1500 points" },
+          "platinum": { "name": "Platinum", "discount": "12% off", "points": "From 5000 points" }
+        }
+      },
+      "section_3": {
+        "tag": "AI CHATBOX",
+        "title": "AI assistant suggests dishes by preference",
+        "description": "AI understands preferences, diet, and budget to suggest the best dishes — like a food-savvy companion.",
+        "bullets": {
+          "preferences": "Suggestions by taste, allergy, and diet",
+          "instant_reply": "Instant replies without waiting for staff",
+          "personalization": "Learns from order history for personalized recommendations"
+        }
+      },
+      "section_4": {
+        "tag": "ORDER REVIEW",
+        "title": "Track your order transparently step by step",
+        "description": "Customers can see full order details, dish status, total amount, and loyalty points without asking staff.",
+        "bullets": {
+          "order_status": "Ordered items list with real-time status",
+          "edit_cancel": "Edit or cancel dishes before kitchen confirmation",
+          "bill_discount": "View total bill and membership discount",
+          "points_after_payment": "Points shown immediately after payment"
+        }
+      },
+      "ai_chat": {
+        "title": "AI dish suggestions",
+        "status": "Active",
+        "input_placeholder": "Ask AI about dishes...",
+        "messages": {
+          "1": "I want something light and low-calorie.",
+          "2": "I suggest Salmon Salad or Pumpkin Soup — low-calorie, nutritious, and great for dinner.",
+          "3": "Do you have options for vegetarians?",
+          "4": "Yes! Mushroom Tofu, Grilled Vegetables, and Brown Rice are all great vegetarian choices."
+        }
+      },
+      "order_review": {
+        "header": {
+          "title": "Order — Table A02",
+          "item_count": "4 items",
+          "member_badge": "Gold member"
+        },
+        "items": {
+          "pho_bo": "Rare Beef Pho",
+          "bun_cha": "Hanoi Bun Cha",
+          "tra_sen": "Golden Lotus Tea",
+          "banh_flan": "Flan"
+        },
+        "summary": {
+          "subtotal": "Subtotal",
+          "discount": "Gold discount (8%)",
+          "total": "Total payment"
+        },
+        "points": {
+          "label": "Loyalty points",
+          "suffix": "points"
+        },
+        "cta": "Request payment"
+      }
+    },
+    "staff_ops": {
+      "status": {
+        "online": "Online",
+        "offline": "Offline"
+      },
+      "terminal": {
+        "title": "staff-ops ~ terminal"
+      },
+      "hero": {
+        "title_prefix": "Smart restaurant",
+        "title_highlight": "operations",
+        "description": "A complete staff management system — from account creation and permissions to order handling and table-side payment.",
+        "staff": {
+          "an": { "name": "Nguyen Van An", "role": "Waiter" },
+          "bich": { "name": "Tran Thi Bich", "role": "Cashier" },
+          "duc": { "name": "Le Minh Duc", "role": "Waiter" }
+        }
+      },
+      "section_1": {
+        "tag": "STEP 01",
+        "title": "Create and manage staff accounts",
+        "description": "Owners create accounts, assign permissions, and manage all staff in one place. Each employee gets a role-specific dashboard.",
+        "bullets": {
+          "create_account": "Create new staff accounts in seconds",
+          "assign_roles": "Assign roles: waiter, cashier, manager",
+          "edit_disable": "Edit profile, reset password, disable account"
+        },
+        "terminal": {
+          "name_label": "Enter name",
+          "email_label": "Email",
+          "role_label": "Role",
+          "shift_label": "Shift",
+          "shift_value": "Morning / Afternoon",
+          "success": "[OK] Account created successfully.",
+          "note": "ID: STF-00142 | Temporary password sent by email."
+        }
+      },
+      "section_2": {
+        "tag": "STEP 02",
+        "title": "Table-side staff operations",
+        "description": "Staff handle the full service flow — from check-in to ordering, editing, and cancellation — all in one simple interface.",
+        "bullets": {
+          "checkin": "Check in guests, open table, start service",
+          "add_items": "Add items at any time during service",
+          "cancel_items": "Cancel items with reason and sync to kitchen instantly",
+          "update_qty_note": "Update quantities and special notes per item"
+        },
+        "terminal": {
+          "table_meta": "Table A02 — 4 guests — 19:32",
+          "items": {
+            "pho_bo": "Special Beef Pho",
+            "com_tam": "Broken Rice with Pork Rib",
+            "nuoc_cam": "Fresh Orange Juice",
+            "banh_mi": "Grilled Pork Banh Mi"
+          },
+          "status": {
+            "done": "Done",
+            "pending": "Pending",
+            "cancelled": "Cancelled"
+          },
+          "total_label": "Total"
+        }
+      },
+      "section_3": {
+        "tag": "STEP 03",
+        "title": "Flexible payments",
+        "description": "Support multiple payment methods from cash to QR transfer. The system auto-calculates, issues invoice, and updates loyalty points.",
+        "bullets": {
+          "cash": "Fast cash payment with instant table-side receipt",
+          "transfer": "QR transfer with instant auto confirmation",
+          "loyalty_points": "Auto-earn loyalty points after each successful payment"
+        },
+        "terminal": {
+          "invoice_title": "Invoice for table A02",
+          "rows": {
+            "subtotal": "Food subtotal",
+            "vat": "VAT (8%)",
+            "discount": "Discount"
+          },
+          "total_label": "Payment",
+          "method_label": "Method:",
+          "methods": {
+            "cash": "Cash",
+            "transfer": "Bank transfer"
+          },
+          "success": "[OK] Payment succeeded — 19:58"
+        }
+      }
     }
   },
   "dashboard": {
@@ -1969,8 +2198,11 @@
   },
   "homepage": {
     "header": {
+      "logo_alt": "Restaurant logo",
+      "brand": "Restaurant",
       "product": "Product",
       "workflow": "Workflow",
+      "about": "About Us",
       "testimonials": "Testimonials",
       "contact": "Contact",
       "staff": "Staff",
@@ -2021,8 +2253,33 @@
     "features": {
       "tag": "Features",
       "title_prefix": "Highlight features of ",
+      "brand": "Restaurant",
       "description": "All the tools you need to run your restaurant – in one intuitive interface.",
       "items": {
+        "analytics": {
+          "title": "Analytics",
+          "description": "Watch sales data flow into charts and reports in real time."
+        },
+        "tables": {
+          "title": "Tables",
+          "description": "Monitor table maps and serving status instantly across all areas."
+        },
+        "menu": {
+          "title": "Menu",
+          "description": "Admins create dishes, update menus, and customers see changes immediately."
+        },
+        "reservations": {
+          "title": "Reservations",
+          "description": "Customers book tables, admins process requests, and staff check in with a clear flow."
+        },
+        "customer": {
+          "title": "Customer",
+          "description": "Track order history, returning guests, and loyalty data for each customer."
+        },
+        "staff_ops": {
+          "title": "Staff Ops",
+          "description": "KDS and operating workflow for staff, kitchen, and admins in one screen."
+        },
         "table_management": {
           "title": "Smart Table Management",
           "description": "Automatic table reservation system with intuitive interface, helping optimize table layout and reduce waiting time for customers."
@@ -3575,6 +3832,421 @@
       "title": "Need Help?",
       "description": "To modify or cancel your reservation, please contact the restaurant directly.",
       "get_directions": "Get Directions"
+    }
+  },
+  "tour": {
+    "layout": {
+      "logo_alt": "Restaurant logo",
+      "modules": {
+        "analytics": "Analytics",
+        "tables": "Tables",
+        "menu": "Menu",
+        "reservations": "Reservations",
+        "customer": "Customer",
+        "staff_ops": "Staff Ops"
+      }
+    },
+    "analytics": {
+      "how_it_works": {
+        "title": "How It Works",
+        "description": "Three simple steps to unlock your restaurant data"
+      },
+      "steps": {
+        "data_collection": {
+          "title": "Data Collection",
+          "description": "Data comes from orders, payments and customer interactions — streamed in real-time."
+        },
+        "smart_aggregation": {
+          "title": "Smart Aggregation",
+          "description": "Charts aggregate by day, table, and category with interactive drill-down capabilities."
+        },
+        "actionable_insights": {
+          "title": "Actionable Insights",
+          "description": "Admins review trends, identify opportunities, and act on data-driven insights."
+        }
+      },
+      "interactive": {
+        "title": "See revenue with real clarity",
+        "description": "Pick a time range to view revenue and order counts across the latest 7 days, 4 weeks, 6 months, and 5 years."
+      },
+      "filters": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "year": "Year"
+      },
+      "summary": {
+        "total_revenue": "Total revenue",
+        "total_orders": "Total orders"
+      },
+      "chart": {
+        "revenue_by_filter": "Revenue by {{filter}}",
+        "orders_by_filter": "Orders by {{filter}}"
+      }
+    },
+    "reservations": {
+      "header": {
+        "tag": "ONLINE RESERVATIONS",
+        "title_prefix": "Reservation",
+        "highlight": "flow",
+        "description": "Tap each step to view the full journey — from customer booking to staff service."
+      },
+      "done_message": "Flow complete — customer has been successfully served",
+      "steps": {
+        "step_1": {
+          "label": "Step 1",
+          "title": "Customer books a table",
+          "summary": "Choose time, guest count, and a suitable table",
+          "script": {
+            "select_time": {
+              "heading": "Select time & party size",
+              "body": "Customers select arrival date, time, and number of guests. The system shows real-time available slots."
+            },
+            "select_table": {
+              "heading": "Choose a table on the floor plan",
+              "body": "After selecting time, customers view the floor layout and choose a table. Reserved or busy tables are hidden automatically."
+            },
+            "view_360": {
+              "heading": "View 360° table perspective",
+              "body": "Before confirming, customers can rotate and preview the real view from that table to choose confidently."
+            },
+            "confirm": {
+              "heading": "Confirm reservation",
+              "body": "Customers enter contact details and submit the booking. The request is sent to the restaurant instantly."
+            }
+          }
+        },
+        "step_2": {
+          "label": "Step 2",
+          "title": "Restaurant confirms",
+          "summary": "Admin reviews and confirms the booking",
+          "script": {
+            "receive_request": {
+              "heading": "Receive reservation request",
+              "body": "Admins are notified immediately on new requests. The list shows full details: guest name, time, party size, and selected table."
+            },
+            "confirm_or_adjust": {
+              "heading": "Confirm or adjust",
+              "body": "Admins can confirm the reservation or suggest alternate table/time when needed. Customers receive updates instantly."
+            },
+            "assign_staff": {
+              "heading": "Assign staff",
+              "body": "After confirmation, admins can assign staff to the table for timely guest reception."
+            }
+          }
+        },
+        "step_3": {
+          "label": "Step 3",
+          "title": "Staff welcomes guests",
+          "summary": "Check in and guide guests to their reserved table",
+          "script": {
+            "checkin": {
+              "heading": "Check in arrivals",
+              "body": "Staff can search by name or booking code, verify identity, and mark guests as arrived in the system."
+            },
+            "guide_to_table": {
+              "heading": "Guide guests to table",
+              "body": "The system highlights the reserved table on the layout so staff can guide guests without re-checking."
+            },
+            "update_table_status": {
+              "heading": "Update table status",
+              "body": "The table automatically changes to \"Dining\" and all departments are updated in real time."
+            }
+          }
+        }
+      }
+    },
+    "tables": {
+      "section_1": {
+        "tag": "Step 01 — Floor plan design",
+        "title_prefix": "Upload your restaurant floor plan &",
+        "title_highlight": "add tables",
+        "title_suffix": "for each floor",
+        "description": "Restaurant owners can upload real floor images and place/name tables directly on the map. Customers see the exact seating location when booking — no confusion and no wasted time.",
+        "image_alt": "Restaurant floor plan",
+        "badge": "Visual floor map"
+      },
+      "highlights": {
+        "upload_floor_map": "Upload floor plan images for each level (PNG, JPG)",
+        "add_and_name_table": "Add and name tables by area",
+        "real_position_view": "Customers see their exact seating location"
+      },
+      "panorama": {
+        "viewer_title": "360° Panorama Viewer",
+        "drag_hint": "Drag to rotate 360°",
+        "tag": "Step 02 — Real-world view",
+        "title_prefix": "",
+        "title_highlight": "360° panorama",
+        "title_suffix": "for each table",
+        "description": "Owners upload 360° images per table so customers can rotate and preview the real viewpoint before booking. No surprises on arrival — guests know exactly where they will sit and what they will see.",
+        "highlights": {
+          "upload_360": "Upload 360° image for each table (JPG equirectangular)",
+          "rotate_preview": "Guests can rotate and preview before booking",
+          "increase_conversion": "Increase reservation conversion with realistic previews"
+        }
+      },
+      "qr": {
+        "title_prefix": "One",
+        "title_highlight": "unique QR code",
+        "title_suffix": "per table for instant ordering",
+        "description": "Guests scan the QR code at the table to open the menu instantly — no app and no staff assistance required. Each order is bound to the correct table and area to remove serving mistakes.",
+        "image_alt": "Table QR code",
+        "badge": "Scan & order now",
+        "highlights": {
+          "unique_qr_per_table": "Each table has an independent QR code",
+          "auto_bind_order": "Orders are automatically attached to the correct table",
+          "no_cross_table_mixup": "No order mix-ups between tables",
+          "faster_service": "Faster service with better staff focus"
+        }
+      },
+      "steps": {
+        "1": {
+          "title": "Design floor layout",
+          "description": "Owners upload floor images and arrange tables visually with drag and drop."
+        },
+        "2": {
+          "title": "Real-time table status",
+          "description": "Staff track each table status — available, occupied, reserved, or cleaning."
+        },
+        "3": {
+          "title": "Smart seating",
+          "description": "Customers identify seats easily while staff allocate tables quickly and efficiently."
+        }
+      }
+    },
+    "menu": {
+      "stats": {
+        "setup_suffix": " steps",
+        "setup_label": "Simple setup",
+        "menu_items_label": "Menu items per catalog",
+        "reload_suffix": " reload",
+        "realtime_label": "Instant updates"
+      },
+      "features": {
+        "step_1": {
+          "tag": "Step 01 — Categories",
+          "title_highlight": "Customize categories",
+          "title_suffix": "for your restaurant menu",
+          "description": "Create and arrange flexible categories — Main dishes, Appetizers, Desserts, Drinks. Add items to each group with full details and images.",
+          "image_alt": "Category management",
+          "bullets": {
+            "create_category": "Create categories and custom names",
+            "add_dish": "Add dishes to each category",
+            "reorder_display": "Reorder display sequence via drag and drop"
+          }
+        },
+        "step_2": {
+          "tag": "Step 02 — Dishes",
+          "title_prefix": "Manage",
+          "title_highlight": "dishes",
+          "title_suffix": "comprehensively",
+          "description": "Add, edit, and control each dish with complete details: name, description, price, image, and real-time visibility status.",
+          "image_alt": "Dish management",
+          "bullets": {
+            "edit_info": "Edit dish information and pricing",
+            "attach_multi_category": "Attach one dish to multiple categories",
+            "toggle_visibility": "Instantly show/hide dishes without reload"
+          }
+        },
+        "step_3": {
+          "tag": "Step 03 — Ingredients",
+          "title_prefix": "Control",
+          "title_highlight": "ingredients",
+          "title_suffix": "and inventory",
+          "description": "Bind ingredients to each dish and track stock in real time. The system automatically alerts when stock runs low so the kitchen can act early.",
+          "image_alt": "Ingredient management",
+          "bullets": {
+            "bind_ingredients": "Bind specific ingredients to each dish",
+            "low_stock_alert": "Automatic low-stock alerts",
+            "auto_hide_out_of_stock": "Automatically hide dishes when ingredients run out"
+          }
+        }
+      }
+    },
+    "customer": {
+      "section_1": {
+        "title": "Instant QR ordering",
+        "description": "Customers simply scan the QR code at the table, browse the full menu, and place orders on their phone — no app and no waiting for staff.",
+        "stats": {
+          "wait_seconds": "Wait seconds",
+          "menu_items": "Menu items",
+          "order_steps": "Steps to order"
+        },
+        "cards": {
+          "qr": {
+            "title": "Instant QR scan",
+            "description": "Each table has its own QR code. Scan and open the menu immediately without app download or sign-in."
+          },
+          "realtime": {
+            "title": "Real-time updates",
+            "description": "Dish status and ready-to-serve notifications are shown directly on the customer's phone."
+          },
+          "loyalty": {
+            "title": "Automatic loyalty points",
+            "description": "Every order automatically earns member points. Customers can track points and redeem offers at the table."
+          }
+        }
+      },
+      "section_2": {
+        "title": "Membership tiers & exclusive offers",
+        "description": "Membership tiers are upgraded automatically based on spending. The higher the tier, the better the perks.",
+        "points_path_title": "Points progression",
+        "tiers": {
+          "bronze": { "name": "Bronze", "discount": "3% off", "points": "From 0 points" },
+          "silver": { "name": "Silver", "discount": "5% off", "points": "From 500 points" },
+          "gold": { "name": "Gold", "discount": "8% off", "points": "From 1500 points" },
+          "platinum": { "name": "Platinum", "discount": "12% off", "points": "From 5000 points" }
+        }
+      },
+      "section_3": {
+        "tag": "AI CHATBOX",
+        "title": "AI assistant suggests dishes by preference",
+        "description": "AI understands preferences, diet, and budget to suggest the best dishes — like a food-savvy companion.",
+        "bullets": {
+          "preferences": "Suggestions by taste, allergy, and diet",
+          "instant_reply": "Instant replies without waiting for staff",
+          "personalization": "Learns from order history for personalized recommendations"
+        }
+      },
+      "section_4": {
+        "tag": "ORDER REVIEW",
+        "title": "Track your order transparently step by step",
+        "description": "Customers can see full order details, dish status, total amount, and loyalty points without asking staff.",
+        "bullets": {
+          "order_status": "Ordered items list with real-time status",
+          "edit_cancel": "Edit or cancel dishes before kitchen confirmation",
+          "bill_discount": "View total bill and membership discount",
+          "points_after_payment": "Points shown immediately after payment"
+        }
+      },
+      "ai_chat": {
+        "title": "AI dish suggestions",
+        "status": "Active",
+        "input_placeholder": "Ask AI about dishes...",
+        "messages": {
+          "1": "I want something light and low-calorie.",
+          "2": "I suggest Salmon Salad or Pumpkin Soup — low-calorie, nutritious, and great for dinner.",
+          "3": "Do you have options for vegetarians?",
+          "4": "Yes! Mushroom Tofu, Grilled Vegetables, and Brown Rice are all great vegetarian choices."
+        }
+      },
+      "order_review": {
+        "header": {
+          "title": "Order — Table A02",
+          "item_count": "4 items",
+          "member_badge": "Gold member"
+        },
+        "items": {
+          "pho_bo": "Rare Beef Pho",
+          "bun_cha": "Hanoi Bun Cha",
+          "tra_sen": "Golden Lotus Tea",
+          "banh_flan": "Flan"
+        },
+        "summary": {
+          "subtotal": "Subtotal",
+          "discount": "Gold discount (8%)",
+          "total": "Total payment"
+        },
+        "points": {
+          "label": "Loyalty points",
+          "suffix": "points"
+        },
+        "cta": "Request payment"
+      }
+    },
+    "staff_ops": {
+      "status": {
+        "online": "Online",
+        "offline": "Offline"
+      },
+      "terminal": {
+        "title": "staff-ops ~ terminal"
+      },
+      "hero": {
+        "title_prefix": "Smart restaurant",
+        "title_highlight": "operations",
+        "description": "A complete staff management system — from account creation and permissions to order handling and table-side payment.",
+        "staff": {
+          "an": { "name": "Nguyen Van An", "role": "Waiter" },
+          "bich": { "name": "Tran Thi Bich", "role": "Cashier" },
+          "duc": { "name": "Le Minh Duc", "role": "Waiter" }
+        }
+      },
+      "section_1": {
+        "tag": "STEP 01",
+        "title": "Create and manage staff accounts",
+        "description": "Owners create accounts, assign permissions, and manage all staff in one place. Each employee gets a role-specific dashboard.",
+        "bullets": {
+          "create_account": "Create new staff accounts in seconds",
+          "assign_roles": "Assign roles: waiter, cashier, manager",
+          "edit_disable": "Edit profile, reset password, disable account"
+        },
+        "terminal": {
+          "name_label": "Enter name",
+          "email_label": "Email",
+          "role_label": "Role",
+          "shift_label": "Shift",
+          "shift_value": "Morning / Afternoon",
+          "success": "[OK] Account created successfully.",
+          "note": "ID: STF-00142 | Temporary password sent by email."
+        }
+      },
+      "section_2": {
+        "tag": "STEP 02",
+        "title": "Table-side staff operations",
+        "description": "Staff handle the full service flow — from check-in to ordering, editing, and cancellation — all in one simple interface.",
+        "bullets": {
+          "checkin": "Check in guests, open table, start service",
+          "add_items": "Add items at any time during service",
+          "cancel_items": "Cancel items with reason and sync to kitchen instantly",
+          "update_qty_note": "Update quantities and special notes per item"
+        },
+        "terminal": {
+          "table_meta": "Table A02 — 4 guests — 19:32",
+          "items": {
+            "pho_bo": "Special Beef Pho",
+            "com_tam": "Broken Rice with Pork Rib",
+            "nuoc_cam": "Fresh Orange Juice",
+            "banh_mi": "Grilled Pork Banh Mi"
+          },
+          "status": {
+            "done": "Done",
+            "pending": "Pending",
+            "cancelled": "Cancelled"
+          },
+          "total_label": "Total"
+        }
+      },
+      "section_3": {
+        "tag": "STEP 03",
+        "title": "Flexible payments",
+        "description": "Support multiple payment methods from cash to QR transfer. The system auto-calculates, issues invoice, and updates loyalty points.",
+        "bullets": {
+          "cash": "Fast cash payment with instant table-side receipt",
+          "transfer": "QR transfer with instant auto confirmation",
+          "loyalty_points": "Auto-earn loyalty points after each successful payment"
+        },
+        "terminal": {
+          "invoice_title": "Invoice for table A02",
+          "rows": {
+            "subtotal": "Food subtotal",
+            "vat": "VAT (8%)",
+            "discount": "Discount"
+          },
+          "total_label": "Payment",
+          "method_label": "Method:",
+          "methods": {
+            "cash": "Cash",
+            "transfer": "Bank transfer"
+          },
+          "success": "[OK] Payment succeeded — 19:58"
+        }
+      }
+    }
+  },
+  "common": {
+    "actions": {
+      "exporting": "Exporting..."
     }
   }
 }
