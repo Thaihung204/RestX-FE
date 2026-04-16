@@ -466,8 +466,8 @@
     },
     "menu": {
       "dashboard": "Dashboard",
-      "tables": "Tables",
-      "tables_short": "Tables",
+      "activity": "Activity",
+      "activity_short": "Activity",
       "orders": "Order Management",
       "orders_short": "Orders",
       "kitchen": "Kitchen",
@@ -619,8 +619,13 @@
       "occupancy_rate": "Occupancy Rate",
       "active_revenue": "Active Revenue",
       "search_placeholder": "Search reservation code...",
+      "date_filter_label": "Date",
+      "time_filter_label": "Time",
       "table_label": "TABLE",
+      "floor_name": "Floor {{name}}",
       "seats_label": "seats",
+      "merge_mode": "Merge Tables",
+      "execute_merge": "Confirm Merge ({{count}})",
       "filter": {
         "all": "All statuses",
         "pending": "Pending",
@@ -631,29 +636,61 @@
         "available": "Available",
         "occupied": "Occupied",
         "reserved": "Reserved",
-        "cleaning": "Cleaning"
+        "cleaning": "Cleaning",
+        "active": "Active",
+        "inactive": "Ended",
+        "not_started": "Not started"
       },
       "stats": {
         "occupied": "Occupied",
         "available": "Available",
         "has_reservation": "Has Reservation"
       },
+      "merge": {
+        "success": "Tables merged successfully!",
+        "error": "Failed to merge tables",
+        "manual_required": "Manual resolution required due to multiple active orders.",
+        "same_order_selected": "This table already belongs to the same order as the selected table. Please choose another table.",
+        "same_group_selected": "This table is already in the same merged group as the selected table.",
+        "already_merged": "Selected tables already belong to the same order. No merge is needed.",
+        "merged_tables_badge": "Merged {{count}} tables",
+        "with_tables": "Merged with tables: {{tables}}",
+        "no_order_selected": "Select at least one table with an active order to merge.",
+        "reservation_pending_checkin": "Cannot merge a reserved table before check-in."
+      },
       "no_session_tables": "No tables are booked in this session.",
       "session_filter_desc": "You can switch sessions to view other tables.",
       "session_filter_hint": "The list is currently filtered by the active session.",
       "modal": {
+        "table_name": "Table {{name}}",
+        "merge_group": "Merged group",
+        "session": "Session",
+        "session_id": "Session ID",
         "reserved_by": "Reserved by",
         "phone": "Phone",
         "reservation_time": "Reservation time",
+        "reservation": "Reservation",
         "guest_count": "Guests",
         "total": "Total",
         "start_time": "Started",
+        "end_time": "Ended",
+        "order": "Order",
         "payment": "Payment",
         "seats": "seats",
         "guests": "guests",
         "checkin_btn": "Check-in",
         "checkin_success": "Check-in successful!",
         "checkin_error": "Check-in failed",
+        "checkin_too_early": "Check-in is only available within {{minutes}} minutes before reservation time ({{reservationTime}}).",
+        "checkin_too_late": "The valid check-in window has passed. It is only allowed up to {{minutes}} minutes after reservation time ({{reservationTime}}).",
+        "open_session_btn": "Open Session (walk-in)",
+        "create_session_success": "Walk-in table session opened",
+        "create_session_error": "Unable to open table session",
+        "cancel_reservation_btn": "No-show / Cancel reservation",
+        "cancel_reservation_confirm_title": "Confirm no-show?",
+        "cancel_reservation_confirm_content": "This will cancel the reservation and automatically update related status.",
+        "cancel_reservation_success": "Reservation cancelled successfully.",
+        "cancel_reservation_error": "Unable to cancel reservation",
         "customer": "Customer"
       }
     },
@@ -1811,6 +1848,35 @@
         "inactive": "Inactive",
         "off_duty": "Off Duty",
         "on_leave": "On Leave"
+      },
+      "floor_activity": {
+        "title": "Activity",
+        "last_updated": "Last updated at",
+        "occupied_suffix": "occupied tables",
+        "table_label": "Table",
+        "seats_label": "seats",
+        "merge_mode": "Table Merge Mode",
+        "execute_merge": "Confirm Merge ({{count}})",
+        "stats": {
+          "occupied": "Occupied",
+          "available": "Available",
+          "has_reservation": "Reserved"
+        },
+        "status": {
+          "available": "Available",
+          "occupied": "Occupied",
+          "reserved": "Reserved",
+          "cleaning": "Cleaning"
+        },
+        "merge": {
+          "success": "Tables merged successfully!",
+          "error": "Failed to merge tables",
+          "manual_required": "Manual resolution required due to multiple active orders."
+        },
+        "modal": {
+          "checkin_success": "Check-in successful!",
+          "checkin_error": "Check-in failed"
+        }
       }
     },
     "ingredients": {
@@ -2222,6 +2288,7 @@
     }
   },
   "common": {
+    "cancel": "Cancel",
     "actions": {
       "exporting": "Exporting..."
     },
@@ -2996,7 +3063,7 @@
       "staff_assigned": "staff assigned"
     },
     "export": {
-      "alert": "Export feature will be available when connected to backend API"
+      "alert": "Export feature will be available when data is ready"
     }
   },
   "not_found": {
@@ -3733,6 +3800,8 @@
         "booking_ref": "Booking Ref",
         "confirmation_sent": "Confirmation email sent to:",
         "phone_label": "Phone",
+        "pay_deposit_now": "Pay deposit now",
+        "deposit_deadline": "Deposit payment deadline",
         "view_details": "View Details",
         "make_another": "Make Another Booking"
       },
@@ -3905,7 +3974,14 @@
       "no_order_warning": "No deposit order found. Please contact the restaurant.",
       "link_opened": "Payment link opened.",
       "link_error": "Could not get payment link.",
-      "create_failed": "Failed to create payment link."
+      "create_failed": "Failed to create payment link.",
+      "already_paid": "This deposit has already been paid.",
+      "deadline_label": "Payment deadline",
+      "deadline_passed": "The deposit payment deadline has passed.",
+      "deadline_over": "Expired",
+      "payment_link_label": "Deposit payment link",
+      "open_payment_link": "Open payment link",
+      "cancelled_due_deadline": "This reservation was cancelled due to an expired deposit payment deadline."
     },
     "order": {
       "title": "Order Information",

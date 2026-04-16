@@ -163,6 +163,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [confirmationCode, setConfirmationCode] = useState<string>('');
     const [reservationId, setReservationId] = useState<string>('');
+    const [depositCheckoutUrl, setDepositCheckoutUrl] = useState<string>('');
+    const [depositPaymentDeadline, setDepositPaymentDeadline] = useState<string>('');
 
     const totalSelectedCapacity = useMemo(
         () => selectedTables.reduce((sum, table) => sum + (table.capacity || 0), 0),
@@ -490,6 +492,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
         setIsSubmitting(true);
         setSubmitError(null);
+        setDepositCheckoutUrl('');
+        setDepositPaymentDeadline('');
 
         try {
             // Combine date + time thành ISO datetime
@@ -514,8 +518,12 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 raw?.confirmation_code ||
                 raw?.bookingCode ||
                 (rawId ? rawId.replace(/-/g, '').slice(0, 6).toUpperCase() : '');
+            const checkoutUrl: string = raw?.checkoutUrl || raw?.CheckoutUrl || '';
+            const paymentDeadline: string = raw?.paymentDeadline || raw?.PaymentDeadline || '';
             setConfirmationCode(resolvedCode);
             setReservationId(rawId);
+            setDepositCheckoutUrl(checkoutUrl);
+            setDepositPaymentDeadline(paymentDeadline);
             setStep(ReservationStep.SUCCESS);
         } catch (error: unknown) {
             console.error("Failed to create reservation:", error);
@@ -1138,12 +1146,31 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
                         </div>
 
+                        {depositCheckoutUrl && (
+                            <div className="mb-4">
+                                <button
+                                    onClick={() => {
+                                        window.location.href = depositCheckoutUrl;
+                                    }}
+                                    className="w-full py-3.5 mb-2 bg-[var(--success)] hover:brightness-110 text-white font-bold rounded-xl transition-all text-sm"
+                                >
+                                    {t('landing.booking.success.pay_deposit_now', { defaultValue: 'Thanh toán cọc ngay' })}
+                                </button>
+                                {depositPaymentDeadline && (
+                                    <p className="text-xs text-[var(--danger)] text-center">
+                                        {t('landing.booking.success.deposit_deadline', { defaultValue: 'Hạn thanh toán cọc' })}: {new Date(depositPaymentDeadline).toLocaleString('vi-VN')}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
                         <button
                             onClick={() => {
-                                if (!reservationId) return;
-                                window.location.href = `/your-reservation/${reservationId}`;
+                                const detailToken = (confirmationCode || reservationId || '').trim();
+                                if (!detailToken) return;
+                                window.location.href = `/your-reservation/${encodeURIComponent(detailToken)}`;
                             }}
-                            disabled={!reservationId}
+                            disabled={!confirmationCode && !reservationId}
                             className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {t('landing.booking.success.view_details', { defaultValue: 'Xem chi tiết' })}
