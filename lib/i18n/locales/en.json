@@ -328,6 +328,7 @@
       "messages": {
         "select_table_and_items": "Please select a table and add items",
         "order_created": "New order created successfully",
+        "order_create_failed": "Failed to create order",
         "status_updated": "Item status updated",
         "order_status_updated": "Order status updated",
         "order_status_update_failed": "Failed to update order status"
@@ -356,7 +357,9 @@
           "cash_insufficient": "Cash received is not enough",
           "cash_success": "Cash payment successful",
           "link_created": "Payment link created",
-          "payment_failed": "Payment failed"
+          "payment_failed": "Payment failed",
+          "payos_return_success": "PayOS payment completed successfully",
+          "payos_return_cancel": "PayOS payment was cancelled"
         },
         "discount": {
           "title": "Discounts",
@@ -1085,6 +1088,26 @@
       "overview_load_failed": "Unable to load dashboard overview",
       "export_success": "Report exported successfully",
       "export_failed": "Failed to export report"
+    },
+    "best_selling_dishes": {
+      "title": "Best Selling Dishes",
+      "subtitle": "Top {{count}}",
+      "loading": "Loading dishes...",
+      "empty": "No sales data yet",
+      "sold": "Sold",
+      "revenue": "Revenue"
+    },
+    "latest_feedbacks": {
+      "title": "Latest Feedbacks",
+      "subtitle": "{{count}} feedbacks",
+      "loading": "Loading feedbacks...",
+      "empty": "No feedbacks yet",
+      "rating": "Rating",
+      "time_ago": {
+        "minutes": "{{count}} minutes ago",
+        "hours": "{{count}} hours ago",
+        "days": "{{count}} days ago"
+      }
     },
     "tables_overview": {
       "title": "Tables & Reservations",

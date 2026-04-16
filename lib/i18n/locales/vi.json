@@ -330,6 +330,7 @@
       "messages": {
         "select_table_and_items": "Vui lòng chọn bàn và thêm món",
         "order_created": "Đã tạo order mới",
+        "order_create_failed": "Tạo order thất bại",
         "status_updated": "Đã cập nhật trạng thái món",
         "order_status_updated": "Đã cập nhật trạng thái order",
         "order_status_update_failed": "Cập nhật trạng thái order thất bại"
@@ -358,7 +359,9 @@
           "cash_insufficient": "Số tiền khách đưa không đủ",
           "cash_success": "Thanh toán tiền mặt thành công",
           "link_created": "Đã tạo link thanh toán",
-          "payment_failed": "Thanh toán thất bại"
+          "payment_failed": "Thanh toán thất bại",
+          "payos_return_success": "Thanh toán PayOS thành công",
+          "payos_return_cancel": "Bạn đã hủy thanh toán PayOS"
         },
         "discount": {
           "title": "Giảm giá",
@@ -982,6 +985,26 @@
       "overview_load_failed": "Không thể tải dữ liệu tổng quan",
       "export_success": "Xuất báo cáo thành công",
       "export_failed": "Xuất báo cáo thất bại"
+    },
+    "best_selling_dishes": {
+      "title": "Món Bán Chạy",
+      "subtitle": "Top {{count}}",
+      "loading": "Đang tải dữ liệu...",
+      "empty": "Chưa có dữ liệu bán hàng",
+      "sold": "Đã bán",
+      "revenue": "Doanh thu"
+    },
+    "latest_feedbacks": {
+      "title": "Đánh Giá Mới Nhất",
+      "subtitle": "{{count}} đánh giá",
+      "loading": "Đang tải đánh giá...",
+      "empty": "Chưa có đánh giá",
+      "rating": "Đánh giá",
+      "time_ago": {
+        "minutes": "{{count}} phút trước",
+        "hours": "{{count}} giờ trước",
+        "days": "{{count}} ngày trước"
+      }
     },
     "quick_actions": {
       "title": "Thao tác nhanh",

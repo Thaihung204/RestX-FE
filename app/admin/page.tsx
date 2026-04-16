@@ -1,19 +1,21 @@
 "use client";
 
+import BestSellingDishesCard from "@/components/admin/BestSellingDishesCard";
 import KPISection from "@/components/admin/KPISection";
+import LatestFeedbacksCard from "@/components/admin/LatestFeedbacksCard";
 import OrdersBarChart from "@/components/admin/charts/OrdersBarChart";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import ReservationList from "@/components/admin/reservations/ReservationList";
 import dashboardService, {
-  DashboardFilterType,
-  DashboardOverview,
-  DashboardSummary,
-  OrderTrendPoint,
-  RevenueTrendPoint,
+    DashboardFilterType,
+    DashboardOverview,
+    DashboardSummary,
+    OrderTrendPoint,
+    RevenueTrendPoint,
 } from "@/lib/services/dashboardService";
 import reportService, { ReportType } from "@/lib/services/reportService";
 import reservationService, {
-  PaginatedReservations,
+    PaginatedReservations,
 } from "@/lib/services/reservationService";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined } from "@ant-design/icons";
@@ -536,6 +538,14 @@ export default function DashboardPage() {
             data={orderChartData}
             totalOrders={totalOrdersForChart}
             subtitle={chartPeriodSubtitle}
+          />
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <LatestFeedbacksCard loading={dashboardLoading && !summaryData} />
+          <BestSellingDishesCard 
+            dishes={overviewData?.topDishes?.dishes}
+            loading={dashboardLoading && !overviewData}
           />
         </section>
 
