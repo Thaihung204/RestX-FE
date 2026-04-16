@@ -98,7 +98,8 @@ export default function AnalyticsPage() {
     
     setLoading(true);
     try {
-      const response = await aiService.analyzeDashboard({ filterType: activeFilter });
+      const apiFilterType = activeFilter === "day" ? "today" : activeFilter;
+      const response = await aiService.analyzeDashboard({ filterType: apiFilterType });
       
       // Ensure the generatedAt has a consistent value or use the one from response if exists
       const reportData: AIStrategyReport = {
