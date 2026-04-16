@@ -645,6 +645,8 @@
         "checkin_btn": "Check-in",
         "checkin_success": "Check-in successful!",
         "checkin_error": "Check-in failed",
+        "checkin_too_early": "Check-in is only available within {{minutes}} minutes before reservation time ({{reservationTime}}).",
+        "checkin_too_late": "The valid check-in window has passed. It is only allowed up to {{minutes}} minutes after reservation time ({{reservationTime}}).",
         "customer": "Customer"
       }
     }

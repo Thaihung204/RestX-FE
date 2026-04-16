@@ -203,13 +203,20 @@ export default function AntdProvider({
         }
 
         /* Override hardcoded colors with CSS variables */
-        .ant-btn-primary:not(.ant-btn-dangerous) {
+        .ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-disabled):not(:disabled) {
           background: var(--primary) !important;
           border-color: var(--primary) !important;
         }
-        .ant-btn-primary:not(.ant-btn-dangerous):hover {
+        .ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-disabled):not(:disabled):hover {
           background: var(--primary-hover) !important;
           border-color: var(--primary-hover) !important;
+        }
+        .ant-btn-primary.ant-btn-disabled,
+        .ant-btn-primary:disabled {
+          background: var(--surface) !important;
+          border-color: var(--border) !important;
+          color: var(--text-muted) !important;
+          box-shadow: none !important;
         }
         .ant-typography strong,
         .ant-typography-danger {

@@ -673,6 +673,8 @@
         "checkin_btn": "Check-in",
         "checkin_success": "Check-in thành công!",
         "checkin_error": "Check-in thất bại",
+        "checkin_too_early": "Chỉ được check-in trong vòng {{minutes}} phút trước giờ đặt ({{reservationTime}}).",
+        "checkin_too_late": "Đã quá thời gian check-in hợp lệ. Chỉ hỗ trợ đến {{minutes}} phút sau giờ đặt ({{reservationTime}}).",
         "customer": "Khách hàng"
       }
     }
