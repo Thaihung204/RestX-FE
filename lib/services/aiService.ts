@@ -30,6 +30,11 @@ export const aiService = {
     );
     return response.data;
   },
+
+  analyzeDashboard: async (payload: { filterType: string; analysisType?: string; fromDate?: string; toDate?: string }): Promise<any> => {
+    const response = await axiosInstance.post<any>("/ai/analytics", payload);
+    return response.data;
+  },
 };
 
 export default aiService;

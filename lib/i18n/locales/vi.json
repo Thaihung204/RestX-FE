@@ -2195,11 +2195,75 @@
       }
     },
     "analytics": {
-      "title": "Bảng phân tích",
-      "subtitle": "Thông tin chi tiết và chỉ số hiệu suất",
+      "title": "AI Strategy Report",
+      "subtitle": "AI phân tích dữ liệu dashboard và đưa ra chiến lược kinh doanh chi tiết",
       "page_title": "Trang phân tích",
       "coming_soon": "Tính năng phân tích nâng cao đang phát triển",
-      "under_development": "Đang phát triển"
+      "under_development": "Đang phát triển",
+      "createNew": "Tạo báo cáo mới",
+      "generating": "Đang tạo báo cáo...",
+      "filter": {
+        "by": "Phân tích theo"
+      },
+      "time": {
+        "justNow": "Vừa xong",
+        "minutesAgo": "phút trước",
+        "hoursAgo": "giờ trước",
+        "daysAgo": "ngày trước"
+      },
+      "success": {
+        "generate": "Tạo báo cáo thành công"
+      },
+      "error": {
+        "generate": "Tạo báo cáo thất bại"
+      },
+      "empty": {
+        "title": "Chưa có báo cáo chiến lược",
+        "subtitle": "Nhấn nút \"Tạo báo cáo mới\" để AI phân tích dữ liệu và đưa ra chiến lược kinh doanh"
+      },
+      "tabs": {
+        "overview": "Tổng quan",
+        "menu": "Menu",
+        "marketing": "Marketing & Khách hàng",
+        "actionPlan": "Kế hoạch hành động"
+      },
+      "sections": {
+        "risks": "Rủi ro tiềm ẩn",
+        "opportunities": "Cơ hội tiềm năng",
+        "menuOptimization": "Tối ưu Menu",
+        "marketingStrategy": "Chiến lược Marketing",
+        "customerStrategy": "Chiến lược Khách hàng",
+        "executionPlan": "Kế hoạch thực thi",
+        "currentTrend": "Xu hướng hiện tại",
+        "promoStrategy": "Chiến lược khuyến mãi",
+        "upcomingEvents": "Sự kiện sắp tới"
+      },
+      "impact": {
+        "high": "Cao",
+        "medium": "Trung bình",
+        "low": "Thấp"
+      },
+      "labels": {
+        "action": "Hành động:",
+        "time": "Thời gian:"
+      },
+      "summary": {
+        "title": "Tóm tắt chiến lược",
+        "alerts": "cảnh báo",
+        "generatedAt": "Tạo lúc:"
+      },
+      "stats": {
+        "alerts": "Cảnh báo",
+        "opportunities": "Cơ hội",
+        "risks": "Rủi ro",
+        "actions": "Hành động"
+      },
+      "menu": {
+        "trendingDish": "Món đang hot:",
+        "timeBasedDishes": "Món theo thời gian",
+        "suggestedAdditions": "Đề xuất thêm món",
+        "comboSuggestions": "Đề xuất combo"
+      }
     }
   },
   "common": {
