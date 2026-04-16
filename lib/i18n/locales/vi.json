@@ -1682,6 +1682,29 @@
       }
     },
     "staff": {
+      "menu": {
+        "dashboard": "Tổng quan",
+        "orders": "Đơn hàng",
+        "orders_short": "Order",
+        "tables": "Bàn",
+        "tables_short": "Bàn",
+        "kitchen": "Bếp",
+        "checkout": "Thanh toán",
+        "reservations": "Đặt bàn",
+        "attendance": "Chấm công"
+      },
+      "user_menu": {
+        "profile": "Hồ sơ",
+        "settings": "Cài đặt",
+        "logout": "Đăng xuất"
+      },
+      "sidebar": {
+        "brand": "Nhà hàng Demo",
+        "staff_role": "Nhân viên",
+        "working": "Đang làm việc",
+        "started": "Bắt đầu",
+        "today": "Hôm nay"
+      },
       "title": "Quản lý nhân viên",
       "subtitle": "Quản lý đội ngũ nhân viên",
       "add_staff": "Thêm nhân viên",

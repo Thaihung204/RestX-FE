@@ -315,6 +315,7 @@ export default function LoyaltyPointBandSettings() {
         open={modalVisible}
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
+        destroyOnClose
         okButtonProps={{
           style: {
             background: "var(--primary)",
@@ -433,7 +434,12 @@ export default function LoyaltyPointBandSettings() {
             getValueFromEvent={(checked: boolean) => checked}>
             <StatusToggle
               checked={form.getFieldValue("isActive") ?? true}
-              onChange={(checked) => form.setFieldValue("isActive", checked)}
+              onChange={() =>
+                form.setFieldValue(
+                  "isActive",
+                  !(form.getFieldValue("isActive") ?? true)
+                )
+              }
             />
           </Form.Item>
 

@@ -96,43 +96,43 @@ export default function StaffLayout({
     {
       key: "/staff",
       icon: <DashboardOutlined />,
-      label: t("staff.menu.dashboard"),
+      label: t("dashboard.staff.menu.dashboard"),
     },
     {
       key: "/staff/orders",
       icon: <ShoppingCartOutlined />,
       label:
         isMobile || isTablet
-          ? t("staff.menu.orders_short")
-          : t("staff.menu.orders"),
+          ? t("dashboard.staff.menu.orders_short")
+          : t("dashboard.staff.menu.orders"),
     },
     {
       key: "/staff/tables",
       icon: <ApartmentOutlined />,
       label:
         isMobile || isTablet
-          ? t("staff.menu.tables_short")
-          : t("staff.menu.tables"),
+          ? t("dashboard.staff.menu.tables_short")
+          : t("dashboard.staff.menu.tables"),
     },
     {
       key: "/staff/kitchen",
       icon: <FireOutlined />,
-      label: t("staff.menu.kitchen"),
+      label: t("dashboard.staff.menu.kitchen"),
     },
     {
       key: "/staff/checkout",
       icon: <WalletOutlined />,
-      label: t("staff.menu.checkout"),
+      label: t("dashboard.staff.menu.checkout"),
     },
     {
       key: "/staff/reservations",
       icon: <CalendarOutlined />,
-      label: t("staff.menu.reservations"),
+      label: t("dashboard.staff.menu.reservations"),
     },
     {
       key: "/staff/attendance",
       icon: <ClockCircleOutlined />,
-      label: t("staff.menu.attendance"),
+      label: t("dashboard.staff.menu.attendance"),
     },
   ];
 
@@ -329,6 +329,7 @@ export default function StaffLayout({
           style={{
             display: "flex",
             alignItems: "center",
+            gap: 5,
             textDecoration: "none",
           }}>
           <div
@@ -637,7 +638,7 @@ export default function StaffLayout({
                       whiteSpace: "nowrap",
                     }}>
                     {menuItems.find((item) => item.key === pathname)?.label ||
-                      t("staff.menu.dashboard")}
+                      t("dashboard.staff.menu.dashboard")}
                   </Text>
                 </div>
               </div>

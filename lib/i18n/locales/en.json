@@ -1659,6 +1659,29 @@
       }
     },
     "staff": {
+      "menu": {
+        "dashboard": "Dashboard",
+        "orders": "Orders",
+        "orders_short": "Orders",
+        "tables": "Tables",
+        "tables_short": "Tables",
+        "kitchen": "Kitchen",
+        "checkout": "Checkout",
+        "reservations": "Reservations",
+        "attendance": "Attendance"
+      },
+      "user_menu": {
+        "profile": "Profile",
+        "settings": "Settings",
+        "logout": "Logout"
+      },
+      "sidebar": {
+        "brand": "Demo Restaurant",
+        "staff_role": "Staff",
+        "working": "Working",
+        "started": "Started",
+        "today": "Today"
+      },
       "title": "Staff Management",
       "subtitle": "Manage your restaurant team members",
       "add_staff": "Add Staff",

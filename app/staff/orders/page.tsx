@@ -48,6 +48,7 @@ interface Order {
   reference: string;
   tableId: string;
   tableName: string;
+  customerId?: string;
   items: OrderItem[];
   detailItems: OrderItem[];
   createdAt: string;
@@ -71,6 +72,16 @@ type PaymentOrder = {
   total: number;
   customerId?: string;
   raw?: {
+    paymentStatusId?: number;
+  };
+};
+
+type OrderForPaymentTrigger = {
+  id: string;
+  reference: string;
+  total: number;
+  raw?: {
+    customerId?: string;
     paymentStatusId?: number;
   };
 };
@@ -611,16 +622,24 @@ export default function OrderManagement() {
     }
   };
 
-  const openPaymentModal = (order: PaymentOrder) => {
+  const openPaymentModal = (order: OrderForPaymentTrigger) => {
+    const matchedOrder = orders.find((o) => o.id === order.id);
+    const source = matchedOrder ?? order;
+
     setIsOrderDetailModalOpen(false);
     setSelectedOrderForDetail(null);
     setSelectedOrder({
-      ...order,
-      subTotal: order.subTotal ?? order.total,
+      id: source.id,
+      reference: source.reference,
+      total: source.total,
+      subTotal: matchedOrder?.subTotal ?? source.total,
       customerId:
-        order.customerId || (order as any).raw?.customerId || undefined,
+        matchedOrder?.customerId || source.raw?.customerId || undefined,
+      raw: {
+        paymentStatusId: source.raw?.paymentStatusId,
+      },
     });
-    setCashReceived(order.total);
+    setCashReceived(source.total);
     setPaymentMethod("cash");
     setIsPaymentModalOpen(true);
   };
