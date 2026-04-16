@@ -51,6 +51,7 @@ interface Order {
   items: OrderItem[];
   detailItems: OrderItem[];
   createdAt: string;
+  subTotal: number;
   total: number;
   notes?: string;
   orderStatusId: OrderStatusId;
@@ -66,6 +67,7 @@ interface Order {
 type PaymentOrder = {
   id: string;
   reference: string;
+  subTotal: number;
   total: number;
   customerId?: string;
   raw?: {
@@ -234,6 +236,7 @@ export default function OrderManagement() {
               })
             : "",
           total: Number(order.totalAmount || 0),
+          subTotal: Number(order.subTotal ?? order.totalAmount ?? 0),
           notes: undefined,
           orderStatusId: (order.orderStatusId ?? 0) as OrderStatusId,
           orderStatus: status,
@@ -613,6 +616,7 @@ export default function OrderManagement() {
     setSelectedOrderForDetail(null);
     setSelectedOrder({
       ...order,
+      subTotal: order.subTotal ?? order.total,
       customerId:
         order.customerId || (order as any).raw?.customerId || undefined,
     });
@@ -684,7 +688,7 @@ export default function OrderManagement() {
   }));
 
   return (
-    <div>
+    <div className="staff-orders-page">
       {/* Search & Filter */}
       <FilterOrder
         selectedTableId={selectedTableId}
@@ -866,6 +870,22 @@ export default function OrderManagement() {
           .order-detail-status-select .ant-select-selection-item {
             font-size: 11px !important;
             line-height: 20px !important;
+          }
+        }
+
+        @media (max-width: 992px) {
+          .staff-orders-page .ant-typography,
+          .staff-orders-page .ant-btn,
+          .staff-orders-page .ant-input,
+          .staff-orders-page .ant-input-number-input,
+          .staff-orders-page .ant-select-selection-item,
+          .staff-orders-page .ant-select-item-option-content,
+          .staff-orders-page .ant-empty-description,
+          .staff-orders-page p,
+          .staff-orders-page span,
+          .staff-orders-page label,
+          .staff-orders-page button {
+            font-size: calc(100% + 2px);
           }
         }
       `}</style>

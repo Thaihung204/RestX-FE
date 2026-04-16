@@ -1,47 +1,25 @@
 "use client";
 
+import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
+import StatusToggle from "@/components/ui/StatusToggle";
 import loyaltyService, {
-  LoyaltyPointBand,
-  TIER_COLORS,
+    LoyaltyPointBand,
+    TIER_COLORS,
 } from "@/lib/services/loyaltyService";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
 import {
-  Button,
-  ColorPicker,
-  Form,
-  Input,
-  InputNumber,
-  message,
-  Modal,
-  Popconfirm,
-  Table,
+    Button,
+    ColorPicker,
+    Form,
+    Input,
+    InputNumber,
+    message,
+    Modal,
+    Popconfirm,
+    Table,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-
-const StatusToggle = ({ value, onChange, t }: any) => (
-  <div className="flex items-center gap-3">
-    <div
-      onClick={() => onChange?.(!value)}
-      className={`relative w-14 h-8 rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${value ? "bg-[var(--primary)]" : "bg-gray-200 dark:bg-zinc-700"
-        }`}
-      role="switch"
-      aria-checked={value}>
-      <span
-        className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full shadow-sm transform transition-transform duration-200 ease-in-out ${value ? "translate-x-6" : "translate-x-0"
-          }`}
-      />
-    </div>
-    <span
-      className={`font-medium text-sm ${value ? "text-[var(--primary)]" : "text-gray-500"
-        }`}>
-      {value
-        ? t("common.status.active", { defaultValue: "Active" })
-        : t("common.status.inactive", { defaultValue: "Inactive" })}
-    </span>
-  </div>
-);
 
 export default function LoyaltyPointBandSettings() {
   const { t } = useTranslation("common");
@@ -240,17 +218,15 @@ export default function LoyaltyPointBandSettings() {
       dataIndex: "isActive",
       key: "isActive",
       render: (isActive: boolean, record: LoyaltyPointBand) => (
-        <button
-          onClick={() => handleToggleStatus(record)}
-          className={`cursor-pointer inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm transition-all hover:opacity-80 ${isActive
-            ? "bg-green-500 text-white dark:bg-green-600"
-            : "bg-gray-500 text-white dark:bg-gray-600"
-            }`}>
-          <span className="w-1.5 h-1.5 rounded-full mr-2 bg-white"></span>
-          {isActive
-            ? t("common.status.active", { defaultValue: "Active" })
-            : t("common.status.inactive", { defaultValue: "Inactive" })}
-        </button>
+        <StatusToggle
+          checked={isActive}
+          onChange={() => handleToggleStatus(record)}
+          ariaLabel={
+            isActive
+              ? t("common.status.deactivate", { defaultValue: "Deactivate" })
+              : t("common.status.activate", { defaultValue: "Activate" })
+          }
+        />
       ),
     },
     {
@@ -452,8 +428,13 @@ export default function LoyaltyPointBandSettings() {
 
           <Form.Item
             name="isActive"
-            label={t("common.status.label", { defaultValue: "Status" })}>
-            <StatusToggle t={t} />
+            label={t("common.status.label", { defaultValue: "Status" })}
+            valuePropName="checked"
+            getValueFromEvent={(checked: boolean) => checked}>
+            <StatusToggle
+              checked={form.getFieldValue("isActive") ?? true}
+              onChange={(checked) => form.setFieldValue("isActive", checked)}
+            />
           </Form.Item>
 
           <Form.Item shouldUpdate noStyle>

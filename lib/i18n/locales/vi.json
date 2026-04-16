@@ -343,7 +343,8 @@
         "modal": {
           "title": "Thanh toán",
           "order_label": "Đơn hàng",
-          "total_label": "Tổng tiền",
+          "total_label": "Tạm tính",
+          "final_total_label": "Thanh toán",
           "method_label": "Phương thức thanh toán",
           "cash_label": "Số tiền khách đưa",
           "change_label": "Tiền thối",
@@ -360,13 +361,18 @@
           "payment_failed": "Thanh toán thất bại"
         },
         "discount": {
+          "title": "Giảm giá",
           "applying": "Đang áp dụng giảm giá...",
           "membership_applied": "Đã áp dụng giảm giá thành viên",
+          "membership_label": "Giảm theo hạng thành viên",
           "apply_button": "Áp dụng giảm giá",
           "subtotal": "Tạm tính",
           "level": "Hạng thành viên",
           "amount": "Số tiền giảm",
-          "no_discount": "Không có giảm giá thành viên"
+          "no_discount": "Không có giảm giá thành viên",
+          "no_promotions": "Không có mã giảm giá",
+          "min_order": "Đơn tối thiểu",
+          "or": "hoặc"
         }
       }
     },
@@ -829,7 +835,8 @@
         "suppliers": "Nhà cung cấp",
         "loyalty": "Hạng thành viên",
         "order_status": "Trạng thái món ăn",
-        "order_level_status": "Trạng thái đơn hàng"
+        "order_level_status": "Trạng thái đơn hàng",
+        "promotions": "Khuyến mãi"
       },
       "ingredient_categories": {
         "title": "Loại nguyên liệu",
@@ -1057,6 +1064,38 @@
           "delete_failed": "Không thể xóa trạng thái đơn hàng",
           "save_failed": "Không thể lưu trạng thái đơn hàng",
           "update_failed": "Không thể cập nhật trạng thái mặc định"
+        }
+      },
+      "promotion": {
+        "title": "Khuyến mãi",
+        "desc": "Quản lý chương trình khuyến mãi và mã giảm giá",
+        "add": "Thêm khuyến mãi",
+        "edit": "Sửa khuyến mãi",
+        "code": "Mã",
+        "name": "Tên",
+        "discount": "Giảm giá",
+        "discount_type": "Loại giảm giá",
+        "discount_value": "Giá trị giảm",
+        "max_discount": "Giảm tối đa",
+        "min_order": "Đơn tối thiểu",
+        "usage_limit": "Giới hạn sử dụng",
+        "usage_per_customer": "Lượt dùng mỗi khách",
+        "apply": "Áp dụng",
+        "valid_date": "Hiệu lực từ - đến",
+        "valid_from": "Hiệu lực từ",
+        "valid_to": "Hiệu lực đến",
+        "status": "Trạng thái",
+        "toasts": {
+          "fetch_error": "Không thể tải danh sách khuyến mãi",
+          "required_fields": "Vui lòng nhập các trường bắt buộc",
+          "create_success": "Tạo khuyến mãi thành công",
+          "update_success": "Cập nhật khuyến mãi thành công",
+          "save_error": "Không thể lưu khuyến mãi",
+          "delete_success": "Xóa khuyến mãi thành công",
+          "delete_error": "Không thể xóa khuyến mãi",
+          "activate_success": "Đã kích hoạt khuyến mãi",
+          "deactivate_success": "Đã tắt khuyến mãi",
+          "status_error": "Không thể cập nhật trạng thái"
         }
       },
       "notifications": {

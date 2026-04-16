@@ -140,12 +140,17 @@ export default function DishCard({
               {formatPrice(item.price)}đ
             </p>
           </div>
+          <StatusToggle
+            checked={item.isActive}
+            onChange={() => onToggleStatus(item)}
+            ariaLabel={item.isActive ? labels.deactivate : labels.activate}
+          />
         </div>
 
-        <div className="flex flex-nowrap items-center gap-2 mt-4 min-w-0">
-          <Link href={`/admin/menu/${item.id}`} className="flex-1 min-w-0">
+        <div className="grid grid-cols-2 gap-2 mt-4">
+          <Link href={`/admin/menu/${item.id}`} className="block">
             <button
-              className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all truncate whitespace-nowrap"
+              className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
               style={{
                 backgroundColor: "rgba(255,56,11,0.1)",
                 color: "var(--primary)",
@@ -162,7 +167,7 @@ export default function DishCard({
           </Link>
           <button
             onClick={() => onAddIngredients(item)}
-            className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm font-medium transition-all truncate whitespace-nowrap"
+            className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
             style={{
               background: "var(--surface)",
               color: "var(--text)",
@@ -179,11 +184,6 @@ export default function DishCard({
             suppressHydrationWarning>
             {labels.ingredients}
           </button>
-          <StatusToggle
-            checked={item.isActive}
-            onChange={() => onToggleStatus(item)}
-            ariaLabel={item.isActive ? labels.deactivate : labels.activate}
-          />
         </div>
       </div>
     </div>
