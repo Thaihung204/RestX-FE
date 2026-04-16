@@ -1,26 +1,26 @@
 "use client";
 
 import orderDetailStatusService, {
-  OrderDetailStatus,
+    OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
 import {
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined,
-  StarFilled,
-  StarOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    PlusOutlined,
+    StarFilled,
+    StarOutlined,
 } from "@ant-design/icons";
 import {
-  Button,
-  ColorPicker,
-  Form,
-  Input,
-  message,
-  Modal,
-  Popconfirm,
-  Table,
-  Tag,
-  Tooltip
+    Button,
+    ColorPicker,
+    Form,
+    Input,
+    message,
+    Modal,
+    Popconfirm,
+    Table,
+    Tag,
+    Tooltip
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
@@ -258,157 +258,34 @@ export default function OrderDetailStatusSettings() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
+    <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] p-6">
       {contextHolder}
-      <style jsx global>{`
-        .modern-table .ant-table {
-          background: transparent;
-        }
-        .modern-table .ant-table-container {
-          background: var(--card);
-          border-radius: 16px;
-          border: 1px solid var(--border);
-          box-shadow:
-            0 4px 6px -1px rgba(0, 0, 0, 0.1),
-            0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        .modern-table .ant-table-thead > tr > th {
-          background: transparent;
-          color: var(--text-muted);
-          font-weight: 600;
-          border-bottom: 1px solid var(--border) !important;
-        }
-        .modern-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid var(--border) !important;
-          color: var(--text);
-        }
-        .modern-table .ant-table-tbody > tr:last-child > td {
-          border-bottom: none !important;
-        }
-        .modern-table .ant-table-tbody > tr:hover > td {
-          background: var(--bg-hover) !important;
-        }
-
-        .modern-modal .ant-modal-content {
-          border-radius: 24px !important;
-          overflow: hidden;
-          background: var(--card);
-          padding: 0 !important;
-        }
-        .modern-modal .ant-modal-header {
-          background: transparent;
-          border-bottom: 1px solid var(--border);
-          padding: 20px 24px !important;
-          margin-bottom: 0 !important;
-        }
-        .modern-modal .ant-modal-body {
-          padding: 24px !important;
-        }
-        .modern-modal .ant-modal-footer {
-          margin-top: 0 !important;
-          padding: 16px 24px !important;
-          border-top: 1px solid var(--border);
-        }
-        .modern-modal .ant-modal-title {
-          color: var(--text);
-        }
-        .modern-modal .ant-modal-close {
-          color: var(--text-muted);
-          top: 24px !important;
-        }
-
-        .modern-modal .ant-color-picker {
-          width: 100% !important;
-        }
-        .modern-modal .ant-color-picker-trigger {
-          width: 100% !important;
-          background: var(--input-bg, var(--card)) !important;
-          border: 1px solid var(--border) !important;
-          height: 44px !important;
-          padding: 0 16px !important;
-          border-radius: 12px !important;
-          display: flex !important;
-          align-items: center !important;
-        }
-        .modern-modal .ant-color-picker-trigger .ant-color-picker-color-block {
-          width: 24px !important;
-          height: 24px !important;
-          border-radius: 6px !important;
-        }
-        .modern-modal .ant-color-picker-trigger .ant-color-picker-trigger-text {
-          color: var(--text) !important;
-          margin-left: 12px !important;
-        }
-
-        /* Input fields styling */
-        .modern-modal .ant-input {
-          background: var(--input-bg, var(--card)) !important;
-          border-color: var(--border) !important;
-          color: var(--text) !important;
-        }
-        .modern-modal .ant-input::placeholder {
-          color: var(--text-muted) !important;
-        }
-      `}</style>
-
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] bg-clip-text text-transparent">
+          <h3 className="text-lg font-bold text-[var(--text)]">
             {t("dashboard.manage.order_status.title")}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
+          <p className="text-sm text-[var(--text-muted)] mt-1">
             {t("dashboard.manage.order_status.subtitle")}
           </p>
-          {/* <span
-            className="inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold"
-            style={{
-              background: "var(--surface-subtle)",
-              color: "var(--text-muted)",
-              border: "1px solid var(--border)",
-            }}>
-            {t("dashboard.manage.order_status.status_count", {
-              count: statuses.length,
-            })}
-          </span> */}
         </div>
         <Button
           type="primary"
           onClick={handleAdd}
           icon={<PlusOutlined />}
-          size="large"
-          className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] border-none hover:shadow-lg hover:scale-105 active:scale-95 transition-all rounded-xl h-11 px-6 font-medium">
+          style={{ background: "linear-gradient(to right, var(--primary), var(--primary-hover))", border: "none" }}>
           {t("dashboard.manage.order_status.add_status")}
         </Button>
       </div>
 
-      <div className="modern-table">
-        <Table
-          columns={columns}
-          dataSource={statuses}
-          rowKey="id"
-          loading={loading}
-          pagination={false}
-          locale={{
-            emptyText: (
-              <div
-                className="py-12 text-center"
-                style={{ color: "var(--text-muted)" }}>
-                <div
-                  className="mb-4 w-20 h-20 rounded-full flex items-center justify-center mx-auto"
-                  style={{ backgroundColor: "var(--surface-subtle)" }}>
-                  <StarOutlined className="text-3xl opacity-50" />
-                </div>
-                <p className="text-lg font-medium">
-                  {t("dashboard.manage.order_status.empty_state_title")}
-                </p>
-                <p className="text-sm opacity-60">
-                  {t("dashboard.manage.order_status.empty_state_desc")}
-                </p>
-              </div>
-            ),
-          }}
-        />
-      </div>
+      <Table
+        columns={columns}
+        dataSource={statuses}
+        rowKey="id"
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+        className="admin-loyalty-table"
+      />
 
       <Modal
         title={

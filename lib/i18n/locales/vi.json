@@ -330,6 +330,7 @@
       "messages": {
         "select_table_and_items": "Vui lòng chọn bàn và thêm món",
         "order_created": "Đã tạo order mới",
+        "order_create_failed": "Tạo order thất bại",
         "status_updated": "Đã cập nhật trạng thái món",
         "order_status_updated": "Đã cập nhật trạng thái order",
         "order_status_update_failed": "Cập nhật trạng thái order thất bại"
@@ -343,7 +344,8 @@
         "modal": {
           "title": "Thanh toán",
           "order_label": "Đơn hàng",
-          "total_label": "Tổng tiền",
+          "total_label": "Tạm tính",
+          "final_total_label": "Thanh toán",
           "method_label": "Phương thức thanh toán",
           "cash_label": "Số tiền khách đưa",
           "change_label": "Tiền thối",
@@ -357,16 +359,23 @@
           "cash_insufficient": "Số tiền khách đưa không đủ",
           "cash_success": "Thanh toán tiền mặt thành công",
           "link_created": "Đã tạo link thanh toán",
-          "payment_failed": "Thanh toán thất bại"
+          "payment_failed": "Thanh toán thất bại",
+          "payos_return_success": "Thanh toán PayOS thành công",
+          "payos_return_cancel": "Bạn đã hủy thanh toán PayOS"
         },
         "discount": {
+          "title": "Giảm giá",
           "applying": "Đang áp dụng giảm giá...",
           "membership_applied": "Đã áp dụng giảm giá thành viên",
+          "membership_label": "Giảm theo hạng thành viên",
           "apply_button": "Áp dụng giảm giá",
           "subtotal": "Tạm tính",
           "level": "Hạng thành viên",
           "amount": "Số tiền giảm",
-          "no_discount": "Không có giảm giá thành viên"
+          "no_discount": "Không có giảm giá thành viên",
+          "no_promotions": "Không có mã giảm giá",
+          "min_order": "Đơn tối thiểu",
+          "or": "hoặc"
         }
       }
     },
@@ -711,6 +720,235 @@
         "cancel_reservation_error": "Không thể hủy đặt bàn",
         "customer": "Khách hàng"
       }
+    },
+    "menu": {
+      "stats": {
+        "setup_suffix": " bước",
+        "setup_label": "Thiết lập đơn giản",
+        "menu_items_label": "Món ăn mỗi thực đơn",
+        "reload_suffix": " reload",
+        "realtime_label": "Cập nhật tức thì"
+      },
+      "features": {
+        "step_1": {
+          "tag": "Bước 01 — Danh mục",
+          "title_highlight": "Tùy chỉnh danh mục",
+          "title_suffix": "theo thực đơn nhà hàng",
+          "description": "Tạo và sắp xếp danh mục linh hoạt — Món chính, Khai vị, Tráng miệng, Đồ uống. Thêm món ăn vào từng nhóm với đầy đủ thông tin và hình ảnh.",
+          "image_alt": "Quản lý danh mục",
+          "bullets": {
+            "create_category": "Tạo danh mục và đặt tên tùy ý",
+            "add_dish": "Thêm món ăn vào từng danh mục",
+            "reorder_display": "Sắp xếp thứ tự hiển thị kéo-thả"
+          }
+        },
+        "step_2": {
+          "tag": "Bước 02 — Món ăn",
+          "title_prefix": "Quản lý",
+          "title_highlight": "món ăn",
+          "title_suffix": "toàn diện",
+          "description": "Thêm, chỉnh sửa và kiểm soát từng món ăn với đầy đủ thông tin: tên, mô tả, giá, hình ảnh và trạng thái hiển thị theo thời gian thực.",
+          "image_alt": "Quản lý món ăn",
+          "bullets": {
+            "edit_info": "Chỉnh sửa thông tin và giá món ăn",
+            "attach_multi_category": "Gắn món vào nhiều danh mục cùng lúc",
+            "toggle_visibility": "Ẩn/hiện món ăn tức thì không cần reload"
+          }
+        },
+        "step_3": {
+          "tag": "Bước 03 — Nguyên liệu",
+          "title_prefix": "Kiểm soát",
+          "title_highlight": "nguyên liệu",
+          "title_suffix": "và tồn kho",
+          "description": "Gắn nguyên liệu cho từng món và theo dõi tồn kho theo thời gian thực. Hệ thống tự động cảnh báo khi sắp hết, giúp bếp chủ động xử lý trước khi ảnh hưởng phục vụ.",
+          "image_alt": "Quản lý nguyên liệu",
+          "bullets": {
+            "bind_ingredients": "Gắn nguyên liệu cụ thể cho từng món",
+            "low_stock_alert": "Cảnh báo tự động khi sắp hết nguyên liệu",
+            "auto_hide_out_of_stock": "Tự động ẩn món khi nguyên liệu cạn kiệt"
+          }
+        }
+      }
+    },
+    "customer": {
+      "section_1": {
+        "title": "Gọi món tức thì qua QR",
+        "description": "Khách hàng chỉ cần quét mã QR tại bàn, xem thực đơn đầy đủ và đặt món ngay trên điện thoại — không cần app, không cần chờ nhân viên.",
+        "stats": {
+          "wait_seconds": "Giây chờ đợi",
+          "menu_items": "Món ăn trên menu",
+          "order_steps": "Bước để gọi món"
+        },
+        "cards": {
+          "qr": {
+            "title": "Quét QR tức thì",
+            "description": "Mỗi bàn có mã QR riêng. Khách quét là vào thực đơn ngay, không cần tải app hay đăng nhập."
+          },
+          "realtime": {
+            "title": "Cập nhật thời gian thực",
+            "description": "Trạng thái món ăn, thông báo khi món sắp ra — tất cả hiển thị trực tiếp trên điện thoại khách."
+          },
+          "loyalty": {
+            "title": "Tích điểm tự động",
+            "description": "Mỗi đơn hàng tự động cộng điểm thành viên. Khách theo dõi điểm và đổi ưu đãi ngay tại bàn."
+          }
+        }
+      },
+      "section_2": {
+        "title": "Hạng thành viên & ưu đãi độc quyền",
+        "description": "Hệ thống hạng thành viên tự động nâng cấp theo chi tiêu. Càng lên hạng cao, ưu đãi càng hấp dẫn.",
+        "points_path_title": "Lộ trình tích điểm",
+        "tiers": {
+          "bronze": { "name": "Bronze", "discount": "Giảm 3%", "points": "Từ 0 điểm" },
+          "silver": { "name": "Silver", "discount": "Giảm 5%", "points": "Từ 500 điểm" },
+          "gold": { "name": "Gold", "discount": "Giảm 8%", "points": "Từ 1500 điểm" },
+          "platinum": { "name": "Platinum", "discount": "Giảm 12%", "points": "Từ 5000 điểm" }
+        }
+      },
+      "section_3": {
+        "tag": "AI CHATBOX",
+        "title": "Trợ lý AI gợi ý món theo nhu cầu",
+        "description": "AI hiểu sở thích, chế độ ăn và ngân sách của khách để gợi ý món phù hợp nhất — như một người bạn am hiểu ẩm thực.",
+        "bullets": {
+          "preferences": "Gợi ý theo khẩu vị, dị ứng và chế độ ăn",
+          "instant_reply": "Phản hồi tức thì, không cần chờ nhân viên",
+          "personalization": "Học từ lịch sử đặt món để cá nhân hóa gợi ý"
+        }
+      },
+      "section_4": {
+        "tag": "XEM LẠI ĐƠN HÀNG",
+        "title": "Theo dõi đơn hàng minh bạch từng bước",
+        "description": "Khách hàng thấy toàn bộ đơn hàng, trạng thái từng món, tổng tiền và điểm tích lũy — không cần hỏi nhân viên.",
+        "bullets": {
+          "order_status": "Danh sách món đã gọi với trạng thái thời gian thực",
+          "edit_cancel": "Chỉnh sửa hoặc hủy món trước khi bếp xác nhận",
+          "bill_discount": "Xem tổng hóa đơn và mức giảm giá thành viên",
+          "points_after_payment": "Điểm tích lũy hiển thị ngay sau khi thanh toán"
+        }
+      },
+      "ai_chat": {
+        "title": "AI gợi ý món",
+        "status": "Đang hoạt động",
+        "input_placeholder": "Hỏi AI về món ăn...",
+        "messages": {
+          "1": "Tôi muốn ăn gì đó nhẹ nhàng, ít calo",
+          "2": "Tôi gợi ý Salad Cá Hồi hoặc Súp Bí Đỏ — ít calo, giàu dinh dưỡng và rất phù hợp cho buổi tối.",
+          "3": "Có món nào phù hợp cho người ăn chay không?",
+          "4": "Có! Đậu Hũ Sốt Nấm, Rau Củ Nướng và Cơm Gạo Lứt đều là lựa chọn tuyệt vời cho thực đơn chay."
+        }
+      },
+      "order_review": {
+        "header": {
+          "title": "Đơn hàng — Bàn A02",
+          "item_count": "4 món",
+          "member_badge": "Thành viên Gold"
+        },
+        "items": {
+          "pho_bo": "Phở Bò Tái",
+          "bun_cha": "Bún Chả Hà Nội",
+          "tra_sen": "Trà Sen Vàng",
+          "banh_flan": "Bánh Flan"
+        },
+        "summary": {
+          "subtotal": "Tạm tính",
+          "discount": "Giảm giá Gold (8%)",
+          "total": "Tổng thanh toán"
+        },
+        "points": {
+          "label": "Điểm tích lũy",
+          "suffix": "điểm"
+        },
+        "cta": "Yêu cầu thanh toán"
+      }
+    },
+    "staff_ops": {
+      "status": {
+        "online": "Trực tuyến",
+        "offline": "Ngoại tuyến"
+      },
+      "terminal": {
+        "title": "staff-ops ~ terminal"
+      },
+      "hero": {
+        "title_prefix": "Vận hành nhà hàng",
+        "title_highlight": "thông minh",
+        "description": "Hệ thống quản lý nhân viên toàn diện — từ tạo tài khoản, phân quyền, đến xử lý order và thanh toán ngay tại bàn.",
+        "staff": {
+          "an": { "name": "Nguyễn Văn An", "role": "Phục vụ" },
+          "bich": { "name": "Trần Thị Bích", "role": "Thu ngân" },
+          "duc": { "name": "Lê Minh Đức", "role": "Phục vụ" }
+        }
+      },
+      "section_1": {
+        "tag": "BƯỚC 01",
+        "title": "Tạo và quản lý tài khoản nhân viên",
+        "description": "Chủ quán tạo tài khoản, phân quyền và quản lý toàn bộ nhân sự ngay trên hệ thống. Mỗi nhân viên có dashboard riêng phù hợp với vai trò của họ.",
+        "bullets": {
+          "create_account": "Tạo tài khoản nhân viên mới chỉ trong vài giây",
+          "assign_roles": "Phân quyền theo vai trò: phục vụ, thu ngân, quản lý",
+          "edit_disable": "Chỉnh sửa thông tin, đổi mật khẩu, vô hiệu hóa tài khoản"
+        },
+        "terminal": {
+          "name_label": "Nhập tên",
+          "email_label": "Email",
+          "role_label": "Vai trò",
+          "shift_label": "Ca làm",
+          "shift_value": "Sáng / Chiều",
+          "success": "[OK] Tài khoản đã được tạo thành công.",
+          "note": "ID: STF-00142 | Mật khẩu tạm thời đã gửi qua email."
+        }
+      },
+      "section_2": {
+        "tag": "BƯỚC 02",
+        "title": "Nghiệp vụ nhân viên tại bàn",
+        "description": "Nhân viên xử lý toàn bộ quy trình phục vụ — từ check-in khách, gọi món, chỉnh sửa đến hủy order — tất cả trên một giao diện đơn giản.",
+        "bullets": {
+          "checkin": "Check-in khách, mở bàn và bắt đầu phục vụ",
+          "add_items": "Thêm món vào order bất kỳ lúc nào trong quá trình phục vụ",
+          "cancel_items": "Hủy món với lý do, cập nhật tức thì xuống bếp",
+          "update_qty_note": "Chỉnh sửa số lượng, ghi chú đặc biệt cho từng món"
+        },
+        "terminal": {
+          "table_meta": "Bàn A02 — 4 khách — 19:32",
+          "items": {
+            "pho_bo": "Phở bò đặc biệt",
+            "com_tam": "Cơm tấm sườn bì",
+            "nuoc_cam": "Nước cam ép",
+            "banh_mi": "Bánh mì thịt nướng"
+          },
+          "status": {
+            "done": "Xong",
+            "pending": "Chờ",
+            "cancelled": "Hủy"
+          },
+          "total_label": "Tổng cộng"
+        }
+      },
+      "section_3": {
+        "tag": "BƯỚC 03",
+        "title": "Thanh toán linh hoạt",
+        "description": "Hỗ trợ nhiều hình thức thanh toán, từ tiền mặt đến chuyển khoản QR. Hệ thống tự động tính toán, xuất hóa đơn và cập nhật điểm tích lũy cho khách hàng.",
+        "bullets": {
+          "cash": "Thanh toán tiền mặt nhanh chóng, in hóa đơn ngay tại bàn",
+          "transfer": "Chuyển khoản qua QR code, xác nhận tự động tức thì",
+          "loyalty_points": "Tích điểm tự động sau mỗi giao dịch thành công"
+        },
+        "terminal": {
+          "invoice_title": "Hóa đơn bàn A02",
+          "rows": {
+            "subtotal": "Tổng món ăn",
+            "vat": "Thuế VAT (8%)",
+            "discount": "Giảm giá"
+          },
+          "total_label": "Thanh toán",
+          "method_label": "Phương thức:",
+          "methods": {
+            "cash": "Tiền mặt",
+            "transfer": "Chuyển khoản"
+          },
+          "success": "[OK] Thanh toán thành công — 19:58"
+        }
+      }
     }
   },
   "dashboard": {
@@ -783,6 +1021,26 @@
       "overview_load_failed": "Không thể tải dữ liệu tổng quan",
       "export_success": "Xuất báo cáo thành công",
       "export_failed": "Xuất báo cáo thất bại"
+    },
+    "best_selling_dishes": {
+      "title": "Món Bán Chạy",
+      "subtitle": "Top {{count}}",
+      "loading": "Đang tải dữ liệu...",
+      "empty": "Chưa có dữ liệu bán hàng",
+      "sold": "Đã bán",
+      "revenue": "Doanh thu"
+    },
+    "latest_feedbacks": {
+      "title": "Đánh Giá Mới Nhất",
+      "subtitle": "{{count}} đánh giá",
+      "loading": "Đang tải đánh giá...",
+      "empty": "Chưa có đánh giá",
+      "rating": "Đánh giá",
+      "time_ago": {
+        "minutes": "{{count}} phút trước",
+        "hours": "{{count}} giờ trước",
+        "days": "{{count}} ngày trước"
+      }
     },
     "quick_actions": {
       "title": "Thao tác nhanh",
@@ -865,7 +1123,8 @@
         "suppliers": "Nhà cung cấp",
         "loyalty": "Hạng thành viên",
         "order_status": "Trạng thái món ăn",
-        "order_level_status": "Trạng thái đơn hàng"
+        "order_level_status": "Trạng thái đơn hàng",
+        "promotions": "Khuyến mãi"
       },
       "ingredient_categories": {
         "title": "Loại nguyên liệu",
@@ -1093,6 +1352,38 @@
           "delete_failed": "Không thể xóa trạng thái đơn hàng",
           "save_failed": "Không thể lưu trạng thái đơn hàng",
           "update_failed": "Không thể cập nhật trạng thái mặc định"
+        }
+      },
+      "promotion": {
+        "title": "Khuyến mãi",
+        "desc": "Quản lý chương trình khuyến mãi và mã giảm giá",
+        "add": "Thêm khuyến mãi",
+        "edit": "Sửa khuyến mãi",
+        "code": "Mã",
+        "name": "Tên",
+        "discount": "Giảm giá",
+        "discount_type": "Loại giảm giá",
+        "discount_value": "Giá trị giảm",
+        "max_discount": "Giảm tối đa",
+        "min_order": "Đơn tối thiểu",
+        "usage_limit": "Giới hạn sử dụng",
+        "usage_per_customer": "Lượt dùng mỗi khách",
+        "apply": "Áp dụng",
+        "valid_date": "Hiệu lực từ - đến",
+        "valid_from": "Hiệu lực từ",
+        "valid_to": "Hiệu lực đến",
+        "status": "Trạng thái",
+        "toasts": {
+          "fetch_error": "Không thể tải danh sách khuyến mãi",
+          "required_fields": "Vui lòng nhập các trường bắt buộc",
+          "create_success": "Tạo khuyến mãi thành công",
+          "update_success": "Cập nhật khuyến mãi thành công",
+          "save_error": "Không thể lưu khuyến mãi",
+          "delete_success": "Xóa khuyến mãi thành công",
+          "delete_error": "Không thể xóa khuyến mãi",
+          "activate_success": "Đã kích hoạt khuyến mãi",
+          "deactivate_success": "Đã tắt khuyến mãi",
+          "status_error": "Không thể cập nhật trạng thái"
         }
       },
       "notifications": {
@@ -1450,6 +1741,29 @@
       }
     },
     "staff": {
+      "menu": {
+        "dashboard": "Tổng quan",
+        "orders": "Đơn hàng",
+        "orders_short": "Order",
+        "tables": "Bàn",
+        "tables_short": "Bàn",
+        "kitchen": "Bếp",
+        "checkout": "Thanh toán",
+        "reservations": "Đặt bàn",
+        "attendance": "Chấm công"
+      },
+      "user_menu": {
+        "profile": "Hồ sơ",
+        "settings": "Cài đặt",
+        "logout": "Đăng xuất"
+      },
+      "sidebar": {
+        "brand": "Nhà hàng Demo",
+        "staff_role": "Nhân viên",
+        "working": "Đang làm việc",
+        "started": "Bắt đầu",
+        "today": "Hôm nay"
+      },
       "title": "Quản lý nhân viên",
       "subtitle": "Quản lý đội ngũ nhân viên",
       "add_staff": "Thêm nhân viên",
@@ -2041,8 +2355,11 @@
   },
   "homepage": {
     "header": {
+      "logo_alt": "Logo nhà hàng",
+      "brand": "Nhà hàng",
       "product": "Sản phẩm",
       "workflow": "Quy trình",
+      "about": "Về chúng tôi",
       "testimonials": "Khách hàng",
       "contact": "Liên hệ",
       "staff": "Staff",
@@ -2093,8 +2410,33 @@
     "features": {
       "tag": "Tính năng",
       "title_prefix": "Tính năng nổi bật của ",
+      "brand": "Nhà hàng",
       "description": "Tất cả công cụ bạn cần để vận hành nhà hàng – trong một giao diện trực quan.",
       "items": {
+        "analytics": {
+          "title": "Analytics",
+          "description": "Xem dữ liệu bán hàng chảy vào biểu đồ và báo cáo theo thời gian thực."
+        },
+        "tables": {
+          "title": "Tables",
+          "description": "Quan sát sơ đồ bàn và trạng thái phục vụ tức thì trên toàn bộ khu vực."
+        },
+        "menu": {
+          "title": "Menu",
+          "description": "Admin tạo món, chỉnh menu và khách nhìn thấy thay đổi ngay lập tức."
+        },
+        "reservations": {
+          "title": "Reservations",
+          "description": "Customer đặt bàn, Admin xử lý và Staff check-in theo luồng rõ ràng."
+        },
+        "customer": {
+          "title": "Customer",
+          "description": "Theo dõi lịch sử đơn hàng, khách quay lại và dữ liệu loyalty của từng khách."
+        },
+        "staff_ops": {
+          "title": "Staff Ops",
+          "description": "KDS và quy trình vận hành cho Staff, Kitchen và Admin trong một màn hình."
+        },
         "table_management": {
           "title": "Quản lý đặt bàn thông minh",
           "description": "Hệ thống đặt bàn tự động với giao diện trực quan, giúp tối ưu hóa sơ đồ bàn và giảm thời gian chờ cho khách hàng."
@@ -3659,6 +4001,421 @@
       "title": "Cần hỗ trợ?",
       "description": "Để thay đổi hoặc hủy đặt bàn, vui lòng liên hệ trực tiếp với nhà hàng.",
       "get_directions": "Chỉ đường"
+    }
+  },
+  "tour": {
+    "layout": {
+      "logo_alt": "Logo nhà hàng",
+      "modules": {
+        "analytics": "Phân tích",
+        "tables": "Bàn",
+        "menu": "Thực đơn",
+        "reservations": "Đặt bàn",
+        "customer": "Khách hàng",
+        "staff_ops": "Vận hành"
+      }
+    },
+    "analytics": {
+      "how_it_works": {
+        "title": "Cách hoạt động",
+        "description": "Ba bước đơn giản để khai thác dữ liệu nhà hàng của bạn"
+      },
+      "steps": {
+        "data_collection": {
+          "title": "Thu thập dữ liệu",
+          "description": "Dữ liệu đến từ đơn hàng, thanh toán và tương tác khách hàng — được đồng bộ theo thời gian thực."
+        },
+        "smart_aggregation": {
+          "title": "Tổng hợp thông minh",
+          "description": "Biểu đồ tổng hợp theo ngày, bàn và danh mục, kèm khả năng drill-down tương tác."
+        },
+        "actionable_insights": {
+          "title": "Insight hành động",
+          "description": "Admin xem xu hướng, xác định cơ hội và ra quyết định dựa trên dữ liệu."
+        }
+      },
+      "interactive": {
+        "title": "Xem doanh thu đúng nghĩa",
+        "description": "Chọn mốc thời gian để xem doanh thu và số đơn hàng theo từng mốc 7 ngày, 4 tuần, 6 tháng và 5 năm gần nhất."
+      },
+      "filters": {
+        "day": "Ngày",
+        "week": "Tuần",
+        "month": "Tháng",
+        "year": "Năm"
+      },
+      "summary": {
+        "total_revenue": "Tổng doanh thu",
+        "total_orders": "Tổng đơn"
+      },
+      "chart": {
+        "revenue_by_filter": "Doanh thu theo {{filter}}",
+        "orders_by_filter": "Số đơn theo {{filter}}"
+      }
+    },
+    "reservations": {
+      "header": {
+        "tag": "ĐẶT BÀN TRỰC TUYẾN",
+        "title_prefix": "Quy trình",
+        "highlight": "đặt bàn",
+        "description": "Nhấn vào từng bước để xem chi tiết quy trình — từ khách hàng đến nhân viên phục vụ."
+      },
+      "done_message": "Quy trình hoàn chỉnh — khách hàng đã được phục vụ",
+      "steps": {
+        "step_1": {
+          "label": "Bước 1",
+          "title": "Khách hàng đặt bàn",
+          "summary": "Chọn thời gian, số người và bàn phù hợp",
+          "script": {
+            "select_time": {
+              "heading": "Chọn thời gian & số người",
+              "body": "Khách hàng chọn ngày, giờ đến và số lượng người trong nhóm. Hệ thống hiển thị các khung giờ còn trống theo thời gian thực."
+            },
+            "select_table": {
+              "heading": "Chọn bàn trên sơ đồ",
+              "body": "Sau khi chọn thời gian, khách xem sơ đồ tầng và chọn bàn mong muốn. Các bàn đã được đặt hoặc đang bận sẽ bị ẩn tự động."
+            },
+            "view_360": {
+              "heading": "Xem góc nhìn 360° của bàn",
+              "body": "Trước khi xác nhận, khách có thể xoay và xem toàn cảnh góc nhìn thực tế từ bàn đó — đảm bảo chọn đúng vị trí ưng ý."
+            },
+            "confirm": {
+              "heading": "Xác nhận đặt bàn",
+              "body": "Khách điền thông tin liên hệ và nhấn đặt bàn. Yêu cầu được gửi ngay đến nhà hàng để xác nhận."
+            }
+          }
+        },
+        "step_2": {
+          "label": "Bước 2",
+          "title": "Nhà hàng xác nhận",
+          "summary": "Admin duyệt và xác nhận lịch đặt bàn",
+          "script": {
+            "receive_request": {
+              "heading": "Nhận yêu cầu đặt bàn",
+              "body": "Admin nhận thông báo ngay khi có yêu cầu mới. Danh sách đặt bàn hiển thị đầy đủ thông tin: tên khách, giờ, số người, bàn đã chọn."
+            },
+            "confirm_or_adjust": {
+              "heading": "Xác nhận hoặc điều chỉnh",
+              "body": "Admin xem xét và xác nhận đặt bàn, hoặc đề xuất bàn/giờ thay thế nếu cần. Khách nhận thông báo ngay lập tức."
+            },
+            "assign_staff": {
+              "heading": "Phân công nhân viên",
+              "body": "Sau khi xác nhận, admin có thể gắn nhân viên phụ trách bàn đó để chuẩn bị đón khách đúng giờ."
+            }
+          }
+        },
+        "step_3": {
+          "label": "Bước 3",
+          "title": "Nhân viên đón khách",
+          "summary": "Check-in và dẫn khách vào bàn đã đặt",
+          "script": {
+            "checkin": {
+              "heading": "Check-in khách đến",
+              "body": "Nhân viên tra cứu tên hoặc mã đặt bàn, xác nhận danh tính và đánh dấu khách đã đến trong hệ thống."
+            },
+            "guide_to_table": {
+              "heading": "Dẫn khách vào bàn",
+              "body": "Hệ thống hiển thị đúng bàn đã đặt trên sơ đồ. Nhân viên dẫn khách đến đúng vị trí mà không cần hỏi lại."
+            },
+            "update_table_status": {
+              "heading": "Cập nhật trạng thái bàn",
+              "body": "Bàn tự động chuyển sang trạng thái \"Đang dùng bữa\". Các bộ phận khác trong nhà hàng cập nhật theo thời gian thực."
+            }
+          }
+        }
+      }
+    },
+    "tables": {
+      "section_1": {
+        "tag": "Bước 01 — Thiết kế sơ đồ",
+        "title_prefix": "Tải ảnh sơ đồ nhà hàng &",
+        "title_highlight": "thêm bàn",
+        "title_suffix": "cho từng tầng",
+        "description": "Chủ nhà hàng có thể tải lên ảnh sơ đồ nhà hàng thực tế của từng tầng, sau đó đặt và đặt tên bàn trực tiếp lên sơ đồ đó. Khách hàng khi đặt bàn sẽ thấy đúng vị trí ngồi trong nhà hàng — không còn nhầm lẫn hay mất thời gian tìm chỗ.",
+        "image_alt": "Sơ đồ nhà hàng",
+        "badge": "Sơ đồ tầng trực quan"
+      },
+      "highlights": {
+        "upload_floor_map": "Tải ảnh sơ đồ từng tầng (PNG, JPG)",
+        "add_and_name_table": "Thêm & đặt tên bàn cho từng khu vực",
+        "real_position_view": "Khách hàng thấy đúng vị trí ngồi thực tế"
+      },
+      "panorama": {
+        "viewer_title": "360° Panorama Viewer",
+        "drag_hint": "Kéo để xoay 360°",
+        "tag": "Bước 02 — Góc nhìn thực tế",
+        "title_prefix": "Ảnh",
+        "title_highlight": "360° panorama",
+        "title_suffix": "cho từng bàn",
+        "description": "Chủ nhà hàng tải lên ảnh 360° cho từng bàn để khách hàng có thể xoay và xem toàn cảnh góc nhìn thực tế trước khi đặt chỗ. Không còn bất ngờ khi đến nơi — khách biết chính xác mình sẽ ngồi ở đâu, nhìn thấy gì.",
+        "highlights": {
+          "upload_360": "Tải ảnh 360° cho từng bàn (JPG equirectangular)",
+          "rotate_preview": "Khách xoay góc nhìn toàn cảnh trước khi đặt bàn",
+          "increase_conversion": "Tăng tỷ lệ chuyển đổi đặt bàn nhờ trải nghiệm thực tế"
+        }
+      },
+      "qr": {
+        "title_prefix": "Mỗi bàn một",
+        "title_highlight": "mã QR riêng",
+        "title_suffix": "để gọi món tức thì",
+        "description": "Khách chỉ cần quét mã QR trên bàn là vào thẳng menu — không cần app, không cần nhân viên hỗ trợ. Mỗi đơn hàng được gắn đúng bàn, đúng khu vực, loại bỏ hoàn toàn nhầm lẫn trong quá trình phục vụ.",
+        "image_alt": "QR code bàn ăn",
+        "badge": "Quét & gọi món ngay",
+        "highlights": {
+          "unique_qr_per_table": "Mỗi bàn có 1 mã QR độc lập — quét là vào menu ngay",
+          "auto_bind_order": "Đơn hàng tự động gắn đúng bàn, không cần nhập tay",
+          "no_cross_table_mixup": "Không bao giờ nhầm order giữa các bàn",
+          "faster_service": "Phục vụ nhanh hơn — khách chủ động, nhân viên tập trung"
+        }
+      },
+      "steps": {
+        "1": {
+          "title": "Thiết kế sơ đồ tầng",
+          "description": "Chủ nhà hàng tải ảnh từng tầng và sắp xếp bàn trực quan trên bản đồ kéo-thả."
+        },
+        "2": {
+          "title": "Trạng thái bàn thời gian thực",
+          "description": "Nhân viên theo dõi trạng thái từng bàn — trống, đang dùng, đã đặt trước hoặc đang dọn."
+        },
+        "3": {
+          "title": "Xếp chỗ thông minh",
+          "description": "Khách hàng dễ dàng biết vị trí ngồi, nhân viên phân bổ bàn nhanh chóng và hiệu quả."
+        }
+      }
+    },
+    "menu": {
+      "stats": {
+        "setup_suffix": " bước",
+        "setup_label": "Thiết lập đơn giản",
+        "menu_items_label": "Món ăn mỗi thực đơn",
+        "reload_suffix": " reload",
+        "realtime_label": "Cập nhật tức thì"
+      },
+      "features": {
+        "step_1": {
+          "tag": "Bước 01 — Danh mục",
+          "title_highlight": "Tùy chỉnh danh mục",
+          "title_suffix": "theo thực đơn nhà hàng",
+          "description": "Tạo và sắp xếp danh mục linh hoạt — Món chính, Khai vị, Tráng miệng, Đồ uống. Thêm món ăn vào từng nhóm với đầy đủ thông tin và hình ảnh.",
+          "image_alt": "Quản lý danh mục",
+          "bullets": {
+            "create_category": "Tạo danh mục và đặt tên tùy ý",
+            "add_dish": "Thêm món ăn vào từng danh mục",
+            "reorder_display": "Sắp xếp thứ tự hiển thị kéo-thả"
+          }
+        },
+        "step_2": {
+          "tag": "Bước 02 — Món ăn",
+          "title_prefix": "Quản lý",
+          "title_highlight": "món ăn",
+          "title_suffix": "toàn diện",
+          "description": "Thêm, chỉnh sửa và kiểm soát từng món ăn với đầy đủ thông tin: tên, mô tả, giá, hình ảnh và trạng thái hiển thị theo thời gian thực.",
+          "image_alt": "Quản lý món ăn",
+          "bullets": {
+            "edit_info": "Chỉnh sửa thông tin và giá món ăn",
+            "attach_multi_category": "Gắn món vào nhiều danh mục cùng lúc",
+            "toggle_visibility": "Ẩn/hiện món ăn tức thì không cần reload"
+          }
+        },
+        "step_3": {
+          "tag": "Bước 03 — Nguyên liệu",
+          "title_prefix": "Kiểm soát",
+          "title_highlight": "nguyên liệu",
+          "title_suffix": "và tồn kho",
+          "description": "Gắn nguyên liệu cho từng món và theo dõi tồn kho theo thời gian thực. Hệ thống tự động cảnh báo khi sắp hết, giúp bếp chủ động xử lý trước khi ảnh hưởng phục vụ.",
+          "image_alt": "Quản lý nguyên liệu",
+          "bullets": {
+            "bind_ingredients": "Gắn nguyên liệu cụ thể cho từng món",
+            "low_stock_alert": "Cảnh báo tự động khi sắp hết nguyên liệu",
+            "auto_hide_out_of_stock": "Tự động ẩn món khi nguyên liệu cạn kiệt"
+          }
+        }
+      }
+    },
+    "customer": {
+      "section_1": {
+        "title": "Gọi món tức thì qua QR",
+        "description": "Khách hàng chỉ cần quét mã QR tại bàn, xem thực đơn đầy đủ và đặt món ngay trên điện thoại — không cần app, không cần chờ nhân viên.",
+        "stats": {
+          "wait_seconds": "Giây chờ đợi",
+          "menu_items": "Món ăn trên menu",
+          "order_steps": "Bước để gọi món"
+        },
+        "cards": {
+          "qr": {
+            "title": "Quét QR tức thì",
+            "description": "Mỗi bàn có mã QR riêng. Khách quét là vào thực đơn ngay, không cần tải app hay đăng nhập."
+          },
+          "realtime": {
+            "title": "Cập nhật thời gian thực",
+            "description": "Trạng thái món ăn, thông báo khi món sắp ra — tất cả hiển thị trực tiếp trên điện thoại khách."
+          },
+          "loyalty": {
+            "title": "Tích điểm tự động",
+            "description": "Mỗi đơn hàng tự động cộng điểm thành viên. Khách theo dõi điểm và đổi ưu đãi ngay tại bàn."
+          }
+        }
+      },
+      "section_2": {
+        "title": "Hạng thành viên & ưu đãi độc quyền",
+        "description": "Hệ thống hạng thành viên tự động nâng cấp theo chi tiêu. Càng lên hạng cao, ưu đãi càng hấp dẫn.",
+        "points_path_title": "Lộ trình tích điểm",
+        "tiers": {
+          "bronze": { "name": "Bronze", "discount": "Giảm 3%", "points": "Từ 0 điểm" },
+          "silver": { "name": "Silver", "discount": "Giảm 5%", "points": "Từ 500 điểm" },
+          "gold": { "name": "Gold", "discount": "Giảm 8%", "points": "Từ 1500 điểm" },
+          "platinum": { "name": "Platinum", "discount": "Giảm 12%", "points": "Từ 5000 điểm" }
+        }
+      },
+      "section_3": {
+        "tag": "AI CHATBOX",
+        "title": "Trợ lý AI gợi ý món theo nhu cầu",
+        "description": "AI hiểu sở thích, chế độ ăn và ngân sách của khách để gợi ý món phù hợp nhất — như một người bạn am hiểu ẩm thực.",
+        "bullets": {
+          "preferences": "Gợi ý theo khẩu vị, dị ứng và chế độ ăn",
+          "instant_reply": "Phản hồi tức thì, không cần chờ nhân viên",
+          "personalization": "Học từ lịch sử đặt món để cá nhân hóa gợi ý"
+        }
+      },
+      "section_4": {
+        "tag": "XEM LẠI ĐƠN HÀNG",
+        "title": "Theo dõi đơn hàng minh bạch từng bước",
+        "description": "Khách hàng thấy toàn bộ đơn hàng, trạng thái từng món, tổng tiền và điểm tích lũy — không cần hỏi nhân viên.",
+        "bullets": {
+          "order_status": "Danh sách món đã gọi với trạng thái thời gian thực",
+          "edit_cancel": "Chỉnh sửa hoặc hủy món trước khi bếp xác nhận",
+          "bill_discount": "Xem tổng hóa đơn và mức giảm giá thành viên",
+          "points_after_payment": "Điểm tích lũy hiển thị ngay sau khi thanh toán"
+        }
+      },
+      "ai_chat": {
+        "title": "AI gợi ý món",
+        "status": "Đang hoạt động",
+        "input_placeholder": "Hỏi AI về món ăn...",
+        "messages": {
+          "1": "Tôi muốn ăn gì đó nhẹ nhàng, ít calo",
+          "2": "Tôi gợi ý Salad Cá Hồi hoặc Súp Bí Đỏ — ít calo, giàu dinh dưỡng và rất phù hợp cho buổi tối.",
+          "3": "Có món nào phù hợp cho người ăn chay không?",
+          "4": "Có! Đậu Hũ Sốt Nấm, Rau Củ Nướng và Cơm Gạo Lứt đều là lựa chọn tuyệt vời cho thực đơn chay."
+        }
+      },
+      "order_review": {
+        "header": {
+          "title": "Đơn hàng — Bàn A02",
+          "item_count": "4 món",
+          "member_badge": "Thành viên Gold"
+        },
+        "items": {
+          "pho_bo": "Phở Bò Tái",
+          "bun_cha": "Bún Chả Hà Nội",
+          "tra_sen": "Trà Sen Vàng",
+          "banh_flan": "Bánh Flan"
+        },
+        "summary": {
+          "subtotal": "Tạm tính",
+          "discount": "Giảm giá Gold (8%)",
+          "total": "Tổng thanh toán"
+        },
+        "points": {
+          "label": "Điểm tích lũy",
+          "suffix": "điểm"
+        },
+        "cta": "Yêu cầu thanh toán"
+      }
+    },
+    "staff_ops": {
+      "status": {
+        "online": "Trực tuyến",
+        "offline": "Ngoại tuyến"
+      },
+      "terminal": {
+        "title": "staff-ops ~ terminal"
+      },
+      "hero": {
+        "title_prefix": "Vận hành nhà hàng",
+        "title_highlight": "thông minh",
+        "description": "Hệ thống quản lý nhân viên toàn diện — từ tạo tài khoản, phân quyền, đến xử lý order và thanh toán ngay tại bàn.",
+        "staff": {
+          "an": { "name": "Nguyễn Văn An", "role": "Phục vụ" },
+          "bich": { "name": "Trần Thị Bích", "role": "Thu ngân" },
+          "duc": { "name": "Lê Minh Đức", "role": "Phục vụ" }
+        }
+      },
+      "section_1": {
+        "tag": "BƯỚC 01",
+        "title": "Tạo và quản lý tài khoản nhân viên",
+        "description": "Chủ quán tạo tài khoản, phân quyền và quản lý toàn bộ nhân sự ngay trên hệ thống. Mỗi nhân viên có dashboard riêng phù hợp với vai trò của họ.",
+        "bullets": {
+          "create_account": "Tạo tài khoản nhân viên mới chỉ trong vài giây",
+          "assign_roles": "Phân quyền theo vai trò: phục vụ, thu ngân, quản lý",
+          "edit_disable": "Chỉnh sửa thông tin, đổi mật khẩu, vô hiệu hóa tài khoản"
+        },
+        "terminal": {
+          "name_label": "Nhập tên",
+          "email_label": "Email",
+          "role_label": "Vai trò",
+          "shift_label": "Ca làm",
+          "shift_value": "Sáng / Chiều",
+          "success": "[OK] Tài khoản đã được tạo thành công.",
+          "note": "ID: STF-00142 | Mật khẩu tạm thời đã gửi qua email."
+        }
+      },
+      "section_2": {
+        "tag": "BƯỚC 02",
+        "title": "Nghiệp vụ nhân viên tại bàn",
+        "description": "Nhân viên xử lý toàn bộ quy trình phục vụ — từ check-in khách, gọi món, chỉnh sửa đến hủy order — tất cả trên một giao diện đơn giản.",
+        "bullets": {
+          "checkin": "Check-in khách, mở bàn và bắt đầu phục vụ",
+          "add_items": "Thêm món vào order bất kỳ lúc nào trong quá trình phục vụ",
+          "cancel_items": "Hủy món với lý do, cập nhật tức thì xuống bếp",
+          "update_qty_note": "Chỉnh sửa số lượng, ghi chú đặc biệt cho từng món"
+        },
+        "terminal": {
+          "table_meta": "Bàn A02 — 4 khách — 19:32",
+          "items": {
+            "pho_bo": "Phở bò đặc biệt",
+            "com_tam": "Cơm tấm sườn bì",
+            "nuoc_cam": "Nước cam ép",
+            "banh_mi": "Bánh mì thịt nướng"
+          },
+          "status": {
+            "done": "Xong",
+            "pending": "Chờ",
+            "cancelled": "Hủy"
+          },
+          "total_label": "Tổng cộng"
+        }
+      },
+      "section_3": {
+        "tag": "BƯỚC 03",
+        "title": "Thanh toán linh hoạt",
+        "description": "Hỗ trợ nhiều hình thức thanh toán, từ tiền mặt đến chuyển khoản QR. Hệ thống tự động tính toán, xuất hóa đơn và cập nhật điểm tích lũy cho khách hàng.",
+        "bullets": {
+          "cash": "Thanh toán tiền mặt nhanh chóng, in hóa đơn ngay tại bàn",
+          "transfer": "Chuyển khoản qua QR code, xác nhận tự động tức thì",
+          "loyalty_points": "Tích điểm tự động sau mỗi giao dịch thành công"
+        },
+        "terminal": {
+          "invoice_title": "Hóa đơn bàn A02",
+          "rows": {
+            "subtotal": "Tổng món ăn",
+            "vat": "Thuế VAT (8%)",
+            "discount": "Giảm giá"
+          },
+          "total_label": "Thanh toán",
+          "method_label": "Phương thức:",
+          "methods": {
+            "cash": "Tiền mặt",
+            "transfer": "Chuyển khoản"
+          },
+          "success": "[OK] Thanh toán thành công — 19:58"
+        }
+      }
+    }
+  },
+  "common": {
+    "actions": {
+      "exporting": "Đang xuất..."
     }
   }
 }

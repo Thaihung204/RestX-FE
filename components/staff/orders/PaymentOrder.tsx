@@ -1,6 +1,17 @@
-import orderService, { ApplyDiscountResponse } from "@/lib/services/orderService";
-import { CrownOutlined } from "@ant-design/icons";
-import { Button, InputNumber, Modal, Space, Spin, Typography } from "antd";
+"use client";
+
+import orderService, {
+  ApplyDiscountResponse,
+} from "@/lib/services/orderService";
+import promotionService, { Promotion } from "@/lib/services/promotionService";
+import {
+  BankOutlined,
+  CheckCircleFilled,
+  CrownOutlined,
+  DollarOutlined,
+  TagOutlined,
+} from "@ant-design/icons";
+import { Button, InputNumber, Modal, Spin, Typography } from "antd";
 import { useCallback, useEffect, useState } from "react";
 
 const { Text } = Typography;
@@ -15,6 +26,7 @@ interface PaymentOption {
 interface SelectedOrder {
   id: string;
   reference: string;
+  subTotal: number;
   total: number;
   customerId?: string;
 }
@@ -46,214 +58,581 @@ export default function PaymentOrder({
   onConfirm,
   t,
 }: PaymentOrderProps) {
-  const [discountData, setDiscountData] = useState<ApplyDiscountResponse | null>(null);
+  const [discountData, setDiscountData] =
+    useState<ApplyDiscountResponse | null>(null);
   const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
+  const [activePromotions, setActivePromotions] = useState<Promotion[]>([]);
+  const [isLoadingPromotions, setIsLoadingPromotions] = useState(false);
+  const [discountMode, setDiscountMode] = useState<
+    "none" | "promotion" | "membership"
+  >("none");
+  const [selectedPromoCode, setSelectedPromoCode] = useState<string | null>(
+    null,
+  );
 
   const hasCustomer = !!(
     selectedOrder?.customerId &&
     selectedOrder.customerId !== "00000000-0000-0000-0000-000000000000"
   );
 
-  const effectiveTotal = discountData?.totalAmount ?? selectedOrder?.total ?? 0;
-
-  const applyMembershipDiscount = useCallback(async () => {
-    if (!selectedOrder || !hasCustomer) return;
-
-    setIsApplyingDiscount(true);
-    try {
-      const result = await orderService.applyDiscount(selectedOrder.id, {
-        promotionCode: null,
-        applyMembership: true,
-      });
-      setDiscountData(result);
-      setCashReceived(result.totalAmount);
-    } catch (error) {
-      console.error("Failed to apply discount:", error);
-    } finally {
-      setIsApplyingDiscount(false);
-    }
-  }, [selectedOrder, hasCustomer, setCashReceived]);
+  // subTotal = tạm tính (giá gốc bill từ OrderDto.subTotal)
+  // total = totalAmount của order (trước khi apply discount API)
+  // finalTotal = totalAmount sau khi apply discount API (hoặc total nếu chưa apply)
+  const subTotal = selectedOrder?.subTotal ?? selectedOrder?.total ?? 0;
+  const finalTotal = discountData?.totalAmount ?? selectedOrder?.total ?? 0;
+  const hasDiscount = !!(discountData && discountData.discountAmount > 0);
 
   useEffect(() => {
-    if (isOpen && selectedOrder && hasCustomer) {
-      applyMembershipDiscount();
-    }
     if (!isOpen) {
       setDiscountData(null);
+      setDiscountMode("none");
+      setSelectedPromoCode(null);
+      setActivePromotions([]);
+      return;
     }
-  }, [isOpen, selectedOrder?.id, hasCustomer, applyMembershipDiscount]);
+    const fetchPromotions = async () => {
+      setIsLoadingPromotions(true);
+      try {
+        const data = await promotionService.getActivePromotions();
+        setActivePromotions(data);
+      } catch {
+        setActivePromotions([]);
+      } finally {
+        setIsLoadingPromotions(false);
+      }
+    };
+    fetchPromotions();
+  }, [isOpen]);
+
+  const applyDiscount = useCallback(
+    async (mode: "promotion" | "membership", promoCode?: string | null) => {
+      if (!selectedOrder) return;
+      setIsApplyingDiscount(true);
+      try {
+        const result = await orderService.applyDiscount(selectedOrder.id, {
+          promotionCode: mode === "promotion" ? (promoCode ?? null) : null,
+          applyMembership: mode === "membership",
+        });
+        setDiscountData(result);
+        setCashReceived(result.totalAmount);
+      } catch (error) {
+        console.error("Failed to apply discount:", error);
+      } finally {
+        setIsApplyingDiscount(false);
+      }
+    },
+    [selectedOrder, setCashReceived],
+  );
+
+  const handleSelectPromotion = async (code: string) => {
+    if (selectedPromoCode === code && discountMode === "promotion") {
+      setSelectedPromoCode(null);
+      setDiscountMode("none");
+      setDiscountData(null);
+      setCashReceived(selectedOrder?.total ?? 0);
+      return;
+    }
+    setDiscountMode("promotion");
+    setSelectedPromoCode(code);
+    await applyDiscount("promotion", code);
+  };
+
+  const handleSelectMembership = async () => {
+    if (discountMode === "membership") {
+      setDiscountMode("none");
+      setSelectedPromoCode(null);
+      setDiscountData(null);
+      setCashReceived(selectedOrder?.total ?? 0);
+      return;
+    }
+    setDiscountMode("membership");
+    setSelectedPromoCode(null);
+    await applyDiscount("membership");
+  };
 
   return (
     <Modal
-      title={<span style={{ fontSize: 16, fontWeight: 700 }}>{t("staff.orders.payment.modal.title")}</span>}
+      title={
+        <span style={{ fontSize: 15, fontWeight: 700 }}>
+          {selectedOrder?.reference
+            ? `#${selectedOrder.reference}`
+            : t("staff.orders.payment.modal.title")}
+        </span>
+      }
       open={isOpen}
       onCancel={onClose}
       footer={null}
       centered
       width={440}
       zIndex={1200}
-      styles={{ body: { padding: "16px 18px 20px" } }}>
+      styles={{ body: { padding: "4px 16px 16px" } }}>
       {selectedOrder && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ padding: 12, background: "var(--primary-5, #f0f7ff)", borderRadius: 10, border: "1px solid var(--primary-20, #bae7ff)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <div>
-                <Text type="secondary">{t("staff.orders.payment.modal.order_label")}</Text>
-                <Text strong style={{ display: "block", fontSize: 14, lineHeight: 1.3 }}>{selectedOrder.reference}</Text>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <Text type="secondary">{t("staff.orders.payment.modal.total_label")}</Text>
-                <Text strong style={{ display: "block", fontSize: 16, color: "var(--primary)" }}>
-                  {effectiveTotal.toLocaleString("vi-VN")}đ
-                </Text>
-              </div>
-            </div>
-          </div>
-
-          {/* Membership Discount Section */}
-          {hasCustomer && (
-            <div style={{
-              padding: 12,
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* ── Order summary ── */}
+          <div
+            style={{
               borderRadius: 10,
-              border: discountData?.appliedMembership
-                ? "1px solid #b7eb8f"
-                : "1px solid #e8e8e8",
-              background: discountData?.appliedMembership
-                ? "#f6ffed"
-                : "#fafafa",
+              background: "#fff",
+              border: "1px solid #f0f0f0",
+              padding: "12px 14px",
             }}>
-              {isApplyingDiscount ? (
-                <div style={{ textAlign: "center", padding: 8 }}>
-                  <Spin size="small" />
-                  <Text type="secondary" style={{ display: "block", marginTop: 4, fontSize: 12 }}>
-                    {t("staff.orders.payment.discount.applying")}
-                  </Text>
-                </div>
-              ) : discountData?.appliedMembership ? (
+            <div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 10,
+                }}>
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
-                    <Space style={{ alignItems: "center", gap: 6 }}>
-                      {/* <CrownOutlined style={{ color: "#faad14", fontSize: 16 }} /> */}
-                      <Text strong style={{ fontSize: 13 }}>
-                        {t("staff.orders.payment.discount.membership_applied")}
-                      </Text>
-                    </Space>
-                    <Button
-                      size="small"
-                      onClick={applyMembershipDiscount}
-                      style={{ borderRadius: 6, fontSize: 11, height: 24, paddingInline: 8 }}>
-                      {t("staff.orders.payment.discount.apply_button")}
-                    </Button>
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {t("staff.orders.payment.discount.subtotal")}
-                      </Text>
-                      <Text style={{ fontSize: 12 }}>
-                        {discountData.subTotal.toLocaleString("vi-VN")}đ
-                      </Text>
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {t("staff.orders.payment.discount.level")} ({discountData.appliedMembership.level})
-                      </Text>
-                      <Text style={{ fontSize: 12, color: "#52c41a" }}>
-                        -{discountData.appliedMembership.discountPercentage}%
-                      </Text>
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {t("staff.orders.payment.discount.amount")}
-                      </Text>
-                      <Text strong style={{ fontSize: 12, color: "#52c41a" }}>
-                        -{discountData.breakdown.membershipDiscount.toLocaleString("vi-VN")}đ
-                      </Text>
-                    </div>
+                  <Text type="secondary" style={{ fontSize: 11 }}>
+                    {t("staff.orders.payment.modal.total_label")}
+                  </Text>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: "#262626",
+                      marginTop: 2,
+                    }}>
+                    {subTotal.toLocaleString("vi-VN")}đ
                   </div>
                 </div>
-              ) : discountData ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <CrownOutlined style={{ color: "#d9d9d9", fontSize: 16 }} />
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {t("staff.orders.payment.discount.no_discount")}
+
+                <div style={{ textAlign: "right" }}>
+                  <Text type="secondary" style={{ fontSize: 11 }}>
+                    {t("staff.orders.payment.modal.final_total_label")}
+                  </Text>
+                  <div
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 800,
+                      color: "var(--primary, #1677ff)",
+                      marginTop: 2,
+                    }}>
+                    {finalTotal.toLocaleString("vi-VN")}đ
+                  </div>
+                </div>
+              </div>
+
+              {hasDiscount && !isApplyingDiscount && (
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: 4,
+                  }}>
+                  <CheckCircleFilled
+                    style={{ color: "#52c41a", fontSize: 11 }}
+                  />
+                  <Text style={{ fontSize: 12, color: "#52c41a" }}>
+                    -{discountData!.discountAmount.toLocaleString("vi-VN")}đ
                   </Text>
                 </div>
-              ) : null}
-            </div>
-          )}
-
-          <div>
-            <Text strong style={{ display: "block", marginBottom: 8, fontSize: 13 }}>{t("staff.orders.payment.modal.method_label")}</Text>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {paymentOptions.map((method) => (
-                <button
-                  key={method.id}
-                  type="button"
-                  onClick={() => setPaymentMethod(method.id)}
-                  style={{
-                    padding: "8px 10px",
-                    textAlign: "center",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                    border: paymentMethod === method.id ? "2px solid var(--primary)" : "1px solid #E5E7EB",
-                    background: paymentMethod === method.id ? "#fff" : "#FAFAFA",
-                    transition: "all 0.2s",
-                  }}>
-                  <Text strong style={{ fontSize: 12 }}>{method.label}</Text>
-                </button>
-              ))}
+              )}
             </div>
           </div>
 
+          {/* ── Discount section ── */}
+          <div style={{ borderRadius: 10, border: "1px solid #f0f0f0" }}>
+            <div
+              style={{
+                padding: "9px 12px",
+                borderBottom: "1px solid #f0f0f0",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}>
+              <TagOutlined
+                style={{ color: "var(--primary, #1677ff)", fontSize: 13 }}
+              />
+              <Text strong style={{ fontSize: 13 }}>
+                {t("staff.orders.payment.discount.title")}
+              </Text>
+              {isApplyingDiscount && (
+                <Spin size="small" style={{ marginLeft: "auto" }} />
+              )}
+            </div>
+
+            <div
+              style={{
+                padding: "10px 12px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+              }}>
+              {/* Promotion list */}
+              {isLoadingPromotions ? (
+                <div style={{ textAlign: "center", padding: "10px 0" }}>
+                  <Spin size="small" />
+                </div>
+              ) : activePromotions.length > 0 ? (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 6,
+                    maxHeight: 192,
+                    overflowY: "auto",
+                  }}>
+                  {activePromotions.map((promo) => {
+                    const isSelected =
+                      discountMode === "promotion" &&
+                      selectedPromoCode === promo.code;
+                    const isPct = promo.discountType === "PERCENTAGE";
+                    return (
+                      <button
+                        key={promo.id}
+                        type="button"
+                        disabled={isApplyingDiscount}
+                        onClick={() => handleSelectPromotion(promo.code)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          padding: "9px 11px",
+                          borderRadius: 8,
+                          border: isSelected
+                            ? "1.5px solid var(--primary, #1677ff)"
+                            : "1px solid #e8e8e8",
+                          background: isSelected ? "#f0f7ff" : "#fff",
+                          cursor: isApplyingDiscount
+                            ? "not-allowed"
+                            : "pointer",
+                          textAlign: "left",
+                          transition: "border-color 0.15s, background 0.15s",
+                          opacity: isApplyingDiscount && !isSelected ? 0.55 : 1,
+                        }}>
+                        <TagOutlined
+                          style={{
+                            fontSize: 14,
+                            color: isSelected
+                              ? "var(--primary, #1677ff)"
+                              : "#bfbfbf",
+                            flexShrink: 0,
+                          }}
+                        />
+
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              flexWrap: "wrap",
+                            }}>
+                            <Text strong style={{ fontSize: 13 }}>
+                              {promo.code}
+                            </Text>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 600,
+                                padding: "1px 6px",
+                                borderRadius: 4,
+                                background: isPct ? "#e6f4ff" : "#fff7e6",
+                                color: isPct
+                                  ? "var(--primary, #1677ff)"
+                                  : "#d46b08",
+                                border: `1px solid ${isPct ? "#bae0ff" : "#ffd591"}`,
+                              }}>
+                              {isPct
+                                ? `-${promo.discountValue}%`
+                                : `-${promo.discountValue.toLocaleString("vi-VN")}đ`}
+                            </span>
+                          </div>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            <span
+                              style={{
+                                color: "#1f1f1f",
+                                fontSize: 13,
+                                fontWeight: 500,
+                              }}>
+                              {promo.name}
+                            </span>
+                          </Text>
+                          {promo.minOrderAmount > 0 && (
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                color: "#262626",
+                                display: "block",
+                              }}>
+                              {t("staff.orders.payment.discount.min_order")}:{" "}
+                              {promo.minOrderAmount.toLocaleString("vi-VN")}đ
+                            </Text>
+                          )}
+                        </div>
+
+                        {isSelected ? (
+                          <CheckCircleFilled
+                            style={{
+                              color: "var(--primary, #1677ff)",
+                              fontSize: 15,
+                              flexShrink: 0,
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: 15,
+                              height: 15,
+                              borderRadius: "50%",
+                              border: "1.5px solid #d9d9d9",
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <Text
+                  type="secondary"
+                  style={{
+                    fontSize: 12,
+                    textAlign: "center",
+                    padding: "6px 0",
+                    display: "block",
+                  }}>
+                  {t("staff.orders.payment.discount.no_promotions")}
+                </Text>
+              )}
+
+              {/* Divider */}
+              {hasCustomer && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    margin: "2px 0",
+                  }}>
+                  <div style={{ flex: 1, height: 1, background: "#f0f0f0" }} />
+                  <Text type="secondary" style={{ fontSize: 11 }}>
+                    {t("staff.orders.payment.discount.or") || "hoặc"}
+                  </Text>
+                  <div style={{ flex: 1, height: 1, background: "#f0f0f0" }} />
+                </div>
+              )}
+
+              {/* Membership option */}
+              {hasCustomer && (
+                <button
+                  type="button"
+                  disabled={isApplyingDiscount}
+                  onClick={handleSelectMembership}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "9px 11px",
+                    borderRadius: 8,
+                    border:
+                      discountMode === "membership"
+                        ? "1.5px solid var(--primary, #1677ff)"
+                        : "1px solid #e8e8e8",
+                    background:
+                      discountMode === "membership" ? "#f0f7ff" : "#fff",
+                    cursor: isApplyingDiscount ? "not-allowed" : "pointer",
+                    textAlign: "left",
+                    transition: "border-color 0.15s, background 0.15s",
+                    opacity:
+                      isApplyingDiscount && discountMode !== "membership"
+                        ? 0.55
+                        : 1,
+                  }}>
+                  <CrownOutlined
+                    style={{
+                      fontSize: 14,
+                      color:
+                        discountMode === "membership"
+                          ? "var(--primary, #1677ff)"
+                          : "#bfbfbf",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Text strong style={{ fontSize: 13 }}>
+                      {t("staff.orders.payment.discount.membership_label")}
+                    </Text>
+                    {discountMode === "membership" &&
+                      discountData?.appliedMembership && (
+                        <Text
+                          type="secondary"
+                          style={{ fontSize: 12, display: "block" }}>
+                          {discountData.appliedMembership.level} · -
+                          {discountData.appliedMembership.discountPercentage}%
+                        </Text>
+                      )}
+                  </div>
+                  {discountMode === "membership" ? (
+                    <CheckCircleFilled
+                      style={{
+                        color: "var(--primary, #1677ff)",
+                        fontSize: 15,
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 15,
+                        height: 15,
+                        borderRadius: "50%",
+                        border: "1.5px solid #d9d9d9",
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ── Payment method ── */}
+          <div>
+            <Text
+              strong
+              style={{ display: "block", marginBottom: 8, fontSize: 13 }}>
+              {t("staff.orders.payment.modal.method_label")}
+            </Text>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 8,
+              }}>
+              {paymentOptions.map((method) => {
+                const active = paymentMethod === method.id;
+                return (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setPaymentMethod(method.id)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 7,
+                      padding: "9px 12px",
+                      borderRadius: 8,
+                      cursor: "pointer",
+                      border: active
+                        ? "2px solid var(--primary, #1677ff)"
+                        : "1.5px solid #e8e8e8",
+                      background: "#fff",
+                      transition: "all 0.15s",
+                    }}>
+                    <span
+                      style={{
+                        fontSize: 14,
+                        color: active ? "var(--primary, #1677ff)" : "#8c8c8c",
+                      }}>
+                      {method.id === "cash" ? (
+                        <DollarOutlined />
+                      ) : (
+                        <BankOutlined />
+                      )}
+                    </span>
+                    <Text
+                      strong
+                      style={{
+                        fontSize: 13,
+                        color: active ? "var(--primary, #1677ff)" : "#595959",
+                      }}>
+                      {method.label}
+                    </Text>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Cash input ── */}
           {paymentMethod === "cash" && (
-            <div>
-              <Text strong style={{ fontSize: 13 }}>{t("staff.orders.payment.modal.cash_label")}</Text>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <Text strong style={{ fontSize: 13 }}>
+                {t("staff.orders.payment.modal.cash_label")}
+              </Text>
               <InputNumber
                 autoFocus
                 value={cashReceived}
                 onChange={(value) => setCashReceived(value || 0)}
                 min={0}
-                size="middle"
-                style={{ width: "100%", marginTop: 6, fontSize: 14, fontWeight: 600 }}
-                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                size="large"
+                style={{ width: "100%", fontWeight: 600 }}
+                formatter={(value) =>
+                  `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
                 parser={(value) => Number(value?.replace(/,/g, "") || 0)}
               />
-              <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {[50000, 100000, 200000, 500000].map((amount) => (
-                  <Button key={amount} size="small" onClick={() => setCashReceived(amount)} style={{ borderRadius: 6, fontSize: 11, height: 24, paddingInline: 8 }}>
+                  <Button
+                    key={amount}
+                    size="small"
+                    type={cashReceived === amount ? "primary" : "default"}
+                    onClick={() => setCashReceived(amount)}
+                    style={{ borderRadius: 6, fontSize: 11 }}>
                     {amount.toLocaleString("vi-VN")}
                   </Button>
                 ))}
               </div>
-              <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: cashReceived >= effectiveTotal ? "#F6FFED" : "#FFF1F0", textAlign: "center" }}>
-                {cashReceived < effectiveTotal ? (
-                  <Text type="danger" strong style={{ fontSize: 13 }}>
-                    {t("staff.orders.payment.modal.missing_label")}: {(effectiveTotal - cashReceived).toLocaleString("vi-VN")}đ
-                  </Text>
+
+              <div
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 8,
+                  background:
+                    cashReceived >= finalTotal ? "#f6ffed" : "#fff1f0",
+                  border: `1px solid ${cashReceived >= finalTotal ? "#b7eb8f" : "#ffa39e"}`,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}>
+                {cashReceived < finalTotal ? (
+                  <>
+                    <Text type="danger" style={{ fontSize: 13 }}>
+                      {t("staff.orders.payment.modal.missing_label")}
+                    </Text>
+                    <Text type="danger" strong style={{ fontSize: 15 }}>
+                      -{(finalTotal - cashReceived).toLocaleString("vi-VN")}đ
+                    </Text>
+                  </>
                 ) : (
-                  <div>
-                    <div style={{ color: "#52C41A", fontSize: 12 }}>{t("staff.orders.payment.modal.change_label")}</div>
-                    <div style={{ color: "#52C41A", fontSize: 18, fontWeight: 700 }}>
-                      {(cashReceived - effectiveTotal).toLocaleString("vi-VN")}đ
-                    </div>
-                  </div>
+                  <>
+                    <Text style={{ fontSize: 13, color: "#389e0d" }}>
+                      {t("staff.orders.payment.modal.change_label")}
+                    </Text>
+                    <Text strong style={{ fontSize: 16, color: "#52c41a" }}>
+                      {(cashReceived - finalTotal).toLocaleString("vi-VN")}đ
+                    </Text>
+                  </>
                 )}
               </div>
             </div>
           )}
 
+          {/* ── Confirm ── */}
           <Button
             type="primary"
             size="large"
             loading={isProcessingPayment}
             onClick={onConfirm}
-            disabled={paymentMethod === "cash" && cashReceived < effectiveTotal}
-            style={{ width: "100%", height: 42, borderRadius: 10, fontSize: 14, fontWeight: 600, marginTop: 4, boxShadow: "0 3px 10px rgba(24, 144, 255, 0.24)" }}>
-            {t("staff.orders.payment.actions.confirm")}
+            disabled={paymentMethod === "cash" && cashReceived < finalTotal}
+            style={{
+              width: "100%",
+              height: 44,
+              borderRadius: 10,
+              fontSize: 14,
+              fontWeight: 700,
+              marginTop: 2,
+            }}>
+            {t("staff.orders.payment.actions.confirm")} ·{" "}
+            {finalTotal.toLocaleString("vi-VN")}đ
           </Button>
         </div>
       )}

@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import { useTenant } from '@/lib/contexts/TenantContext';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 // ─── CSS — only things RAF can't do ───────────────────────────────────────────
 const CSS = `
@@ -393,7 +393,7 @@ export function usePageLoading(
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        const isAdminRoute = window.location.pathname.startsWith('/admin');
+        const isAdminRoute = window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/tour');
         const onlyInitial = options?.onlyInitial ?? isAdminRoute;
         if (!onlyInitial) {
             shouldDispatch.current = true;
@@ -477,7 +477,7 @@ export function PageTransitionLoader() {
 
     // ── Trigger 1: Hard refresh (F5 / Ctrl+R) ──
     useEffect(() => {
-        if (pathname?.startsWith('/admin')) return;
+        if (pathname?.startsWith('/admin') || pathname?.startsWith('/tour')) return;
         if (!isHardRefresh()) return;
 
         show();
@@ -507,7 +507,7 @@ export function PageTransitionLoader() {
 
     // ── Trigger 1b: Initial load (non-hard refresh) ──
     useEffect(() => {
-        if (pathname?.startsWith('/admin')) return;
+        if (pathname?.startsWith('/admin') || pathname?.startsWith('/tour')) return;
         if (isHardRefresh()) return;
         if (document.readyState === 'complete') return;
 
