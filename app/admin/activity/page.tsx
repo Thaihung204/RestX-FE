@@ -1,9 +1,9 @@
-import TablesPage from "@/app/staff/tables/page";
+import { TablesPageContent } from "@/app/staff/activity/page";
 
 export default function AdminActivityPage() {
   return (
     <div style={{ paddingTop: 4 }}>
-      <TablesPage showAllActivities />
+      <TablesPageContent showAllActivities />
     </div>
   );
 }

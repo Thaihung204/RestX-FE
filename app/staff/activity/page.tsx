@@ -5,6 +5,7 @@ import reservationService, { ReservationListItem } from '@/lib/services/reservat
 import { floorService, FloorSummary, tableService, TableSessionInfo } from '@/lib/services/tableService';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import {
+  LinkOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -17,7 +18,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { HubConnectionState } from '@microsoft/signalr';
-import { App, Button, Card, Col, ConfigProvider, Divider, Input, Modal, Row, Tag, Typography } from 'antd';
+import { App, Button, Card, Col, Input, Modal, Row, Tag, Typography } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -27,8 +28,68 @@ const { Title, Text } = Typography;
 
 type TableStatus = 'available' | 'occupied';
 
-const CHECKIN_EARLY_MINUTES = 30;
 const CHECKIN_LATE_MINUTES = 15;
+
+function isPastReservationWithinLateWindow(reservationDate: Date, filterDateTime: Date): boolean {
+  const minutesAfterReservation = (filterDateTime.getTime() - reservationDate.getTime()) / (60 * 1000);
+  return minutesAfterReservation >= 0 && minutesAfterReservation <= CHECKIN_LATE_MINUTES;
+}
+
+function toYmd(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function toHm(date: Date): string {
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  return `${hour}:${minute}`;
+}
+
+function parseFilterDateTime(dateValue: string, timeValue: string): Date | null {
+  if (!dateValue) return null;
+  const timePart = timeValue || '00:00';
+  const parsed = new Date(`${dateValue}T${timePart}:00`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
+function toLocalDateTimeParam(date: Date): string {
+  return `${toYmd(date)}T${toHm(date)}:00`;
+}
+
+function pickReservationForSlot(
+  reservations: ReservationListItem[],
+  filterDateTime: Date,
+): ReservationListItem | undefined {
+  if (!reservations.length) return undefined;
+
+  const sorted = reservations
+    .map((reservation) => ({
+      reservation,
+      date: new Date(reservation.reservationDateTime),
+    }))
+    .filter((item) => !Number.isNaN(item.date.getTime()))
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  if (!sorted.length) return undefined;
+
+  const targetTime = filterDateTime.getTime();
+  const upcoming = sorted.find((item) => item.date.getTime() >= targetTime);
+  if (upcoming) return upcoming.reservation;
+
+  const pastCandidates = sorted.filter((item) => item.date.getTime() <= targetTime);
+  const latestPast = pastCandidates[pastCandidates.length - 1];
+  if (!latestPast) return undefined;
+
+  if (isPastReservationWithinLateWindow(latestPast.date, filterDateTime)) {
+    return latestPast.reservation;
+  }
+
+  return undefined;
+}
 
 interface TableActivityData {
   id: string;
@@ -50,6 +111,7 @@ interface TableActivityData {
   reservationContactName?: string;
   reservationContactPhone?: string;
   reservationStatusName?: string;
+  reservationStatusCode?: string;
   sessionId?: string;
   sessionStartedAt?: string;
   sessionEndedAt?: string | null;
@@ -79,45 +141,35 @@ function tint(color: string, percent: number): string {
   return `color-mix(in srgb, ${color} ${percent}%, transparent)`;
 }
 
-function getCheckInWindowStatus(reservationTime?: string, now: Date = new Date()) {
-  if (!reservationTime) {
-    return { allowed: true as const, state: 'allowed' as const };
-  }
-
-  const reservationDate = new Date(reservationTime);
-  if (Number.isNaN(reservationDate.getTime())) {
-    return { allowed: true as const, state: 'allowed' as const };
-  }
-
-  const earliestCheckIn = reservationDate.getTime() - CHECKIN_EARLY_MINUTES * 60 * 1000;
-  const latestCheckIn = reservationDate.getTime() + CHECKIN_LATE_MINUTES * 60 * 1000;
-  const nowTime = now.getTime();
-
-  if (nowTime < earliestCheckIn) {
-    return { allowed: false as const, state: 'too_early' as const, reservationDate };
-  }
-
-  if (nowTime > latestCheckIn) {
-    return { allowed: false as const, state: 'too_late' as const, reservationDate };
-  }
-
-  return { allowed: true as const, state: 'allowed' as const, reservationDate };
-}
-
-export default function TablesPage({ showAllActivities = false }: { showAllActivities?: boolean } = {}) {
+export function TablesPageContent({ showAllActivities = false }: { showAllActivities?: boolean }) {
   const { t } = useTranslation();
   const { mode } = useThemeMode();
   const { tenant } = useTenant();
-  const { message: messageApi, modal } = App.useApp();
+  const { message: messageApi } = App.useApp();
 
   const [tables, setTables] = useState<TableActivityData[]>([]);
   const [floors, setFloors] = useState<FloorSummary[]>([]);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
+  const [reservationFilterDate, setReservationFilterDate] = useState(() =>
+    toYmd(new Date()),
+  );
+  const [reservationFilterTime, setReservationFilterTime] = useState(() =>
+    toHm(new Date()),
+  );
   const [reservationKeyword, setReservationKeyword] = useState('');
   const [selectedTable, setSelectedTable] = useState<TableActivityData | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [isMergeMode, setIsMergeMode] = useState(false);
+  const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
+  const [isMerging, setIsMerging] = useState(false);
+  const [manualMergeGroupsByTable, setManualMergeGroupsByTable] = useState<Record<string, string[]>>({});
   const inFlightRef = useRef(false);
+
+  const selectedFilterDateTime = useMemo(
+    () => parseFilterDateTime(reservationFilterDate, reservationFilterTime),
+    [reservationFilterDate, reservationFilterTime],
+  );
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -141,15 +193,19 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
         }
       };
 
+      const filterDateForApi = reservationFilterDate || toYmd(new Date());
+      const filterDateTime = selectedFilterDateTime ?? new Date();
+      const filterAtParam = toLocalDateTimeParam(filterDateTime);
+
       const [tableData, floorData, sessionData, reservationData] = await Promise.all([
         safe(tableService.getAllTables(), [], 'Tables'),
         safe(floorService.getAllFloors(), [], 'Floors'),
-        safe(tableService.getTableSessions(), [], 'Sessions'),
+        safe(tableService.getTableSessions(filterAtParam), [], 'Sessions'),
         safe(
           reservationService.getReservations({ 
             pageNumber: 1, 
-            pageSize: 200,
-            date: new Date().toLocaleDateString('en-CA') 
+            pageSize: 500,
+            date: filterDateForApi,
           }),
           {
             items: [],
@@ -171,19 +227,42 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
         if (session.isActive) sessionMap.set(session.tableId, session);
       }
 
-      const reservationMap = new Map<string, ReservationListItem>();
-      for (const reservation of reservationData.items ?? []) {
+      const validReservations = (reservationData.items ?? []).filter((reservation) => {
         const code = reservation.status?.code?.toUpperCase();
-        if (code === 'CANCELLED' || code === 'NO_SHOW' || code === 'NOSHOW' || code === 'COMPLETED' || code === 'CHECKED_IN') continue;
+        return !['CANCELLED', 'NO_SHOW', 'NOSHOW', 'COMPLETED', 'CHECKED_IN'].includes(code || '');
+      });
+
+      const reservationsById = new Map<string, ReservationListItem>();
+      const reservationsByTable = new Map<string, ReservationListItem[]>();
+
+      for (const reservation of validReservations) {
+        reservationsById.set(reservation.id, reservation);
         for (const table of reservation.tables ?? []) {
-          if (!reservationMap.has(table.id)) reservationMap.set(table.id, reservation);
+          const list = reservationsByTable.get(table.id) || [];
+          list.push(reservation);
+          reservationsByTable.set(table.id, list);
         }
+      }
+
+      const reservationMap = new Map<string, ReservationListItem>();
+      for (const [tableId, reservations] of reservationsByTable) {
+        const pickedReservation = pickReservationForSlot(reservations, filterDateTime);
+        if (pickedReservation) reservationMap.set(tableId, pickedReservation);
       }
 
       for (const session of sessionData) {
         if (session.reservationId && !reservationMap.has(session.tableId)) {
-          const linkedRes = (reservationData.items ?? []).find((r) => r.id === session.reservationId);
-          if (linkedRes) reservationMap.set(session.tableId, linkedRes);
+          const linkedRes = reservationsById.get(session.reservationId);
+          if (!linkedRes) continue;
+
+          const linkedResDate = new Date(linkedRes.reservationDateTime);
+          if (Number.isNaN(linkedResDate.getTime())) continue;
+
+          if (linkedResDate.getTime() <= filterDateTime.getTime() && !isPastReservationWithinLateWindow(linkedResDate, filterDateTime)) {
+            continue;
+          }
+
+          reservationMap.set(session.tableId, linkedRes);
         }
       }
 
@@ -213,6 +292,7 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
           reservationContactName: reservation?.contactName,
           reservationContactPhone: reservation?.contactPhone,
           reservationStatusName: reservation?.status?.name,
+          reservationStatusCode: reservation?.status?.code,
           sessionId: session?.sessionId ?? session?.id,
           sessionStartedAt: session?.startedAt,
           sessionEndedAt: session?.endedAt ?? null,
@@ -227,7 +307,7 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
     } finally {
       inFlightRef.current = false;
     }
-  }, []);
+  }, [reservationFilterDate, selectedFilterDateTime]);
 
   useEffect(() => {
     fetchData();
@@ -275,45 +355,8 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
     };
   }, [tenant?.id, fetchData]);
 
-  const getCheckInWindowMessage = useCallback((reservationTime?: string) => {
-    const checkInWindow = getCheckInWindowStatus(reservationTime);
-    const formattedReservationTime = checkInWindow.reservationDate
-      ? checkInWindow.reservationDate.toLocaleString('vi-VN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        })
-      : null;
-
-    if (checkInWindow.state === 'too_early') {
-      return t('staff.floor_activity.modal.checkin_too_early', {
-        minutes: CHECKIN_EARLY_MINUTES,
-        reservationTime: formattedReservationTime ?? '—',
-        defaultValue: `Chỉ được check-in trong vòng ${CHECKIN_EARLY_MINUTES} phút trước giờ đặt (${formattedReservationTime ?? '—'}).`,
-      });
-    }
-
-    if (checkInWindow.state === 'too_late') {
-      return t('staff.floor_activity.modal.checkin_too_late', {
-        minutes: CHECKIN_LATE_MINUTES,
-        reservationTime: formattedReservationTime ?? '—',
-        defaultValue: `Đã quá thời gian check-in hợp lệ. Chỉ hỗ trợ đến ${CHECKIN_LATE_MINUTES} phút sau giờ đặt (${formattedReservationTime ?? '—'}).`,
-      });
-    }
-
-    return '';
-  }, [t]);
-
   const handleCheckIn = async (table: TableActivityData) => {
     if (!table.reservationCode) return;
-
-    const checkInWindow = getCheckInWindowStatus(table.reservationTime);
-    if (!checkInWindow.allowed) {
-      messageApi.warning(getCheckInWindowMessage(table.reservationTime));
-      return;
-    }
 
     setIsCheckingIn(true);
     try {
@@ -329,33 +372,84 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
     }
   };
 
-  const handleCloseSession = useCallback((table: TableActivityData) => {
-    if (!table.sessionIsActive) return;
+  const handleMergeExecution = async () => {
+    if (selectedTableIds.length < 2) return;
+    const requestedTableIds = [...selectedTableIds];
 
-    modal.confirm({
-      title: t('staff.floor_activity.modal.end_session_confirm_title', {
-        defaultValue: 'Kết thúc phiên bàn?',
-      }),
-      content: t('staff.floor_activity.modal.end_session_confirm_content', {
-        defaultValue: 'Thao tác này sẽ đóng phiên hiện tại của bàn và cập nhật trạng thái bàn ngay lập tức.',
-      }),
-      okText: t('staff.floor_activity.modal.end_session_btn', { defaultValue: 'Kết thúc phiên' }),
-      cancelText: t('staff.floor_activity.modal.cancel', { defaultValue: 'Hủy' }),
-      okButtonProps: { danger: true },
-      centered: true,
-      onOk: async () => {
-        try {
-          await tableService.closeTableSession(table.id);
-          messageApi.success(t('staff.floor_activity.modal.end_session_success', { defaultValue: 'Đã kết thúc phiên bàn' }));
-          setSelectedTable(null);
-          await fetchData();
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : String(err);
-          messageApi.error(msg || t('staff.floor_activity.modal.end_session_error', { defaultValue: 'Không thể kết thúc phiên bàn' }));
+    const hasSelectedTablesAlreadyInSameOrder =
+      selectedTablesForMerge.length >= 2 &&
+      selectedTablesForMerge.every((table) => !!table.orderId) &&
+      selectedOrderIdsForMerge.size === 1;
+
+    if (hasSelectedTablesAlreadyInSameOrder) {
+      messageApi.warning(
+        t('staff.floor_activity.merge.already_merged', {
+          defaultValue: 'Các bàn đã thuộc cùng một đơn, không cần gộp lại.',
+        }),
+      );
+      return;
+    }
+
+    setIsMerging(true);
+    try {
+      const response = await tableService.mergeTables({
+        tableIds: requestedTableIds,
+      });
+
+      if (response.requiresManualResolution) {
+        messageApi.warning(t('staff.floor_activity.merge.manual_required', { defaultValue: 'Cần xử lý thủ công do có nhiều đơn hàng.' }));
+        await fetchData();
+        return;
+      } else {
+        messageApi.success(t('staff.floor_activity.merge.success', { defaultValue: 'Gộp bàn thành công!' }));
+      }
+
+      if (!response.orderId) {
+        const mergedIdsFromResponse = (response.sessions ?? [])
+          .map((session) => session.tableId)
+          .filter((tableId): tableId is string => Boolean(tableId));
+
+        const normalizedMergedIds = Array.from(
+          new Set(mergedIdsFromResponse.length >= 2 ? mergedIdsFromResponse : requestedTableIds),
+        ).sort((a, b) => a.localeCompare(b));
+
+        if (normalizedMergedIds.length >= 2) {
+          setManualMergeGroupsByTable((prev) => {
+            const next = { ...prev };
+            for (const tableId of normalizedMergedIds) {
+              next[tableId] = normalizedMergedIds;
+            }
+            return next;
+          });
         }
-      },
-    });
-  }, [fetchData, messageApi, modal, t]);
+      }
+
+      setIsMergeMode(false);
+      setSelectedTableIds([]);
+      await fetchData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      messageApi.error(msg || t('staff.floor_activity.merge.error', { defaultValue: 'Gộp bàn thất bại' }));
+    } finally {
+      setIsMerging(false);
+    }
+  };
+
+  const toggleTableSelection = (tableId: string) => {
+    setSelectedTableIds((prev) =>
+      prev.includes(tableId) ? prev.filter((id) => id !== tableId) : [...prev, tableId],
+    );
+  };
+
+  const getLocalizedFloorName = useCallback((floorName?: string) => {
+    if (!floorName) return '';
+
+    const normalizedFloorName = floorName.trim();
+    const match = normalizedFloorName.match(/^(?:t[aầ]ng|floor)\s+(.+)$/i);
+    if (!match) return normalizedFloorName;
+
+    return t('staff.floor_activity.floor_name', { name: match[1] });
+  }, [t]);
 
   const reservationKeywordNormalized = reservationKeyword.trim().toLowerCase();
   const filteredTables = useMemo(() => {
@@ -366,6 +460,153 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
         .some((value) => String(value).toLowerCase().includes(reservationKeywordNormalized));
     });
   }, [reservationKeywordNormalized, tables]);
+
+  const tableById = useMemo(() => {
+    const map = new Map<string, TableActivityData>();
+    for (const table of tables) {
+      map.set(table.id, table);
+    }
+    return map;
+  }, [tables]);
+
+  useEffect(() => {
+    const existingTableIds = new Set(tables.map((table) => table.id));
+
+    setManualMergeGroupsByTable((prev) => {
+      let changed = false;
+      const next: Record<string, string[]> = {};
+
+      for (const [tableId, groupIds] of Object.entries(prev)) {
+        if (!existingTableIds.has(tableId)) {
+          changed = true;
+          continue;
+        }
+
+        const filteredGroupIds = Array.from(
+          new Set(groupIds.filter((groupId) => existingTableIds.has(groupId))),
+        ).sort((a, b) => a.localeCompare(b));
+
+        if (filteredGroupIds.length < 2) {
+          changed = true;
+          continue;
+        }
+
+        if (groupIds.length !== filteredGroupIds.length || groupIds.some((id, idx) => id !== filteredGroupIds[idx])) {
+          changed = true;
+        }
+
+        next[tableId] = filteredGroupIds;
+      }
+
+      return changed ? next : prev;
+    });
+  }, [tables]);
+
+  const selectedTablesForMerge = useMemo(
+    () =>
+      selectedTableIds
+        .map((tableId) => tableById.get(tableId))
+        .filter((table): table is TableActivityData => Boolean(table)),
+    [selectedTableIds, tableById],
+  );
+
+  const selectedOrderIdsForMerge = useMemo(
+    () =>
+      new Set(
+        selectedTablesForMerge
+          .map((table) => table.orderId)
+          .filter((orderId): orderId is string => Boolean(orderId)),
+      ),
+    [selectedTablesForMerge],
+  );
+
+  const orderTableIdsMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+
+    for (const table of tables) {
+      if (!table.orderId) continue;
+      const current = map.get(table.orderId) || [];
+      current.push(table.id);
+      map.set(table.orderId, current);
+    }
+
+    for (const [orderId, ids] of map.entries()) {
+      const sortedIds = [...ids].sort((a, b) => a.localeCompare(b));
+      map.set(orderId, sortedIds);
+    }
+
+    return map;
+  }, [tables]);
+
+  const getMergedTableIds = useCallback((table: TableActivityData) => {
+    const orderMergedIds = table.orderId ? (orderTableIdsMap.get(table.orderId) || []) : [];
+    const manualMergedIds = manualMergeGroupsByTable[table.id] || [];
+
+    return Array.from(new Set([...orderMergedIds, ...manualMergedIds])).sort((a, b) => {
+      const nameA = tableById.get(a)?.name || a;
+      const nameB = tableById.get(b)?.name || b;
+      return nameA.localeCompare(nameB, undefined, { numeric: true });
+    });
+  }, [manualMergeGroupsByTable, orderTableIdsMap, tableById]);
+
+  const getMergedTableNames = useCallback((table: TableActivityData) => {
+    return getMergedTableIds(table)
+      .map((tableId) => tableById.get(tableId)?.name)
+      .filter((name): name is string => Boolean(name));
+  }, [getMergedTableIds, tableById]);
+
+  const selectedKnownMergedTableIds = useMemo(() => {
+    const set = new Set<string>();
+
+    for (const selectedTable of selectedTablesForMerge) {
+      const mergedIds = getMergedTableIds(selectedTable);
+      if (mergedIds.length > 1) {
+        for (const tableId of mergedIds) {
+          set.add(tableId);
+        }
+      }
+    }
+
+    return set;
+  }, [getMergedTableIds, selectedTablesForMerge]);
+
+  const getMergeLockReason = (table: TableActivityData): 'same-order' | 'same-group' | null => {
+    if (!isMergeMode) return null;
+    if (selectedTableIds.includes(table.id)) return null;
+
+    if (table.orderId && selectedOrderIdsForMerge.has(table.orderId)) {
+      return 'same-order';
+    }
+
+    if (selectedKnownMergedTableIds.has(table.id)) {
+      return 'same-group';
+    }
+
+    return null;
+  };
+
+  const isTableLockedForMerge = (table: TableActivityData) => {
+    return getMergeLockReason(table) !== null;
+  };
+
+  const handleMergeSelection = (table: TableActivityData) => {
+    const lockReason = getMergeLockReason(table);
+
+    if (lockReason) {
+      messageApi.warning(
+        lockReason === 'same-order'
+          ? t('staff.floor_activity.merge.same_order_selected', {
+              defaultValue: 'Bàn này đã thuộc cùng đơn với bàn đã chọn. Vui lòng chọn bàn khác.',
+            })
+          : t('staff.floor_activity.merge.same_group_selected', {
+              defaultValue: 'Bàn này đã nằm trong cùng nhóm gộp với bàn đã chọn.',
+            }),
+      );
+      return;
+    }
+
+    toggleTableSelection(table.id);
+  };
 
   const statsOccupied = filteredTables.filter((t) => t.status === 'occupied').length;
   const statsAvailable = filteredTables.filter((t) => t.status === 'available').length;
@@ -387,7 +628,11 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
 
     if (showAllActivities) {
       return [
-        ...floors.map((floor) => ({ label: floor.name, id: floor.id, tables: byFloor.get(floor.id) || [] })),
+        ...floors.map((floor) => ({
+          label: getLocalizedFloorName(floor.name),
+          id: floor.id,
+          tables: byFloor.get(floor.id) || [],
+        })),
         { label: t('staff.floor_activity.no_floor'), id: '__no_floor__', tables: noFloor },
       ].filter((g) => g.tables.length > 0);
     }
@@ -399,21 +644,18 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
         tables: filteredTables,
       },
     ];
-  }, [filteredTables, floors, showAllActivities, t]);
+  }, [filteredTables, floors, getLocalizedFloorName, showAllActivities, t]);
 
   const hasResults = tableGroups.length > 0;
-  const selectedTableCheckInWindow = selectedTable ? getCheckInWindowStatus(selectedTable.reservationTime) : null;
-  const canCheckInNow = selectedTableCheckInWindow?.allowed ?? false;
-  const checkInWindowMessage = selectedTable ? getCheckInWindowMessage(selectedTable.reservationTime) : '';
 
   return (
     <div className="floor-activity-root">
-      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="floor-activity-header">
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="floor-activity-header" style={{ flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 16 : 20, alignItems: isMobile ? 'stretch' : 'center' }}>
         <div className="floor-activity-header-left">
           <div className="floor-activity-title-row">
             <span className="floor-activity-live-dot" />
             <Title level={isMobile ? 5 : 4} style={{ margin: 0, color: 'var(--text)' }}>
-              {t('staff.menu.tables')}
+              {t('staff.menu.activity')}
             </Title>
           </div>
           <Text style={{ color: 'var(--text-muted)', fontSize: 13 }}>
@@ -421,16 +663,73 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
           </Text>
         </div>
 
-        <div className="floor-activity-header-right" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <ConfigProvider theme={mode === 'dark' ? undefined : { token: { colorBgContainer: '#ffffff', colorText: '#000000' } }}>
+        <div className="floor-activity-header-right">
+          <div className="floor-activity-toolbar">
+            <div className="floor-activity-filter-group floor-activity-filter-group--date">
+              <Text className="floor-activity-filter-label">
+                {t('staff.floor_activity.date_filter_label', { defaultValue: 'Ngày' })}
+              </Text>
+              <Input
+                className="floor-activity-filter-input floor-activity-filter-input--date"
+                type="date"
+                value={reservationFilterDate}
+                onChange={(e) => {
+                  if (!e.target.value) return;
+                  setReservationFilterDate(e.target.value);
+                }}
+              />
+            </div>
+
+            <div className="floor-activity-filter-group floor-activity-filter-group--time">
+              <Text className="floor-activity-filter-label">
+                {t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' })}
+              </Text>
+              <Input
+                className="floor-activity-filter-input floor-activity-filter-input--time"
+                type="time"
+                step={300}
+                value={reservationFilterTime}
+                onChange={(e) => {
+                  if (!e.target.value) return;
+                  setReservationFilterTime(e.target.value);
+                }}
+              />
+            </div>
+
             <Input
+              className="floor-activity-filter-input floor-activity-filter-input--search"
               allowClear
               value={reservationKeyword}
               onChange={(e) => setReservationKeyword(e.target.value)}
               placeholder={t('staff.floor_activity.search_placeholder')}
-              style={{ width: isMobile ? 170 : 240, borderRadius: 10 }}
             />
-          </ConfigProvider>
+
+            <div className="floor-activity-action-row">
+              <Button
+                className="floor-activity-action-btn"
+                icon={<TableOutlined />}
+                onClick={() => {
+                  setIsMergeMode(!isMergeMode);
+                  setSelectedTableIds([]);
+                }}
+                type={isMergeMode ? 'primary' : 'default'}
+                danger={isMergeMode}
+              >
+                {isMergeMode ? t('common.cancel') : t('staff.floor_activity.merge_mode')}
+              </Button>
+
+              {isMergeMode && selectedTableIds.length >= 2 && (
+                <Button
+                  className="floor-activity-action-btn floor-activity-action-btn--confirm"
+                  type="primary"
+                  loading={isMerging}
+                  onClick={handleMergeExecution}
+                >
+                  {t('staff.floor_activity.execute_merge', { count: selectedTableIds.length })}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </motion.div>
 
@@ -474,12 +773,79 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
               <Row gutter={[isMobile ? 10 : 14, isMobile ? 10 : 14]}>
                 {group.tables.map((table, ti) => {
                   const cfg = statusConfig[table.status];
+                  const hasBookedGuests = typeof table.reservationGuests === 'number' && table.reservationGuests > 0;
+                  const cardPeopleCount = hasBookedGuests ? table.reservationGuests : table.capacity;
+                  const cardPeopleLabel = hasBookedGuests
+                    ? t('staff.floor_activity.modal.guests')
+                    : t('staff.floor_activity.seats_label');
+                  const mergedTableNames = getMergedTableNames(table);
+                  const mergedTableCount = mergedTableNames.length;
+                  const isMergedGroup = mergedTableCount > 1;
+                  const mergedGroupTablesLabel = mergedTableNames
+                    .map((name) =>
+                      t('staff.floor_activity.modal.table_name', {
+                        name,
+                        defaultValue: `Bàn ${name}`,
+                      }),
+                    )
+                    .join(', ');
+                  const isSelectedForMerge = isMergeMode && selectedTableIds.includes(table.id);
+                  const isLockedForMerge = isMergeMode && isTableLockedForMerge(table);
                   return (
                     <Col xs={12} sm={8} md={6} lg={4} xl={4} key={table.id}>
                       <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25, delay: Math.min(ti * 0.03, 0.3) }} whileHover={!isMobile ? { y: -4, transition: { duration: 0.18 } } : undefined} style={{ height: '100%' }}>
-                        <div className="floor-activity-table-card" style={{ background: cfg.bg, borderColor: cfg.border, cursor: 'pointer' }} onClick={() => setSelectedTable(table)}>
+                        <div
+                          className={`floor-activity-table-card ${isSelectedForMerge ? 'selected' : ''}`}
+                          style={{
+                            background: cfg.bg,
+                            borderColor: isSelectedForMerge ? 'var(--primary)' : cfg.border,
+                            borderWidth: isSelectedForMerge ? 3 : 1,
+                            cursor: isLockedForMerge ? 'not-allowed' : 'pointer',
+                            opacity: isLockedForMerge ? 0.62 : 1,
+                            position: 'relative'
+                          }}
+                          onClick={() => isMergeMode ? handleMergeSelection(table) : setSelectedTable(table)}
+                        >
+                          {isMergeMode && (
+                            <div style={{
+                              position: 'absolute',
+                              top: 8,
+                              left: 8,
+                              width: 20,
+                              height: 20,
+                              borderRadius: '50%',
+                              backgroundColor: isSelectedForMerge
+                                ? 'var(--primary)'
+                                : isLockedForMerge
+                                  ? 'rgba(217,217,217,0.65)'
+                                  : 'rgba(255,255,255,0.8)',
+                              border: `2px solid ${isLockedForMerge ? 'rgba(140,140,140,0.6)' : 'var(--primary)'}`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyItems: 'center',
+                              zIndex: 10
+                            }}>
+                              {isSelectedForMerge && <CheckCircleOutlined style={{ color: 'white', fontSize: 12, margin: 'auto' }} />}
+                            </div>
+                          )}
                           <div className="floor-activity-table-top" style={{ justifyContent: 'flex-end' }}>
-                            <span className="floor-activity-order-status-badge" style={{ visibility: 'hidden' }}>Placeholder</span>
+                            {isMergedGroup ? (
+                              <span
+                                className="floor-activity-merge-badge"
+                                title={t('staff.floor_activity.merge.with_tables', {
+                                  tables: mergedGroupTablesLabel,
+                                  defaultValue: `Gộp với bàn: ${mergedGroupTablesLabel}`,
+                                })}
+                              >
+                                <LinkOutlined style={{ fontSize: 10 }} />
+                                {t('staff.floor_activity.merge.merged_tables_badge', {
+                                  count: mergedTableCount,
+                                  defaultValue: `Gộp ${mergedTableCount} bàn`,
+                                })}
+                              </span>
+                            ) : (
+                              <span className="floor-activity-order-status-badge" style={{ visibility: 'hidden' }}>Placeholder</span>
+                            )}
                           </div>
 
                           <div className="table-card-number-badge" style={{ background: table.status === 'occupied' ? 'rgba(255,255,255,0.72)' : tint(cfg.color, 15), border: table.status === 'occupied' ? `2px solid ${tint(cfg.color, 40)}` : `2px solid ${tint(cfg.color, 28)}`, boxShadow: table.status === 'occupied' ? `0 0 0 1px ${tint(cfg.color, 22)} inset` : undefined }}>
@@ -491,11 +857,13 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
 
                           <div className="table-card-capacity-row">
                             <UserOutlined style={{ fontSize: 12, color: 'var(--text-muted)' }} />
-                            <Text style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{table.capacity} {t('staff.floor_activity.seats_label')}</Text>
+                            <Text style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>
+                              {cardPeopleCount} {cardPeopleLabel}
+                            </Text>
                           </div>
 
-                          <Tag style={{ borderRadius: 20, fontSize: 11, padding: '2px 10px', border: 'none', background: tint(cfg.color, 20), color: cfg.color, marginTop: 4, fontWeight: 700 }}>
-                            {cfg.icon} {t(cfg.label)}
+                          <Tag style={{ borderRadius: 20, fontSize: 11, padding: '2px 10px', border: 'none', background: tint(cfg.color, 20), color: cfg.color, marginTop: 4, fontWeight: 700, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {cfg.icon} {table.reservationContactName || table.customerName || t(cfg.label)}
                           </Tag>
 
                           <div className="floor-activity-table-detail floor-activity-table-detail--fixed">
@@ -549,6 +917,11 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
           const cfg = statusConfig[selectedTable.status];
           const hasReservation = !!(selectedTable.reservationCode || selectedTable.reservationContactName || selectedTable.reservationTime);
           const hasOrder = !!(selectedTable.orderId || selectedTable.orderReference || selectedTable.orderTotal);
+          const canShowCheckInButton = !!selectedTable.reservationCode && selectedTable.status === 'available';
+          const hasNamedGuest = selectedTable.status === 'occupied' && !!(selectedTable.reservationContactName || selectedTable.customerName);
+          const selectedMergedTableNames = getMergedTableNames(selectedTable);
+          const selectedMergedTableCount = selectedMergedTableNames.length;
+          const isSelectedTableMerged = selectedMergedTableCount > 1;
 
           return (
             <div className="table-modal-root">
@@ -558,14 +931,40 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
                 </div>
                 <div className="table-modal-hero-info">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>{selectedTable.name}</Title>
-                    <Tag style={{ borderRadius: 20, padding: '3px 12px', border: 'none', background: `${cfg.color}20`, color: cfg.color, fontWeight: 700, fontSize: 12 }}>
-                      {cfg.icon} {t(cfg.label)}
-                    </Tag>
+                    <Title level={4} style={{ margin: 0, color: 'var(--text)' }}>
+                      {t('staff.floor_activity.modal.table_name', {
+                        name: selectedTable.name,
+                        defaultValue: `Bàn ${selectedTable.name}`,
+                      })}
+                    </Title>
+                    {!hasNamedGuest && (
+                      <Tag style={{ borderRadius: 20, padding: '3px 12px', border: 'none', background: `${cfg.color}20`, color: cfg.color, fontWeight: 700, fontSize: 12 }}>
+                        {cfg.icon} {t(cfg.label)}
+                      </Tag>
+                    )}
                   </div>
+                  {selectedTable.status === 'occupied' && (selectedTable.reservationContactName || selectedTable.customerName) && (
+                    <div style={{ marginTop: 8, fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>
+                      {selectedTable.reservationContactName || selectedTable.customerName}
+                    </div>
+                  )}
+                  {isSelectedTableMerged && (
+                    <span className="table-modal-merge-chip">
+                      <LinkOutlined />
+                      {t('staff.floor_activity.merge.merged_tables_badge', {
+                        count: selectedMergedTableCount,
+                        defaultValue: `Gộp ${selectedMergedTableCount} bàn`,
+                      })}
+                    </span>
+                  )}
                   <div style={{ display: 'flex', gap: 16, marginTop: 6, flexWrap: 'wrap' }}>
-                    <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}><UserOutlined style={{ marginRight: 5 }} />{selectedTable.capacity} {t('staff.floor_activity.modal.seats')}</Text>
-                    {selectedTable.floorName && <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}><TableOutlined style={{ marginRight: 5 }} />{selectedTable.floorName}</Text>}
+                    <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}><UserOutlined style={{ marginRight: 5 }} />{selectedTable.capacity} {t('staff.floor_activity.seats_label')}</Text>
+                    {selectedTable.floorName && (
+                      <Text style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                        <TableOutlined style={{ marginRight: 5 }} />
+                        {getLocalizedFloorName(selectedTable.floorName)}
+                      </Text>
+                    )}
                   </div>
                 </div>
               </div>
@@ -597,6 +996,23 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
                           <ClockCircleOutlined /> {t('staff.floor_activity.modal.session_id', { defaultValue: 'Session ID' })}
                         </span>
                         <span className="table-modal-info-value" style={{ fontFamily: 'monospace' }}>{selectedTable.sessionId}</span>
+                      </div>
+                    )}
+                    {isSelectedTableMerged && (
+                      <div className="table-modal-info-row">
+                        <span className="table-modal-info-label">
+                          <LinkOutlined /> {t('staff.floor_activity.modal.merge_group', { defaultValue: 'Nhóm gộp' })}
+                        </span>
+                        <span className="table-modal-info-value">
+                          {selectedMergedTableNames
+                            .map((name) =>
+                              t('staff.floor_activity.modal.table_name', {
+                                name,
+                                defaultValue: `Bàn ${name}`,
+                              }),
+                            )
+                            .join(', ')}
+                        </span>
                       </div>
                     )}
                     <div className="table-modal-info-row">
@@ -633,17 +1049,7 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
                     </div>
                   </div>
 
-                  {selectedTable.sessionIsActive && (
-                    <Button
-                      danger
-                      block
-                      size="large"
-                      onClick={() => handleCloseSession(selectedTable)}
-                      style={{ marginTop: 12, borderRadius: 12, height: 44, fontWeight: 700, fontSize: 14 }}
-                    >
-                      {t('staff.floor_activity.modal.end_session_btn', { defaultValue: 'Kết thúc phiên' })}
-                    </Button>
-                  )}
+
                 </div>
 
                 {hasReservation && (
@@ -652,7 +1058,7 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
                       <div className="table-modal-section-icon" style={{ background: 'rgba(24,144,255,0.12)', color: '#1890ff' }}>
                         <CalendarOutlined />
                       </div>
-                      <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>Reservation</Text>
+                      <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>{t('staff.floor_activity.modal.reservation', { defaultValue: 'Đặt bàn' })}</Text>
                       {selectedTable.reservationCode && <span className="table-modal-code-badge">#{selectedTable.reservationCode}</span>}
                       {selectedTable.reservationStatusName && <Tag style={{ marginLeft: 'auto', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>{selectedTable.reservationStatusName}</Tag>}
                     </div>
@@ -684,58 +1090,47 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
                       )}
                     </div>
 
-                    {selectedTable.reservationCode && selectedTable.status === 'available' && (
-                      <>
-                        <Button
-                          type="primary"
-                          icon={<LoginOutlined />}
-                          loading={isCheckingIn}
-                          disabled={!canCheckInNow}
-                          onClick={() => handleCheckIn(selectedTable)}
-                          block
-                          size="large"
-                          style={{ marginTop: 12, borderRadius: 12, height: 44, fontWeight: 700, fontSize: 14 }}
-                        >
-                          {t('staff.floor_activity.modal.checkin_btn')}
-                        </Button>
-                        {!canCheckInNow && (
-                          <Text style={{ display: 'block', marginTop: 8, color: '#faad14', fontSize: 12 }}>
-                            {checkInWindowMessage}
-                          </Text>
-                        )}
-                      </>
+                    {canShowCheckInButton && (
+                      <Button
+                        type="primary"
+                        icon={<LoginOutlined />}
+                        loading={isCheckingIn}
+                        onClick={() => handleCheckIn(selectedTable)}
+                        block
+                        size="large"
+                        style={{ marginTop: 12, borderRadius: 12, height: 44, fontWeight: 700, fontSize: 14 }}
+                      >
+                        {t('staff.floor_activity.modal.checkin_btn')}
+                      </Button>
                     )}
                   </div>
                 )}
 
                 {hasOrder && (
-                  <>
-                    {hasReservation && <Divider style={{ margin: '0 0 16px' }} />}
-                    <div className="table-modal-section">
-                      <div className="table-modal-section-header">
-                        <div className="table-modal-section-icon" style={{ background: 'rgba(255,56,11,0.1)', color: 'var(--primary)' }}>
-                          <ShoppingCartOutlined />
-                        </div>
-                        <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>Order</Text>
-                        {selectedTable.orderReference && <span className="table-modal-code-badge" style={{ background: 'rgba(255,56,11,0.1)', color: 'var(--primary)', border: '1px solid rgba(255,56,11,0.2)' }}>#{selectedTable.orderReference}</span>}
+                  <div className="table-modal-section">
+                    <div className="table-modal-section-header">
+                      <div className="table-modal-section-icon" style={{ background: 'rgba(255,56,11,0.1)', color: 'var(--primary)' }}>
+                        <ShoppingCartOutlined />
                       </div>
-
-                      <div className="table-modal-info-grid">
-                        {selectedTable.orderTotal != null && (
-                          <div className="table-modal-info-row">
-                            <span className="table-modal-info-label"><DollarOutlined /> {t('staff.floor_activity.modal.total')}</span>
-                            <span className="table-modal-info-value" style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 15 }}>{selectedTable.orderTotal.toLocaleString('vi-VN')}d</span>
-                          </div>
-                        )}
-                        {!hasReservation && selectedTable.startAt && (
-                          <div className="table-modal-info-row">
-                            <span className="table-modal-info-label"><ClockCircleOutlined /> {t('staff.floor_activity.modal.start_time')}</span>
-                            <span className="table-modal-info-value">{new Date(selectedTable.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-                          </div>
-                        )}
-                      </div>
+                      <Text strong style={{ fontSize: 14, color: 'var(--text)' }}>{t('staff.floor_activity.modal.order', { defaultValue: 'Order' })}</Text>
+                      {selectedTable.orderReference && <span className="table-modal-code-badge" style={{ background: 'rgba(255,56,11,0.1)', color: 'var(--primary)', border: '1px solid rgba(255,56,11,0.2)' }}>#{selectedTable.orderReference}</span>}
                     </div>
-                  </>
+
+                    <div className="table-modal-info-grid">
+                      {selectedTable.orderTotal != null && (
+                        <div className="table-modal-info-row">
+                          <span className="table-modal-info-label"><DollarOutlined /> {t('staff.floor_activity.modal.total')}</span>
+                          <span className="table-modal-info-value" style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 15 }}>{selectedTable.orderTotal.toLocaleString('vi-VN')}d</span>
+                        </div>
+                      )}
+                      {!hasReservation && selectedTable.startAt && (
+                        <div className="table-modal-info-row">
+                          <span className="table-modal-info-label"><ClockCircleOutlined /> {t('staff.floor_activity.modal.start_time')}</span>
+                          <span className="table-modal-info-value">{new Date(selectedTable.startAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {!hasReservation && !hasOrder && (
@@ -754,4 +1149,8 @@ export default function TablesPage({ showAllActivities = false }: { showAllActiv
       </Modal>
     </div>
   );
+}
+
+export default function StaffActivityPage() {
+  return <TablesPageContent />;
 }

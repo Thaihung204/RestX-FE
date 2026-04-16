@@ -50,6 +50,20 @@ export interface TableSessionInfo {
     orderTotalAmount?: number | null;
 }
 
+export interface MergeTableRequest {
+    tableIds: string[];
+    reservationId?: string | null;
+    customerId?: string | null;
+}
+
+export interface MergeTableResponse {
+    orderId?: string | null;
+    requiresManualResolution: boolean;
+    message: string;
+    existingOrderIds: string[];
+    sessions: TableSessionInfo[];
+}
+
 const normalizeSessionInfo = (payload: unknown): TableSessionInfo | null => {
     if (!payload || typeof payload !== 'object') return null;
 
@@ -240,6 +254,28 @@ export const tableService = {
     /** PUT /api/tables/{tableId}/sessions/close — Close active session */
     closeTableSession: async (tableId: string): Promise<void> => {
         await axiosInstance.put(`/tables/${tableId}/sessions/close`);
+    },
+
+    /** POST /api/tables/merge — Merge multiple tables */
+    mergeTables: async (request: MergeTableRequest): Promise<MergeTableResponse> => {
+        try {
+            const response = await axiosInstance.post<MergeTableResponse>('/tables/merge', request);
+            return response.data;
+        } catch (error: unknown) {
+            const conflictResponse = (error as {
+                response?: {
+                    status?: number;
+                    data?: MergeTableResponse;
+                };
+            }).response;
+
+            // BE returns 409 when multiple existing orders require manual resolution.
+            if (conflictResponse?.status === 409 && conflictResponse.data?.requiresManualResolution) {
+                return conflictResponse.data;
+            }
+
+            throw error;
+        }
     },
 };
 

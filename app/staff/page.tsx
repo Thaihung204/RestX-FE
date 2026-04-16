@@ -770,7 +770,7 @@ export default function StaffDashboard() {
                 ))}
 
                 <div style={{ marginTop: 'auto', paddingTop: 16 }}>
-                  <Link href="/staff/tables">
+                  <Link href="/staff/activity">
                     <motion.div
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -832,7 +832,7 @@ export default function StaffDashboard() {
           >
             <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}>
               {[
-                { icon: <TableOutlined />, title: t('staff.dashboard.quick_action_items.open_table'), color: 'var(--primary)', href: '/staff/tables' },
+                { icon: <TableOutlined />, title: t('staff.dashboard.quick_action_items.open_table'), color: 'var(--primary)', href: '/staff/activity' },
                 { icon: <ShoppingCartOutlined />, title: t('staff.dashboard.quick_action_items.create_order'), color: '#1890ff', href: '/staff/orders' },
                 { icon: <DollarOutlined />, title: t('staff.dashboard.quick_action_items.checkout'), color: '#52c41a', href: '/staff/checkout' },
                 { icon: <ClockCircleOutlined />, title: t('staff.dashboard.quick_action_items.attendance'), color: '#722ed1', href: '/staff/attendance' },

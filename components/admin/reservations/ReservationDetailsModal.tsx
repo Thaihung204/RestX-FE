@@ -4,7 +4,7 @@ import reservationService, {
   ReservationDetail,
   ReservationStatus,
 } from "@/lib/services/reservationService";
-import { Select, message } from "antd";
+import { Select } from "antd";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -30,7 +30,6 @@ export default function ReservationDetailsModal({ reservationId, onClose, onStat
   const [actionLoading, setActionLoading] = useState(false);
   const [allStatuses, setAllStatuses] = useState<ReservationStatus[]>([]);
   const [selectedStatusId, setSelectedStatusId] = useState<number | "">("");
-  const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
     reservationService.getReservationStatuses().then(setAllStatuses).catch(console.error);
@@ -65,34 +64,8 @@ export default function ReservationDetailsModal({ reservationId, onClose, onStat
     }
   };
 
-  const handleCheckin = async () => {
-    if (!detail) return;
-
-    if (detail.checkedInAt) {
-      messageApi.info(t("admin.reservations.messages.already_checked_in", { defaultValue: "Reservation này đã check-in rồi" }));
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      await reservationService.checkInReservation(detail.confirmationCode);
-      await fetchDetail();
-      messageApi.success(t("admin.reservations.messages.checkin_success", { defaultValue: "Check-in thành công" }));
-      onStatusUpdated();
-    } catch (e: any) {
-      console.error(e);
-      const errorMessage = e?.response?.data?.message || t("admin.reservations.messages.checkin_failed", { defaultValue: "Không thể check-in reservation" });
-      messageApi.error(errorMessage);
-      await fetchDetail().catch(() => undefined);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   return (
-    <>
-      {contextHolder}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} onClick={(e) => e.target === e.currentTarget && onClose()}>
         <div className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
           <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
           <div>
@@ -120,7 +93,7 @@ export default function ReservationDetailsModal({ reservationId, onClose, onStat
                   onChange={handleStatusChange}
                   style={{ minWidth: 180 }}
                   optionLabelProp="label"
-                  options={allStatuses.map((s) => {
+                  options={allStatuses.filter((s) => s.code !== "CHECKED_IN").map((s) => {
                     const color = s.code === "CONFIRMED" ? "#3b82f6" : s.colorCode;
                     const label = t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name });
                     return { value: s.id, label: <span style={{ color, fontWeight: 600, fontSize: 13 }}>{label}</span>, rawLabel: label, color };
@@ -132,12 +105,6 @@ export default function ReservationDetailsModal({ reservationId, onClose, onStat
                     </div>
                   )}
                 />
-                {detail.status.code === "CONFIRMED" && !detail.checkedInAt && (
-                  <button onClick={handleCheckin} disabled={actionLoading} className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 flex items-center gap-1.5" style={{ background: "#8b5cf6" }}>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    {t("admin.reservations.actions.checkin")}
-                  </button>
-                )}
                 {detail.checkedInAt && (
                   <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "var(--success-soft)", color: "var(--success)", border: "1px solid var(--success-border)" }}>
                     {t("admin.reservations.messages.checked_in_at", { defaultValue: "Đã check-in lúc" })}: {new Date(detail.checkedInAt).toLocaleString()}
@@ -169,6 +136,5 @@ export default function ReservationDetailsModal({ reservationId, onClose, onStat
           </div>
         </div>
       </div>
-    </>
   );
 }

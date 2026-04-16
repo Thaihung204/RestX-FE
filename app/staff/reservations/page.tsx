@@ -23,7 +23,6 @@ const STATUS_ACTIONS_KEYS: Record<
         { actionKey: "cancel", nextStatusId: 5, color: "#ef4444" },
     ],
     CONFIRMED: [
-        { actionKey: "checkin", nextStatusId: 3, color: "#8b5cf6" },
         { actionKey: "complete", nextStatusId: 4, color: "#22c55e" },
         { actionKey: "cancel", nextStatusId: 5, color: "#ef4444" },
     ],
@@ -107,20 +106,6 @@ function ReservationDetailModal({
         }
     };
 
-    const handleCheckin = async () => {
-        if (!detail) return;
-        setActionLoading(true);
-        try {
-            await reservationService.checkInReservation(detail.confirmationCode);
-            onStatusUpdated();
-            onClose();
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setActionLoading(false);
-        }
-    };
-
     return (
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -184,7 +169,7 @@ function ReservationDetailModal({
                                     onChange={(val) => handleStatusChange(val)}
                                     style={{ minWidth: 180 }}
                                     optionLabelProp="label"
-                                    options={allStatuses.map((s) => {
+                                    options={allStatuses.filter((s) => s.code !== "CHECKED_IN").map((s) => {
                                         const color = s.code === "CONFIRMED" ? "#3b82f6" : s.colorCode;
                                         const label = t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name });
                                         return {
@@ -210,20 +195,6 @@ function ReservationDetailModal({
                                         </div>
                                     )}
                                 />
-                                {/* Dedicated Check-in button — opens table session + sets table occupied */}
-                                {detail.status.code === "CONFIRMED" && (
-                                    <button
-                                        onClick={handleCheckin}
-                                        disabled={actionLoading}
-                                        className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 flex items-center gap-1.5"
-                                        style={{ background: "#8b5cf6" }}
-                                    >
-                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        {t('admin.reservations.actions.checkin')}
-                                    </button>
-                                )}
                             </div>
 
                             {/* Info grid */}
