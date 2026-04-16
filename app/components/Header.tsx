@@ -1,15 +1,15 @@
 "use client";
 
-import { CloseOutlined, LogoutOutlined, MenuOutlined, TeamOutlined } from "@ant-design/icons";
+import { CloseOutlined, MenuOutlined } from "@ant-design/icons";
 import { Button, Divider, Drawer, Layout, Menu, Space } from "antd";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
+import { useTenant } from "../../lib/contexts/TenantContext";
 import { useThemeMode } from "../theme/AntdProvider";
 import { usePageTransition } from "./PageTransition";
 import ThemeToggle from "./ThemeToggle";
-import { useTenant } from "../../lib/contexts/TenantContext";
 
 const { Header: AntHeader } = Layout;
 
@@ -21,7 +21,8 @@ const Header: React.FC = () => {
   const { tenant } = useTenant();
 
   const tenantName = "RestX";
-  const tenantLogoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
+  const tenantLogoUrl =
+    tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
 
   const navItems = [
     {
@@ -135,7 +136,14 @@ const Header: React.FC = () => {
             height: 64,
           }}>
           {/* Logo */}
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+          <Link
+            href="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              textDecoration: "none",
+            }}>
             <div
               style={{
                 width: 38,
@@ -151,7 +159,8 @@ const Header: React.FC = () => {
                 className="app-logo-img"
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
                 onError={(e) => {
-                  e.currentTarget.src = "/images/logo/restx-removebg-preview.png";
+                  e.currentTarget.src =
+                    "/images/logo/restx-removebg-preview.png";
                 }}
               />
             </div>
@@ -187,8 +196,7 @@ const Header: React.FC = () => {
             <Space size={12}>
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}>
-              </motion.div>
+                whileTap={{ scale: 0.95 }}></motion.div>
               <LanguageSwitcher />
               <ThemeToggle />
             </Space>
@@ -209,7 +217,15 @@ const Header: React.FC = () => {
       {/* Mobile Drawer */}
       <Drawer
         title={
-          <Link href="/" onClick={() => setDrawerOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+          <Link
+            href="/"
+            onClick={() => setDrawerOpen(false)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              textDecoration: "none",
+            }}>
             <div
               style={{
                 width: 32,
@@ -230,7 +246,8 @@ const Header: React.FC = () => {
                   padding: "4px",
                 }}
                 onError={(e) => {
-                  e.currentTarget.src = "/images/logo/restx-removebg-preview.png";
+                  e.currentTarget.src =
+                    "/images/logo/restx-removebg-preview.png";
                 }}
               />
             </div>

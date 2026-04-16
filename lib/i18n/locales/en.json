@@ -332,7 +332,6 @@
         "order_status_updated": "Order status updated",
         "order_status_update_failed": "Failed to update order status"
       },
-      "empty": "No orders found",
       "payment": {
         "btn": "Pay",
         "actions": {
@@ -630,6 +629,9 @@
         "available": "Available",
         "has_reservation": "Has Reservation"
       },
+      "no_session_tables": "No tables are booked in this session.",
+      "session_filter_desc": "You can switch sessions to view other tables.",
+      "session_filter_hint": "The list is currently filtered by the active session.",
       "modal": {
         "reserved_by": "Reserved by",
         "phone": "Phone",
@@ -878,91 +880,129 @@
   },
   "dashboard": {
     "tables": {
-      "title": "Table management",
-      "subtitle": "Manage tables and reservations",
-      "add_floor": "Add area",
-      "edit_floor": "Edit area",
-      "delete_floor": "Delete area",
-      "add_table": "Add table",
+      "title": "Table Management",
+      "subtitle": "Manage restaurant tables and reservations",
+      "add_table": "Add Table",
+      "add_area": "Add Area",
+      "add_zone": "Draw Zone",
+      "add_area_modal": {
+        "title": "Add New Area",
+        "name_label": "Area Name",
+        "name_placeholder": "e.g. Roof Top",
+        "width_label": "Width (px)",
+        "height_label": "Height (px)",
+        "cancel": "Cancel",
+        "submit": "Add Area",
+        "errors": {
+          "name_required": "Please enter area name",
+          "name_min": "Area name must be at least {{min}} characters",
+          "name_max": "Area name must be at most {{max}} characters",
+          "name_duplicate": "Area name already exists",
+          "width_required": "Please enter width",
+          "width_min": "Width must be at least {{min}} px",
+          "width_max": "Width must be at most {{max}} px",
+          "height_required": "Please enter height",
+          "height_min": "Height must be at least {{min}} px",
+          "height_max": "Height must be at most {{max}} px"
+        }
+      },
+      "add_table_modal": {
+        "title": "Create New Table",
+        "subtitle": "Add a new table to your restaurant layout",
+        "table_number": "Table Number",
+        "table_number_placeholder": "Enter table number",
+        "capacity": "Seating Capacity",
+        "capacity_placeholder": "Number of seats (1-20)",
+        "area": "Dining Area",
+        "cancel": "Cancel",
+        "submit": "Create Table",
+        "errors": {
+          "number_required": "Table number is required",
+          "capacity_min": "Minimum capacity is 1",
+          "capacity_max": "Maximum capacity is 20"
+        },
+        "areas": {
+          "vip": "VIP Section",
+          "indoor": "Indoor Dining",
+          "outdoor": "Outdoor Terrace"
+        }
+      },
+      "stats": {
+        "total_tables": "Total Tables",
+        "available": "Available",
+        "occupied": "Occupied",
+        "reserved": "Reserved"
+      },
+      "card": {
+        "area": "Area",
+        "capacity": "Capacity: {{count}} seats",
+        "order": "Order",
+        "reserved_at": "Reserved at",
+        "view_details": "View Details",
+        "table_name": "Table {{number}}"
+      },
+      "errors": {
+        "cannot_delete_last_area": "Cannot delete the last area."
+      },
       "status": {
         "available": "Available",
         "occupied": "Occupied",
         "reserved": "Reserved",
         "cleaning": "Cleaning"
       },
-      "stats": {
-        "total_tables": "Total tables",
-        "available": "Available",
-        "occupied": "Occupied",
-        "reserved": "Reserved"
+      "map": {
+        "upload_floorplan": "Upload Floorplan",
+        "show_grid": "Show Grid",
+        "floor_dimensions": "Floor Dimensions",
+        "zones": "zones",
+        "tables_on_floor": "tables on this floor"
       },
-      "card": {
-        "table_name": "Table {{number}}",
+      "details": {
+        "title": "Table Details",
+        "subtitle": "Review and update table information",
+        "current_status": "Current Status",
+        "status_available": "Available",
+        "status_occupied": "Occupied",
+        "status_reserved": "Reserved",
+        "status_cleaning": "Cleaning",
+        "qr_title": "QR Code Table {{number}}",
+        "qr_scan": "Scan to order",
+        "qr_load_failed": "Failed to load QR",
+        "copy_link": "Copy link",
+        "copied": "Copied",
+        "download_qr": "Download QR",
+        "cubemap_title": "360 Images (Cubemap)",
+        "cubemap_set": "Images set",
+        "cubemap_save": "Save 360 images",
+        "cubemap_clear": "Remove all 360 images",
+        "cubemap_face_front": "Front",
+        "cubemap_face_back": "Back",
+        "cubemap_face_left": "Left",
+        "cubemap_face_right": "Right",
+        "cubemap_face_top": "Top",
+        "cubemap_face_bottom": "Bottom",
+        "table_code": "Table code",
+        "table_code_placeholder": "Enter table code",
+        "seating_capacity": "Seating capacity",
+        "shape": "Shape",
+        "shape_square": "Square",
+        "shape_circle": "Circle",
+        "shape_rectangle": "Rectangle",
+        "shape_oval": "Oval",
+        "rotation": "Rotation",
+        "width": "Width",
+        "height": "Height",
         "floor": "Floor",
-        "capacity": "Capacity: {{count}} seats",
-        "order": "Order",
-        "reserved_at": "Reserved at",
-        "view_details": "View details"
-      },
-      "view": {
-        "grid": "Grid",
-        "map": "Map"
-      },
-      "zones": {
-        "all": "All",
-        "zone_a": "Zone A",
-        "zone_b": "Zone B",
-        "zone_vip": "VIP",
-        "zone": "Zone"
-      },
-      "table": {
-        "seats": "seats",
-        "guests": "guests",
-        "dishes": "dishes",
-        "from": "From",
-        "booked_at": "Booked at",
-        "capacity": "Capacity"
-      },
-      "modal": {
-        "detail": "Details",
-        "open_table": "Open table",
-        "zone": "Area",
-        "guests_count": "Guest count",
-        "start_time": "Start time",
-        "total_amount": "Total amount",
-        "reservation_name": "Reserved by",
-        "reservation_time": "Reservation time",
-        "phone": "Phone",
-        "confirm_open": "Confirm open",
-        "guest_count": "Guests",
-        "capacity": "Capacity",
-        "total": "Total",
-        "reserved_by": "Reserved by"
-      },
-      "actions": {
-        "open_table": "Open table",
-        "add_dish": "Add dish",
-        "transfer_table": "Transfer table",
-        "checkout": "Checkout",
-        "close_table": "Close table",
-        "guest_arrived": "Guest arrived - Open table",
-        "edit_reservation": "Edit reservation",
-        "finish_cleaning": "Finish cleaning"
-      },
-      "messages": {
-        "table_opened": "Opened {table} for {guests} guests",
-        "table_closed": "Closed {table}",
-        "table_ready": "{table} is ready",
-        "enter_guests": "Please enter guest count",
-        "max_guests": "Max {capacity} guests"
-      },
-      "errors": {
-        "cannot_delete_last_area": "Cannot delete the last area.",
-        "cannot_delete_due_to_booking": "Cannot delete because there is a reservation.",
-        "add_failed": "Failed to add table",
-        "create_floor_failed": "Failed to create area"
-      },
-      "confirm_merge": "Merge tables? This will combine capacity and hide the source table."
+        "table_status": "Table status",
+        "delete": "Delete table",
+        "cancel": "Cancel",
+        "save_changes": "Save changes",
+        "errors": {
+          "number_required": "Table code is required",
+          "width_too_small": "Width must be at least 20",
+          "height_too_small": "Height must be at least 20"
+        }
+      }
     },
     "toasts": {
       "staff": {
@@ -1101,6 +1141,7 @@
         "dashboard": "Dashboard",
         "analytics": "Analytics",
         "tables": "Tables",
+        "activity": "Activity",
         "reservations": "Reservations",
         "menu": "Menu",
         "ingredients": "Ingredients",
@@ -1578,131 +1619,6 @@
         }
       }
     },
-    "tables": {
-      "title": "Table Management",
-      "subtitle": "Manage restaurant tables and reservations",
-      "add_table": "Add Table",
-      "add_area": "Add Area",
-      "add_zone": "Draw Zone",
-      "add_area_modal": {
-        "title": "Add New Area",
-        "name_label": "Area Name",
-        "name_placeholder": "e.g. Roof Top",
-        "width_label": "Width (px)",
-        "height_label": "Height (px)",
-        "cancel": "Cancel",
-        "submit": "Add Area",
-        "errors": {
-          "name_required": "Please enter area name",
-          "name_min": "Area name must be at least {{min}} characters",
-          "name_max": "Area name must be at most {{max}} characters",
-          "name_duplicate": "Area name already exists",
-          "width_required": "Please enter width",
-          "width_min": "Width must be at least {{min}} px",
-          "width_max": "Width must be at most {{max}} px",
-          "height_required": "Please enter height",
-          "height_min": "Height must be at least {{min}} px",
-          "height_max": "Height must be at most {{max}} px"
-        }
-      },
-      "add_table_modal": {
-        "title": "Create New Table",
-        "subtitle": "Add a new table to your restaurant layout",
-        "table_number": "Table Number",
-        "table_number_placeholder": "Enter table number",
-        "capacity": "Seating Capacity",
-        "capacity_placeholder": "Number of seats (1-20)",
-        "area": "Dining Area",
-        "cancel": "Cancel",
-        "submit": "Create Table",
-        "errors": {
-          "number_required": "Table number is required",
-          "capacity_min": "Minimum capacity is 1",
-          "capacity_max": "Maximum capacity is 20"
-        },
-        "areas": {
-          "vip": "VIP Section",
-          "indoor": "Indoor Dining",
-          "outdoor": "Outdoor Terrace"
-        }
-      },
-      "stats": {
-        "total_tables": "Total Tables",
-        "available": "Available",
-        "occupied": "Occupied",
-        "reserved": "Reserved"
-      },
-      "card": {
-        "area": "Area",
-        "capacity": "Capacity: {{count}} seats",
-        "order": "Order",
-        "reserved_at": "Reserved at",
-        "view_details": "View Details",
-        "table_name": "Table {{number}}"
-      },
-      "errors": {
-        "cannot_delete_last_area": "Cannot delete the last area."
-      },
-      "status": {
-        "available": "Available",
-        "occupied": "Occupied",
-        "reserved": "Reserved",
-        "cleaning": "Cleaning"
-      },
-      "map": {
-        "upload_floorplan": "Upload Floorplan",
-        "show_grid": "Show Grid",
-        "floor_dimensions": "Floor Dimensions",
-        "zones": "zones",
-        "tables_on_floor": "tables on this floor"
-      },
-      "details": {
-        "title": "Table Details",
-        "subtitle": "Review and update table information",
-        "current_status": "Current Status",
-        "status_available": "Available",
-        "status_occupied": "Occupied",
-        "status_reserved": "Reserved",
-        "status_cleaning": "Cleaning",
-        "qr_title": "QR Code Table {{number}}",
-        "qr_scan": "Scan to order",
-        "qr_load_failed": "Failed to load QR",
-        "copy_link": "Copy link",
-        "copied": "Copied",
-        "download_qr": "Download QR",
-        "cubemap_title": "360 Images (Cubemap)",
-        "cubemap_set": "Images set",
-        "cubemap_save": "Save 360 images",
-        "cubemap_clear": "Remove all 360 images",
-        "cubemap_face_front": "Front",
-        "cubemap_face_back": "Back",
-        "cubemap_face_left": "Left",
-        "cubemap_face_right": "Right",
-        "cubemap_face_top": "Top",
-        "cubemap_face_bottom": "Bottom",
-        "table_code": "Table code",
-        "table_code_placeholder": "Enter table code",
-        "seating_capacity": "Seating capacity",
-        "shape": "Shape",
-        "shape_square": "Square",
-        "shape_circle": "Circle",
-        "shape_rectangle": "Rectangle",
-        "shape_oval": "Oval",
-        "rotation": "Rotation",
-        "width": "Width",
-        "height": "Height",
-        "floor": "Floor",
-        "table_status": "Table status",
-        "delete": "Delete table",
-        "cancel": "Cancel",
-        "save_changes": "Save changes",
-        "errors": {
-          "number_required": "Table code is required",
-          "width_too_small": "Width must be at least 20",
-          "height_too_small": "Height must be at least 20"
-        }
-      }
-    },
     "staff": {
       "title": "Staff Management",
       "subtitle": "Manage your restaurant team members",
@@ -2021,22 +1937,8 @@
         }
       },
       "notifications": {
-        "order_notifications": "Order Notifications",
-        "system_notifications": "System Notifications",
-        "items": {
-          "new_orders": "New Orders",
-          "new_orders_desc": "Get notified when new orders arrive",
-          "order_updates": "Order Updates",
-          "order_updates_desc": "Updates on order status changes",
-          "order_completion": "Order Completion",
-          "order_completion_desc": "When orders are completed",
-          "table_updates": "Table Updates",
-          "table_updates_desc": "Changes in table status",
-          "staff_alerts": "Staff Alerts",
-          "staff_alerts_desc": "Staff check-in/out notifications",
-          "inventory_alerts": "Inventory Alerts",
-          "inventory_alerts_desc": "Low stock warnings"
-        }
+        "success_update": "Updated successfully",
+        "error_update": "Update failed"
       },
       "security": {
         "change_password": "Change Password",
@@ -2076,10 +1978,6 @@
         "notifications": {
           "not_configured": "No payment information configured for this restaurant"
         }
-      },
-      "notifications": {
-        "success_update": "Updated successfully",
-        "error_update": "Update failed"
       },
       "buttons": {
         "cancel": "Cancel",
@@ -2175,56 +2073,12 @@
     }
   },
   "common": {
-    "cancel": "Cancel",
-    "save": "Save",
-    "saving": "Saving...",
-    "time": {
-      "just_now": "Just now",
-      "minutes_ago": "{{count}} minutes ago",
-      "hours_ago": "{{count}} hours ago",
-      "days_ago": "{{count}} days ago"
-    },
-    "status": {
-      "label": "Status",
-      "active": "Active",
-      "inactive": "Inactive",
-      "pending": "Pending",
-      "preparing": "Preparing",
-      "ready": "Ready",
-      "served": "Served",
-      "cancelled": "Cancelled"
-    },
     "actions": {
-      "title": "Actions",
-      "yes": "Yes",
-      "no": "No",
-      "create_order": "Create New Order",
-      "export_excel": "Export Excel",
-      "exporting": "Exporting...",
-      "export_report": "Download report",
-      "exporting_report": "Downloading report..."
+      "exporting": "Exporting..."
     },
-    "messages": {
-      "export_success": "Report downloaded successfully",
-      "export_failed": "Failed to download report"
-    },
-    "language": "Language",
-    "english": "English",
-    "vietnamese": "Tiếng Việt",
     "theme": {
-      "switch_to_light": "Switch to Light mode",
-      "switch_to_dark": "Switch to Dark mode"
-    },
-    "loading": "Loading...",
-    "loading_menu": "Loading menu...",
-    "save_changes": "Save Changes",
-    "edit": "Edit",
-    "delete": "Delete",
-    "errors": {
-      "data_not_supported": "Data structure not supported",
-      "api_error": "API Error: {{status}} - {{message}}",
-      "network_error": "Network Error: {{message}}",
-      "unknown_error": "An unexpected error occurred"
+      "switch_to_light": "Switch to Light Mode",
+      "switch_to_dark": "Switch to Dark Mode"
     }
   },
   "payment": {
@@ -2570,7 +2424,8 @@
         "orders": "Orders",
         "total_spent": "Total Spent",
         "points": "Points",
-        "status": "Status"
+        "status": "Status",
+        "actions": "Actions"
       },
       "status": {
         "birthday": "Birthday",
@@ -3776,7 +3631,22 @@
         "confirm_table": "Confirm Table",
         "mobile_selected": "Selected",
         "mobile_none": "None",
-        "mobile_confirm": "Done"
+        "mobile_confirm": "Done",
+        "view_360": "View 360",
+        "total_capacity": "Total Capacity",
+        "selected_table_label": "Selected Table"
+      },
+      "panorama": {
+        "loading": "Loading 360 image...",
+        "not_ready": "360 image not ready",
+        "no_image": "This table does not have a 360 image yet.",
+        "load_failed": "Could not load 360 image. Please try again later.",
+        "table_label": "Table {{name}}",
+        "status_available": "Available",
+        "status_occupied": "Occupied",
+        "drag_hint": "Drag to rotate - Scroll to zoom",
+        "back_to_map": "Back to map",
+        "book_now": "Book this table"
       },
       "footer": {
         "tagline": "World-class Dining Experience"
@@ -3875,7 +3745,9 @@
       "seats_unit": "seats",
       "checked_in_at": "Checked In At",
       "last_updated": "Last Updated",
-      "special_requests": "Special Requests"
+      "special_requests": "Special Requests",
+      "panorama": "Panorama",
+      "view_360": "View 360"
     },
     "deposit": {
       "label": "Deposit",

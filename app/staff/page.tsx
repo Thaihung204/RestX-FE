@@ -324,7 +324,7 @@ export default function StaffDashboard() {
       dataIndex: 'time',
       key: 'time',
       width: '22%',
-      render: (time: number) => <Text type="secondary" style={{ fontSize: 14 }}>{t('time.minutes_ago', { count: time })}</Text>,
+      render: (time: number) => <Text type="secondary" style={{ fontSize: 14 }}>{t('time.minutes_ago', { ns: 'common', count: time, defaultValue: '{{count}} phút trước' })}</Text>,
     },
   ];
 
@@ -467,7 +467,7 @@ export default function StaffDashboard() {
                           }}
                           className="welcome-btn-primary"
                         >
-                          {t('actions.create_order')}
+                          {t('staff.dashboard.quick_action_items.create_order')}
                         </Button>
                       </Link>
                     </Flex>

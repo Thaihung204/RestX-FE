@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
+import ThemeToggle from "@/app/components/ThemeToggle";
+import { useThemeMode } from "@/app/theme/AntdProvider";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTenant } from "@/lib/contexts/TenantContext";
 import {
   ApiOutlined,
   BarChartOutlined,
+  CloseOutlined,
   FileTextOutlined,
   InboxOutlined,
+  MenuOutlined,
   ShopOutlined,
   TableOutlined,
-  MenuOutlined,
-  CloseOutlined,
-} from '@ant-design/icons';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import React, { useEffect, useState, type ReactNode } from 'react';
-import { useTenant } from '@/lib/contexts/TenantContext';
-import { useThemeMode } from '@/app/theme/AntdProvider';
-import ThemeToggle from '@/app/components/ThemeToggle';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { Layout, Button, Drawer, Divider, Space } from 'antd';
-import { useTranslation } from 'react-i18next';
+} from "@ant-design/icons";
+import { Button, Divider, Drawer, Layout, Space } from "antd";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 const { Header: AntHeader } = Layout;
 
@@ -30,16 +30,47 @@ export default function TourLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
 
   const modules = [
-    { href: '/tour/analytics', label: t('tour.layout.modules.analytics'), icon: <BarChartOutlined />, color: 'var(--primary)' },
-    { href: '/tour/tables', label: t('tour.layout.modules.tables'), icon: <TableOutlined />, color: '#10B981' },
-    { href: '/tour/menu', label: t('tour.layout.modules.menu'), icon: <FileTextOutlined />, color: '#6366F1' },
-    { href: '/tour/reservations', label: t('tour.layout.modules.reservations'), icon: <InboxOutlined />, color: '#F59E0B' },
-    { href: '/tour/customer', label: t('tour.layout.modules.customer'), icon: <ShopOutlined />, color: '#EC4899' },
-    { href: '/tour/staff-ops', label: t('tour.layout.modules.staff_ops'), icon: <ApiOutlined />, color: '#14B8A6' },
+    {
+      href: "/tour/analytics",
+      label: t("tour.layout.modules.analytics"),
+      icon: <BarChartOutlined />,
+      color: "var(--primary)",
+    },
+    {
+      href: "/tour/tables",
+      label: t("tour.layout.modules.tables"),
+      icon: <TableOutlined />,
+      color: "#10B981",
+    },
+    {
+      href: "/tour/menu",
+      label: t("tour.layout.modules.menu"),
+      icon: <FileTextOutlined />,
+      color: "#6366F1",
+    },
+    {
+      href: "/tour/reservations",
+      label: t("tour.layout.modules.reservations"),
+      icon: <InboxOutlined />,
+      color: "#F59E0B",
+    },
+    {
+      href: "/tour/customer",
+      label: t("tour.layout.modules.customer"),
+      icon: <ShopOutlined />,
+      color: "#EC4899",
+    },
+    {
+      href: "/tour/staff-ops",
+      label: t("tour.layout.modules.staff_ops"),
+      icon: <ApiOutlined />,
+      color: "#14B8A6",
+    },
   ];
 
   const tenantName = "RestX";
-  const tenantLogoUrl = tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
+  const tenantLogoUrl =
+    tenant?.logoUrl?.trim() || "/images/logo/restx-removebg-preview.png";
 
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -54,21 +85,26 @@ export default function TourLayout({ children }: { children: ReactNode }) {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1024); // using 1024 to give space for all modules
     };
-    
+
     handleScroll();
     handleResize();
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
   if (!mounted) return null;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', color: 'var(--text)' }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--bg-base)",
+        color: "var(--text)",
+      }}>
       {/* Premium fixed header with glassmorphism similar to main page */}
       <AntHeader
         style={{
@@ -102,7 +138,14 @@ export default function TourLayout({ children }: { children: ReactNode }) {
           height: 64,
         }}>
         {/* Logo wrapped in Link to / */}
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: 'none' }}>
+        <Link
+          href="/"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            textDecoration: "none",
+          }}>
           <div
             style={{
               width: 38,
@@ -114,7 +157,7 @@ export default function TourLayout({ children }: { children: ReactNode }) {
             }}>
             <img
               src={tenantLogoUrl}
-              alt={tenantName || t('tour.layout.logo_alt')}
+              alt={tenantName || t("tour.layout.logo_alt")}
               className="app-logo-img"
               style={{ width: "100%", height: "100%", objectFit: "contain" }}
               onError={(e) => {
@@ -134,7 +177,13 @@ export default function TourLayout({ children }: { children: ReactNode }) {
 
         {/* Desktop Navigation */}
         {!isMobile && (
-          <nav style={{ display: 'flex', gap: 6, flex: 1, justifyContent: 'center' }}>
+          <nav
+            style={{
+              display: "flex",
+              gap: 6,
+              flex: 1,
+              justifyContent: "center",
+            }}>
             {modules.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -142,21 +191,26 @@ export default function TourLayout({ children }: { children: ReactNode }) {
                   key={item.href}
                   href={item.href}
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
+                    display: "inline-flex",
+                    alignItems: "center",
                     gap: 6,
-                    padding: '8px 14px',
+                    padding: "8px 14px",
                     borderRadius: 50,
-                    border: isActive ? `1.5px solid ${item.color}` : '1.5px solid transparent',
+                    border: isActive
+                      ? `1.5px solid ${item.color}`
+                      : "1.5px solid transparent",
                     fontWeight: isActive ? 600 : 500,
                     fontSize: 13,
-                    color: isActive ? item.color : mode === 'dark' ? '#A3A3A3' : '#666',
-                    textDecoration: 'none',
-                    background: isActive ? `${item.color}10` : 'transparent',
-                    transition: 'all 0.3s ease',
-                    boxShadow: isActive ? `0 2px 12px ${item.color}20` : 'none',
-                  }}
-                >
+                    color: isActive
+                      ? item.color
+                      : mode === "dark"
+                        ? "#A3A3A3"
+                        : "#666",
+                    textDecoration: "none",
+                    background: isActive ? `${item.color}10` : "transparent",
+                    transition: "all 0.3s ease",
+                    boxShadow: isActive ? `0 2px 12px ${item.color}20` : "none",
+                  }}>
                   <span style={{ fontSize: 14 }}>{item.icon}</span>
                   {item.label}
                 </Link>
@@ -187,7 +241,15 @@ export default function TourLayout({ children }: { children: ReactNode }) {
       {/* Mobile Drawer */}
       <Drawer
         title={
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: 'none' }} onClick={() => setDrawerOpen(false)}>
+          <Link
+            href="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              textDecoration: "none",
+            }}
+            onClick={() => setDrawerOpen(false)}>
             <div
               style={{
                 width: 32,
@@ -199,11 +261,17 @@ export default function TourLayout({ children }: { children: ReactNode }) {
               }}>
               <img
                 src={tenantLogoUrl}
-                alt={tenantName || t('tour.layout.logo_alt')}
+                alt={tenantName || t("tour.layout.logo_alt")}
                 className="app-logo-img"
-                style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  padding: "4px",
+                }}
                 onError={(e) => {
-                  e.currentTarget.src = "/images/logo/restx-removebg-preview.png";
+                  e.currentTarget.src =
+                    "/images/logo/restx-removebg-preview.png";
                 }}
               />
             </div>
@@ -220,14 +288,21 @@ export default function TourLayout({ children }: { children: ReactNode }) {
         placement="right"
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
-        closeIcon={<CloseOutlined style={{ color: mode === "dark" ? "#ECECEC" : "#111111" }} />}
+        closeIcon={
+          <CloseOutlined
+            style={{ color: mode === "dark" ? "#ECECEC" : "#111111" }}
+          />
+        }
         size="default"
         styles={{
-          header: { background: "var(--surface)", borderBottom: "1px solid var(--border)" },
-          body: { background: "var(--surface)", padding: '24px 16px' },
+          header: {
+            background: "var(--surface)",
+            borderBottom: "1px solid var(--border)",
+          },
+          body: { background: "var(--surface)", padding: "24px 16px" },
           mask: { backdropFilter: "blur(4px)" },
         }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {modules.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -236,26 +311,31 @@ export default function TourLayout({ children }: { children: ReactNode }) {
                 href={item.href}
                 onClick={() => setDrawerOpen(false)}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
+                  display: "flex",
+                  alignItems: "center",
                   gap: 12,
-                  padding: '12px 16px',
+                  padding: "12px 16px",
                   borderRadius: 12,
-                  background: isActive ? `${item.color}15` : 'transparent',
-                  color: isActive ? item.color : mode === 'dark' ? '#ECECEC' : '#111111',
-                  textDecoration: 'none',
+                  background: isActive ? `${item.color}15` : "transparent",
+                  color: isActive
+                    ? item.color
+                    : mode === "dark"
+                      ? "#ECECEC"
+                      : "#111111",
+                  textDecoration: "none",
                   fontWeight: isActive ? 600 : 500,
                   fontSize: 16,
-                  border: isActive ? `1px solid ${item.color}30` : `1px solid transparent`,
-                }}
-              >
+                  border: isActive
+                    ? `1px solid ${item.color}30`
+                    : `1px solid transparent`,
+                }}>
                 <span style={{ fontSize: 18 }}>{item.icon}</span>
                 {item.label}
               </Link>
             );
           })}
         </div>
-        <Divider style={{ borderColor: 'var(--border)' }} />
+        <Divider style={{ borderColor: "var(--border)" }} />
         <div
           style={{
             display: "flex",
@@ -272,8 +352,7 @@ export default function TourLayout({ children }: { children: ReactNode }) {
         key={pathname}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.25, 0.4, 0.25, 1] }}
-      >
+        transition={{ duration: 0.5, ease: [0.25, 0.4, 0.25, 1] }}>
         {children}
       </motion.main>
     </div>
