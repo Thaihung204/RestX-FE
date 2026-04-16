@@ -12,7 +12,7 @@ import customerService from "@/lib/services/customerService";
 import reservationService, { ReservationDepositStatus, ReservationDetail, ReservationStatus } from "@/lib/services/reservationService";
 import { Drawer, Tag, message } from "antd";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { HubConnectionState } from "@microsoft/signalr";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -82,6 +82,9 @@ const statusBg: Record<string, string> = {
 };
 
 const currency = (v?: number) => `${(v || 0).toLocaleString("vi-VN")}đ`;
+const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const isGuidLike = (value: string): boolean => GUID_REGEX.test(value.trim());
 
 const normalizeReservationDetail = (detail: ReservationDetail): ReservationDetail => {
   const raw = detail as ReservationDetail & {
@@ -792,6 +795,7 @@ function TableMapCard({
 // ── Main Component ─────────────────────────────────────────────────────────────
 export default function ReservationDetailsView({ reservationId, mode: viewMode }: ReservationDetailsViewProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { tenant } = useTenant();
   const { t, i18n } = useTranslation();
 
@@ -811,11 +815,35 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const [editSpecialRequests, setEditSpecialRequests] = useState("");
 
   const isCustomer = viewMode === "customer";
+  const reservationSlug = String(reservationId || "").trim();
+  const reservationCodeQuery = (searchParams.get("code") || "").trim().toUpperCase();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const d = await reservationService.getReservationById(reservationId);
+      if (!reservationSlug) {
+        throw new Error("Reservation identifier is empty");
+      }
+
+      const shouldLoadByCode = isCustomer && !isGuidLike(reservationSlug);
+      let d: ReservationDetail;
+
+      if (shouldLoadByCode) {
+        d = await reservationService.lookupReservation({ code: reservationSlug });
+      } else {
+        try {
+          d = await reservationService.getReservationById(reservationSlug);
+        } catch (error) {
+          const statusCode = (error as { response?: { status?: number } })?.response?.status;
+
+          if (isCustomer && statusCode === 401 && reservationCodeQuery) {
+            d = await reservationService.lookupReservation({ code: reservationCodeQuery });
+          } else {
+            throw error;
+          }
+        }
+      }
+
       let normalizedDetail = normalizeReservationDetail(d);
 
       try {
@@ -824,6 +852,31 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
       } catch (depositError) {
         // Keep reservation detail fallback when deposit status endpoint is unavailable for current auth context.
         console.warn("Deposit status unavailable:", depositError);
+      }
+
+      const deadlineTime = normalizedDetail.paymentDeadline
+        ? new Date(normalizedDetail.paymentDeadline).getTime()
+        : Number.NaN;
+      const isDepositDeadlinePassed = !Number.isNaN(deadlineTime) && deadlineTime <= Date.now();
+      const shouldRegenerateDepositLink =
+        isCustomer &&
+        !normalizedDetail.depositPaid &&
+        normalizedDetail.depositAmount > 0 &&
+        !isDepositDeadlinePassed &&
+        !normalizedDetail.checkoutUrl;
+
+      if (shouldRegenerateDepositLink) {
+        try {
+          const payLinkRes = await reservationService.createDepositPaymentLink(normalizedDetail.id);
+          if (payLinkRes.checkoutUrl) {
+            normalizedDetail = {
+              ...normalizedDetail,
+              checkoutUrl: payLinkRes.checkoutUrl,
+            };
+          }
+        } catch (payLinkError) {
+          console.warn("Deposit payment link regeneration unavailable:", payLinkError);
+        }
       }
 
       setDetail(normalizedDetail);
@@ -872,7 +925,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     } finally {
       setLoading(false);
     }
-  }, [reservationId, isCustomer]);
+  }, [reservationSlug, isCustomer, reservationCodeQuery]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -1056,12 +1109,19 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     detail.depositAmount > 0 &&
     !isDepositDeadlinePassed &&
     !isEditLocked;
+  const isCancelledByDeadline =
+    !detail.depositPaid &&
+    isDepositDeadlinePassed &&
+    (detail.status.code || "").toUpperCase() === "CANCELLED";
   const hasTenantHeroBanner = Boolean(tenant?.backgroundUrl);
   const heroText = hasTenantHeroBanner ? "#F8FAFC" : "var(--text)";
   const heroTextMuted = hasTenantHeroBanner ? "rgba(248,250,252,0.82)" : "var(--text-muted)";
   const heroBorder = hasTenantHeroBanner ? "rgba(248,250,252,0.22)" : "var(--border)";
   const heroSurface = hasTenantHeroBanner ? "rgba(15,23,42,0.55)" : "var(--surface)";
-  const reservationSharePath = `/your-reservation/${detail.id}`;
+  const reservationShareToken = isCustomer
+    ? (detail.confirmationCode || detail.id)
+    : detail.id;
+  const reservationSharePath = `/your-reservation/${encodeURIComponent(reservationShareToken)}`;
   const reservationShareUrl = typeof window !== "undefined"
     ? `${window.location.origin}${reservationSharePath}`
     : reservationSharePath;
@@ -1548,6 +1608,13 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                 {isDepositDeadlinePassed && !detail.depositPaid && (
                   <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>
                     {t("reservation_detail.deposit.deadline_passed", { defaultValue: "Đã quá hạn thanh toán cọc." })}
+                  </p>
+                )}
+                {isCancelledByDeadline && (
+                  <p className="text-xs mt-1" style={{ color: "var(--danger)", fontWeight: 700 }}>
+                    {t("reservation_detail.deposit.cancelled_due_deadline", {
+                      defaultValue: "Đặt bàn đã bị hủy do quá hạn thanh toán cọc.",
+                    })}
                   </p>
                 )}
               </div>

@@ -3973,7 +3973,8 @@
       "deadline_passed": "Đã quá hạn thanh toán cọc.",
       "deadline_over": "Quá hạn",
       "payment_link_label": "Link thanh toán cọc",
-      "open_payment_link": "Mở link thanh toán"
+      "open_payment_link": "Mở link thanh toán",
+      "cancelled_due_deadline": "Đặt bàn đã bị hủy do quá hạn thanh toán cọc."
     },
     "order": {
       "title": "Thông tin order",

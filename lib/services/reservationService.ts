@@ -288,24 +288,13 @@ export const reservationService = {
     await axiosInstance.post(`/reservations/${id}/checkin`);
   },
 
-  /** GET /api/reservations/{id}/deposit-status (fallback: /deposit) — trạng thái đặt cọc */
+  /** GET /api/reservations/{id}/deposit — trạng thái đặt cọc */
   getDepositStatus: async (id: string): Promise<ReservationDepositStatus> => {
-    const unwrap = (payload: unknown): ReservationDepositStatus => {
-      const raw = payload as { data?: ReservationDepositStatus } | ReservationDepositStatus;
-      return (raw as { data?: ReservationDepositStatus })?.data ?? (raw as ReservationDepositStatus);
-    };
-
-    try {
-      const response = await axiosInstance.get<ApiEnvelope<ReservationDepositStatus> | ReservationDepositStatus>(
-        `/reservations/${id}/deposit-status`,
-      );
-      return unwrap(response.data);
-    } catch {
-      const response = await axiosInstance.get<ApiEnvelope<ReservationDepositStatus> | ReservationDepositStatus>(
-        `/reservations/${id}/deposit`,
-      );
-      return unwrap(response.data);
-    }
+    const response = await axiosInstance.get<ApiEnvelope<ReservationDepositStatus> | ReservationDepositStatus>(
+      `/reservations/${id}/deposit`,
+    );
+    const raw = response.data as { data?: ReservationDepositStatus } | ReservationDepositStatus;
+    return (raw as { data?: ReservationDepositStatus })?.data ?? (raw as ReservationDepositStatus);
   },
 
   /** POST /api/reservations/{id}/deposit/pay — tạo link thanh toán cọc */

@@ -1166,10 +1166,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                         <button
                             onClick={() => {
-                                if (!reservationId) return;
-                                window.location.href = `/your-reservation/${reservationId}`;
+                                const detailToken = (confirmationCode || reservationId || '').trim();
+                                if (!detailToken) return;
+                                window.location.href = `/your-reservation/${encodeURIComponent(detailToken)}`;
                             }}
-                            disabled={!reservationId}
+                            disabled={!confirmationCode && !reservationId}
                             className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {t('landing.booking.success.view_details', { defaultValue: 'Xem chi tiết' })}

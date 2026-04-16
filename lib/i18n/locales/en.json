@@ -3916,7 +3916,8 @@
       "deadline_passed": "The deposit payment deadline has passed.",
       "deadline_over": "Expired",
       "payment_link_label": "Deposit payment link",
-      "open_payment_link": "Open payment link"
+      "open_payment_link": "Open payment link",
+      "cancelled_due_deadline": "This reservation was cancelled due to an expired deposit payment deadline."
     },
     "order": {
       "title": "Order Information",

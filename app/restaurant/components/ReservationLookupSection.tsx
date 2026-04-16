@@ -219,7 +219,7 @@ export default function ReservationLookupSection() {
 
                             <div className="pt-2 mt-2">
                                 <Link
-                                    href={`/your-reservation/${result.id}`}
+                                    href={`/your-reservation/${encodeURIComponent(result.confirmationCode || result.id)}`}
                                     className="flex w-full items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all hover:brightness-110"
                                     style={{
                                         background: 'var(--primary)',
