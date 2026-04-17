@@ -47,6 +47,23 @@ export default function OrdersPage() {
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
 
+  const searchQuery = [orderSearch.trim(), customerSearch.trim(), tableSearch.trim()]
+    .filter(Boolean)
+    .join(" ");
+
+  const orderFilterParams = useMemo(
+    () => ({
+      search: searchQuery || undefined,
+      orderStatusId: statusFilter ? Number(statusFilter) : undefined,
+      paymentStatusId: paymentFilter
+        ? paymentFilter === "paid"
+          ? 1
+          : 0
+        : undefined,
+    }),
+    [paymentFilter, searchQuery, statusFilter],
+  );
+
   const mapPaymentStatus = (statusId: number): "unpaid" | "paid" => {
     return statusId === 1 ? "paid" : "unpaid";
   };
@@ -111,16 +128,7 @@ export default function OrdersPage() {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
-      const data = await orderService.getOrdersByFilter({
-        reference: orderSearch.trim() || undefined,
-        tableId: tableSearch.trim() || undefined,
-        orderStatusId: statusFilter ? Number(statusFilter) : undefined,
-        paymentStatusId: paymentFilter
-          ? paymentFilter === "paid"
-            ? 1
-            : 0
-          : undefined,
-      });
+      const data = await orderService.getOrdersByFilter(orderFilterParams);
       setOrders(
         data.map((o) => {
           const distinctCount = o.orderDetails?.length ?? 0;
@@ -162,7 +170,7 @@ export default function OrdersPage() {
     } finally {
       inFlightRef.current = false;
     }
-  }, []);
+  }, [orderFilterParams]);
 
   const refreshOrders = useCallback(
     async (showLoading = true) => {
@@ -238,16 +246,7 @@ export default function OrdersPage() {
   const handleExportOrders = useCallback(async () => {
     setExporting(true);
     try {
-      const file = await orderService.exportOrders({
-        reference: orderSearch.trim() || undefined,
-        tableId: tableSearch.trim() || undefined,
-        orderStatusId: statusFilter ? Number(statusFilter) : undefined,
-        paymentStatusId: paymentFilter
-          ? paymentFilter === "paid"
-            ? 1
-            : 0
-          : undefined,
-      });
+      const file = await orderService.exportOrders(orderFilterParams);
 
       triggerBrowserDownload(file.blob, file.fileName);
       message.success(t("common.messages.export_success"));
@@ -257,53 +256,15 @@ export default function OrdersPage() {
     } finally {
       setExporting(false);
     }
-  }, [orderSearch, paymentFilter, statusFilter, t, tableSearch]);
+  }, [orderFilterParams, t]);
 
-  const filteredOrders = useMemo(() => {
-    const orderKeyword = orderSearch.trim().toLowerCase();
-    const customerKeyword = customerSearch.trim().toLowerCase();
-    const tableKeyword = tableSearch.trim().toLowerCase();
-
-    return orders.filter((order) => {
-      const matchesOrder =
-        !orderKeyword || order.orderNumber.toLowerCase().includes(orderKeyword);
-
-      const matchesCustomer =
-        !customerKeyword ||
-        order.customerName.toLowerCase().includes(customerKeyword);
-
-      const tableValue = String(order.raw?.tableId ?? "").toLowerCase();
-      const matchesTable = !tableKeyword || tableValue.includes(tableKeyword);
-
-      const matchesStatus =
-        !statusFilter || String(order.orderStatusId) === statusFilter;
-      const matchesPayment =
-        !paymentFilter || order.paymentStatus === paymentFilter;
-
-      return (
-        matchesOrder &&
-        matchesCustomer &&
-        matchesTable &&
-        matchesStatus &&
-        matchesPayment
-      );
-    });
-  }, [
-    orders,
-    orderSearch,
-    customerSearch,
-    tableSearch,
-    statusFilter,
-    paymentFilter,
-  ]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
 
   const pagedOrders = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredOrders.slice(start, start + PAGE_SIZE);
-  }, [currentPage, filteredOrders]);
+    return orders.slice(start, start + PAGE_SIZE);
+  }, [currentPage, orders]);
 
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -700,7 +661,7 @@ export default function OrdersPage() {
             </table>
           </div>
 
-          {!loading && filteredOrders.length > 0 && totalPages > 1 && (
+          {!loading && orders.length > 0 && totalPages > 1 && (
             <div
               className="flex items-center justify-between px-4 py-3"
               style={{ borderTop: "1px solid var(--border)" }}>
@@ -708,8 +669,8 @@ export default function OrdersPage() {
                 {t("admin.reservations.pagination.page_info", {
                   page: currentPage,
                   total: totalPages,
-                  count: filteredOrders.length,
-                  defaultValue: `Trang ${currentPage}/${totalPages} • ${filteredOrders.length} bản ghi`,
+                  count: orders.length,
+                  defaultValue: `Trang ${currentPage}/${totalPages} • ${orders.length} bản ghi`,
                 })}
               </p>
               <div className="flex items-center gap-2">
