@@ -503,7 +503,54 @@
       "attendance": "Chấm công",
       "reservations": "Đặt bàn",
       "floor_activity": "Hoạt động sàn",
-      "floor_activity_short": "Sàn"
+      "floor_activity_short": "Sàn",
+      "stats": {
+        "setup_suffix": " bước",
+        "setup_label": "Thiết lập đơn giản",
+        "menu_items_label": "Món ăn mỗi thực đơn",
+        "reload_suffix": " reload",
+        "realtime_label": "Cập nhật tức thì"
+      },
+      "features": {
+        "step_1": {
+          "tag": "Bước 01 — Danh mục",
+          "title_highlight": "Tùy chỉnh danh mục",
+          "title_suffix": "theo thực đơn nhà hàng",
+          "description": "Tạo và sắp xếp danh mục linh hoạt — Món chính, Khai vị, Tráng miệng, Đồ uống. Thêm món ăn vào từng nhóm với đầy đủ thông tin và hình ảnh.",
+          "image_alt": "Quản lý danh mục",
+          "bullets": {
+            "create_category": "Tạo danh mục và đặt tên tùy ý",
+            "add_dish": "Thêm món ăn vào từng danh mục",
+            "reorder_display": "Sắp xếp thứ tự hiển thị kéo-thả"
+          }
+        },
+        "step_2": {
+          "tag": "Bước 02 — Món ăn",
+          "title_prefix": "Quản lý",
+          "title_highlight": "món ăn",
+          "title_suffix": "toàn diện",
+          "description": "Thêm, chỉnh sửa và kiểm soát từng món ăn với đầy đủ thông tin: tên, mô tả, giá, hình ảnh và trạng thái hiển thị theo thời gian thực.",
+          "image_alt": "Quản lý món ăn",
+          "bullets": {
+            "edit_info": "Chỉnh sửa thông tin và giá món ăn",
+            "attach_multi_category": "Gắn món vào nhiều danh mục cùng lúc",
+            "toggle_visibility": "Ẩn/hiện món ăn tức thì không cần reload"
+          }
+        },
+        "step_3": {
+          "tag": "Bước 03 — Nguyên liệu",
+          "title_prefix": "Kiểm soát",
+          "title_highlight": "nguyên liệu",
+          "title_suffix": "và tồn kho",
+          "description": "Gắn nguyên liệu cho từng món và theo dõi tồn kho theo thời gian thực. Hệ thống tự động cảnh báo khi sắp hết, giúp bếp chủ động xử lý trước khi ảnh hưởng phục vụ.",
+          "image_alt": "Quản lý nguyên liệu",
+          "bullets": {
+            "bind_ingredients": "Gắn nguyên liệu cụ thể cho từng món",
+            "low_stock_alert": "Cảnh báo tự động khi sắp hết nguyên liệu",
+            "auto_hide_out_of_stock": "Tự động ẩn món khi nguyên liệu cạn kiệt"
+          }
+        }
+      }
     },
     "user_menu": {
       "profile": "Thông tin cá nhân",
@@ -720,55 +767,6 @@
         "cancel_reservation_success": "Đã hủy đặt bàn thành công.",
         "cancel_reservation_error": "Không thể hủy đặt bàn",
         "customer": "Khách hàng"
-      }
-    },
-    "menu": {
-      "stats": {
-        "setup_suffix": " bước",
-        "setup_label": "Thiết lập đơn giản",
-        "menu_items_label": "Món ăn mỗi thực đơn",
-        "reload_suffix": " reload",
-        "realtime_label": "Cập nhật tức thì"
-      },
-      "features": {
-        "step_1": {
-          "tag": "Bước 01 — Danh mục",
-          "title_highlight": "Tùy chỉnh danh mục",
-          "title_suffix": "theo thực đơn nhà hàng",
-          "description": "Tạo và sắp xếp danh mục linh hoạt — Món chính, Khai vị, Tráng miệng, Đồ uống. Thêm món ăn vào từng nhóm với đầy đủ thông tin và hình ảnh.",
-          "image_alt": "Quản lý danh mục",
-          "bullets": {
-            "create_category": "Tạo danh mục và đặt tên tùy ý",
-            "add_dish": "Thêm món ăn vào từng danh mục",
-            "reorder_display": "Sắp xếp thứ tự hiển thị kéo-thả"
-          }
-        },
-        "step_2": {
-          "tag": "Bước 02 — Món ăn",
-          "title_prefix": "Quản lý",
-          "title_highlight": "món ăn",
-          "title_suffix": "toàn diện",
-          "description": "Thêm, chỉnh sửa và kiểm soát từng món ăn với đầy đủ thông tin: tên, mô tả, giá, hình ảnh và trạng thái hiển thị theo thời gian thực.",
-          "image_alt": "Quản lý món ăn",
-          "bullets": {
-            "edit_info": "Chỉnh sửa thông tin và giá món ăn",
-            "attach_multi_category": "Gắn món vào nhiều danh mục cùng lúc",
-            "toggle_visibility": "Ẩn/hiện món ăn tức thì không cần reload"
-          }
-        },
-        "step_3": {
-          "tag": "Bước 03 — Nguyên liệu",
-          "title_prefix": "Kiểm soát",
-          "title_highlight": "nguyên liệu",
-          "title_suffix": "và tồn kho",
-          "description": "Gắn nguyên liệu cho từng món và theo dõi tồn kho theo thời gian thực. Hệ thống tự động cảnh báo khi sắp hết, giúp bếp chủ động xử lý trước khi ảnh hưởng phục vụ.",
-          "image_alt": "Quản lý nguyên liệu",
-          "bullets": {
-            "bind_ingredients": "Gắn nguyên liệu cụ thể cho từng món",
-            "low_stock_alert": "Cảnh báo tự động khi sắp hết nguyên liệu",
-            "auto_hide_out_of_stock": "Tự động ẩn món khi nguyên liệu cạn kiệt"
-          }
-        }
       }
     },
     "customer": {
@@ -3979,8 +3977,19 @@
     }
   },
   "reservation_detail": {
+    "loading": "Đang tải thông tin đặt bàn...",
     "back": "Quay lại",
     "breadcrumb": "Chi tiết đặt bàn",
+    "language": {
+      "toggle": "Chuyển ngôn ngữ",
+      "switched": "Đã chuyển ngôn ngữ thành công."
+    },
+    "share": {
+      "label": "Đường dẫn đặt bàn",
+      "copy": "Sao chép",
+      "copy_success": "Đã sao chép đường dẫn đặt bàn.",
+      "copy_failed": "Không thể sao chép đường dẫn đặt bàn."
+    },
     "not_found": {
       "title": "Không tìm thấy đặt bàn",
       "description": "Đặt bàn này có thể không tồn tại hoặc bạn không có quyền truy cập."
@@ -4007,7 +4016,8 @@
       "type": "Loại khách",
       "guest": "Khách vãng lai",
       "member": "Thành viên",
-      "loyalty_points": "Điểm tích lũy"
+      "loyalty_points": "Điểm tích lũy",
+      "points_unit": "điểm"
     },
     "booking": {
       "title": "Thông tin đặt chỗ",
@@ -4021,24 +4031,31 @@
       "checked_in_at": "Thời gian check-in",
       "last_updated": "Cập nhật lần cuối",
       "special_requests": "Yêu cầu đặc biệt",
-      "panorama": "Panorama",
-      "view_360": "Xem 360"
+      "table_preview_title": "Không gian bàn",
+      "table_preview_desc": "Ảnh khu vực bàn đã chọn.",
+      "table_label": "Bàn {{code}}",
+      "table_preview_alt": "Ảnh xem trước bàn {{code}}"
     },
     "deposit": {
       "label": "Đặt cọc",
       "pay_now": "Thanh toán cọc",
       "creating_link": "Đang tạo...",
+      "already_paid": "Khoản cọc đã được thanh toán.",
+      "deadline_passed": "Đã quá hạn thanh toán cọc.",
       "no_order_warning": "Chưa có order cọc. Vui lòng liên hệ nhà hàng.",
       "link_opened": "Đã mở link thanh toán cọc.",
       "link_error": "Không lấy được link thanh toán.",
       "create_failed": "Tạo link thanh toán thất bại.",
-      "already_paid": "Khoản cọc đã được thanh toán.",
-      "deadline_label": "Hạn thanh toán",
-      "deadline_passed": "Đã quá hạn thanh toán cọc.",
-      "deadline_over": "Quá hạn",
-      "payment_link_label": "Link thanh toán cọc",
-      "open_payment_link": "Mở link thanh toán",
-      "cancelled_due_deadline": "Đặt bàn đã bị hủy do quá hạn thanh toán cọc."
+      "paid_desc": "Khoản đặt cọc đã được thanh toán thành công.",
+      "unpaid_desc": "Bạn chưa thanh toán đặt cọc. Hãy thanh toán sớm để giữ bàn.",
+      "deadline_cancel_desc": "Reservation đã bị hủy do quá hạn thanh toán cọc.",
+      "deadline_passed_desc": "Đã quá hạn thanh toán đặt cọc.",
+      "deadline": "Hạn thanh toán",
+      "open_checkout": "Mở link thanh toán",
+      "badge_paid": "Đã thanh toán",
+      "badge_unpaid": "Chưa thanh toán",
+      "status_paid": "Đã thanh toán",
+      "status_unpaid": "Chưa thanh toán"
     },
     "order": {
       "title": "Thông tin order",
@@ -4047,12 +4064,34 @@
       "status": "Trạng thái",
       "no_orders": "Chưa có order nào liên kết với đặt bàn này.",
       "order_now": "Order ngay",
-      "readonly_note": "Bạn chỉ có quyền xem thông tin. Liên hệ nhà hàng để thay đổi."
+      "readonly_note": "Bạn chỉ có quyền xem thông tin. Liên hệ nhà hàng để thay đổi.",
+      "unnamed_order": "Đơn hàng",
+      "paid": "Đã thanh toán",
+      "unpaid": "Chưa thanh toán"
+    },
+    "edit": {
+      "locked_status": "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa.",
+      "date_required": "Vui lòng chọn thời gian.",
+      "date_in_past": "Thời gian đặt chỗ phải lớn hơn thời điểm hiện tại.",
+      "guests_exceed_capacity": "Số khách ({{guests}}) vượt quá sức chứa bàn ({{capacity}}).",
+      "save_success": "Cập nhật reservation thành công.",
+      "save_failed": "Không thể cập nhật reservation.",
+      "edit_btn": "Chỉnh sửa",
+      "cancel_btn": "Hủy",
+      "save_btn": "Lưu",
+      "date_time": "Ngày & giờ",
+      "guests": "Số khách",
+      "special_requests": "Yêu cầu đặc biệt"
+    },
+    "map": {
+      "loading": "Đang tải sơ đồ...",
+      "unavailable": "Không có sơ đồ bàn"
     },
     "location": {
       "no_address": "Chưa có địa chỉ",
       "updating": "Đang cập nhật địa chỉ",
-      "open_maps": "Mở Google Maps"
+      "open_maps": "Mở Google Maps",
+      "map_title": "Bản đồ vị trí nhà hàng"
     },
     "code": {
       "label": "Mã xác nhận",
@@ -4485,11 +4524,6 @@
           "success": "[OK] Thanh toán thành công — 19:58"
         }
       }
-    }
-  },
-  "common": {
-    "actions": {
-      "exporting": "Đang xuất..."
     }
   }
 }

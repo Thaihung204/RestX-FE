@@ -1,12 +1,8 @@
-import {
+﻿import {
   DownloadableFile,
   getFileNameFromContentDisposition,
 } from "@/lib/utils/fileDownload";
 import axiosInstance from "./axiosInstance";
-
-// ─────────────────────────────────────────────
-// Shared Types
-// ─────────────────────────────────────────────
 
 export interface ReservationStatus {
   id: number;
@@ -27,10 +23,6 @@ export interface ApiEnvelope<T> {
   data: T;
   message?: string;
 }
-
-// ─────────────────────────────────────────────
-// POST /api/reservations — Create (guest hoặc customer login)
-// ─────────────────────────────────────────────
 
 export interface CreateReservationRequest {
   tableIds: string[];
@@ -67,10 +59,6 @@ export interface CreateReservationResponse {
   updatedAt?: string;
 }
 
-// ─────────────────────────────────────────────
-// GET /api/reservations — Manager/Admin list
-// ─────────────────────────────────────────────
-
 export interface GetReservationsParams {
   pageNumber?: number;
   pageSize?: number;
@@ -85,10 +73,7 @@ export interface GetReservationsParams {
 export interface ReservationListItem {
   id: string;
   confirmationCode: string;
-  tables: Pick<
-    ReservationTableItem,
-    "id" | "code" | "capacity" | "floorName"
-  >[];
+  tables: Pick<ReservationTableItem, "id" | "code" | "capacity" | "floorName">[];
   reservationDateTime: string;
   numberOfGuests: number;
   contactName: string;
@@ -97,6 +82,8 @@ export interface ReservationListItem {
   status: ReservationStatus;
   depositAmount?: number;
   depositPaid: boolean;
+  paymentDeadline?: string | null;
+  checkoutUrl?: string | null;
   createdAt: string;
 }
 
@@ -109,10 +96,6 @@ export interface PaginatedReservations {
   hasNextPage: boolean;
   hasPreviousPage: boolean;
 }
-
-// ─────────────────────────────────────────────
-// GET /api/reservations/{id} — Detail
-// ─────────────────────────────────────────────
 
 export interface ReservationContact {
   name: string;
@@ -145,23 +128,17 @@ export interface ReservationDetail {
 export interface ReservationDepositStatus {
   reservationId: string;
   depositAmount: number;
-  paymentDeadline?: string | null;
+  paymentDeadline: string | null;
   isPaid: boolean;
-  checkoutUrl?: string | null;
-  paymentStatus?: number | null;
+  checkoutUrl: string | null;
+  paymentStatus?: string | number | null;
   paymentStatusName?: string | null;
 }
-
-// ─────────────────────────────────────────────
-// GET /api/reservations/check-availability
-// ─────────────────────────────────────────────
 
 export interface CheckAvailabilityParams {
   tableIds?: string[];
   reservationDateTime?: string;
   bufferMinutes?: number;
-
-  // backward-compatible input
   date?: string;
   time?: string;
   numberOfGuests?: number;
@@ -179,34 +156,26 @@ export interface CheckAvailabilityResponse {
   conflictingSlots: CheckAvailabilityConflict[];
 }
 
-// ─────────────────────────────────────────────
-// GET /api/reservations/lookup — Guest
-// ─────────────────────────────────────────────
-
 export interface LookupReservationParams {
   code?: string;
   confirmationCode?: string;
 }
 
-// ─────────────────────────────────────────────
-// Service
-// ─────────────────────────────────────────────
+const unwrapApiEnvelope = <T>(payload: ApiEnvelope<T> | T): T => {
+  const maybeEnvelope = payload as ApiEnvelope<T>;
+  if (maybeEnvelope && typeof maybeEnvelope === "object" && "data" in maybeEnvelope) {
+    return maybeEnvelope.data;
+  }
+  return payload as T;
+};
 
 export const reservationService = {
-  /** POST /api/reservations — Guest hoặc Customer tạo đặt bàn */
-  createReservation: async (
-    data: CreateReservationRequest,
-  ): Promise<CreateReservationResponse> => {
-    const response = await axiosInstance.post<
-      ApiEnvelope<CreateReservationResponse>
-    >("/reservations", data);
+  createReservation: async (data: CreateReservationRequest): Promise<CreateReservationResponse> => {
+    const response = await axiosInstance.post<ApiEnvelope<CreateReservationResponse>>("/reservations", data);
     return response.data.data;
   },
 
-  /** GET /api/reservations — Manager/Admin xem danh sách */
-  getReservations: async (
-    params: GetReservationsParams = {},
-  ): Promise<PaginatedReservations> => {
+  getReservations: async (params: GetReservationsParams = {}): Promise<PaginatedReservations> => {
     const queryParams = {
       PageNumber: params.pageNumber,
       PageSize: params.pageSize,
@@ -218,18 +187,13 @@ export const reservationService = {
       TableId: params.tableId,
     };
 
-    const response = await axiosInstance.get<
-      ApiEnvelope<PaginatedReservations>
-    >("/reservations", {
+    const response = await axiosInstance.get<ApiEnvelope<PaginatedReservations>>("/reservations", {
       params: queryParams,
     });
-
     return response.data.data;
   },
 
-  exportReservations: async (
-    params: GetReservationsParams = {},
-  ): Promise<DownloadableFile> => {
+  exportReservations: async (params: GetReservationsParams = {}): Promise<DownloadableFile> => {
     const queryParams = {
       PageNumber: params.pageNumber,
       PageSize: params.pageSize,
@@ -246,28 +210,19 @@ export const reservationService = {
       responseType: "blob",
     });
 
-    const contentDisposition = response.headers?.["content-disposition"] as
-      | string
-      | undefined;
+    const contentDisposition = response.headers?.["content-disposition"] as string | undefined;
 
     return {
       blob: response.data,
-      fileName: getFileNameFromContentDisposition(
-        contentDisposition,
-        `reservations_${Date.now()}.xlsx`,
-      ),
+      fileName: getFileNameFromContentDisposition(contentDisposition, `reservations_${Date.now()}.xlsx`),
     };
   },
 
-  /** GET /api/reservations/{id} — Xem chi tiết 1 reservation */
   getReservationById: async (id: string): Promise<ReservationDetail> => {
-    const response = await axiosInstance.get<ApiEnvelope<ReservationDetail>>(
-      `/reservations/${id}`,
-    );
+    const response = await axiosInstance.get<ApiEnvelope<ReservationDetail>>(`/reservations/${id}`);
     return response.data.data;
   },
 
-  /** PUT /api/reservations/{id} — cập nhật reservation */
   updateReservation: async (
     id: string,
     data: {
@@ -288,86 +243,57 @@ export const reservationService = {
     await axiosInstance.post(`/reservations/${id}/checkin`);
   },
 
-  /** GET /api/reservations/{id}/deposit — trạng thái đặt cọc */
   getDepositStatus: async (id: string): Promise<ReservationDepositStatus> => {
     const response = await axiosInstance.get<ApiEnvelope<ReservationDepositStatus> | ReservationDepositStatus>(
       `/reservations/${id}/deposit`,
     );
-    const raw = response.data as { data?: ReservationDepositStatus } | ReservationDepositStatus;
-    return (raw as { data?: ReservationDepositStatus })?.data ?? (raw as ReservationDepositStatus);
+    return unwrapApiEnvelope(response.data);
   },
 
-  /** POST /api/reservations/{id}/deposit/pay — tạo link thanh toán cọc */
   createDepositPaymentLink: async (id: string): Promise<{ checkoutUrl: string | null }> => {
     const response = await axiosInstance.post<ApiEnvelope<{ checkoutUrl: string | null }> | { checkoutUrl: string | null }>(
       `/reservations/${id}/deposit/pay`,
     );
-    const raw = response.data as { data?: { checkoutUrl: string | null } } | { checkoutUrl: string | null };
-    return (raw as { data?: { checkoutUrl: string | null } })?.data ?? (raw as { checkoutUrl: string | null });
+    return unwrapApiEnvelope(response.data);
   },
 
   completeReservation: async (id: string): Promise<void> => {
     await axiosInstance.post(`/reservations/${id}/complete`);
   },
 
-  /** DELETE /api/reservations/{id} — cancel reservation */
   deleteReservation: async (id: string): Promise<void> => {
     await axiosInstance.delete(`/reservations/${id}`);
   },
 
-  /** GET /api/statuses/reservation — all available reservation statuses */
   getReservationStatuses: async (): Promise<ReservationStatus[]> => {
     const response = await axiosInstance.get<any>("/statuses/reservation");
     const raw = response.data;
-    // Handle both bare array and ApiEnvelope<ReservationStatus[]>
     if (Array.isArray(raw)) return raw;
     if (Array.isArray(raw?.data)) return raw.data;
     return [];
   },
 
-  /** PUT /api/reservations/{id}/status — change status by statusId */
-  updateReservationStatus: async (
-    id: string,
-    statusId: number,
-  ): Promise<void> => {
+  updateReservationStatus: async (id: string, statusId: number): Promise<void> => {
     await axiosInstance.put(`/reservations/${id}/status`, { statusId });
   },
 
-  /** GET /api/reservations/my — Customer xem đặt bàn của chính họ */
   getMyReservations: async (): Promise<ReservationListItem[]> => {
-    const response =
-      await axiosInstance.get<
-        ApiEnvelope<PaginatedReservations | ReservationListItem[]>
-      >("/reservations/my");
+    const response = await axiosInstance.get<ApiEnvelope<PaginatedReservations | ReservationListItem[]>>(
+      "/reservations/my",
+    );
     const data = response.data.data as any;
     return Array.isArray(data) ? data : (data?.items ?? []);
   },
 
-  /**
-   * Lookup reservation by code.
-   * NOTE: Current BE exposes GET /reservations/{code} (role-protected), not /reservations/lookup.
-   */
-  lookupReservation: async (
-    params: LookupReservationParams,
-  ): Promise<ReservationDetail> => {
-    const confirmationCode = (
-      params.confirmationCode ??
-      params.code ??
-      ""
-    ).trim();
+  lookupReservation: async (params: LookupReservationParams): Promise<ReservationDetail> => {
+    const confirmationCode = (params.confirmationCode ?? params.code ?? "").trim();
     const response = await axiosInstance.get<ApiEnvelope<ReservationDetail>>(
       `/reservations/${encodeURIComponent(confirmationCode)}`,
     );
     return response.data.data;
   },
 
-  /**
-   * Check availability is currently not exposed by BE controller.
-   * Keep API stable for UI callers by returning "available" fallback.
-   */
-  checkAvailability: async (
-    _params: CheckAvailabilityParams,
-  ): Promise<CheckAvailabilityResponse> => {
+  checkAvailability: async (_params: CheckAvailabilityParams): Promise<CheckAvailabilityResponse> => {
     return {
       available: true,
       conflictingSlots: [],

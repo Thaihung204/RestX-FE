@@ -1424,6 +1424,38 @@ img {
 .reservation-section-animate:nth-child(3) { animation-delay: 0.15s; }
 .reservation-section-animate:nth-child(4) { animation-delay: 0.20s; }
 
+@media (max-width: 1024px) {
+  .reservation-hero-orb {
+    width: 9rem;
+    height: 9rem;
+    filter: blur(28px);
+  }
+}
+
+@media (max-width: 768px) {
+  .reservation-code-display {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.75rem 1rem;
+  }
+
+  .reservation-code-text {
+    font-size: 1.125rem;
+    letter-spacing: 0.1em;
+  }
+
+  .reservation-section-animate {
+    animation-duration: 0.28s;
+  }
+}
+
+@media (max-width: 480px) {
+  .reservation-code-text {
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+  }
+}
+
 /* =========================================================
  * ContentAreaLoader — inline skeleton for admin content area
  * Only covers the content panel; sidebar + header stay visible

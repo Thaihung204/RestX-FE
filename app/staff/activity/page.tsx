@@ -120,6 +120,15 @@ interface TableActivityData {
   positionY?: number;
 }
 
+function isTablePendingCheckInForMerge(table: TableActivityData): boolean {
+  const statusCode = (table.reservationStatusCode || '').toUpperCase();
+  const isPendingReservation = statusCode === 'PENDING' || statusCode === 'CONFIRMED';
+  const hasReservation = Boolean(table.reservationCode || table.reservationId);
+  const hasActiveServiceSession = Boolean(table.sessionIsActive || table.orderId);
+
+  return isPendingReservation && hasReservation && !hasActiveServiceSession;
+}
+
 const getTableStatusConfig = (mode: 'light' | 'dark') => ({
   available: {
     color: '#52c41a',
@@ -390,6 +399,29 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       return;
     }
 
+    const hasPendingCheckInReservationTable = selectedTablesForMerge.some((table) =>
+      isTablePendingCheckInForMerge(table),
+    );
+
+    if (hasPendingCheckInReservationTable) {
+      messageApi.warning(
+        t('staff.floor_activity.merge.reservation_pending_checkin', {
+          defaultValue: 'Không thể gộp bàn đã đặt nhưng chưa check-in.',
+        }),
+      );
+      return;
+    }
+
+    const hasAtLeastOneActiveOrder = selectedTablesForMerge.some((table) => Boolean(table.orderId));
+    if (!hasAtLeastOneActiveOrder) {
+      messageApi.warning(
+        t('staff.floor_activity.merge.no_order_selected', {
+          defaultValue: 'Cần chọn ít nhất 1 bàn đang có order để gộp.',
+        }),
+      );
+      return;
+    }
+
     setIsMerging(true);
     try {
       const response = await tableService.mergeTables({
@@ -520,6 +552,11 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     [selectedTablesForMerge],
   );
 
+  const selectedHasActiveOrderForMerge = useMemo(
+    () => selectedTablesForMerge.some((table) => Boolean(table.orderId)),
+    [selectedTablesForMerge],
+  );
+
   const orderTableIdsMap = useMemo(() => {
     const map = new Map<string, string[]>();
 
@@ -570,9 +607,20 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     return set;
   }, [getMergedTableIds, selectedTablesForMerge]);
 
-  const getMergeLockReason = (table: TableActivityData): 'same-order' | 'same-group' | null => {
+  const getMergeLockReason = (
+    table: TableActivityData,
+  ): 'same-order' | 'same-group' | 'reservation-pending-checkin' | 'requires-order-anchor' | null => {
     if (!isMergeMode) return null;
     if (selectedTableIds.includes(table.id)) return null;
+
+    // Start merge from a table that already has an active order.
+    if (!selectedHasActiveOrderForMerge && !table.orderId) {
+      return 'requires-order-anchor';
+    }
+
+    if (isTablePendingCheckInForMerge(table)) {
+      return 'reservation-pending-checkin';
+    }
 
     if (table.orderId && selectedOrderIdsForMerge.has(table.orderId)) {
       return 'same-order';
@@ -593,14 +641,25 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     const lockReason = getMergeLockReason(table);
 
     if (lockReason) {
-      messageApi.warning(
+      const warningMessage =
         lockReason === 'same-order'
           ? t('staff.floor_activity.merge.same_order_selected', {
               defaultValue: 'Bàn này đã thuộc cùng đơn với bàn đã chọn. Vui lòng chọn bàn khác.',
             })
-          : t('staff.floor_activity.merge.same_group_selected', {
-              defaultValue: 'Bàn này đã nằm trong cùng nhóm gộp với bàn đã chọn.',
-            }),
+          : lockReason === 'same-group'
+            ? t('staff.floor_activity.merge.same_group_selected', {
+                defaultValue: 'Bàn này đã nằm trong cùng nhóm gộp với bàn đã chọn.',
+              })
+            : lockReason === 'requires-order-anchor'
+              ? t('staff.floor_activity.merge.no_order_selected', {
+                  defaultValue: 'Cần chọn ít nhất 1 bàn đang có order để gộp.',
+                })
+            : t('staff.floor_activity.merge.reservation_pending_checkin', {
+                defaultValue: 'Không thể gộp bàn đã đặt nhưng chưa check-in.',
+              });
+
+      messageApi.warning(
+        warningMessage,
       );
       return;
     }
@@ -713,8 +772,17 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                 className="floor-activity-action-btn"
                 icon={<TableOutlined />}
                 onClick={() => {
-                  setIsMergeMode(!isMergeMode);
+                  const nextMode = !isMergeMode;
+                  setIsMergeMode(nextMode);
                   setSelectedTableIds([]);
+
+                  if (nextMode && !tables.some((table) => Boolean(table.orderId))) {
+                    messageApi.info(
+                      t('staff.floor_activity.merge.no_order_selected', {
+                        defaultValue: 'Cần chọn ít nhất 1 bàn đang có order để gộp.',
+                      }),
+                    );
+                  }
                 }}
                 type={isMergeMode ? 'primary' : 'default'}
                 danger={isMergeMode}
