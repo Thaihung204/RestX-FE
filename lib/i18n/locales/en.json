@@ -466,8 +466,8 @@
     },
     "menu": {
       "dashboard": "Dashboard",
-      "tables": "Tables",
-      "tables_short": "Tables",
+      "activity": "Activity",
+      "activity_short": "Activity",
       "orders": "Order Management",
       "orders_short": "Orders",
       "kitchen": "Kitchen",
@@ -475,7 +475,54 @@
       "attendance": "Attendance",
       "reservations": "Reservations",
       "floor_activity": "Floor Activity",
-      "floor_activity_short": "Floor"
+      "floor_activity_short": "Floor",
+      "stats": {
+        "setup_suffix": " steps",
+        "setup_label": "Simple setup",
+        "menu_items_label": "Menu items per catalog",
+        "reload_suffix": " reload",
+        "realtime_label": "Instant updates"
+      },
+      "features": {
+        "step_1": {
+          "tag": "Step 01 — Categories",
+          "title_highlight": "Customize categories",
+          "title_suffix": "for your restaurant menu",
+          "description": "Create and arrange flexible categories — Main dishes, Appetizers, Desserts, Drinks. Add items to each group with full details and images.",
+          "image_alt": "Category management",
+          "bullets": {
+            "create_category": "Create categories and custom names",
+            "add_dish": "Add dishes to each category",
+            "reorder_display": "Reorder display sequence via drag and drop"
+          }
+        },
+        "step_2": {
+          "tag": "Step 02 — Dishes",
+          "title_prefix": "Manage",
+          "title_highlight": "dishes",
+          "title_suffix": "comprehensively",
+          "description": "Add, edit, and control each dish with complete details: name, description, price, image, and real-time visibility status.",
+          "image_alt": "Dish management",
+          "bullets": {
+            "edit_info": "Edit dish information and pricing",
+            "attach_multi_category": "Attach one dish to multiple categories",
+            "toggle_visibility": "Instantly show/hide dishes without reload"
+          }
+        },
+        "step_3": {
+          "tag": "Step 03 — Ingredients",
+          "title_prefix": "Control",
+          "title_highlight": "ingredients",
+          "title_suffix": "and inventory",
+          "description": "Bind ingredients to each dish and track stock in real time. The system automatically alerts when stock runs low so the kitchen can act early.",
+          "image_alt": "Ingredient management",
+          "bullets": {
+            "bind_ingredients": "Bind specific ingredients to each dish",
+            "low_stock_alert": "Automatic low-stock alerts",
+            "auto_hide_out_of_stock": "Automatically hide dishes when ingredients run out"
+          }
+        }
+      }
     },
     "user_menu": {
       "profile": "Profile",
@@ -619,8 +666,13 @@
       "occupancy_rate": "Occupancy Rate",
       "active_revenue": "Active Revenue",
       "search_placeholder": "Search reservation code...",
+      "date_filter_label": "Date",
+      "time_filter_label": "Time",
       "table_label": "TABLE",
+      "floor_name": "Floor {{name}}",
       "seats_label": "seats",
+      "merge_mode": "Merge Tables",
+      "execute_merge": "Confirm Merge ({{count}})",
       "filter": {
         "all": "All statuses",
         "pending": "Pending",
@@ -631,79 +683,62 @@
         "available": "Available",
         "occupied": "Occupied",
         "reserved": "Reserved",
-        "cleaning": "Cleaning"
+        "cleaning": "Cleaning",
+        "active": "Active",
+        "inactive": "Ended",
+        "not_started": "Not started"
       },
       "stats": {
         "occupied": "Occupied",
         "available": "Available",
         "has_reservation": "Has Reservation"
       },
+      "merge": {
+        "success": "Tables merged successfully!",
+        "error": "Failed to merge tables",
+        "manual_required": "Manual resolution required due to multiple active orders.",
+        "same_order_selected": "This table already belongs to the same order as the selected table. Please choose another table.",
+        "same_group_selected": "This table is already in the same merged group as the selected table.",
+        "already_merged": "Selected tables already belong to the same order. No merge is needed.",
+        "merged_tables_badge": "Merged {{count}} tables",
+        "with_tables": "Merged with tables: {{tables}}",
+        "no_order_selected": "Select at least one table with an active order to merge.",
+        "reservation_pending_checkin": "Cannot merge a reserved table before check-in."
+      },
       "no_session_tables": "No tables are booked in this session.",
       "session_filter_desc": "You can switch sessions to view other tables.",
       "session_filter_hint": "The list is currently filtered by the active session.",
       "modal": {
+        "table_name": "Table {{name}}",
+        "merge_group": "Merged group",
+        "session": "Session",
+        "session_id": "Session ID",
         "reserved_by": "Reserved by",
         "phone": "Phone",
         "reservation_time": "Reservation time",
+        "reservation": "Reservation",
         "guest_count": "Guests",
         "total": "Total",
         "start_time": "Started",
+        "end_time": "Ended",
+        "order": "Order",
         "payment": "Payment",
         "seats": "seats",
         "guests": "guests",
         "checkin_btn": "Check-in",
         "checkin_success": "Check-in successful!",
         "checkin_error": "Check-in failed",
+        "checkin_too_early": "Check-in is only available within {{minutes}} minutes before reservation time ({{reservationTime}}).",
+        "checkin_too_late": "The valid check-in window has passed. It is only allowed up to {{minutes}} minutes after reservation time ({{reservationTime}}).",
+        "open_session_btn": "Open Session (walk-in)",
+        "create_session_success": "Walk-in table session opened",
+        "create_session_error": "Unable to open table session",
+        "cancel_reservation_btn": "No-show / Cancel reservation",
+        "cancel_reservation_confirm_title": "Confirm no-show?",
+        "cancel_reservation_confirm_content": "This will cancel the reservation and automatically update related status.",
+        "cancel_reservation_success": "Reservation cancelled successfully.",
+        "cancel_reservation_error": "Unable to cancel reservation",
         "customer": "Customer"
-      }
-    },
-    "menu": {
-      "stats": {
-        "setup_suffix": " steps",
-        "setup_label": "Simple setup",
-        "menu_items_label": "Menu items per catalog",
-        "reload_suffix": " reload",
-        "realtime_label": "Instant updates"
-      },
-      "features": {
-        "step_1": {
-          "tag": "Step 01 — Categories",
-          "title_highlight": "Customize categories",
-          "title_suffix": "for your restaurant menu",
-          "description": "Create and arrange flexible categories — Main dishes, Appetizers, Desserts, Drinks. Add items to each group with full details and images.",
-          "image_alt": "Category management",
-          "bullets": {
-            "create_category": "Create categories and custom names",
-            "add_dish": "Add dishes to each category",
-            "reorder_display": "Reorder display sequence via drag and drop"
-          }
-        },
-        "step_2": {
-          "tag": "Step 02 — Dishes",
-          "title_prefix": "Manage",
-          "title_highlight": "dishes",
-          "title_suffix": "comprehensively",
-          "description": "Add, edit, and control each dish with complete details: name, description, price, image, and real-time visibility status.",
-          "image_alt": "Dish management",
-          "bullets": {
-            "edit_info": "Edit dish information and pricing",
-            "attach_multi_category": "Attach one dish to multiple categories",
-            "toggle_visibility": "Instantly show/hide dishes without reload"
-          }
-        },
-        "step_3": {
-          "tag": "Step 03 — Ingredients",
-          "title_prefix": "Control",
-          "title_highlight": "ingredients",
-          "title_suffix": "and inventory",
-          "description": "Bind ingredients to each dish and track stock in real time. The system automatically alerts when stock runs low so the kitchen can act early.",
-          "image_alt": "Ingredient management",
-          "bullets": {
-            "bind_ingredients": "Bind specific ingredients to each dish",
-            "low_stock_alert": "Automatic low-stock alerts",
-            "auto_hide_out_of_stock": "Automatically hide dishes when ingredients run out"
-          }
-        }
       }
     },
     "customer": {
@@ -1811,6 +1846,35 @@
         "inactive": "Inactive",
         "off_duty": "Off Duty",
         "on_leave": "On Leave"
+      },
+      "floor_activity": {
+        "title": "Activity",
+        "last_updated": "Last updated at",
+        "occupied_suffix": "occupied tables",
+        "table_label": "Table",
+        "seats_label": "seats",
+        "merge_mode": "Table Merge Mode",
+        "execute_merge": "Confirm Merge ({{count}})",
+        "stats": {
+          "occupied": "Occupied",
+          "available": "Available",
+          "has_reservation": "Reserved"
+        },
+        "status": {
+          "available": "Available",
+          "occupied": "Occupied",
+          "reserved": "Reserved",
+          "cleaning": "Cleaning"
+        },
+        "merge": {
+          "success": "Tables merged successfully!",
+          "error": "Failed to merge tables",
+          "manual_required": "Manual resolution required due to multiple active orders."
+        },
+        "modal": {
+          "checkin_success": "Check-in successful!",
+          "checkin_error": "Check-in failed"
+        }
       }
     },
     "ingredients": {
@@ -2225,6 +2289,7 @@
     }
   },
   "common": {
+    "cancel": "Cancel",
     "actions": {
       "exporting": "Exporting..."
     },
@@ -2999,7 +3064,7 @@
       "staff_assigned": "staff assigned"
     },
     "export": {
-      "alert": "Export feature will be available when connected to backend API"
+      "alert": "Export feature will be available when data is ready"
     }
   },
   "not_found": {
@@ -3736,6 +3801,8 @@
         "booking_ref": "Booking Ref",
         "confirmation_sent": "Confirmation email sent to:",
         "phone_label": "Phone",
+        "pay_deposit_now": "Pay deposit now",
+        "deposit_deadline": "Deposit payment deadline",
         "view_details": "View Details",
         "make_another": "Make Another Booking"
       },
@@ -3856,8 +3923,19 @@
     }
   },
   "reservation_detail": {
+    "loading": "Loading reservation...",
     "back": "Back",
     "breadcrumb": "Reservation Details",
+    "language": {
+      "toggle": "Toggle language",
+      "switched": "Language switched successfully."
+    },
+    "share": {
+      "label": "Reservation URL",
+      "copy": "Copy",
+      "copy_success": "Reservation URL copied.",
+      "copy_failed": "Unable to copy reservation URL."
+    },
     "not_found": {
       "title": "Reservation not found",
       "description": "This reservation may not exist or you may not have access."
@@ -3884,7 +3962,8 @@
       "type": "Customer Type",
       "guest": "Walk-in Guest",
       "member": "Member",
-      "loyalty_points": "Loyalty Points"
+      "loyalty_points": "Loyalty Points",
+      "points_unit": "pts"
     },
     "booking": {
       "title": "Reservation Details",
@@ -3898,17 +3977,31 @@
       "checked_in_at": "Checked In At",
       "last_updated": "Last Updated",
       "special_requests": "Special Requests",
-      "panorama": "Panorama",
-      "view_360": "View 360"
+      "table_preview_title": "Table View",
+      "table_preview_desc": "Preview of the selected table area.",
+      "table_label": "Table {{code}}",
+      "table_preview_alt": "Table {{code}} preview image"
     },
     "deposit": {
       "label": "Deposit",
       "pay_now": "Pay Deposit",
       "creating_link": "Creating...",
+      "already_paid": "The deposit has already been paid.",
+      "deadline_passed": "The deposit payment deadline has passed.",
       "no_order_warning": "No deposit order found. Please contact the restaurant.",
       "link_opened": "Payment link opened.",
       "link_error": "Could not get payment link.",
-      "create_failed": "Failed to create payment link."
+      "create_failed": "Failed to create payment link.",
+      "paid_desc": "The deposit has been paid successfully.",
+      "unpaid_desc": "Your deposit is still unpaid. Please pay soon to keep the table.",
+      "deadline_cancel_desc": "This reservation was cancelled due to overdue deposit payment.",
+      "deadline_passed_desc": "The deposit payment deadline has passed.",
+      "deadline": "Payment deadline",
+      "open_checkout": "Open payment link",
+      "badge_paid": "Paid",
+      "badge_unpaid": "Unpaid",
+      "status_paid": "Paid",
+      "status_unpaid": "Unpaid"
     },
     "order": {
       "title": "Order Information",
@@ -3917,12 +4010,34 @@
       "status": "Status",
       "no_orders": "No orders linked to this reservation yet.",
       "order_now": "Order Now",
-      "readonly_note": "You can only view this reservation. Contact the restaurant for any changes."
+      "readonly_note": "You can only view this reservation. Contact the restaurant for any changes.",
+      "unnamed_order": "Order",
+      "paid": "Paid",
+      "unpaid": "Unpaid"
+    },
+    "edit": {
+      "locked_status": "This reservation is completed or cancelled and cannot be edited.",
+      "date_required": "Please select date and time.",
+      "date_in_past": "Reservation time must be in the future.",
+      "guests_exceed_capacity": "Guests ({{guests}}) exceed table capacity ({{capacity}}).",
+      "save_success": "Reservation updated successfully.",
+      "save_failed": "Unable to update reservation.",
+      "edit_btn": "Edit",
+      "cancel_btn": "Cancel",
+      "save_btn": "Save",
+      "date_time": "Date & Time",
+      "guests": "Guests",
+      "special_requests": "Special Requests"
+    },
+    "map": {
+      "loading": "Loading map...",
+      "unavailable": "Map not available"
     },
     "location": {
       "no_address": "Address not available",
       "updating": "Address being updated",
-      "open_maps": "Open in Google Maps"
+      "open_maps": "Open in Google Maps",
+      "map_title": "Restaurant location map"
     },
     "code": {
       "label": "Confirmation Code",
@@ -4355,11 +4470,6 @@
           "success": "[OK] Payment succeeded — 19:58"
         }
       }
-    }
-  },
-  "common": {
-    "actions": {
-      "exporting": "Exporting..."
     }
   }
 }

@@ -91,7 +91,32 @@ export default function TablesPage() {
   const [loading] = useState(false);
   const [tenantId, setTenantId] = useState<string>("");
   const [isUploadingPanorama, setIsUploadingPanorama] = useState(false);
+  const [isMergingTableRequest, setIsMergingTableRequest] = useState(false);
   usePageLoading(loading, { onlyInitial: true, key: "admin-tables-initial" });
+
+  const getApiErrorMessage = (error: unknown): string | null => {
+    const responseData = (error as { response?: { data?: unknown } })?.response?.data;
+
+    if (typeof responseData === "string" && responseData.trim()) {
+      return responseData;
+    }
+
+    if (responseData && typeof responseData === "object") {
+      const obj = responseData as Record<string, unknown>;
+      if (typeof obj.message === "string" && obj.message.trim()) {
+        return obj.message;
+      }
+      if (typeof obj.title === "string" && obj.title.trim()) {
+        return obj.title;
+      }
+    }
+
+    if (error instanceof Error && error.message.trim()) {
+      return error.message;
+    }
+
+    return null;
+  };
 
   // Fetch tables + floors from BE API
   const fetchTables = async () => {
@@ -413,32 +438,60 @@ export default function TablesPage() {
 
   // Table Merge Handler
   const handleTableMerge = async (sourceTableId: string, targetTableId: string) => {
+    if (isMergingTableRequest || sourceTableId === targetTableId) return;
+
     const sourceTable = tables.find(t => t.id === sourceTableId);
     const targetTable = tables.find(t => t.id === targetTableId);
 
     if (!sourceTable || !targetTable) return;
 
-    if (!confirm(tDashboard("tables.confirm_merge", { defaultValue: "Merge tables? This will combine capacity and hide the source table." }))) {
+    if (!sourceTable.isActive || !targetTable.isActive) {
+      message.warning(tDashboard("tables.merge.inactive_table", {
+        defaultValue: "Only active tables can be merged.",
+      }));
       return;
     }
 
-    const newCapacity = sourceTable.capacity + targetTable.capacity;
+    const hasAnyOccupiedTable = sourceTable.status === "occupied" || targetTable.status === "occupied";
+    if (!hasAnyOccupiedTable) {
+      message.warning(tDashboard("floor_activity.merge.no_order_selected", {
+        defaultValue: "Select at least one table with an active order to merge.",
+      }));
+      return;
+    }
 
-    // Optimistic
-    setTables(prev =>
-      prev.map(t => {
-        if (t.id === sourceTableId) return { ...t, isActive: false };
-        if (t.id === targetTableId) return { ...t, capacity: newCapacity };
-        return t;
-      })
-    );
+    if (!confirm(tDashboard("tables.merge.confirm_prompt", {
+      defaultValue: "Merge these tables into one service group? This does not change capacity or hide any table.",
+    }))) {
+      return;
+    }
 
+    setIsMergingTableRequest(true);
     try {
-      await tableService.updateTable(targetTableId, { seatingCapacity: newCapacity, floorId: targetTable.floorId });
-      await tableService.updateTable(sourceTableId, { isActive: false, floorId: sourceTable.floorId });
+      const response = await tableService.mergeTables({
+        tableIds: [sourceTableId, targetTableId],
+      });
+
+      if (response.requiresManualResolution) {
+        message.warning(tDashboard("floor_activity.merge.manual_required", {
+          defaultValue: "Manual resolution is required because multiple active orders were found.",
+        }));
+      } else {
+        message.success(tDashboard("floor_activity.merge.success", {
+          defaultValue: "Tables merged successfully!",
+        }));
+      }
+
+      await fetchTables();
     } catch (err) {
       console.error("Merge failed:", err);
-      fetchTables();
+      message.error(
+        getApiErrorMessage(err) ||
+        tDashboard("floor_activity.merge.error", { defaultValue: "Failed to merge tables" }),
+      );
+      await fetchTables();
+    } finally {
+      setIsMergingTableRequest(false);
     }
   };
 

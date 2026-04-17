@@ -38,17 +38,23 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
   const [form, setForm] = useState({ ...initialFormState, ...initialForm });
   const [loading, setLoading] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
+  const [depositCheckoutUrl, setDepositCheckoutUrl] = useState<string | null>(null);
+  const [depositPaymentDeadline, setDepositPaymentDeadline] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setForm({ ...initialFormState, ...initialForm });
     setConfirmationCode(null);
+    setDepositCheckoutUrl(null);
+    setDepositPaymentDeadline(null);
     setError(null);
   }, [table, initialForm]);
 
   const handleClose = () => {
     setForm({ ...initialFormState, ...initialForm });
     setConfirmationCode(null);
+    setDepositCheckoutUrl(null);
+    setDepositPaymentDeadline(null);
     setError(null);
     onClose();
   };
@@ -85,7 +91,11 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
         raw?.confirmation_code ||
         raw?.bookingCode ||
         (rawId ? rawId.replace(/-/g, '').slice(0, 6).toUpperCase() : '');
+      const checkoutUrl: string | null = raw?.checkoutUrl || raw?.CheckoutUrl || null;
+      const paymentDeadline: string | null = raw?.paymentDeadline || raw?.PaymentDeadline || null;
       setConfirmationCode(resolvedCode || rawId || '');
+      setDepositCheckoutUrl(checkoutUrl);
+      setDepositPaymentDeadline(paymentDeadline);
     } catch (err: any) {
       const beMessage = err?.response?.data?.message;
       setError(beMessage || t('landing.booking.confirm.error_generic'));
@@ -178,6 +188,32 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                   <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
                     {t('landing.booking.success.booking_ref')}: <strong>{confirmationCode}</strong>
                   </p>
+                  {depositCheckoutUrl && (
+                    <div style={{ marginBottom: 16 }}>
+                      <button
+                        onClick={() => {
+                          window.location.href = depositCheckoutUrl;
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 20px',
+                          borderRadius: 12,
+                          border: 'none',
+                          background: 'var(--success)',
+                          color: '#fff',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {t('landing.booking.success.pay_deposit_now', { defaultValue: 'Thanh toán cọc ngay' })}
+                      </button>
+                      {depositPaymentDeadline && (
+                        <p style={{ color: 'var(--danger)', marginTop: 8, fontSize: 12 }}>
+                          {t('landing.booking.success.deposit_deadline', { defaultValue: 'Hạn thanh toán cọc' })}: {new Date(depositPaymentDeadline).toLocaleString('vi-VN')}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <button
                     onClick={handleClose}
                     style={{

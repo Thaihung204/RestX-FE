@@ -4,16 +4,14 @@ import { TableMap2D, Layout } from "@/app/admin/tables/components/TableMap2D";
 import { tableService, floorService, FloorLayoutTableItem } from "@/lib/services/tableService";
 import { TableData } from "@/app/admin/tables/components/DraggableTable";
 import { useTenant } from "@/lib/contexts/TenantContext";
-
 import orderService, { OrderDto } from "@/lib/services/orderService";
-import orderSignalRService from "@/lib/services/orderSignalRService";
-import dishService from "@/lib/services/dishService";
+import dishService, { MenuCategory, MenuItem } from "@/lib/services/dishService";
 import customerService from "@/lib/services/customerService";
-import paymentService from "@/lib/services/paymentService";
+import orderSignalRService from "@/lib/services/orderSignalRService";
 import reservationService, { ReservationDetail, ReservationStatus } from "@/lib/services/reservationService";
-import { Drawer, Tag, message } from "antd";
+import { message, Drawer, Tag } from "antd";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { HubConnectionState } from "@microsoft/signalr";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -82,10 +80,71 @@ const statusBg: Record<string, string> = {
   CANCELLED: "var(--danger-soft)",
 };
 
-const currency = (v?: number) => `${(v || 0).toLocaleString("vi-VN")}đ`;
+const getLocaleTag = (language: string): string =>
+  language.toLowerCase().startsWith("vi") ? "vi-VN" : "en-US";
+
+const currency = (v?: number, locale = "vi-VN") => `${(v || 0).toLocaleString(locale)}đ`;
+const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const isGuidLike = (value: string): boolean => GUID_REGEX.test(value.trim());
+const deriveConfirmationCodeFromGuid = (guid: string): string =>
+  guid.replace(/-/g, "").slice(0, 6).toUpperCase();
+
+interface ReservationDepositStatus {
+  reservationId: string;
+  depositAmount: number;
+  paymentDeadline: string | null;
+  isPaid: boolean;
+  checkoutUrl: string | null;
+}
+
+type ReservationDetailViewModel = ReservationDetail & {
+  paymentDeadline?: string | null;
+  checkoutUrl?: string | null;
+};
+
+const reservationServiceWithDeposit = reservationService as typeof reservationService & {
+  getDepositStatus?: (id: string) => Promise<ReservationDepositStatus>;
+  createDepositPaymentLink?: (id: string) => Promise<{ checkoutUrl: string | null }>;
+};
+
+const normalizeReservationDetail = (detail: ReservationDetail): ReservationDetailViewModel => {
+  const raw = detail as ReservationDetailViewModel;
+
+  return {
+    ...detail,
+    depositAmount: Number(detail.depositAmount || 0),
+    depositPaid: Boolean(raw.depositPaid),
+    paymentDeadline: raw.paymentDeadline ?? null,
+    checkoutUrl: raw.checkoutUrl ?? null,
+  };
+};
+
+const mergeDepositStatusIntoDetail = (
+  detail: ReservationDetailViewModel,
+  depositStatus?: ReservationDepositStatus | null,
+): ReservationDetailViewModel => {
+  if (!depositStatus) return detail;
+
+  return {
+    ...detail,
+    depositAmount:
+      typeof depositStatus.depositAmount === "number"
+        ? Number(depositStatus.depositAmount)
+        : detail.depositAmount,
+    depositPaid:
+      typeof depositStatus.isPaid === "boolean"
+        ? depositStatus.isPaid
+        : detail.depositPaid,
+    paymentDeadline: depositStatus.paymentDeadline ?? detail.paymentDeadline ?? null,
+    checkoutUrl: depositStatus.checkoutUrl ?? detail.checkoutUrl ?? null,
+  };
+};
 
 // ── Spinner ───────────────────────────────────────────────────────────────────
 function Spinner() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg-base)" }}>
       <div className="w-full max-w-md rounded-3xl p-8" style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "var(--shadow-md)" }}>
@@ -94,7 +153,9 @@ function Spinner() {
             className="w-12 h-12 rounded-full border-[3px] animate-spin"
             style={{ borderColor: "var(--primary-border)", borderTopColor: "var(--primary)" }}
           />
-          <p className="text-sm font-medium tracking-wide" style={{ color: "var(--text-muted)" }}>Loading reservation...</p>
+          <p className="text-sm font-medium tracking-wide" style={{ color: "var(--text-muted)" }}>
+            {t("reservation_detail.loading")}
+          </p>
         </div>
         <div className="space-y-3">
           <div className="h-4 rounded-full animate-pulse" style={{ background: "var(--surface)" }} />
@@ -106,43 +167,115 @@ function Spinner() {
   );
 }
 
-// ── Timeline Step ─────────────────────────────────────────────────────────────
-function TimelineStep({ label, done, active }: { label: string; done?: boolean; active?: boolean }) {
-  const borderColor = done || active ? "#6adf9d" : "var(--border)";
-  const dotColor = done || active ? "#6adf9d" : "#c9ced8";
+// ── Booking Progress Bar ──────────────────────────────────────────────────────
+function BookingProgressBar({
+  steps,
+  currentIndex,
+  ariaLabel,
+}: {
+  steps: ReservationStatus[];
+  currentIndex: number;
+  ariaLabel: string;
+}) {
+  const safeSteps = steps.length > 0 ? steps : [];
+  const stepsCount = safeSteps.length;
+
+  if (stepsCount === 0) return null;
+
+  const normalizedIndex = currentIndex >= 0
+    ? Math.min(currentIndex, stepsCount - 1)
+    : 0;
+
+  const progressPercent = stepsCount <= 1
+    ? (currentIndex >= 0 ? 100 : 0)
+    : (normalizedIndex / (stepsCount - 1)) * 100;
+
+  const currentStepName = currentIndex >= 0 ? safeSteps[normalizedIndex]?.name : "";
 
   return (
-    <div className="relative flex flex-col items-center min-w-0 px-1">
-      <div
-        className="relative z-20 w-10 h-10 rounded-full flex items-center justify-center mb-3 transition-all duration-300"
-        style={{
-          background: done || active ? "color-mix(in srgb, var(--card) 84%, #6adf9d 16%)" : "var(--card)",
-          border: `2px solid ${borderColor}`,
-          boxShadow: "0 0 0 8px var(--card)",
-        }}
-      >
-        {done ? (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" style={{ color: "#6adf9d" }}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        ) : (
-          <div className="w-2.5 h-2.5 rounded-full" style={{ background: dotColor }} />
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold tabular-nums" style={{ color: "var(--text-muted)" }}>
+          {currentIndex >= 0 ? normalizedIndex + 1 : 0}/{stepsCount}
+        </p>
+        {currentStepName && (
+          <span
+            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+            style={{
+              background: "var(--success-soft)",
+              color: "var(--success)",
+              border: "1px solid var(--success-border)",
+            }}
+          >
+            {currentStepName}
+          </span>
         )}
       </div>
 
-      <span
-        className="text-sm font-semibold text-center whitespace-nowrap truncate max-w-full"
-        style={{ color: done || active ? "var(--text)" : "var(--text-muted)" }}
-        title={label}
+      <div
+        role="progressbar"
+        aria-label={ariaLabel}
+        aria-valuemin={0}
+        aria-valuemax={stepsCount}
+        aria-valuenow={currentIndex >= 0 ? normalizedIndex + 1 : 0}
       >
-        {label}
-      </span>
+        <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="h-full rounded-full" style={{ width: `${progressPercent}%`, background: "var(--success)" }} />
+        </div>
+      </div>
+
+      <div className="grid gap-2 sm:gap-3" style={{ gridTemplateColumns: `repeat(${stepsCount}, minmax(0, 1fr))` }}>
+        {safeSteps.map((step, index) => {
+          const done = currentIndex >= 0 && index < normalizedIndex;
+          const active = currentIndex >= 0 && index === normalizedIndex;
+
+          return (
+            <div
+              key={step.code || index}
+              className="rounded-xl px-2 py-2.5 sm:px-3 sm:py-3 min-w-0"
+              style={{
+                background: active
+                  ? "color-mix(in srgb, var(--success) 8%, var(--card))"
+                  : "var(--card)",
+                border: `1px solid ${active ? "var(--success-border)" : "var(--border)"}`,
+              }}
+            >
+              <div
+                className="mx-auto mb-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center"
+                style={{
+                  background: done || active ? "var(--success-soft)" : "var(--surface)",
+                  border: `1px solid ${done || active ? "var(--success-border)" : "var(--border)"}`,
+                  color: done || active ? "var(--success)" : "var(--text-muted)",
+                }}
+              >
+                {done ? (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <span className="text-[11px] font-bold tabular-nums">{index + 1}</span>
+                )}
+              </div>
+              <p
+                className="text-[11px] sm:text-sm font-semibold text-center leading-snug break-words"
+                style={{ color: done || active ? "var(--text)" : "var(--text-muted)" }}
+                title={step.name}
+              >
+                {step.name}
+              </p>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
 // ── Deposit Badge ─────────────────────────────────────────────────────────────
 function DepositBadge({ paid, amount }: { paid: boolean; amount: number }) {
+  const { t, i18n } = useTranslation();
+  const localeTag = getLocaleTag(i18n.language);
+
   return (
     <span
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
@@ -157,7 +290,9 @@ function DepositBadge({ paid, amount }: { paid: boolean; amount: number }) {
       ) : (
         <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       )}
-      {paid ? `${currency(amount)} - Paid` : `${currency(amount)} - Unpaid`}
+      {paid
+        ? `${currency(amount, localeTag)} - ${t("reservation_detail.deposit.badge_paid")}`
+        : `${currency(amount, localeTag)} - ${t("reservation_detail.deposit.badge_unpaid")}`}
     </span>
   );
 }
@@ -171,7 +306,7 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: "var(--text-muted)" }}>{label}</p>
-        <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>{value || "—"}</p>
+        <p className="text-sm font-semibold break-words leading-snug" style={{ color: "var(--text)" }}>{value || "—"}</p>
       </div>
     </div>
   );
@@ -179,7 +314,8 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 
 // ── Order Panel ───────────────────────────────────────────────────────────────
 function OrderPanel({ orders, firstTableId, isCustomer }: { orders: OrderDto[]; firstTableId?: string; isCustomer: boolean }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const localeTag = getLocaleTag(i18n.language);
   const totalAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
   return (
@@ -192,11 +328,11 @@ function OrderPanel({ orders, firstTableId, isCustomer }: { orders: OrderDto[]; 
             </svg>
           </div>
           <div>
-            <h3 className="font-bold text-sm" style={{ color: "var(--text)" }}>{t("reservation_detail.order.title", { defaultValue: "Đơn hàng" })}</h3>
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>{orders.length} {t("reservation_detail.order.orders_count", { defaultValue: "đơn" })}</p>
+            <h3 className="font-bold text-sm" style={{ color: "var(--text)" }}>{t("reservation_detail.order.title")}</h3>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>{orders.length} {t("reservation_detail.order.orders_count")}</p>
           </div>
         </div>
-        {orders.length > 0 && <span className="text-sm font-black tracking-wide" style={{ color: "var(--primary)" }}>{currency(totalAmount)}</span>}
+        {orders.length > 0 && <span className="text-sm font-black tracking-wide" style={{ color: "var(--primary)" }}>{currency(totalAmount, localeTag)}</span>}
       </div>
 
       <div className="p-5 space-y-3" style={{ background: "var(--card)" }}>
@@ -207,7 +343,7 @@ function OrderPanel({ orders, firstTableId, isCustomer }: { orders: OrderDto[]; 
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-sm text-center" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.order.no_orders", { defaultValue: "Chưa có đơn hàng" })}</p>
+            <p className="text-sm text-center" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.order.no_orders")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -221,18 +357,18 @@ function OrderPanel({ orders, firstTableId, isCustomer }: { orders: OrderDto[]; 
                     <div className="flex items-center gap-2 min-w-0">
                       <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black shrink-0" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>{i + 1}</div>
                       <p className="text-xs font-bold truncate" style={{ color: "var(--text)" }}>
-                        {order.reference || order.id || t("reservation_detail.order.unnamed_order", { defaultValue: "Đơn hàng" })}
+                        {order.reference || order.id || t("reservation_detail.order.unnamed_order")}
                       </p>
                     </div>
-                    <span className="text-sm font-bold shrink-0" style={{ color: "var(--primary)" }}>{currency(order.totalAmount)}</span>
+                    <span className="text-sm font-bold shrink-0" style={{ color: "var(--primary)" }}>{currency(order.totalAmount, localeTag)}</span>
                   </div>
 
                   <div className="mt-2 flex flex-wrap gap-2">
                     <span className="px-2 py-1 rounded-lg text-[11px] font-semibold" style={{ background: "var(--card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
-                      {(order.orderDetails?.length ?? 0)} {t("reservation_detail.order.items", { defaultValue: "món" })}
+                      {(order.orderDetails?.length ?? 0)} {t("reservation_detail.order.items")}
                     </span>
                     <span className="px-2 py-1 rounded-lg text-[11px] font-semibold" style={{ background: isPaid ? "var(--success-soft)" : "var(--warning-soft)", color: isPaid ? "var(--success)" : "var(--warning)", border: `1px solid ${isPaid ? "var(--success-border)" : "var(--warning-border)"}` }}>
-                      {order.paymentStatusName || (isPaid ? t("dashboard.orders.payment_status.paid", { defaultValue: "Đã thanh toán" }) : t("dashboard.orders.payment_status.unpaid", { defaultValue: "Chưa thanh toán" }))}
+                      {order.paymentStatusName || (isPaid ? t("reservation_detail.order.paid") : t("reservation_detail.order.unpaid"))}
                     </span>
                   </div>
                 </div>
@@ -251,7 +387,7 @@ function OrderPanel({ orders, firstTableId, isCustomer }: { orders: OrderDto[]; 
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
             </svg>
-            {t("reservation_detail.order.order_now", { defaultValue: "Đặt món ngay" })}
+            {t("reservation_detail.order.order_now")}
           </Link>
         )}
       </div>
@@ -269,9 +405,9 @@ function TableMapCard({
   relatedOrders: OrderDto[];
   viewMode: "admin" | "customer";
 }) {
-  const { t } = useTranslation();
   const router = useRouter();
   const { tenant } = useTenant();
+  const { t } = useTranslation();
   const [layout, setLayout] = useState<Layout | null>(null);
   const [loadingMap, setLoadingMap] = useState(false);
   const [selectedTableActivity, setSelectedTableActivity] = useState<TableActivityDetail | null>(null);
@@ -298,9 +434,9 @@ function TableMapCard({
       }
       try {
         const menu = await dishService.getMenu();
-        const flatItems = (menu ?? []).flatMap((cat) => cat.items ?? []);
+        const flatItems = (menu ?? []).flatMap((cat: MenuCategory) => cat.items ?? []);
         const nextMap: Record<string, string> = {};
-        flatItems.forEach((dish) => {
+        flatItems.forEach((dish: MenuItem) => {
           if (dish.id) {
             nextMap[dish.id] = dish.name || dish.id;
           }
@@ -591,7 +727,9 @@ function TableMapCard({
         {loadingMap ? (
           <div className="absolute inset-0 flex items-center justify-center gap-3" style={{ color: "var(--text-muted)" }}>
             <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--primary-border)", borderTopColor: "var(--primary)" }} />
-            <span className="text-xs font-bold tracking-widest uppercase">Loading map...</span>
+            <span className="text-xs font-bold tracking-widest uppercase">
+              {t("reservation_detail.map.loading")}
+            </span>
           </div>
         ) : layout ? (
           <div className="absolute inset-0 p-1 pointer-events-auto">
@@ -615,7 +753,9 @@ function TableMapCard({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <p className="text-sm font-semibold" style={{ color: "var(--text-muted)" }}>Map not available</p>
+              <p className="text-sm font-semibold" style={{ color: "var(--text-muted)" }}>
+                {t("reservation_detail.map.unavailable")}
+              </p>
             </div>
           </div>
         )}
@@ -756,13 +896,14 @@ function TableMapCard({
 // ── Main Component ─────────────────────────────────────────────────────────────
 export default function ReservationDetailsView({ reservationId, mode: viewMode }: ReservationDetailsViewProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { tenant } = useTenant();
   const { t, i18n } = useTranslation();
 
   const [messageApi, contextHolder] = message.useMessage();
 
   const [loading, setLoading] = useState(true);
-  const [detail, setDetail] = useState<ReservationDetail | null>(null);
+  const [detail, setDetail] = useState<ReservationDetailViewModel | null>(null);
   const [statusSteps, setStatusSteps] = useState<ReservationStatus[]>([]);
   const [relatedOrders, setRelatedOrders] = useState<OrderDto[]>([]);
   const [depositLoading, setDepositLoading] = useState(false);
@@ -775,12 +916,74 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const [editSpecialRequests, setEditSpecialRequests] = useState("");
 
   const isCustomer = viewMode === "customer";
+  const reservationSlug = String(reservationId || "").trim();
+  const reservationCodeQuery = (searchParams.get("code") || "").trim().toUpperCase();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const d = await reservationService.getReservationById(reservationId);
-      setDetail(d);
+      if (!reservationSlug) {
+        throw new Error("Reservation identifier is empty");
+      }
+
+      const shouldLoadByCode = isCustomer && !isGuidLike(reservationSlug);
+      let d: ReservationDetailViewModel;
+
+      if (shouldLoadByCode) {
+        d = await reservationService.lookupReservation({ code: reservationSlug });
+      } else {
+        try {
+          d = await reservationService.getReservationById(reservationSlug);
+        } catch (error) {
+          const statusCode = (error as { response?: { status?: number } })?.response?.status;
+
+          if (isCustomer && statusCode === 401) {
+            const fallbackCode = reservationCodeQuery || deriveConfirmationCodeFromGuid(reservationSlug);
+            d = await reservationService.lookupReservation({ code: fallbackCode });
+          } else {
+            throw error;
+          }
+        }
+      }
+
+      let normalizedDetail = normalizeReservationDetail(d);
+
+      if (reservationServiceWithDeposit.getDepositStatus) {
+        try {
+          const depositStatus = await reservationServiceWithDeposit.getDepositStatus(normalizedDetail.id);
+          normalizedDetail = mergeDepositStatusIntoDetail(normalizedDetail, depositStatus);
+        } catch (depositError) {
+          // Keep reservation detail fallback when deposit status endpoint is unavailable for current auth context.
+          console.warn("Deposit status unavailable:", depositError);
+        }
+      }
+
+      const deadlineTime = normalizedDetail.paymentDeadline
+        ? new Date(normalizedDetail.paymentDeadline).getTime()
+        : Number.NaN;
+      const isDepositDeadlinePassed = !Number.isNaN(deadlineTime) && deadlineTime <= Date.now();
+      const shouldRegenerateDepositLink =
+        isCustomer &&
+        !normalizedDetail.depositPaid &&
+        normalizedDetail.depositAmount > 0 &&
+        !isDepositDeadlinePassed &&
+        !normalizedDetail.checkoutUrl;
+
+      if (shouldRegenerateDepositLink && reservationServiceWithDeposit.createDepositPaymentLink) {
+        try {
+          const payLinkRes = await reservationServiceWithDeposit.createDepositPaymentLink(normalizedDetail.id);
+          if (payLinkRes.checkoutUrl) {
+            normalizedDetail = {
+              ...normalizedDetail,
+              checkoutUrl: payLinkRes.checkoutUrl,
+            };
+          }
+        } catch (payLinkError) {
+          console.warn("Deposit payment link regeneration unavailable:", payLinkError);
+        }
+      }
+
+      setDetail(normalizedDetail);
 
       try {
         const statuses = await reservationService.getReservationStatuses();
@@ -796,13 +999,13 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
       } catch {
         setStatusSteps([]);
       }
-      setEditDateTime(d.reservationDateTime ? d.reservationDateTime.slice(0, 16) : "");
-      setEditGuests(d.numberOfGuests || 1);
-      setEditSpecialRequests(d.specialRequests || "");
+      setEditDateTime(normalizedDetail.reservationDateTime ? normalizedDetail.reservationDateTime.slice(0, 16) : "");
+      setEditGuests(normalizedDetail.numberOfGuests || 1);
+      setEditSpecialRequests(normalizedDetail.specialRequests || "");
 
-      if (d.tables?.length) {
+      if (normalizedDetail.tables?.length) {
         try {
-          const firstTable = d.tables[0];
+          const firstTable = normalizedDetail.tables[0];
           const table = await tableService.getTableById(firstTable.id);
           const imageUrl = table.cubeFrontImageUrl || table.defaultViewUrl || "";
           setPanoramaImage(imageUrl ? { tableId: firstTable.id, tableCode: firstTable.code, imageUrl } : null);
@@ -815,7 +1018,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
       try {
         const orders = await orderService.getAllOrders();
-        setRelatedOrders(orders.filter((o) => o.reservationId === d.id));
+        setRelatedOrders(orders.filter((o) => o.reservationId === normalizedDetail.id));
       } catch {
         setRelatedOrders([]);
       }
@@ -826,7 +1029,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     } finally {
       setLoading(false);
     }
-  }, [reservationId, isCustomer]);
+  }, [isCustomer, reservationCodeQuery, reservationSlug]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -855,21 +1058,54 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     : "";
 
   const handlePayDeposit = async () => {
-    const unpaid = relatedOrders.find((o) => o.paymentStatusId === 0);
-    if (!unpaid?.id) { messageApi.warning(t("reservation_detail.deposit.no_order_warning")); return; }
+    if (!detail) return;
+
+    if (detail.depositPaid) {
+      messageApi.info(t("reservation_detail.deposit.already_paid"));
+      return;
+    }
+
+    if (detail.paymentDeadline) {
+      const deadlineTime = new Date(detail.paymentDeadline).getTime();
+      if (!Number.isNaN(deadlineTime) && deadlineTime <= Date.now()) {
+        messageApi.warning(t("reservation_detail.deposit.deadline_passed"));
+        return;
+      }
+    }
+
     try {
       setDepositLoading(true);
-      const res = await paymentService.createPaymentLink(unpaid.id);
-      if (res.checkoutUrl) {
-        window.location.assign(res.checkoutUrl);
+
+      if (detail.checkoutUrl) {
+        window.location.assign(detail.checkoutUrl);
         return;
-        messageApi.success(t("reservation_detail.deposit.link_opened"));
+      }
+
+      if (!reservationServiceWithDeposit.createDepositPaymentLink) {
+        messageApi.error(t("reservation_detail.deposit.create_failed"));
+        return;
+      }
+
+      const res = await reservationServiceWithDeposit.createDepositPaymentLink(detail.id);
+      if (res.checkoutUrl) {
+        setDetail((prev) =>
+          prev
+            ? {
+                ...prev,
+                checkoutUrl: res.checkoutUrl,
+              }
+            : prev,
+        );
+
+        window.location.assign(res.checkoutUrl);
       } else {
         messageApi.error(t("reservation_detail.deposit.link_error"));
       }
     } catch (err) {
       console.error(err);
-      messageApi.error(t("reservation_detail.deposit.create_failed"));
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      const beMessage = axiosError?.response?.data?.message;
+      messageApi.error(beMessage || t("reservation_detail.deposit.create_failed"));
     } finally {
       setDepositLoading(false);
     }
@@ -879,7 +1115,8 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
     const newLang = i18n.language === "vi" ? "en" : "vi";
     i18n.changeLanguage(newLang);
     localStorage.setItem("language", newLang);
-    messageApi.success(newLang === "vi" ? "Đã chuyển sang Tiếng Việt" : "Switched to English");
+    const nextT = i18n.getFixedT(newLang);
+    messageApi.success(nextT("reservation_detail.language.switched"));
   };
 
   const handleCancelEdit = () => {
@@ -895,18 +1132,18 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
     const isLockedStatus = ["COMPLETED", "CANCELLED"].includes(detail.status.code);
     if (isLockedStatus) {
-      messageApi.warning(t("reservation_detail.edit.locked_status", "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa."));
+      messageApi.warning(t("reservation_detail.edit.locked_status"));
       return;
     }
 
     if (!editDateTime) {
-      messageApi.warning(t("reservation_detail.edit.date_required", "Vui lòng chọn thời gian"));
+      messageApi.warning(t("reservation_detail.edit.date_required"));
       return;
     }
 
     const selectedDate = new Date(editDateTime);
     if (Number.isNaN(selectedDate.getTime()) || selectedDate.getTime() <= Date.now()) {
-      messageApi.warning(t("reservation_detail.edit.date_in_past", "Thời gian đặt chỗ phải lớn hơn thời điểm hiện tại."));
+      messageApi.warning(t("reservation_detail.edit.date_in_past"));
       return;
     }
 
@@ -916,7 +1153,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
       messageApi.warning(
         t(
           "reservation_detail.edit.guests_exceed_capacity",
-          `Số khách (${normalizedGuests}) vượt quá sức chứa bàn (${totalCapacity}).`
+          { guests: normalizedGuests, capacity: totalCapacity }
         )
       );
       return;
@@ -929,12 +1166,12 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
         numberOfGuests: normalizedGuests,
         specialRequests: editSpecialRequests?.trim() || undefined,
       });
-      messageApi.success(t("reservation_detail.edit.save_success", "Cập nhật reservation thành công"));
+      messageApi.success(t("reservation_detail.edit.save_success"));
       setIsEditing(false);
       await load();
     } catch (err) {
       console.error(err);
-      messageApi.error(t("reservation_detail.edit.save_failed", "Không thể cập nhật reservation"));
+      messageApi.error(t("reservation_detail.edit.save_failed"));
     } finally {
       setSavingEdit(false);
     }
@@ -964,22 +1201,42 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const sColor = statusColor[detail.status.code] ?? "var(--text)";
   const sBg = statusBg[detail.status.code] ?? "var(--surface)";
   const reservationDate = new Date(detail.reservationDateTime);
+  const localeTag = getLocaleTag(i18n.language);
   const fallbackSteps: ReservationStatus[] = [
-    { id: 1, code: "PENDING", name: t("reservation_detail.timeline.pending", { defaultValue: "Chờ xác nhận" }), colorCode: "" },
-    { id: 2, code: "CONFIRMED", name: t("reservation_detail.timeline.confirmed", { defaultValue: "Đã xác nhận" }), colorCode: "" },
-    { id: 3, code: "CANCELLED", name: t("reservation_detail.timeline.cancelled", { defaultValue: "Đã hủy" }), colorCode: "" },
+    { id: 1, code: "PENDING", name: t("reservation_detail.timeline.pending"), colorCode: "" },
+    { id: 2, code: "CONFIRMED", name: t("reservation_detail.timeline.confirmed"), colorCode: "" },
+    { id: 3, code: "CANCELLED", name: t("reservation_detail.timeline.cancelled"), colorCode: "" },
   ];
 
   const allSteps = statusSteps.length > 0 ? statusSteps : fallbackSteps;
   const currentStatusCode = (detail.status.code || "").toUpperCase();
   const currIdx = allSteps.findIndex((s) => s.code?.toUpperCase() === currentStatusCode);
   const isEditLocked = ["COMPLETED", "CANCELLED"].includes(detail.status.code);
+  const depositDeadlineDate = detail.paymentDeadline ? new Date(detail.paymentDeadline) : null;
+  const hasDepositDeadline = Boolean(depositDeadlineDate && !Number.isNaN(depositDeadlineDate.getTime()));
+  const isDepositDeadlinePassed = hasDepositDeadline ? depositDeadlineDate!.getTime() <= Date.now() : false;
+  const isDepositPaymentAllowed =
+    isCustomer &&
+    !detail.depositPaid &&
+    detail.depositAmount > 0 &&
+    !isDepositDeadlinePassed &&
+    !isEditLocked;
+  const isCancelledByDeadline =
+    !detail.depositPaid &&
+    isDepositDeadlinePassed &&
+    (detail.status.code || "").toUpperCase() === "CANCELLED";
   const hasTenantHeroBanner = Boolean(tenant?.backgroundUrl);
   const heroText = hasTenantHeroBanner ? "#F8FAFC" : "var(--text)";
   const heroTextMuted = hasTenantHeroBanner ? "rgba(248,250,252,0.82)" : "var(--text-muted)";
   const heroBorder = hasTenantHeroBanner ? "rgba(248,250,252,0.22)" : "var(--border)";
   const heroSurface = hasTenantHeroBanner ? "rgba(15,23,42,0.55)" : "var(--surface)";
-  const reservationSharePath = `/your-reservation/${detail.id}`;
+  const languageToggleBg = hasTenantHeroBanner ? "rgba(15,23,42,0.72)" : "var(--surface)";
+  const languageToggleBorder = hasTenantHeroBanner ? "rgba(248,250,252,0.5)" : "var(--border)";
+  const languageToggleColor = hasTenantHeroBanner ? "#F8FAFC" : "var(--primary)";
+  const reservationShareToken = isCustomer
+    ? (detail.confirmationCode || detail.id)
+    : detail.id;
+  const reservationSharePath = `/your-reservation/${encodeURIComponent(reservationShareToken)}`;
   const reservationShareUrl = typeof window !== "undefined"
     ? `${window.location.origin}${reservationSharePath}`
     : reservationSharePath;
@@ -987,9 +1244,9 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
   const handleCopyReservationUrl = async () => {
     try {
       await navigator.clipboard.writeText(reservationShareUrl);
-      messageApi.success(t("reservation_detail.share.copy_success", { defaultValue: "Đã copy link reservation" }));
+      messageApi.success(t("reservation_detail.share.copy_success"));
     } catch {
-      messageApi.error(t("reservation_detail.share.copy_failed", { defaultValue: "Không thể copy link" }));
+      messageApi.error(t("reservation_detail.share.copy_failed"));
     }
   };
 
@@ -1027,11 +1284,11 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
         <div className="reservation-hero-orb absolute -top-16 -right-16 z-0" />
         <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: tenant?.backgroundUrl ? "linear-gradient(to right, transparent, rgba(255,255,255,0.35), transparent)" : "linear-gradient(to right, transparent, var(--primary-border), transparent)" }} />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-12">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-12">
           {/* Top Bar (Breadcrumb + Actions) */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <button
                 id="reservation-back-btn"
                 onClick={handleBack}
@@ -1048,54 +1305,84 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 self-end sm:self-auto">
               <button
                 onClick={handleToggleLanguage}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-all border"
-                style={{ background: heroSurface, borderColor: heroBorder, color: hasTenantHeroBanner ? "#E2E8F0" : "var(--primary)", backdropFilter: hasTenantHeroBanner ? "blur(6px)" : undefined }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-soft)"; e.currentTarget.style.borderColor = "var(--primary-border)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface)"; e.currentTarget.style.borderColor = "var(--border)"; }}
-                title="Toggle Language"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-all border hover:brightness-110 active:scale-[0.98]"
+                style={{
+                  background: languageToggleBg,
+                  borderColor: languageToggleBorder,
+                  color: languageToggleColor,
+                  backdropFilter: hasTenantHeroBanner ? "blur(8px)" : undefined,
+                  boxShadow: hasTenantHeroBanner ? "0 8px 24px rgba(2,6,23,0.35)" : undefined,
+                }}
+                title={t("reservation_detail.language.toggle")}
+                aria-label={t("reservation_detail.language.toggle")}
               >
-                <span className="text-[10px] font-bold uppercase">{i18n.language === "vi" ? "VI" : "EN"}</span>
+                <span className="text-[11px] font-black uppercase">{i18n.language === "vi" ? "VI" : "EN"}</span>
               </button>
             </div>
           </div>
 
           {/* Share URL */}
           <div
-            className="mb-6 flex flex-col md:flex-row md:items-center gap-2 md:gap-3 rounded-xl p-3"
-            style={{ background: heroSurface, border: `1px solid ${heroBorder}`, backdropFilter: hasTenantHeroBanner ? "blur(6px)" : undefined }}
+            className="mb-6 rounded-2xl p-3 sm:p-4"
+            style={{
+              background: heroSurface,
+              border: `1px solid ${heroBorder}`,
+              backdropFilter: hasTenantHeroBanner ? "blur(8px)" : undefined,
+              boxShadow: hasTenantHeroBanner ? "0 12px 32px rgba(2,6,23,0.22)" : undefined,
+            }}
           >
-            <span className="text-[11px] font-bold uppercase tracking-wider shrink-0" style={{ color: heroTextMuted }}>
-              {t("reservation_detail.share.label", { defaultValue: "Reservation URL" })}
-            </span>
-            <input
-              value={reservationShareUrl}
-              readOnly
-              className="flex-1 min-w-0 px-3 py-2 rounded-lg text-xs md:text-sm font-medium"
-              style={{ background: "var(--card)", color: "var(--text)", border: `1px solid ${heroBorder}` }}
-            />
-            <button
-              onClick={handleCopyReservationUrl}
-              className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider shrink-0"
-              style={{ background: "var(--primary)", color: "var(--on-primary)" }}
-            >
-              {t("reservation_detail.share.copy", { defaultValue: "Copy" })}
-            </button>
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl shrink-0"
+                style={{
+                  background: hasTenantHeroBanner ? "rgba(15,23,42,0.5)" : "var(--surface)",
+                  border: `1px solid ${heroBorder}`,
+                }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ color: hasTenantHeroBanner ? "#F8FAFC" : "var(--primary)" }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.5-1.5M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.5 1.5" />
+                </svg>
+                <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: heroTextMuted }}>
+                  {t("reservation_detail.share.label")}
+                </span>
+              </div>
+
+              <div className="flex-1 min-w-0 flex items-center gap-2">
+                <input
+                  value={reservationShareUrl}
+                  readOnly
+                  className="flex-1 min-w-0 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium"
+                  style={{
+                    background: "var(--card)",
+                    color: "var(--text)",
+                    border: `1px solid ${heroBorder}`,
+                  }}
+                />
+                <button
+                  onClick={handleCopyReservationUrl}
+                  className="px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all hover:brightness-110"
+                  style={{ background: "var(--primary)", color: "var(--on-primary)" }}
+                >
+                  {t("reservation_detail.share.copy")}
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-start justify-between gap-8">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             {/* Left: title + badges */}
             <div className="flex-1 min-w-0">
               <p className="text-xs uppercase tracking-[0.25em] font-bold mb-3" style={{ color: heroTextMuted }}>
                 {t("reservation_detail.hero.label")}
               </p>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 italic" style={{ color: heroText }}>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-2 italic" style={{ color: heroText }}>
                 #{detail.confirmationCode}
               </h1>
               <p className="text-sm mb-5" style={{ color: heroTextMuted }}>
-                {t("reservation_detail.hero.created_at")} {new Date(detail.createdAt).toLocaleString("vi-VN")}
+                {t("reservation_detail.hero.created_at")} {new Date(detail.createdAt).toLocaleString(localeTag)}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 <span
@@ -1115,28 +1402,28 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
             </div>
 
             {/* Right: date-time chip + table badges */}
-            <div className="flex flex-col items-end gap-4 shrink-0">
-              <div className="flex items-center gap-5 px-6 py-5 rounded-2xl" style={{ background: hasTenantHeroBanner ? "rgba(15,23,42,0.58)" : "var(--card)", border: `1px solid ${heroBorder}`, boxShadow: "var(--shadow-md)", backdropFilter: hasTenantHeroBanner ? "blur(8px)" : undefined }}>
+            <div className="flex flex-col items-start lg:items-end gap-3 shrink-0 w-full lg:w-auto">
+              <div className="w-full lg:w-auto flex items-center justify-between gap-3 sm:gap-5 px-4 py-4 sm:px-6 sm:py-5 rounded-2xl" style={{ background: hasTenantHeroBanner ? "rgba(15,23,42,0.58)" : "var(--card)", border: `1px solid ${heroBorder}`, boxShadow: "var(--shadow-md)", backdropFilter: hasTenantHeroBanner ? "blur(8px)" : undefined }}>
                 <div className="text-center">
-                  <p className="text-4xl font-black" style={{ color: "var(--primary)" }}>{reservationDate.getDate()}</p>
+                  <p className="text-3xl sm:text-4xl font-black" style={{ color: "var(--primary)" }}>{reservationDate.getDate()}</p>
                   <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: heroTextMuted }}>
-                    {reservationDate.toLocaleString("vi-VN", { month: "short" })} {reservationDate.getFullYear()}
+                    {reservationDate.toLocaleString(localeTag, { month: "short" })} {reservationDate.getFullYear()}
                   </p>
                 </div>
-                <div className="w-px h-12" style={{ background: heroBorder }} />
+                <div className="w-px h-10 sm:h-12" style={{ background: heroBorder }} />
                 <div className="text-center">
-                  <p className="text-2xl font-black" style={{ color: heroText }}>
-                    {reservationDate.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                  <p className="text-xl sm:text-2xl font-black" style={{ color: heroText }}>
+                    {reservationDate.toLocaleTimeString(localeTag, { hour: "2-digit", minute: "2-digit" })}
                   </p>
                   <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: heroTextMuted }}>{t("reservation_detail.hero.time_label")}</p>
                 </div>
-                <div className="w-px h-12" style={{ background: heroBorder }} />
+                <div className="w-px h-10 sm:h-12" style={{ background: heroBorder }} />
                 <div className="text-center">
-                  <p className="text-2xl font-black" style={{ color: heroText }}>{detail.numberOfGuests}</p>
+                  <p className="text-xl sm:text-2xl font-black" style={{ color: heroText }}>{detail.numberOfGuests}</p>
                   <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: heroTextMuted }}>{t("reservation_detail.hero.guests_label")}</p>
                 </div>
               </div>
-              <div className="flex flex-wrap justify-end gap-1.5">
+              <div className="flex flex-wrap justify-start lg:justify-end gap-1.5 w-full lg:w-auto">
                 {detail.tables.map((tbl) => (
                   <span key={tbl.id} className="px-3 py-1 rounded-lg text-xs font-bold" style={{ background: hasTenantHeroBanner ? "rgba(15,23,42,0.52)" : "var(--primary-soft)", color: hasTenantHeroBanner ? "#E2E8F0" : "var(--primary)", border: `1px solid ${hasTenantHeroBanner ? "rgba(148,163,184,0.4)" : "var(--primary-border)"}`, backdropFilter: hasTenantHeroBanner ? "blur(6px)" : undefined }}>
                     {tbl.code} · {tbl.floorName}
@@ -1149,61 +1436,32 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
       </div>
 
       {/* ── Body ──────────────────────────────────────────────────────────────── */}
-      <div className="max-w-6xl mx-auto px-4 md:px-8 py-10">
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-10">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-8 items-start">
 
           {/* ── Left Column (7/12) ─────────────────────────────────────────── */}
-          <div className="xl:col-span-7 space-y-8 reservation-section-animate">
+          <div className="xl:col-span-7 space-y-5 md:space-y-8 reservation-section-animate">
 
             {/* Status Timeline */}
             {detail.status.code !== "CANCELLED" && (
-              <div className="rounded-2xl p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-8" style={{ color: "var(--text-muted)" }}>
+              <div className="rounded-2xl p-4 sm:p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4" style={{ color: "var(--text-muted)" }}>
                   {t("reservation_detail.timeline.title")}
                 </p>
-                <div className="relative w-full">
-                  <div
-                    className="absolute left-0 right-0 z-0"
-                    style={{
-                      top: 20,
-                      height: 2,
-                      background: "var(--border)",
-                      borderRadius: 999,
-                    }}
-                  />
-                  {allSteps.length > 1 && currIdx >= 0 && (
-                    <div
-                      className="absolute left-0 z-0 transition-all duration-500"
-                      style={{
-                        top: 20,
-                        height: 2,
-                        borderRadius: 999,
-                        background: "#6adf9d",
-                        width: `${(currIdx / (allSteps.length - 1)) * 100}%`,
-                      }}
-                    />
-                  )}
-
-                  <div
-                    className="relative z-10 grid items-start w-full"
-                    style={{ gridTemplateColumns: `repeat(${Math.max(allSteps.length, 1)}, minmax(0, 1fr))`, columnGap: 8 }}
-                  >
-                    {allSteps.map((step, i) => (
-                      <TimelineStep
-                        key={step.code || i}
-                        label={step.name || t(`reservation_detail.timeline.${(step.code || "").toLowerCase()}`)}
-                        done={i < currIdx}
-                        active={i === currIdx}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <BookingProgressBar
+                  steps={allSteps.map((step) => ({
+                    ...step,
+                    name: step.name || t(`reservation_detail.timeline.${(step.code || "").toLowerCase()}`),
+                  }))}
+                  currentIndex={currIdx}
+                  ariaLabel={t("reservation_detail.timeline.title")}
+                />
               </div>
             )}
 
             {/* Customer Info */}
-            <div className="rounded-2xl p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <div className="flex items-center justify-between mb-6">
+            <div className="rounded-2xl p-4 sm:p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.customer.title")}</p>
                   <h3 className="text-xl font-black mt-1" style={{ color: "var(--text)" }}>{detail.contact.name}</h3>
@@ -1228,18 +1486,18 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                 <InfoRow
                   icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>}
                   label={t("reservation_detail.customer.loyalty_points")}
-                  value={`${detail.contact.loyaltyPoints?.toLocaleString() ?? 0} pts`}
+                  value={`${detail.contact.loyaltyPoints?.toLocaleString(localeTag) ?? 0} ${t("reservation_detail.customer.points_unit")}`}
                 />
               )}
             </div>
 
             {/* Booking Details */}
-            <div className="rounded-2xl p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+            <div className="rounded-2xl p-4 sm:p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-6" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.booking.title")}</p>
               <InfoRow
                 icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
                 label={t("reservation_detail.booking.date_time")}
-                value={reservationDate.toLocaleString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                value={reservationDate.toLocaleString(localeTag, { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
               />
               <InfoRow
                 icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
@@ -1269,8 +1527,8 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
             {/* Admin note + edit */}
             {!isCustomer && (
-              <div className="rounded-2xl p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-                <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="rounded-2xl p-4 sm:p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 mb-4">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -1287,19 +1545,19 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                       disabled={isEditLocked}
                       className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ background: "var(--primary-soft)", color: "var(--primary)", border: "1px solid var(--primary-border)" }}
-                      title={isEditLocked ? t("reservation_detail.edit.locked_status", "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa.") : undefined}
+                      title={isEditLocked ? t("reservation_detail.edit.locked_status") : undefined}
                     >
-                      {t("reservation_detail.edit.edit_btn", "Edit")}
+                      {t("reservation_detail.edit.edit_btn")}
                     </button>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={handleCancelEdit}
                         disabled={savingEdit}
                         className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider"
                         style={{ background: "var(--surface)", color: "var(--text-muted)", border: "1px solid var(--border)" }}
                       >
-                        {t("reservation_detail.edit.cancel_btn", "Cancel")}
+                        {t("reservation_detail.edit.cancel_btn")}
                       </button>
                       <button
                         onClick={handleSaveEdit}
@@ -1308,7 +1566,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                         style={{ background: "var(--primary)", color: "var(--on-primary)" }}
                       >
                         {savingEdit && <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />}
-                        {t("reservation_detail.edit.save_btn", "Save")}
+                        {t("reservation_detail.edit.save_btn")}
                       </button>
                     </div>
                   )}
@@ -1316,7 +1574,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
                 {isEditLocked && (
                   <div className="mb-4 rounded-lg px-3 py-2 text-xs font-semibold" style={{ background: "var(--surface)", color: "var(--text-muted)", border: "1px dashed var(--border)" }}>
-                    {t("reservation_detail.edit.locked_status", "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa.")}
+                    {t("reservation_detail.edit.locked_status")}
                   </div>
                 )}
 
@@ -1324,7 +1582,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <label className="flex flex-col gap-1">
                       <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
-                        {t("reservation_detail.edit.date_time", "Date & time")}
+                        {t("reservation_detail.edit.date_time")}
                       </span>
                       <input
                         type="datetime-local"
@@ -1337,7 +1595,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
                     <label className="flex flex-col gap-1">
                       <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
-                        {t("reservation_detail.edit.guests", "Guests")}
+                        {t("reservation_detail.edit.guests")}
                       </span>
                       <input
                         type="number"
@@ -1351,7 +1609,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
                     <label className="flex flex-col gap-1 md:col-span-2">
                       <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
-                        {t("reservation_detail.edit.special_requests", "Special requests")}
+                        {t("reservation_detail.edit.special_requests")}
                       </span>
                       <textarea
                         value={editSpecialRequests}
@@ -1368,14 +1626,14 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
           </div>
 
           {/* ── Right Column (5/12) ─────────────────────────────────────────── */}
-          <div className="xl:col-span-5 space-y-6 reservation-section-animate" style={{ animationDelay: "0.1s" }}>
+          <div className="xl:col-span-5 space-y-4 md:space-y-6 reservation-section-animate" style={{ animationDelay: "0.1s" }}>
 
             {/* Confirmation Code */}
             <div
               className="rounded-2xl p-[1px] overflow-hidden"
               style={{ background: "linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 30%, transparent))", boxShadow: "0 0 40px var(--primary-glow)" }}
             >
-              <div className="rounded-2xl p-8 text-center relative overflow-hidden" style={{ background: "var(--card)" }}>
+              <div className="rounded-2xl p-5 sm:p-8 text-center relative overflow-hidden" style={{ background: "var(--card)" }}>
                 <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full" style={{ background: "var(--primary)", opacity: 0.05, filter: "blur(30px)" }} />
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-3" style={{ color: "var(--text-muted)" }}>
                   {t("reservation_detail.code.label")}
@@ -1391,25 +1649,29 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
             <OrderPanel orders={relatedOrders} firstTableId={firstTableId} isCustomer={isCustomer} />
 
             {/* Deposit Status */}
-            <div className="rounded-2xl p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-2" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.deposit.label", "Deposit")}</p>
+            <div className="rounded-2xl p-4 sm:p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-2" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.deposit.label")}</p>
                   <div className="flex items-center gap-2">
                     <span
                       className="w-2 h-2 rounded-full"
                       style={{ background: detail.depositPaid ? "var(--success)" : "var(--warning)", boxShadow: detail.depositPaid ? "0 0 8px var(--success)" : "none" }}
                     />
-                    <p className="text-lg font-black" style={{ color: "var(--text)" }}>{currency(detail.depositAmount)}</p>
+                    <p className="text-lg font-black" style={{ color: "var(--text)" }}>{currency(detail.depositAmount, localeTag)}</p>
                   </div>
                 </div>
-                {isCustomer && !detail.depositPaid && (
+                {isCustomer && (
                   <button
                     id="pay-deposit-btn"
                     onClick={handlePayDeposit}
-                    disabled={depositLoading}
-                    className="shrink-0 px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:brightness-110 disabled:opacity-60 flex items-center gap-2"
-                    style={{ background: "var(--success)", color: "#fff" }}
+                    disabled={depositLoading || !isDepositPaymentAllowed}
+                    className="w-full sm:w-auto shrink-0 px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                    style={{
+                      background: isDepositPaymentAllowed ? "var(--success)" : "var(--surface)",
+                      color: isDepositPaymentAllowed ? "#fff" : "var(--text-muted)",
+                      border: isDepositPaymentAllowed ? "none" : "1px solid var(--border)",
+                    }}
                   >
                     {depositLoading ? (
                       <div className="w-3.5 h-3.5 border border-white border-t-transparent rounded-full animate-spin" />
@@ -1419,9 +1681,9 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                     {depositLoading ? t("reservation_detail.deposit.creating_link") : t("reservation_detail.deposit.pay_now")}
                   </button>
                 )}
-                {!isCustomer && (
+                {!isDepositPaymentAllowed && (
                   <span className="px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest opacity-50 cursor-default" style={{ background: "var(--surface)", color: detail.depositPaid ? "var(--success)" : "var(--danger)", border: `1px solid ${detail.depositPaid ? "var(--success-border)" : "var(--danger-border)"}` }}>
-                    {detail.depositPaid ? "Paid" : "Unpaid"}
+                    {detail.depositPaid ? t("reservation_detail.deposit.status_paid") : t("reservation_detail.deposit.status_unpaid")}
                   </span>
                 )}
               </div>
@@ -1435,40 +1697,62 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                 </div>
                 <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
                   {detail.depositPaid
-                    ? t("reservation_detail.deposit.paid_desc", "Khoản đặt cọc đã được thanh toán thành công.")
-                    : t("reservation_detail.deposit.unpaid_desc", "Bạn chưa thanh toán đặt cọc. Hãy thanh toán sớm để giữ bàn.")}
+                    ? t("reservation_detail.deposit.paid_desc")
+                    : isCancelledByDeadline
+                      ? t("reservation_detail.deposit.deadline_cancel_desc")
+                      : isDepositDeadlinePassed
+                        ? t("reservation_detail.deposit.deadline_passed_desc")
+                        : t("reservation_detail.deposit.unpaid_desc")}
                 </p>
+
+                {hasDepositDeadline && (
+                  <p className="text-xs mt-1" style={{ color: isDepositDeadlinePassed ? "var(--danger)" : "var(--text-muted)" }}>
+                    {t("reservation_detail.deposit.deadline")}: {depositDeadlineDate?.toLocaleString(localeTag)}
+                  </p>
+                )}
+
+                {isCustomer && detail.checkoutUrl && !detail.depositPaid && (
+                  <a
+                    href={detail.checkoutUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex mt-2 text-xs font-semibold break-all"
+                    style={{ color: "var(--primary)" }}
+                  >
+                    {t("reservation_detail.deposit.open_checkout")}
+                  </a>
+                )}
               </div>
             </div>
 
-            {/* Panorama */}
+            {/* Table Preview */}
             {panoramaImage && (
               <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
-                <div className="px-5 pt-5 pb-3 flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "var(--text-muted)" }}>
-                    {t("reservation_detail.booking.panorama", "Panorama")}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setIs3DModalOpen(true)}
-                    className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider"
-                    style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}
+                <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "var(--text-muted)" }}>
+                      {t("reservation_detail.booking.table_preview_title")}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                      {t("reservation_detail.booking.table_preview_desc")}
+                    </p>
+                  </div>
+                  <span
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold shrink-0"
+                    style={{ background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }}
                   >
-                    {t("reservation_detail.booking.view_360", "Xem 360")}
-                  </button>
+                    {t("reservation_detail.booking.table_label", { code: panoramaImage.tableCode })}
+                  </span>
                 </div>
-                <div className="px-5 pb-5">
+                <div className="px-4 sm:px-5 pb-4 sm:pb-5">
                   <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
-                    <div className="px-3 py-2 text-xs font-semibold" style={{ color: "var(--text-muted)", borderBottom: "1px solid var(--border)" }}>
-                      Table {panoramaImage.tableCode}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIs3DModalOpen(true)}
-                      className="w-full block cursor-pointer"
-                    >
-                      <img src={panoramaImage.imageUrl} alt={`Panorama table ${panoramaImage.tableCode}`} className="w-full h-40 object-cover" />
-                    </button>
+                    <img
+                      src={panoramaImage.imageUrl}
+                      alt={t("reservation_detail.booking.table_preview_alt", { code: panoramaImage.tableCode })}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full aspect-[21/8] object-cover"
+                    />
                   </div>
                 </div>
                 <TablePreview3DModal
@@ -1497,7 +1781,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
             {/* Location */}
             {tenantAddress && (
               <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
-                <div className="p-5 flex items-start gap-4">
+                <div className="p-4 sm:p-5 flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -1520,12 +1804,12 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                   </div>
                 </div>
 
-                <div className="px-5 pb-5">
+                <div className="px-4 sm:px-5 pb-4 sm:pb-5">
                   <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
                     <iframe
-                      title="restaurant-location-map"
+                      title={t("reservation_detail.location.map_title")}
                       src={mapEmbedUrl}
-                      className="w-full h-64"
+                      className="w-full h-56 sm:h-64"
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
                     />
@@ -1535,15 +1819,15 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
             )}
 
             {/* Meta */}
-            <div className="rounded-2xl p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+            <div className="rounded-2xl p-4 sm:p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.meta.title")}</p>
-              <div className="flex justify-between items-center py-2" style={{ borderBottom: "1px solid var(--border)" }}>
+              <div className="flex justify-between items-center py-2 gap-4" style={{ borderBottom: "1px solid var(--border)" }}>
                 <span className="text-sm" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.meta.tables_count")}</span>
                 <span className="text-sm font-bold" style={{ color: "var(--text)" }}>{detail.tables.length}</span>
               </div>
-              <div className="flex justify-between items-center pt-3">
+              <div className="flex justify-between items-start sm:items-center pt-3 gap-4">
                 <span className="text-sm" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.booking.last_updated")}</span>
-                <span className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>{new Date(detail.updatedAt).toLocaleString("vi-VN")}</span>
+                <span className="text-xs font-semibold text-right" style={{ color: "var(--text-muted)" }}>{new Date(detail.updatedAt).toLocaleString(localeTag)}</span>
               </div>
             </div>
           </div>

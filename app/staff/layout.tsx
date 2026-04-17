@@ -107,12 +107,20 @@ export default function StaffLayout({
           : t("dashboard.staff.menu.orders"),
     },
     {
-      key: "/staff/tables",
+      key: "/staff/activity",
       icon: <ApartmentOutlined />,
       label:
         isMobile || isTablet
-          ? t("dashboard.staff.menu.tables_short")
-          : t("dashboard.staff.menu.tables"),
+          ? t("staff.menu.activity_short", {
+              defaultValue: t("dashboard.staff.menu.tables_short", {
+                defaultValue: "Tables",
+              }),
+            })
+          : t("staff.menu.activity", {
+              defaultValue: t("dashboard.staff.menu.tables", {
+                defaultValue: "Tables",
+              }),
+            }),
     },
     {
       key: "/staff/kitchen",
@@ -144,7 +152,7 @@ export default function StaffLayout({
         "/staff/checkout",
         "/staff/orders",
         "/staff/reservations",
-        "/staff/tables",
+        "/staff/activity",
       ].includes(item.key);
     }
 
@@ -268,7 +276,7 @@ export default function StaffLayout({
       "/staff/checkout",
       "/staff/orders",
       "/staff/reservations",
-      "/staff/tables",
+      "/staff/activity",
     ];
 
     const shouldRedirectKitchen =

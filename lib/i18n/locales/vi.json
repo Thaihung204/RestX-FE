@@ -494,8 +494,8 @@
     },
     "menu": {
       "dashboard": "Tổng quan",
-      "tables": "Bàn",
-      "tables_short": "Bàn",
+      "activity": "Hoạt động",
+      "activity_short": "Hoạt động",
       "orders": "Quản lý Order",
       "orders_short": "Order",
       "kitchen": "Bếp",
@@ -503,7 +503,54 @@
       "attendance": "Chấm công",
       "reservations": "Đặt bàn",
       "floor_activity": "Hoạt động sàn",
-      "floor_activity_short": "Sàn"
+      "floor_activity_short": "Sàn",
+      "stats": {
+        "setup_suffix": " bước",
+        "setup_label": "Thiết lập đơn giản",
+        "menu_items_label": "Món ăn mỗi thực đơn",
+        "reload_suffix": " reload",
+        "realtime_label": "Cập nhật tức thì"
+      },
+      "features": {
+        "step_1": {
+          "tag": "Bước 01 — Danh mục",
+          "title_highlight": "Tùy chỉnh danh mục",
+          "title_suffix": "theo thực đơn nhà hàng",
+          "description": "Tạo và sắp xếp danh mục linh hoạt — Món chính, Khai vị, Tráng miệng, Đồ uống. Thêm món ăn vào từng nhóm với đầy đủ thông tin và hình ảnh.",
+          "image_alt": "Quản lý danh mục",
+          "bullets": {
+            "create_category": "Tạo danh mục và đặt tên tùy ý",
+            "add_dish": "Thêm món ăn vào từng danh mục",
+            "reorder_display": "Sắp xếp thứ tự hiển thị kéo-thả"
+          }
+        },
+        "step_2": {
+          "tag": "Bước 02 — Món ăn",
+          "title_prefix": "Quản lý",
+          "title_highlight": "món ăn",
+          "title_suffix": "toàn diện",
+          "description": "Thêm, chỉnh sửa và kiểm soát từng món ăn với đầy đủ thông tin: tên, mô tả, giá, hình ảnh và trạng thái hiển thị theo thời gian thực.",
+          "image_alt": "Quản lý món ăn",
+          "bullets": {
+            "edit_info": "Chỉnh sửa thông tin và giá món ăn",
+            "attach_multi_category": "Gắn món vào nhiều danh mục cùng lúc",
+            "toggle_visibility": "Ẩn/hiện món ăn tức thì không cần reload"
+          }
+        },
+        "step_3": {
+          "tag": "Bước 03 — Nguyên liệu",
+          "title_prefix": "Kiểm soát",
+          "title_highlight": "nguyên liệu",
+          "title_suffix": "và tồn kho",
+          "description": "Gắn nguyên liệu cho từng món và theo dõi tồn kho theo thời gian thực. Hệ thống tự động cảnh báo khi sắp hết, giúp bếp chủ động xử lý trước khi ảnh hưởng phục vụ.",
+          "image_alt": "Quản lý nguyên liệu",
+          "bullets": {
+            "bind_ingredients": "Gắn nguyên liệu cụ thể cho từng món",
+            "low_stock_alert": "Cảnh báo tự động khi sắp hết nguyên liệu",
+            "auto_hide_out_of_stock": "Tự động ẩn món khi nguyên liệu cạn kiệt"
+          }
+        }
+      }
     },
     "user_menu": {
       "profile": "Thông tin cá nhân",
@@ -650,8 +697,13 @@
       "occupancy_rate": "Tỷ lệ lấp đầy",
       "active_revenue": "Doanh thu đang phục vụ",
       "search_placeholder": "Tìm mã reservation...",
+      "date_filter_label": "Ngày",
+      "time_filter_label": "Giờ",
       "table_label": "BÀN",
+      "floor_name": "Tầng {{name}}",
       "seats_label": "chỗ ngồi",
+      "merge_mode": "Gộp bàn",
+      "execute_merge": "Xác nhận gộp ({{count}})",
       "filter": {
         "all": "Tất cả trạng thái",
         "pending": "Chờ xác nhận",
@@ -662,76 +714,59 @@
         "available": "Trống",
         "occupied": "Có khách",
         "reserved": "Đã đặt",
-        "cleaning": "Đang dọn"
+        "cleaning": "Đang dọn",
+        "active": "Đang hoạt động",
+        "inactive": "Đã kết thúc",
+        "not_started": "Chưa bắt đầu"
       },
       "stats": {
         "occupied": "Đang phục vụ",
         "available": "Trống",
         "has_reservation": "Có đặt bàn"
       },
+      "merge": {
+        "success": "Gộp bàn thành công!",
+        "error": "Gộp bàn thất bại",
+        "manual_required": "Cần xử lý thủ công do có nhiều đơn hàng.",
+        "same_order_selected": "Bàn này đã thuộc cùng đơn với bàn đã chọn. Vui lòng chọn bàn khác.",
+        "same_group_selected": "Bàn này đã nằm trong cùng nhóm gộp với bàn đã chọn.",
+        "already_merged": "Các bàn đã thuộc cùng một đơn, không cần gộp lại.",
+        "merged_tables_badge": "Gộp {{count}} bàn",
+        "with_tables": "Gộp với bàn: {{tables}}",
+        "no_order_selected": "Cần chọn ít nhất 1 bàn đang có order để gộp.",
+        "reservation_pending_checkin": "Không thể gộp bàn đã đặt nhưng chưa check-in."
+      },
       "modal": {
+        "table_name": "Bàn {{name}}",
+        "merge_group": "Nhóm gộp",
+        "session": "Phiên bàn",
+        "session_id": "Session ID",
         "reserved_by": "Người đặt",
         "phone": "Số điện thoại",
         "reservation_time": "Thời gian đặt",
+        "reservation": "Đặt bàn",
         "guest_count": "Số khách",
         "total": "Tổng tiền",
         "start_time": "Bắt đầu",
+        "end_time": "Giờ kết thúc",
+        "order": "Đơn hàng",
         "payment": "Thanh toán",
         "seats": "chỗ ngồi",
         "guests": "khách",
         "checkin_btn": "Check-in",
         "checkin_success": "Check-in thành công!",
         "checkin_error": "Check-in thất bại",
+        "checkin_too_early": "Chỉ được check-in trong vòng {{minutes}} phút trước giờ đặt ({{reservationTime}}).",
+        "checkin_too_late": "Đã quá thời gian check-in hợp lệ. Chỉ hỗ trợ đến {{minutes}} phút sau giờ đặt ({{reservationTime}}).",
+        "open_session_btn": "Mở phiên (walk-in)",
+        "create_session_success": "Đã mở phiên bàn cho khách walk-in",
+        "create_session_error": "Không thể mở phiên bàn",
+        "cancel_reservation_btn": "Khách không đến / Hủy đặt bàn",
+        "cancel_reservation_confirm_title": "Xác nhận khách không đến?",
+        "cancel_reservation_confirm_content": "Hệ thống sẽ hủy đặt bàn này và tự cập nhật trạng thái liên quan.",
+        "cancel_reservation_success": "Đã hủy đặt bàn thành công.",
+        "cancel_reservation_error": "Không thể hủy đặt bàn",
         "customer": "Khách hàng"
-      }
-    },
-    "menu": {
-      "stats": {
-        "setup_suffix": " bước",
-        "setup_label": "Thiết lập đơn giản",
-        "menu_items_label": "Món ăn mỗi thực đơn",
-        "reload_suffix": " reload",
-        "realtime_label": "Cập nhật tức thì"
-      },
-      "features": {
-        "step_1": {
-          "tag": "Bước 01 — Danh mục",
-          "title_highlight": "Tùy chỉnh danh mục",
-          "title_suffix": "theo thực đơn nhà hàng",
-          "description": "Tạo và sắp xếp danh mục linh hoạt — Món chính, Khai vị, Tráng miệng, Đồ uống. Thêm món ăn vào từng nhóm với đầy đủ thông tin và hình ảnh.",
-          "image_alt": "Quản lý danh mục",
-          "bullets": {
-            "create_category": "Tạo danh mục và đặt tên tùy ý",
-            "add_dish": "Thêm món ăn vào từng danh mục",
-            "reorder_display": "Sắp xếp thứ tự hiển thị kéo-thả"
-          }
-        },
-        "step_2": {
-          "tag": "Bước 02 — Món ăn",
-          "title_prefix": "Quản lý",
-          "title_highlight": "món ăn",
-          "title_suffix": "toàn diện",
-          "description": "Thêm, chỉnh sửa và kiểm soát từng món ăn với đầy đủ thông tin: tên, mô tả, giá, hình ảnh và trạng thái hiển thị theo thời gian thực.",
-          "image_alt": "Quản lý món ăn",
-          "bullets": {
-            "edit_info": "Chỉnh sửa thông tin và giá món ăn",
-            "attach_multi_category": "Gắn món vào nhiều danh mục cùng lúc",
-            "toggle_visibility": "Ẩn/hiện món ăn tức thì không cần reload"
-          }
-        },
-        "step_3": {
-          "tag": "Bước 03 — Nguyên liệu",
-          "title_prefix": "Kiểm soát",
-          "title_highlight": "nguyên liệu",
-          "title_suffix": "và tồn kho",
-          "description": "Gắn nguyên liệu cho từng món và theo dõi tồn kho theo thời gian thực. Hệ thống tự động cảnh báo khi sắp hết, giúp bếp chủ động xử lý trước khi ảnh hưởng phục vụ.",
-          "image_alt": "Quản lý nguyên liệu",
-          "bullets": {
-            "bind_ingredients": "Gắn nguyên liệu cụ thể cho từng món",
-            "low_stock_alert": "Cảnh báo tự động khi sắp hết nguyên liệu",
-            "auto_hide_out_of_stock": "Tự động ẩn món khi nguyên liệu cạn kiệt"
-          }
-        }
       }
     },
     "customer": {
@@ -1834,6 +1869,35 @@
         "inactive": "Ngừng hoạt động",
         "off_duty": "Nghỉ ca",
         "on_leave": "Nghỉ phép"
+      },
+      "floor_activity": {
+        "title": "Hoạt động",
+        "last_updated": "Cập nhật lúc",
+        "occupied_suffix": "bàn đang dùng",
+        "table_label": "Bàn",
+        "seats_label": "ghế",
+        "merge_mode": "Chế độ gộp bàn",
+        "execute_merge": "Xác nhận gộp bàn ({{count}})",
+        "stats": {
+          "occupied": "Đang dùng",
+          "available": "Trống",
+          "has_reservation": "Có lịch đặt"
+        },
+        "status": {
+          "available": "Trống",
+          "occupied": "Đang dùng",
+          "reserved": "Đã đặt",
+          "cleaning": "Đang dọn"
+        },
+        "merge": {
+          "success": "Gộp bàn thành công!",
+          "error": "Gộp bàn thất bại",
+          "manual_required": "Cần xử lý thủ công do có nhiều đơn hàng."
+        },
+        "modal": {
+          "checkin_success": "Check-in thành công!",
+          "checkin_error": "Check-in thất bại"
+        }
       }
     },
     "ingredients": {
@@ -2270,6 +2334,7 @@
     }
   },
   "common": {
+    "cancel": "Hủy",
     "actions": {
       "exporting": "Đang xuất..."
     },
@@ -3044,7 +3109,7 @@
       "staff_assigned": "đã phân công"
     },
     "export": {
-      "alert": "Tính năng xuất file sẽ khả dụng khi kết nối với backend API"
+      "alert": "Tính năng xuất file sẽ khả dụng khi hệ thống sẵn sàng dữ liệu"
     }
   },
   "not_found": {
@@ -3793,6 +3858,8 @@
         "booking_ref": "Mã đặt bàn",
         "confirmation_sent": "Email xác nhận gửi tới:",
         "phone_label": "Số điện thoại",
+        "pay_deposit_now": "Thanh toán cọc ngay",
+        "deposit_deadline": "Hạn thanh toán cọc",
         "view_details": "Xem chi tiết",
         "make_another": "Đặt bàn mới"
       },
@@ -3913,8 +3980,19 @@
     }
   },
   "reservation_detail": {
+    "loading": "Đang tải thông tin đặt bàn...",
     "back": "Quay lại",
     "breadcrumb": "Chi tiết đặt bàn",
+    "language": {
+      "toggle": "Chuyển ngôn ngữ",
+      "switched": "Đã chuyển ngôn ngữ thành công."
+    },
+    "share": {
+      "label": "Đường dẫn đặt bàn",
+      "copy": "Sao chép",
+      "copy_success": "Đã sao chép đường dẫn đặt bàn.",
+      "copy_failed": "Không thể sao chép đường dẫn đặt bàn."
+    },
     "not_found": {
       "title": "Không tìm thấy đặt bàn",
       "description": "Đặt bàn này có thể không tồn tại hoặc bạn không có quyền truy cập."
@@ -3941,7 +4019,8 @@
       "type": "Loại khách",
       "guest": "Khách vãng lai",
       "member": "Thành viên",
-      "loyalty_points": "Điểm tích lũy"
+      "loyalty_points": "Điểm tích lũy",
+      "points_unit": "điểm"
     },
     "booking": {
       "title": "Thông tin đặt chỗ",
@@ -3955,17 +4034,31 @@
       "checked_in_at": "Thời gian check-in",
       "last_updated": "Cập nhật lần cuối",
       "special_requests": "Yêu cầu đặc biệt",
-      "panorama": "Panorama",
-      "view_360": "Xem 360"
+      "table_preview_title": "Không gian bàn",
+      "table_preview_desc": "Ảnh khu vực bàn đã chọn.",
+      "table_label": "Bàn {{code}}",
+      "table_preview_alt": "Ảnh xem trước bàn {{code}}"
     },
     "deposit": {
       "label": "Đặt cọc",
       "pay_now": "Thanh toán cọc",
       "creating_link": "Đang tạo...",
+      "already_paid": "Khoản cọc đã được thanh toán.",
+      "deadline_passed": "Đã quá hạn thanh toán cọc.",
       "no_order_warning": "Chưa có order cọc. Vui lòng liên hệ nhà hàng.",
       "link_opened": "Đã mở link thanh toán cọc.",
       "link_error": "Không lấy được link thanh toán.",
-      "create_failed": "Tạo link thanh toán thất bại."
+      "create_failed": "Tạo link thanh toán thất bại.",
+      "paid_desc": "Khoản đặt cọc đã được thanh toán thành công.",
+      "unpaid_desc": "Bạn chưa thanh toán đặt cọc. Hãy thanh toán sớm để giữ bàn.",
+      "deadline_cancel_desc": "Reservation đã bị hủy do quá hạn thanh toán cọc.",
+      "deadline_passed_desc": "Đã quá hạn thanh toán đặt cọc.",
+      "deadline": "Hạn thanh toán",
+      "open_checkout": "Mở link thanh toán",
+      "badge_paid": "Đã thanh toán",
+      "badge_unpaid": "Chưa thanh toán",
+      "status_paid": "Đã thanh toán",
+      "status_unpaid": "Chưa thanh toán"
     },
     "order": {
       "title": "Thông tin order",
@@ -3974,12 +4067,34 @@
       "status": "Trạng thái",
       "no_orders": "Chưa có order nào liên kết với đặt bàn này.",
       "order_now": "Order ngay",
-      "readonly_note": "Bạn chỉ có quyền xem thông tin. Liên hệ nhà hàng để thay đổi."
+      "readonly_note": "Bạn chỉ có quyền xem thông tin. Liên hệ nhà hàng để thay đổi.",
+      "unnamed_order": "Đơn hàng",
+      "paid": "Đã thanh toán",
+      "unpaid": "Chưa thanh toán"
+    },
+    "edit": {
+      "locked_status": "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa.",
+      "date_required": "Vui lòng chọn thời gian.",
+      "date_in_past": "Thời gian đặt chỗ phải lớn hơn thời điểm hiện tại.",
+      "guests_exceed_capacity": "Số khách ({{guests}}) vượt quá sức chứa bàn ({{capacity}}).",
+      "save_success": "Cập nhật reservation thành công.",
+      "save_failed": "Không thể cập nhật reservation.",
+      "edit_btn": "Chỉnh sửa",
+      "cancel_btn": "Hủy",
+      "save_btn": "Lưu",
+      "date_time": "Ngày & giờ",
+      "guests": "Số khách",
+      "special_requests": "Yêu cầu đặc biệt"
+    },
+    "map": {
+      "loading": "Đang tải sơ đồ...",
+      "unavailable": "Không có sơ đồ bàn"
     },
     "location": {
       "no_address": "Chưa có địa chỉ",
       "updating": "Đang cập nhật địa chỉ",
-      "open_maps": "Mở Google Maps"
+      "open_maps": "Mở Google Maps",
+      "map_title": "Bản đồ vị trí nhà hàng"
     },
     "code": {
       "label": "Mã xác nhận",
@@ -4412,11 +4527,6 @@
           "success": "[OK] Thanh toán thành công — 19:58"
         }
       }
-    }
-  },
-  "common": {
-    "actions": {
-      "exporting": "Đang xuất..."
     }
   }
 }
