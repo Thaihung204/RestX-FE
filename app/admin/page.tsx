@@ -1,21 +1,26 @@
 "use client";
 
+import AIPanelDashboard, {
+  AIReportFilterOption,
+  AIStrategyReport,
+} from "@/components/admin/AIPanelDashboard";
 import BestSellingDishesCard from "@/components/admin/BestSellingDishesCard";
 import KPISection from "@/components/admin/KPISection";
 import LatestFeedbacksCard from "@/components/admin/LatestFeedbacksCard";
 import OrdersBarChart from "@/components/admin/charts/OrdersBarChart";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import ReservationList from "@/components/admin/reservations/ReservationList";
+import aiService from "@/lib/services/aiService";
 import dashboardService, {
-    DashboardFilterType,
-    DashboardOverview,
-    DashboardSummary,
-    OrderTrendPoint,
-    RevenueTrendPoint,
+  DashboardFilterType,
+  DashboardOverview,
+  DashboardSummary,
+  OrderTrendPoint,
+  RevenueTrendPoint,
 } from "@/lib/services/dashboardService";
 import reportService, { ReportType } from "@/lib/services/reportService";
 import reservationService, {
-    PaginatedReservations,
+  PaginatedReservations,
 } from "@/lib/services/reservationService";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined } from "@ant-design/icons";
@@ -334,6 +339,9 @@ export default function DashboardPage() {
   const [dashboardFilter, setDashboardFilter] =
     useState<DashboardFilterOption>("week");
   const [exportingReport, setExportingReport] = useState(false);
+  const [aiReport, setAiReport] = useState<AIStrategyReport | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiFilter, setAiFilter] = useState<AIReportFilterOption>("month");
 
   const filterOptions: DashboardFilterOption[] = [
     "day",
@@ -422,6 +430,26 @@ export default function DashboardPage() {
       orderChartData.reduce((sum, item) => sum + item.total, 0),
     [overviewData?.orderTrend?.totalOrders, orderChartData],
   );
+
+  const generateAIReport = useCallback(async (filter: AIReportFilterOption) => {
+    setAiFilter(filter);
+    setAiLoading(true);
+    try {
+      const apiFilterType = filter === "month" ? "month" : filter;
+      const response = await aiService.analyzeDashboard({ filterType: apiFilterType });
+      setAiReport({
+        ...response,
+        id: response.id || `report-${Date.now()}`,
+        generatedAt: response.generatedAt || new Date().toISOString(),
+      });
+      message.success(t("dashboard.analytics.success.generate"));
+    } catch (err) {
+      console.error(err);
+      message.error(t("dashboard.analytics.error.generate"));
+    } finally {
+      setAiLoading(false);
+    }
+  }, [message, t]);
 
   const fetchReservations = useCallback(async () => {
     setReservationLoading(true);
@@ -541,9 +569,17 @@ export default function DashboardPage() {
           />
         </section>
 
+        <section>
+          <AIPanelDashboard
+            report={aiReport}
+            loading={aiLoading}
+            onGenerate={generateAIReport}
+            currentFilter={aiFilter}
+          />
+        </section>
+
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <LatestFeedbacksCard loading={dashboardLoading && !summaryData} />
-          <BestSellingDishesCard 
+          <LatestFeedbacksCard loading={dashboardLoading && !summaryData} />          <BestSellingDishesCard 
             dishes={overviewData?.topDishes?.dishes}
             loading={dashboardLoading && !overviewData}
           />

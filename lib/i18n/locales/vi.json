@@ -2203,7 +2203,10 @@
       "createNew": "Tạo báo cáo mới",
       "generating": "Đang tạo báo cáo...",
       "filter": {
-        "by": "Phân tích theo"
+        "by": "Phân tích theo",
+        "month": "Tháng",
+        "quarter": "Quý",
+        "year": "Năm"
       },
       "time": {
         "justNow": "Vừa xong",

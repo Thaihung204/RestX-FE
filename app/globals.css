@@ -2076,3 +2076,12 @@ img {
     font-size: 13px;
   }
 }
+
+/* AI Strategy icon — black by default (light mode), invert to white in dark mode */
+.ai-icon {
+  filter: none;
+}
+
+[data-theme="dark"] .ai-icon {
+  filter: invert(1);
+}
