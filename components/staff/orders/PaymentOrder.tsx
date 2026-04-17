@@ -1,15 +1,15 @@
 "use client";
 
 import orderService, {
-  ApplyDiscountResponse,
+    ApplyDiscountResponse,
 } from "@/lib/services/orderService";
 import promotionService, { Promotion } from "@/lib/services/promotionService";
 import {
-  BankOutlined,
-  CheckCircleFilled,
-  CrownOutlined,
-  DollarOutlined,
-  TagOutlined,
+    BankOutlined,
+    CheckCircleFilled,
+    CrownOutlined,
+    DollarOutlined,
+    TagOutlined,
 } from "@ant-design/icons";
 import { Button, InputNumber, Modal, Spin, Typography } from "antd";
 import { useCallback, useEffect, useState } from "react";
@@ -34,6 +34,7 @@ interface SelectedOrder {
 interface PaymentOrderProps {
   isOpen: boolean;
   selectedOrder: SelectedOrder | null;
+  onFinalTotalChange?: (value: number) => void;
   paymentMethod: PaymentMethod;
   setPaymentMethod: (method: PaymentMethod) => void;
   cashReceived: number;
@@ -48,6 +49,7 @@ interface PaymentOrderProps {
 export default function PaymentOrder({
   isOpen,
   selectedOrder,
+  onFinalTotalChange,
   paymentMethod,
   setPaymentMethod,
   cashReceived,
@@ -81,6 +83,11 @@ export default function PaymentOrder({
   const subTotal = selectedOrder?.subTotal ?? selectedOrder?.total ?? 0;
   const finalTotal = discountData?.totalAmount ?? selectedOrder?.total ?? 0;
   const hasDiscount = !!(discountData && discountData.discountAmount > 0);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    onFinalTotalChange?.(finalTotal);
+  }, [isOpen, finalTotal, onFinalTotalChange]);
 
   useEffect(() => {
     if (!isOpen) {

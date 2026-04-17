@@ -1,13 +1,26 @@
 "use client";
 
 import { useTenant } from "@/lib/contexts/TenantContext";
-import orderService, { OrderDetailListItemDto } from "@/lib/services/orderService";
+import orderService, {
+  OrderDetailListItemDto,
+} from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
-import { ClockCircleOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import {
+  ClockCircleOutlined,
+  ShoppingCartOutlined,
+  SyncOutlined,
+} from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
 import { App, Space, Spin, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
@@ -75,75 +88,104 @@ export default function StaffKitchenPage() {
 
   const getStatusTag = (status?: string) => {
     const normalized = (status || "").toLowerCase();
+    const spinningIcon = <SyncOutlined spin />;
 
     if (normalized.includes("preparing")) {
       return (
-        <Tag color="processing" style={statusTagStyle}>
+        <Tag color="processing" icon={spinningIcon} style={statusTagStyle}>
           {t("staff.kitchen.status.preparing")}
         </Tag>
       );
     }
     if (normalized.includes("ready")) {
       return (
-        <Tag color="success" style={statusTagStyle}>
+        <Tag color="success" icon={spinningIcon} style={statusTagStyle}>
           {t("staff.kitchen.status.ready")}
         </Tag>
       );
     }
     if (normalized.includes("served")) {
       return (
-        <Tag color="blue" style={statusTagStyle}>
+        <Tag color="blue" icon={spinningIcon} style={statusTagStyle}>
           {t("staff.kitchen.status.served")}
         </Tag>
       );
     }
     if (normalized.includes("cancel")) {
       return (
-        <Tag color="error" style={statusTagStyle}>
+        <Tag color="error" icon={spinningIcon} style={statusTagStyle}>
           {t("staff.kitchen.status.cancelled")}
         </Tag>
       );
     }
 
-    return <Tag style={statusTagStyle}>{status || "-"}</Tag>;
+    return (
+      <Tag icon={spinningIcon} style={statusTagStyle}>
+        {status || "-"}
+      </Tag>
+    );
   };
 
-  const mapOrderDetailsToKitchenItems = useCallback((details: OrderDetailListItemDto[], tableMap: Map<string, string>): KitchenItem[] => {
-    return (details || []).map((detail, index) => ({
-      key: detail.id || `${detail.orderId || "order"}-${detail.dishId || "dish"}-${index}`,
-      id: detail.id || "",
-      orderId: detail.orderId || "",
-      tableName: (detail.orderId && tableMap.get(detail.orderId)) || "-",
-      dishName: detail.dishName || detail.dishId || "",
-      quantity: detail.quantity ?? 0,
-      note: detail.note || undefined,
-      status: detail.status || undefined,
-      createdDate: detail.createdDate || undefined,
-    }));
-  }, []);
+  const mapOrderDetailsToKitchenItems = useCallback(
+    (
+      details: OrderDetailListItemDto[],
+      tableMap: Map<string, string>,
+    ): KitchenItem[] => {
+      return (details || []).map((detail, index) => ({
+        key:
+          detail.id ||
+          `${detail.orderId || "order"}-${detail.dishId || "dish"}-${index}`,
+        id: detail.id || "",
+        orderId: detail.orderId || "",
+        tableName: (detail.orderId && tableMap.get(detail.orderId)) || "-",
+        dishName: detail.dishName || detail.dishId || "",
+        quantity: detail.quantity ?? 0,
+        note: detail.note || undefined,
+        status: detail.status || undefined,
+        createdDate: detail.createdDate || undefined,
+      }));
+    },
+    [],
+  );
 
-  const resolveOrderTableCodes = useCallback((order: { id?: string; tableId?: string; tableIds?: string[]; tableSessions?: Array<{ tableId?: string | null; tableCode?: string | null; table?: { code?: string | null } | null }> }) => {
-    const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+  const resolveOrderTableCodes = useCallback(
+    (order: {
+      id?: string;
+      tableId?: string;
+      tableIds?: string[];
+      tableSessions?: Array<{
+        tableId?: string | null;
+        tableCode?: string | null;
+        table?: { code?: string | null } | null;
+      }>;
+    }) => {
+      const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
 
-    const sessionCodes = (order.tableSessions ?? [])
-      .map((session) => session?.tableCode || session?.table?.code)
-      .filter((code): code is string => !!code && code.trim().length > 0);
+      const sessionCodes = (order.tableSessions ?? [])
+        .map((session) => session?.tableCode || session?.table?.code)
+        .filter((code): code is string => !!code && code.trim().length > 0);
 
-    if (sessionCodes.length > 0) {
-      return Array.from(new Set(sessionCodes)).join(" - ");
-    }
+      if (sessionCodes.length > 0) {
+        return Array.from(new Set(sessionCodes)).join(" - ");
+      }
 
-    const tableIdFromSession = (order.tableSessions ?? [])
-      .map((session) => session?.tableId)
-      .find((id): id is string => !!id && id !== EMPTY_GUID);
-    const tableIdFromList = (order.tableIds ?? []).find((id): id is string => !!id && id !== EMPTY_GUID);
-    const fallbackTableId =
-      (order.tableId && order.tableId !== EMPTY_GUID ? order.tableId : undefined) ||
-      tableIdFromSession ||
-      tableIdFromList;
+      const tableIdFromSession = (order.tableSessions ?? [])
+        .map((session) => session?.tableId)
+        .find((id): id is string => !!id && id !== EMPTY_GUID);
+      const tableIdFromList = (order.tableIds ?? []).find(
+        (id): id is string => !!id && id !== EMPTY_GUID,
+      );
+      const fallbackTableId =
+        (order.tableId && order.tableId !== EMPTY_GUID
+          ? order.tableId
+          : undefined) ||
+        tableIdFromSession ||
+        tableIdFromList;
 
-    return fallbackTableId ? fallbackTableId.slice(0, 6) : "-";
-  }, []);
+      return fallbackTableId ? fallbackTableId.slice(0, 6) : "-";
+    },
+    [],
+  );
 
   const loadData = useCallback(
     async (silent = false) => {
@@ -154,7 +196,10 @@ export default function StaffKitchenPage() {
       }
 
       try {
-        const [details, orders] = await Promise.all([orderService.getOrderDetailsList(), orderService.getAllOrders()]);
+        const [details, orders] = await Promise.all([
+          orderService.getOrderDetailsList(),
+          orderService.getAllOrders(),
+        ]);
 
         const tableMap = new Map<string, string>();
         orders.forEach((order) => {
@@ -163,18 +208,25 @@ export default function StaffKitchenPage() {
           }
         });
 
-        const mapped = mapOrderDetailsToKitchenItems(details, tableMap).sort((a, b) => {
-          if (!a.createdDate && !b.createdDate) return 0;
-          if (!a.createdDate) return 1;
-          if (!b.createdDate) return -1;
-          return new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime();
-        });
+        const mapped = mapOrderDetailsToKitchenItems(details, tableMap).sort(
+          (a, b) => {
+            if (!a.createdDate && !b.createdDate) return 0;
+            if (!a.createdDate) return 1;
+            if (!b.createdDate) return -1;
+            return (
+              new Date(a.createdDate).getTime() -
+              new Date(b.createdDate).getTime()
+            );
+          },
+        );
 
         setItems(mapped);
         setUpdatedAt(Date.now());
       } catch (error) {
         console.error("Failed to load kitchen items:", error);
-        messageApiRef.current.error(i18n.t("staff.kitchen.messages.load_error"));
+        messageApiRef.current.error(
+          i18n.t("staff.kitchen.messages.load_error"),
+        );
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -198,8 +250,12 @@ export default function StaffKitchenPage() {
     const handleOrderChanged = (payload: unknown) => {
       if (!isMounted) return;
 
-      const payloadObj = payload as { tenantId?: string; order?: { tenantId?: string } };
-      const changedTenantId = payloadObj?.tenantId || payloadObj?.order?.tenantId;
+      const payloadObj = payload as {
+        tenantId?: string;
+        order?: { tenantId?: string };
+      };
+      const changedTenantId =
+        payloadObj?.tenantId || payloadObj?.order?.tenantId;
       if (changedTenantId && changedTenantId !== tenantId) return;
 
       if (debounceTimerRef.current) {
@@ -219,7 +275,9 @@ export default function StaffKitchenPage() {
         const conn = orderSignalRService.getConnection();
         if (conn.state === HubConnectionState.Connected) {
           await orderSignalRService.invoke("JoinTenantGroup", tenantId);
-          events.forEach((event) => orderSignalRService.on(event, handleOrderChanged));
+          events.forEach((event) =>
+            orderSignalRService.on(event, handleOrderChanged),
+          );
         }
       } catch (error) {
         console.error("SignalR: Setup kitchen failed", error);
@@ -233,7 +291,9 @@ export default function StaffKitchenPage() {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
-      events.forEach((event) => orderSignalRService.off(event, handleOrderChanged));
+      events.forEach((event) =>
+        orderSignalRService.off(event, handleOrderChanged),
+      );
       orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
     };
   }, [tenant?.id, loadData]);
@@ -248,27 +308,45 @@ export default function StaffKitchenPage() {
   const columns: ColumnsType<KitchenItem> = useMemo(
     () => [
       {
-        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.table")}</span>,
+        title: (
+          <span style={headerCellStyle}>
+            {t("staff.kitchen.columns.table")}
+          </span>
+        ),
         dataIndex: "tableName",
         key: "tableName",
         width: 130,
         render: (value: string) => (
-          <Text style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>{value || "-"}</Text>
-        ),
-      },
-      {
-        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.dish_name")}</span>,
-        key: "dish",
-        dataIndex: "dishName",
-        width: 260,
-        render: (value: string) => (
-          <Text style={{ color: "var(--primary)", fontSize: 15, fontWeight: 700, lineHeight: 1.35 }}>
+          <Text style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>
             {value || "-"}
           </Text>
         ),
       },
       {
-        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.note")}</span>,
+        title: (
+          <span style={headerCellStyle}>
+            {t("staff.kitchen.columns.dish_name")}
+          </span>
+        ),
+        key: "dish",
+        dataIndex: "dishName",
+        width: 260,
+        render: (value: string) => (
+          <Text
+            style={{
+              color: "var(--primary)",
+              fontSize: 15,
+              fontWeight: 700,
+              lineHeight: 1.35,
+            }}>
+            {value || "-"}
+          </Text>
+        ),
+      },
+      {
+        title: (
+          <span style={headerCellStyle}>{t("staff.kitchen.columns.note")}</span>
+        ),
         key: "note",
         dataIndex: "note",
         width: 240,
@@ -287,8 +365,7 @@ export default function StaffKitchenPage() {
                 color: "#ad6800",
                 maxWidth: "100%",
                 whiteSpace: "normal",
-              }}
-            >
+              }}>
               {value}
             </Tag>
           ) : (
@@ -298,7 +375,11 @@ export default function StaffKitchenPage() {
           ),
       },
       {
-        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.quantity")}</span>,
+        title: (
+          <span style={headerCellStyle}>
+            {t("staff.kitchen.columns.quantity")}
+          </span>
+        ),
         dataIndex: "quantity",
         key: "quantity",
         width: 120,
@@ -313,14 +394,17 @@ export default function StaffKitchenPage() {
               fontSize: 13,
               lineHeight: "20px",
               paddingInline: 10,
-            }}
-          >
+            }}>
             x{value}
           </Tag>
         ),
       },
       {
-        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.status")}</span>,
+        title: (
+          <span style={headerCellStyle}>
+            {t("staff.kitchen.columns.status")}
+          </span>
+        ),
         dataIndex: "status",
         key: "status",
         width: 160,
@@ -328,13 +412,22 @@ export default function StaffKitchenPage() {
         render: (value?: string) => getStatusTag(value),
       },
       {
-        title: <span style={headerCellStyle}>{t("staff.kitchen.columns.time")}</span>,
+        title: (
+          <span style={headerCellStyle}>{t("staff.kitchen.columns.time")}</span>
+        ),
         dataIndex: "createdDate",
         key: "createdDate",
         width: 180,
         align: "center",
         render: (value?: string) => (
-          <Text style={{ fontSize: 14, fontWeight: 500, color: "var(--text-muted)" }}>{formatTime(value)}</Text>
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: "var(--text-muted)",
+            }}>
+            {formatTime(value)}
+          </Text>
         ),
       },
     ],
@@ -373,8 +466,12 @@ export default function StaffKitchenPage() {
           <div className="w-20 h-20 bg-[var(--surface)] rounded-full flex items-center justify-center mb-6 border border-[var(--border)]">
             <ClockCircleOutlined className="text-[34px] text-[var(--text-muted)] opacity-50" />
           </div>
-          <h2 className="text-[22px] leading-[30px] font-semibold text-[var(--text)] mb-2">{t("staff.kitchen.empty.title")}</h2>
-          <p className="text-[15px] leading-6 text-[var(--text-muted)]">{t("staff.kitchen.empty.description")}</p>
+          <h2 className="text-[22px] leading-[30px] font-semibold text-[var(--text)] mb-2">
+            {t("staff.kitchen.empty.title")}
+          </h2>
+          <p className="text-[15px] leading-6 text-[var(--text-muted)]">
+            {t("staff.kitchen.empty.description")}
+          </p>
         </div>
       ) : (
         <div className="h-[calc(100vh-64px)] w-full">
@@ -389,11 +486,20 @@ export default function StaffKitchenPage() {
               padding: "12px 16px",
               borderBottom: "1px solid var(--border)",
               background: "var(--card)",
-            }}
-          >
+            }}>
             <Space size={12} align="center">
-              <ShoppingCartOutlined style={{ color: "var(--primary)", fontSize: 18 }} />
-              <span style={{ fontSize: 18, lineHeight: "26px", fontWeight: 700, color: "var(--text)" }}>{t("staff.kitchen.title")}</span>
+              <ShoppingCartOutlined
+                style={{ color: "var(--primary)", fontSize: 18 }}
+              />
+              <span
+                style={{
+                  fontSize: 18,
+                  lineHeight: "26px",
+                  fontWeight: 700,
+                  color: "var(--text)",
+                }}>
+                {t("staff.kitchen.title")}
+              </span>
               <Tag
                 color="orange"
                 style={{
@@ -403,12 +509,19 @@ export default function StaffKitchenPage() {
                   fontWeight: 600,
                   margin: 0,
                   paddingInline: 10,
-                }}
-              >
-                {t("staff.kitchen.preparing_count", { count: items.filter((o) => (o.status || "").toLowerCase().includes("preparing")).length })}
+                }}>
+                {t("staff.kitchen.preparing_count", {
+                  count: items.filter((o) =>
+                    (o.status || "").toLowerCase().includes("preparing"),
+                  ).length,
+                })}
               </Tag>
             </Space>
-            <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("staff.kitchen.updated_at", { time: formatUpdatedAt(updatedAt) })}</Text>
+            <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              {t("staff.kitchen.updated_at", {
+                time: formatUpdatedAt(updatedAt),
+              })}
+            </Text>
           </div>
 
           <Table

@@ -28,7 +28,7 @@ interface Order {
   detailItems: OrderItem[];
   total: number;
   raw?: {
-    paymentStatusId?: number;
+    paymentStatus?: number;
   };
   orderStatusId: number;
   tableSessions?: Array<{
@@ -148,7 +148,26 @@ export default function CardOrder({
                 </Text>
                 <div
                   onClick={(event) => event.stopPropagation()}
-                  onMouseDown={(event) => event.stopPropagation()}>
+                  onMouseDown={(event) => event.stopPropagation()}
+                  style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {Number(order.raw?.paymentStatus) === 1 && (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      margin: 0,
+                      fontWeight: 500,
+                      fontSize: isMobile ? 11 : 12,
+                      lineHeight: '22px',
+                      padding: '0 7px',
+                      border: '1.5px solid #52c41a',
+                      background: 'transparent',
+                      color: mode === 'dark' ? '#fff' : '#000',
+                      borderRadius: 6,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {t("staff.orders.order.paid")}
+                    </span>
+                  )}
                   <Select
                     value={order.orderStatusId}
                     size="small"

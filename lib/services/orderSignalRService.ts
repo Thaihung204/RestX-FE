@@ -16,6 +16,74 @@ const getHubUrl = () => {
 };
 
 let connection: HubConnection | null = null;
+const tenantGroupRefCounts = new Map<string, number>();
+let lifecycleEventsBound = false;
+
+const normalizeTenantId = (tenantId: string) => tenantId.trim();
+
+const syncTenantGroups = async (conn: HubConnection) => {
+  const tenantIds = Array.from(tenantGroupRefCounts.keys());
+  await Promise.all(
+    tenantIds.map(async (tenantId) => {
+      try {
+        await conn.invoke("JoinTenantGroup", tenantId);
+      } catch (error) {
+        console.error("SignalR: Failed to rejoin tenant group", {
+          tenantId,
+          error,
+        });
+      }
+    }),
+  );
+};
+
+const bindLifecycleEvents = (conn: HubConnection) => {
+  if (lifecycleEventsBound) return;
+  lifecycleEventsBound = true;
+
+  conn.onreconnected(async () => {
+    await syncTenantGroups(conn);
+  });
+};
+
+const invokeWhenConnected = async (methodName: string, ...args: any[]) => {
+  const conn = getConnection();
+  if (conn.state === HubConnectionState.Connected) {
+    return await conn.invoke(methodName, ...args);
+  }
+
+  console.warn(
+    `SignalR: Cannot invoke ${methodName} because state is ${conn.state}`,
+  );
+};
+
+const joinTenantGroup = async (tenantId: string) => {
+  const normalizedTenantId = normalizeTenantId(tenantId || "");
+  if (!normalizedTenantId) return;
+
+  const currentRefCount = tenantGroupRefCounts.get(normalizedTenantId) || 0;
+  tenantGroupRefCounts.set(normalizedTenantId, currentRefCount + 1);
+
+  if (currentRefCount === 0) {
+    await invokeWhenConnected("JoinTenantGroup", normalizedTenantId);
+  }
+};
+
+const leaveTenantGroup = async (tenantId: string) => {
+  const normalizedTenantId = normalizeTenantId(tenantId || "");
+  if (!normalizedTenantId) return;
+
+  const currentRefCount = tenantGroupRefCounts.get(normalizedTenantId) || 0;
+  if (currentRefCount <= 0) return;
+
+  if (currentRefCount === 1) {
+    tenantGroupRefCounts.delete(normalizedTenantId);
+    await invokeWhenConnected("LeaveTenantGroup", normalizedTenantId);
+    return;
+  }
+
+  tenantGroupRefCounts.set(normalizedTenantId, currentRefCount - 1);
+};
 
 const getConnection = () => {
   if (!connection) {
@@ -36,6 +104,7 @@ const getConnection = () => {
 
     connection.serverTimeoutInMilliseconds = 60000;
     connection.keepAliveIntervalInMilliseconds = 20000;
+    bindLifecycleEvents(connection);
   }
   return connection;
 };
@@ -45,6 +114,7 @@ const start = async () => {
   const conn = getConnection();
   if (conn.state === HubConnectionState.Disconnected) {
     await conn.start();
+    await syncTenantGroups(conn);
   }
 };
 
@@ -56,12 +126,17 @@ const stop = async () => {
 };
 
 const invoke = async (methodName: string, ...args: any[]) => {
-  const conn = getConnection();
-  if (conn.state === HubConnectionState.Connected) {
-    return await conn.invoke(methodName, ...args);
-  } else {
-    console.warn(`SignalR: Cannot invoke ${methodName} because state is ${conn.state}`);
+  if (methodName === "JoinTenantGroup") {
+    const tenantId = String(args[0] || "");
+    return await joinTenantGroup(tenantId);
   }
+
+  if (methodName === "LeaveTenantGroup") {
+    const tenantId = String(args[0] || "");
+    return await leaveTenantGroup(tenantId);
+  }
+
+  return await invokeWhenConnected(methodName, ...args);
 };
 
 const on = <T>(eventName: string, handler: (payload: T) => void) => {
@@ -78,6 +153,8 @@ const orderSignalRService = {
   start,
   stop,
   invoke,
+  joinTenantGroup,
+  leaveTenantGroup,
   on,
   off,
   getConnection,
