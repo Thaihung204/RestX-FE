@@ -299,6 +299,7 @@
         "time": "Time",
         "status": "Status",
         "total": "Total",
+        "paid": "Paid",
         "other_items": "other items",
         "more_items": "more items",
         "not_done": "not done",

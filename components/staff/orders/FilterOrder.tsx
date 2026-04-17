@@ -11,6 +11,7 @@ interface FilterOrderProps {
   tableFilterOptions: FilterOption[];
   onChangeTable: (value: string) => void;
   onAddItem: () => void;
+  disableAddItem?: boolean;
   isMobile: boolean;
   isTablet: boolean;
   mode: "light" | "dark";
@@ -22,6 +23,7 @@ export default function FilterOrder({
   tableFilterOptions,
   onChangeTable,
   onAddItem,
+  disableAddItem = false,
   isMobile,
   isTablet,
   mode,
@@ -64,6 +66,7 @@ export default function FilterOrder({
             size={isMobile ? "middle" : "large"}
             icon={<PlusOutlined />}
             onClick={onAddItem}
+            disabled={disableAddItem}
             block={isMobile || isTablet}
             style={{
               borderRadius: 12,
