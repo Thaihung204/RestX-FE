@@ -57,6 +57,8 @@ export interface CreateReservationResponse {
     status: ReservationStatus;
     depositAmount: number;
     depositPaid: boolean;
+    paymentDeadline?: string | null;
+    checkoutUrl?: string | null;
     createdAt: string;
     updatedAt?: string;
 }
@@ -88,6 +90,8 @@ export interface ReservationListItem {
     status: ReservationStatus;
     depositAmount?: number;
     depositPaid: boolean;
+    paymentDeadline?: string | null;
+    checkoutUrl?: string | null;
     createdAt: string;
 }
 
@@ -126,9 +130,21 @@ export interface ReservationDetail {
     status: ReservationStatus;
     depositAmount: number;
     depositPaid: boolean;
+    paymentDeadline?: string | null;
+    checkoutUrl?: string | null;
     checkedInAt: string | null;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface ReservationDepositStatus {
+    reservationId: string;
+    depositAmount: number;
+    paymentDeadline: string | null;
+    isPaid: boolean;
+    checkoutUrl: string | null;
+    paymentStatus?: string | null;
+    paymentStatusName?: string | null;
 }
 
 // ─────────────────────────────────────────────
@@ -258,11 +274,23 @@ export const reservationService = {
 
     /**
      * Lookup reservation by code.
-     * NOTE: Current BE exposes GET /reservations/{code} (role-protected), not /reservations/lookup.
+      * Current BE exposes GET /reservations/{code} (AllowAnonymous).
      */
     lookupReservation: async (params: LookupReservationParams): Promise<ReservationDetail> => {
         const confirmationCode = (params.confirmationCode ?? params.code ?? '').trim();
         const response = await axiosInstance.get<ApiEnvelope<ReservationDetail>>(`/reservations/${encodeURIComponent(confirmationCode)}`);
+        return response.data.data;
+    },
+
+    /** GET /api/reservations/{id}/deposit */
+    getDepositStatus: async (id: string): Promise<ReservationDepositStatus> => {
+        const response = await axiosInstance.get<ApiEnvelope<ReservationDepositStatus>>(`/reservations/${id}/deposit`);
+        return response.data.data;
+    },
+
+    /** POST /api/reservations/{id}/deposit/pay */
+    createDepositPaymentLink: async (id: string): Promise<{ checkoutUrl: string | null }> => {
+        const response = await axiosInstance.post<ApiEnvelope<{ checkoutUrl: string | null }>>(`/reservations/${id}/deposit/pay`);
         return response.data.data;
     },
 

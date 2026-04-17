@@ -3317,8 +3317,19 @@
     }
   },
   "reservation_detail": {
+    "loading": "Loading reservation...",
     "back": "Back",
     "breadcrumb": "Reservation Details",
+    "language": {
+      "toggle": "Toggle language",
+      "switched": "Language switched successfully."
+    },
+    "share": {
+      "label": "Reservation URL",
+      "copy": "Copy",
+      "copy_success": "Reservation URL copied.",
+      "copy_failed": "Unable to copy reservation URL."
+    },
     "not_found": {
       "title": "Reservation not found",
       "description": "This reservation may not exist or you may not have access."
@@ -3345,7 +3356,8 @@
       "type": "Customer Type",
       "guest": "Walk-in Guest",
       "member": "Member",
-      "loyalty_points": "Loyalty Points"
+      "loyalty_points": "Loyalty Points",
+      "points_unit": "pts"
     },
     "booking": {
       "title": "Reservation Details",
@@ -3358,16 +3370,32 @@
       "seats_unit": "seats",
       "checked_in_at": "Checked In At",
       "last_updated": "Last Updated",
-      "special_requests": "Special Requests"
+      "special_requests": "Special Requests",
+      "table_preview_title": "Table View",
+      "table_preview_desc": "Preview of the selected table area.",
+      "table_label": "Table {{code}}",
+      "table_preview_alt": "Table {{code}} preview image"
     },
     "deposit": {
       "label": "Deposit",
       "pay_now": "Pay Deposit",
       "creating_link": "Creating...",
+      "already_paid": "The deposit has already been paid.",
+      "deadline_passed": "The deposit payment deadline has passed.",
       "no_order_warning": "No deposit order found. Please contact the restaurant.",
       "link_opened": "Payment link opened.",
       "link_error": "Could not get payment link.",
-      "create_failed": "Failed to create payment link."
+      "create_failed": "Failed to create payment link.",
+      "paid_desc": "The deposit has been paid successfully.",
+      "unpaid_desc": "Your deposit is still unpaid. Please pay soon to keep the table.",
+      "deadline_cancel_desc": "This reservation was cancelled due to overdue deposit payment.",
+      "deadline_passed_desc": "The deposit payment deadline has passed.",
+      "deadline": "Payment deadline",
+      "open_checkout": "Open payment link",
+      "badge_paid": "Paid",
+      "badge_unpaid": "Unpaid",
+      "status_paid": "Paid",
+      "status_unpaid": "Unpaid"
     },
     "order": {
       "title": "Order Information",
@@ -3376,12 +3404,34 @@
       "status": "Status",
       "no_orders": "No orders linked to this reservation yet.",
       "order_now": "Order Now",
-      "readonly_note": "You can only view this reservation. Contact the restaurant for any changes."
+      "readonly_note": "You can only view this reservation. Contact the restaurant for any changes.",
+      "unnamed_order": "Order",
+      "paid": "Paid",
+      "unpaid": "Unpaid"
+    },
+    "edit": {
+      "locked_status": "This reservation is completed or cancelled and cannot be edited.",
+      "date_required": "Please select date and time.",
+      "date_in_past": "Reservation time must be in the future.",
+      "guests_exceed_capacity": "Guests ({{guests}}) exceed table capacity ({{capacity}}).",
+      "save_success": "Reservation updated successfully.",
+      "save_failed": "Unable to update reservation.",
+      "edit_btn": "Edit",
+      "cancel_btn": "Cancel",
+      "save_btn": "Save",
+      "date_time": "Date & Time",
+      "guests": "Guests",
+      "special_requests": "Special Requests"
+    },
+    "map": {
+      "loading": "Loading map...",
+      "unavailable": "Map not available"
     },
     "location": {
       "no_address": "Address not available",
       "updating": "Address being updated",
-      "open_maps": "Open in Google Maps"
+      "open_maps": "Open in Google Maps",
+      "map_title": "Restaurant location map"
     },
     "code": {
       "label": "Confirmation Code",

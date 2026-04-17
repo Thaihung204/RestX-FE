@@ -3287,8 +3287,19 @@
     }
   },
   "reservation_detail": {
+    "loading": "Đang tải thông tin đặt bàn...",
     "back": "Quay lại",
     "breadcrumb": "Chi tiết đặt bàn",
+    "language": {
+      "toggle": "Chuyển ngôn ngữ",
+      "switched": "Đã chuyển ngôn ngữ thành công."
+    },
+    "share": {
+      "label": "Đường dẫn đặt bàn",
+      "copy": "Sao chép",
+      "copy_success": "Đã sao chép đường dẫn đặt bàn.",
+      "copy_failed": "Không thể sao chép đường dẫn đặt bàn."
+    },
     "not_found": {
       "title": "Không tìm thấy đặt bàn",
       "description": "Đặt bàn này có thể không tồn tại hoặc bạn không có quyền truy cập."
@@ -3315,7 +3326,8 @@
       "type": "Loại khách",
       "guest": "Khách vãng lai",
       "member": "Thành viên",
-      "loyalty_points": "Điểm tích lũy"
+      "loyalty_points": "Điểm tích lũy",
+      "points_unit": "điểm"
     },
     "booking": {
       "title": "Thông tin đặt chỗ",
@@ -3328,16 +3340,32 @@
       "seats_unit": "ghế",
       "checked_in_at": "Thời gian check-in",
       "last_updated": "Cập nhật lần cuối",
-      "special_requests": "Yêu cầu đặc biệt"
+      "special_requests": "Yêu cầu đặc biệt",
+      "table_preview_title": "Không gian bàn",
+      "table_preview_desc": "Ảnh khu vực bàn đã chọn.",
+      "table_label": "Bàn {{code}}",
+      "table_preview_alt": "Ảnh xem trước bàn {{code}}"
     },
     "deposit": {
       "label": "Đặt cọc",
       "pay_now": "Thanh toán cọc",
       "creating_link": "Đang tạo...",
+      "already_paid": "Khoản cọc đã được thanh toán.",
+      "deadline_passed": "Đã quá hạn thanh toán cọc.",
       "no_order_warning": "Chưa có order cọc. Vui lòng liên hệ nhà hàng.",
       "link_opened": "Đã mở link thanh toán cọc.",
       "link_error": "Không lấy được link thanh toán.",
-      "create_failed": "Tạo link thanh toán thất bại."
+      "create_failed": "Tạo link thanh toán thất bại.",
+      "paid_desc": "Khoản đặt cọc đã được thanh toán thành công.",
+      "unpaid_desc": "Bạn chưa thanh toán đặt cọc. Hãy thanh toán sớm để giữ bàn.",
+      "deadline_cancel_desc": "Reservation đã bị hủy do quá hạn thanh toán cọc.",
+      "deadline_passed_desc": "Đã quá hạn thanh toán đặt cọc.",
+      "deadline": "Hạn thanh toán",
+      "open_checkout": "Mở link thanh toán",
+      "badge_paid": "Đã thanh toán",
+      "badge_unpaid": "Chưa thanh toán",
+      "status_paid": "Đã thanh toán",
+      "status_unpaid": "Chưa thanh toán"
     },
     "order": {
       "title": "Thông tin order",
@@ -3346,12 +3374,34 @@
       "status": "Trạng thái",
       "no_orders": "Chưa có order nào liên kết với đặt bàn này.",
       "order_now": "Order ngay",
-      "readonly_note": "Bạn chỉ có quyền xem thông tin. Liên hệ nhà hàng để thay đổi."
+      "readonly_note": "Bạn chỉ có quyền xem thông tin. Liên hệ nhà hàng để thay đổi.",
+      "unnamed_order": "Đơn hàng",
+      "paid": "Đã thanh toán",
+      "unpaid": "Chưa thanh toán"
+    },
+    "edit": {
+      "locked_status": "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa.",
+      "date_required": "Vui lòng chọn thời gian.",
+      "date_in_past": "Thời gian đặt chỗ phải lớn hơn thời điểm hiện tại.",
+      "guests_exceed_capacity": "Số khách ({{guests}}) vượt quá sức chứa bàn ({{capacity}}).",
+      "save_success": "Cập nhật reservation thành công.",
+      "save_failed": "Không thể cập nhật reservation.",
+      "edit_btn": "Chỉnh sửa",
+      "cancel_btn": "Hủy",
+      "save_btn": "Lưu",
+      "date_time": "Ngày & giờ",
+      "guests": "Số khách",
+      "special_requests": "Yêu cầu đặc biệt"
+    },
+    "map": {
+      "loading": "Đang tải sơ đồ...",
+      "unavailable": "Không có sơ đồ bàn"
     },
     "location": {
       "no_address": "Chưa có địa chỉ",
       "updating": "Đang cập nhật địa chỉ",
-      "open_maps": "Mở Google Maps"
+      "open_maps": "Mở Google Maps",
+      "map_title": "Bản đồ vị trí nhà hàng"
     },
     "code": {
       "label": "Mã xác nhận",
