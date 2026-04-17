@@ -83,6 +83,7 @@ export default function AIPanelDashboard({
   report,
   loading,
   onGenerate,
+  currentFilter,
 }: AIPanelDashboardProps) {
   const { t } = useTranslation("common");
 
@@ -132,6 +133,13 @@ export default function AIPanelDashboard({
           </div>
           <h3 className="text-base font-semibold" style={{ color: "var(--text)" }}>
             {t("dashboard.analytics.title")}
+            {report && (
+              <span
+                className="font-normal"
+                style={{ color: "var(--text-muted)", fontSize: 13, marginLeft: 6 }}>
+                — {t(`dashboard.analytics.filter.subtitle.${currentFilter}`)}
+              </span>
+            )}
           </h3>
         </div>
 

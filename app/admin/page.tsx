@@ -339,9 +339,26 @@ export default function DashboardPage() {
   const [dashboardFilter, setDashboardFilter] =
     useState<DashboardFilterOption>("week");
   const [exportingReport, setExportingReport] = useState(false);
-  const [aiReport, setAiReport] = useState<AIStrategyReport | null>(null);
+  const [aiReport, setAiReport] = useState<AIStrategyReport | null>(() => {
+    try {
+      const raw = localStorage.getItem("ai_strategy_report");
+      if (!raw) return null;
+      const { data, cachedAt } = JSON.parse(raw);
+      const ONE_DAY_MS = 24 * 60 * 60 * 1000;//lưu 24h
+      if (Date.now() - cachedAt > ONE_DAY_MS) {
+        localStorage.removeItem("ai_strategy_report");
+        return null;
+      }
+      return data;
+    } catch { return null; }
+  });
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiFilter, setAiFilter] = useState<AIReportFilterOption>("month");
+  // add filter type to cache
+  const [aiFilter, setAiFilter] = useState<AIReportFilterOption>(() => {
+    try {
+      return (localStorage.getItem("ai_strategy_filter") as AIReportFilterOption) || "month";
+    } catch { return "month"; }
+  });
 
   const filterOptions: DashboardFilterOption[] = [
     "day",
@@ -433,15 +450,21 @@ export default function DashboardPage() {
 
   const generateAIReport = useCallback(async (filter: AIReportFilterOption) => {
     setAiFilter(filter);
+    // add filter type to local storage
+    try { localStorage.setItem("ai_strategy_filter", filter); } catch {}
     setAiLoading(true);
     try {
       const apiFilterType = filter === "month" ? "month" : filter;
       const response = await aiService.analyzeDashboard({ filterType: apiFilterType });
-      setAiReport({
+      const report = {
         ...response,
         id: response.id || `report-${Date.now()}`,
         generatedAt: response.generatedAt || new Date().toISOString(),
-      });
+      };
+      setAiReport(report);
+      try {
+        localStorage.setItem("ai_strategy_report", JSON.stringify({ data: report, cachedAt: Date.now() }));
+      } catch {}
       message.success(t("dashboard.analytics.success.generate"));
     } catch (err) {
       console.error(err);

@@ -2270,7 +2270,12 @@
         "by": "Phân tích theo",
         "month": "Tháng",
         "quarter": "Quý",
-        "year": "Năm"
+        "year": "Năm",
+        "subtitle": {
+          "month": "chiến lược kinh doanh theo tháng",
+          "quarter": "chiến lược kinh doanh theo quý",
+          "year": "chiến lược kinh doanh theo năm"
+        }
       },
       "time": {
         "justNow": "Vừa xong",

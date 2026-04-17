@@ -2225,7 +2225,12 @@
         "by": "Analyze by",
         "month": "Month",
         "quarter": "Quarter",
-        "year": "Year"
+        "year": "Year",
+        "subtitle": {
+          "month": "monthly business strategy",
+          "quarter": "quarterly business strategy",
+          "year": "yearly business strategy"
+        }
       },
       "time": {
         "justNow": "Just now",
