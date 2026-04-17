@@ -2,18 +2,19 @@
 
 import { tableService, TableStatus } from '@/lib/services/tableService';
 import {
-    CalendarOutlined,
-    CheckCircleOutlined,
-    ClockCircleOutlined,
-    DollarOutlined,
-    ExclamationCircleOutlined,
-    ReloadOutlined,
-    RightOutlined,
-    ShoppingCartOutlined,
-    SmileOutlined,
-    SyncOutlined,
-    TableOutlined,
-    ThunderboltOutlined
+  CalendarOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
+  DollarOutlined,
+  ExclamationCircleOutlined,
+  ReloadOutlined,
+  RightOutlined,
+  ShoppingCartOutlined,
+  SmileOutlined,
+  SyncOutlined,
+  TableOutlined,
+  ThunderboltOutlined
 } from '@ant-design/icons';
 import { Button, Card, Col, Flex, Progress, Row, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import { motion } from 'framer-motion';
@@ -61,7 +62,7 @@ const urgentOrders = [
     key: '2',
     table: '12',
     items: 6,
-    status: 'preparing',
+    status: 'served',
     time: 12,
     priority: 'medium',
   },
@@ -69,7 +70,7 @@ const urgentOrders = [
     key: '3',
     table: '03',
     items: 2,
-    status: 'ready',
+    status: 'completed',
     time: 18,
     priority: 'urgent',
   },
@@ -77,7 +78,7 @@ const urgentOrders = [
     key: '5',
     table: '15',
     items: 3,
-    status: 'preparing',
+    status: 'cancelled',
     time: 32,
     priority: 'medium',
   },
@@ -215,7 +216,7 @@ export default function StaffDashboard() {
       table: '12',
       items: 6,
       total: 1250000,
-      status: 'preparing',
+      status: 'served',
       time: 12,
     },
     {
@@ -223,7 +224,7 @@ export default function StaffDashboard() {
       table: '03',
       items: 2,
       total: 420000,
-      status: 'ready',
+      status: 'completed',
       time: 18,
     },
     {
@@ -239,7 +240,7 @@ export default function StaffDashboard() {
       table: '15',
       items: 3,
       total: 520000,
-      status: 'preparing',
+      status: 'cancelled',
       time: 32,
     },
     {
@@ -305,11 +306,10 @@ export default function StaffDashboard() {
       width: '24%',
       render: (status: string) => {
         const statusConfig: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-          pending: { color: 'orange', text: t('common.status.pending'), icon: <ExclamationCircleOutlined /> },
-          preparing: { color: 'blue', text: t('common.status.preparing'), icon: <SyncOutlined spin /> },
-          ready: { color: 'green', text: t('common.status.ready'), icon: <CheckCircleOutlined /> },
-          served: { color: 'green', text: t('common.status.served'), icon: <CheckCircleOutlined /> },
-          // Mock data contains these exact status strings 
+          pending: { color: 'orange', text: t('staff.orders.status.pending'), icon: <ExclamationCircleOutlined /> },
+          served: { color: 'blue', text: t('staff.orders.status.served'), icon: <SyncOutlined spin /> },
+          completed: { color: 'green', text: t('staff.orders.status.completed'), icon: <CheckCircleOutlined /> },
+          cancelled: { color: 'red', text: t('staff.orders.status.cancelled'), icon: <CloseCircleOutlined /> },
         };
         const config = statusConfig[status] || { color: 'default', text: status, icon: null };
         return (
@@ -324,7 +324,7 @@ export default function StaffDashboard() {
       dataIndex: 'time',
       key: 'time',
       width: '22%',
-      render: (time: number) => <Text type="secondary" style={{ fontSize: 14 }}>{t('common.time.minutes_ago', { count: time })}</Text>,
+      render: (time: number) => <Text type="secondary" style={{ fontSize: 14 }}>{t('time.minutes_ago', { ns: 'common', count: time, defaultValue: '{{count}} phút trước' })}</Text>,
     },
   ];
 
@@ -467,7 +467,7 @@ export default function StaffDashboard() {
                           }}
                           className="welcome-btn-primary"
                         >
-                          {t('common.actions.create_order')}
+                          {t('staff.dashboard.quick_action_items.create_order')}
                         </Button>
                       </Link>
                     </Flex>
@@ -633,7 +633,7 @@ export default function StaffDashboard() {
                       </motion.div>
                       <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>{t('staff.dashboard.recent_orders.title')}</span>
                       <Tag color="orange" style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12, margin: 0 }}>
-                        {t('staff.dashboard.recent_orders.processing_count', { count: recentOrders.filter(o => o.status === 'pending' || o.status === 'preparing').length })}
+                        {t('staff.dashboard.recent_orders.processing_count', { count: recentOrders.filter(o => o.status === 'pending').length })}
                       </Tag>
                     </Space>
                     <Link href="/staff/orders">
@@ -661,7 +661,7 @@ export default function StaffDashboard() {
                   size="middle"
                   scroll={isMobile ? { x: 300 } : undefined}
                   rowClassName={(record) =>
-                    record.status === 'ready' ? 'table-row-ready' : ''
+                    record.status === 'completed' ? 'table-row-ready' : ''
                   }
                   tableLayout="fixed"
                 />
@@ -770,7 +770,7 @@ export default function StaffDashboard() {
                 ))}
 
                 <div style={{ marginTop: 'auto', paddingTop: 16 }}>
-                  <Link href="/staff/tables">
+                  <Link href="/staff/activity">
                     <motion.div
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -832,7 +832,7 @@ export default function StaffDashboard() {
           >
             <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}>
               {[
-                { icon: <TableOutlined />, title: t('staff.dashboard.quick_action_items.open_table'), color: 'var(--primary)', href: '/staff/tables' },
+                { icon: <TableOutlined />, title: t('staff.dashboard.quick_action_items.open_table'), color: 'var(--primary)', href: '/staff/activity' },
                 { icon: <ShoppingCartOutlined />, title: t('staff.dashboard.quick_action_items.create_order'), color: '#1890ff', href: '/staff/orders' },
                 { icon: <DollarOutlined />, title: t('staff.dashboard.quick_action_items.checkout'), color: '#52c41a', href: '/staff/checkout' },
                 { icon: <ClockCircleOutlined />, title: t('staff.dashboard.quick_action_items.attendance'), color: '#722ed1', href: '/staff/attendance' },

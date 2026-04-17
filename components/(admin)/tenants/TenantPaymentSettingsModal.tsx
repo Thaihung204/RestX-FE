@@ -29,13 +29,18 @@ export default function TenantPaymentSettingsModal({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasExistingSettings, setHasExistingSettings] = useState(false);
-  const [initialSettings, setInitialSettings] = useState<PaymentGatewaySettings | null>(null);
+  const [initialSettings, setInitialSettings] =
+    useState<PaymentGatewaySettings | null>(null);
 
   const showNoPaymentInfoToast = () => {
-    message.warning(t("dashboard.settings.payment.notifications.not_configured"));
+    message.warning(
+      t("dashboard.settings.payment.notifications.not_configured"),
+    );
   };
 
-  const normalizeSettings = (settings: PaymentGatewaySettings): PaymentGatewaySettings => ({
+  const normalizeSettings = (
+    settings: PaymentGatewaySettings,
+  ): PaymentGatewaySettings => ({
     clientId: settings.clientId?.trim() || "",
     apiKey: settings.apiKey?.trim() || "",
     checksumKey: settings.checksumKey?.trim() || "",
@@ -130,9 +135,15 @@ export default function TenantPaymentSettingsModal({
           error?.response?.status === 409
         ) {
           if (hasExistingSettings) {
-            await tenantService.createPaymentSettings(tenant.id, normalizedValues);
+            await tenantService.createPaymentSettings(
+              tenant.id,
+              normalizedValues,
+            );
           } else {
-            await tenantService.updatePaymentSettings(tenant.id, normalizedValues);
+            await tenantService.updatePaymentSettings(
+              tenant.id,
+              normalizedValues,
+            );
           }
           setHasExistingSettings(true);
           setInitialSettings(normalizedValues);
@@ -176,7 +187,9 @@ export default function TenantPaymentSettingsModal({
           rules={[
             {
               required: true,
-              message: t("dashboard.settings.payment.validation.client_id_required"),
+              message: t(
+                "dashboard.settings.payment.validation.client_id_required",
+              ),
             },
           ]}>
           <Input size="large" disabled={loading || saving} />
@@ -188,7 +201,9 @@ export default function TenantPaymentSettingsModal({
           rules={[
             {
               required: true,
-              message: t("dashboard.settings.payment.validation.api_key_required"),
+              message: t(
+                "dashboard.settings.payment.validation.api_key_required",
+              ),
             },
           ]}>
           <Input.Password size="large" disabled={loading || saving} />
@@ -200,7 +215,9 @@ export default function TenantPaymentSettingsModal({
           rules={[
             {
               required: true,
-              message: t("dashboard.settings.payment.validation.checksum_key_required"),
+              message: t(
+                "dashboard.settings.payment.validation.checksum_key_required",
+              ),
             },
           ]}>
           <Input.Password size="large" disabled={loading || saving} />
@@ -210,7 +227,11 @@ export default function TenantPaymentSettingsModal({
           <Button onClick={onClose} disabled={saving || loading}>
             {t("dashboard.settings.buttons.cancel")}
           </Button>
-          <Button type="primary" htmlType="submit" loading={saving || loading} disabled={saving || loading}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={saving || loading}
+            disabled={saving || loading}>
             {t("dashboard.settings.payment.actions.save_settings")}
           </Button>
         </div>

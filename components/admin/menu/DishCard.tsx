@@ -1,5 +1,6 @@
 "use client";
 
+import StatusToggle from "@/components/ui/StatusToggle";
 import Link from "next/link";
 
 export interface DishCardItem {
@@ -9,6 +10,7 @@ export interface DishCardItem {
   price: number;
   image: string;
   description: string;
+  isActive: boolean;
   available: boolean;
   isBestSeller: boolean;
 }
@@ -25,6 +27,8 @@ interface DishCardProps {
     price: string;
     edit: string;
     ingredients: string;
+    active: string;
+    inactive: string;
     activate: string;
     deactivate: string;
     status_icon_label: string;
@@ -93,7 +97,7 @@ export default function DishCard({
             {labels.bestSeller}
           </div>
         )}
-        {!item.available && (
+        {!item.isActive && (
           <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
             <span className="px-4 py-2 bg-red-500 text-white rounded-lg font-bold">
               {labels.outOfStock}
@@ -103,19 +107,24 @@ export default function DishCard({
       </div>
 
       <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
+        <div className="flex items-start justify-between mb-2 gap-2">
+          <div className="flex-1 min-w-0">
             <h3
-              className="text-base font-bold mb-1 line-clamp-1"
+              className="text-base font-bold mb-1 truncate"
               style={{ color: "var(--text)" }}>
               {item.name}
             </h3>
             <p
-              className="text-xs line-clamp-2"
+              className="text-xs truncate"
+              title={item.description || labels.noDescription}
               style={{ color: "var(--text-muted)" }}>
               {item.description || labels.noDescription}
             </p>
           </div>
+          <span
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium ml-2 ${item.isActive ? "bg-green-500/10 text-green-500" : "bg-gray-500/10 text-gray-500"}`}>
+            {item.isActive ? labels.active : labels.inactive}
+          </span>
         </div>
 
         <div className="flex items-center justify-between mt-3 gap-1">
@@ -131,10 +140,15 @@ export default function DishCard({
               {formatPrice(item.price)}đ
             </p>
           </div>
+          <StatusToggle
+            checked={item.isActive}
+            onChange={() => onToggleStatus(item)}
+            ariaLabel={item.isActive ? labels.deactivate : labels.activate}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-2 mt-4">
-          <Link href={`/admin/menu/${item.id}`} className="col-span-1">
+          <Link href={`/admin/menu/${item.id}`} className="block">
             <button
               className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
               style={{
@@ -142,12 +156,10 @@ export default function DishCard({
                 color: "var(--primary)",
               }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  "rgba(255,56,11,0.2)")
+                (e.currentTarget.style.backgroundColor = "rgba(255,56,11,0.2)")
               }
               onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  "rgba(255,56,11,0.1)")
+                (e.currentTarget.style.backgroundColor = "rgba(255,56,11,0.1)")
               }
               suppressHydrationWarning>
               {labels.edit}
@@ -171,55 +183,6 @@ export default function DishCard({
             }}
             suppressHydrationWarning>
             {labels.ingredients}
-          </button>
-          <button
-            onClick={() => onToggleStatus(item)}
-            className="col-span-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-            style={{
-              background: item.available
-                ? "rgba(239, 68, 68, 0.08)"
-                : "rgba(34, 197, 94, 0.1)",
-              color: item.available ? "#ef4444" : "#16a34a",
-              border: "1px solid var(--border)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = item.available
-                ? "rgba(239, 68, 68, 0.16)"
-                : "rgba(34, 197, 94, 0.18)";
-              e.currentTarget.style.borderColor = item.available
-                ? "rgba(239, 68, 68, 0.3)"
-                : "rgba(34, 197, 94, 0.3)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = item.available
-                ? "rgba(239, 68, 68, 0.08)"
-                : "rgba(34, 197, 94, 0.1)";
-              e.currentTarget.style.borderColor = "var(--border)";
-            }}
-            suppressHydrationWarning>
-            <span className="sr-only">{labels.status_icon_label}</span>
-            <svg
-              className="w-4 h-4 inline-block mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              {item.available ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M18 12H6"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v12m6-6H6"
-                />
-              )}
-            </svg>
-            {item.available ? labels.deactivate : labels.activate}
           </button>
         </div>
       </div>

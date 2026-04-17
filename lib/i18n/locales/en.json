@@ -99,12 +99,16 @@
       "back_to_list": "Back to list",
       "sections": {
         "customer": "Customer",
+        "order_info": "Order Information",
+        "reservation": "Reservation",
         "order_details": "Order Details",
+        "payment": "Payment",
+        "selected_items": "Selected ({{count}})",
         "total": "Total"
       },
       "status": {
         "pending": "Pending",
-        "serving": "Serving",
+        "served": "Served",
         "completed": "Completed",
         "cancelled": "Cancelled"
       },
@@ -115,6 +119,21 @@
         "loyalty_points": "Loyalty Points",
         "total_orders": "Total Orders",
         "total_reservations": "Total Reservations"
+      },
+      "order_info": {
+        "reference": "Order Reference",
+        "created_date": "Created Date",
+        "status": "Order Status"
+      },
+      "reservation": {
+        "confirmation_code": "Confirmation",
+        "date_time": "Reservation Time",
+        "guests": "Guests",
+        "tables": "Tables",
+        "deposit_amount": "Deposit Amount",
+        "created_at": "Created At",
+        "contact_name": "Contact Name",
+        "contact_phone": "Contact Phone"
       },
       "fields": {
         "order_status": "Order Status",
@@ -130,7 +149,14 @@
         "dish_name": "Dish Name",
         "quantity": "Quantity",
         "price": "Price",
-        "status": "Status"
+        "status": "Status",
+        "created_at": "Created",
+        "note": "Note"
+      },
+      "actions": {
+        "add_dish": "Add Dish",
+        "confirm_add_dish": "Confirm Add Dish",
+        "processing": "Processing..."
       },
       "money": {
         "sub_total": "SubTotal",
@@ -141,8 +167,14 @@
       },
       "messages": {
         "load_error": "Failed to load order details.",
+        "update_error": "Update failed.",
+        "add_dish_success": "Dish added to order successfully!",
         "not_found": "Order not found.",
-        "no_items": "No items in this order."
+        "no_items": "No items in this order.",
+        "no_reservation": "No reservation information.",
+        "loading": "Loading...",
+        "no_image": "No Image",
+        "no_menu_items": "No dishes available."
       }
     }
   },
@@ -242,19 +274,25 @@
       "filter": {
         "all_tables": "All tables"
       },
+      "actions": {
+        "expand": "Show",
+        "collapse": "Collapse"
+      },
       "create_order_short": "Create Order",
       "stats": {
         "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready",
+        "served": "Served",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
         "pending_items": "items not done",
         "no_orders": "No orders found"
       },
       "tabs": {
         "all": "All",
         "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready"
+        "served": "Served",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
       },
       "order": {
         "table": "Table",
@@ -268,10 +306,6 @@
       },
       "status": {
         "pending": "Pending",
-        "confirmed": "Confirmed",
-        "serving": "Serving",
-        "preparing": "Preparing",
-        "ready": "Ready",
         "served": "Served",
         "completed": "Completed",
         "cancelled": "Cancelled"
@@ -283,7 +317,7 @@
         "print": "Print Bill",
         "print_short": "Print",
         "add_item": "Add Item",
-        "send_to_kitchen": "Send to Kitchen"
+        "order_detail": "Order details"
       },
       "menu": {
         "appetizer": "Appetizers",
@@ -294,11 +328,13 @@
       "messages": {
         "select_table_and_items": "Please select a table and add items",
         "order_created": "New order created successfully",
+        "order_create_failed": "Failed to create order",
         "status_updated": "Item status updated",
         "order_status_updated": "Order status updated",
         "order_status_update_failed": "Failed to update order status"
       },
       "payment": {
+        "btn": "Pay",
         "actions": {
           "pay": "Pay",
           "confirm": "Confirm payment"
@@ -306,7 +342,8 @@
         "modal": {
           "title": "Payment",
           "order_label": "Order",
-          "total_label": "Total",
+          "total_label": "Subtotal",
+          "final_total_label": "Total due",
           "method_label": "Payment method",
           "cash_label": "Cash received",
           "change_label": "Change",
@@ -320,8 +357,50 @@
           "cash_insufficient": "Cash received is not enough",
           "cash_success": "Cash payment successful",
           "link_created": "Payment link created",
-          "payment_failed": "Payment failed"
+          "payment_failed": "Payment failed",
+          "payos_return_success": "PayOS payment completed successfully",
+          "payos_return_cancel": "PayOS payment was cancelled"
+        },
+        "discount": {
+          "title": "Discounts",
+          "applying": "Applying discount...",
+          "membership_applied": "Membership discount applied",
+          "membership_label": "Discount by membership rank",
+          "apply_button": "Apply discount",
+          "subtotal": "Subtotal",
+          "level": "Membership",
+          "amount": "Discount amount",
+          "no_discount": "No membership discount available",
+          "no_promotions": "No promotion codes available",
+          "min_order": "Min. order",
+          "or": "or"
         }
+      }
+    },
+    "kitchen": {
+      "title": "Dishes to prepare",
+      "updated_at": "Updated: {{time}}",
+      "preparing_count": "{{count}} preparing",
+      "columns": {
+        "table": "TABLE",
+        "dish_name": "DISH",
+        "note": "NOTE",
+        "quantity": "QUANTITY",
+        "status": "STATUS",
+        "time": "TIME"
+      },
+      "status": {
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served",
+        "cancelled": "Cancelled"
+      },
+      "empty": {
+        "title": "No dishes need preparation",
+        "description": "Waiting for new orders..."
+      },
+      "messages": {
+        "load_error": "Unable to load kitchen items"
       }
     },
     "tables": {
@@ -387,14 +466,63 @@
     },
     "menu": {
       "dashboard": "Dashboard",
-      "tables": "Table Management",
-      "tables_short": "Tables",
+      "activity": "Activity",
+      "activity_short": "Activity",
       "orders": "Order Management",
       "orders_short": "Orders",
       "kitchen": "Kitchen",
       "checkout": "Checkout",
       "attendance": "Attendance",
-      "reservations": "Reservations"
+      "reservations": "Reservations",
+      "floor_activity": "Floor Activity",
+      "floor_activity_short": "Floor",
+      "stats": {
+        "setup_suffix": " steps",
+        "setup_label": "Simple setup",
+        "menu_items_label": "Menu items per catalog",
+        "reload_suffix": " reload",
+        "realtime_label": "Instant updates"
+      },
+      "features": {
+        "step_1": {
+          "tag": "Step 01 — Categories",
+          "title_highlight": "Customize categories",
+          "title_suffix": "for your restaurant menu",
+          "description": "Create and arrange flexible categories — Main dishes, Appetizers, Desserts, Drinks. Add items to each group with full details and images.",
+          "image_alt": "Category management",
+          "bullets": {
+            "create_category": "Create categories and custom names",
+            "add_dish": "Add dishes to each category",
+            "reorder_display": "Reorder display sequence via drag and drop"
+          }
+        },
+        "step_2": {
+          "tag": "Step 02 — Dishes",
+          "title_prefix": "Manage",
+          "title_highlight": "dishes",
+          "title_suffix": "comprehensively",
+          "description": "Add, edit, and control each dish with complete details: name, description, price, image, and real-time visibility status.",
+          "image_alt": "Dish management",
+          "bullets": {
+            "edit_info": "Edit dish information and pricing",
+            "attach_multi_category": "Attach one dish to multiple categories",
+            "toggle_visibility": "Instantly show/hide dishes without reload"
+          }
+        },
+        "step_3": {
+          "tag": "Step 03 — Ingredients",
+          "title_prefix": "Control",
+          "title_highlight": "ingredients",
+          "title_suffix": "and inventory",
+          "description": "Bind ingredients to each dish and track stock in real time. The system automatically alerts when stock runs low so the kitchen can act early.",
+          "image_alt": "Ingredient management",
+          "bullets": {
+            "bind_ingredients": "Bind specific ingredients to each dish",
+            "low_stock_alert": "Automatic low-stock alerts",
+            "auto_hide_out_of_stock": "Automatically hide dishes when ingredients run out"
+          }
+        }
+      }
     },
     "user_menu": {
       "profile": "Profile",
@@ -523,591 +651,278 @@
         "break_start_success": "Break started at {time}",
         "break_end_success": "Break ended at {time}"
       }
+    },
+    "floor_activity": {
+      "title": "Tables",
+      "last_updated": "Updated at",
+      "refresh": "Refresh",
+      "all_floors": "All Floors",
+      "no_floor": "No Floor Assigned",
+      "no_tables": "No tables found",
+      "occupied_suffix": "tables serving",
+      "reserved_label": "Reserved",
+      "cleaning_label": "Being cleaned",
+      "items": "items",
+      "occupancy_rate": "Occupancy Rate",
+      "active_revenue": "Active Revenue",
+      "search_placeholder": "Search reservation code...",
+      "date_filter_label": "Date",
+      "time_filter_label": "Time",
+      "table_label": "TABLE",
+      "floor_name": "Floor {{name}}",
+      "seats_label": "seats",
+      "merge_mode": "Merge Tables",
+      "execute_merge": "Confirm Merge ({{count}})",
+      "filter": {
+        "all": "All statuses",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "checkin": "Check-in"
+      },
+      "status": {
+        "available": "Available",
+        "occupied": "Occupied",
+        "reserved": "Reserved",
+        "cleaning": "Cleaning",
+        "active": "Active",
+        "inactive": "Ended",
+        "not_started": "Not started"
+      },
+      "stats": {
+        "occupied": "Occupied",
+        "available": "Available",
+        "has_reservation": "Has Reservation"
+      },
+      "merge": {
+        "success": "Tables merged successfully!",
+        "error": "Failed to merge tables",
+        "manual_required": "Manual resolution required due to multiple active orders.",
+        "same_order_selected": "This table already belongs to the same order as the selected table. Please choose another table.",
+        "same_group_selected": "This table is already in the same merged group as the selected table.",
+        "already_merged": "Selected tables already belong to the same order. No merge is needed.",
+        "merged_tables_badge": "Merged {{count}} tables",
+        "with_tables": "Merged with tables: {{tables}}",
+        "no_order_selected": "Select at least one table with an active order to merge.",
+        "reservation_pending_checkin": "Cannot merge a reserved table before check-in."
+      },
+      "no_session_tables": "No tables are booked in this session.",
+      "session_filter_desc": "You can switch sessions to view other tables.",
+      "session_filter_hint": "The list is currently filtered by the active session.",
+      "modal": {
+        "table_name": "Table {{name}}",
+        "merge_group": "Merged group",
+        "session": "Session",
+        "session_id": "Session ID",
+        "reserved_by": "Reserved by",
+        "phone": "Phone",
+        "reservation_time": "Reservation time",
+        "reservation": "Reservation",
+        "guest_count": "Guests",
+        "total": "Total",
+        "start_time": "Started",
+        "end_time": "Ended",
+        "order": "Order",
+        "payment": "Payment",
+        "seats": "seats",
+        "guests": "guests",
+        "checkin_btn": "Check-in",
+        "checkin_success": "Check-in successful!",
+        "checkin_error": "Check-in failed",
+        "checkin_too_early": "Check-in is only available within {{minutes}} minutes before reservation time ({{reservationTime}}).",
+        "checkin_too_late": "The valid check-in window has passed. It is only allowed up to {{minutes}} minutes after reservation time ({{reservationTime}}).",
+        "open_session_btn": "Open Session (walk-in)",
+        "create_session_success": "Walk-in table session opened",
+        "create_session_error": "Unable to open table session",
+        "cancel_reservation_btn": "No-show / Cancel reservation",
+        "cancel_reservation_confirm_title": "Confirm no-show?",
+        "cancel_reservation_confirm_content": "This will cancel the reservation and automatically update related status.",
+        "cancel_reservation_success": "Reservation cancelled successfully.",
+        "cancel_reservation_error": "Unable to cancel reservation",
+        "customer": "Customer"
+      }
+    },
+    "customer": {
+      "section_1": {
+        "title": "Instant QR ordering",
+        "description": "Customers simply scan the QR code at the table, browse the full menu, and place orders on their phone — no app and no waiting for staff.",
+        "stats": {
+          "wait_seconds": "Wait seconds",
+          "menu_items": "Menu items",
+          "order_steps": "Steps to order"
+        },
+        "cards": {
+          "qr": {
+            "title": "Instant QR scan",
+            "description": "Each table has its own QR code. Scan and open the menu immediately without app download or sign-in."
+          },
+          "realtime": {
+            "title": "Real-time updates",
+            "description": "Dish status and ready-to-serve notifications are shown directly on the customer's phone."
+          },
+          "loyalty": {
+            "title": "Automatic loyalty points",
+            "description": "Every order automatically earns member points. Customers can track points and redeem offers at the table."
+          }
+        }
+      },
+      "section_2": {
+        "title": "Membership tiers & exclusive offers",
+        "description": "Membership tiers are upgraded automatically based on spending. The higher the tier, the better the perks.",
+        "points_path_title": "Points progression",
+        "tiers": {
+          "bronze": { "name": "Bronze", "discount": "3% off", "points": "From 0 points" },
+          "silver": { "name": "Silver", "discount": "5% off", "points": "From 500 points" },
+          "gold": { "name": "Gold", "discount": "8% off", "points": "From 1500 points" },
+          "platinum": { "name": "Platinum", "discount": "12% off", "points": "From 5000 points" }
+        }
+      },
+      "section_3": {
+        "tag": "AI CHATBOX",
+        "title": "AI assistant suggests dishes by preference",
+        "description": "AI understands preferences, diet, and budget to suggest the best dishes — like a food-savvy companion.",
+        "bullets": {
+          "preferences": "Suggestions by taste, allergy, and diet",
+          "instant_reply": "Instant replies without waiting for staff",
+          "personalization": "Learns from order history for personalized recommendations"
+        }
+      },
+      "section_4": {
+        "tag": "ORDER REVIEW",
+        "title": "Track your order transparently step by step",
+        "description": "Customers can see full order details, dish status, total amount, and loyalty points without asking staff.",
+        "bullets": {
+          "order_status": "Ordered items list with real-time status",
+          "edit_cancel": "Edit or cancel dishes before kitchen confirmation",
+          "bill_discount": "View total bill and membership discount",
+          "points_after_payment": "Points shown immediately after payment"
+        }
+      },
+      "ai_chat": {
+        "title": "AI dish suggestions",
+        "status": "Active",
+        "input_placeholder": "Ask AI about dishes...",
+        "messages": {
+          "1": "I want something light and low-calorie.",
+          "2": "I suggest Salmon Salad or Pumpkin Soup — low-calorie, nutritious, and great for dinner.",
+          "3": "Do you have options for vegetarians?",
+          "4": "Yes! Mushroom Tofu, Grilled Vegetables, and Brown Rice are all great vegetarian choices."
+        }
+      },
+      "order_review": {
+        "header": {
+          "title": "Order — Table A02",
+          "item_count": "4 items",
+          "member_badge": "Gold member"
+        },
+        "items": {
+          "pho_bo": "Rare Beef Pho",
+          "bun_cha": "Hanoi Bun Cha",
+          "tra_sen": "Golden Lotus Tea",
+          "banh_flan": "Flan"
+        },
+        "summary": {
+          "subtotal": "Subtotal",
+          "discount": "Gold discount (8%)",
+          "total": "Total payment"
+        },
+        "points": {
+          "label": "Loyalty points",
+          "suffix": "points"
+        },
+        "cta": "Request payment"
+      }
+    },
+    "staff_ops": {
+      "status": {
+        "online": "Online",
+        "offline": "Offline"
+      },
+      "terminal": {
+        "title": "staff-ops ~ terminal"
+      },
+      "hero": {
+        "title_prefix": "Smart restaurant",
+        "title_highlight": "operations",
+        "description": "A complete staff management system — from account creation and permissions to order handling and table-side payment.",
+        "staff": {
+          "an": { "name": "Nguyen Van An", "role": "Waiter" },
+          "bich": { "name": "Tran Thi Bich", "role": "Cashier" },
+          "duc": { "name": "Le Minh Duc", "role": "Waiter" }
+        }
+      },
+      "section_1": {
+        "tag": "STEP 01",
+        "title": "Create and manage staff accounts",
+        "description": "Owners create accounts, assign permissions, and manage all staff in one place. Each employee gets a role-specific dashboard.",
+        "bullets": {
+          "create_account": "Create new staff accounts in seconds",
+          "assign_roles": "Assign roles: waiter, cashier, manager",
+          "edit_disable": "Edit profile, reset password, disable account"
+        },
+        "terminal": {
+          "name_label": "Enter name",
+          "email_label": "Email",
+          "role_label": "Role",
+          "shift_label": "Shift",
+          "shift_value": "Morning / Afternoon",
+          "success": "[OK] Account created successfully.",
+          "note": "ID: STF-00142 | Temporary password sent by email."
+        }
+      },
+      "section_2": {
+        "tag": "STEP 02",
+        "title": "Table-side staff operations",
+        "description": "Staff handle the full service flow — from check-in to ordering, editing, and cancellation — all in one simple interface.",
+        "bullets": {
+          "checkin": "Check in guests, open table, start service",
+          "add_items": "Add items at any time during service",
+          "cancel_items": "Cancel items with reason and sync to kitchen instantly",
+          "update_qty_note": "Update quantities and special notes per item"
+        },
+        "terminal": {
+          "table_meta": "Table A02 — 4 guests — 19:32",
+          "items": {
+            "pho_bo": "Special Beef Pho",
+            "com_tam": "Broken Rice with Pork Rib",
+            "nuoc_cam": "Fresh Orange Juice",
+            "banh_mi": "Grilled Pork Banh Mi"
+          },
+          "status": {
+            "done": "Done",
+            "pending": "Pending",
+            "cancelled": "Cancelled"
+          },
+          "total_label": "Total"
+        }
+      },
+      "section_3": {
+        "tag": "STEP 03",
+        "title": "Flexible payments",
+        "description": "Support multiple payment methods from cash to QR transfer. The system auto-calculates, issues invoice, and updates loyalty points.",
+        "bullets": {
+          "cash": "Fast cash payment with instant table-side receipt",
+          "transfer": "QR transfer with instant auto confirmation",
+          "loyalty_points": "Auto-earn loyalty points after each successful payment"
+        },
+        "terminal": {
+          "invoice_title": "Invoice for table A02",
+          "rows": {
+            "subtotal": "Food subtotal",
+            "vat": "VAT (8%)",
+            "discount": "Discount"
+          },
+          "total_label": "Payment",
+          "method_label": "Method:",
+          "methods": {
+            "cash": "Cash",
+            "transfer": "Bank transfer"
+          },
+          "success": "[OK] Payment succeeded — 19:58"
+        }
+      }
     }
   },
   "dashboard": {
-    "tables": {
-      "title": "Table management",
-      "subtitle": "Manage tables and reservations",
-      "add_floor": "Add area",
-      "add_table": "Add table",
-      "status": {
-        "available": "Available",
-        "occupied": "Occupied",
-        "reserved": "Reserved",
-        "cleaning": "Cleaning"
-      },
-      "stats": {
-        "total_tables": "Total tables",
-        "available": "Available",
-        "occupied": "Occupied",
-        "reserved": "Reserved"
-      },
-      "card": {
-        "table_name": "Table {{number}}",
-        "floor": "Floor",
-        "capacity": "Capacity: {{count}} seats",
-        "order": "Order",
-        "reserved_at": "Reserved at",
-        "view_details": "View details"
-      },
-      "view": {
-        "grid": "Grid",
-        "map": "Map"
-      },
-      "zones": {
-        "all": "All",
-        "zone_a": "Zone A",
-        "zone_b": "Zone B",
-        "zone_vip": "VIP",
-        "zone": "Zone"
-      },
-      "table": {
-        "seats": "seats",
-        "guests": "guests",
-        "dishes": "dishes",
-        "from": "From",
-        "booked_at": "Booked at",
-        "capacity": "Capacity"
-      },
-      "modal": {
-        "detail": "Details",
-        "open_table": "Open table",
-        "zone": "Area",
-        "guests_count": "Guest count",
-        "start_time": "Start time",
-        "total_amount": "Total amount",
-        "reservation_name": "Reserved by",
-        "reservation_time": "Reservation time",
-        "phone": "Phone",
-        "confirm_open": "Confirm open",
-        "guest_count": "Guests",
-        "capacity": "Capacity",
-        "total": "Total",
-        "reserved_by": "Reserved by"
-      },
-      "actions": {
-        "open_table": "Open table",
-        "add_dish": "Add dish",
-        "transfer_table": "Transfer table",
-        "checkout": "Checkout",
-        "close_table": "Close table",
-        "guest_arrived": "Guest arrived - Open table",
-        "edit_reservation": "Edit reservation",
-        "finish_cleaning": "Finish cleaning"
-      },
-      "messages": {
-        "table_opened": "Opened {table} for {guests} guests",
-        "table_closed": "Closed {table}",
-        "table_ready": "{table} is ready",
-        "enter_guests": "Please enter guest count",
-        "max_guests": "Max {capacity} guests"
-      },
-      "errors": {
-        "cannot_delete_last_area": "Cannot delete the last area.",
-        "cannot_delete_due_to_booking": "Cannot delete because there is a reservation.",
-        "add_failed": "Failed to add table",
-        "create_floor_failed": "Failed to create area"
-      },
-      "confirm_merge": "Merge tables? This will combine capacity and hide the source table."
-    },
-    "toasts": {
-      "staff": {
-        "load_error_title": "Error",
-        "load_network_error_title": "Network Error",
-        "load_error_message": "Failed to load staff list",
-        "deactivated_title": "Success",
-        "deactivated_message": "Staff member deactivated successfully",
-        "action_failed_title": "Action Failed",
-        "validation_error_title": "Validation Error",
-        "validation_full_name_required": "Full name is required",
-        "validation_email_required": "Email is required",
-        "validation_position_required": "Position is required",
-        "validation_salary_required": "Salary must be greater than 0",
-        "created_title": "Staff Created",
-        "created_message": "New staff member has been created successfully",
-        "updated_title": "Staff Updated",
-        "updated_message": "Staff information has been updated successfully",
-        "save_failed_title": "Save Failed"
-      }
-    },
-    "kpi": {
-      "revenue": "Today's Revenue",
-      "revenue_subtitle": "Target: {{target}}",
-      "orders": "Today's Orders",
-      "orders_subtitle": "{{completed}} completed · {{processing}} processing",
-      "tables": "Tables & Reservations",
-      "tables_subtitle": "{{available}} available · {{reserved}} reserved",
-      "customers": "Customers",
-      "customers_subtitle": "{{new}} new this month",
-      "staff": "On-duty Staff",
-      "staff_subtitle": "{{waiter}} waiter · {{kitchen}} kitchen"
-    },
-    "tables_overview": {
-      "title": "Tables & Reservations",
-      "subtitle": "Real-time status",
-      "available": "Available",
-      "serving": "Serving",
-      "reserved": "Reserved",
-      "upcoming": "Upcoming Reservations",
-      "guests": "{{count}} guests",
-      "view_all": "View all reservations"
-    },
-    "customer_insights": {
-      "title": "Customer Insights",
-      "subtitle": "This month's overview",
-      "total_customers": "Total Customers",
-      "new_customers": "New Customers",
-      "returning_rate": "Returning Rate",
-      "view_all": "View all customers"
-    },
-    "staff_overview": {
-      "title": "Staff & Performance",
-      "subtitle": "Today's workforce status",
-      "total_staff": "Total Staff",
-      "on_duty": "On Duty",
-      "day_off": "Day Off",
-      "avg_orders": "Avg Orders/Staff",
-      "positions": {
-        "waiter": "Waiter",
-        "kitchen": "Kitchen"
-      },
-      "view_all": "View all staff"
-    },
-    "table_status": {
-      "title": "Real-time Table Status",
-      "subtitle": "Live floor plan overview",
-      "areas": {
-        "vip": "VIP Area",
-        "indoor": "Indoor Area",
-        "outdoor": "Outdoor Area"
-      },
-      "status": {
-        "serving": "Serving",
-        "available": "Available",
-        "reserved": "Reserved",
-        "cleaning": "Cleaning"
-      },
-      "tooltip": {
-        "status": "Status",
-        "seats": "Seats",
-        "area": "Area"
-      }
-    },
-    "timeline": {
-      "title": "Recent Activity",
-      "subtitle": "Latest actions"
-    },
-    "sidebar": {
-      "management": "Management",
-      "items": {
-        "dashboard": "Dashboard",
-        "analytics": "Analytics",
-        "tables": "Tables",
-        "reservations": "Reservations",
-        "menu": "Menu",
-        "ingredients": "Ingredients",
-        "orders": "Orders",
-        "customers": "Customers",
-        "staff": "Staff",
-        "schedules": "Schedules",
-        "automation": "Automation",
-        "settings": "Settings",
-        "manage": "Manage",
-        "help": "Help"
-      }
-    },
-    "manage": {
-      "title": "Manage",
-      "subtitle": "Manage your restaurant categories and configurations",
-      "tabs": {
-        "categories": "Categories",
-        "ingredient_categories": "Ingredient Categories",
-        "suppliers": "Suppliers",
-        "loyalty": "Loyalty Bands",
-        "order_status": "Dish Status"
-      },
-      "ingredient_categories": {
-        "title": "Ingredient Categories",
-        "subtitle": "Organize your ingredients by category for better inventory management",
-        "add": "Add Category",
-        "edit": "Edit Category",
-        "name": "Name",
-        "description": "Description",
-        "unit": "Default Unit",
-        "actions": "Actions",
-        "empty": "No ingredient categories found.",
-        "confirm_delete": "Are you sure you want to delete this category?",
-        "name_placeholder": "e.g. Vegetables, Meat, Dairy...",
-        "description_placeholder": "Brief description of this ingredient category",
-        "empty_title": "No Categories Found",
-        "tooltip_edit": "Edit category",
-        "tooltip_delete": "Delete category",
-        "defaults": {
-          "vegetables": {
-            "name": "Vegetables",
-            "description": "Fresh vegetables and greens"
-          },
-          "meat": {
-            "name": "Meat",
-            "description": "Beef, pork, chicken, etc."
-          },
-          "seafood": {
-            "name": "Seafood",
-            "description": "Fish, shrimp, crab, etc."
-          },
-          "dairy": {
-            "name": "Dairy products",
-            "description": "Milk, cheese, butter, etc."
-          },
-          "spices": {
-            "name": "Spices",
-            "description": "Salt, pepper, herbs, etc."
-          },
-          "sauces": {
-            "name": "Sauces",
-            "description": "Soy sauce, fish sauce, etc."
-          }
-        },
-        "units": {
-          "kg": "kg",
-          "gram": "gram",
-          "liter": "liter",
-          "ml": "ml",
-          "piece": "piece",
-          "bottle": "bottle",
-          "can": "can",
-          "pack": "pack",
-          "box": "box"
-        }
-      },
-      "suppliers": {
-        "title": "Supplier Management",
-        "subtitle": "Manage your restaurant suppliers and vendors",
-        "add": "Add Supplier",
-        "edit": "Edit Supplier",
-        "name": "Supplier Name",
-        "contact": "Contact Info",
-        "phone": "Phone",
-        "email": "Email",
-        "address": "Address",
-        "status": "Status",
-        "actions": "Actions",
-        "active": "Active",
-        "inactive": "Inactive",
-        "empty": "No suppliers found.",
-        "confirm_delete": "Are you sure you want to delete this supplier?",
-        "fetch_failed": "Failed to load suppliers",
-        "save_failed": "Failed to save supplier",
-        "status_update_failed": "Failed to update status",
-        "loading": "Loading suppliers...",
-        "name_required": "Please enter supplier name",
-        "tooltip_edit": "Edit supplier",
-        "tooltip_delete": "Delete supplier",
-        "created": "Supplier created successfully",
-        "updated": "Supplier updated successfully",
-        "deleted": "Supplier deleted",
-        "name_placeholder": "e.g. Fresh Veggies Co.",
-        "phone_placeholder": "0123456789",
-        "email_placeholder": "contact@supplier.com",
-        "address_placeholder": "Full address of the supplier",
-        "defaults": {
-          "supplier1": {
-            "name": "Fresh Veggies Co.",
-            "address": "123 Market Street, District 1"
-          },
-          "supplier2": {
-            "name": "Ocean Seafood Ltd.",
-            "address": "456 Harbor Road, District 2"
-          }
-        }
-      },
-      "loyalty": {
-        "title": "Loyalty Point Bands",
-        "desc": "Manage loyalty tiers and benefits",
-        "add_new": "Add New Band",
-        "edit": "Edit Loyalty Band",
-        "create": "Create Loyalty Band",
-        "name": "Band Name",
-        "range": "Points Range",
-        "discount": "Discount",
-        "benefits": "Benefits",
-        "status": "Status",
-        "form": {
-          "name": "Band Name",
-          "logo": "Rank",
-          "range": "Points Range",
-          "max_tooltip": "Leave empty for infinite range",
-          "discount": "Discount Percentage (%)",
-          "benefits": "Benefits Description"
-        },
-        "badges": {
-          "bronze": "Bronze",
-          "silver": "Silver",
-          "gold": "Gold",
-          "platinum": "Platinum"
-        }
-      },
-      "order_status": {
-        "title": "Dish Status Management",
-        "subtitle": "Manage dish statuses, codes, and colors",
-        "add_status": "Add Status",
-        "edit_status": "Edit Dish Status",
-        "name": "Status Name",
-        "name_placeholder": "Enter status name",
-        "name_required": "Please enter status name",
-        "code": "Code",
-        "code_placeholder": "Enter status code",
-        "code_required": "Please enter status code",
-        "code_format": "Code must be uppercase letters and underscores only",
-        "color": "Color",
-        "color_required": "Please select a color",
-        "color_from_db": "Used colors",
-        "is_active": "Active Status",
-        "is_active_desc": "Enable or disable this status",
-        "is_default": "Set as Default",
-        "is_default_desc": "Set this as the default status for new dishes",
-        "default_note": "Only one status can be set as default. This will replace the current default.",
-        "confirm_delete": "Delete dish status",
-        "confirm_delete_desc": "Are you sure you want to delete this status?",
-        "status_count": "{{count}} statuses",
-        "empty_state_title": "No dish status yet",
-        "tooltip": {
-          "current_default": "Current Default",
-          "set_default": "Set as Default",
-          "edit": "Edit status",
-          "delete": "Delete status"
-        },
-        "modal_subtitle_edit": "Update status details",
-        "modal_subtitle_create": "Create a new status entry",
-        "empty_state_desc": "Create a new status to get started",
-        "table": {
-          "name": "Status Name",
-          "code": "Code",
-          "color": "Color",
-          "default": "Default",
-          "status": "Status",
-          "actions": "Actions"
-        },
-        "actions": {
-          "confirm": "Confirm",
-          "cancel": "Cancel"
-        },
-        "errors": {
-          "fetch_failed": "Failed to load dish statuses",
-          "delete_failed": "Failed to delete dish status",
-          "save_failed": "Failed to save dish status",
-          "update_failed": "Failed to update default status"
-        }
-      },
-      "notifications": {
-        "delete_success": "Deleted successfully",
-        "update_success": "Updated successfully",
-        "create_success": "Created successfully"
-      },
-      "errors": {
-        "fetch_failed": "Failed to fetch loyalty point bands",
-        "delete_failed": "Failed to delete"
-      }
-    },
-    "header": {
-      "pages": "Pages",
-      "dashboard": "Dashboard",
-      "main_dashboard": "Main Dashboard",
-      "search_placeholder": "Search...",
-      "go_to_staff": "Staff",
-      "user_role": "Restaurant Owner"
-    },
-    "menu": {
-      "title": "Menu Management",
-      "subtitle": "Manage your restaurant menu items",
-      "add_item": "Add Menu Item",
-      "stats": {
-        "total_items": "Total Items",
-        "available": "Available",
-        "popular_items": "Popular Items",
-        "categories": "Categories"
-      },
-      "filter": "All",
-      "out_of_stock": "Out of Stock",
-      "popular": "Popular",
-      "price": "Price",
-      "edit": "Edit",
-      "categories": {
-        "all": "All",
-        "main_course": "Main Course",
-        "appetizer": "Appetizer",
-        "dessert": "Dessert",
-        "beverages": "Beverages"
-      },
-      "best_seller": "Best Seller",
-      "no_description": "No description",
-      "loading": "Loading menu items...",
-      "no_items": "No menu items found",
-      "add_first_item": "Add your first menu item",
-      "empty_category": "No items in \"{{category}}\" category",
-      "modal": {
-        "delete_title": "Delete Menu Item",
-        "delete_confirm": "Are you sure you want to delete",
-        "cannot_undo": "This action cannot be undone.",
-        "cancel": "Cancel",
-        "delete": "Delete"
-      },
-      "toasts": {
-        "fetch_success_message": "Menu loaded successfully",
-        "fetch_error_message": "Failed to load menu. Please try again.",
-        "delete_success_message": "Dish deleted successfully",
-        "delete_error_message": "Failed to delete dish. Please try again.",
-        "create_success_message": "Dish created successfully",
-        "update_success_message": "Dish updated successfully",
-        "save_error_message": "Failed to save dish. Please try again.",
-        "detail_error_message": "Failed to load dish details.",
-        "validation_error_message": "Invalid data. Please check your input."
-      },
-      "images": {
-        "main_image": "Main",
-        "set_main": "Set as main image",
-        "is_main": "Main image",
-        "remove": "Remove image",
-        "add_photo": "Add photo",
-        "click_to_upload": "Click to upload images",
-        "format_hint": "PNG, JPG, WEBP up to 5MB each",
-        "helper_text": "Upload up to {{maxCount}} images. Star button sets the main image. Drag images to reposition.",
-        "max_count": "Maximum {{maxCount}} images allowed",
-        "file_too_large": "{{name}}: File size must be less than 5MB",
-        "invalid_type": "{{name}}: Only PNG, JPG, JPEG, and WEBP are allowed"
-      },
-      "ingredients": {
-        "actions": {
-          "ingredients": "Ingredients",
-          "add": "Add",
-          "save": "Save",
-          "delete": "Delete",
-          "activate": "Activate",
-          "deactivate": "Deactivate",
-          "status_icon_label": "Dish status"
-        },
-        "modal": {
-          "title": "Ingredients: {{name}}",
-          "title_empty": "Ingredients",
-          "select_placeholder": "Select ingredient",
-          "quantity_placeholder": "Quantity",
-          "loading_recipes": "Loading ingredients...",
-          "empty_recipes": "No ingredients yet."
-        },
-        "status": {
-          "activate_title": "Activate dish",
-          "deactivate_title": "Deactivate dish",
-          "activate_confirm": "Are you sure you want to activate {{name}}?",
-          "deactivate_confirm": "Are you sure you want to deactivate {{name}}?",
-          "activate_action": "Activate",
-          "deactivate_action": "Deactivate",
-          "activate_success": "{{name}} activated",
-          "deactivate_success": "{{name}} deactivated",
-          "update_failed": "Failed to update status"
-        },
-        "validation": {
-          "select_ingredient": "Please select an ingredient",
-          "invalid_quantity": "Invalid quantity"
-        },
-        "toasts": {
-          "add_success": "Ingredient added",
-          "add_error": "Failed to add ingredient",
-          "update_success": "Ingredient updated",
-          "update_error": "Failed to update ingredient",
-          "delete_success": "Ingredient deleted",
-          "delete_error": "Failed to delete ingredient"
-        },
-        "errors": {
-          "fetch_ingredients": "Failed to load ingredients",
-          "fetch_recipes": "Failed to load dish ingredients"
-        }
-      }
-    },
-    "orders": {
-      "title": "Order Management",
-      "subtitle": "Track and manage all restaurant orders",
-      "new_order": "New Order",
-      "stats": {
-        "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready",
-        "served": "Served",
-        "completed": "Completed"
-      },
-      "table": {
-        "order": "Order",
-        "customer": "Customer",
-        "table": "Table",
-        "items": "Items",
-        "total": "Tổng",
-        "status": "Status",
-        "payment": "Payment",
-        "time": "Time",
-        "actions": "Actions"
-      },
-      "status": {
-        "pending": "Pending",
-        "preparing": "Preparing",
-        "ready": "Ready",
-        "served": "Served",
-        "completed": "Completed",
-        "cancelled": "Cancelled"
-      },
-      "payment_status": {
-        "paid": "Paid",
-        "unpaid": "Unpaid"
-      },
-      "labels": {
-        "table_code": "Table {{tableCode}}",
-        "items_count": "{{count}} items",
-        "total_quantity": "{{count}} portions"
-      },
-      "actions": {
-        "view_details": "View details"
-      },
-      "fallbacks": {
-        "guest_name": "Guest"
-      },
-      "modal": {
-        "title": "Order {{orderNumber}} Details",
-        "close": "Close",
-        "table_code": "Table {{tableCode}}",
-        "total_items": "Total items: {{count}}",
-        "empty": "This order has no items yet.",
-        "unknown_dish": "Unknown dish",
-        "total": "Total payment",
-        "columns": {
-          "dish": "Dish",
-          "qty": "Qty"
-        }
-      },
-      "payment": {
-        "actions": {
-          "pay": "Pay",
-          "confirm": "Confirm payment"
-        },
-        "modal": {
-          "title": "Payment",
-          "order_label": "Order",
-          "total_label": "Total",
-          "method_label": "Payment method",
-          "cash_label": "Cash received",
-          "change_label": "Change",
-          "missing_label": "Amount due"
-        },
-        "methods": {
-          "cash": "Cash",
-          "bank": "Bank transfer"
-        },
-        "messages": {
-          "cash_insufficient": "Cash received is not enough",
-          "cash_success": "Cash payment successful",
-          "link_created": "Payment link created",
-          "payment_failed": "Payment failed"
-        }
-      }
-    },
     "tables": {
       "title": "Table Management",
       "subtitle": "Manage restaurant tables and reservations",
@@ -1233,7 +1048,698 @@
         }
       }
     },
+    "toasts": {
+      "staff": {
+        "load_error_title": "Error",
+        "load_network_error_title": "Network Error",
+        "load_error_message": "Failed to load staff list",
+        "deactivated_title": "Success",
+        "deactivated_message": "Staff member deactivated successfully",
+        "action_failed_title": "Action Failed",
+        "validation_error_title": "Validation Error",
+        "validation_full_name_required": "Full name is required",
+        "validation_email_required": "Email is required",
+        "validation_position_required": "Position is required",
+        "validation_salary_required": "Salary must be greater than 0",
+        "created_title": "Staff Created",
+        "created_message": "New staff member has been created successfully",
+        "updated_title": "Staff Updated",
+        "updated_message": "Staff information has been updated successfully",
+        "save_failed_title": "Save Failed"
+      }
+    },
+    "kpi": {
+      "revenue": "Today's Revenue",
+      "revenue_subtitle": "Target: {{target}}",
+      "orders": "Today's Orders",
+      "orders_subtitle": "{{completed}} completed · {{processing}} processing",
+      "reservations": "Today's Reservations",
+      "reservations_subtitle": "{{pending}} pending confirmation",
+      "new_customers": "New Customers",
+      "new_customers_subtitle": "This period",
+      "tables": "Tables & Reservations",
+      "tables_subtitle": "{{available}} available · {{reserved}} reserved",
+      "customers": "Customers",
+      "customers_subtitle": "{{new}} new this month",
+      "staff": "On-duty Staff",
+      "staff_subtitle": "{{waiter}} waiter · {{kitchen}} kitchen",
+      "titles": {
+        "revenue": {
+          "day": "Today's revenue",
+          "week": "Revenue in 7 days",
+          "month": "Revenue in 1 month",
+          "year": "Revenue in 1 year"
+        },
+        "orders": {
+          "day": "Today's orders",
+          "week": "Orders in 7 days",
+          "month": "Orders in 1 month",
+          "year": "Orders in 1 year"
+        },
+        "reservations": {
+          "day": "Today's reservations",
+          "week": "Reservations in 7 days",
+          "month": "Reservations in 1 month",
+          "year": "Reservations in 1 year"
+        },
+        "new_customers": {
+          "day": "New customers today",
+          "week": "New customers in 7 days",
+          "month": "New customers in 1 month",
+          "year": "New customers in 1 year"
+        }
+      }
+    },
+    "filters": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "actions": {
+      "export_report": "Export Report"
+    },
+    "messages": {
+      "overview_load_failed": "Unable to load dashboard overview",
+      "export_success": "Report exported successfully",
+      "export_failed": "Failed to export report"
+    },
+    "best_selling_dishes": {
+      "title": "Best Selling Dishes",
+      "subtitle": "Top {{count}}",
+      "loading": "Loading dishes...",
+      "empty": "No sales data yet",
+      "sold": "Sold",
+      "revenue": "Revenue"
+    },
+    "latest_feedbacks": {
+      "title": "Latest Feedbacks",
+      "subtitle": "{{count}} feedbacks",
+      "loading": "Loading feedbacks...",
+      "empty": "No feedbacks yet",
+      "rating": "Rating",
+      "time_ago": {
+        "minutes": "{{count}} minutes ago",
+        "hours": "{{count}} hours ago",
+        "days": "{{count}} days ago"
+      }
+    },
+    "tables_overview": {
+      "title": "Tables & Reservations",
+      "subtitle": "Real-time status",
+      "available": "Available",
+      "serving": "Serving",
+      "reserved": "Reserved",
+      "upcoming": "Upcoming Reservations",
+      "guests": "{{count}} guests",
+      "view_all": "View all reservations"
+    },
+    "customer_insights": {
+      "title": "Customer Insights",
+      "subtitle": "This month's overview",
+      "total_customers": "Total Customers",
+      "new_customers": "New Customers",
+      "returning_rate": "Returning Rate",
+      "view_all": "View all customers"
+    },
+    "staff_overview": {
+      "title": "Staff & Performance",
+      "subtitle": "Today's workforce status",
+      "total_staff": "Total Staff",
+      "on_duty": "On Duty",
+      "day_off": "Day Off",
+      "avg_orders": "Avg Orders/Staff",
+      "positions": {
+        "waiter": "Waiter",
+        "kitchen": "Kitchen"
+      },
+      "view_all": "View all staff"
+    },
+    "table_status": {
+      "title": "Real-time Table Status",
+      "subtitle": "Live floor plan overview",
+      "areas": {
+        "vip": "VIP Area",
+        "indoor": "Indoor Area",
+        "outdoor": "Outdoor Area"
+      },
+      "status": {
+        "serving": "Serving",
+        "available": "Available",
+        "reserved": "Reserved",
+        "cleaning": "Cleaning"
+      },
+      "tooltip": {
+        "status": "Status",
+        "seats": "Seats",
+        "area": "Area"
+      }
+    },
+    "timeline": {
+      "title": "Recent Activity",
+      "subtitle": "Latest actions"
+    },
+    "sidebar": {
+      "management": "Management",
+      "items": {
+        "dashboard": "Dashboard",
+        "analytics": "Analytics",
+        "tables": "Tables",
+        "activity": "Activity",
+        "reservations": "Reservations",
+        "menu": "Menu",
+        "ingredients": "Ingredients",
+        "orders": "Orders",
+        "customers": "Customers",
+        "staff": "Staff",
+        "schedules": "Schedules",
+        "automation": "Automation",
+        "settings": "Settings",
+        "manage": "Manage",
+        "help": "Help"
+      }
+    },
+    "manage": {
+      "title": "Manage",
+      "subtitle": "Manage your restaurant categories and configurations",
+      "tabs": {
+        "categories": "Categories",
+        "ingredient_categories": "Ingredient Categories",
+        "suppliers": "Suppliers",
+        "loyalty": "Loyalty Bands",
+        "order_status": "Dish Status",
+        "order_level_status": "Order Status",
+        "promotions": "Promotions"
+      },
+      "ingredient_categories": {
+        "title": "Ingredient Categories",
+        "subtitle": "Organize your ingredients by category for better inventory management",
+        "add": "Add Category",
+        "edit": "Edit Category",
+        "name": "Name",
+        "description": "Description",
+        "unit": "Default Unit",
+        "actions": "Actions",
+        "empty": "No ingredient categories found.",
+        "confirm_delete": "Are you sure you want to delete this category?",
+        "name_placeholder": "e.g. Vegetables, Meat, Dairy...",
+        "description_placeholder": "Brief description of this ingredient category",
+        "empty_title": "No Categories Found",
+        "tooltip_edit": "Edit category",
+        "tooltip_delete": "Delete category",
+        "defaults": {
+          "vegetables": {
+            "name": "Vegetables",
+            "description": "Fresh vegetables and greens"
+          },
+          "meat": {
+            "name": "Meat",
+            "description": "Beef, pork, chicken, etc."
+          },
+          "seafood": {
+            "name": "Seafood",
+            "description": "Fish, shrimp, crab, etc."
+          },
+          "dairy": {
+            "name": "Dairy products",
+            "description": "Milk, cheese, butter, etc."
+          },
+          "spices": {
+            "name": "Spices",
+            "description": "Salt, pepper, herbs, etc."
+          },
+          "sauces": {
+            "name": "Sauces",
+            "description": "Soy sauce, fish sauce, etc."
+          }
+        },
+        "units": {
+          "kg": "kg",
+          "gram": "gram",
+          "liter": "liter",
+          "ml": "ml",
+          "piece": "piece",
+          "bottle": "bottle",
+          "can": "can",
+          "pack": "pack",
+          "box": "box"
+        }
+      },
+      "suppliers": {
+        "title": "Supplier Management",
+        "subtitle": "Manage your restaurant suppliers and vendors",
+        "add": "Add Supplier",
+        "edit": "Edit Supplier",
+        "name": "Supplier Name",
+        "contact": "Contact Info",
+        "phone": "Phone",
+        "email": "Email",
+        "address": "Address",
+        "status": "Status",
+        "actions": "Actions",
+        "active": "Active",
+        "inactive": "Inactive",
+        "empty": "No suppliers found.",
+        "confirm_delete": "Are you sure you want to delete this supplier?",
+        "fetch_failed": "Failed to load suppliers",
+        "save_failed": "Failed to save supplier",
+        "status_update_failed": "Failed to update status",
+        "loading": "Loading suppliers...",
+        "name_required": "Please enter supplier name",
+        "tooltip_edit": "Edit supplier",
+        "tooltip_delete": "Delete supplier",
+        "created": "Supplier created successfully",
+        "updated": "Supplier updated successfully",
+        "deleted": "Supplier deleted",
+        "name_placeholder": "e.g. Fresh Veggies Co.",
+        "phone_placeholder": "0123456789",
+        "email_placeholder": "contact@supplier.com",
+        "address_placeholder": "Full address of the supplier",
+        "defaults": {
+          "supplier1": {
+            "name": "Fresh Veggies Co.",
+            "address": "123 Market Street, District 1"
+          },
+          "supplier2": {
+            "name": "Ocean Seafood Ltd.",
+            "address": "456 Harbor Road, District 2"
+          }
+        }
+      },
+      "loyalty": {
+        "title": "Loyalty Point Bands",
+        "desc": "Manage loyalty tiers and benefits",
+        "add_new": "Add New Band",
+        "edit": "Edit Loyalty Band",
+        "create": "Create Loyalty Band",
+        "name": "Band Name",
+        "range": "Points Range",
+        "discount": "Discount",
+        "benefits": "Benefits",
+        "status": "Status",
+        "form": {
+          "name": "Band Name",
+          "logo": "Rank",
+          "logo_required": "Please choose a rank color",
+          "range": "Points Range",
+          "max_tooltip": "Leave empty for infinite range",
+          "discount": "Discount Percentage (%)",
+          "benefits": "Benefits Description"
+        },
+        "preview": {
+          "title": "Badge preview",
+          "default_name": "New Rank"
+        },
+        "badges": {
+          "default": "Default colors",
+          "bronze": "Bronze",
+          "silver": "Silver",
+          "gold": "Gold",
+          "platinum": "Platinum"
+        }
+      },
+      "order_status": {
+        "title": "Dish Status Management",
+        "title_order": "Order Status Management",
+        "subtitle": "Manage dish statuses, codes, and colors",
+        "subtitle_order": "Manage order statuses, codes, and colors",
+        "add_status": "Add Status",
+        "edit_status": "Edit Dish Status",
+        "name": "Status Name",
+        "name_placeholder": "Enter status name",
+        "name_required": "Please enter status name",
+        "code": "Code",
+        "code_placeholder": "Enter status code",
+        "code_required": "Please enter status code",
+        "code_format": "Code must be uppercase letters and underscores only",
+        "color": "Color",
+        "color_required": "Please select a color",
+        "color_from_db": "Used colors",
+        "is_active": "Active Status",
+        "is_active_desc": "Enable or disable this status",
+        "is_default": "Set as Default",
+        "is_default_desc": "Set this as the default status for new dishes",
+        "default_note": "Only one status can be set as default. This will replace the current default.",
+        "confirm_delete": "Delete dish status",
+        "confirm_delete_desc": "Are you sure you want to delete this status?",
+        "status_count": "{{count}} statuses",
+        "empty_state_title": "No dish status yet",
+        "tooltip": {
+          "current_default": "Current Default",
+          "set_default": "Set as Default",
+          "edit": "Edit status",
+          "delete": "Delete status"
+        },
+        "modal_subtitle_edit": "Update status details",
+        "modal_subtitle_create": "Create a new status entry",
+        "empty_state_desc": "Create a new status to get started",
+        "table": {
+          "name": "Status Name",
+          "code": "Code",
+          "color": "Color",
+          "default": "Default",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "actions": {
+          "confirm": "Confirm",
+          "cancel": "Cancel"
+        },
+        "errors": {
+          "fetch_failed": "Failed to load dish statuses",
+          "delete_failed": "Failed to delete dish status",
+          "save_failed": "Failed to save dish status",
+          "update_failed": "Failed to update default status"
+        }
+      },
+      "order_level_status": {
+        "title": "Order Status Management",
+        "subtitle": "Manage order statuses, codes, and colors",
+        "add_status": "Add Status",
+        "edit_status": "Edit Order Status",
+        "name": "Status Name",
+        "name_placeholder": "Enter status name",
+        "name_required": "Please enter status name",
+        "code": "Code",
+        "code_placeholder": "Enter status code",
+        "code_required": "Please enter status code",
+        "color": "Color",
+        "color_required": "Please select a color",
+        "color_from_db": "Used colors",
+        "is_default": "Set as Default",
+        "is_default_desc": "Set this as the default order status",
+        "confirm_delete": "Delete order status",
+        "confirm_delete_desc": "Are you sure you want to delete this status?",
+        "status_count": "{{count}} statuses",
+        "empty_state_title": "No order statuses yet",
+        "empty_state_desc": "Create a new status to get started",
+        "tooltip": {
+          "current_default": "Current Default",
+          "set_default": "Set as Default",
+          "edit": "Edit status",
+          "delete": "Delete status"
+        },
+        "modal_subtitle_edit": "Update order status details",
+        "modal_subtitle_create": "Create a new order status entry",
+        "table": {
+          "name": "Status Name",
+          "code": "Code",
+          "color": "Color",
+          "default": "Default",
+          "actions": "Actions"
+        },
+        "actions": {
+          "confirm": "Confirm",
+          "cancel": "Cancel"
+        },
+        "errors": {
+          "fetch_failed": "Failed to load order statuses",
+          "delete_failed": "Failed to delete order status",
+          "save_failed": "Failed to save order status",
+          "update_failed": "Failed to update default status"
+        }
+      },
+      "promotion": {
+        "title": "Promotions",
+        "desc": "Manage promotions and discount codes",
+        "add": "Add New Promotion",
+        "edit": "Edit Promotion",
+        "code": "Code",
+        "name": "Name",
+        "discount": "Discount",
+        "discount_type": "Discount Type",
+        "discount_value": "Discount Value",
+        "max_discount": "Max Discount Amount",
+        "min_order": "Min Order Amount",
+        "usage_limit": "Usage Limit",
+        "usage_per_customer": "Usage Per Customer",
+        "apply": "Apply",
+        "valid_date": "Valid From - To",
+        "valid_from": "Valid From",
+        "valid_to": "Valid To",
+        "status": "Status",
+        "toasts": {
+          "fetch_error": "Unable to load promotions",
+          "required_fields": "Please fill in required fields",
+          "create_success": "Promotion created successfully",
+          "update_success": "Promotion updated successfully",
+          "save_error": "Unable to save promotion",
+          "delete_success": "Promotion deleted successfully",
+          "delete_error": "Unable to delete promotion",
+          "activate_success": "Promotion activated",
+          "deactivate_success": "Promotion deactivated",
+          "status_error": "Unable to update status"
+        }
+      },
+      "notifications": {
+        "delete_success": "Deleted successfully",
+        "update_success": "Updated successfully",
+        "create_success": "Created successfully"
+      },
+      "errors": {
+        "fetch_failed": "Failed to fetch loyalty point bands",
+        "delete_failed": "Failed to delete"
+      }
+    },
+    "header": {
+      "pages": "Pages",
+      "dashboard": "Dashboard",
+      "main_dashboard": "Main Dashboard",
+      "search_placeholder": "Search...",
+      "go_to_staff": "Staff",
+      "user_role": "Restaurant Owner"
+    },
+    "menu": {
+      "title": "Menu Management",
+      "subtitle": "Manage your restaurant menu items",
+      "add_item": "Add Menu Item",
+      "stats": {
+        "total_items": "Total Items",
+        "available": "Available",
+        "popular_items": "Popular Items",
+        "categories": "Categories"
+      },
+      "filter": "All",
+      "out_of_stock": "Out of Stock",
+      "popular": "Popular",
+      "price": "Price",
+      "edit": "Edit",
+      "categories": {
+        "all": "All",
+        "main_course": "Main Course",
+        "appetizer": "Appetizer",
+        "dessert": "Dessert",
+        "beverages": "Beverages"
+      },
+      "best_seller": "Best Seller",
+      "no_description": "No description",
+      "loading": "Loading menu items...",
+      "no_items": "No menu items found",
+      "add_first_item": "Add your first menu item",
+      "empty_category": "No items in \"{{category}}\" category",
+      "modal": {
+        "delete_title": "Delete Menu Item",
+        "delete_confirm": "Are you sure you want to delete",
+        "cannot_undo": "This action cannot be undone.",
+        "cancel": "Cancel",
+        "delete": "Delete"
+      },
+      "toasts": {
+        "fetch_success_message": "Menu loaded successfully",
+        "fetch_error_message": "Failed to load menu. Please try again.",
+        "delete_success_message": "Dish deleted successfully",
+        "delete_error_message": "Failed to delete dish. Please try again.",
+        "create_success_message": "Dish created successfully",
+        "update_success_message": "Dish updated successfully",
+        "save_error_message": "Failed to save dish. Please try again.",
+        "detail_error_message": "Failed to load dish details.",
+        "validation_error_message": "Invalid data. Please check your input."
+      },
+      "images": {
+        "main_image": "Main",
+        "set_main": "Set as main image",
+        "is_main": "Main image",
+        "remove": "Remove image",
+        "add_photo": "Add photo",
+        "click_to_upload": "Click to upload images",
+        "format_hint": "PNG, JPG, WEBP up to 5MB each",
+        "helper_text": "Upload up to {{maxCount}} images. Star button sets the main image. Drag images to reposition.",
+        "max_count": "Maximum {{maxCount}} images allowed",
+        "file_too_large": "{{name}}: File size must be less than 5MB",
+        "invalid_type": "{{name}}: Only PNG, JPG, JPEG, and WEBP are allowed"
+      },
+      "ingredients": {
+        "actions": {
+          "ingredients": "Ingredients",
+          "add": "Add",
+          "save": "Save",
+          "delete": "Delete",
+          "activate": "Activate",
+          "deactivate": "Deactivate",
+          "status_icon_label": "Dish status"
+        },
+        "modal": {
+          "title": "Ingredients: {{name}}",
+          "title_empty": "Ingredients",
+          "select_placeholder": "Select ingredient",
+          "quantity_placeholder": "Quantity",
+          "loading_recipes": "Loading ingredients...",
+          "empty_recipes": "No ingredients yet."
+        },
+        "status": {
+          "activate_title": "Activate dish",
+          "deactivate_title": "Deactivate dish",
+          "activate_confirm": "Are you sure you want to activate {{name}}?",
+          "deactivate_confirm": "Are you sure you want to deactivate {{name}}?",
+          "activate_action": "Activate",
+          "deactivate_action": "Deactivate",
+          "activate_success": "{{name}} activated",
+          "deactivate_success": "{{name}} deactivated",
+          "update_failed": "Failed to update status"
+        },
+        "validation": {
+          "select_ingredient": "Please select an ingredient",
+          "invalid_quantity": "Invalid quantity"
+        },
+        "toasts": {
+          "add_success": "Ingredient added",
+          "add_error": "Failed to add ingredient",
+          "update_success": "Ingredient updated",
+          "update_error": "Failed to update ingredient",
+          "delete_success": "Ingredient deleted",
+          "delete_error": "Failed to delete ingredient"
+        },
+        "errors": {
+          "fetch_ingredients": "Failed to load ingredients",
+          "fetch_recipes": "Failed to load dish ingredients"
+        }
+      },
+      "dish_status": {
+        "title": "Dish Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "enabled": "ENABLED",
+        "disabled": "DISABLED",
+        "can_order": "Customers can order this dish",
+        "cannot_order": "This dish is currently unavailable"
+      },
+      "errors": {
+        "load_failed": "Failed to load menu items",
+        "name_required": "Dish name is required",
+        "category_required": "Please select a category",
+        "price_invalid": "Price must be a positive number",
+        "detail_load_failed": "Failed to load dish details",
+        "retry_hint": "Please try again later"
+      }
+    },
+    "orders": {
+      "title": "Order Management",
+      "subtitle": "Track and manage all restaurant orders",
+      "new_order": "New Order",
+      "stats": {
+        "pending": "Pending",
+        "served": "Served",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "table": {
+        "order": "Order",
+        "customer": "Customer",
+        "table": "Table",
+        "items": "Items",
+        "total": "Total",
+        "status": "Status",
+        "payment": "Payment",
+        "time": "Time",
+        "actions": "Actions"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "serving": "Serving",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "payment_status": {
+        "paid": "Paid",
+        "unpaid": "Unpaid"
+      },
+      "labels": {
+        "table_code": "Table {{tableCode}}",
+        "items_count": "{{count}} items",
+        "total_quantity": "{{count}} portions"
+      },
+      "actions": {
+        "view_details": "View details"
+      },
+      "fallbacks": {
+        "guest_name": "Guest"
+      },
+      "modal": {
+        "title": "Order {{orderNumber}} Details",
+        "close": "Close",
+        "table_code": "Table {{tableCode}}",
+        "total_items": "Total items: {{count}}",
+        "empty": "This order has no items yet.",
+        "unknown_dish": "Unknown dish",
+        "total": "Total payment",
+        "columns": {
+          "dish": "Dish",
+          "qty": "Qty"
+        }
+      },
+      "payment": {
+        "actions": {
+          "pay": "Pay",
+          "confirm": "Confirm payment"
+        },
+        "modal": {
+          "title": "Payment",
+          "order_label": "Order",
+          "total_label": "Total",
+          "method_label": "Payment method",
+          "cash_label": "Cash received",
+          "change_label": "Change",
+          "missing_label": "Amount due"
+        },
+        "methods": {
+          "cash": "Cash",
+          "bank": "Bank transfer"
+        },
+        "messages": {
+          "cash_insufficient": "Cash received is not enough",
+          "cash_success": "Cash payment successful",
+          "link_created": "Payment link created",
+          "payment_failed": "Payment failed",
+          "payos_return_success": "PayOS payment completed successfully",
+          "payos_return_cancel": "PayOS payment was cancelled"
+        }
+      }
+    },
     "staff": {
+      "menu": {
+        "dashboard": "Dashboard",
+        "orders": "Orders",
+        "orders_short": "Orders",
+        "tables": "Tables",
+        "tables_short": "Tables",
+        "kitchen": "Kitchen",
+        "checkout": "Checkout",
+        "reservations": "Reservations",
+        "attendance": "Attendance"
+      },
+      "user_menu": {
+        "profile": "Profile",
+        "settings": "Settings",
+        "logout": "Logout"
+      },
+      "sidebar": {
+        "brand": "Demo Restaurant",
+        "staff_role": "Staff",
+        "working": "Working",
+        "started": "Started",
+        "today": "Today"
+      },
       "title": "Staff Management",
       "subtitle": "Manage your restaurant team members",
       "add_staff": "Add Staff",
@@ -1340,6 +1846,35 @@
         "inactive": "Inactive",
         "off_duty": "Off Duty",
         "on_leave": "On Leave"
+      },
+      "floor_activity": {
+        "title": "Activity",
+        "last_updated": "Last updated at",
+        "occupied_suffix": "occupied tables",
+        "table_label": "Table",
+        "seats_label": "seats",
+        "merge_mode": "Table Merge Mode",
+        "execute_merge": "Confirm Merge ({{count}})",
+        "stats": {
+          "occupied": "Occupied",
+          "available": "Available",
+          "has_reservation": "Reserved"
+        },
+        "status": {
+          "available": "Available",
+          "occupied": "Occupied",
+          "reserved": "Reserved",
+          "cleaning": "Cleaning"
+        },
+        "merge": {
+          "success": "Tables merged successfully!",
+          "error": "Failed to merge tables",
+          "manual_required": "Manual resolution required due to multiple active orders."
+        },
+        "modal": {
+          "checkin_success": "Check-in successful!",
+          "checkin_error": "Check-in failed"
+        }
       }
     },
     "ingredients": {
@@ -1551,22 +2086,8 @@
         }
       },
       "notifications": {
-        "order_notifications": "Order Notifications",
-        "system_notifications": "System Notifications",
-        "items": {
-          "new_orders": "New Orders",
-          "new_orders_desc": "Get notified when new orders arrive",
-          "order_updates": "Order Updates",
-          "order_updates_desc": "Updates on order status changes",
-          "order_completion": "Order Completion",
-          "order_completion_desc": "When orders are completed",
-          "table_updates": "Table Updates",
-          "table_updates_desc": "Changes in table status",
-          "staff_alerts": "Staff Alerts",
-          "staff_alerts_desc": "Staff check-in/out notifications",
-          "inventory_alerts": "Inventory Alerts",
-          "inventory_alerts_desc": "Low stock warnings"
-        }
+        "success_update": "Updated successfully",
+        "error_update": "Update failed"
       },
       "security": {
         "change_password": "Change Password",
@@ -1585,12 +2106,16 @@
         "fields": {
           "client_id": "Client ID",
           "api_key": "API Key",
-          "checksum_key": "Checksum Key"
+          "checksum_key": "Checksum Key",
+          "return_url": "Return URL",
+          "cancel_url": "Cancel URL"
         },
         "validation": {
           "client_id_required": "Client ID is required",
           "api_key_required": "API Key is required",
-          "checksum_key_required": "Checksum Key is required"
+          "checksum_key_required": "Checksum Key is required",
+          "return_url_required": "Return URL is required",
+          "cancel_url_required": "Cancel URL is required"
         },
         "actions": {
           "save_settings": "Save"
@@ -1602,10 +2127,6 @@
         "notifications": {
           "not_configured": "No payment information configured for this restaurant"
         }
-      },
-      "notifications": {
-        "success_update": "Updated successfully",
-        "error_update": "Update failed"
       },
       "buttons": {
         "cancel": "Cancel",
@@ -1693,56 +2214,85 @@
       }
     },
     "analytics": {
-      "title": "Analytics Dashboard",
-      "subtitle": "Detailed insights and performance metrics",
+      "title": "AI Strategy Report",
+      "subtitle": "AI analyzes dashboard data and provides detailed business strategies",
       "page_title": "Analytics Page",
       "coming_soon": "Advanced analytics features coming soon",
-      "under_development": "Under Development"
+      "under_development": "Under Development",
+      "createNew": "Create New Report",
+      "generating": "Generating report...",
+      "filter": {
+        "by": "Analyze by"
+      },
+      "time": {
+        "justNow": "Just now",
+        "minutesAgo": "minutes ago",
+        "hoursAgo": "hours ago",
+        "daysAgo": "days ago"
+      },
+      "success": {
+        "generate": "Report generated successfully"
+      },
+      "error": {
+        "generate": "Failed to generate report"
+      },
+      "empty": {
+        "title": "No strategy report yet",
+        "subtitle": "Click \"Create New Report\" button to let AI analyze data and provide business strategies"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "menu": "Menu",
+        "marketing": "Marketing & Customer",
+        "actionPlan": "Action Plan"
+      },
+      "sections": {
+        "risks": "Hidden Risks",
+        "opportunities": "Hidden Opportunities",
+        "menuOptimization": "Menu Optimization",
+        "marketingStrategy": "Marketing Strategy",
+        "customerStrategy": "Customer Strategy",
+        "executionPlan": "Execution Plan",
+        "currentTrend": "Current Trend",
+        "promoStrategy": "Promotion Strategy",
+        "upcomingEvents": "Upcoming Events"
+      },
+      "impact": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "labels": {
+        "action": "Action:",
+        "time": "Time:"
+      },
+      "summary": {
+        "title": "Strategy Summary",
+        "alerts": "alerts",
+        "generatedAt": "Generated at:"
+      },
+      "stats": {
+        "alerts": "Alerts",
+        "opportunities": "Opportunities",
+        "risks": "Risks",
+        "actions": "Actions"
+      },
+      "menu": {
+        "trendingDish": "Trending Dish:",
+        "timeBasedDishes": "Time-Based Dishes",
+        "suggestedAdditions": "Suggested Additions",
+        "comboSuggestions": "Combo Suggestions"
+      }
     }
   },
   "common": {
     "cancel": "Cancel",
-    "save": "Save",
-    "saving": "Saving...",
-    "time": {
-      "just_now": "Just now",
-      "minutes_ago": "{{count}} minutes ago",
-      "hours_ago": "{{count}} hours ago",
-      "days_ago": "{{count}} days ago"
-    },
-    "status": {
-      "label": "Status",
-      "active": "Active",
-      "inactive": "Inactive",
-      "pending": "Pending",
-      "preparing": "Preparing",
-      "ready": "Ready",
-      "served": "Served",
-      "cancelled": "Cancelled"
-    },
     "actions": {
-      "title": "Actions",
-      "yes": "Yes",
-      "no": "No",
-      "create_order": "Create New Order"
+      "exporting": "Exporting..."
     },
-    "language": "Language",
-    "english": "English",
-    "vietnamese": "Tiếng Việt",
     "theme": {
-      "switch_to_light": "Switch to Light mode",
-      "switch_to_dark": "Switch to Dark mode"
-    },
-    "loading": "Loading...",
-    "loading_menu": "Loading menu...",
-    "save_changes": "Save Changes",
-    "edit": "Edit",
-    "delete": "Delete",
-    "errors": {
-      "data_not_supported": "Data structure not supported",
-      "api_error": "API Error: {{status}} - {{message}}",
-      "network_error": "Network Error: {{message}}",
-      "unknown_error": "An unexpected error occurred"
+      "switch_to_light": "Switch to Light Mode",
+      "switch_to_dark": "Switch to Dark Mode"
     }
   },
   "payment": {
@@ -1758,9 +2308,16 @@
     }
   },
   "charts": {
+    "periods": {
+      "last_7_days": "Compare last 7 days",
+      "last_4_weeks": "Compare last 4 weeks",
+      "last_6_months": "Compare last 6 months",
+      "last_5_years": "Compare last 5 years"
+    },
     "revenue": {
       "title": "Revenue Trend",
-      "subtitle": "Last 7 days performance"
+      "subtitle": "Last 7 days performance",
+      "total_period": "Total period"
     },
     "orders": {
       "title": "Orders Overview",
@@ -1816,8 +2373,11 @@
   },
   "homepage": {
     "header": {
+      "logo_alt": "Restaurant logo",
+      "brand": "Restaurant",
       "product": "Product",
       "workflow": "Workflow",
+      "about": "About Us",
       "testimonials": "Testimonials",
       "contact": "Contact",
       "staff": "Staff",
@@ -1826,7 +2386,7 @@
     },
     "hero": {
       "tag": "All-in-one Restaurant Ops Platform",
-      "title": "Optimize restaurant operations with Restaurant Platform",
+      "title": "Optimize restaurant operations with RestX",
       "description": "Manage tables, orders, kitchen, inventory and reports on a single platform.",
       "get_started": "Get Started",
       "watch_demo": "Watch Demo",
@@ -1868,8 +2428,33 @@
     "features": {
       "tag": "Features",
       "title_prefix": "Highlight features of ",
+      "brand": "Restaurant",
       "description": "All the tools you need to run your restaurant – in one intuitive interface.",
       "items": {
+        "analytics": {
+          "title": "Analytics",
+          "description": "Watch sales data flow into charts and reports in real time."
+        },
+        "tables": {
+          "title": "Tables",
+          "description": "Monitor table maps and serving status instantly across all areas."
+        },
+        "menu": {
+          "title": "Menu",
+          "description": "Admins create dishes, update menus, and customers see changes immediately."
+        },
+        "reservations": {
+          "title": "Reservations",
+          "description": "Customers book tables, admins process requests, and staff check in with a clear flow."
+        },
+        "customer": {
+          "title": "Customer",
+          "description": "Track order history, returning guests, and loyalty data for each customer."
+        },
+        "staff_ops": {
+          "title": "Staff Ops",
+          "description": "KDS and operating workflow for staff, kitchen, and admins in one screen."
+        },
         "table_management": {
           "title": "Smart Table Management",
           "description": "Automatic table reservation system with intuitive interface, helping optimize table layout and reduce waiting time for customers."
@@ -2053,7 +2638,8 @@
         "orders": "Orders",
         "total_spent": "Total Spent",
         "points": "Points",
-        "status": "Status"
+        "status": "Status",
+        "actions": "Actions"
       },
       "status": {
         "birthday": "Birthday",
@@ -2475,7 +3061,7 @@
       "staff_assigned": "staff assigned"
     },
     "export": {
-      "alert": "Export feature will be available when connected to backend API"
+      "alert": "Export feature will be available when data is ready"
     }
   },
   "not_found": {
@@ -3212,6 +3798,8 @@
         "booking_ref": "Booking Ref",
         "confirmation_sent": "Confirmation email sent to:",
         "phone_label": "Phone",
+        "pay_deposit_now": "Pay deposit now",
+        "deposit_deadline": "Deposit payment deadline",
         "view_details": "View Details",
         "make_another": "Make Another Booking"
       },
@@ -3259,7 +3847,22 @@
         "confirm_table": "Confirm Table",
         "mobile_selected": "Selected",
         "mobile_none": "None",
-        "mobile_confirm": "Done"
+        "mobile_confirm": "Done",
+        "view_360": "View 360",
+        "total_capacity": "Total Capacity",
+        "selected_table_label": "Selected Table"
+      },
+      "panorama": {
+        "loading": "Loading 360 image...",
+        "not_ready": "360 image not ready",
+        "no_image": "This table does not have a 360 image yet.",
+        "load_failed": "Could not load 360 image. Please try again later.",
+        "table_label": "Table {{name}}",
+        "status_available": "Available",
+        "status_occupied": "Occupied",
+        "drag_hint": "Drag to rotate - Scroll to zoom",
+        "back_to_map": "Back to map",
+        "book_now": "Book this table"
       },
       "footer": {
         "tagline": "World-class Dining Experience"
@@ -3455,7 +4058,415 @@
       "description": "To modify or cancel your reservation, please contact the restaurant directly.",
       "get_directions": "Get Directions"
     }
+  },
+  "tour": {
+    "layout": {
+      "logo_alt": "Restaurant logo",
+      "modules": {
+        "analytics": "Analytics",
+        "tables": "Tables",
+        "menu": "Menu",
+        "reservations": "Reservations",
+        "customer": "Customer",
+        "staff_ops": "Staff Ops"
+      }
+    },
+    "analytics": {
+      "how_it_works": {
+        "title": "How It Works",
+        "description": "Three simple steps to unlock your restaurant data"
+      },
+      "steps": {
+        "data_collection": {
+          "title": "Data Collection",
+          "description": "Data comes from orders, payments and customer interactions — streamed in real-time."
+        },
+        "smart_aggregation": {
+          "title": "Smart Aggregation",
+          "description": "Charts aggregate by day, table, and category with interactive drill-down capabilities."
+        },
+        "actionable_insights": {
+          "title": "Actionable Insights",
+          "description": "Admins review trends, identify opportunities, and act on data-driven insights."
+        }
+      },
+      "interactive": {
+        "title": "See revenue with real clarity",
+        "description": "Pick a time range to view revenue and order counts across the latest 7 days, 4 weeks, 6 months, and 5 years."
+      },
+      "filters": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "year": "Year"
+      },
+      "summary": {
+        "total_revenue": "Total revenue",
+        "total_orders": "Total orders"
+      },
+      "chart": {
+        "revenue_by_filter": "Revenue by {{filter}}",
+        "orders_by_filter": "Orders by {{filter}}"
+      }
+    },
+    "reservations": {
+      "header": {
+        "tag": "ONLINE RESERVATIONS",
+        "title_prefix": "Reservation",
+        "highlight": "flow",
+        "description": "Tap each step to view the full journey — from customer booking to staff service."
+      },
+      "done_message": "Flow complete — customer has been successfully served",
+      "steps": {
+        "step_1": {
+          "label": "Step 1",
+          "title": "Customer books a table",
+          "summary": "Choose time, guest count, and a suitable table",
+          "script": {
+            "select_time": {
+              "heading": "Select time & party size",
+              "body": "Customers select arrival date, time, and number of guests. The system shows real-time available slots."
+            },
+            "select_table": {
+              "heading": "Choose a table on the floor plan",
+              "body": "After selecting time, customers view the floor layout and choose a table. Reserved or busy tables are hidden automatically."
+            },
+            "view_360": {
+              "heading": "View 360° table perspective",
+              "body": "Before confirming, customers can rotate and preview the real view from that table to choose confidently."
+            },
+            "confirm": {
+              "heading": "Confirm reservation",
+              "body": "Customers enter contact details and submit the booking. The request is sent to the restaurant instantly."
+            }
+          }
+        },
+        "step_2": {
+          "label": "Step 2",
+          "title": "Restaurant confirms",
+          "summary": "Admin reviews and confirms the booking",
+          "script": {
+            "receive_request": {
+              "heading": "Receive reservation request",
+              "body": "Admins are notified immediately on new requests. The list shows full details: guest name, time, party size, and selected table."
+            },
+            "confirm_or_adjust": {
+              "heading": "Confirm or adjust",
+              "body": "Admins can confirm the reservation or suggest alternate table/time when needed. Customers receive updates instantly."
+            },
+            "assign_staff": {
+              "heading": "Assign staff",
+              "body": "After confirmation, admins can assign staff to the table for timely guest reception."
+            }
+          }
+        },
+        "step_3": {
+          "label": "Step 3",
+          "title": "Staff welcomes guests",
+          "summary": "Check in and guide guests to their reserved table",
+          "script": {
+            "checkin": {
+              "heading": "Check in arrivals",
+              "body": "Staff can search by name or booking code, verify identity, and mark guests as arrived in the system."
+            },
+            "guide_to_table": {
+              "heading": "Guide guests to table",
+              "body": "The system highlights the reserved table on the layout so staff can guide guests without re-checking."
+            },
+            "update_table_status": {
+              "heading": "Update table status",
+              "body": "The table automatically changes to \"Dining\" and all departments are updated in real time."
+            }
+          }
+        }
+      }
+    },
+    "tables": {
+      "section_1": {
+        "tag": "Step 01 — Floor plan design",
+        "title_prefix": "Upload your restaurant floor plan &",
+        "title_highlight": "add tables",
+        "title_suffix": "for each floor",
+        "description": "Restaurant owners can upload real floor images and place/name tables directly on the map. Customers see the exact seating location when booking — no confusion and no wasted time.",
+        "image_alt": "Restaurant floor plan",
+        "badge": "Visual floor map"
+      },
+      "highlights": {
+        "upload_floor_map": "Upload floor plan images for each level (PNG, JPG)",
+        "add_and_name_table": "Add and name tables by area",
+        "real_position_view": "Customers see their exact seating location"
+      },
+      "panorama": {
+        "viewer_title": "360° Panorama Viewer",
+        "drag_hint": "Drag to rotate 360°",
+        "tag": "Step 02 — Real-world view",
+        "title_prefix": "",
+        "title_highlight": "360° panorama",
+        "title_suffix": "for each table",
+        "description": "Owners upload 360° images per table so customers can rotate and preview the real viewpoint before booking. No surprises on arrival — guests know exactly where they will sit and what they will see.",
+        "highlights": {
+          "upload_360": "Upload 360° image for each table (JPG equirectangular)",
+          "rotate_preview": "Guests can rotate and preview before booking",
+          "increase_conversion": "Increase reservation conversion with realistic previews"
+        }
+      },
+      "qr": {
+        "title_prefix": "One",
+        "title_highlight": "unique QR code",
+        "title_suffix": "per table for instant ordering",
+        "description": "Guests scan the QR code at the table to open the menu instantly — no app and no staff assistance required. Each order is bound to the correct table and area to remove serving mistakes.",
+        "image_alt": "Table QR code",
+        "badge": "Scan & order now",
+        "highlights": {
+          "unique_qr_per_table": "Each table has an independent QR code",
+          "auto_bind_order": "Orders are automatically attached to the correct table",
+          "no_cross_table_mixup": "No order mix-ups between tables",
+          "faster_service": "Faster service with better staff focus"
+        }
+      },
+      "steps": {
+        "1": {
+          "title": "Design floor layout",
+          "description": "Owners upload floor images and arrange tables visually with drag and drop."
+        },
+        "2": {
+          "title": "Real-time table status",
+          "description": "Staff track each table status — available, occupied, reserved, or cleaning."
+        },
+        "3": {
+          "title": "Smart seating",
+          "description": "Customers identify seats easily while staff allocate tables quickly and efficiently."
+        }
+      }
+    },
+    "menu": {
+      "stats": {
+        "setup_suffix": " steps",
+        "setup_label": "Simple setup",
+        "menu_items_label": "Menu items per catalog",
+        "reload_suffix": " reload",
+        "realtime_label": "Instant updates"
+      },
+      "features": {
+        "step_1": {
+          "tag": "Step 01 — Categories",
+          "title_highlight": "Customize categories",
+          "title_suffix": "for your restaurant menu",
+          "description": "Create and arrange flexible categories — Main dishes, Appetizers, Desserts, Drinks. Add items to each group with full details and images.",
+          "image_alt": "Category management",
+          "bullets": {
+            "create_category": "Create categories and custom names",
+            "add_dish": "Add dishes to each category",
+            "reorder_display": "Reorder display sequence via drag and drop"
+          }
+        },
+        "step_2": {
+          "tag": "Step 02 — Dishes",
+          "title_prefix": "Manage",
+          "title_highlight": "dishes",
+          "title_suffix": "comprehensively",
+          "description": "Add, edit, and control each dish with complete details: name, description, price, image, and real-time visibility status.",
+          "image_alt": "Dish management",
+          "bullets": {
+            "edit_info": "Edit dish information and pricing",
+            "attach_multi_category": "Attach one dish to multiple categories",
+            "toggle_visibility": "Instantly show/hide dishes without reload"
+          }
+        },
+        "step_3": {
+          "tag": "Step 03 — Ingredients",
+          "title_prefix": "Control",
+          "title_highlight": "ingredients",
+          "title_suffix": "and inventory",
+          "description": "Bind ingredients to each dish and track stock in real time. The system automatically alerts when stock runs low so the kitchen can act early.",
+          "image_alt": "Ingredient management",
+          "bullets": {
+            "bind_ingredients": "Bind specific ingredients to each dish",
+            "low_stock_alert": "Automatic low-stock alerts",
+            "auto_hide_out_of_stock": "Automatically hide dishes when ingredients run out"
+          }
+        }
+      }
+    },
+    "customer": {
+      "section_1": {
+        "title": "Instant QR ordering",
+        "description": "Customers simply scan the QR code at the table, browse the full menu, and place orders on their phone — no app and no waiting for staff.",
+        "stats": {
+          "wait_seconds": "Wait seconds",
+          "menu_items": "Menu items",
+          "order_steps": "Steps to order"
+        },
+        "cards": {
+          "qr": {
+            "title": "Instant QR scan",
+            "description": "Each table has its own QR code. Scan and open the menu immediately without app download or sign-in."
+          },
+          "realtime": {
+            "title": "Real-time updates",
+            "description": "Dish status and ready-to-serve notifications are shown directly on the customer's phone."
+          },
+          "loyalty": {
+            "title": "Automatic loyalty points",
+            "description": "Every order automatically earns member points. Customers can track points and redeem offers at the table."
+          }
+        }
+      },
+      "section_2": {
+        "title": "Membership tiers & exclusive offers",
+        "description": "Membership tiers are upgraded automatically based on spending. The higher the tier, the better the perks.",
+        "points_path_title": "Points progression",
+        "tiers": {
+          "bronze": { "name": "Bronze", "discount": "3% off", "points": "From 0 points" },
+          "silver": { "name": "Silver", "discount": "5% off", "points": "From 500 points" },
+          "gold": { "name": "Gold", "discount": "8% off", "points": "From 1500 points" },
+          "platinum": { "name": "Platinum", "discount": "12% off", "points": "From 5000 points" }
+        }
+      },
+      "section_3": {
+        "tag": "AI CHATBOX",
+        "title": "AI assistant suggests dishes by preference",
+        "description": "AI understands preferences, diet, and budget to suggest the best dishes — like a food-savvy companion.",
+        "bullets": {
+          "preferences": "Suggestions by taste, allergy, and diet",
+          "instant_reply": "Instant replies without waiting for staff",
+          "personalization": "Learns from order history for personalized recommendations"
+        }
+      },
+      "section_4": {
+        "tag": "ORDER REVIEW",
+        "title": "Track your order transparently step by step",
+        "description": "Customers can see full order details, dish status, total amount, and loyalty points without asking staff.",
+        "bullets": {
+          "order_status": "Ordered items list with real-time status",
+          "edit_cancel": "Edit or cancel dishes before kitchen confirmation",
+          "bill_discount": "View total bill and membership discount",
+          "points_after_payment": "Points shown immediately after payment"
+        }
+      },
+      "ai_chat": {
+        "title": "AI dish suggestions",
+        "status": "Active",
+        "input_placeholder": "Ask AI about dishes...",
+        "messages": {
+          "1": "I want something light and low-calorie.",
+          "2": "I suggest Salmon Salad or Pumpkin Soup — low-calorie, nutritious, and great for dinner.",
+          "3": "Do you have options for vegetarians?",
+          "4": "Yes! Mushroom Tofu, Grilled Vegetables, and Brown Rice are all great vegetarian choices."
+        }
+      },
+      "order_review": {
+        "header": {
+          "title": "Order — Table A02",
+          "item_count": "4 items",
+          "member_badge": "Gold member"
+        },
+        "items": {
+          "pho_bo": "Rare Beef Pho",
+          "bun_cha": "Hanoi Bun Cha",
+          "tra_sen": "Golden Lotus Tea",
+          "banh_flan": "Flan"
+        },
+        "summary": {
+          "subtotal": "Subtotal",
+          "discount": "Gold discount (8%)",
+          "total": "Total payment"
+        },
+        "points": {
+          "label": "Loyalty points",
+          "suffix": "points"
+        },
+        "cta": "Request payment"
+      }
+    },
+    "staff_ops": {
+      "status": {
+        "online": "Online",
+        "offline": "Offline"
+      },
+      "terminal": {
+        "title": "staff-ops ~ terminal"
+      },
+      "hero": {
+        "title_prefix": "Smart restaurant",
+        "title_highlight": "operations",
+        "description": "A complete staff management system — from account creation and permissions to order handling and table-side payment.",
+        "staff": {
+          "an": { "name": "Nguyen Van An", "role": "Waiter" },
+          "bich": { "name": "Tran Thi Bich", "role": "Cashier" },
+          "duc": { "name": "Le Minh Duc", "role": "Waiter" }
+        }
+      },
+      "section_1": {
+        "tag": "STEP 01",
+        "title": "Create and manage staff accounts",
+        "description": "Owners create accounts, assign permissions, and manage all staff in one place. Each employee gets a role-specific dashboard.",
+        "bullets": {
+          "create_account": "Create new staff accounts in seconds",
+          "assign_roles": "Assign roles: waiter, cashier, manager",
+          "edit_disable": "Edit profile, reset password, disable account"
+        },
+        "terminal": {
+          "name_label": "Enter name",
+          "email_label": "Email",
+          "role_label": "Role",
+          "shift_label": "Shift",
+          "shift_value": "Morning / Afternoon",
+          "success": "[OK] Account created successfully.",
+          "note": "ID: STF-00142 | Temporary password sent by email."
+        }
+      },
+      "section_2": {
+        "tag": "STEP 02",
+        "title": "Table-side staff operations",
+        "description": "Staff handle the full service flow — from check-in to ordering, editing, and cancellation — all in one simple interface.",
+        "bullets": {
+          "checkin": "Check in guests, open table, start service",
+          "add_items": "Add items at any time during service",
+          "cancel_items": "Cancel items with reason and sync to kitchen instantly",
+          "update_qty_note": "Update quantities and special notes per item"
+        },
+        "terminal": {
+          "table_meta": "Table A02 — 4 guests — 19:32",
+          "items": {
+            "pho_bo": "Special Beef Pho",
+            "com_tam": "Broken Rice with Pork Rib",
+            "nuoc_cam": "Fresh Orange Juice",
+            "banh_mi": "Grilled Pork Banh Mi"
+          },
+          "status": {
+            "done": "Done",
+            "pending": "Pending",
+            "cancelled": "Cancelled"
+          },
+          "total_label": "Total"
+        }
+      },
+      "section_3": {
+        "tag": "STEP 03",
+        "title": "Flexible payments",
+        "description": "Support multiple payment methods from cash to QR transfer. The system auto-calculates, issues invoice, and updates loyalty points.",
+        "bullets": {
+          "cash": "Fast cash payment with instant table-side receipt",
+          "transfer": "QR transfer with instant auto confirmation",
+          "loyalty_points": "Auto-earn loyalty points after each successful payment"
+        },
+        "terminal": {
+          "invoice_title": "Invoice for table A02",
+          "rows": {
+            "subtotal": "Food subtotal",
+            "vat": "VAT (8%)",
+            "discount": "Discount"
+          },
+          "total_label": "Payment",
+          "method_label": "Method:",
+          "methods": {
+            "cash": "Cash",
+            "transfer": "Bank transfer"
+          },
+          "success": "[OK] Payment succeeded — 19:58"
+        }
+      }
+    }
   }
 }
-
-

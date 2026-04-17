@@ -15,7 +15,7 @@ import customerService, {
 } from "@/lib/services/customerService";
 import { ConfigProvider, Grid, Space, Typography, message, theme } from "antd";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -30,6 +30,8 @@ export default function CustomerHomePageByTable() {
   const router = useRouter();
   const screens = useBreakpoint();
   const isSmallPhone = !screens.sm;
+  const pageHorizontalPadding = isSmallPhone ? 12 : 16;
+  const sectionSpacing = isSmallPhone ? 20 : 24;
   const params = useParams();
   const rawTableId = params?.tableId;
   const tableId = Array.isArray(rawTableId) ? rawTableId[0] : rawTableId || "";
@@ -92,11 +94,6 @@ export default function CustomerHomePageByTable() {
     loadCustomerProfile();
   }, [loadCustomerProfile]);
 
-  const tableLabel = useMemo(() => {
-    if (!tableId) return "--";
-    return tableId.slice(0, 2).toUpperCase();
-  }, [tableId]);
-
   const handleViewMenu = () => {
     router.push(`/menu/${tableId}`);
   };
@@ -106,9 +103,7 @@ export default function CustomerHomePageByTable() {
       <ConfigProvider
         theme={{
           algorithm:
-            themeMode === "dark"
-              ? theme.darkAlgorithm
-              : theme.defaultAlgorithm,
+            themeMode === "dark" ? theme.darkAlgorithm : theme.defaultAlgorithm,
           token: {
             colorPrimary: "var(--primary)",
             fontFamily: "'Playfair Display', 'Inter', sans-serif",
@@ -139,8 +134,7 @@ export default function CustomerHomePageByTable() {
             },
           },
         }}
-        form={{ requiredMark: false }}
-      >
+        form={{ requiredMark: false }}>
         <div
           style={{
             minHeight: "100vh",
@@ -150,19 +144,18 @@ export default function CustomerHomePageByTable() {
               radial-gradient(circle at 100% 100%, var(--primary-faint), transparent 45%)
             `,
             paddingBottom: isSmallPhone ? 96 : 88,
-          }}
-        >
+          }}>
           {contextHolder}
 
-          <section style={{ position: "relative", marginBottom: -48, zIndex: 1 }}>
+          <section
+            style={{ position: "relative", marginBottom: -48, zIndex: 1 }}>
             <div
               style={{
                 height: "clamp(260px, 40vh, 400px)",
                 background:
                   "url(/images/customer/customer.png) no-repeat center center / cover",
                 position: "relative",
-              }}
-            >
+              }}>
               <div
                 style={{
                   position: "absolute",
@@ -177,15 +170,16 @@ export default function CustomerHomePageByTable() {
               style={{
                 maxWidth: 1200,
                 margin: "0 auto",
-                padding: "0 12px",
+                padding: `0 ${pageHorizontalPadding}px`,
                 position: "absolute",
-                bottom: 64,
+                bottom: isSmallPhone ? 52 : 64,
                 left: 0,
                 right: 0,
-              }}
-            >
+              }}>
               <RestaurantHeader
-                restaurantName={tenant?.businessName || tenant?.name || "Restaurant"}
+                restaurantName={
+                  tenant?.businessName || tenant?.name || "Restaurant"
+                }
                 phone={tenant?.businessPrimaryPhone || "1900 6868"}
                 hours={tenant?.businessOpeningHours || "08:00 - 23:00"}
               />
@@ -196,15 +190,16 @@ export default function CustomerHomePageByTable() {
             style={{
               maxWidth: 1200,
               margin: "0 auto",
-              padding: "0 16px",
+              padding: `0 ${pageHorizontalPadding}px`,
               position: "relative",
               zIndex: 2,
-            }}
-          >
-            <Space orientation="vertical" size={24} style={{ width: "100%" }}>
+            }}>
+            <Space
+              orientation="vertical"
+              size={sectionSpacing}
+              style={{ width: "100%" }}>
               <WelcomeCard
                 customerName={customerName}
-                tableNumber={tableLabel}
                 rank={customerProfile?.membershipLevel}
                 onClick={() => setOpenProfileSignal((prev) => prev + 1)}
               />
@@ -212,32 +207,38 @@ export default function CustomerHomePageByTable() {
               <MenuCTA onViewMenu={handleViewMenu} />
             </Space>
 
-            <div style={{ textAlign: "center", marginTop: 32, opacity: 0.5 }}>
+            <div
+              style={{
+                textAlign: "center",
+                marginTop: isSmallPhone ? 24 : 32,
+                opacity: 0.5,
+              }}>
               <Text
                 style={{
                   color: "var(--text-muted)",
-                  fontSize: 12,
-                  letterSpacing: 2,
+                  fontSize: isSmallPhone ? 11 : 12,
+                  letterSpacing: isSmallPhone ? 1.5 : 2,
                   textTransform: "uppercase",
-                }}
-              >
-                {tenant?.businessName || tenant?.name || "Restaurant Experience"}
+                }}>
+                {tenant?.businessName ||
+                  tenant?.name ||
+                  "Restaurant Experience"}
               </Text>
             </div>
           </div>
-
-          <CustomerFooter
-            customerProfile={customerProfile}
-            customerName={customerName}
-            phoneNumber={phoneNumber}
-            avatarUrl={avatarUrl}
-            onProfileUpdate={loadCustomerProfile}
-            openProfileSignal={openProfileSignal}
-            position="sticky"
-            tableId={tableId}
-          />
-          <CartModal />
         </div>
+
+        <CustomerFooter
+          customerProfile={customerProfile}
+          customerName={customerName}
+          phoneNumber={phoneNumber}
+          avatarUrl={avatarUrl}
+          onProfileUpdate={loadCustomerProfile}
+          openProfileSignal={openProfileSignal}
+          position="sticky"
+          tableId={tableId}
+        />
+        <CartModal />
       </ConfigProvider>
     </ProtectedRoute>
   );

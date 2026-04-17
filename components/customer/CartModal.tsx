@@ -20,6 +20,7 @@ export default function CartModal() {
     orderedItems,
     cartModalOpen,
     activeCartTab,
+    isSubmittingOrder,
     cartItemCount,
     totalOrderAmount,
     updateQuantity,
@@ -33,7 +34,7 @@ export default function CartModal() {
     const grouped = new Map<string, typeof orderedItems>();
 
     orderedItems.forEach((item) => {
-      const key = (item.status || "Pending").toLowerCase();
+      const key = item.status || "Pending";
       const existing = grouped.get(key) || [];
       grouped.set(key, [...existing, item]);
     });
@@ -152,7 +153,9 @@ export default function CartModal() {
               justifyContent: "center",
               border: "1px solid var(--primary-border)",
             }}>
-            <ShoppingCartOutlined style={{ color: "var(--primary)", fontSize: 20 }} />
+            <ShoppingCartOutlined
+              style={{ color: "var(--primary)", fontSize: 20 }}
+            />
           </div>
           <div>
             <Text
@@ -280,7 +283,9 @@ export default function CartModal() {
                                     fontWeight: 600,
                                   }}>
                                   {formatPrice(
-                                    (parseFloat(item.price) * item.quantity).toString(),
+                                    (
+                                      parseFloat(item.price) * item.quantity
+                                    ).toString(),
                                   )}
                                   đ
                                 </Text>
@@ -297,7 +302,9 @@ export default function CartModal() {
                                 <Button
                                   type="text"
                                   icon={<MinusOutlined />}
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  onClick={() =>
+                                    updateQuantity(item.id, item.quantity - 1)
+                                  }
                                   style={{
                                     color: "var(--text)",
                                     border: "1px solid var(--border)",
@@ -322,7 +329,9 @@ export default function CartModal() {
                                 <Button
                                   type="text"
                                   icon={<PlusOutlined />}
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  onClick={() =>
+                                    updateQuantity(item.id, item.quantity + 1)
+                                  }
                                   style={{
                                     color: "var(--text)",
                                     border: "1px solid var(--border)",
@@ -347,6 +356,8 @@ export default function CartModal() {
                       type="primary"
                       size="large"
                       onClick={confirmOrder}
+                      loading={isSubmittingOrder}
+                      disabled={isSubmittingOrder}
                       style={{
                         background: "var(--primary)",
                         border: "none",
@@ -422,7 +433,10 @@ export default function CartModal() {
                               </Text>
                               {items.map((item, index) => (
                                 <Card
-                                  key={item.lineId || `${item.id}-${status}-${index}`}
+                                  key={
+                                    item.lineId ||
+                                    `${item.id}-${status}-${index}`
+                                  }
                                   style={{
                                     background: "var(--surface)",
                                     border: "1px solid var(--border)",
@@ -479,7 +493,8 @@ export default function CartModal() {
                                             fontSize: 13,
                                             fontWeight: 600,
                                           }}>
-                                          {formatPrice(item.price)}đ x {item.quantity}
+                                          {formatPrice(item.price)}đ x{" "}
+                                          {item.quantity}
                                         </Text>
                                       </div>
                                       <div
@@ -554,18 +569,18 @@ export default function CartModal() {
                         </div>
                       </div>
                       <Button
-                      block
-                      type="primary"
-                      size="large"
-                      onClick={requestPayment}
-                      style={{
-                        background: "var(--primary)",
-                        border: "none",
-                        height: 48,
-                        fontWeight: 700,
-                        fontSize: 16,
-                        boxShadow: "0 10px 25px var(--primary-glow)",
-                      }}>
+                        block
+                        type="primary"
+                        size="large"
+                        onClick={requestPayment}
+                        style={{
+                          background: "var(--primary)",
+                          border: "none",
+                          height: 48,
+                          fontWeight: 700,
+                          fontSize: 16,
+                          boxShadow: "0 10px 25px var(--primary-glow)",
+                        }}>
                         {t("customer_page.cart_modal.request_payment")}
                       </Button>
                     </div>

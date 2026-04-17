@@ -1,5 +1,6 @@
 "use client";
 
+import StatusToggle from "@/components/ui/StatusToggle";
 import VnAddressSelect from "@/components/ui/VnAddressSelect";
 import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
@@ -9,7 +10,7 @@ import {
   ExclamationCircleOutlined,
   MailOutlined,
   PhoneOutlined,
-  ShopOutlined
+  ShopOutlined,
 } from "@ant-design/icons";
 import type { FormProps, UploadFile } from "antd";
 import {
@@ -21,9 +22,8 @@ import {
   Input,
   Modal,
   Spin,
-  Switch,
   Typography,
-  Upload
+  Upload,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -31,7 +31,14 @@ import { useTranslation } from "react-i18next";
 
 const { TextArea } = Input;
 const { Title, Paragraph } = Typography;
-const TENANTS_BRAND_LOGO = "https://res.cloudinary.com/dzz8yqhcr/image/upload/v1773461233/DemoRestaurant/LogoUrl/logo.png";
+const TENANTS_BRAND_LOGO =
+  "https://res.cloudinary.com/dzz8yqhcr/image/upload/v1773461233/DemoRestaurant/LogoUrl/logo.png";
+
+interface PaymentGatewaySettings {
+  clientId: string;
+  apiKey: string;
+  checksumKey: string;
+}
 
 const customStyles = `
   .tenant-delete-modal .ant-modal-root,
@@ -185,12 +192,42 @@ const COLOR_FIELD_NAMES: Array<keyof TenantUpdateInput> = [
   "darkCardColor",
 ];
 
+const toHexColorString = (value: unknown): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "toHexString" in value &&
+    typeof (value as { toHexString?: unknown }).toHexString === "function"
+  ) {
+    return (value as { toHexString: () => string }).toHexString();
+  }
+
+  return undefined;
+};
+
+const normalizePaymentSettings = (
+  settings: PaymentGatewaySettings,
+): PaymentGatewaySettings => ({
+  clientId: settings.clientId?.trim() || "",
+  apiKey: settings.apiKey?.trim() || "",
+  checksumKey: settings.checksumKey?.trim() || "",
+});
+
 const TenantEditPage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
   const { t } = useTranslation();
   const { message } = App.useApp();
   const [form] = Form.useForm<TenantUpdateInput>();
+  const [paymentForm] = Form.useForm<PaymentGatewaySettings>();
   const [formData, setFormData] = useState<Partial<TenantUpdateInput>>({});
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -200,10 +237,15 @@ const TenantEditPage: React.FC = () => {
   const [tenantStatus, setTenantStatus] = useState<boolean>(true);
   const [logoFileList, setLogoFileList] = useState<UploadFile[]>([]);
   const [faviconFileList, setFaviconFileList] = useState<UploadFile[]>([]);
-  const [backgroundFileList, setBackgroundFileList] = useState<UploadFile[]>([]);
+  const [backgroundFileList, setBackgroundFileList] = useState<UploadFile[]>(
+    [],
+  );
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string>("");
   const [faviconPreviewUrl, setFaviconPreviewUrl] = useState<string>("");
   const [backgroundPreviewUrl, setBackgroundPreviewUrl] = useState<string>("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [hasExistingPaymentSettings, setHasExistingPaymentSettings] =
+    useState(false);
   const tenantId = params.id as string;
 
   const getRawFile = (fileList: UploadFile[]): File | null => {
@@ -221,7 +263,9 @@ const TenantEditPage: React.FC = () => {
     if (typeof document === "undefined") return;
 
     const setOrCreateLink = (rel: string) => {
-      let link = document.querySelector(`link[rel='${rel}']`) as HTMLLinkElement | null;
+      let link = document.querySelector(
+        `link[rel='${rel}']`,
+      ) as HTMLLinkElement | null;
       if (!link) {
         link = document.createElement("link");
         link.rel = rel;
@@ -254,7 +298,6 @@ const TenantEditPage: React.FC = () => {
     };
   }, [deleteModalVisible]);
 
-
   const fetchTenantDetails = async () => {
     try {
       setInitialLoading(true);
@@ -266,8 +309,7 @@ const TenantEditPage: React.FC = () => {
         return;
       }
 
-      const cleanHostname =
-        data.hostname?.replace(/\.restx\.food$/i, "") || "";
+      const cleanHostname = data.hostname?.replace(/\.restx\.food$/i, "") || "";
 
       const formValues: Partial<TenantUpdateInput> = {
         name: data.name,
@@ -325,12 +367,47 @@ const TenantEditPage: React.FC = () => {
       setTenantStatus(
         typeof data.status === "boolean" ? data.status : data.status === true,
       );
+
+      await fetchPaymentSettings();
     } catch (error) {
       console.error("Failed to fetch tenant details:", error);
       message.error(t("tenants.toasts.detail_error_message"));
       router.push("/tenants");
     } finally {
       setInitialLoading(false);
+    }
+  };
+
+  const fetchPaymentSettings = async () => {
+    setPaymentLoading(true);
+
+    try {
+      const settings = await tenantService.getPaymentSettings(tenantId);
+      if (settings) {
+        const normalized = normalizePaymentSettings({
+          clientId: settings.clientId || "",
+          apiKey: settings.apiKey || "",
+          checksumKey: settings.checksumKey || "",
+        });
+
+        paymentForm.setFieldsValue(normalized);
+        setHasExistingPaymentSettings(true);
+      } else {
+        const emptySettings = normalizePaymentSettings({
+          clientId: "",
+          apiKey: "",
+          checksumKey: "",
+        });
+
+        paymentForm.setFieldsValue(emptySettings);
+        setHasExistingPaymentSettings(false);
+      }
+    } catch (error) {
+      console.error("Failed to fetch payment settings:", error);
+      setHasExistingPaymentSettings(false);
+      message.error(t("dashboard.settings.notifications.error_update"));
+    } finally {
+      setPaymentLoading(false);
     }
   };
 
@@ -346,10 +423,16 @@ const TenantEditPage: React.FC = () => {
         ? `${values.hostname}.restx.food`
         : undefined;
 
-      const colorValues = COLOR_FIELD_NAMES.reduce(
-        (acc, field) => ({ ...acc, [field]: form.getFieldValue(field) }),
-        {} as Partial<TenantUpdateInput>,
-      );
+      const colorValues = COLOR_FIELD_NAMES.reduce((acc, field) => {
+        const rawValue = form.getFieldValue(field);
+        const normalizedValue = toHexColorString(rawValue);
+        const fallbackValue =
+          typeof rawValue === "string" ? rawValue : undefined;
+        return {
+          ...acc,
+          [field]: normalizedValue ?? fallbackValue,
+        };
+      }, {} as Partial<TenantUpdateInput>);
 
       const requestData: TenantUpdateInput = {
         ...values,
@@ -367,11 +450,93 @@ const TenantEditPage: React.FC = () => {
         modifiedBy: undefined,
       };
 
+      const paymentValues = normalizePaymentSettings(
+        paymentForm.getFieldsValue(),
+      );
+
+      const hasAnyPaymentCredential = [
+        paymentValues.clientId,
+        paymentValues.apiKey,
+        paymentValues.checksumKey,
+      ].some(Boolean);
+      const hasAllPaymentCredential = [
+        paymentValues.clientId,
+        paymentValues.apiKey,
+        paymentValues.checksumKey,
+      ].every(Boolean);
+
+      if (hasAnyPaymentCredential && !hasAllPaymentCredential) {
+        message.error(
+          t("dashboard.settings.notifications.error_update", {
+            defaultValue: "Please fill all payment credentials before saving.",
+          }),
+        );
+        return;
+      }
+
       await tenantService.upsertTenant(requestData, {
         logo: getRawFile(logoFileList),
         favicon: getRawFile(faviconFileList),
         background: getRawFile(backgroundFileList),
       });
+
+      if (hasAllPaymentCredential) {
+        try {
+          console.log("[tenant-edit] Saving payment settings payload:", {
+            tenantId,
+            endpoint: `/tenants/${tenantId}/payment-settings`,
+            method: hasExistingPaymentSettings ? "PUT" : "POST",
+            payload: paymentValues,
+          });
+
+          if (hasExistingPaymentSettings) {
+            await tenantService.updatePaymentSettings(tenantId, paymentValues);
+          } else {
+            await tenantService.createPaymentSettings(tenantId, paymentValues);
+          }
+
+          setHasExistingPaymentSettings(true);
+        } catch (error: any) {
+          let fallbackSucceeded = false;
+
+          try {
+            if (
+              error?.response?.status === 400 ||
+              error?.response?.status === 404 ||
+              error?.response?.status === 409
+            ) {
+              if (hasExistingPaymentSettings) {
+                await tenantService.createPaymentSettings(
+                  tenantId,
+                  paymentValues,
+                );
+              } else {
+                await tenantService.updatePaymentSettings(
+                  tenantId,
+                  paymentValues,
+                );
+              }
+
+              setHasExistingPaymentSettings(true);
+              fallbackSucceeded = true;
+            }
+          } catch (fallbackError) {
+            console.error(
+              "Fallback save payment settings failed:",
+              fallbackError,
+            );
+            message.error(t("dashboard.settings.notifications.error_update"));
+            return;
+          }
+
+          if (!fallbackSucceeded) {
+            console.error("Failed to save payment settings:", error);
+            message.error(t("dashboard.settings.notifications.error_update"));
+            return;
+          }
+        }
+      }
+
       message.success(t("tenants.toasts.update_success_message"));
       router.push("/tenants");
     } catch (error: any) {
@@ -429,7 +594,6 @@ const TenantEditPage: React.FC = () => {
         className="px-6 lg:px-8 py-8 flex-1"
         style={{ background: "var(--bg-base)", color: "var(--text)" }}>
         <div className="max-w-7xl mx-auto space-y-6">
-
           {/* --- Main Form --- */}
           <Spin spinning={initialLoading} size="large">
             <Form
@@ -489,7 +653,9 @@ const TenantEditPage: React.FC = () => {
                       name="prefix">
                       <Input
                         size="large"
-                        placeholder={t("tenants.create.fields.prefix_placeholder")}
+                        placeholder={t(
+                          "tenants.create.fields.prefix_placeholder",
+                        )}
                       />
                     </Form.Item>
 
@@ -636,7 +802,9 @@ const TenantEditPage: React.FC = () => {
                         cityFieldName="businessAddressLine3"
                         districtWardFieldName="businessAddressLine2"
                         countryFieldName="businessCountry"
-                        placeholder={t("tenants.create.fields.address_line1_placeholder")}
+                        placeholder={t(
+                          "tenants.create.fields.address_line1_placeholder",
+                        )}
                       />
                     </Form.Item>
                     <VnAddressSelect
@@ -644,16 +812,21 @@ const TenantEditPage: React.FC = () => {
                       cityFieldName="businessAddressLine3"
                       districtWardFieldName="businessAddressLine2"
                       required
-                      cityRequiredMessage={t("tenants.create.validation.city_required")}
-                      districtRequiredMessage={t("tenants.create.validation.street_name_required")}
-                      wardRequiredMessage={t("tenants.create.validation.street_name_required")}
+                      cityRequiredMessage={t(
+                        "tenants.create.validation.city_required",
+                      )}
+                      districtRequiredMessage={t(
+                        "tenants.create.validation.street_name_required",
+                      )}
+                      wardRequiredMessage={t(
+                        "tenants.create.validation.street_name_required",
+                      )}
                     />
                   </div>
 
                   <div
                     className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-dashed"
                     style={{ borderColor: "var(--border)" }}>
-
                     <Form.Item
                       label={
                         <span
@@ -767,14 +940,18 @@ const TenantEditPage: React.FC = () => {
                     boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
                   }}
                   title={
-                    <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
+                    <Title
+                      level={5}
+                      style={{ margin: 0, color: "var(--text)" }}>
                       {t("tenants.edit.tenant_settings.title")}
                     </Title>
                   }>
                   <Form.Item name="tenantSettings">
                     <TextArea
                       rows={4}
-                      placeholder={t("tenants.edit.tenant_settings.placeholder")}
+                      placeholder={t(
+                        "tenants.edit.tenant_settings.placeholder",
+                      )}
                     />
                   </Form.Item>
                 </Card>
@@ -787,7 +964,9 @@ const TenantEditPage: React.FC = () => {
                     boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
                   }}
                   title={
-                    <Title level={5} style={{ margin: 0, color: "var(--text)" }}>
+                    <Title
+                      level={5}
+                      style={{ margin: 0, color: "var(--text)" }}>
                       {t("tenants.edit.system_fields.title")}
                     </Title>
                   }>
@@ -855,7 +1034,6 @@ const TenantEditPage: React.FC = () => {
                     </Title>
                   }>
                   <div className="grid grid-cols-1 gap-4">
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Form.Item
                         label={
@@ -929,7 +1107,9 @@ const TenantEditPage: React.FC = () => {
                                 />
                               ) : (
                                 <div className="branding-preview-empty h-full w-full">
-                                  {t("tenants.edit.branding.favicon_upload_hint")}
+                                  {t(
+                                    "tenants.edit.branding.favicon_upload_hint",
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -970,7 +1150,9 @@ const TenantEditPage: React.FC = () => {
                               />
                             ) : (
                               <div className="branding-preview-empty h-full w-full">
-                                {t("tenants.edit.branding.background_upload_hint")}
+                                {t(
+                                  "tenants.edit.branding.background_upload_hint",
+                                )}
                               </div>
                             )}
                           </div>
@@ -1106,6 +1288,95 @@ const TenantEditPage: React.FC = () => {
                   </div>
                 </Card>
 
+                <Card
+                  style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "16px",
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                  }}
+                  title={
+                    <Title
+                      level={5}
+                      style={{ margin: 0, color: "var(--text)" }}>
+                      {t("dashboard.settings.payment.title")}
+                    </Title>
+                  }>
+                  <Form
+                    form={paymentForm}
+                    layout="vertical"
+                    className="tenant-form">
+                    <Form.Item
+                      label={t("dashboard.settings.payment.fields.client_id")}
+                      name="clientId"
+                      rules={[
+                        {
+                          required: true,
+                          message: t(
+                            "dashboard.settings.payment.validation.client_id_required",
+                          ),
+                        },
+                      ]}>
+                      <Input
+                        size="large"
+                        disabled={paymentLoading || loading}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={t("dashboard.settings.payment.fields.api_key")}
+                      name="apiKey"
+                      rules={[
+                        {
+                          required: true,
+                          message: t(
+                            "dashboard.settings.payment.validation.api_key_required",
+                          ),
+                        },
+                      ]}>
+                      <Input.Password
+                        size="large"
+                        disabled={paymentLoading || loading}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={t(
+                        "dashboard.settings.payment.fields.checksum_key",
+                      )}
+                      name="checksumKey"
+                      rules={[
+                        {
+                          required: true,
+                          message: t(
+                            "dashboard.settings.payment.validation.checksum_key_required",
+                          ),
+                        },
+                      ]}>
+                      <Input.Password
+                        size="large"
+                        disabled={paymentLoading || loading}
+                      />
+                    </Form.Item>
+
+                    {/* <Form.Item
+                      label={t("dashboard.settings.payment.fields.return_url", {
+                        defaultValue: "Return URL",
+                      })}
+                      name="returnUrl">
+                      <Input size="large" disabled />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={t("dashboard.settings.payment.fields.cancel_url", {
+                        defaultValue: "Cancel URL",
+                      })}
+                      name="cancelUrl">
+                      <Input size="large" disabled />
+                    </Form.Item> */}
+                  </Form>
+                </Card>
+
                 {/* Action Buttons */}
                 <div className="flex flex-col gap-3 mt-4">
                   {/* Status Toggle */}
@@ -1129,11 +1400,10 @@ const TenantEditPage: React.FC = () => {
                           : t("tenants.edit.fields.status_inactive")}
                       </span>
                     </div>
-                    <Switch
+                    <StatusToggle
                       checked={tenantStatus}
-                      onChange={setTenantStatus}
-                      checkedChildren={t("tenants.filter.active")}
-                      unCheckedChildren={t("tenants.filter.inactive")}
+                      onChange={() => setTenantStatus((prev) => !prev)}
+                      ariaLabel={t("tenants.edit.fields.status")}
                     />
                   </div>
                   <Button
@@ -1212,7 +1482,6 @@ const TenantEditPage: React.FC = () => {
             background: "var(--modal-overlay)",
           },
         }}>
-
         <div className="py-4 space-y-4">
           <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-4">
             <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">

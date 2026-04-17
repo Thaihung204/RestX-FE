@@ -1,6 +1,7 @@
 "use client";
 
 import { DropDown } from "@/components/ui/DropDown";
+import StatusToggle from "@/components/ui/StatusToggle";
 import employeeService from "@/lib/services/employeeService";
 import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
@@ -49,19 +50,24 @@ function DraggableImagePreview({
           y: clamp(position.y + dy * 0.2),
         });
       }}
-      onPointerUp={() => { dragRef.current.dragging = false; }}
-      onPointerCancel={() => { dragRef.current.dragging = false; }}
-    >
+      onPointerUp={() => {
+        dragRef.current.dragging = false;
+      }}
+      onPointerCancel={() => {
+        dragRef.current.dragging = false;
+      }}>
       <img
         src={src}
         alt={alt}
         className="w-full h-full pointer-events-none"
-        style={{ objectFit: "cover", objectPosition: `${position.x}% ${position.y}%` }}
+        style={{
+          objectFit: "cover",
+          objectPosition: `${position.x}% ${position.y}%`,
+        }}
       />
       <div
         className="absolute bottom-2 right-2 rounded-md px-2 py-1 text-[10px] font-medium pointer-events-none"
-        style={{ color: "#fff", background: "rgba(0,0,0,0.55)" }}
-      >
+        style={{ color: "#fff", background: "rgba(0,0,0,0.55)" }}>
         {hintText}
       </div>
     </div>
@@ -101,7 +107,10 @@ export default function StaffFormPage() {
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [shouldRemoveAvatar, setShouldRemoveAvatar] = useState(false);
-  const [avatarPosition, setAvatarPosition] = useState<ImagePosition>({ x: 50, y: 50 });
+  const [avatarPosition, setAvatarPosition] = useState<ImagePosition>({
+    x: 50,
+    y: 50,
+  });
 
   useEffect(() => {
     if (!isNewStaff) {
@@ -241,7 +250,10 @@ export default function StaffFormPage() {
   };
 
   const formatSalary = (amount: number) =>
-    new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount);
 
   if (loading && !isNewStaff) {
     return (
@@ -379,10 +391,11 @@ export default function StaffFormPage() {
                       name="position"
                       value={formData.position}
                       onChange={handleChange}
-                      required
-                    >
+                      required>
                       <option value="" disabled>
-                        {t("dashboard.staff.form.select_position", { defaultValue: "Select position" })}
+                        {t("dashboard.staff.form.select_position", {
+                          defaultValue: "Select position",
+                        })}
                       </option>
                       {POSITIONS.map((position) => (
                         <option key={position} value={position}>
@@ -422,8 +435,7 @@ export default function StaffFormPage() {
                     <DropDown
                       name="role"
                       value={formData.role}
-                      onChange={handleChange}
-                    >
+                      onChange={handleChange}>
                       {ROLES.map((role) => (
                         <option key={role} value={role}>
                           {role}
@@ -491,7 +503,9 @@ export default function StaffFormPage() {
                       }}
                     />
                     {formData.salary > 0 && (
-                      <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
+                      <p
+                        className="mt-1 text-xs"
+                        style={{ color: "var(--text-muted)" }}>
                         {formatSalary(formData.salary)}
                       </p>
                     )}
@@ -507,11 +521,13 @@ export default function StaffFormPage() {
                     <DropDown
                       name="salaryType"
                       value={formData.salaryType}
-                      onChange={handleChange}
-                    >
+                      onChange={handleChange}>
                       {SALARY_TYPES.map((st) => (
                         <option key={st} value={st}>
-                          {t(`dashboard.staff.employment_details.salary_types.${st.toLowerCase()}`, { defaultValue: st })}
+                          {t(
+                            `dashboard.staff.employment_details.salary_types.${st.toLowerCase()}`,
+                            { defaultValue: st },
+                          )}
                         </option>
                       ))}
                     </DropDown>
@@ -523,7 +539,9 @@ export default function StaffFormPage() {
                       className="block mb-1.5 text-sm font-medium"
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.staff.employment_details.termination_date")}
-                      <span className="ml-1 text-xs opacity-60">({t("common.optional", { defaultValue: "optional" })})</span>
+                      <span className="ml-1 text-xs opacity-60">
+                        ({t("common.optional", { defaultValue: "optional" })})
+                      </span>
                     </label>
                     <input
                       type="date"
@@ -538,7 +556,6 @@ export default function StaffFormPage() {
                       }}
                     />
                   </div>
-
                 </div>
               </div>
 
@@ -631,16 +648,15 @@ export default function StaffFormPage() {
                       </div>
                     </div>
 
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="isActive"
-                        checked={formData.isActive}
-                        onChange={handleChange}
-                        className="sr-only peer"
-                      />
-                      <div className="w-14 h-7 bg-gray-400 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500 shadow-inner"></div>
-                    </label>
+                    <StatusToggle
+                      checked={formData.isActive}
+                      onChange={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          isActive: !prev.isActive,
+                        }));
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -686,7 +702,10 @@ export default function StaffFormPage() {
                             alt="Avatar Preview"
                             position={avatarPosition}
                             onPositionChange={setAvatarPosition}
-                            hintText={t("dashboard.settings.appearance.drag_to_adjust", { defaultValue: "Drag to adjust" })}
+                            hintText={t(
+                              "dashboard.settings.appearance.drag_to_adjust",
+                              { defaultValue: "Drag to adjust" },
+                            )}
                           />
                         </div>
 
@@ -892,7 +911,7 @@ export default function StaffFormPage() {
                       className="w-full py-3 rounded-lg font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-orange-500/30 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       style={{
                         background: loading ? "#999" : "var(--primary)",
-                        color: "white"
+                        color: "white",
                       }}>
                       {loading ? (
                         <span className="flex items-center justify-center gap-2">

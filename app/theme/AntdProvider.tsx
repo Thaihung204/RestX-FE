@@ -2,11 +2,11 @@
 
 import { App as AntdApp, ConfigProvider, theme } from "antd";
 import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from "react";
 import { darkTheme, lightTheme, ThemeMode } from "./themeConfig";
 
@@ -203,13 +203,20 @@ export default function AntdProvider({
         }
 
         /* Override hardcoded colors with CSS variables */
-        .ant-btn-primary:not(.ant-btn-dangerous) {
+        .ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-disabled):not(:disabled) {
           background: var(--primary) !important;
           border-color: var(--primary) !important;
         }
-        .ant-btn-primary:not(.ant-btn-dangerous):hover {
+        .ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-disabled):not(:disabled):hover {
           background: var(--primary-hover) !important;
           border-color: var(--primary-hover) !important;
+        }
+        .ant-btn-primary.ant-btn-disabled,
+        .ant-btn-primary:disabled {
+          background: var(--surface) !important;
+          border-color: var(--border) !important;
+          color: var(--text-muted) !important;
+          box-shadow: none !important;
         }
         .ant-typography strong,
         .ant-typography-danger {
@@ -468,12 +475,6 @@ export default function AntdProvider({
           box-shadow: var(--shadow-sm) !important;
         }
 
-        /* Modal styling */
-        .ant-modal-content {
-          background: var(--card) !important;
-          border-color: var(--border) !important;
-        }
-
         /* Popconfirm/Popover - force follow current CSS variables */
         .ant-popover,
         .ant-popconfirm {
@@ -493,11 +494,6 @@ export default function AntdProvider({
         .ant-popover .ant-popover-title,
         .ant-popover .ant-popover-description {
           color: var(--text) !important;
-        }
-        
-        .ant-modal-header {
-          background: var(--card) !important;
-          border-bottom-color: var(--border) !important;
         }
         
         .ant-modal-title {

@@ -2,8 +2,7 @@ import axiosInstance from './axiosInstance';
 
 export enum TableStatus {
     Available = 0,
-    Reserved = 1,
-    Occupied = 2
+    Occupied = 1
 }
 
 export interface TableItem {
@@ -35,6 +34,75 @@ export interface TableItem {
 export interface PanoramaImage {
     front?: File | null;
 }
+
+/** Matches BE: TableSessionInfo DTO from GET /api/tables/sessions */
+export interface TableSessionInfo {
+    id: string;
+    sessionId?: string;
+    tableId: string;
+    tableCode?: string;
+    orderId?: string | null;
+    reservationId?: string | null;
+    startedAt: string;
+    endedAt?: string | null;
+    isActive: boolean;
+    orderReference?: string | null;
+    orderTotalAmount?: number | null;
+}
+
+export interface MergeTableRequest {
+    tableIds: string[];
+    reservationId?: string | null;
+    customerId?: string | null;
+}
+
+export interface MergeTableResponse {
+    orderId?: string | null;
+    requiresManualResolution: boolean;
+    message: string;
+    existingOrderIds: string[];
+    sessions: TableSessionInfo[];
+}
+
+const normalizeSessionInfo = (payload: unknown): TableSessionInfo | null => {
+    if (!payload || typeof payload !== 'object') return null;
+
+    const data = payload as Record<string, unknown>;
+    const id = String(data.id ?? data.sessionId ?? '').trim();
+    const tableId = String(data.tableId ?? '').trim();
+    const startedAt = String(data.startedAt ?? '').trim();
+
+    if (!id || !tableId || !startedAt) return null;
+
+    return {
+        id,
+        sessionId: String(data.sessionId ?? data.id ?? id),
+        tableId,
+        tableCode: typeof data.tableCode === 'string' ? data.tableCode : undefined,
+        orderId: typeof data.orderId === 'string' ? data.orderId : null,
+        reservationId: typeof data.reservationId === 'string' ? data.reservationId : null,
+        startedAt,
+        endedAt: typeof data.endedAt === 'string' ? data.endedAt : null,
+        isActive: Boolean(data.isActive),
+        orderReference: typeof data.orderReference === 'string' ? data.orderReference : null,
+        orderTotalAmount: typeof data.orderTotalAmount === 'number' ? data.orderTotalAmount : null,
+    };
+};
+
+const normalizeSessionList = (payload: unknown): TableSessionInfo[] => {
+    if (Array.isArray(payload)) {
+        return payload.map(normalizeSessionInfo).filter((item): item is TableSessionInfo => Boolean(item));
+    }
+
+    const envelope = payload as Record<string, unknown> | null;
+    const nested = envelope?.data;
+    if (Array.isArray(nested)) {
+        return nested.map(normalizeSessionInfo).filter((item): item is TableSessionInfo => Boolean(item));
+    }
+
+    const single = normalizeSessionInfo(payload);
+    return single ? [single] : [];
+};
 
 /**
  * Build a FormData from a Partial<TableItem>.
@@ -164,6 +232,51 @@ export const tableService = {
         );
         return response.data;
     },
+
+    /** GET /api/tables/sessions — Requires Auth (Admin/Staff) */
+    getTableSessions: async (at?: string): Promise<TableSessionInfo[]> => {
+        const params = at ? { at } : {};
+        const response = await axiosInstance.get<unknown>('/tables/sessions', { params });
+        return normalizeSessionList(response.data);
+    },
+
+    /** POST /api/tables/{tableId}/sessions — Create a new table session */
+    createTableSession: async (tableId: string, customerId?: string, reservationId?: string): Promise<TableSessionInfo> => {
+        const params: Record<string, string> = {};
+        if (customerId) params.customerId = customerId;
+        if (reservationId) params.reservationId = reservationId;
+        const response = await axiosInstance.post<unknown>(`/tables/${tableId}/sessions`, null, { params });
+        const normalized = normalizeSessionInfo(response.data);
+        if (!normalized) throw new Error('Invalid table session payload');
+        return normalized;
+    },
+
+    /** PUT /api/tables/{tableId}/sessions/close — Close active session */
+    closeTableSession: async (tableId: string): Promise<void> => {
+        await axiosInstance.put(`/tables/${tableId}/sessions/close`);
+    },
+
+    /** POST /api/tables/merge — Merge multiple tables */
+    mergeTables: async (request: MergeTableRequest): Promise<MergeTableResponse> => {
+        try {
+            const response = await axiosInstance.post<MergeTableResponse>('/tables/merge', request);
+            return response.data;
+        } catch (error: unknown) {
+            const conflictResponse = (error as {
+                response?: {
+                    status?: number;
+                    data?: MergeTableResponse;
+                };
+            }).response;
+
+            // BE returns 409 when multiple existing orders require manual resolution.
+            if (conflictResponse?.status === 409 && conflictResponse.data?.requiresManualResolution) {
+                return conflictResponse.data;
+            }
+
+            throw error;
+        }
+    },
 };
 
 /** Summary DTO returned by GET /api/floors */
@@ -197,7 +310,7 @@ export interface FloorLayoutTableItem {
     id: string;
     code: string;
     seatingCapacity: number;
-    /** Numeric enum as string: "0"=Available, "1"=Reserved, "2"=Occupied */
+    /** Numeric enum as string: "0"=Available, "1"=Occupied */
     status: string;
     layout: {
         x: number;

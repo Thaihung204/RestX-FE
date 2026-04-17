@@ -34,6 +34,7 @@ i18n
     resources,
     lng: getInitialLanguage(), // Get language from localStorage or default to 'vi'
     fallbackLng: 'vi',
+    ns: ['common', 'dashboard', 'auth'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false, // React already does escaping

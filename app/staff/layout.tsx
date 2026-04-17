@@ -2,6 +2,7 @@
 
 import StaffAuthGuard from "@/components/auth/StaffAuthGuard";
 import {
+  ApartmentOutlined,
   BellOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
@@ -13,7 +14,7 @@ import {
   MenuUnfoldOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
-  TableOutlined,
+
   UserOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
@@ -78,7 +79,9 @@ export default function StaffLayout({
     .toLowerCase();
   const isKitchenPosition =
     normalizedPosition === "kitchen" ||
-    normalizedPosition === "kitchen staff";
+    normalizedPosition === "kitchen staff" ||
+    normalizedPosition.includes("kitchen") ||
+    normalizedPosition === "chef";
   const isWaiterPosition = normalizedPosition === "waiter";
 
   const initials = displayName
@@ -93,43 +96,51 @@ export default function StaffLayout({
     {
       key: "/staff",
       icon: <DashboardOutlined />,
-      label: t("staff.menu.dashboard"),
-    },
-    {
-      key: "/staff/tables",
-      icon: <TableOutlined />,
-      label:
-        isMobile || isTablet
-          ? t("staff.menu.tables_short")
-          : t("staff.menu.tables"),
+      label: t("dashboard.staff.menu.dashboard"),
     },
     {
       key: "/staff/orders",
       icon: <ShoppingCartOutlined />,
       label:
         isMobile || isTablet
-          ? t("staff.menu.orders_short")
-          : t("staff.menu.orders"),
+          ? t("dashboard.staff.menu.orders_short")
+          : t("dashboard.staff.menu.orders"),
+    },
+    {
+      key: "/staff/activity",
+      icon: <ApartmentOutlined />,
+      label:
+        isMobile || isTablet
+          ? t("staff.menu.activity_short", {
+              defaultValue: t("dashboard.staff.menu.tables_short", {
+                defaultValue: "Tables",
+              }),
+            })
+          : t("staff.menu.activity", {
+              defaultValue: t("dashboard.staff.menu.tables", {
+                defaultValue: "Tables",
+              }),
+            }),
     },
     {
       key: "/staff/kitchen",
       icon: <FireOutlined />,
-      label: t("staff.menu.kitchen"),
+      label: t("dashboard.staff.menu.kitchen"),
     },
     {
       key: "/staff/checkout",
       icon: <WalletOutlined />,
-      label: t("staff.menu.checkout"),
+      label: t("dashboard.staff.menu.checkout"),
     },
     {
       key: "/staff/reservations",
       icon: <CalendarOutlined />,
-      label: t("staff.menu.reservations"),
+      label: t("dashboard.staff.menu.reservations"),
     },
     {
       key: "/staff/attendance",
       icon: <ClockCircleOutlined />,
-      label: t("staff.menu.attendance"),
+      label: t("dashboard.staff.menu.attendance"),
     },
   ];
 
@@ -141,7 +152,7 @@ export default function StaffLayout({
         "/staff/checkout",
         "/staff/orders",
         "/staff/reservations",
-        "/staff/tables",
+        "/staff/activity",
       ].includes(item.key);
     }
 
@@ -265,7 +276,7 @@ export default function StaffLayout({
       "/staff/checkout",
       "/staff/orders",
       "/staff/reservations",
-      "/staff/tables",
+      "/staff/activity",
     ];
 
     const shouldRedirectKitchen =
@@ -326,6 +337,7 @@ export default function StaffLayout({
           style={{
             display: "flex",
             alignItems: "center",
+            gap: 5,
             textDecoration: "none",
           }}>
           <div
@@ -566,7 +578,7 @@ export default function StaffLayout({
           style={{
             flex: 1,
             minWidth: 0,
-            height: "100%",
+            minHeight: 0,
             overflowY: "auto",
             overflowX: "hidden",
             WebkitOverflowScrolling: "touch",
@@ -634,7 +646,7 @@ export default function StaffLayout({
                       whiteSpace: "nowrap",
                     }}>
                     {menuItems.find((item) => item.key === pathname)?.label ||
-                      t("staff.menu.dashboard")}
+                      t("dashboard.staff.menu.dashboard")}
                   </Text>
                 </div>
               </div>
@@ -700,8 +712,7 @@ export default function StaffLayout({
               {/* Language switcher - hidden on very small screens if needed, or just keep it */}
               <div
                 style={{
-                  display:
-                    isMobile && window.innerWidth < 360 ? "none" : "block",
+                  display: isMobile ? "none" : "block",
                 }}>
                 <LanguageSwitcher />
               </div>

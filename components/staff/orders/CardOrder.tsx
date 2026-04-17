@@ -1,110 +1,306 @@
-import { Card, Select, Typography, Space, Divider, Tag } from "antd";
-import { ClockCircleOutlined, DollarOutlined, FileTextOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import { DownOutlined, UpOutlined } from "@ant-design/icons";
+import { Button, Card, Select, Space, Tag, Typography } from "antd";
+import type { DefaultOptionType } from "antd/es/select";
+import { useState } from "react";
 
 const { Text } = Typography;
 
-export type OrderStatusId = 0 | 1 | 2 | 3 | 4;
-export type OrderStatusUi = "pending" | "confirmed" | "serving" | "completed" | "cancelled";
+type OrderItemStatus = string;
 
-export interface OrderItem {
+interface OrderItem {
   id: string;
-  dishId: string;
   name: string;
   quantity: number;
-  price: number;
   note?: string;
-  status: string;
+  status: OrderItemStatus;
 }
 
-export interface Order {
+interface OrderStatus {
+  id: string;
+  name: string;
+  code: string;
+  color: string;
+}
+
+interface Order {
   id: string;
   reference: string;
-  tableId: string;
-  tableName: string;
-  items: OrderItem[];
   detailItems: OrderItem[];
-  createdAt: string;
   total: number;
-  notes?: string;
-  orderStatusId: OrderStatusId;
-  orderStatus: OrderStatusUi;
-  raw?: any;
+  raw?: {
+    paymentStatusId?: number;
+  };
+  orderStatusId: number;
+  tableSessions?: Array<{
+    id?: string;
+    tableId?: string;
+    tableCode?: string;
+  }>;
 }
 
 interface CardOrderProps {
   order: Order;
-  mode: "light" | "dark";
   isMobile: boolean;
+  mode: "light" | "dark";
+  statusOptions: DefaultOptionType[];
+  orderStatuses: OrderStatus[];
+  orderStatusOptions: DefaultOptionType[];
   isUpdatingOrderStatus: boolean;
-  orderStatusOptions: { value: number; label: string; className: string }[];
-  orderStatusStyleMap: Record<OrderStatusUi, { bg: string; border: string }>;
-  onOpenDetail: (order: Order) => void;
-  onUpdateOrderStatus: (orderId: string, statusId: OrderStatusId) => void;
+  isUpdatingDetailStatus: boolean;
+  normalizeStatusValue: (status: OrderItemStatus) => string;
+  handleUpdateOrderStatus: (orderId: string, statusId: number) => void;
+  handleUpdateDetailStatus: (
+    orderId: string,
+    detailId: string,
+    statusValue: string,
+  ) => void;
+  onViewDetails?: (orderId: string) => void;
+  t: (key: string) => string;
 }
 
 export default function CardOrder({
   order,
-  mode,
   isMobile,
-  isUpdatingOrderStatus,
+  mode,
+  statusOptions,
+  orderStatuses,
   orderStatusOptions,
-  orderStatusStyleMap,
-  onOpenDetail,
-  onUpdateOrderStatus,
+  isUpdatingOrderStatus,
+  isUpdatingDetailStatus,
+  normalizeStatusValue,
+  handleUpdateOrderStatus,
+  handleUpdateDetailStatus,
+  onViewDetails,
+  t,
 }: CardOrderProps) {
-  const orderStyle = orderStatusStyleMap[order.orderStatus];
+  const [isExpanded, setIsExpanded] = useState(true);
+  const textSizes = {
+    table: isMobile ? 16 : 18,
+    reference: isMobile ? 14 : 15,
+    detailHeader: isMobile ? 14 : 15,
+    itemName: isMobile ? 14 : 15,
+    itemNote: isMobile ? 12 : 13,
+    quantity: isMobile ? 13 : 14,
+    total: isMobile ? 16 : 17 ,
+  };
+  const currentStatus = orderStatuses?.find(s => Number(s.id) === order.orderStatusId);
+  const styleColor = currentStatus?.color || "#E5E5E5";
+  const bgLight = `${styleColor}15`;
+  const borderLight = `${styleColor}40`;
+  const bgDark = `${styleColor}20`;
+  const borderDark = `${styleColor}50`;
+
+  const orderStyle = {
+    bg: mode === "dark" ? bgDark : bgLight,
+    border: mode === "dark" ? borderDark : borderLight,
+  };
 
   return (
     <Card
-      hoverable
-      onClick={() => onOpenDetail(order)}
+      onClick={() => onViewDetails?.(order.id)}
       style={{
-        borderRadius: 16,
+        borderRadius: 12,
         border: `1px solid ${orderStyle.border}`,
+        marginBottom: isMobile ? 12 : 16,
         overflow: "hidden",
         background: orderStyle.bg,
-        boxShadow: mode === "dark" ? "0 4px 12px rgba(0, 0, 0, 0.2)" : "0 4px 12px rgba(0, 0, 0, 0.05)",
-        transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
+        boxShadow:
+          mode === "dark"
+            ? "0 2px 8px rgba(0, 0, 0, 0.3)"
+            : "0 2px 8px rgba(0, 0, 0, 0.08)",
+        transition: "all 0.3s ease",
+        cursor: onViewDetails ? "pointer" : "default",
       }}
-      styles={{ body: { padding: isMobile ? 14 : 16 } }}>
-      
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-        <Space align="start">
-          <div style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            background: mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.8)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: mode === "dark" ? "none" : "0 2px 6px rgba(0,0,0,0.04)"
-          }}>
-             <FileTextOutlined style={{ fontSize: 20, color: "var(--primary)" }} />
+      styles={{ body: { padding: isMobile ? 12 : 16 } }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          flexWrap: "wrap",
+          gap: 8,
+        }}>
+        <div style={{ flex: 1, minWidth: isMobile ? "100%" : "auto" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: isMobile ? 10 : 12,
+              marginBottom: isMobile ? 10 : 12,
+            }}>
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 8,
+                  flexWrap: "wrap",
+                }}>
+                <Text
+                  strong
+                  style={{
+                    fontSize: textSizes.table,
+                    fontWeight: 500,
+                    lineHeight: 1.3,
+                  }}>
+                  {t("staff.orders.order.table")} {order.tableSessions?.map((s) => s.tableCode).join(" - ")}
+                </Text>
+                <div
+                  onClick={(event) => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}>
+                  <Select
+                    value={order.orderStatusId}
+                    size="small"
+                    style={{ minWidth: isMobile ? 102 : 116, fontSize: isMobile ? 11 : 12 }}
+                    className="order-status-select"
+                    onChange={(value) =>
+                      handleUpdateOrderStatus(order.id, Number(value))
+                    }
+                    disabled={isUpdatingOrderStatus}
+                    options={orderStatusOptions}
+                  />
+                </div>
+              </div>
+              <Text
+                style={{
+                  fontSize: textSizes.reference,
+                  color:
+                    mode === "dark"
+                      ? "rgba(255, 255, 255, 0.5)"
+                      : "rgba(0, 0, 0, 0.5)",
+                  fontWeight: 400,
+                  lineHeight: 1.3,
+                }}>
+                {order.reference}
+              </Text>
+            </div>
           </div>
-          <div>
-            <Text strong style={{ fontSize: 16, display: 'block', lineHeight: 1.2 }}>
-              {order.reference}
-            </Text>
-            <Space size={4} style={{ color: mode === "dark" ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)", fontSize: 13, marginTop: 4 }}>
-              <ClockCircleOutlined />
-              <Text type="secondary">{order.createdAt || "N/A"}</Text>
-            </Space>
+
+          <div style={{ marginBottom: isMobile ? 12 : 16 }}>
+            {order.detailItems.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setIsExpanded((prev) => !prev);
+                  }}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    cursor: "pointer",
+                    padding: isMobile ? "8px 0" : "10px 0",
+                    borderBottom:
+                      mode === "dark"
+                        ? "1px dashed rgba(255, 255, 255, 0.12)"
+                        : "1px dashed #D9D9D9",
+                  }}>
+                  <Text
+                    strong
+                    style={{
+                      fontSize: textSizes.detailHeader,
+                    }}>
+                    {t("staff.orders.modal.order_detail")}
+                  </Text>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={isExpanded ? <UpOutlined /> : <DownOutlined />}
+                    style={{ paddingInline: 4, fontSize: isMobile ? 11 : 12, height: isMobile ? 24 : 26 }}>
+                    {isExpanded ? t("staff.orders.actions.collapse") : t("staff.orders.actions.expand")}
+                  </Button>
+                </div>
+
+                {isExpanded &&
+                  order.detailItems.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={(event) => event.stopPropagation()}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                        padding: isMobile ? "6px 0" : "8px 0",
+                        borderBottom:
+                          mode === "dark"
+                            ? "1px dashed rgba(255, 255, 255, 0.08)"
+                            : "1px dashed #EDEDED",
+                      }}>
+                      <div style={{ flex: 1, minWidth: 0, paddingLeft: 12 }}>
+                        <Text
+                          style={{
+                            fontSize: textSizes.itemName,
+                            fontWeight: 500,
+                            display: "block",
+                            lineHeight: 1.3,
+                          }}>
+                          {item.name}
+                        </Text>
+                      </div>
+                      <Space size={isMobile ? 6 : 8} style={{ alignItems: "center" }}>
+                        <Tag
+                          style={{
+                            margin: 0,
+                            borderRadius: 8,
+                            fontSize: textSizes.quantity,
+                            lineHeight: 1.2,
+                            paddingInline: isMobile ? 6 : 8,
+                          }}>
+                          x{item.quantity}
+                        </Tag>
+                        <div
+                          onClick={(event) => event.stopPropagation()}
+                          onMouseDown={(event) => event.stopPropagation()}>
+                          <Select
+                            value={normalizeStatusValue(item.status)}
+                            size="small"
+                            style={{ minWidth: isMobile ? 82 : 98, fontSize: isMobile ? 11 : 12 }}
+                            className="order-detail-status-select"
+                            onChange={(value) =>
+                              handleUpdateDetailStatus(order.id, item.id, String(value))
+                            }
+                            disabled={isUpdatingDetailStatus}
+                            options={statusOptions}
+                            popupMatchSelectWidth={false}
+                          />
+                        </div>
+                      </Space>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <Text
+                style={{
+                  fontSize: isMobile ? 12 : 13,
+                  color:
+                    mode === "dark"
+                      ? "rgba(255, 255, 255, 0.5)"
+                      : "rgba(0, 0, 0, 0.45)",
+                }}>
+                {t("staff.orders.empty")}
+              </Text>
+            )}
           </div>
-        </Space>
-        
-        <div onClick={(event) => event.stopPropagation()} onMouseDown={(event) => event.stopPropagation()}>
-          <Select
-            value={order.orderStatusId}
-            size="middle"
-            style={{ width: 140 }}
-            className="order-status-select"
-            onChange={(value) => onUpdateOrderStatus(order.id, value as OrderStatusId)}
-            disabled={isUpdatingOrderStatus}
-            options={orderStatusOptions}
-            onClick={(e) => e.stopPropagation()}
-            popupMatchSelectWidth={false}
-          />
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: isMobile ? 8 : 16,
+              flexWrap: "wrap",
+            }}>
+            {/* <Text
+              strong
+              style={{ color: "var(--primary)", fontSize: textSizes.total }}>
+              {order.total.toLocaleString("vi-VN")}đ
+            </Text> */}
+          </div>
         </div>
       </div>
     </Card>

@@ -11,7 +11,7 @@ import { TableDetailsDrawer } from "./components/TableDetailsDrawer";
 import { TableMap2D, Layout, Floor } from "./components/TableMap2D";
 import { tableService, TableStatus, floorService, FloorSummary, PanoramaImage } from "@/lib/services/tableService";
 import { usePageLoading } from "@/components/PageTransitionLoader";
-import { App } from "antd";
+import { App, Spin } from "antd";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import { HubConnectionState } from "@microsoft/signalr";
 import { tenantService } from "@/lib/services/tenantService";
@@ -20,7 +20,7 @@ interface Table {
   id: string;
   number: string;
   capacity: number;
-  status: "available" | "occupied" | "reserved" | "cleaning";
+  status: "available" | "occupied";
   area: string; // floorName from BE
   floorId?: string; // BE floor GUID
   currentOrder?: string;
@@ -73,16 +73,6 @@ export default function TablesPage() {
       badge:
         "bg-[var(--primary-soft)] text-[var(--primary)] border-[var(--primary-border)]",
     },
-    reserved: {
-      color: "bg-blue-500",
-      text: tDashboard("tables.status.reserved"),
-      badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    },
-    cleaning: {
-      color: "bg-red-500",
-      text: tDashboard("tables.status.cleaning"),
-      badge: "bg-red-500/10 text-red-500 border-red-500/20",
-    },
   };
 
   const filteredTables = tables.filter((table) => {
@@ -100,7 +90,33 @@ export default function TablesPage() {
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
   const [loading] = useState(false);
   const [tenantId, setTenantId] = useState<string>("");
+  const [isUploadingPanorama, setIsUploadingPanorama] = useState(false);
+  const [isMergingTableRequest, setIsMergingTableRequest] = useState(false);
   usePageLoading(loading, { onlyInitial: true, key: "admin-tables-initial" });
+
+  const getApiErrorMessage = (error: unknown): string | null => {
+    const responseData = (error as { response?: { data?: unknown } })?.response?.data;
+
+    if (typeof responseData === "string" && responseData.trim()) {
+      return responseData;
+    }
+
+    if (responseData && typeof responseData === "object") {
+      const obj = responseData as Record<string, unknown>;
+      if (typeof obj.message === "string" && obj.message.trim()) {
+        return obj.message;
+      }
+      if (typeof obj.title === "string" && obj.title.trim()) {
+        return obj.title;
+      }
+    }
+
+    if (error instanceof Error && error.message.trim()) {
+      return error.message;
+    }
+
+    return null;
+  };
 
   // Fetch tables + floors from BE API
   const fetchTables = async () => {
@@ -120,9 +136,7 @@ export default function TablesPage() {
 
       const mappedTables: Table[] = items.map(item => {
         let status: Table['status'] = 'available';
-        if (item.tableStatusId === TableStatus.Reserved) status = 'reserved';
         if (item.tableStatusId === TableStatus.Occupied) status = 'occupied';
-        if (item.tableStatusName?.toLowerCase() === 'cleaning') status = 'cleaning';
 
         return {
           id: item.id,
@@ -251,7 +265,7 @@ export default function TablesPage() {
           tenantId: 'tenant-1',
           name: tDashboard('tables.card.table_name', { number: table.number }),
           seats: table.capacity,
-          status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : table.status === 'reserved' ? 'RESERVED' : 'DISABLED',
+          status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : 'DISABLED',
           area: table.area,
           position: { x: table.positionX, y: table.positionY },
           shape: table.shape as any,
@@ -287,7 +301,7 @@ export default function TablesPage() {
             tenantId: 'tenant-1',
             name: tDashboard('tables.card.table_name', { number: table.number }),
             seats: table.capacity,
-            status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : table.status === 'reserved' ? 'RESERVED' : table.status === 'cleaning' ? 'CLEANING' : 'DISABLED',
+            status: table.status === 'available' ? 'AVAILABLE' : table.status === 'occupied' ? 'OCCUPIED' : 'DISABLED',
             area: table.area,
             position: { x: table.positionX, y: table.positionY },
             shape: table.shape as any,
@@ -355,7 +369,6 @@ export default function TablesPage() {
       };
 
       if (tableToUpdate.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
-      else if (tableToUpdate.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
 
       console.log('[Admin] Saving table position:', { tableId, x: position.x, y: position.y, floorId: effectiveFloorId });
       await tableService.updateTable(tableId, apiData);
@@ -410,7 +423,6 @@ export default function TablesPage() {
       };
 
       if (tableToUpdate.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
-      else if (tableToUpdate.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
 
       await tableService.updateTable(tableId, apiData);
 
@@ -426,32 +438,60 @@ export default function TablesPage() {
 
   // Table Merge Handler
   const handleTableMerge = async (sourceTableId: string, targetTableId: string) => {
+    if (isMergingTableRequest || sourceTableId === targetTableId) return;
+
     const sourceTable = tables.find(t => t.id === sourceTableId);
     const targetTable = tables.find(t => t.id === targetTableId);
 
     if (!sourceTable || !targetTable) return;
 
-    if (!confirm(tDashboard("tables.confirm_merge", { defaultValue: "Merge tables? This will combine capacity and hide the source table." }))) {
+    if (!sourceTable.isActive || !targetTable.isActive) {
+      message.warning(tDashboard("tables.merge.inactive_table", {
+        defaultValue: "Only active tables can be merged.",
+      }));
       return;
     }
 
-    const newCapacity = sourceTable.capacity + targetTable.capacity;
+    const hasAnyOccupiedTable = sourceTable.status === "occupied" || targetTable.status === "occupied";
+    if (!hasAnyOccupiedTable) {
+      message.warning(tDashboard("floor_activity.merge.no_order_selected", {
+        defaultValue: "Select at least one table with an active order to merge.",
+      }));
+      return;
+    }
 
-    // Optimistic
-    setTables(prev =>
-      prev.map(t => {
-        if (t.id === sourceTableId) return { ...t, isActive: false };
-        if (t.id === targetTableId) return { ...t, capacity: newCapacity };
-        return t;
-      })
-    );
+    if (!confirm(tDashboard("tables.merge.confirm_prompt", {
+      defaultValue: "Merge these tables into one service group? This does not change capacity or hide any table.",
+    }))) {
+      return;
+    }
 
+    setIsMergingTableRequest(true);
     try {
-      await tableService.updateTable(targetTableId, { seatingCapacity: newCapacity, floorId: targetTable.floorId });
-      await tableService.updateTable(sourceTableId, { isActive: false, floorId: sourceTable.floorId });
+      const response = await tableService.mergeTables({
+        tableIds: [sourceTableId, targetTableId],
+      });
+
+      if (response.requiresManualResolution) {
+        message.warning(tDashboard("floor_activity.merge.manual_required", {
+          defaultValue: "Manual resolution is required because multiple active orders were found.",
+        }));
+      } else {
+        message.success(tDashboard("floor_activity.merge.success", {
+          defaultValue: "Tables merged successfully!",
+        }));
+      }
+
+      await fetchTables();
     } catch (err) {
       console.error("Merge failed:", err);
-      fetchTables();
+      message.error(
+        getApiErrorMessage(err) ||
+        tDashboard("floor_activity.merge.error", { defaultValue: "Failed to merge tables" }),
+      );
+      await fetchTables();
+    } finally {
+      setIsMergingTableRequest(false);
     }
   };
 
@@ -529,7 +569,6 @@ export default function TablesPage() {
         if (keys.length === 1 && keys[0] === 'status' && values.status) {
           let statusId = TableStatus.Available;
           if (values.status === 'occupied') statusId = TableStatus.Occupied;
-          else if (values.status === 'reserved') statusId = TableStatus.Reserved;
 
           await tableService.updateStatus(selectedTable.id, statusId);
         } else {
@@ -555,7 +594,6 @@ export default function TablesPage() {
           };
 
           if (selectedTable.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
-          else if (selectedTable.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
 
           if (values.number !== undefined) apiData.code = values.number;
           if (values.capacity !== undefined) apiData.seatingCapacity = values.capacity;
@@ -571,7 +609,6 @@ export default function TablesPage() {
           if (values.status !== undefined) {
             if (values.status === 'available') apiData.tableStatusId = TableStatus.Available;
             else if (values.status === 'occupied') apiData.tableStatusId = TableStatus.Occupied;
-            else if (values.status === 'reserved') apiData.tableStatusId = TableStatus.Reserved;
           }
 
           await tableService.updateTable(selectedTable.id, apiData);
@@ -582,8 +619,6 @@ export default function TablesPage() {
       } finally {
         fetchTables();
       }
-      setDrawerOpen(false);
-      setSelectedTable(null);
     }
   };
 
@@ -613,9 +648,7 @@ export default function TablesPage() {
         isActive: tableToUpdate.isActive,
         tableStatusId: tableToUpdate.status === 'occupied'
           ? TableStatus.Occupied
-          : tableToUpdate.status === 'reserved'
-            ? TableStatus.Reserved
-            : TableStatus.Available,
+          : TableStatus.Available,
         has3DView: clear ? false : Boolean(file || tableToUpdate.cubeFrontImageUrl || tableToUpdate.defaultViewUrl),
         viewDescription: clear ? '' : 'Panorama',
         defaultViewUrl: clear ? '' : (tableToUpdate.cubeFrontImageUrl || tableToUpdate.defaultViewUrl || ''),
@@ -627,12 +660,37 @@ export default function TablesPage() {
         front: file,
       };
 
-      await tableService.updateTableWithPanorama(tableId, tableData, panoramaPayload, clear);
-      message.success(tDashboard('tables.panorama_saved', { defaultValue: 'Đã lưu ảnh panorama!' }));
-      await fetchTables();
+      setIsUploadingPanorama(true);
+
+      try {
+        const result = await tableService.updateTableWithPanorama(tableId, tableData, panoramaPayload, clear);
+        setIsUploadingPanorama(false);
+        message.success(tDashboard('tables.panorama_saved', { defaultValue: 'Lưu ảnh panorama thành công!' }));
+
+        // Update local state directly from BE response instead of refetching all tables
+        const cacheBust = Date.now();
+        const withCB = (url?: string) => {
+          if (!url) return undefined;
+          return `${url}${url.includes('?') ? '&' : '?'}v=${cacheBust}`;
+        };
+        setTables(prev => prev.map(t => {
+          if (t.id !== tableId) return t;
+          return {
+            ...t,
+            cubeFrontImageUrl: withCB(result.cubeFrontImageUrl),
+            defaultViewUrl: result.defaultViewUrl || (clear ? '' : t.defaultViewUrl),
+            has3DView: result.has3DView ?? !clear,
+          };
+        }));
+      } catch (err) {
+        setIsUploadingPanorama(false);
+        throw err;
+      }
     } catch (err) {
       console.error('Failed to save panorama:', err);
       message.error(tDashboard('tables.panorama_save_failed', { defaultValue: 'Lưu ảnh panorama thất bại' }));
+      // Only refetch all tables on error to restore consistent state
+      await fetchTables();
     }
   };
 
@@ -725,6 +783,7 @@ export default function TablesPage() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[var(--bg-base)]">
+      <Spin fullscreen spinning={isUploadingPanorama} tip={tDashboard('tables.panorama_saving', { defaultValue: 'Đang tải ảnh panorama lên hệ thống...' })} size="large" />
       <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -806,11 +865,11 @@ export default function TablesPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl p-4 bg-[var(--card)] border border-green-500/20">
+            <div className="rounded-xl p-4 bg-[var(--card)] border border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.available")}</p>
-                  <p className="text-3xl font-bold text-green-500 mt-1">{tables.filter(t => t.status === 'available').length}</p>
+                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.total_tables")}</p>
+                  <p className="text-3xl font-bold text-[var(--text)] mt-1">{tables.length}</p>
                 </div>
               </div>
             </div>
@@ -822,11 +881,11 @@ export default function TablesPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl p-4 bg-[var(--card)] border border-blue-500/20">
+            <div className="rounded-xl p-4 bg-[var(--card)] border border-green-500/20">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.reserved")}</p>
-                  <p className="text-3xl font-bold text-blue-500 mt-1">{tables.filter(t => t.status === 'reserved').length}</p>
+                  <p className="text-sm text-[var(--text-muted)]">{tDashboard("tables.stats.available")}</p>
+                  <p className="text-3xl font-bold text-green-500 mt-1">{tables.filter(t => t.status === 'available').length}</p>
                 </div>
               </div>
             </div>
@@ -847,7 +906,7 @@ export default function TablesPage() {
                 readOnly={false}
                 selectedTableIds={selectedTable?.id ? [selectedTable.id] : []}
                 renderTableContent={(table) => {
-                  const hasOrder = table.status === "OCCUPIED" || table.status === "RESERVED";
+                  const hasOrder = table.status === "OCCUPIED";
                   return hasOrder && (
                     <div className="absolute -top-1 -right-1 bg-red-500 w-3 h-3 rounded-full" />
                   );

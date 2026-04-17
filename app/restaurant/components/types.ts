@@ -13,9 +13,7 @@ export interface BookingData {
 
 export enum TableStatus {
     Available = 0,
-    Reserved = 1,
-    Occupied = 2,
-    Cleaning = 3
+    Occupied = 1
 }
 
 export interface Table {

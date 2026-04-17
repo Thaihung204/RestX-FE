@@ -8,8 +8,9 @@ import { tableService, floorService, TableStatus, FloorLayoutTableItem } from '@
 import reservationService from '@/lib/services/reservationService';
 import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
+import TablePreview3DModal from './TablePreview3DModal';
 
-import { DatePicker, Select } from 'antd';
+import { DatePicker, TimePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -146,6 +147,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [layout, setLayout] = useState<Layout | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(false);
     const [selectedTables, setSelectedTables] = useState<Table[]>([]);
+    const [panoramaMap, setPanoramaMap] = useState<Map<string, { tableLabel: string; imageUrl: string }>>(new Map());
+    const [is3DModalOpen, setIs3DModalOpen] = useState(false);
+    const [panoramaTableData, setPanoramaTableData] = useState<TableData | null>(null);
+    const [active360TableId, setActive360TableId] = useState<string | null>(null);
     const [userDetails, setUserDetails] = useState<UserDetails>({
         name: '',
         phone: '',
@@ -158,6 +163,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [confirmationCode, setConfirmationCode] = useState<string>('');
     const [reservationId, setReservationId] = useState<string>('');
+    const [depositCheckoutUrl, setDepositCheckoutUrl] = useState<string>('');
+    const [depositPaymentDeadline, setDepositPaymentDeadline] = useState<string>('');
 
     const totalSelectedCapacity = useMemo(
         () => selectedTables.reduce((sum, table) => sum + (table.capacity || 0), 0),
@@ -215,11 +222,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 };
 
                 /** Convert numeric-string status from BE floor layout to TableData status */
-                const parseLayoutStatus = (s: string): 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'CLEANING' => {
+                const parseLayoutStatus = (s: string): 'AVAILABLE' | 'OCCUPIED' => {
                     const normalized = s?.toLowerCase();
-                    if (s === '3' || normalized === 'cleaning') return 'CLEANING';
-                    if (s === '2' || normalized === 'occupied') return 'OCCUPIED';
-                    if (s === '1' || normalized === 'reserved') return 'RESERVED';
+                    if (s === '1' || normalized === 'occupied') return 'OCCUPIED';
                     return 'AVAILABLE';
                 };
 
@@ -254,6 +259,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         height: Number(t.layout.height) || 100,
                                         rotation: Number(t.layout.rotation) || 0,
                                         zoneId: floorSummary.name,
+                                        photo360Url: (t as any).cubeFrontImageUrl || (
+                                            floorSummary.name?.toLowerCase().includes('vip')
+                                                ? "/images/restaurant/warm_restaurant.webp"
+                                                : "/images/restaurant/bush_restaurant.webp"
+                                        ),
                                     };
                                 }
                             );
@@ -295,10 +305,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                         const maxX = Math.max(...floorTables.map(t => (t.positionX ?? 0) + (t.width ?? 100)), 800);
                         const maxY = Math.max(...floorTables.map(t => (t.positionY ?? 0) + (t.height ?? 100)), 600);
                         const tableDataList: TableData[] = floorTables.map(t => {
-                            let status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'CLEANING' = 'AVAILABLE';
-                            if (t.tableStatusName?.toLowerCase() === 'cleaning') status = 'CLEANING';
-                            else if (t.tableStatusId === TableStatus.Occupied) status = 'OCCUPIED';
-                            else if (t.tableStatusId === TableStatus.Reserved) status = 'RESERVED';
+                            let status: 'AVAILABLE' | 'OCCUPIED' = 'AVAILABLE';
+                            if (t.tableStatusId === TableStatus.Occupied) status = 'OCCUPIED';
                             return {
                                 id: t.id,
                                 tenantId: tenant?.id || 'default',
@@ -315,6 +323,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 height: t.height ?? 100,
                                 rotation: t.rotation ?? 0,
                                 zoneId: typeName,
+                                photo360Url: t.cubeFrontImageUrl || (
+                                    typeName?.toLowerCase().includes('vip')
+                                        ? "/images/restaurant/warm_restaurant.webp"
+                                        : "/images/restaurant/bush_restaurant.webp"
+                                ),
                             };
                         });
                         return {
@@ -358,12 +371,55 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 rotation: table.rotation || 0,
     });
 
-    const handleMapTableClick = (table: TableData) => {
+    const handleMapTableClick = async (table: TableData) => {
+        const alreadySelected = selectedTables.some(t => t.id === table.id);
+
         setSelectedTables(prev => {
-            const exists = prev.some(t => t.id === table.id);
-            if (exists) return prev.filter(t => t.id !== table.id);
+            if (alreadySelected) return prev.filter(t => t.id !== table.id);
             return [...prev, buildSelectedTable(table)];
         });
+
+        if (alreadySelected) {
+            // Remove panorama entry for this table
+            setPanoramaMap(prev => {
+                const next = new Map(prev);
+                next.delete(table.id);
+                return next;
+            });
+            if (active360TableId === table.id) {
+                setIs3DModalOpen(false);
+                setPanoramaTableData(null);
+                setActive360TableId(null);
+            }
+            return;
+        }
+
+        try {
+            const fullTable = await tableService.getTableById(table.id);
+            console.log('[ReservationSection] getTableById response:', {
+                id: fullTable?.id,
+                code: fullTable?.code,
+                defaultViewUrl: fullTable?.defaultViewUrl,
+                cubeFrontImageUrl: fullTable?.cubeFrontImageUrl,
+                has3DView: fullTable?.has3DView,
+            });
+            // Panorama 360 (equirectangular) — check both fields (admin may upload to either)
+            const imageUrl = fullTable?.cubeFrontImageUrl || fullTable?.defaultViewUrl || '';
+            if (imageUrl) {
+                setPanoramaMap(prev => {
+                    const next = new Map(prev);
+                    next.set(table.id, {
+                        tableLabel: table.name,
+                        imageUrl,
+                    });
+                    return next;
+                });
+                setPanoramaTableData(table);
+                setActive360TableId(table.id);
+            }
+        } catch (err) {
+            console.warn('[ReservationSection] Failed to fetch table details for 360:', err);
+        }
     };
 
     // --- Gemini Integration ---
@@ -423,6 +479,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     };
 
 
+    // The old inline THREE.js panorama viewer has been replaced by TablePreview3DModal
+
     const handleCompleteReservation = async () => {
         if (selectedTables.length === 0) return;
 
@@ -434,6 +492,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
         setIsSubmitting(true);
         setSubmitError(null);
+        setDepositCheckoutUrl('');
+        setDepositPaymentDeadline('');
 
         try {
             // Combine date + time thành ISO datetime
@@ -458,8 +518,12 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 raw?.confirmation_code ||
                 raw?.bookingCode ||
                 (rawId ? rawId.replace(/-/g, '').slice(0, 6).toUpperCase() : '');
+            const checkoutUrl: string = raw?.checkoutUrl || raw?.CheckoutUrl || '';
+            const paymentDeadline: string = raw?.paymentDeadline || raw?.PaymentDeadline || '';
             setConfirmationCode(resolvedCode);
             setReservationId(rawId);
+            setDepositCheckoutUrl(checkoutUrl);
+            setDepositPaymentDeadline(paymentDeadline);
             setStep(ReservationStep.SUCCESS);
         } catch (error: unknown) {
             console.error("Failed to create reservation:", error);
@@ -559,27 +623,36 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                                 <div className="pill-segment">
                                     <span className="pill-label">{t('landing.booking.form.preferred_time')}</span>
-                                        <Select
+                                    <TimePicker
                                         className="reservation-time-select pill-control"
                                         classNames={{ popup: { root: 'reservation-time-popup' } }}
-                                            value={booking.time}
-                                            onChange={(value) => setBooking({ ...booking, time: value })}
-                                            notFoundContent={<div className="text-center py-4 text-sm" style={{color: 'var(--text-muted)'}}>{t('landing.booking.form.no_slots')}</div>}
-                                            options={(() => {
-                                                const today = getTodayLocalDate();
-                                                return timeSlots
-                                                    .filter((slot) => {
-                                                        if (booking.date !== today) return true;
-                                                        const [h, m] = slot.split(':').map(Number);
-                                                        const slotDate = new Date();
-                                                        slotDate.setHours(h, m, 0, 0);
-                                                        return slotDate.getTime() > Date.now();
-                                                    })
-                                                    .map((slot) => ({ label: slot, value: slot }));
-                                            })()}
-                                            prefix={<span className="material-symbols-outlined text-[var(--primary)]">schedule</span>}
-                                            suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">expand_more</span>}
-                                        />
+                                        value={dayjs(booking.time, 'HH:mm')}
+                                        format="HH:mm"
+                                        minuteStep={5}
+                                        allowClear={false}
+                                        showNow={false}
+                                        suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">expand_more</span>}
+                                        onChange={(value) => {
+                                            if (!value) return;
+                                            setBooking({ ...booking, time: value.format('HH:mm') });
+                                        }}
+                                        disabledTime={() => {
+                                            const today = getTodayLocalDate();
+                                            if (booking.date !== today) return {};
+
+                                            const now = dayjs();
+                                            const currentHour = now.hour();
+                                            const currentMinute = now.minute();
+
+                                            return {
+                                                disabledHours: () => Array.from({ length: currentHour }, (_, i) => i),
+                                                disabledMinutes: (selectedHour: number) => {
+                                                    if (selectedHour !== currentHour) return [];
+                                                    return Array.from({ length: currentMinute + 1 }, (_, i) => i);
+                                                },
+                                            };
+                                        }}
+                                    />
                                 </div>
 
                                 <div className="pill-divider" />
@@ -701,9 +774,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     {[
                                         { bg: 'bg-[#f6ffed]', border: 'border-[#52c41a]', label: 'Available' },
                                         { bg: 'bg-[var(--primary-soft)]', border: 'border-[var(--primary)] shadow-md shadow-[var(--primary-glow)]', label: 'Selected' },
-                                        { bg: 'bg-[#fff1f0]', border: 'border-[#ff4d4f] diagonal-stripe opacity-60', label: 'Occupied' },
-                                        { bg: 'bg-[#e6f7ff]', border: 'border-[#1890ff]', label: 'Reserved' },
-                                        { bg: 'bg-[#fff7e6]', border: 'border-[#faad14]', label: 'Cleaning' }
+                                        { bg: 'bg-[#fff1f0]', border: 'border-[#ff4d4f] diagonal-stripe opacity-60', label: 'Occupied' }
                                     ].map((legend, i) => (
                                         <div key={i} className="flex items-center gap-4">
                                             <div className={`w-6 h-6 rounded-lg border-2 ${legend.bg} ${legend.border}`} />
@@ -767,7 +838,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     {selectedTables.length > 0 ? (
                                         <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
                                             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-xs text-[var(--text-muted)] flex items-center justify-between gap-4">
-                                                <span className="uppercase tracking-[0.2em] font-semibold">Tổng sức chứa</span>
+                                                <span className="uppercase tracking-[0.2em] font-semibold">{t('landing.booking.table_map.total_capacity')}</span>
                                                 <span className="inline-flex items-center justify-center text-[var(--primary)] font-bold text-sm px-3 py-1 rounded-full bg-[var(--primary-faint)] border border-[var(--primary-border)] leading-none text-center whitespace-nowrap min-h-[28px]">
                                                     {totalSelectedCapacity} {t('landing.booking.table_map.guests')}
                                                 </span>
@@ -775,7 +846,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             {selectedTables.map(table => (
                                                 <div key={table.id} className="bg-[var(--primary-faint)] rounded-2xl p-6 border border-[var(--primary-border)]">
                                                     <div className="flex items-center justify-between mb-4">
-                                                        <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-[0.2em]">Selected Table</span>
+                                                        <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-[0.2em]">{t('landing.booking.table_map.selected_table_label')}</span>
                                                         <span className="text-2xl font-bold text-[var(--primary)] leading-none">{table.label}</span>
                                                     </div>
                                                     <div className="space-y-3">
@@ -790,6 +861,33 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                             <span className="font-semibold text-[var(--text)]">{table.capacity} {t('landing.booking.table_map.guests')}</span>
                                                         </div>
                                                     </div>
+                                                    {panoramaMap.has(table.id) && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setActive360TableId(table.id);
+                                                                setPanoramaTableData({
+                                                                    id: table.id,
+                                                                    tenantId: '',
+                                                                    name: table.label,
+                                                                    seats: table.capacity,
+                                                                    status: 'AVAILABLE',
+                                                                    area: table.zone,
+                                                                    position: { x: table.x || 0, y: table.y || 0 },
+                                                                    shape: table.shape === 'Round' ? 'Circle' : 'Rectangle',
+                                                                    width: table.width || 80,
+                                                                    height: table.height || 80,
+                                                                    rotation: table.rotation || 0,
+                                                                } as TableData);
+                                                                setIs3DModalOpen(true);
+                                                            }}
+                                                            className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:brightness-110"
+                                                            style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}
+                                                        >
+                                                            <span className="material-symbols-outlined text-base">3d_rotation</span>
+                                                            {t('landing.booking.table_map.view_360', 'Xem 360')}
+                                                        </button>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -799,6 +897,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             <span>{t('landing.booking.table_map.no_table_selected')}</span>
                                         </div>
                                     )}
+
                                 </div>
 
                                 <button
@@ -1047,12 +1146,31 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
                         </div>
 
+                        {depositCheckoutUrl && (
+                            <div className="mb-4">
+                                <button
+                                    onClick={() => {
+                                        window.location.href = depositCheckoutUrl;
+                                    }}
+                                    className="w-full py-3.5 mb-2 bg-[var(--success)] hover:brightness-110 text-white font-bold rounded-xl transition-all text-sm"
+                                >
+                                    {t('landing.booking.success.pay_deposit_now', { defaultValue: 'Thanh toán cọc ngay' })}
+                                </button>
+                                {depositPaymentDeadline && (
+                                    <p className="text-xs text-[var(--danger)] text-center">
+                                        {t('landing.booking.success.deposit_deadline', { defaultValue: 'Hạn thanh toán cọc' })}: {new Date(depositPaymentDeadline).toLocaleString('vi-VN')}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
                         <button
                             onClick={() => {
-                                if (!reservationId) return;
-                                window.location.href = `/your-reservation/${reservationId}`;
+                                const detailToken = (confirmationCode || reservationId || '').trim();
+                                if (!detailToken) return;
+                                window.location.href = `/your-reservation/${encodeURIComponent(detailToken)}`;
                             }}
-                            disabled={!reservationId}
+                            disabled={!confirmationCode && !reservationId}
                             className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {t('landing.booking.success.view_details', { defaultValue: 'Xem chi tiết' })}
@@ -1062,6 +1180,20 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
             </main>
 
+
+            <TablePreview3DModal
+                open={is3DModalOpen}
+                table={panoramaTableData}
+                tableImageUrl={active360TableId ? panoramaMap.get(active360TableId)?.imageUrl : undefined}
+                onClose={() => setIs3DModalOpen(false)}
+                onBookNow={() => {
+                    setIs3DModalOpen(false);
+                    setStep(ReservationStep.CONFIRMATION);
+                }}
+                onBackToMap={() => {
+                    setIs3DModalOpen(false);
+                }}
+            />
 
             <style jsx global>{`
                 .reservation-date-picker.ant-picker {
@@ -1238,8 +1370,13 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     color: var(--text-muted) !important;
                 }
 
+                .pill-control .ant-picker-input {
+                    justify-content: center;
+                }
+
                 .pill-control .ant-picker-input > input {
-                    padding-left: 4px;
+                    padding-left: 0;
+                    text-align: center;
                 }
 
                 .pill-control .ant-select-arrow,
@@ -1353,24 +1490,55 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     overscroll-behavior: contain;
                 }
 
+                .reservation-time-popup .ant-picker-panel-container,
+                .reservation-time-popup .ant-picker-panel,
+                .reservation-time-popup .ant-picker-time-panel,
+                .reservation-time-popup .ant-picker-content,
+                .reservation-time-popup .ant-picker-footer {
+                    background: var(--card) !important;
+                    color: var(--text) !important;
+                    border-color: var(--border) !important;
+                }
+
+                .reservation-time-popup .ant-picker-time-panel-column > li {
+                    color: var(--text-muted) !important;
+                }
+
+                .reservation-time-popup .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+                    background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
+                    color: var(--text) !important;
+                    border-radius: 8px !important;
+                }
+
+                .reservation-time-popup .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-disabled {
+                    opacity: 0.35;
+                }
+
+                .reservation-time-popup .ant-picker-now-btn {
+                    color: var(--primary) !important;
+                }
+
+                .reservation-time-popup .ant-picker-ok button {
+                    color: var(--on-primary) !important;
+                    background: var(--primary) !important;
+                    border-color: var(--primary) !important;
+                }
+
                 .reservation-time-popup .rc-virtual-list-holder,
                 .reservation-guest-popup .rc-virtual-list-holder {
                     overscroll-behavior: contain;
                 }
 
-                .reservation-time-popup .ant-select-item,
                 .reservation-guest-popup .ant-select-item {
                     color: var(--text) !important;
                     border-radius: 8px !important;
                     font-weight: 600 !important;
                 }
 
-                .reservation-time-popup .ant-select-item-option-active,
                 .reservation-guest-popup .ant-select-item-option-active {
                     background: var(--surface-subtle) !important;
                 }
 
-                .reservation-time-popup .ant-select-item-option-selected,
                 .reservation-guest-popup .ant-select-item-option-selected {
                     background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
                     color: var(--text) !important;

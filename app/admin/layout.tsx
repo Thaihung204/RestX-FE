@@ -20,7 +20,7 @@ export default function AdminLayout({
 
           <DashboardSidebar />
 
-          <div className="flex-1 overflow-y-auto relative">
+          <div className="admin-layout-content flex-1 overflow-y-auto relative p-4 sm:p-6 lg:p-8">
             {children}
           </div>
         </div>

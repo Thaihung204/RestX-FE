@@ -124,6 +124,42 @@ const mapCreateInputToApi = (input: TenantCreateInput) => {
 const toPascalCase = (str: string): string =>
   str.charAt(0).toUpperCase() + str.slice(1);
 
+const COLOR_FIELD_KEYS = new Set([
+  "primaryColor",
+  "lightBaseColor",
+  "lightSurfaceColor",
+  "lightCardColor",
+  "darkBaseColor",
+  "darkSurfaceColor",
+  "darkCardColor",
+]);
+
+const normalizeFieldValue = (key: string, value: unknown): string => {
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (
+    COLOR_FIELD_KEYS.has(key) &&
+    typeof value === "object" &&
+    value !== null &&
+    "toHexString" in value &&
+    typeof (value as { toHexString?: unknown }).toHexString === "function"
+  ) {
+    return (value as { toHexString: () => string }).toHexString();
+  }
+
+  return String(value);
+};
+
 const toFormData = (
   data: any,
   files?: {
@@ -179,11 +215,7 @@ const toFormData = (
   requiredFields.forEach((key) => {
     const value = data[key];
     const pascalKey = toPascalCase(key);
-    if (typeof value === "boolean") {
-      formData.append(pascalKey, value ? "true" : "false");
-    } else {
-      formData.append(pascalKey, (value ?? "").toString());
-    }
+    formData.append(pascalKey, normalizeFieldValue(key, value));
     appendedKeys.push(pascalKey);
   });
 
@@ -192,7 +224,7 @@ const toFormData = (
     const value = data[key];
     if (value !== null && value !== undefined && value !== "") {
       const pascalKey = toPascalCase(key);
-      formData.append(pascalKey, value.toString());
+      formData.append(pascalKey, normalizeFieldValue(key, value));
       appendedKeys.push(pascalKey);
     }
   });
@@ -652,7 +684,10 @@ export const tenantService = {
    * Create payment settings
    * Backend endpoint: POST /api/tenants/{id}/payment-settings
    */
-  createPaymentSettings: async (tenantId: string, settings: any): Promise<void> => {
+  createPaymentSettings: async (
+    tenantId: string,
+    settings: any,
+  ): Promise<void> => {
     await adminAxiosInstance.post(
       `/tenants/${tenantId}/payment-settings`,
       settings,
@@ -663,7 +698,10 @@ export const tenantService = {
    * Update payment settings
    * Backend endpoint: PUT /api/tenants/{id}/payment-settings
    */
-  updatePaymentSettings: async (tenantId: string, settings: any): Promise<void> => {
+  updatePaymentSettings: async (
+    tenantId: string,
+    settings: any,
+  ): Promise<void> => {
     await adminAxiosInstance.put(
       `/tenants/${tenantId}/payment-settings`,
       settings,
@@ -673,7 +711,10 @@ export const tenantService = {
   /**
    * @deprecated Use createPaymentSettings() or updatePaymentSettings() instead
    */
-  upsertPaymentSettings: async (tenantId: string, settings: any): Promise<void> => {
+  upsertPaymentSettings: async (
+    tenantId: string,
+    settings: any,
+  ): Promise<void> => {
     await tenantService.updatePaymentSettings(tenantId, settings);
   },
 

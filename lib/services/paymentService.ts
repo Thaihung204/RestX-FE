@@ -15,11 +15,14 @@ export interface CreatePaymentLinkResponse {
   paymentId: string;
   orderCode: number;
   checkoutUrl: string;
+  returnUrl?: string;
+  cancelUrl?: string;
 }
 
 export interface PaymentDetail {
   id: string;
   orderId?: string | null;
+  reservationId?: string | null;
   paymentMethodId: string;
   amount: number;
   payOSOrderCode?: number | null;
@@ -31,6 +34,8 @@ export interface PaymentDetail {
   paymentStatusId: number;
   paymentStatusName?: string | null;
   paymentStatusCode?: string | null;
+  status?: number;
+  statusName?: string | null;
 }
 
 class PaymentService {
@@ -46,7 +51,10 @@ class PaymentService {
     return response.data;
   }
 
-  async payByCash(orderId: string, cashReceive: number): Promise<CashPaymentResponse> {
+  async payByCash(
+    orderId: string,
+    cashReceive: number,
+  ): Promise<CashPaymentResponse> {
     const response = await axiosInstance.post<CashPaymentResponse>(
       `/payments/orders/${orderId}/cash`,
       { cashReceive },
