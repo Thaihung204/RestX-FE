@@ -55,6 +55,8 @@ export default function StaffPage() {
       const data = await employeeService.getEmployees({
         page,
         itemsPerPage: PAGE_SIZE,
+        search: searchQuery.trim() || undefined,
+        position: filterRole === "all" ? undefined : filterRole,
       });
 
       const paginatedData = data.data;
@@ -120,7 +122,7 @@ export default function StaffPage() {
   useEffect(() => {
     fetchStaffList(currentPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
+  }, [currentPage, searchQuery, filterRole]);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -169,18 +171,6 @@ export default function StaffPage() {
       message.error(t("dashboard.staff.errors.update_failed"));
     }
   };
-
-  // Client-side filter within current page
-  const filteredStaff = staffList.filter((staff) => {
-    const matchesSearch =
-      staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      staff.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole =
-      filterRole === "all" ||
-      staff.role === filterRole ||
-      staff.position === filterRole;
-    return matchesSearch && matchesRole;
-  });
 
   // Build pagination page numbers array
   const buildPageNumbers = () => {
@@ -253,7 +243,10 @@ export default function StaffPage() {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setCurrentPage(1);
+                    setSearchQuery(e.target.value);
+                  }}
                   placeholder={t("dashboard.staff.search_placeholder")}
                   className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
                   style={{
@@ -266,7 +259,10 @@ export default function StaffPage() {
               <DropDown
                 containerClassName="sm:w-48"
                 value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
+                onChange={(e) => {
+                  setCurrentPage(1);
+                  setFilterRole(e.target.value);
+                }}
                 className="py-3 font-medium">
                 <option value="all">{t("dashboard.staff.all_roles")}</option>
                 {roles.map((role) => (
@@ -423,7 +419,7 @@ export default function StaffPage() {
 
             {/* Staff Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredStaff.map((member) => (
+              {staffList.map((member) => (
                 <div
                   key={member.id}
                   className="rounded-xl overflow-hidden transition-all group"
@@ -601,7 +597,7 @@ export default function StaffPage() {
               ))}
             </div>
 
-            {filteredStaff.length === 0 && !loading && (
+            {staffList.length === 0 && !loading && (
               <div
                 className="text-center py-12 rounded-xl"
                 style={{

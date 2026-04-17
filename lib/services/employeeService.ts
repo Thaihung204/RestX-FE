@@ -3,6 +3,7 @@ import axiosInstance from "./axiosInstance";
 export interface EmployeeFilterParams {
   page?: number;
   itemsPerPage?: number;
+  search?: string;
   position?: string;
   isActive?: boolean;
   hireDateFrom?: string;
@@ -111,6 +112,7 @@ class EmployeeService {
     return JSON.stringify({
       page: filter?.page || 1,
       itemsPerPage: filter?.itemsPerPage || 12,
+      search: filter?.search ?? null,
       position: filter?.position ?? null,
       isActive: filter?.isActive ?? null,
       hireDateFrom: filter?.hireDateFrom ?? null,
@@ -155,6 +157,7 @@ class EmployeeService {
           pageNumber: filter?.page || 1,
           itemsPerPage: filter?.itemsPerPage || 12,
           pageSize: filter?.itemsPerPage || 12,
+          ...(filter?.search !== undefined && { search: filter.search }),
           ...(filter?.position !== undefined && { position: filter.position }),
           ...(filter?.isActive !== undefined && { isActive: filter.isActive }),
           ...(filter?.hireDateFrom !== undefined && {
