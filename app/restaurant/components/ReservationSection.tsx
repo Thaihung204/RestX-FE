@@ -10,7 +10,7 @@ import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
 import TablePreview3DModal from './TablePreview3DModal';
 
-import { DatePicker, TimePicker } from 'antd';
+import { DatePicker, Select } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -22,6 +22,60 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const DEFAULT_TIME_SLOTS = ['17:30', '18:00', '18:30', '19:00', '19:30', '20:00'];
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
+
+const TIME_SLOT_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+
+const normalizeTimeSlot = (slot: string) => {
+    const trimmed = slot.trim();
+    const match = trimmed.match(TIME_SLOT_PATTERN);
+    if (!match) return null;
+
+    const hour = Number(match[1]);
+    const minute = Number(match[2]);
+    if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
+
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+};
+
+const toMinutes = (slot: string) => {
+    const normalized = normalizeTimeSlot(slot);
+    if (!normalized) return null;
+    const [hour, minute] = normalized.split(':').map(Number);
+    return (hour * 60) + minute;
+};
+
+const normalizeTimeSlots = (slots: string[]) => {
+    const unique = new Set<string>();
+    for (const slot of slots) {
+        const normalized = normalizeTimeSlot(slot);
+        if (normalized) unique.add(normalized);
+    }
+
+    return Array.from(unique).sort((a, b) => {
+        const minutesA = toMinutes(a) ?? 0;
+        const minutesB = toMinutes(b) ?? 0;
+        return minutesA - minutesB;
+    });
+};
+
+const getTodayLocalDate = () => {
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
+};
+
+const getAvailableSlotsForDate = (date: string, slots: string[]) => {
+    const today = getTodayLocalDate();
+    if (!slots.length) return [] as string[];
+    if (date < today) return [] as string[];
+    if (date > today) return slots;
+
+    const now = dayjs();
+    return slots.filter((slot) => {
+        const slotDateTime = dayjs(`${today}T${slot}:00`);
+        return slotDateTime.isAfter(now);
+    });
+};
 
 
 
@@ -88,7 +142,12 @@ const getTenantReservationConfig = (tenant: TenantConfig | null) => {
         }
     }
 
-    return { timeSlots, maxGuestsOverride };
+    const normalizedTimeSlots = normalizeTimeSlots(timeSlots);
+
+    return {
+        timeSlots: normalizedTimeSlots.length ? normalizedTimeSlots : DEFAULT_TIME_SLOTS,
+        maxGuestsOverride,
+    };
 };
 
 interface ReservationSectionProps {
@@ -132,17 +191,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         [tenant],
     );
 
-    const getTodayLocalDate = () => {
-        const now = new Date();
-        const tzOffset = now.getTimezoneOffset() * 60000;
-        return new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
-    };
-
-    const [booking, setBooking] = useState<BookingData>({
+    const [booking, setBooking] = useState<BookingData>(() => ({
         date: getTodayLocalDate(),
-        time: '19:00',
-        guests: 4
-    });
+        time: timeSlots.includes('19:00') ? '19:00' : (timeSlots[0] || '19:00'),
+        guests: 4,
+    }));
 
     const [layout, setLayout] = useState<Layout | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(false);
@@ -171,28 +224,31 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         [selectedTables],
     );
 
+    const availableSlotsForSelectedDate = useMemo(
+        () => getAvailableSlotsForDate(booking.date, timeSlots),
+        [booking.date, timeSlots],
+    );
+
 
     useEffect(() => {
         const today = getTodayLocalDate();
-        const currentDate = booking.date < today ? today : booking.date;
+        let nextDate = booking.date < today ? today : booking.date;
 
-        const availableSlots = timeSlots.filter((slot) => {
-            if (currentDate !== today) return true;
+        let availableSlots = getAvailableSlotsForDate(nextDate, timeSlots);
+        if (nextDate === today && availableSlots.length === 0 && timeSlots.length > 0) {
+            nextDate = dayjs(today).add(1, 'day').format('YYYY-MM-DD');
+            availableSlots = getAvailableSlotsForDate(nextDate, timeSlots);
+        }
 
-            const [h, m] = slot.split(':').map(Number);
-            const slotDate = new Date();
-            slotDate.setHours(h, m, 0, 0);
-            return slotDate.getTime() > Date.now();
-        });
-
+        const fallbackTime = availableSlots[0] || timeSlots[0] || '19:00';
         const nextTime = availableSlots.includes(booking.time)
             ? booking.time
-            : (availableSlots[0] || timeSlots[0]);
+            : fallbackTime;
 
-        if (currentDate !== booking.date || nextTime !== booking.time) {
-            setBooking(prev => ({ ...prev, date: currentDate, time: nextTime }));
+        if (nextDate !== booking.date || nextTime !== booking.time) {
+            setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
         }
-    }, [booking.date, booking.time]);
+    }, [booking.date, booking.time, timeSlots]);
 
     // Auto-fill user info when logged in (only once, first time CONFIRMATION is opened)
     useEffect(() => {
@@ -474,7 +530,27 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        getSmartRecommendation(booking.guests, booking.time);
+
+        const today = getTodayLocalDate();
+        let nextDate = booking.date < today ? today : booking.date;
+        let availableSlots = getAvailableSlotsForDate(nextDate, timeSlots);
+
+        if (nextDate === today && availableSlots.length === 0 && timeSlots.length > 0) {
+            nextDate = dayjs(today).add(1, 'day').format('YYYY-MM-DD');
+            availableSlots = getAvailableSlotsForDate(nextDate, timeSlots);
+        }
+
+        if (availableSlots.length === 0) return;
+
+        const nextTime = availableSlots.includes(booking.time)
+            ? booking.time
+            : availableSlots[0];
+
+        if (nextDate !== booking.date || nextTime !== booking.time) {
+            setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
+        }
+
+        getSmartRecommendation(Number(booking.guests) || 1, nextTime);
         setStep(ReservationStep.TABLE_SELECTION);
     };
 
@@ -595,18 +671,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             prefix={<span className="material-symbols-outlined text-[var(--primary)]">calendar_month</span>}
                                             disabledDate={(current) => {
                                                 if (!current) return false;
-                                                // Disable past days
-                                                if (current.startOf('day').isBefore(dayjs().startOf('day'))) return true;
-                                                // Disable today if all time slots have already passed
-                                                if (current.startOf('day').isSame(dayjs().startOf('day'))) {
-                                                    const hasAvailableSlot = timeSlots.some((slot) => {
-                                                        const [h, m] = slot.split(':').map(Number);
-                                                        const slotDate = new Date();
-                                                        slotDate.setHours(h, m, 0, 0);
-                                                        return slotDate.getTime() > Date.now();
-                                                    });
-                                                    return !hasAvailableSlot;
-                                                }
+                                                const today = getTodayLocalDate();
+                                                const currentDate = current.format('YYYY-MM-DD');
+                                                if (currentDate < today) return true;
+                                                if (!timeSlots.length) return true;
+                                                if (currentDate === today) return getAvailableSlotsForDate(today, timeSlots).length === 0;
                                                 return false;
                                             }}
                                             onChange={(value) => {
@@ -614,7 +683,15 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                 const selectedDate = value.format('YYYY-MM-DD');
                                                 const today = getTodayLocalDate();
                                                 const safeDate = selectedDate < today ? today : selectedDate;
-                                                setBooking({ ...booking, date: safeDate });
+
+                                                const availableSlots = getAvailableSlotsForDate(safeDate, timeSlots);
+                                                setBooking((prev) => {
+                                                    const fallbackTime = availableSlots[0] || timeSlots[0] || prev.time;
+                                                    const nextTime = availableSlots.includes(prev.time)
+                                                        ? prev.time
+                                                        : fallbackTime;
+                                                    return { ...prev, date: safeDate, time: nextTime };
+                                                });
                                             }}
                                         />
                                 </div>
@@ -623,34 +700,17 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                                 <div className="pill-segment">
                                     <span className="pill-label">{t('landing.booking.form.preferred_time')}</span>
-                                    <TimePicker
+                                    <Select
                                         className="reservation-time-select pill-control"
-                                        classNames={{ popup: { root: 'reservation-time-popup' } }}
-                                        value={dayjs(booking.time, 'HH:mm')}
-                                        format="HH:mm"
-                                        minuteStep={5}
-                                        allowClear={false}
-                                        showNow={false}
+                                        popupClassName="reservation-time-popup"
+                                        value={booking.time}
+                                        options={availableSlotsForSelectedDate.map((slot) => ({ value: slot, label: slot }))}
+                                        disabled={availableSlotsForSelectedDate.length === 0}
                                         suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">expand_more</span>}
-                                        onChange={(value) => {
-                                            if (!value) return;
-                                            setBooking({ ...booking, time: value.format('HH:mm') });
-                                        }}
-                                        disabledTime={() => {
-                                            const today = getTodayLocalDate();
-                                            if (booking.date !== today) return {};
-
-                                            const now = dayjs();
-                                            const currentHour = now.hour();
-                                            const currentMinute = now.minute();
-
-                                            return {
-                                                disabledHours: () => Array.from({ length: currentHour }, (_, i) => i),
-                                                disabledMinutes: (selectedHour: number) => {
-                                                    if (selectedHour !== currentHour) return [];
-                                                    return Array.from({ length: currentMinute + 1 }, (_, i) => i);
-                                                },
-                                            };
+                                        onChange={(selectedTime) => {
+                                            if (!selectedTime) return;
+                                            if (!availableSlotsForSelectedDate.includes(selectedTime)) return;
+                                            setBooking((prev) => ({ ...prev, time: selectedTime }));
                                         }}
                                     />
                                 </div>
@@ -687,14 +747,20 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         <div className="pill-guest-actions">
                                         <button
                                             type="button"
-                                            onClick={() => setBooking(b => ({ ...b, guests: Math.max(1, b.guests - 1) }))}
+                                            onClick={() => setBooking((b) => {
+                                                const currentGuests = Math.max(1, Number(b.guests) || 1);
+                                                return { ...b, guests: Math.max(1, currentGuests - 1) };
+                                            })}
                                                 className="pill-step-btn"
                                         >
                                             −
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => setBooking(b => ({ ...b, guests: b.guests + 1 }))}
+                                            onClick={() => setBooking((b) => {
+                                                const currentGuests = Math.max(1, Number(b.guests) || 1);
+                                                return { ...b, guests: currentGuests + 1 };
+                                            })}
                                                 className="pill-step-btn"
                                         >
                                             +
@@ -705,20 +771,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                                 <button
                                     type="submit"
-                                    disabled={(() => {
-                                        const today = getTodayLocalDate();
-                                        const available = timeSlots.filter((slot) => {
-                                            if (booking.date !== today) return true;
-                                            const [h, m] = slot.split(':').map(Number);
-                                            const slotDate = new Date();
-                                            slotDate.setHours(h, m, 0, 0);
-                                            return slotDate.getTime() > Date.now();
-                                        });
-                                        return available.length === 0;
-                                    })()}
+                                    disabled={availableSlotsForSelectedDate.length === 0 || !availableSlotsForSelectedDate.includes(booking.time)}
                                     className="pill-submit disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                                 >
-                                    <span>{t('landing.booking.form.choose_table')}</span>
+                                    <span>{availableSlotsForSelectedDate.length === 0 ? t('landing.booking.form.no_slots') : t('landing.booking.form.choose_table')}</span>
                                     <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
                                 </button>
                             </form>
@@ -960,7 +1016,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         {[
                                             { icon: 'calendar_today', label: t('landing.booking.confirm.date_time'), value: new Date(booking.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }), sub: booking.time },
                                             { icon: 'table_restaurant', label: t('landing.booking.confirm.selected_table'), value: selectedTables.map(t => `Table ${t.label}`).join(', '), sub: `${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')}` },
-                                            { icon: 'group', label: t('landing.booking.confirm.party_size'), value: `${booking.guests} ${t('landing.booking.table_map.guests')}`, sub: t('landing.booking.confirm.standard_seating') }
+                                            { icon: 'group', label: t('landing.booking.confirm.party_size', { count: booking.guests }), value: `${booking.guests} ${t('landing.booking.table_map.guests')}`, sub: t('landing.booking.confirm.standard_seating') }
                                         ].map((item, idx) => (
                                             <div key={idx} className="flex gap-5">
                                                 <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
@@ -1490,38 +1546,37 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     overscroll-behavior: contain;
                 }
 
-                .reservation-time-popup .ant-picker-panel-container,
-                .reservation-time-popup .ant-picker-panel,
-                .reservation-time-popup .ant-picker-time-panel,
-                .reservation-time-popup .ant-picker-content,
-                .reservation-time-popup .ant-picker-footer {
+                .reservation-time-popup .ant-select-dropdown,
+                .reservation-time-popup .ant-select-item {
                     background: var(--card) !important;
                     color: var(--text) !important;
                     border-color: var(--border) !important;
                 }
 
-                .reservation-time-popup .ant-picker-time-panel-column > li {
-                    color: var(--text-muted) !important;
-                }
-
-                .reservation-time-popup .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
-                    background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
+                .reservation-time-popup .ant-select-item {
                     color: var(--text) !important;
                     border-radius: 8px !important;
+                    font-weight: 600 !important;
                 }
 
-                .reservation-time-popup .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-disabled {
+                .reservation-time-popup .ant-select-item-option-active {
+                    background: var(--surface-subtle) !important;
+                }
+
+                .reservation-time-popup .ant-select-item-option-selected {
+                    background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
+                    color: var(--text) !important;
+                }
+
+                .reservation-time-popup .rc-virtual-list-holder {
+                    max-height: min(280px, 45vh) !important;
+                    overflow-y: auto !important;
+                    overscroll-behavior: contain;
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                .reservation-time-popup .ant-select-item-option-disabled {
                     opacity: 0.35;
-                }
-
-                .reservation-time-popup .ant-picker-now-btn {
-                    color: var(--primary) !important;
-                }
-
-                .reservation-time-popup .ant-picker-ok button {
-                    color: var(--on-primary) !important;
-                    background: var(--primary) !important;
-                    border-color: var(--primary) !important;
                 }
 
                 .reservation-time-popup .rc-virtual-list-holder,
