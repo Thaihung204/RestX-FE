@@ -80,6 +80,37 @@ export interface DishListResponseDto {
   itemsPerPage?: number;
 }
 
+export interface ComboDetailItemDto {
+  id?: string;
+  dishId: string;
+  dishName?: string;
+  dishPrice?: number;
+  quantity: number;
+}
+
+export interface ComboSummaryDto {
+  id: string;
+  name: string;
+  code?: string;
+  description: string;
+  imageUrl?: string;
+  baseCost: number;
+  price: number;
+  isActive: boolean;
+  details: ComboDetailItemDto[];
+}
+
+export interface ComboCreateDto {
+  name: string;
+  description: string;
+  price: number;
+  isActive: boolean;
+  details: ComboDetailItemDto[];
+  file?: File;
+}
+
+export interface ComboUpdateDto extends ComboCreateDto {}
+
 class DishService {
   private dishListCache = new Map<string, DishListResponseDto>();
 
@@ -93,6 +124,14 @@ class DishService {
 
   private menuInFlight: Promise<MenuCategory[]> | null = null;
 
+  private comboListCache: ComboSummaryDto[] | null = null;
+
+  private comboListInFlight: Promise<ComboSummaryDto[]> | null = null;
+
+  private comboByIdCache = new Map<string, ComboSummaryDto>();
+
+  private comboByIdInFlight = new Map<string, Promise<ComboSummaryDto>>();
+
   private getDishListCacheKey(page: number, itemsPerPage: number): string {
     return `${page}:${itemsPerPage}`;
   }
@@ -102,6 +141,7 @@ class DishService {
     this.dishListInFlight.clear();
     this.menuCache = null;
     this.menuInFlight = null;
+    this.invalidateComboCache();
 
     if (id) {
       this.dishByIdCache.delete(id);
@@ -111,6 +151,81 @@ class DishService {
 
     this.dishByIdCache.clear();
     this.dishByIdInFlight.clear();
+  }
+
+  private invalidateComboCache(id?: string): void {
+    this.comboListCache = null;
+    this.comboListInFlight = null;
+
+    if (id) {
+      this.comboByIdCache.delete(id);
+      this.comboByIdInFlight.delete(id);
+      return;
+    }
+
+    this.comboByIdCache.clear();
+    this.comboByIdInFlight.clear();
+  }
+
+  private normalizeComboDetail(raw: any): ComboDetailItemDto {
+    const quantity = Number(raw?.quantity ?? raw?.Quantity ?? 1);
+    const dishPrice = Number(raw?.dishPrice ?? raw?.DishPrice ?? 0);
+
+    return {
+      id: raw?.id ?? raw?.Id,
+      dishId: String(raw?.dishId ?? raw?.DishId ?? ""),
+      dishName: raw?.dishName ?? raw?.DishName,
+      dishPrice: Number.isNaN(dishPrice) ? 0 : dishPrice,
+      quantity:
+        Number.isNaN(quantity) || quantity <= 0 ? 1 : Math.floor(quantity),
+    };
+  }
+
+  private normalizeCombo(raw: any): ComboSummaryDto {
+    const baseCost = Number(raw?.baseCost ?? raw?.BaseCost ?? 0);
+    const price = Number(raw?.price ?? raw?.Price ?? 0);
+    const details = Array.isArray(raw?.details)
+      ? raw.details
+      : Array.isArray(raw?.Details)
+        ? raw.Details
+        : [];
+
+    return {
+      id: String(raw?.id ?? raw?.Id ?? ""),
+      name: raw?.name ?? raw?.Name ?? "",
+      code: raw?.code ?? raw?.Code ?? "",
+      description: raw?.description ?? raw?.Description ?? "",
+      imageUrl: raw?.imageUrl ?? raw?.ImageUrl ?? "",
+      baseCost: Number.isNaN(baseCost) ? 0 : baseCost,
+      price: Number.isNaN(price) ? 0 : price,
+      isActive: Boolean(raw?.isActive ?? raw?.IsActive ?? false),
+      details: details.map((detail: any) => this.normalizeComboDetail(detail)),
+    };
+  }
+
+  private extractArrayData(raw: any): any[] {
+    if (Array.isArray(raw)) {
+      return raw;
+    }
+
+    if (Array.isArray(raw?.data)) {
+      return raw.data;
+    }
+
+    if (Array.isArray(raw?.items)) {
+      return raw.items;
+    }
+
+    return [];
+  }
+
+  private extractId(raw: any): string {
+    if (typeof raw === "string") {
+      return raw;
+    }
+
+    const id = raw?.id ?? raw?.Id ?? raw?.data?.id ?? raw?.data?.Id;
+    return typeof id === "string" ? id : "";
   }
 
   async getDishes(
@@ -328,6 +443,133 @@ class DishService {
 
     this.invalidateDishCache(id);
     return response;
+  }
+
+  private buildComboFormData(combo: ComboCreateDto | ComboUpdateDto): FormData {
+    const formData = new FormData();
+
+    formData.append("Name", (combo.name || "").trim());
+    formData.append("Description", (combo.description || "").trim());
+    formData.append("Price", (combo.price || 0).toString());
+    formData.append("IsActive", String(combo.isActive));
+
+    if (combo.file) {
+      formData.append("File", combo.file);
+    }
+
+    (combo.details || []).forEach((detail, index) => {
+      if (detail.id) {
+        formData.append(`Details[${index}].Id`, detail.id);
+      }
+      formData.append(`Details[${index}].DishId`, detail.dishId);
+      formData.append(
+        `Details[${index}].Quantity`,
+        String(detail.quantity > 0 ? Math.floor(detail.quantity) : 1),
+      );
+    });
+
+    return formData;
+  }
+
+  async getCombos(forceRefresh: boolean = false): Promise<ComboSummaryDto[]> {
+    if (!forceRefresh && this.comboListCache) {
+      return this.comboListCache;
+    }
+
+    if (!forceRefresh && this.comboListInFlight) {
+      return this.comboListInFlight;
+    }
+
+    const request = axiosInstance
+      .get("/dishes/combos")
+      .then((response) => {
+        const normalized = this.extractArrayData(response.data).map((item) =>
+          this.normalizeCombo(item),
+        );
+
+        this.comboListCache = normalized;
+        normalized.forEach((combo) => {
+          if (combo.id) {
+            this.comboByIdCache.set(combo.id, combo);
+          }
+        });
+
+        return normalized;
+      })
+      .finally(() => {
+        this.comboListInFlight = null;
+      });
+
+    this.comboListInFlight = request;
+    return request;
+  }
+
+  async getActiveCombos(): Promise<ComboSummaryDto[]> {
+    const response = await axiosInstance.get("/dishes/combos/active");
+    return this.extractArrayData(response.data).map((item) =>
+      this.normalizeCombo(item),
+    );
+  }
+
+  async getComboById(id: string): Promise<ComboSummaryDto> {
+    const cached = this.comboByIdCache.get(id);
+    if (cached) {
+      return cached;
+    }
+
+    const inFlight = this.comboByIdInFlight.get(id);
+    if (inFlight) {
+      return inFlight;
+    }
+
+    const request = axiosInstance
+      .get(`/dishes/combos/${id}`)
+      .then((response) => {
+        const normalized = this.normalizeCombo(response.data);
+        this.comboByIdCache.set(id, normalized);
+        return normalized;
+      })
+      .finally(() => {
+        this.comboByIdInFlight.delete(id);
+      });
+
+    this.comboByIdInFlight.set(id, request);
+    return request;
+  }
+
+  async createCombo(combo: ComboCreateDto): Promise<string> {
+    const formData = this.buildComboFormData(combo);
+    const response = await axiosInstance.post("/dishes/combos", formData);
+    this.invalidateComboCache();
+    return this.extractId(response.data);
+  }
+
+  async updateCombo(id: string, combo: ComboUpdateDto): Promise<string> {
+    const formData = this.buildComboFormData(combo);
+    const response = await axiosInstance.put(`/dishes/combos/${id}`, formData);
+    this.invalidateComboCache(id);
+    return this.extractId(response.data);
+  }
+
+  async deleteCombo(id: string): Promise<void> {
+    await axiosInstance.delete(`/dishes/combos/${id}`);
+    this.invalidateComboCache(id);
+  }
+
+  async toggleComboStatus(id: string, isActive: boolean): Promise<string> {
+    const currentCombo = await this.getComboById(id);
+
+    return this.updateCombo(id, {
+      name: currentCombo.name,
+      description: currentCombo.description,
+      price: currentCombo.price,
+      isActive,
+      details: (currentCombo.details || []).map((detail) => ({
+        id: detail.id,
+        dishId: detail.dishId,
+        quantity: detail.quantity,
+      })),
+    });
   }
 }
 

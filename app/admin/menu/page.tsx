@@ -2,6 +2,7 @@
 
 import ContentAreaLoader from "@/components/admin/ContentAreaLoader";
 import DishCard, { DishCardItem } from "@/components/admin/menu/DishCard";
+import MenuManagementTabs from "@/components/admin/menu/MenuManagementTabs";
 import { DropDown } from "@/components/ui/DropDown";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
@@ -301,34 +302,30 @@ export default function MenuPage() {
                 {t("dashboard.menu.subtitle")}
               </p>
             </div>
-            <Link href="/admin/menu/new">
-              <button
-                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-                style={{ background: "var(--primary)", color: "white" }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background =
-                    "linear-gradient(to right, #B32607)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background =
-                    "linear-gradient(to right, var(--primary))")
-                }
-                suppressHydrationWarning>
-                <svg
-                  className="w-5 h-5 inline-block mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                {t("dashboard.menu.add_item")}
-              </button>
-            </Link>
+            <div className="flex items-center justify-end gap-2 flex-wrap">
+              <MenuManagementTabs activeTab="dishes" />
+
+              <Link href="/admin/menu/new">
+                <button
+                  className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                  style={{ background: "var(--primary)", color: "white" }}
+                  suppressHydrationWarning>
+                  <svg
+                    className="w-5 h-5 inline-block mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  {t("dashboard.menu.add_item")}
+                </button>
+              </Link>
+            </div>
           </div>
 
           {/* Statistics Cards */}
