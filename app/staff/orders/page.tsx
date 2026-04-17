@@ -6,6 +6,7 @@ import FilterOrder from "@/components/staff/orders/FilterOrder";
 import OrderDetailsPopup from "@/components/staff/orders/OrderDetailsPopup";
 import PaymentOrder from "@/components/staff/orders/PaymentOrder";
 import { useTenant } from "@/lib/contexts/TenantContext";
+import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
 import menuService from "@/lib/services/menuService";
 import orderDetailStatusService, {
   OrderDetailStatus,
@@ -127,6 +128,7 @@ export default function OrderManagement() {
   const { tenant } = useTenant();
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
+  const [comboItems, setComboItems] = useState<ComboSummaryDto[]>([]);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
   const [orderDetailStatuses, setOrderDetailStatuses] = useState<
@@ -296,11 +298,12 @@ export default function OrderManagement() {
     inFlightRef.current = true;
     initializedRef.current = true;
     try {
-      const [statusData, orderStatusData, menuData, orderData] =
+      const [statusData, orderStatusData, menuData, comboData, orderData] =
         await Promise.all([
           orderDetailStatusService.getAllStatuses(),
           orderStatusService.getAllStatuses(),
           menuService.getMenu(),
+          dishService.getActiveCombos().catch(() => []),
           orderService.getAllOrders(getTodayOrderQuery()),
         ]);
 
@@ -311,6 +314,7 @@ export default function OrderManagement() {
       setOrderDetailStatuses(safeStatuses);
       setOrderStatuses(safeOrderStatuses);
       setMenuCategories(safeMenu);
+      setComboItems(comboData ?? []);
 
       statusValueMapRef.current = buildStatusValueMap(safeStatuses);
       dishNameMapRef.current = buildDishNameMap(safeMenu);
@@ -573,6 +577,68 @@ export default function OrderManagement() {
     });
   };
 
+  const addComboToCart = (combo: ComboSummaryDto) => {
+    if (!combo?.details?.length) {
+      message.warning(
+        t("staff.orders.messages.combo_empty", {
+          defaultValue: "Combo has no dishes",
+        }),
+      );
+      return;
+    }
+
+    setCart((prev) => {
+      const nextCart = [...prev];
+
+      combo.details.forEach((detail) => {
+        if (!detail.dishId) {
+          return;
+        }
+
+        const matchedDish = menuCategories
+          .flatMap((category) => category.items)
+          .find((dish) => dish.id === detail.dishId);
+
+        const resolvedDish: DishItem =
+          matchedDish || {
+            id: detail.dishId,
+            name: detail.dishName || detail.dishId,
+            description: "",
+            price: Number(detail.dishPrice ?? 0),
+            unit: "portion",
+            isVegetarian: false,
+            isSpicy: false,
+            isBestSeller: false,
+            images: [],
+            imageUrl: null,
+            categoryId: "combo",
+            categoryName: "Combo",
+          };
+
+        const quantityToAdd = detail.quantity > 0 ? detail.quantity : 1;
+        const existing = nextCart.find((line) => line.item.id === detail.dishId);
+
+        if (existing) {
+          existing.quantity += quantityToAdd;
+          return;
+        }
+
+        nextCart.push({
+          item: resolvedDish,
+          quantity: quantityToAdd,
+        });
+      });
+
+      return nextCart;
+    });
+
+    message.success(
+      t("staff.orders.messages.combo_added", {
+        defaultValue: "Combo added to order",
+      }),
+    );
+  };
+
   const updateCartQuantity = (itemId: string, delta: number) => {
     setCart((prev) => {
       return prev
@@ -796,10 +862,12 @@ export default function OrderManagement() {
               .filter((code): code is string => !!code) ?? [],
         }))}
         menuCategories={menuCategories}
+        comboItems={comboItems}
         activeMenuCategory={activeMenuCategory}
         setActiveMenuCategory={setActiveMenuCategory}
         cart={cart}
         addToCart={addToCart}
+        addComboToCart={addComboToCart}
         updateCartQuantity={updateCartQuantity}
         t={t}
       />

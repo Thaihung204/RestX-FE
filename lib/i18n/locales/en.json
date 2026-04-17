@@ -1513,6 +1513,103 @@
       "title": "Menu Management",
       "subtitle": "Manage your restaurant menu items",
       "add_item": "Add Menu Item",
+      "tabs": {
+        "navigation": "Menu management navigation",
+        "dishes": "Dishes",
+        "combos": "Combos"
+      },
+      "combo": {
+        "title": "Combo Management",
+        "subtitle": "Create and manage meal combos for your menu",
+        "loading": "Loading combos...",
+        "no_image": "No image",
+        "no_description": "No description",
+        "stats": {
+          "total": "Total Combos",
+          "active": "Active",
+          "inactive": "Inactive"
+        },
+        "empty": {
+          "title": "No combos yet",
+          "subtitle": "Create your first combo to offer bundled dishes"
+        },
+        "fields": {
+          "name": "Combo Name",
+          "price": "Price",
+          "description": "Description",
+          "active": "Active",
+          "active_hint": "When active, this combo is available for ordering",
+          "image": "Image",
+          "image_drop_title": "Drop an image here or click to browse",
+          "image_drop_hint": "Supports JPG, PNG, WEBP",
+          "image_current": "Current saved image",
+          "image_pending_hint": "This image will be uploaded when you save the combo",
+          "image_current_hint": "No new image selected. The current image will be kept.",
+          "total_items": "Total items"
+        },
+        "placeholders": {
+          "name": "Enter combo name",
+          "description": "Describe this combo",
+          "select_dish": "Select dish"
+        },
+        "form": {
+          "create_title": "Create Combo",
+          "edit_title": "Edit Combo",
+          "subtitle": "Configure combo information and included dishes",
+          "basic_info": "Basic Information",
+          "details": "Combo Dishes"
+        },
+        "actions": {
+          "manage": "Manage Combos",
+          "back_to_menu": "Back to Menu",
+          "add_combo": "Add Combo",
+          "add_row": "Add Dish",
+          "change_image": "Choose image",
+          "clear_image": "Clear selection",
+          "use_saved_image": "Use saved image",
+          "activate": "Activate combo",
+          "deactivate": "Deactivate combo",
+          "create": "Create Combo",
+          "update": "Update Combo"
+        },
+        "confirm": {
+          "delete_title": "Delete this combo?",
+          "delete_description": "The combo will be deactivated and hidden from active lists."
+        },
+        "toasts": {
+          "fetch_error": "Failed to load combos",
+          "activate_success": "Combo activated",
+          "deactivate_success": "Combo deactivated",
+          "status_error": "Unable to update combo status",
+          "delete_success": "Combo deleted successfully",
+          "delete_error": "Unable to delete combo",
+          "add_dish_row_success": "Dish row added",
+          "remove_dish_row_success": "Dish row removed",
+          "keep_one_dish_row": "At least one dish row is required",
+          "image_selected_success": "Image selected successfully",
+          "image_cleared": "Image selection cleared",
+          "validation_error": "Please review combo information",
+          "create_success": "Combo created successfully",
+          "update_success": "Combo updated successfully",
+          "save_error": "Unable to save combo"
+        },
+        "errors": {
+          "load_failed": "Failed to load combo data",
+          "name_required": "Combo name is required",
+          "name_too_short": "Combo name must be at least 3 characters",
+          "name_too_long": "Combo name must be at most 60 characters",
+          "description_too_long": "Description must be at most 300 characters",
+          "price_invalid": "Price must be greater than zero",
+          "price_too_high": "Price must be less than 100,000,000",
+          "details_required": "Please select at least one dish",
+          "too_many_dishes": "A combo can have at most 20 dishes",
+          "quantity_invalid": "Dish quantity must be greater than zero",
+          "quantity_too_high": "Dish quantity must be at most 99",
+          "duplicate_dish": "A dish can only be selected once",
+          "image_invalid_type": "Only image files are supported",
+          "image_too_large": "Image must be less than 5MB"
+        }
+      },
       "stats": {
         "total_items": "Total Items",
         "available": "Available",

@@ -1,9 +1,14 @@
 "use client";
 
 import axiosInstance from "@/lib/services/axiosInstance";
-import { dishService, MenuCategory, MenuItem } from "@/lib/services/dishService";
+import {
+  ComboSummaryDto,
+  dishService,
+  MenuCategory,
+  MenuItem,
+} from "@/lib/services/dishService";
 import { message } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface MenuSelectionModalProps {
@@ -25,6 +30,7 @@ export default function MenuSelectionModal({
 }: MenuSelectionModalProps) {
   const { t } = useTranslation("common");
   const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [combos, setCombos] = useState<ComboSummaryDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
 
@@ -43,11 +49,27 @@ export default function MenuSelectionModal({
     }
   }, [isOpen]);
 
+  const dishLookup = useMemo(() => {
+    return categories.reduce<Record<string, MenuItem>>((acc, category) => {
+      category.items.forEach((dish) => {
+        if (dish.id) {
+          acc[dish.id] = dish;
+        }
+      });
+      return acc;
+    }, {});
+  }, [categories]);
+
   const loadMenu = async () => {
     setLoading(true);
     try {
-      const data = await dishService.getMenu();
-      setCategories(data);
+      const [menuData, comboData] = await Promise.all([
+        dishService.getMenu(),
+        dishService.getActiveCombos().catch(() => []),
+      ]);
+
+      setCategories(menuData);
+      setCombos(comboData);
     } catch (err) {
       console.error("Failed to load menu", err);
     } finally {
@@ -55,24 +77,57 @@ export default function MenuSelectionModal({
     }
   };
 
-  const handleAddItem = (dish: MenuItem) => {
-    if (!dish.id) return;
+  const addSelection = (
+    dishId: string,
+    name: string,
+    price: number,
+    quantityDelta: number,
+  ) => {
+    if (!dishId || quantityDelta <= 0) return;
+
     setSelectedItems((prev) => {
-      const existing = prev.find((x) => x.dishId === dish.id);
+      const existing = prev.find((x) => x.dishId === dishId);
       if (existing) {
         return prev.map((x) =>
-          x.dishId === dish.id ? { ...x, quantity: x.quantity + 1 } : x
+          x.dishId === dishId
+            ? { ...x, quantity: x.quantity + quantityDelta }
+            : x,
         );
       }
+
       return [
         ...prev,
         {
-          dishId: dish.id,
-          name: dish.name,
-          quantity: 1,
-          price: dish.price ?? 0,
+          dishId,
+          name,
+          quantity: quantityDelta,
+          price,
         },
       ];
+    });
+  };
+
+  const handleAddItem = (dish: MenuItem) => {
+    if (!dish.id) return;
+    addSelection(dish.id, dish.name || "", dish.price ?? 0, 1);
+  };
+
+  const handleAddCombo = (combo: ComboSummaryDto) => {
+    if (!combo?.details?.length) {
+      return;
+    }
+
+    combo.details.forEach((detail) => {
+      if (!detail.dishId) {
+        return;
+      }
+
+      const matchedDish = dishLookup[detail.dishId];
+      const quantity = detail.quantity > 0 ? detail.quantity : 1;
+      const dishName = detail.dishName || matchedDish?.name || detail.dishId;
+      const dishPrice = detail.dishPrice ?? matchedDish?.price ?? 0;
+
+      addSelection(detail.dishId, dishName, dishPrice, quantity);
     });
   };
 
@@ -125,7 +180,11 @@ export default function MenuSelectionModal({
       >
         <div className="flex items-center justify-between border-b p-4 px-6" style={{ borderColor: "var(--border)" }}>
           <h2 className="text-xl font-bold" style={{ color: "var(--text)" }}>{t("admin.order_detail.actions.add_dish")}</h2>
-          <button onClick={onClose} className="rounded-full p-2 transition-colors" style={{ backgroundColor: "var(--surface)", color: "var(--text)" }}>
+          <button
+            onClick={onClose}
+            aria-label={t("common.close", { defaultValue: "Close" })}
+            className="rounded-full p-2 transition-colors"
+            style={{ backgroundColor: "var(--surface)", color: "var(--text)" }}>
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -139,34 +198,79 @@ export default function MenuSelectionModal({
               <div className="animate-pulse flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "var(--primary)" }}></div> {t("admin.order_detail.messages.loading")}
               </div>
-            ) : categories.length > 0 ? (
-              categories.map((cat) => (
-                <div key={cat.categoryId} className="mb-6">
-                  <h3 className="mb-3 text-lg font-bold" style={{ color: "var(--primary)" }}>{cat.categoryName}</h3>
-                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-                    {cat.items.map((dish) => (
-                      <div
-                        key={dish.id}
-                        onClick={() => handleAddItem(dish)}
-                        className="cursor-pointer rounded-lg border p-3 transition hover:-translate-y-1 hover:shadow-md"
-                        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-                      >
-                        {dish.imageUrl ? (
-                          <img src={dish.imageUrl} alt={dish.name} className="mb-2 h-24 w-full rounded-md object-cover" />
-                        ) : (
-                          <div className="mb-2 flex h-24 w-full items-center justify-center rounded-md text-xs font-semibold" style={{ backgroundColor: "var(--border)", color: "var(--text-muted)" }}>
-                            {t("admin.order_detail.messages.no_image")}
-                          </div>
-                        )}
-                        <h4 className="font-semibold text-sm truncate" style={{ color: "var(--text)" }}>{dish.name}</h4>
-                        <p className="text-sm font-medium mt-1" style={{ color: "var(--primary)" }}>
-                          {(dish.price ?? 0).toLocaleString("vi-VN")}đ
-                        </p>
-                      </div>
-                    ))}
+            ) : categories.length > 0 || combos.length > 0 ? (
+              <>
+                {categories.map((cat) => (
+                  <div key={cat.categoryId} className="mb-6">
+                    <h3 className="mb-3 text-lg font-bold" style={{ color: "var(--primary)" }}>{cat.categoryName}</h3>
+                    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+                      {cat.items.map((dish) => (
+                        <div
+                          key={dish.id}
+                          onClick={() => handleAddItem(dish)}
+                          className="cursor-pointer rounded-lg border p-3 transition hover:-translate-y-1 hover:shadow-md"
+                          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+                        >
+                          {dish.imageUrl ? (
+                            <img src={dish.imageUrl} alt={dish.name} className="mb-2 h-24 w-full rounded-md object-cover" />
+                          ) : (
+                            <div className="mb-2 flex h-24 w-full items-center justify-center rounded-md text-xs font-semibold" style={{ backgroundColor: "var(--border)", color: "var(--text-muted)" }}>
+                              {t("admin.order_detail.messages.no_image")}
+                            </div>
+                          )}
+                          <h4 className="font-semibold text-sm truncate" style={{ color: "var(--text)" }}>{dish.name}</h4>
+                          <p className="text-sm font-medium mt-1" style={{ color: "var(--primary)" }}>
+                            {(dish.price ?? 0).toLocaleString("vi-VN")}đ
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+
+                {combos.length > 0 && (
+                  <div className="mb-2">
+                    <h3 className="mb-3 text-lg font-bold" style={{ color: "var(--primary)" }}>
+                      {t("dashboard.menu.combo.title", {
+                        defaultValue: "Combo Management",
+                      })}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {combos.map((combo) => (
+                        <button
+                          key={combo.id}
+                          type="button"
+                          onClick={() => handleAddCombo(combo)}
+                          className="rounded-lg border p-3 text-left transition hover:-translate-y-1 hover:shadow-md"
+                          style={{
+                            borderColor: "var(--border)",
+                            backgroundColor: "var(--surface)",
+                          }}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-semibold" style={{ color: "var(--text)" }}>
+                                {combo.name}
+                              </p>
+                              <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                                {(combo.details || [])
+                                  .map((detail) => {
+                                    const quantity = detail.quantity > 0 ? detail.quantity : 1;
+                                    const dishName = detail.dishName || dishLookup[detail.dishId]?.name || detail.dishId;
+                                    return `${dishName} x${quantity}`;
+                                  })
+                                  .join(" · ")}
+                              </p>
+                            </div>
+                            <span className="text-sm font-semibold" style={{ color: "var(--primary)" }}>
+                              {Number(combo.price || 0).toLocaleString("vi-VN")}đ
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <p style={{ color: "var(--text-muted)" }}>{t("admin.order_detail.messages.no_menu_items")}</p>
             )}
