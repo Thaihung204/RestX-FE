@@ -116,7 +116,7 @@ const RequestTenantPage: React.FC = () => {
               rules={[
                 { required: true, message: "Please enter restaurant name" },
               ]}>
-              <Input placeholder="e.g., My Restaurant" />
+              <Input />
             </Form.Item>
 
             <Form.Item
@@ -127,11 +127,11 @@ const RequestTenantPage: React.FC = () => {
                 { validator: validateSlug },
               ]}
               tooltip="This will be your portal hostname">
-              <Input placeholder="myrestaurant" />
+              <Input />
             </Form.Item>
 
             <Form.Item label="Business Name" name="businessName">
-              <Input placeholder="Legal business name (optional)" />
+              <Input />
             </Form.Item>
 
             <Title level={4} className="mt-6">
@@ -139,7 +139,7 @@ const RequestTenantPage: React.FC = () => {
             </Title>
 
             <Form.Item label="Business Phone" name="businessPrimaryPhone">
-              <Input placeholder="+84 123 456 789 (optional)" />
+              <Input />
             </Form.Item>
 
             <Form.Item
@@ -148,7 +148,7 @@ const RequestTenantPage: React.FC = () => {
               rules={[
                 { type: "email", message: "Please enter a valid email" },
               ]}>
-              <Input placeholder="info@yourrestaurant.com (optional)" />
+              <Input />
             </Form.Item>
 
             <Title level={4} className="mt-6">
@@ -161,7 +161,6 @@ const RequestTenantPage: React.FC = () => {
                 fieldName="businessAddressLine1"
                 cityFieldName="businessAddressLine3"
                 districtWardFieldName="businessAddressLine2"
-                placeholder="Street address (optional)" 
               />
             </Form.Item>
 
@@ -178,11 +177,11 @@ const RequestTenantPage: React.FC = () => {
             />
 
             <Form.Item label="Address Line 4" name="businessAddressLine4" initialValue="Việt Nam">
-              <Input placeholder="State/Province (optional)" />
+              <Input />
             </Form.Item>
 
             <Form.Item label="Country" name="businessCountry" initialValue="Việt Nam">
-              <Input placeholder="Country (optional)" />
+              <Input />
             </Form.Item>
 
             <Form.Item className="mt-8">

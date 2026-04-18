@@ -525,7 +525,6 @@ function AIChatMock() {
             fontSize: 13,
             color: "var(--text-muted)",
           }}>
-          {t("tour.customer.ai_chat.input_placeholder")}
         </div>
         <div
           style={{

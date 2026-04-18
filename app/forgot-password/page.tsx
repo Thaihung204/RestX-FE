@@ -137,7 +137,6 @@ export default function ForgotPasswordPage() {
                 label={t('forgot_password_page.email_label')}
                 icon={<MailOutlined />}
                 type="email"
-                placeholder={t('forgot_password_page.email_placeholder')}
                 required
                 value={email}
                 onChange={handleEmailChange}

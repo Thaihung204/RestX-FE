@@ -7,7 +7,7 @@ import { DropDown } from "@/components/ui/DropDown";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import ingredientService, {
-  IngredientItem,
+    IngredientItem,
 } from "@/lib/services/ingredientService";
 import menuService from "@/lib/services/menuService";
 import recipeService, { DishRecipeItem } from "@/lib/services/recipeService";
@@ -23,10 +23,6 @@ interface MenuItem extends DishCardItem {
 export default function MenuPage() {
   const { t } = useTranslation();
   const { message } = App.useApp();
-
-  const formatPrice = (price: number) => {
-    return price.toLocaleString("vi-VN");
-  };
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [allMenuItems, setAllMenuItems] = useState<MenuItem[]>([]);
@@ -595,7 +591,6 @@ export default function MenuPage() {
                     <div key={item.id} className="space-y-2">
                       <DishCard
                         item={item}
-                        formatPrice={formatPrice}
                         onToggleStatus={handleToggleStatus}
                         onAddIngredients={handleOpenIngredients}
                         labels={{
@@ -653,7 +648,6 @@ export default function MenuPage() {
               onChange={(e) => setSelectedIngredientId(e.target.value)}
               disabled={ingredientsLoading}>
               <option value="">
-                {t("dashboard.menu.ingredients.modal.select_placeholder")}
               </option>
               {ingredients.map((ingredient) => (
                 <option
@@ -672,9 +666,6 @@ export default function MenuPage() {
                   setQuantity(nextValue);
                 }
               }}
-              placeholder={t(
-                "dashboard.menu.ingredients.modal.quantity_placeholder",
-              )}
               className="w-full px-4 py-2.5 rounded-lg outline-none transition-all"
               style={{
                 background: "var(--surface)",

@@ -2,11 +2,11 @@
 
 import { App as AntdApp, ConfigProvider, theme } from "antd";
 import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
+    createContext,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from "react";
 import { darkTheme, lightTheme, ThemeMode } from "./themeConfig";
 
@@ -189,6 +189,11 @@ export default function AntdProvider({
         <AntdApp>{children}</AntdApp>
       </ConfigProvider>
       <style jsx global>{`
+        /* Ant Design message toast - always on top */
+        .ant-message {
+          z-index: 999999 !important;
+        }
+
         /* Body & Layout Base */
         body {
           background: var(--bg-base);

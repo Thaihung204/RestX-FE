@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
-import { Typography, Row, Col, Space } from 'antd';
-import { ReadOutlined } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
 import { DishResponseDto } from '@/lib/services/dishService';
+import { ReadOutlined } from '@ant-design/icons';
+import { Col, Row, Typography } from 'antd';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { formatVND } from "@/lib/utils/currency";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -94,7 +95,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ menu = [] }) => {
                             </h4>
                             <span style={{ flexGrow: 1, borderBottom: '2px dotted var(--border)', margin: '0 8px' }}></span>
                             <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: 16 }}>
-                              {dish.price?.toLocaleString()}đ
+                              {formatVND(dish.price ?? 0)}
                             </span>
                           </div>
                           <p style={{ color: 'var(--text-muted)', marginTop: 4, fontSize: 13, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -147,7 +148,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ menu = [] }) => {
                             </h4>
                             <span style={{ flexGrow: 1, borderBottom: '2px dotted var(--border)', margin: '0 8px' }}></span>
                             <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: 16 }}>
-                              {dish.price?.toLocaleString()}đ
+                              {formatVND(dish.price ?? 0)}
                             </span>
                           </div>
                           <p style={{ color: 'var(--text-muted)', marginTop: 4, fontSize: 13, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>

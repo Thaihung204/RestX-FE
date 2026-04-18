@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { formatVND } from "@/lib/utils/currency";
 
 interface MenuStrategyCardProps {
   menuStrategy: {
@@ -187,7 +188,7 @@ export default function MenuStrategyCard({ menuStrategy }: MenuStrategyCardProps
                   <span
                     className="text-sm font-bold"
                     style={{ color: "var(--primary)" }}>
-                    {combo.suggestedPrice.toLocaleString("vi-VN")}đ
+                    {formatVND(combo.suggestedPrice)}
                   </span>
                   <span
                     className="text-xs px-2 py-1 rounded"
@@ -195,7 +196,7 @@ export default function MenuStrategyCard({ menuStrategy }: MenuStrategyCardProps
                       background: "var(--success-soft)",
                       color: "var(--success)",
                     }}>
-                    +{combo.aovIncrease.toLocaleString("vi-VN")}đ AOV
+                    +{formatVND(combo.aovIncrease)} AOV
                   </span>
                 </div>
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>

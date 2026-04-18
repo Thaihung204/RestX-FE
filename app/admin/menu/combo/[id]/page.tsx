@@ -3,8 +3,8 @@
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import dishService, {
-  ComboDetailItemDto,
-  DishResponseDto,
+    ComboDetailItemDto,
+    DishResponseDto,
 } from "@/lib/services/dishService";
 import { App, Button } from "antd";
 import { useParams, useRouter } from "next/navigation";
@@ -492,9 +492,6 @@ export default function ComboFormPage() {
                       border: "1px solid var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder={t("dashboard.menu.combo.placeholders.name", {
-                      defaultValue: "Enter combo name",
-                    })}
                   />
                 </div>
 
@@ -505,7 +502,7 @@ export default function ComboFormPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.price}
+                    value={formData.price || ""}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, price: e.target.value }))
                     }
@@ -515,7 +512,6 @@ export default function ComboFormPage() {
                       border: "1px solid var(--border)",
                       color: "var(--text)",
                     }}
-                    placeholder="0"
                   />
                 </div>
               </div>
@@ -538,9 +534,6 @@ export default function ComboFormPage() {
                     border: "1px solid var(--border)",
                     color: "var(--text)",
                   }}
-                  placeholder={t("dashboard.menu.combo.placeholders.description", {
-                    defaultValue: "Describe this combo",
-                  })}
                 />
               </div>
 
@@ -680,9 +673,6 @@ export default function ComboFormPage() {
                         handleDetailChange(index, "dishId", e.target.value)
                       }>
                       <option value="">
-                        {t("dashboard.menu.combo.placeholders.select_dish", {
-                          defaultValue: "Select dish",
-                        })}
                       </option>
                       {availableDishes.map((dish) => (
                         <option key={dish.id} value={dish.id}>
@@ -694,7 +684,7 @@ export default function ComboFormPage() {
                     <input
                       type="number"
                       min="1"
-                      value={detail.quantity}
+                      value={detail.quantity || ""}
                       onChange={(e) =>
                         handleDetailChange(index, "quantity", e.target.value)
                       }

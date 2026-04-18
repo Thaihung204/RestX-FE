@@ -7,6 +7,7 @@ import { App, Button, Popconfirm } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 export default function ComboManagementPage() {
   const { t } = useTranslation();
@@ -36,8 +37,6 @@ export default function ComboManagementPage() {
   useEffect(() => {
     fetchCombos();
   }, []);
-
-  const formatPrice = (price: number) => price.toLocaleString("vi-VN");
 
   const activeCount = useMemo(
     () => combos.filter((combo) => combo.isActive).length,
@@ -254,7 +253,7 @@ export default function ComboManagementPage() {
                           {t("dashboard.menu.combo.fields.price", { defaultValue: "Price" })}
                         </p>
                         <p className="font-semibold" style={{ color: "var(--primary)" }}>
-                          {formatPrice(combo.price)} VND
+                          {formatVND(combo.price)}
                         </p>
                       </div>
                       <div>

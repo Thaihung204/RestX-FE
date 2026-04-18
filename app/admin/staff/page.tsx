@@ -247,7 +247,6 @@ export default function StaffPage() {
                     setCurrentPage(1);
                     setSearchQuery(e.target.value);
                   }}
-                  placeholder={t("dashboard.staff.search_placeholder")}
                   className="w-full px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition-all"
                   style={{
                     background: "var(--surface)",

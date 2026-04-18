@@ -2,10 +2,10 @@
 
 import { DropDown } from "@/components/ui/DropDown";
 import reservationService, {
-  PaginatedReservations,
-  ReservationDetail,
-  ReservationListItem,
-  ReservationStatus,
+    PaginatedReservations,
+    ReservationDetail,
+    ReservationListItem,
+    ReservationStatus,
 } from "@/lib/services/reservationService";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
@@ -13,6 +13,7 @@ import { Select, message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 const tableHeaderKeys = [
   "reservation_code",
@@ -297,7 +298,7 @@ function ReservationDetailModal({
                   />
                   <InfoRow
                     label={t("admin.reservations.modal.booking.deposit")}
-                    value={`${detail.depositAmount.toLocaleString()}đ`}
+                    value={formatVND(detail.depositAmount)}
                   />
                   <InfoRow
                     label={t("admin.reservations.modal.booking.deposit_paid")}
@@ -547,7 +548,6 @@ export default function ReservationsPage() {
           }}>
           <input
             type="text"
-            placeholder={t("admin.reservations.filter.search_placeholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1 min-w-[200px] px-3 py-2 rounded-lg text-sm outline-none"

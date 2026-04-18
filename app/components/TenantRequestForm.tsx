@@ -156,7 +156,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
                   { min: 3, message: t("tenant_requests.form.restaurant_name_min") },
                 ]}
               >
-                <Input prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />} placeholder={t("tenant_requests.form.restaurant_name")} />
+                <Input prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />} />
               </Form.Item>
             </Col>
 
@@ -173,7 +173,6 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
                 <div className="url-bar">
                   <span className="url-segment url-scheme">https://</span>
                   <Input
-                    placeholder={t("tenants.create.fields.host_name")}
                     value={hostNameValue}
                     onChange={(e) => {
                       const value = e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -188,7 +187,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
           </Row>
 
           <Form.Item label={t("tenant_requests.form.business_name")} name="businessName">
-            <Input prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />} placeholder={t("tenant_requests.form.business_name")} />
+            <Input prefix={<ShopOutlined style={{ color: "var(--text-muted)" }} />} />
           </Form.Item>
 
           <Row gutter={16}>
@@ -198,12 +197,12 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
                 name="businessEmailAddress"
                 rules={[{ type: "email", message: t("tenant_requests.form.business_email_invalid") }]}
               >
-                <Input prefix={<MailOutlined style={{ color: "var(--text-muted)" }} />} placeholder={t("tenant_requests.form.business_email")} type="email" />
+                <Input prefix={<MailOutlined style={{ color: "var(--text-muted)" }} />} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
               <Form.Item label={t("tenant_requests.form.phone_number")} name="businessPrimaryPhone">
-                <Input prefix={<PhoneOutlined style={{ color: "var(--text-muted)" }} />} placeholder={t("tenant_requests.form.phone_number_placeholder")} />
+                <Input prefix={<PhoneOutlined style={{ color: "var(--text-muted)" }} />} />
               </Form.Item>
             </Col>
           </Row>
@@ -215,7 +214,6 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
               cityFieldName="businessAddressLine3"
               districtWardFieldName="businessAddressLine2"
               countryFieldName="businessCountry"
-              placeholder={t("tenant_requests.form.address_line_1_placeholder")} 
             />
           </Form.Item>
 
@@ -231,7 +229,7 @@ export const TenantRequestForm: React.FC<TenantRequestFormProps> = ({
           />
 
           <Form.Item label={t("tenant_requests.form.country_placeholder")} name="businessCountry" initialValue="Việt Nam">
-            <Input placeholder={t("tenant_requests.form.country_placeholder")} readOnly />
+            <Input readOnly />
           </Form.Item>
         </Form>
       </div>

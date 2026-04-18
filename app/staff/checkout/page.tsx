@@ -1,36 +1,37 @@
 "use client";
 
 import paymentService, { PaymentDetail } from "@/lib/services/paymentService";
+import { formatVND } from "@/lib/utils/currency";
 import {
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  CreditCardOutlined,
-  DollarOutlined,
-  GiftOutlined,
-  PrinterOutlined,
-  QrcodeOutlined,
-  TableOutlined,
-  UserOutlined,
-  WalletOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CreditCardOutlined,
+    DollarOutlined,
+    GiftOutlined,
+    PrinterOutlined,
+    QrcodeOutlined,
+    TableOutlined,
+    UserOutlined,
+    WalletOutlined,
 } from "@ant-design/icons";
 import {
-  Avatar,
-  Button,
-  Card,
-  Col,
-  Divider,
-  Flex,
-  Input,
-  InputNumber,
-  message,
-  Modal,
-  Radio,
-  Result,
-  Row,
-  Space,
-  Statistic,
-  Tag,
-  Typography,
+    Avatar,
+    Button,
+    Card,
+    Col,
+    Divider,
+    Flex,
+    Input,
+    InputNumber,
+    message,
+    Modal,
+    Radio,
+    Result,
+    Row,
+    Space,
+    Statistic,
+    Tag,
+    Typography,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -372,7 +373,7 @@ export default function CheckoutPage() {
             <Text
               strong
               style={{ fontSize: isMobile ? 18 : 24, color: "var(--primary)" }}>
-              {bill.total.toLocaleString("vi-VN")}đ
+              {formatVND(bill.total)}
             </Text>
           </div>
           <Button
@@ -556,7 +557,7 @@ export default function CheckoutPage() {
                       <Text
                         strong
                         style={{ color: "var(--primary)", fontSize: 16 }}>
-                        {Number(payment.amount).toLocaleString("vi-VN")}đ
+                        {formatVND(Number(payment.amount))}
                       </Text>
                       <Text type="secondary" style={{ display: "block" }}>
                         {payment.paymentMethodId}
@@ -568,35 +569,7 @@ export default function CheckoutPage() {
             )}
           </div>
         )}
-      </Card>
-
-      {/* Search */}
-      {/* <Card
-        style={{
-          borderRadius: 12,
-          marginBottom: isMobile ? 16 : 24,
-          border: '1px solid var(--border)',
-        }}
-        styles={{ body: { padding: isMobile ? 12 : '16px 24px' } }}
-      >
-        <Search
-          placeholder={isMobile ? t('staff.checkout.search.placeholder') : t('staff.checkout.search.placeholder_full')}
-          allowClear
-          size={isMobile ? 'middle' : 'large'}
-          style={{ width: '100%', maxWidth: isMobile ? '100%' : 400 }}
-          prefix={<SearchOutlined style={{ color: '#bbb' }} />}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-      </Card> */}
-
-      {/* Bills List */}
-      {/* <Row gutter={[24, 24]}>
-        {filteredBills.map(bill => (
-          <Col xs={24} md={12} lg={8} key={bill.id}>
-            {renderBillCard(bill)}
-          </Col>
-        ))}
-      </Row> */}
+      </Card> 
 
       {/* Payment Modal */}
       <Modal
@@ -862,9 +835,9 @@ export default function CheckoutPage() {
                       <InputNumber
                         min={0}
                         max={100}
-                        value={discountPercent}
+                        value={discountPercent || undefined}
                         onChange={(value) => setDiscountPercent(value || 0)}
-                        formatter={(value) => `${value}%`}
+                        formatter={(value) => value ? `${value}%` : ""}
                         parser={(value) => Number(value?.replace("%", "") || 0)}
                         size={isMobile ? "small" : "middle"}
                         style={{
@@ -928,7 +901,7 @@ export default function CheckoutPage() {
                             fontSize: isMobile ? 13 : 14,
                             fontWeight: 500,
                           }}>
-                          {selectedBill.subtotal.toLocaleString("vi-VN")}đ
+                          {formatVND(selectedBill.subtotal)}
                         </Text>
                       </div>
                       {discountPercent > 0 && (
@@ -959,7 +932,7 @@ export default function CheckoutPage() {
                               fontSize: isMobile ? 13 : 14,
                               fontWeight: 500,
                             }}>
-                            -{calculateDiscount().toLocaleString("vi-VN")}đ
+                            -{formatVND(calculateDiscount())}
                           </Text>
                         </div>
                       )}
@@ -986,7 +959,7 @@ export default function CheckoutPage() {
                             fontSize: isMobile ? 13 : 14,
                             fontWeight: 500,
                           }}>
-                          {selectedBill.tax.toLocaleString("vi-VN")}đ
+                          {formatVND(selectedBill.tax)}
                         </Text>
                       </div>
                       <div
@@ -1016,7 +989,7 @@ export default function CheckoutPage() {
                             color: "var(--primary)",
                             fontWeight: 500,
                           }}>
-                          {calculateFinalTotal().toLocaleString("vi-VN")}đ
+                          {formatVND(calculateFinalTotal())}
                         </Text>
                       </div>
                     </div>

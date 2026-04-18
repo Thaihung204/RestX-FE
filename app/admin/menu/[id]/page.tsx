@@ -410,7 +410,6 @@ export default function MenuItemFormPage() {
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
                         }
-                        placeholder="e.g., Grilled Salmon"
                       />
                     </div>
 
@@ -489,7 +488,6 @@ export default function MenuItemFormPage() {
                           onBlur={(e) =>
                             (e.currentTarget.style.boxShadow = "none")
                           }
-                          placeholder="0"
                         />
                         <span
                           className="absolute right-4 top-1/2 -translate-y-1/2 font-bold"
@@ -525,7 +523,6 @@ export default function MenuItemFormPage() {
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
                         }
-                        placeholder="Describe the dish, ingredients, or special features..."
                       />
                     </div>
 
@@ -556,7 +553,6 @@ export default function MenuItemFormPage() {
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
                         }
-                        placeholder="0"
                       />
                     </div>
                   </div>

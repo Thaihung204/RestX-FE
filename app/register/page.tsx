@@ -267,7 +267,6 @@ export default function RegisterPage() {
                   id="firstName"
                   name="firstName"
                   label={t('register_page.first_name')}
-                  placeholder="John"
                   value={formData.firstName}
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, firstName: true }))}
@@ -282,7 +281,6 @@ export default function RegisterPage() {
                   id="lastName"
                   name="lastName"
                   label={t('register_page.last_name')}
-                  placeholder="Doe"
                   value={formData.lastName}
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, lastName: true }))}
@@ -302,7 +300,6 @@ export default function RegisterPage() {
                 label={t('register_page.email')}
                 icon={<MailOutlined />}
                 type="email"
-                placeholder="name@example.com"
                 value={formData.email}
                 onChange={handleChange}
                 onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
@@ -321,7 +318,6 @@ export default function RegisterPage() {
                 label={t('register_page.phone')}
                 icon={<PhoneOutlined />}
                 type="tel"
-                placeholder="0123456789"
                 value={formData.phone}
                 onChange={handleChange}
                 onBlur={() => setTouched(prev => ({ ...prev, phone: true }))}
@@ -340,7 +336,6 @@ export default function RegisterPage() {
                 label={t('register_page.password')}
                 icon={<LockOutlined />}
                 type={showPassword ? "text" : "password"}
-                placeholder={t('register_page.password_placeholder')}
                 value={formData.password}
                 onChange={handleChange}
                 onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
@@ -370,7 +365,6 @@ export default function RegisterPage() {
                 label={t('register_page.confirm_password')}
                 icon={<LockOutlined />}
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder={t('register_page.confirm_password_placeholder')}
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 onBlur={() => setTouched(prev => ({ ...prev, confirmPassword: true }))}

@@ -108,7 +108,6 @@ export default function ReservationLookupSection() {
                             <span className="text-lg" style={{ color: 'var(--primary)' }}>#</span>
                             <input
                                 type="text"
-                                placeholder={t('landing.lookup.placeholder')}
                                 value={code}
                                 onChange={(e) => setCode(e.target.value)}
                                 className="w-full bg-transparent py-2 font-mono text-base outline-none"
