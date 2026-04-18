@@ -2,12 +2,14 @@
 
 import ContentAreaLoader from "@/components/admin/ContentAreaLoader";
 import DishCard, { DishCardItem } from "@/components/admin/menu/DishCard";
+import MenuManagementTabs from "@/components/admin/menu/MenuManagementTabs";
 import { DropDown } from "@/components/ui/DropDown";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import ingredientService, {
   IngredientItem,
 } from "@/lib/services/ingredientService";
+import menuService from "@/lib/services/menuService";
 import recipeService, { DishRecipeItem } from "@/lib/services/recipeService";
 import { App, Button, Modal } from "antd";
 import Link from "next/link";
@@ -27,6 +29,7 @@ export default function MenuPage() {
   };
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [allMenuItems, setAllMenuItems] = useState<MenuItem[]>([]);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,6 +44,50 @@ export default function MenuPage() {
   const [selectedIngredientId, setSelectedIngredientId] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("1");
   const [savingRecipe, setSavingRecipe] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("All");
+
+  const normalizeMenuItem = (item: any, index: number): MenuItem => ({
+    id:
+      item.id?.toString() ||
+      item.dishId?.toString() ||
+      `dish-${index}-${Date.now()}`,
+    name: item.name || "",
+    categoryId:
+      item.categoryId?.toString() ||
+      item.category?.id?.toString() ||
+      item.category?.categoryId?.toString() ||
+      "",
+    categoryName:
+      item.categoryName?.trim() ||
+      item.category?.categoryName?.trim() ||
+      item.category?.name?.trim() ||
+      item.category?.trim() ||
+      "",
+    price: item.price || 0,
+    image:
+      item.mainImageUrl ||
+      item.imageUrl ||
+      item.image ||
+      (item.images && item.images.length > 0
+        ? (item.images.find((img: any) => img.imageType === 0) || item.images[0])
+            .imageUrl
+        : null) ||
+      "/placeholder-dish.jpg",
+    description: item.description || "",
+    isActive:
+      item.isActive !== undefined
+        ? item.isActive
+        : item.available !== undefined
+          ? item.available
+          : true,
+    available:
+      item.isActive !== undefined
+        ? item.isActive
+        : item.available !== undefined
+          ? item.available
+          : true,
+    isBestSeller: item.isBestSeller !== undefined ? item.isBestSeller : false,
+  });
 
   const fetchMenuItems = async () => {
     try {
@@ -60,52 +107,11 @@ export default function MenuPage() {
         (Array.isArray(data) ? data : null);
 
       if (arrayData && Array.isArray(arrayData)) {
-        const mappedData = arrayData.map((item: any, index: number) => ({
-          id:
-            item.id?.toString() ||
-            item.dishId?.toString() ||
-            `dish-${index}-${Date.now()}`,
-          name: item.name || "",
-          categoryId:
-            item.categoryId?.toString() ||
-            item.category?.id?.toString() ||
-            item.category?.categoryId?.toString() ||
-            "",
-          categoryName:
-            item.categoryName?.trim() ||
-            item.category?.categoryName?.trim() ||
-            item.category?.name?.trim() ||
-            item.category?.trim() ||
-            "",
-          price: item.price || 0,
-          image:
-            item.mainImageUrl ||
-            item.imageUrl ||
-            item.image ||
-            (item.images && item.images.length > 0
-              ? (
-                  item.images.find((img: any) => img.imageType === 0) ||
-                  item.images[0]
-                ).imageUrl
-              : null) ||
-            "/placeholder-dish.jpg",
-          description: item.description || "",
-          isActive:
-            item.isActive !== undefined
-              ? item.isActive
-              : item.available !== undefined
-                ? item.available
-                : true,
-          available:
-            item.isActive !== undefined
-              ? item.isActive
-              : item.available !== undefined
-                ? item.available
-                : true,
-          isBestSeller:
-            item.isBestSeller !== undefined ? item.isBestSeller : false,
-        }));
+        const mappedData = arrayData.map((item: any, index: number) =>
+          normalizeMenuItem(item, index),
+        );
 
+        setAllMenuItems(mappedData);
         setMenuItems(mappedData);
         setError(null);
       } else {
@@ -148,6 +154,28 @@ export default function MenuPage() {
     fetchIngredients();
   }, []);
 
+  const handleCategoryChange = async (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+
+    if (categoryId === "All") {
+      setMenuItems(allMenuItems);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await menuService.getDishesByCategory(categoryId);
+      const arrayData = Array.isArray(data) ? data : [];
+      setMenuItems(arrayData.map((item: any, index: number) => normalizeMenuItem(item, index)));
+    } catch {
+      setError(t("dashboard.menu.errors.load_failed"));
+      message.error(t("dashboard.menu.toasts.fetch_error_message"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleToggleStatus = async (item: DishCardItem) => {
     const nextStatus = !item.isActive;
     try {
@@ -162,6 +190,17 @@ export default function MenuPage() {
             }),
       );
       setMenuItems((prev) =>
+        prev.map((dish) =>
+          dish.id === item.id
+            ? {
+                ...dish,
+                isActive: nextStatus,
+                available: nextStatus,
+              }
+            : dish,
+        ),
+      );
+      setAllMenuItems((prev) =>
         prev.map((dish) =>
           dish.id === item.id
             ? {
@@ -275,13 +314,6 @@ export default function MenuPage() {
     ];
   }, [dbCategories, t]);
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState("All");
-
-  const filteredItems =
-    selectedCategoryId === "All"
-      ? menuItems
-      : menuItems.filter((item) => item.categoryId === selectedCategoryId);
-
   const isNumericInput = (value: string) => /^\d*\.?\d*$/.test(value);
 
   return (
@@ -301,34 +333,30 @@ export default function MenuPage() {
                 {t("dashboard.menu.subtitle")}
               </p>
             </div>
-            <Link href="/admin/menu/new">
-              <button
-                className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-                style={{ background: "var(--primary)", color: "white" }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background =
-                    "linear-gradient(to right, #B32607)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background =
-                    "linear-gradient(to right, var(--primary))")
-                }
-                suppressHydrationWarning>
-                <svg
-                  className="w-5 h-5 inline-block mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                {t("dashboard.menu.add_item")}
-              </button>
-            </Link>
+            <div className="flex items-center justify-end gap-2 flex-wrap">
+              <MenuManagementTabs activeTab="dishes" />
+
+              <Link href="/admin/menu/new">
+                <button
+                  className="px-4 py-2 text-white rounded-lg font-medium transition-all"
+                  style={{ background: "var(--primary)", color: "white" }}
+                  suppressHydrationWarning>
+                  <svg
+                    className="w-5 h-5 inline-block mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  {t("dashboard.menu.add_item")}
+                </button>
+              </Link>
+            </div>
           </div>
 
           {/* Statistics Cards */}
@@ -347,7 +375,7 @@ export default function MenuPage() {
                   <p
                     className="text-3xl font-bold mt-1"
                     style={{ color: "var(--text)" }}>
-                    {menuItems.length}
+                    {allMenuItems.length}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
@@ -379,7 +407,7 @@ export default function MenuPage() {
                     {t("dashboard.menu.stats.available")}
                   </p>
                   <p className="text-3xl font-bold text-green-500 mt-1">
-                    {menuItems.filter((i) => i.isActive).length}
+                    {allMenuItems.filter((i) => i.isActive).length}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
@@ -413,7 +441,7 @@ export default function MenuPage() {
                   <p
                     className="text-3xl font-bold mt-1"
                     style={{ color: "var(--primary)" }}>
-                    {menuItems.filter((i) => i.isBestSeller).length}
+                    {allMenuItems.filter((i) => i.isBestSeller).length}
                   </p>
                 </div>
                 <div
@@ -506,7 +534,7 @@ export default function MenuPage() {
                 {categoryFilters.map((category) => (
                   <button
                     key={category.id}
-                    onClick={() => setSelectedCategoryId(category.id)}
+                    onClick={() => void handleCategoryChange(category.id)}
                     className={`px-4 py-2 rounded-lg font-medium transition-all`}
                     style={
                       selectedCategoryId === category.id
@@ -528,7 +556,7 @@ export default function MenuPage() {
               </div>
 
               {/* Empty State */}
-              {filteredItems.length === 0 ? (
+              {menuItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <svg
                     className="w-16 h-16 mb-4"
@@ -563,7 +591,7 @@ export default function MenuPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
-                  {filteredItems.map((item) => (
+                  {menuItems.map((item) => (
                     <div key={item.id} className="space-y-2">
                       <DishCard
                         item={item}

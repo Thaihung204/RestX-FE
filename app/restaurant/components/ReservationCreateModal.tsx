@@ -27,6 +27,17 @@ const initialFormState = {
   requests: '',
 };
 
+const getTodayLocalDate = () => {
+  const now = new Date();
+  const tzOffset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
+};
+
+const isFutureReservationTime = (date: string, time: string) => {
+  const selectedDateTime = dayjs(`${date}T${time}:00`);
+  return selectedDateTime.isValid() && selectedDateTime.isAfter(dayjs());
+};
+
 export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
   open,
   table,
@@ -63,6 +74,11 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
     if (!table) return;
     if (!form.name || !form.phone) {
       setError(t('landing.booking.confirm.error_required'));
+      return;
+    }
+
+    if (!isFutureReservationTime(form.date, form.time)) {
+      setError(t('reservation_detail.edit.date_in_past', { defaultValue: 'Reservation time must be in the future.' }));
       return;
     }
 
@@ -241,9 +257,15 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                         format="DD/MM/YYYY"
                         allowClear={false}
                         style={{ width: '100%', marginTop: 8 }}
+                        disabledDate={(current) => {
+                          if (!current) return false;
+                          return current.startOf('day').isBefore(dayjs().startOf('day'));
+                        }}
                         onChange={(value) => {
                           if (!value) return;
-                          setForm((prev) => ({ ...prev, date: value.format('YYYY-MM-DD') }));
+                          const selectedDate = value.format('YYYY-MM-DD');
+                          const safeDate = selectedDate < getTodayLocalDate() ? getTodayLocalDate() : selectedDate;
+                          setForm((prev) => ({ ...prev, date: safeDate }));
                         }}
                       />
                     </div>
@@ -254,6 +276,7 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                       <input
                         type="time"
                         value={form.time}
+                        min={form.date === getTodayLocalDate() ? dayjs().format('HH:mm') : undefined}
                         onChange={(e) => setForm((prev) => ({ ...prev, time: e.target.value }))}
                         style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)' }}
                       />

@@ -1,3 +1,4 @@
+import type { ComboSummaryDto } from "@/lib/services/dishService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Modal, Row, Select, Typography } from "antd";
@@ -19,12 +20,14 @@ interface AddOrderItemProps {
   setSelectedOrderIdForAdd: (value: string) => void;
   orders: OrderOption[];
   menuCategories: MenuCategory[];
+  comboItems: ComboSummaryDto[];
   activeMenuCategory: string;
   setActiveMenuCategory: (value: string) => void;
   cart: { item: DishItem; quantity: number }[];
   addToCart: (item: DishItem) => void;
+  addComboToCart: (combo: ComboSummaryDto) => void;
   updateCartQuantity: (itemId: string, delta: number) => void;
-  t: (key: string) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }
 
 export default function AddOrderItem({
@@ -35,10 +38,12 @@ export default function AddOrderItem({
   setSelectedOrderIdForAdd,
   orders,
   menuCategories,
+  comboItems,
   activeMenuCategory,
   setActiveMenuCategory,
   cart,
   addToCart,
+  addComboToCart,
   updateCartQuantity,
   t,
 }: AddOrderItemProps) {
@@ -196,6 +201,90 @@ export default function AddOrderItem({
                 );
               })}
           </Row>
+
+          {comboItems.length > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <Text
+                strong
+                style={{
+                  display: "block",
+                  marginBottom: 8,
+                  fontSize: 13,
+                }}>
+                {t("dashboard.menu.combo.title", {
+                  defaultValue: "Combos",
+                })}
+              </Text>
+
+              <Row gutter={[12, 12]}>
+                {comboItems.map((combo) => {
+                  const totalDishes = (combo.details || []).reduce(
+                    (sum, detail) => sum + (detail.quantity > 0 ? detail.quantity : 1),
+                    0,
+                  );
+
+                  return (
+                    <Col xs={24} sm={12} key={combo.id}>
+                      <Card size="small" styles={{ body: { padding: 10 } }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 8,
+                          }}>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <Text
+                              strong
+                              style={{
+                                fontSize: 13,
+                                display: "block",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}>
+                              {combo.name}
+                            </Text>
+
+                            <Text
+                              style={{
+                                display: "block",
+                                fontSize: 11,
+                                color: "var(--text-muted)",
+                              }}>
+                              {t("dashboard.menu.combo.fields.total_items", {
+                                defaultValue: "Total items",
+                              })}
+                              : {totalDishes}
+                            </Text>
+
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color: "var(--primary)",
+                                fontWeight: 600,
+                              }}>
+                              {Number(combo.price || 0).toLocaleString("vi-VN")}đ
+                            </div>
+                          </div>
+
+                          <Button
+                            size="small"
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => addComboToCart(combo)}>
+                            {t("dashboard.menu.combo.actions.add_combo", {
+                              defaultValue: "Add Combo",
+                            })}
+                          </Button>
+                        </div>
+                      </Card>
+                    </Col>
+                  );
+                })}
+              </Row>
+            </div>
+          )}
         </Col>
       </Row>
     </Modal>

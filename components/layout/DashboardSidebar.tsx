@@ -324,7 +324,9 @@ export default function DashboardSidebar() {
       <nav className="flex-1 py-6 px-3 overflow-y-auto">
         <ul className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.path;
+            const isActive =
+              pathname === item.path ||
+              (item.path !== "/admin" && pathname.startsWith(`${item.path}/`));
             return (
               <li key={item.id}>
                 <Link

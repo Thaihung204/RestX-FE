@@ -301,6 +301,7 @@
         "time": "Thời gian",
         "status": "Trạng thái",
         "total": "Tổng cộng",
+        "paid": "Đã thanh toán",
         "other_items": "món khác",
         "more_items": "món khác",
         "not_done": "chưa xong",
@@ -1407,6 +1408,103 @@
       "title": "Quản lý thực đơn",
       "subtitle": "Quản lý các món ăn trong nhà hàng",
       "add_item": "Thêm món",
+      "tabs": {
+        "navigation": "Điều hướng quản lý thực đơn",
+        "dishes": "Món ăn",
+        "combos": "Combo"
+      },
+      "combo": {
+        "title": "Quản lý combo",
+        "subtitle": "Tạo và quản lý các combo món cho thực đơn",
+        "loading": "Đang tải danh sách combo...",
+        "no_image": "Không có ảnh",
+        "no_description": "Không có mô tả",
+        "stats": {
+          "total": "Tổng số combo",
+          "active": "Đang hoạt động",
+          "inactive": "Ngừng hoạt động"
+        },
+        "empty": {
+          "title": "Chưa có combo nào",
+          "subtitle": "Tạo combo đầu tiên để bán theo gói"
+        },
+        "fields": {
+          "name": "Tên combo",
+          "price": "Giá",
+          "description": "Mô tả",
+          "active": "Hoạt động",
+          "active_hint": "Khi bật, combo sẽ hiển thị để khách gọi món",
+          "image": "Hình ảnh",
+          "image_drop_title": "Kéo thả ảnh vào đây hoặc bấm để chọn",
+          "image_drop_hint": "Hỗ trợ JPG, PNG, WEBP",
+          "image_current": "Ảnh hiện tại đang lưu",
+          "image_pending_hint": "Ảnh này sẽ được tải lên khi bạn lưu combo",
+          "image_current_hint": "Chưa chọn ảnh mới. Hệ thống sẽ giữ ảnh hiện tại.",
+          "total_items": "Tổng số món"
+        },
+        "placeholders": {
+          "name": "Nhập tên combo",
+          "description": "Mô tả combo",
+          "select_dish": "Chọn món"
+        },
+        "form": {
+          "create_title": "Tạo combo",
+          "edit_title": "Chỉnh sửa combo",
+          "subtitle": "Thiết lập thông tin combo và các món đi kèm",
+          "basic_info": "Thông tin cơ bản",
+          "details": "Món trong combo"
+        },
+        "actions": {
+          "manage": "Quản lý combo",
+          "back_to_menu": "Quay lại thực đơn",
+          "add_combo": "Thêm combo",
+          "add_row": "Thêm món",
+          "change_image": "Chọn ảnh",
+          "clear_image": "Xóa lựa chọn",
+          "use_saved_image": "Dùng lại ảnh đã lưu",
+          "activate": "Kích hoạt combo",
+          "deactivate": "Ngừng kích hoạt combo",
+          "create": "Tạo combo",
+          "update": "Cập nhật combo"
+        },
+        "confirm": {
+          "delete_title": "Xóa combo này?",
+          "delete_description": "Combo sẽ bị ngừng kích hoạt và ẩn khỏi danh sách đang bán."
+        },
+        "toasts": {
+          "fetch_error": "Không thể tải danh sách combo",
+          "activate_success": "Đã kích hoạt combo",
+          "deactivate_success": "Đã ngừng kích hoạt combo",
+          "status_error": "Không thể cập nhật trạng thái combo",
+          "delete_success": "Xóa combo thành công",
+          "delete_error": "Không thể xóa combo",
+          "add_dish_row_success": "Đã thêm dòng món",
+          "remove_dish_row_success": "Đã xóa dòng món",
+          "keep_one_dish_row": "Combo cần ít nhất một dòng món",
+          "image_selected_success": "Đã chọn ảnh thành công",
+          "image_cleared": "Đã xóa ảnh đã chọn",
+          "validation_error": "Vui lòng kiểm tra lại thông tin combo",
+          "create_success": "Tạo combo thành công",
+          "update_success": "Cập nhật combo thành công",
+          "save_error": "Không thể lưu combo"
+        },
+        "errors": {
+          "load_failed": "Không thể tải dữ liệu combo",
+          "name_required": "Tên combo là bắt buộc",
+          "name_too_short": "Tên combo phải có ít nhất 3 ký tự",
+          "name_too_long": "Tên combo tối đa 60 ký tự",
+          "description_too_long": "Mô tả tối đa 300 ký tự",
+          "price_invalid": "Giá phải lớn hơn 0",
+          "price_too_high": "Giá phải nhỏ hơn 100.000.000",
+          "details_required": "Vui lòng chọn ít nhất một món",
+          "too_many_dishes": "Combo chỉ được tối đa 20 món",
+          "quantity_invalid": "Số lượng món phải lớn hơn 0",
+          "quantity_too_high": "Số lượng món tối đa 99",
+          "duplicate_dish": "Mỗi món chỉ được chọn một lần",
+          "image_invalid_type": "Chỉ hỗ trợ tệp hình ảnh",
+          "image_too_large": "Ảnh phải nhỏ hơn 5MB"
+        }
+      },
       "stats": {
         "total_items": "Tổng số món",
         "available": "Đang bán",

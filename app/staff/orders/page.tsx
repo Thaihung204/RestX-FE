@@ -6,17 +6,18 @@ import FilterOrder from "@/components/staff/orders/FilterOrder";
 import OrderDetailsPopup from "@/components/staff/orders/OrderDetailsPopup";
 import PaymentOrder from "@/components/staff/orders/PaymentOrder";
 import { useTenant } from "@/lib/contexts/TenantContext";
+import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
 import menuService from "@/lib/services/menuService";
 import orderDetailStatusService, {
-  OrderDetailStatus,
+    OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
 import orderService, {
-  OrderDto,
-  OrderRequestDto,
+    OrderDto,
+    OrderRequestDto,
 } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
-  OrderStatus,
+    OrderStatus,
 } from "@/lib/services/orderStatusService";
 import paymentService from "@/lib/services/paymentService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
@@ -127,6 +128,7 @@ export default function OrderManagement() {
   const { tenant } = useTenant();
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
+  const [comboItems, setComboItems] = useState<ComboSummaryDto[]>([]);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
   const [orderDetailStatuses, setOrderDetailStatuses] = useState<
@@ -296,11 +298,12 @@ export default function OrderManagement() {
     inFlightRef.current = true;
     initializedRef.current = true;
     try {
-      const [statusData, orderStatusData, menuData, orderData] =
+      const [statusData, orderStatusData, menuData, comboData, orderData] =
         await Promise.all([
           orderDetailStatusService.getAllStatuses(),
           orderStatusService.getAllStatuses(),
           menuService.getMenu(),
+          dishService.getActiveCombos().catch(() => []),
           orderService.getAllOrders(getTodayOrderQuery()),
         ]);
 
@@ -311,6 +314,7 @@ export default function OrderManagement() {
       setOrderDetailStatuses(safeStatuses);
       setOrderStatuses(safeOrderStatuses);
       setMenuCategories(safeMenu);
+      setComboItems(comboData ?? []);
 
       statusValueMapRef.current = buildStatusValueMap(safeStatuses);
       dishNameMapRef.current = buildDishNameMap(safeMenu);
@@ -363,7 +367,15 @@ export default function OrderManagement() {
   const [isOrderDetailModalOpen, setIsOrderDetailModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "bank">("cash");
   const [cashReceived, setCashReceived] = useState<number>(0);
+  const [finalTotal, setFinalTotal] = useState<number>(0);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  const isOrderPaid = useCallback(
+    (raw?: { paymentStatusId?: number; paymentStatus?: number } | null) => {
+      return Number(raw?.paymentStatusId ?? raw?.paymentStatus ?? 0) === 1;
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!activeMenuCategory && menuCategories.length > 0) {
@@ -415,10 +427,13 @@ export default function OrderManagement() {
     const setupSignalR = async () => {
       try {
         await orderSignalRService.start();
+        if (!isMounted) return;
 
         const conn = orderSignalRService.getConnection();
         if (conn.state === HubConnectionState.Connected) {
-          await orderSignalRService.invoke("JoinTenantGroup", tenantId);
+          await orderSignalRService.joinTenantGroup(tenantId);
+          if (!isMounted) return;
+
           events.forEach((event) =>
             orderSignalRService.on(event, handleOrderChange),
           );
@@ -436,7 +451,7 @@ export default function OrderManagement() {
       events.forEach((event) =>
         orderSignalRService.off(event, handleOrderChange),
       );
-      orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+      orderSignalRService.leaveTenantGroup(tenantId).catch(() => {});
     };
   }, [tenant?.id, refreshOrders]);
 
@@ -453,12 +468,6 @@ export default function OrderManagement() {
   }, []);
 
   const filteredOrders = orders.filter((order) => {
-    const paymentStatus = (order.raw as any)?.paymentStatus;
-    const paymentStatusId = (order.raw as any)?.paymentStatusId;
-
-    // Chỉ hiển thị order chưa thanh toán
-    if (paymentStatus !== 0 && paymentStatusId !== 0) return false;
-
     if (selectedTableId === "all") return true;
 
     const tableCodes =
@@ -482,6 +491,18 @@ export default function OrderManagement() {
       setSelectedOrderForDetail(latestOrder);
     }
   }, [orders, selectedOrderForDetail]);
+
+  const addableOrders = orders.filter((order) => !isOrderPaid(order.raw));
+
+  useEffect(() => {
+    if (!selectedOrderIdForAdd) return;
+    const isStillAddable = addableOrders.some(
+      (order) => order.id === selectedOrderIdForAdd,
+    );
+    if (!isStillAddable) {
+      setSelectedOrderIdForAdd("");
+    }
+  }, [addableOrders, selectedOrderIdForAdd]);
 
   const handleUpdateOrderStatus = async (
     orderId: string,
@@ -573,6 +594,68 @@ export default function OrderManagement() {
     });
   };
 
+  const addComboToCart = (combo: ComboSummaryDto) => {
+    if (!combo?.details?.length) {
+      message.warning(
+        t("staff.orders.messages.combo_empty", {
+          defaultValue: "Combo has no dishes",
+        }),
+      );
+      return;
+    }
+
+    setCart((prev) => {
+      const nextCart = [...prev];
+
+      combo.details.forEach((detail) => {
+        if (!detail.dishId) {
+          return;
+        }
+
+        const matchedDish = menuCategories
+          .flatMap((category) => category.items)
+          .find((dish) => dish.id === detail.dishId);
+
+        const resolvedDish: DishItem =
+          matchedDish || {
+            id: detail.dishId,
+            name: detail.dishName || detail.dishId,
+            description: "",
+            price: Number(detail.dishPrice ?? 0),
+            unit: "portion",
+            isVegetarian: false,
+            isSpicy: false,
+            isBestSeller: false,
+            images: [],
+            imageUrl: null,
+            categoryId: "combo",
+            categoryName: "Combo",
+          };
+
+        const quantityToAdd = detail.quantity > 0 ? detail.quantity : 1;
+        const existing = nextCart.find((line) => line.item.id === detail.dishId);
+
+        if (existing) {
+          existing.quantity += quantityToAdd;
+          return;
+        }
+
+        nextCart.push({
+          item: resolvedDish,
+          quantity: quantityToAdd,
+        });
+      });
+
+      return nextCart;
+    });
+
+    message.success(
+      t("staff.orders.messages.combo_added", {
+        defaultValue: "Combo added to order",
+      }),
+    );
+  };
+
   const updateCartQuantity = (itemId: string, delta: number) => {
     setCart((prev) => {
       return prev
@@ -594,6 +677,15 @@ export default function OrderManagement() {
     const targetOrder = orders.find((o) => o.id === selectedOrderIdForAdd);
     if (!targetOrder?.raw) {
       message.error(t("staff.orders.messages.order_create_failed"));
+      return;
+    }
+
+    if (isOrderPaid(targetOrder.raw)) {
+      message.warning(
+        t("staff.orders.messages.paid_order_locked", {
+          defaultValue: "Order đã thanh toán, không thể thêm món.",
+        }),
+      );
       return;
     }
 
@@ -640,6 +732,7 @@ export default function OrderManagement() {
       },
     });
     setCashReceived(source.total);
+    setFinalTotal(source.total);
     setPaymentMethod("cash");
     setIsPaymentModalOpen(true);
   };
@@ -650,7 +743,7 @@ export default function OrderManagement() {
     setIsProcessingPayment(true);
     try {
       if (paymentMethod === "cash") {
-        if (cashReceived < selectedOrder.total) {
+        if (cashReceived < finalTotal) {
           message.error(t("staff.orders.payment.messages.cash_insufficient"));
           return;
         }
@@ -670,6 +763,7 @@ export default function OrderManagement() {
 
       setIsPaymentModalOpen(false);
       setSelectedOrder(null);
+      setFinalTotal(0);
       refreshOrders();
     } catch (error) {
       console.error("Payment failed:", error);
@@ -714,6 +808,7 @@ export default function OrderManagement() {
         tableFilterOptions={tableFilterOptions}
         onChangeTable={setSelectedTableId}
         onAddItem={() => setIsAddItemModalOpen(true)}
+        disableAddItem={addableOrders.length === 0}
         isMobile={isMobile}
         isTablet={isTablet}
         mode={mode as "light" | "dark"}
@@ -786,7 +881,7 @@ export default function OrderManagement() {
         onConfirm={handleAddItemsToOrder}
         selectedOrderIdForAdd={selectedOrderIdForAdd}
         setSelectedOrderIdForAdd={setSelectedOrderIdForAdd}
-        orders={orders.map((order) => ({
+        orders={addableOrders.map((order) => ({
           id: order.id,
           reference: order.reference,
           tableName: order.tableName,
@@ -796,10 +891,12 @@ export default function OrderManagement() {
               .filter((code): code is string => !!code) ?? [],
         }))}
         menuCategories={menuCategories}
+        comboItems={comboItems}
         activeMenuCategory={activeMenuCategory}
         setActiveMenuCategory={setActiveMenuCategory}
         cart={cart}
         addToCart={addToCart}
+        addComboToCart={addComboToCart}
         updateCartQuantity={updateCartQuantity}
         t={t}
       />
@@ -813,10 +910,12 @@ export default function OrderManagement() {
         setCashReceived={setCashReceived}
         paymentOptions={paymentOptions}
         isProcessingPayment={isProcessingPayment}
+        onFinalTotalChange={setFinalTotal}
         onClose={() => {
           setIsPaymentModalOpen(false);
           setSelectedOrder(null);
           setCashReceived(0);
+          setFinalTotal(0);
         }}
         onConfirm={handlePayment}
         t={t}
@@ -836,6 +935,16 @@ export default function OrderManagement() {
         normalizeStatusValue={normalizeStatusValue}
         openPaymentModal={openPaymentModal}
         onOpenAddItemModal={(orderId) => {
+          const currentOrder = orders.find((o) => o.id === orderId);
+          if (currentOrder && isOrderPaid(currentOrder.raw)) {
+            message.warning(
+              t("staff.orders.messages.paid_order_locked", {
+                defaultValue: "Order đã thanh toán, không thể thêm món.",
+              }),
+            );
+            return;
+          }
+
           setSelectedOrderIdForAdd(orderId);
           setIsOrderDetailModalOpen(false);
           setSelectedOrderForDetail(null);
