@@ -612,8 +612,32 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         }
     };
 
+    const openPanoramaPreview = (table: Table) => {
+        if (!panoramaMap.has(table.id)) return;
+
+        setActive360TableId(table.id);
+        setPanoramaTableData({
+            id: table.id,
+            tenantId: '',
+            name: table.label,
+            seats: table.capacity,
+            status: 'AVAILABLE',
+            area: table.zone,
+            position: { x: table.x || 0, y: table.y || 0 },
+            shape: table.shape === 'Round' ? 'Circle' : 'Rectangle',
+            width: table.width || 80,
+            height: table.height || 80,
+            rotation: table.rotation || 0,
+        } as TableData);
+        setIs3DModalOpen(true);
+    };
+
+    const mobilePanoramaTable = (active360TableId
+        ? selectedTables.find((table) => table.id === active360TableId && panoramaMap.has(table.id))
+        : undefined) || selectedTables.find((table) => panoramaMap.has(table.id));
+
     return (
-        <div id="reservation" className="min-h-screen relative text-[var(--text)]">
+        <div id="reservation" className="min-h-dvh relative text-[var(--text)]">
             {/* Background Layer */}
             <div className="absolute inset-0 z-0">
                 <img
@@ -624,7 +648,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             </div>
 
-            <main className={`relative z-10 mx-auto px-4 py-8 md:py-20 min-h-screen flex flex-col items-center justify-center ${step === ReservationStep.TABLE_SELECTION ? 'w-full max-w-[98vw]' : 'container'}`}>
+            <main className={`relative z-10 mx-auto px-4 py-8 md:py-20 min-h-dvh flex flex-col items-center justify-center ${step === ReservationStep.TABLE_SELECTION ? 'w-full max-w-[98vw]' : 'container'}`}>
 
                 {/* Language Switcher — top right corner */}
                 <div className="absolute top-4 right-4 z-20">
@@ -639,23 +663,23 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 </div>
 
                 {step === ReservationStep.SEARCH && (
-                    <div className="w-full max-w-5xl fade-in">
-                        <div className="text-center mb-12">
+                    <div className="w-full max-w-5xl px-1 sm:px-0 fade-in">
+                        <div className="text-center mb-8 sm:mb-12">
                             <div className="inline-block px-4 py-1.5 rounded-full border border-[var(--primary-border)] bg-black/30 backdrop-blur-md text-[var(--primary)] text-xs font-bold tracking-[0.2em] uppercase mb-6 shadow-xl">
                                 {t('landing.booking.hero.badge')}
                             </div>
-                            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight font-serif" style={{ color: 'var(--text-inverse)' }}>
+                            <h1 className="text-3xl sm:text-4xl md:text-7xl font-bold mb-4 sm:mb-6 leading-tight font-serif text-balance" style={{ color: 'var(--text-inverse)' }}>
                                 {t('landing.booking.hero.title_prefix')} <br />
                                 <span style={{ color: 'var(--primary)' }}>
                                     {t('landing.booking.hero.title_highlight')}
                                 </span>
                             </h1>
-                            <p className="text-lg md:text-xl text-[var(--text-muted)] mb-8 max-w-2xl mx-auto font-light leading-relaxed">
+                            <p className="text-sm sm:text-base md:text-xl text-[var(--text-muted)] mb-6 sm:mb-8 max-w-2xl mx-auto font-light leading-relaxed text-pretty">
                                 {t('landing.booking.hero.description')}
                             </p>
                         </div>
 
-                        <div className="bg-[var(--card)] rounded-[2rem] shadow-2xl p-6 md:p-10 border border-white/10 relative overflow-hidden">
+                        <div className="bg-[var(--card)] rounded-2xl sm:rounded-[2rem] shadow-2xl p-4 sm:p-6 md:p-10 border border-white/10 relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--primary)] via-[var(--primary-soft)] to-[var(--primary)]"></div>
 
                             <form onSubmit={handleSearchSubmit} className="reservation-pill">
@@ -779,13 +803,13 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 </button>
                             </form>
 
-                            <div className="mt-10 pt-8 border-t border-[var(--border)] flex flex-wrap justify-between gap-6">
+                            <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-[var(--border)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                 {[
                                     { icon: 'restaurant', label: t('landing.booking.features.fine_dining.label'), desc: t('landing.booking.features.fine_dining.desc') },
                                     { icon: 'check_circle', label: t('landing.booking.features.instant_confirm.label'), desc: t('landing.booking.features.instant_confirm.desc') },
                                     { icon: 'local_parking', label: t('landing.booking.features.valet.label'), desc: t('landing.booking.features.valet.desc') }
                                 ].map((item, idx) => (
-                                    <div key={idx} className="flex items-center gap-4 group cursor-default">
+                                    <div key={idx} className="flex items-center gap-4 group cursor-default rounded-xl px-2 py-1">
                                         <div className="w-12 h-12 rounded-full bg-[var(--primary-faint)] flex items-center justify-center group-hover:bg-[var(--primary)] group-hover:text-[var(--on-primary)] transition-all duration-300 transform group-hover:scale-110">
                                             <span className="material-symbols-outlined text-[var(--primary)] group-hover:text-[var(--on-primary)]">{item.icon}</span>
                                         </div>
@@ -804,14 +828,14 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     <div className="w-full fade-in">
                         <StepIndicator active={2} t={t} />
 
-                        <div className="flex justify-between items-center mb-6 text-[var(--text-inverse)] px-2">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-6 text-[var(--text-inverse)] px-1 sm:px-2">
                             <button onClick={() => setStep(ReservationStep.SEARCH)} className="flex items-center gap-2 text-[var(--text-inverse)] opacity-70 hover:opacity-100 group">
                                 <span className="material-symbols-outlined text-lg p-2 bg-white/10 rounded-full group-hover:bg-white/20">arrow_back</span>
                                 <span className="font-medium text-sm">{t('landing.booking.table_map.change_schedule')}</span>
                             </button>
-                            <div className="text-right">
+                            <div className="text-left sm:text-right">
                                 <div className="text-[10px] opacity-60 uppercase tracking-widest font-bold mb-1">{t('landing.booking.table_map.reservation_for')}</div>
-                                <div className="text-sm font-bold flex items-center gap-2">
+                                <div className="text-sm font-bold flex flex-wrap items-center gap-2">
                                     <span>{new Date(booking.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                                     <span className="w-1 h-1 bg-[var(--text-inverse)] opacity-30 rounded-full" />
                                     <span>{booking.time}</span>
@@ -821,7 +845,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
                         </div>
 
-                        <div className="bg-[var(--card)] rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row h-[85vh]">
+                        <div className="bg-[var(--card)] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row h-[76dvh] sm:h-[82dvh] lg:h-[85vh]">
                             {/* Sidebar */}
                             <div className="hidden lg:flex w-80 bg-[var(--surface)] p-8 flex-col border-r border-[var(--border)]">
                                 <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-4">{t('landing.booking.table_map.title')}</h3>
@@ -859,7 +883,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
 
                             {/* Floor Plan Canvas */}
-                            <div className="flex-1 relative bg-[var(--surface-subtle)] overflow-auto p-0">
+                            <div className="flex-1 relative bg-[var(--surface-subtle)] overflow-hidden p-0 min-h-[46dvh] lg:min-h-0">
+                                <div className="lg:hidden absolute top-3 left-3 z-10 rounded-full border border-[var(--border)] bg-[var(--card)]/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] shadow-sm">
+                                    {t('landing.booking.table_map.zoom_hint', { defaultValue: 'Pinch to zoom, drag to move' })}
+                                </div>
                                 {isLayoutLoading && (
                                     <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--card)]/70 backdrop-blur-sm">
                                         <div className="flex flex-col items-center gap-3 text-[var(--text-muted)]">
@@ -869,7 +896,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     </div>
                                 )}
                                 {layout ? (
-                                    <div className="w-full h-full p-6">
+                                    <div className="w-full h-full p-2 sm:p-4 lg:p-6">
                                         <TableMap2D
                                             layout={layout}
                                             onLayoutChange={setLayout}
@@ -877,6 +904,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             onTablePositionChange={() => undefined}
                                             readOnly
                                             selectedTableIds={selectedTables.map(t => t.id)}
+                                            focusOnSelected
                                         />
                                     </div>
                                 ) : (
@@ -920,23 +948,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                     {panoramaMap.has(table.id) && (
                                                         <button
                                                             type="button"
-                                                            onClick={() => {
-                                                                setActive360TableId(table.id);
-                                                                setPanoramaTableData({
-                                                                    id: table.id,
-                                                                    tenantId: '',
-                                                                    name: table.label,
-                                                                    seats: table.capacity,
-                                                                    status: 'AVAILABLE',
-                                                                    area: table.zone,
-                                                                    position: { x: table.x || 0, y: table.y || 0 },
-                                                                    shape: table.shape === 'Round' ? 'Circle' : 'Rectangle',
-                                                                    width: table.width || 80,
-                                                                    height: table.height || 80,
-                                                                    rotation: table.rotation || 0,
-                                                                } as TableData);
-                                                                setIs3DModalOpen(true);
-                                                            }}
+                                                            onClick={() => openPanoramaPreview(table)}
                                                             className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:brightness-110"
                                                             style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}
                                                         >
@@ -969,18 +981,56 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
 
                             {/* Mobile Sticky Footer */}
-                            <div className="lg:hidden p-4 bg-[var(--card)] border-t border-[var(--border)] flex items-center justify-between">
-                                <div>
-                                    <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">{t('landing.booking.table_map.mobile_selected')}</p>
-                                    <p className="font-bold text-[var(--text)]">{selectedTables.length > 0 ? `Selected ${selectedTables.length} tables` : t('landing.booking.table_map.mobile_none')}</p>
+                            <div className="lg:hidden p-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] bg-[var(--card)] border-t border-[var(--border)] flex flex-col gap-3">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">{t('landing.booking.table_map.mobile_selected')}</p>
+                                        <p className="font-bold text-[var(--text)]">
+                                            {selectedTables.length > 0
+                                                ? selectedTables.map((table) => `#${table.label}`).join(', ')
+                                                : t('landing.booking.table_map.mobile_none')}
+                                        </p>
+                                        <p className="text-xs text-[var(--text-muted)]">
+                                            {t('landing.booking.table_map.total_capacity')}: {totalSelectedCapacity} {t('landing.booking.table_map.guests')}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {mobilePanoramaTable && (
+                                            <button
+                                                type="button"
+                                                onClick={() => openPanoramaPreview(mobilePanoramaTable)}
+                                                className="px-4 py-2 border border-[var(--primary-border)] text-[var(--primary)] rounded-xl font-bold text-xs"
+                                            >
+                                                360
+                                            </button>
+                                        )}
+                                        <button
+                                            disabled={selectedTables.length === 0}
+                                            onClick={() => setStep(ReservationStep.CONFIRMATION)}
+                                            className="px-5 py-2.5 bg-[var(--primary)] text-[var(--on-primary)] rounded-xl font-bold text-sm disabled:opacity-50"
+                                        >
+                                            {t('landing.booking.table_map.mobile_confirm')}
+                                        </button>
+                                    </div>
                                 </div>
-                                <button
-                                    disabled={selectedTables.length === 0}
-                                    onClick={() => setStep(ReservationStep.CONFIRMATION)}
-                                    className="px-8 py-3 bg-[var(--primary)] text-[var(--on-primary)] rounded-xl font-bold text-sm disabled:opacity-50"
-                                >
-                                    {t('landing.booking.table_map.mobile_confirm')}
-                                </button>
+
+                                {selectedTables.length > 0 && (
+                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                                        {selectedTables.map((table) => (
+                                            <button
+                                                key={`mobile-chip-${table.id}`}
+                                                type="button"
+                                                onClick={() => panoramaMap.has(table.id) && openPanoramaPreview(table)}
+                                                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border ${panoramaMap.has(table.id)
+                                                    ? 'bg-[var(--primary-faint)] text-[var(--primary)] border-[var(--primary-border)]'
+                                                    : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]'
+                                                    }`}
+                                            >
+                                                #{table.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -1001,40 +1051,40 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </button>
                         </div>
 
-                        <div className="bg-[var(--card)] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[560px]">
+                        <div className="bg-[var(--card)] rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-0 md:min-h-[560px]">
                             {/* Left Summary Panel */}
-                            <div className="md:w-[35%] bg-black text-white p-10 flex flex-col relative overflow-hidden">
+                            <div className="md:w-[35%] bg-black text-white p-6 sm:p-8 md:p-10 flex flex-col relative overflow-hidden">
                                 <div className="absolute inset-0 bg-[var(--primary)] opacity-90" />
                                 <div className="absolute -top-10 -right-10 text-white opacity-10">
                                     <span className="material-symbols-outlined text-[180px]">restaurant_menu</span>
                                 </div>
 
                                 <div className="relative z-10 h-full flex flex-col">
-                                    <h2 className="text-4xl font-serif mb-10 border-b border-white/20 pb-5">{t('landing.booking.confirm.title')}</h2>
+                                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif mb-6 sm:mb-10 border-b border-white/20 pb-4 sm:pb-5 text-balance">{t('landing.booking.confirm.title')}</h2>
 
-                                    <div className="space-y-10 flex-1">
+                                    <div className="space-y-6 sm:space-y-8 md:space-y-10 flex-1">
                                         {[
                                             { icon: 'calendar_today', label: t('landing.booking.confirm.date_time'), value: new Date(booking.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }), sub: booking.time },
                                             { icon: 'table_restaurant', label: t('landing.booking.confirm.selected_table'), value: selectedTables.map(t => `Table ${t.label}`).join(', '), sub: `${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')}` },
                                             { icon: 'group', label: t('landing.booking.confirm.party_size', { count: booking.guests }), value: `${booking.guests} ${t('landing.booking.table_map.guests')}`, sub: t('landing.booking.confirm.standard_seating') }
                                         ].map((item, idx) => (
-                                            <div key={idx} className="flex gap-5">
-                                                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
+                                            <div key={idx} className="flex gap-3 sm:gap-5">
+                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
                                                     <span className="material-symbols-outlined text-white">{item.icon}</span>
                                                 </div>
                                                 <div>
                                                     <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-1">{item.label}</p>
-                                                    <p className="text-lg font-bold">{item.value}</p>
-                                                    <p className="text-white/80 text-sm">{item.sub}</p>
+                                                    <p className="text-base sm:text-lg font-bold text-pretty">{item.value}</p>
+                                                    <p className="text-white/80 text-xs sm:text-sm">{item.sub}</p>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="mt-12 pt-8 border-t border-white/20">
+                                    <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/20">
                                         <div className="flex items-start gap-4 opacity-70">
                                             <span className="material-symbols-outlined text-lg mt-1">location_on</span>
-                                            <p className="text-sm font-medium leading-relaxed">
+                                            <p className="text-xs sm:text-sm font-medium leading-relaxed text-pretty">
                                                 {tenant?.businessAddressLine1 || '—'}<br />
                                                 {tenant?.businessAddressLine2 || ''}
                                             </p>
@@ -1044,10 +1094,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
 
                             {/* Right Form Panel */}
-                            <div className="md:w-[65%] p-10 md:p-14 bg-[var(--card)]">
-                                <div className="mb-10">
-                                    <h3 className="text-3xl font-serif text-[var(--text)] mb-3">{t('landing.booking.confirm.finalize_title')}</h3>
-                                    <p className="text-[var(--text-muted)] font-medium">{t('landing.booking.confirm.finalize_desc')}</p>
+                            <div className="md:w-[65%] p-6 sm:p-8 md:p-14 bg-[var(--card)]">
+                                <div className="mb-8 sm:mb-10">
+                                    <h3 className="text-2xl sm:text-3xl font-serif text-[var(--text)] mb-3 text-balance">{t('landing.booking.confirm.finalize_title')}</h3>
+                                    <p className="text-sm sm:text-base text-[var(--text-muted)] font-medium text-pretty">{t('landing.booking.confirm.finalize_desc')}</p>
                                     {user && (
                                         <div className="mt-3 flex items-center gap-2 text-xs text-[var(--primary)] font-semibold">
                                             <span className="material-symbols-outlined text-sm">verified_user</span>
@@ -1056,8 +1106,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     )}
                                 </div>
 
-                                <form className="space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <form className="space-y-6 sm:space-y-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
                                         <div className="group">
                                             <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.full_name')}</label>
                                             <div className="relative">
@@ -1103,8 +1153,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     <div className="group">
                                         <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.special_requests')} <span className="text-[var(--text-muted)] font-normal ml-1">{t('landing.booking.confirm.special_requests_optional')}</span></label>
                                         <textarea
-                                            placeholder={t('landing.booking.confirm.requests_placeholder')}
-                                            className="w-full p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none h-28"
+                                            className="w-full p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none h-24 sm:h-28"
                                             value={userDetails.requests}
                                             onChange={(e) => setUserDetails({ ...userDetails, requests: e.target.value })}
                                         />
@@ -1121,7 +1170,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             type="button"
                                             onClick={handleCompleteReservation}
                                             disabled={isSubmitting}
-                                            className="w-full py-5 bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] font-bold text-xl rounded-2xl shadow-xl shadow-[var(--primary-glow)] transition-all transform hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
+                                            className="w-full py-4 sm:py-5 bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] font-bold text-base sm:text-lg md:text-xl rounded-2xl shadow-xl shadow-[var(--primary-glow)] transition-all transform hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
                                         >
                                             {isSubmitting ? (
                                                 <>
@@ -1146,17 +1195,17 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 )}
 
                 {step === ReservationStep.SUCCESS && (
-                    <div className="max-w-md w-full fade-in text-center bg-[var(--card)] rounded-3xl p-10 shadow-2xl relative overflow-hidden">
+                    <div className="max-w-lg w-full fade-in text-center bg-[var(--card)] rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden">
                         {/* Green top accent */}
                         <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--success)]" />
 
                         {/* Success icon */}
-                        <div className="w-20 h-20 bg-[var(--success-soft)] rounded-full flex items-center justify-center mx-auto mb-6">
-                            <span className="material-symbols-outlined text-[var(--success)] text-5xl">verified</span>
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[var(--success-soft)] rounded-full flex items-center justify-center mx-auto mb-5 sm:mb-6">
+                            <span className="material-symbols-outlined text-[var(--success)] text-4xl sm:text-5xl">verified</span>
                         </div>
 
-                        <h2 className="text-3xl font-serif font-bold text-[var(--text)] mb-3">{t('landing.booking.success.title')}</h2>
-                        <p className="text-[var(--text-muted)] text-sm mb-8 leading-relaxed px-2">
+                        <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[var(--text)] mb-3 text-balance">{t('landing.booking.success.title')}</h2>
+                        <p className="text-[var(--text-muted)] text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed px-1 sm:px-2 text-pretty">
                             {t('landing.booking.success.thank_you')}{' '}
                             <span className="text-[var(--text)] font-semibold">{userDetails.name}</span>.{' '}
                             {t('landing.booking.success.table_label')}{' '}
@@ -1176,7 +1225,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                         </p>
 
                         {/* Info block */}
-                        <div className="bg-[var(--surface)] rounded-2xl p-5 mb-8 text-left border border-[var(--border)] space-y-3">
+                        <div className="bg-[var(--surface)] rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8 text-left border border-[var(--border)] space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold">{t('landing.booking.success.booking_ref')}</span>
                                 <span className="text-sm font-bold text-[var(--primary)] font-mono tracking-wider">
@@ -1208,7 +1257,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     onClick={() => {
                                         window.location.href = depositCheckoutUrl;
                                     }}
-                                    className="w-full py-3.5 mb-2 bg-[var(--success)] hover:brightness-110 text-white font-bold rounded-xl transition-all text-sm"
+                                    className="w-full py-3.5 mb-2 bg-[var(--success)] hover:brightness-110 text-white font-bold rounded-xl transition-all text-sm sm:text-base"
                                 >
                                     {t('landing.booking.success.pay_deposit_now', { defaultValue: 'Thanh toán cọc ngay' })}
                                 </button>
@@ -1227,7 +1276,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 window.location.href = `/your-reservation/${encodeURIComponent(detailToken)}`;
                             }}
                             disabled={!confirmationCode && !reservationId}
-                            className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {t('landing.booking.success.view_details', { defaultValue: 'Xem chi tiết' })}
                         </button>
@@ -1532,6 +1581,29 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     .pill-submit {
                         width: 100%;
                         justify-content: center;
+                    }
+                }
+
+                @media (max-width: 640px) {
+                    .reservation-pill {
+                        padding: 6px;
+                        border-radius: 18px;
+                        gap: 4px;
+                    }
+
+                    .pill-segment {
+                        padding: 10px 12px;
+                        border-radius: 14px;
+                    }
+
+                    .pill-control .ant-select-selection-item,
+                    .pill-control .ant-picker-input > input {
+                        font-size: 14px;
+                    }
+
+                    .pill-submit {
+                        min-height: 46px;
+                        padding: 0 18px;
                     }
                 }
 

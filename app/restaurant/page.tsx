@@ -90,7 +90,7 @@ export default function RestaurantPage() {
 
   return (
     <TenantGuard>
-      <div className={`${playfair.variable} ${jakarta.variable}`} style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
+      <div className={`${playfair.variable} ${jakarta.variable}`} style={{ minHeight: '100vh', background: 'var(--bg-base)', overflowX: 'clip' }}>
         {/* Inject Font Variables locally only if we can, or rely on the classNames which set the --font-playfair variable */}
         <style jsx global>{`
             :root {

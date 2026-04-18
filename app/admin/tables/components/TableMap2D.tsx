@@ -55,20 +55,110 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   hideControls = false,
   focusOnSelected = false,
 }) => {
+  const MIN_ZOOM_SCALE = 0.8;
+  const MAX_ZOOM_SCALE = 2.8;
   const [showGrid, setShowGrid] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
   const floorRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  const [fitScale, setFitScale] = useState(1);
+  const [zoomScale, setZoomScale] = useState(1);
+  const pinchStartDistanceRef = useRef<number | null>(null);
+  const pinchStartZoomRef = useRef(1);
+  const isPinchingRef = useRef(false);
+  const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null);
+  const lastDoubleTapZoomRef = useRef<{ from: number; to: number } | null>(null);
+  const panStartPointRef = useRef<{ x: number; y: number } | null>(null);
+  const panStartScrollRef = useRef<{ left: number; top: number } | null>(null);
+  const pointerLastSampleRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const panVelocityRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const inertiaFrameRef = useRef<number | null>(null);
+  const [isPanning, setIsPanning] = useState(false);
 
   const activeFloor = layout.floors.find((f) => f.id === layout.activeFloorId);
   const selectedSet = React.useMemo(() => new Set(selectedTableIds), [selectedTableIds]);
   const [hasFocused, setHasFocused] = useState(false);
+  const canDragPan = readOnly;
+  const scale = fitScale * zoomScale;
+
+  const clampZoomScale = useCallback((next: number) => {
+    return Math.min(MAX_ZOOM_SCALE, Math.max(MIN_ZOOM_SCALE, next));
+  }, [MAX_ZOOM_SCALE, MIN_ZOOM_SCALE]);
+
+  const stopInertia = useCallback(() => {
+    if (inertiaFrameRef.current !== null) {
+      window.cancelAnimationFrame(inertiaFrameRef.current);
+      inertiaFrameRef.current = null;
+    }
+  }, []);
+
+  const applyZoomAtClientPoint = useCallback((nextZoom: number, clientX: number, clientY: number) => {
+    if (!containerRef.current) return;
+
+    const container = containerRef.current;
+    const rect = container.getBoundingClientRect();
+    const anchorX = clientX - rect.left;
+    const anchorY = clientY - rect.top;
+
+    const prevScale = scale;
+    const nextScale = fitScale * nextZoom;
+
+    if (prevScale <= 0 || nextScale <= 0) {
+      setZoomScale(nextZoom);
+      return;
+    }
+
+    const worldX = (container.scrollLeft + anchorX) / prevScale;
+    const worldY = (container.scrollTop + anchorY) / prevScale;
+
+    setZoomScale(nextZoom);
+
+    requestAnimationFrame(() => {
+      if (!containerRef.current) return;
+      containerRef.current.scrollLeft = worldX * nextScale - anchorX;
+      containerRef.current.scrollTop = worldY * nextScale - anchorY;
+    });
+  }, [fitScale, scale]);
+
+  const startInertia = useCallback(() => {
+    if (!containerRef.current) return;
+
+    const friction = 0.92;
+    const stopThreshold = 0.1;
+
+    const tick = () => {
+      if (!containerRef.current) return;
+      const container = containerRef.current;
+
+      container.scrollLeft -= panVelocityRef.current.x;
+      container.scrollTop -= panVelocityRef.current.y;
+
+      panVelocityRef.current.x *= friction;
+      panVelocityRef.current.y *= friction;
+
+      if (
+        Math.abs(panVelocityRef.current.x) < stopThreshold &&
+        Math.abs(panVelocityRef.current.y) < stopThreshold
+      ) {
+        stopInertia();
+        return;
+      }
+
+      inertiaFrameRef.current = window.requestAnimationFrame(tick);
+    };
+
+    stopInertia();
+    inertiaFrameRef.current = window.requestAnimationFrame(tick);
+  }, [stopInertia]);
 
   useEffect(() => {
     setHasFocused(false);
   }, [activeFloor?.id, selectedTableIds.join(',')]);
+
+  useEffect(() => {
+    setZoomScale(1);
+  }, [activeFloor?.id]);
 
   // ── Auto-fit: scale canvas to fit container ──
   useEffect(() => {
@@ -83,7 +173,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
       if (availW <= 0 || availH <= 0) return;
       const scaleX = availW / activeFloor.width;
       const scaleY = availH / activeFloor.height;
-      // Fit within container; cap at 1 so we never upscale
+      // Fit within container; cap at 1 so we never upscale.
       let finalScale = Math.min(scaleX, scaleY, 1);
 
       if (focusOnSelected && selectedSet.size > 0) {
@@ -101,7 +191,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
           const paddedH = boxH + 150;
           
           finalScale = Math.min(availW / paddedW, availH / paddedH, 3.0);
-          setScale(finalScale);
+          setFitScale(finalScale);
 
           // Scroll to center the bounding box exactly once
           if (!hasFocused) {
@@ -122,14 +212,186 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
         }
       }
 
-      setScale(finalScale);
+      setFitScale(finalScale);
     };
 
     updateScale();
     const observer = new ResizeObserver(updateScale);
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [activeFloor?.width, activeFloor?.height, activeFloor?.id]);
+  }, [activeFloor?.width, activeFloor?.height, activeFloor?.id, focusOnSelected, selectedSet, hasFocused]);
+
+  const handleZoomIn = () => {
+    if (!containerRef.current) return;
+    lastDoubleTapZoomRef.current = null;
+    const rect = containerRef.current.getBoundingClientRect();
+    const next = clampZoomScale(zoomScale + 0.2);
+    applyZoomAtClientPoint(next, rect.left + rect.width / 2, rect.top + rect.height / 2);
+  };
+
+  const handleZoomOut = () => {
+    if (!containerRef.current) return;
+    lastDoubleTapZoomRef.current = null;
+    const rect = containerRef.current.getBoundingClientRect();
+    const next = clampZoomScale(zoomScale - 0.2);
+    applyZoomAtClientPoint(next, rect.left + rect.width / 2, rect.top + rect.height / 2);
+  };
+
+  const handleZoomReset = () => {
+    lastDoubleTapZoomRef.current = null;
+    setZoomScale(1);
+  };
+
+  const handleCanvasWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    lastDoubleTapZoomRef.current = null;
+    const next = zoomScale + (event.deltaY < 0 ? 0.08 : -0.08);
+    applyZoomAtClientPoint(clampZoomScale(next), event.clientX, event.clientY);
+  };
+
+  const getTouchDistance = (touches: React.TouchList) => {
+    const [first, second] = [touches[0], touches[1]];
+    if (!first || !second) return null;
+    const dx = first.clientX - second.clientX;
+    const dy = first.clientY - second.clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!canDragPan) return;
+
+    if (event.touches.length !== 2) return;
+    lastDoubleTapZoomRef.current = null;
+    const distance = getTouchDistance(event.touches);
+    if (!distance) return;
+    isPinchingRef.current = true;
+    stopInertia();
+    pinchStartDistanceRef.current = distance;
+    pinchStartZoomRef.current = zoomScale;
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!canDragPan) return;
+
+    if (event.touches.length !== 2 || !pinchStartDistanceRef.current) return;
+    const nextDistance = getTouchDistance(event.touches);
+    if (!nextDistance) return;
+    event.preventDefault();
+
+    const ratio = nextDistance / pinchStartDistanceRef.current;
+    const nextScale = clampZoomScale(pinchStartZoomRef.current * ratio);
+    const centerX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+    const centerY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+    applyZoomAtClientPoint(nextScale, centerX, centerY);
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!canDragPan) return;
+
+    if (event.touches.length < 2) {
+      pinchStartDistanceRef.current = null;
+      isPinchingRef.current = false;
+    }
+
+    if (event.touches.length === 0 && event.changedTouches.length === 1 && !isPinchingRef.current) {
+      const touch = event.changedTouches[0];
+      const now = Date.now();
+      const lastTap = lastTapRef.current;
+
+      if (lastTap) {
+        const dt = now - lastTap.time;
+        const distance = Math.hypot(touch.clientX - lastTap.x, touch.clientY - lastTap.y);
+        if (dt < 280 && distance < 28) {
+          const previousZoomState = lastDoubleTapZoomRef.current;
+          const shouldToggleBack =
+            !!previousZoomState &&
+            Math.abs(zoomScale - previousZoomState.to) < 0.06;
+
+          if (shouldToggleBack && previousZoomState) {
+            const backToZoom = clampZoomScale(previousZoomState.from);
+            applyZoomAtClientPoint(backToZoom, touch.clientX, touch.clientY);
+            lastDoubleTapZoomRef.current = null;
+          } else {
+            const next = clampZoomScale(zoomScale + 0.35);
+            applyZoomAtClientPoint(next, touch.clientX, touch.clientY);
+            lastDoubleTapZoomRef.current = { from: zoomScale, to: next };
+          }
+
+          lastTapRef.current = null;
+          return;
+        }
+      }
+
+      lastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
+    }
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!canDragPan || !containerRef.current) return;
+    if (isPinchingRef.current) return;
+
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    stopInertia();
+
+    panStartPointRef.current = { x: event.clientX, y: event.clientY };
+    panStartScrollRef.current = {
+      left: containerRef.current.scrollLeft,
+      top: containerRef.current.scrollTop,
+    };
+    pointerLastSampleRef.current = { x: event.clientX, y: event.clientY, time: performance.now() };
+    panVelocityRef.current = { x: 0, y: 0 };
+    setIsPanning(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!canDragPan || !isPanning || !containerRef.current) return;
+    if (!panStartPointRef.current || !panStartScrollRef.current) return;
+    if (isPinchingRef.current) return;
+
+    const deltaX = event.clientX - panStartPointRef.current.x;
+    const deltaY = event.clientY - panStartPointRef.current.y;
+
+    containerRef.current.scrollLeft = panStartScrollRef.current.left - deltaX;
+    containerRef.current.scrollTop = panStartScrollRef.current.top - deltaY;
+
+    const now = performance.now();
+    const last = pointerLastSampleRef.current;
+    if (last) {
+      const dt = Math.max(1, now - last.time);
+      panVelocityRef.current = {
+        x: (event.clientX - last.x) / dt * 16,
+        y: (event.clientY - last.y) / dt * 16,
+      };
+    }
+    pointerLastSampleRef.current = { x: event.clientX, y: event.clientY, time: now };
+    event.preventDefault();
+  };
+
+  const handlePointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!canDragPan) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    panStartPointRef.current = null;
+    panStartScrollRef.current = null;
+    pointerLastSampleRef.current = null;
+    setIsPanning(false);
+
+    if (!isPinchingRef.current) {
+      const speed = Math.hypot(panVelocityRef.current.x, panVelocityRef.current.y);
+      if (speed > 0.8) {
+        startInertia();
+      }
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopInertia();
+    };
+  }, [stopInertia]);
 
   if (!activeFloor) {
     return <div>No active floor selected</div>;
@@ -264,6 +526,36 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface)] p-1">
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                className="px-2 py-1 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)]"
+                aria-label={t("dashboard.tables.map.zoom_out", { defaultValue: "Zoom out" })}
+              >
+                -
+              </button>
+              <span className="min-w-[48px] text-center text-xs tabular-nums text-[var(--text-muted)]">
+                {Math.round(zoomScale * 100)}%
+              </span>
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                className="px-2 py-1 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)]"
+                aria-label={t("dashboard.tables.map.zoom_in", { defaultValue: "Zoom in" })}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                onClick={handleZoomReset}
+                className="px-2 py-1 text-xs font-semibold text-[var(--primary)]"
+                aria-label={t("dashboard.tables.map.zoom_reset", { defaultValue: "Reset zoom" })}
+              >
+                {t("dashboard.tables.map.zoom_fit", { defaultValue: "Fit" })}
+              </button>
+            </div>
+
             {/* Upload Button */}
             {!readOnly && (
               <>
@@ -301,6 +593,20 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
       <div
         ref={containerRef}
         className="flex-1 overflow-auto bg-[var(--bg-base)] border border-[var(--border)] rounded-xl relative p-4 block"
+        style={{
+          touchAction: canDragPan ? "none" : "pan-x pan-y",
+          cursor: canDragPan ? (isPanning ? "grabbing" : "grab") : "default",
+          userSelect: canDragPan && isPanning ? "none" : "auto",
+        }}
+        onWheel={handleCanvasWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onPointerLeave={handlePointerEnd}
       >
         {/* Scaled wrapper — preserves canvas coordinate system */}
         <div
