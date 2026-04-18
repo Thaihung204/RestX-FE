@@ -3,9 +3,10 @@
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
-    OrderStatus,
+  OrderStatus,
 } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
+import { formatVND } from "@/lib/utils/currency";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
@@ -13,7 +14,6 @@ import { message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatVND } from "@/lib/utils/currency";
 
 interface OrderRow {
   id: string;
@@ -44,6 +44,7 @@ export default function OrdersPage() {
   const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">(
     "",
   );
+  const [dateFilter, setDateFilter] = useState("");
   const [exporting, setExporting] = useState<boolean>(false);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
@@ -56,13 +57,14 @@ export default function OrdersPage() {
     () => ({
       search: searchQuery || undefined,
       orderStatusId: statusFilter ? Number(statusFilter) : undefined,
-      paymentStatusId: paymentFilter
+      paymentStatus: paymentFilter
         ? paymentFilter === "paid"
           ? 1
           : 0
         : undefined,
+      createdDate: dateFilter || undefined,
     }),
-    [paymentFilter, searchQuery, statusFilter],
+    [paymentFilter, searchQuery, statusFilter, dateFilter],
   );
 
   const mapPaymentStatus = (statusId: number): "unpaid" | "paid" => {
@@ -242,7 +244,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [orderSearch, customerSearch, tableSearch, statusFilter, paymentFilter]);
+  }, [orderSearch, customerSearch, tableSearch, statusFilter, paymentFilter, dateFilter]);
 
   const handleExportOrders = useCallback(async () => {
     setExporting(true);
@@ -259,13 +261,15 @@ export default function OrdersPage() {
     }
   }, [orderFilterParams, t]);
 
-  const totalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE));
+  const filteredOrders = orders;
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
 
   const pagedOrders = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
-    return orders.slice(start, start + PAGE_SIZE);
-  }, [currentPage, orders]);
+    return filteredOrders.slice(start, start + PAGE_SIZE);
+  }, [currentPage, filteredOrders]);
 
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -320,6 +324,7 @@ export default function OrdersPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
             <input
               type="text"
+              placeholder={t("dashboard.orders.table.order")}
               value={orderSearch}
               onChange={(e) => setOrderSearch(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none"
@@ -332,6 +337,7 @@ export default function OrdersPage() {
 
             <input
               type="text"
+              placeholder={t("dashboard.orders.table.customer")}
               value={customerSearch}
               onChange={(e) => setCustomerSearch(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none"
@@ -342,8 +348,9 @@ export default function OrdersPage() {
               }}
             />
 
-            <input
+            {/*<input
               type="text"
+              placeholder={t("dashboard.orders.table.table")}
               value={tableSearch}
               onChange={(e) => setTableSearch(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none"
@@ -352,7 +359,7 @@ export default function OrdersPage() {
                 border: "1px solid var(--border)",
                 color: "var(--text)",
               }}
-            />
+            />*/}
 
             <select
               value={statusFilter}
@@ -398,13 +405,26 @@ export default function OrdersPage() {
                 {t("dashboard.orders.payment_status.unpaid")}
               </option>
             </select>
+
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}
+            />
           </div>
 
           {(orderSearch ||
             customerSearch ||
             tableSearch ||
             statusFilter ||
-            paymentFilter) && (
+            paymentFilter ||
+            dateFilter) && (
             <div className="mt-3 flex justify-end">
               <button
                 onClick={() => {
@@ -413,6 +433,7 @@ export default function OrdersPage() {
                   setTableSearch("");
                   setStatusFilter("");
                   setPaymentFilter("");
+                  setDateFilter("");
                 }}
                 className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                 style={{
@@ -653,7 +674,7 @@ export default function OrdersPage() {
             </table>
           </div>
 
-          {!loading && orders.length > 0 && totalPages > 1 && (
+          {!loading && filteredOrders.length > 0 && totalPages > 1 && (
             <div
               className="flex items-center justify-between px-4 py-3"
               style={{ borderTop: "1px solid var(--border)" }}>
@@ -661,8 +682,8 @@ export default function OrdersPage() {
                 {t("admin.reservations.pagination.page_info", {
                   page: currentPage,
                   total: totalPages,
-                  count: orders.length,
-                  defaultValue: `Trang ${currentPage}/${totalPages} • ${orders.length} bản ghi`,
+                  count: filteredOrders.length,
+                  defaultValue: `Trang ${currentPage}/${totalPages} • ${filteredOrders.length} bản ghi`,
                 })}
               </p>
               <div className="flex items-center gap-2">
