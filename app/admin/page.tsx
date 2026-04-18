@@ -1,21 +1,26 @@
 "use client";
 
+import AIPanelDashboard, {
+  AIReportFilterOption,
+  AIStrategyReport,
+} from "@/components/admin/AIPanelDashboard";
 import BestSellingDishesCard from "@/components/admin/BestSellingDishesCard";
 import KPISection from "@/components/admin/KPISection";
 import LatestFeedbacksCard from "@/components/admin/LatestFeedbacksCard";
 import OrdersBarChart from "@/components/admin/charts/OrdersBarChart";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import ReservationList from "@/components/admin/reservations/ReservationList";
+import aiService from "@/lib/services/aiService";
 import dashboardService, {
-    DashboardFilterType,
-    DashboardOverview,
-    DashboardSummary,
-    OrderTrendPoint,
-    RevenueTrendPoint,
+  DashboardFilterType,
+  DashboardOverview,
+  DashboardSummary,
+  OrderTrendPoint,
+  RevenueTrendPoint,
 } from "@/lib/services/dashboardService";
 import reportService, { ReportType } from "@/lib/services/reportService";
 import reservationService, {
-    PaginatedReservations,
+  PaginatedReservations,
 } from "@/lib/services/reservationService";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined } from "@ant-design/icons";
@@ -334,6 +339,26 @@ export default function DashboardPage() {
   const [dashboardFilter, setDashboardFilter] =
     useState<DashboardFilterOption>("week");
   const [exportingReport, setExportingReport] = useState(false);
+  const [aiReport, setAiReport] = useState<AIStrategyReport | null>(() => {
+    try {
+      const raw = localStorage.getItem("ai_strategy_report");
+      if (!raw) return null;
+      const { data, cachedAt } = JSON.parse(raw);
+      const ONE_DAY_MS = 24 * 60 * 60 * 1000;//lưu 24h
+      if (Date.now() - cachedAt > ONE_DAY_MS) {
+        localStorage.removeItem("ai_strategy_report");
+        return null;
+      }
+      return data;
+    } catch { return null; }
+  });
+  const [aiLoading, setAiLoading] = useState(false);
+  // add filter type to cache
+  const [aiFilter, setAiFilter] = useState<AIReportFilterOption>(() => {
+    try {
+      return (localStorage.getItem("ai_strategy_filter") as AIReportFilterOption) || "month";
+    } catch { return "month"; }
+  });
 
   const filterOptions: DashboardFilterOption[] = [
     "day",
@@ -422,6 +447,32 @@ export default function DashboardPage() {
       orderChartData.reduce((sum, item) => sum + item.total, 0),
     [overviewData?.orderTrend?.totalOrders, orderChartData],
   );
+
+  const generateAIReport = useCallback(async (filter: AIReportFilterOption) => {
+    setAiFilter(filter);
+    // add filter type to local storage
+    try { localStorage.setItem("ai_strategy_filter", filter); } catch {}
+    setAiLoading(true);
+    try {
+      const apiFilterType = filter === "month" ? "month" : filter;
+      const response = await aiService.analyzeDashboard({ filterType: apiFilterType });
+      const report = {
+        ...response,
+        id: response.id || `report-${Date.now()}`,
+        generatedAt: response.generatedAt || new Date().toISOString(),
+      };
+      setAiReport(report);
+      try {
+        localStorage.setItem("ai_strategy_report", JSON.stringify({ data: report, cachedAt: Date.now() }));
+      } catch {}
+      message.success(t("dashboard.analytics.success.generate"));
+    } catch (err) {
+      console.error(err);
+      message.error(t("dashboard.analytics.error.generate"));
+    } finally {
+      setAiLoading(false);
+    }
+  }, [message, t]);
 
   const fetchReservations = useCallback(async () => {
     setReservationLoading(true);
@@ -541,9 +592,17 @@ export default function DashboardPage() {
           />
         </section>
 
+        <section>
+          <AIPanelDashboard
+            report={aiReport}
+            loading={aiLoading}
+            onGenerate={generateAIReport}
+            currentFilter={aiFilter}
+          />
+        </section>
+
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <LatestFeedbacksCard loading={dashboardLoading && !summaryData} />
-          <BestSellingDishesCard 
+          <LatestFeedbacksCard loading={dashboardLoading && !summaryData} />          <BestSellingDishesCard 
             dishes={overviewData?.topDishes?.dishes}
             loading={dashboardLoading && !overviewData}
           />

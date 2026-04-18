@@ -2365,7 +2365,15 @@
       "createNew": "Tạo báo cáo mới",
       "generating": "Đang tạo báo cáo...",
       "filter": {
-        "by": "Phân tích theo"
+        "by": "Phân tích theo",
+        "month": "Tháng",
+        "quarter": "Quý",
+        "year": "Năm",
+        "subtitle": {
+          "month": "chiến lược kinh doanh theo tháng",
+          "quarter": "chiến lược kinh doanh theo quý",
+          "year": "chiến lược kinh doanh theo năm"
+        }
       },
       "time": {
         "justNow": "Vừa xong",
