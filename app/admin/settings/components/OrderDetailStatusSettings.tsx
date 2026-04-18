@@ -3,6 +3,7 @@
 import orderDetailStatusService, {
     OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import {
     DeleteOutlined,
     EditOutlined,
@@ -55,7 +56,12 @@ export default function OrderDetailStatusSettings() {
       setStatuses(data);
     } catch (error) {
       console.error("Failed to fetch order detail statuses:", error);
-      messageApi.error(t("dashboard.manage.order_status.errors.fetch_failed"));
+      messageApi.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.order_status.errors.fetch_failed"),
+        ),
+      );
     } finally {
       setLoading(false);
     }
@@ -95,7 +101,12 @@ export default function OrderDetailStatusSettings() {
       fetchStatuses();
     } catch (error: any) {
       console.error("Failed to delete order detail status:", error);
-      messageApi.error(t("dashboard.manage.order_status.errors.delete_failed"));
+      messageApi.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.order_status.errors.delete_failed"),
+        ),
+      );
     }
   };
 
@@ -129,10 +140,16 @@ export default function OrderDetailStatusSettings() {
       setModalVisible(false);
       fetchStatuses();
     } catch (error: any) {
-      if (error?.response) {
-        messageApi.error(t("dashboard.manage.order_status.errors.save_failed"));
+      if (error?.errorFields) {
+        return;
       }
       console.error("Failed to save order detail status:", error);
+      messageApi.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.order_status.errors.save_failed"),
+        ),
+      );
     }
   };
 
@@ -145,7 +162,12 @@ export default function OrderDetailStatusSettings() {
       fetchStatuses();
     } catch (error) {
       console.error("Failed to update default status:", error);
-      messageApi.error(t("dashboard.manage.order_status.errors.update_failed"));
+      messageApi.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.order_status.errors.update_failed"),
+        ),
+      );
     }
   };
 

@@ -13,6 +13,8 @@
       "filter": {
         "search_placeholder": "Tìm theo tên, SĐT, mã đặt bàn...",
         "all_status": "Tất cả trạng thái",
+        "from_date": "Từ ngày",
+        "to_date": "Đến ngày",
         "clear": "Xóa lọc"
       },
       "status": {
@@ -36,6 +38,8 @@
       "empty": "Không có đặt bàn",
       "pagination": {
         "page_info": "Trang {{page}} / {{total}} · {{count}} kết quả",
+        "page_info_compact": "Trang {{page}} / {{total}} ·",
+        "results_label": "kết quả",
         "prev": "Trước",
         "next": "Sau"
       },
@@ -270,6 +274,7 @@
     "orders": {
       "title": "Quản lý đơn hàng",
       "search": {
+        "label": "Tìm kiếm",
         "placeholder": "Tìm order...",
         "placeholder_full": "Tìm theo mã order hoặc tên bàn..."
       },
@@ -1440,12 +1445,29 @@
           "image_current": "Ảnh hiện tại đang lưu",
           "image_pending_hint": "Ảnh này sẽ được tải lên khi bạn lưu combo",
           "image_current_hint": "Chưa chọn ảnh mới. Hệ thống sẽ giữ ảnh hiện tại.",
-          "total_items": "Tổng số món"
+          "total_items": "Tổng số món",
+          "included_dishes": "Món trong combo",
+          "no_dishes": "Combo này chưa có món nào"
         },
         "placeholders": {
           "name": "Nhập tên combo",
           "description": "Mô tả combo",
           "select_dish": "Chọn món"
+        },
+        "ai_content": {
+          "generate": "Tạo bằng AI",
+          "generating": "Đang tạo...",
+          "prompt_placeholder": "Prompt tùy chọn (ví dụ: nhấn mạnh tiết kiệm và phù hợp đi nhóm)",
+          "variants_label": "Số lượng phương án",
+          "variants_hint": "Số ở trên là số lượng phương án mô tả AI sẽ tạo (1-10).",
+          "variants_title": "Các phương án AI (bấm để áp dụng)",
+          "variant_label": "Phương án {{index}}",
+          "score_label": "Điểm: {{score}}",
+          "requires_existing_item": "Vui lòng lưu combo trước để AI dùng đúng ID chi tiết.",
+          "empty_result": "AI chưa trả về nội dung. Vui lòng thử prompt khác.",
+          "generate_success": "Đã tạo nội dung AI. Hãy chọn một phương án bên dưới.",
+          "generate_failed": "Không thể tạo nội dung bằng AI.",
+          "apply_success": "Đã áp dụng mô tả từ phương án AI."
         },
         "form": {
           "create_title": "Tạo combo",
@@ -1458,6 +1480,7 @@
           "manage": "Quản lý combo",
           "back_to_menu": "Quay lại thực đơn",
           "add_combo": "Thêm combo",
+          "view_dishes": "Xem món",
           "add_row": "Thêm món",
           "change_image": "Chọn ảnh",
           "clear_image": "Xóa lựa chọn",
@@ -1486,14 +1509,18 @@
           "validation_error": "Vui lòng kiểm tra lại thông tin combo",
           "create_success": "Tạo combo thành công",
           "update_success": "Cập nhật combo thành công",
-          "save_error": "Không thể lưu combo"
+          "save_error": "Không thể lưu combo",
+          "save_error_bad_request": "Không thể lưu combo. Vui lòng kiểm tra lại các món trong combo rồi thử lại.",
+          "save_error_server": "Hệ thống đang bận, chưa thể lưu combo lúc này. Vui lòng thử lại sau."
         },
         "errors": {
           "load_failed": "Không thể tải dữ liệu combo",
+          "invalid_combo_id": "ID combo không hợp lệ",
+          "combo_not_found": "Không tìm thấy combo trong tenant hiện tại. Vui lòng tải lại danh sách combo.",
           "name_required": "Tên combo là bắt buộc",
           "name_too_short": "Tên combo phải có ít nhất 3 ký tự",
-          "name_too_long": "Tên combo tối đa 60 ký tự",
-          "description_too_long": "Mô tả tối đa 300 ký tự",
+          "name_too_long": "Tên combo tối đa 255 ký tự",
+          "description_too_long": "Mô tả tối đa 2000 ký tự",
           "price_invalid": "Giá phải lớn hơn 0",
           "price_too_high": "Giá phải nhỏ hơn 100.000.000",
           "details_required": "Vui lòng chọn ít nhất một món",
@@ -1546,6 +1573,23 @@
         "save_error_message": "Không thể lưu món ăn. Vui lòng thử lại.",
         "detail_error_message": "Không thể tải thông tin món ăn.",
         "validation_error_message": "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại."
+      },
+      "ai_content": {
+        "generate": "Tạo bằng AI",
+        "generating": "Đang tạo...",
+        "prompt_placeholder": "Prompt tùy chọn (ví dụ: nhấn mạnh vị cay và nguyên liệu cao cấp)",
+        "variants_label": "Số lượng phương án",
+        "variants_hint": "Số ở trên là số lượng phương án mô tả AI sẽ tạo (1-10).",
+        "name_required": "Vui lòng nhập tên món trước khi tạo nội dung AI.",
+        "name_based_hint": "AI dùng tên món làm ngữ cảnh chính. Prompt là tùy chọn để bổ sung định hướng.",
+        "variants_title": "Các phương án AI (bấm để áp dụng)",
+        "variant_label": "Phương án {{index}}",
+        "score_label": "Điểm: {{score}}",
+        "requires_existing_item": "Vui lòng lưu món trước để AI dùng đúng ID chi tiết.",
+        "empty_result": "AI chưa trả về nội dung. Vui lòng thử prompt khác.",
+        "generate_success": "Đã tạo nội dung AI. Hãy chọn một phương án bên dưới.",
+        "generate_failed": "Không thể tạo nội dung bằng AI.",
+        "apply_success": "Đã áp dụng mô tả từ phương án AI."
       },
       "images": {
         "main_image": "Chính",
@@ -1618,8 +1662,10 @@
       "errors": {
         "load_failed": "Không thể tải danh sách món ăn",
         "name_required": "Tên món ăn là bắt buộc",
+        "name_too_long": "Tên món tối đa 255 ký tự",
         "category_required": "Vui lòng chọn danh mục",
         "price_invalid": "Giá phải là số dương",
+        "description_too_long": "Mô tả món tối đa 2000 ký tự",
         "detail_load_failed": "Không thể tải thông tin món ăn",
         "retry_hint": "Vui lòng thử lại sau"
       }
@@ -1937,8 +1983,11 @@
         "account_disabled": "Tài khoản này hiện đang bị vô hiệu hóa"
       },
       "errors": {
+        "load_failed": "Không thể tải thông tin nhân viên",
         "save_failed": "Không thể lưu thông tin nhân viên",
-        "update_failed": "Không thể cập nhật trạng thái nhân viên"
+        "update_failed": "Không thể cập nhật trạng thái nhân viên",
+        "avatar_invalid_type": "Chỉ hỗ trợ PNG, JPG, JPEG và WEBP",
+        "avatar_too_large": "Kích thước tệp phải nhỏ hơn 5MB"
       },
       "modal": {
         "activate_title": "Kích hoạt nhân viên",
@@ -1993,6 +2042,20 @@
           "manual_required": "Cần xử lý thủ công do có nhiều đơn hàng."
         },
         "modal": {
+          "session": "Phiên bàn",
+          "session_id": "Session ID",
+          "start_time": "Giờ bắt đầu",
+          "end_time": "Giờ kết thúc",
+          "reservation": "Đặt bàn",
+          "reserved_by": "Người đặt",
+          "phone": "Số điện thoại",
+          "reservation_time": "Thời gian đặt",
+          "guest_count": "Số khách",
+          "guests": "khách",
+          "seats": "chỗ ngồi",
+          "order": "Order",
+          "total": "Tổng tiền",
+          "checkin_btn": "Check-in",
           "checkin_success": "Check-in thành công!",
           "checkin_error": "Check-in thất bại"
         }

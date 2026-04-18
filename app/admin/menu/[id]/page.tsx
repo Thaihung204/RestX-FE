@@ -3,8 +3,11 @@
 import MultiImageUpload from "@/components/MultiImageUpload";
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
+import aiService from "@/lib/services/aiService";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
+import type { AIContentVariant } from "@/lib/types/ai";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { message } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,6 +20,19 @@ interface ImageItem {
   preview?: string;
   isMain: boolean;
 }
+
+const MIN_AI_VARIANTS = 1;
+const MAX_AI_VARIANTS = 10;
+const MAX_AI_PROMPT_LENGTH = 500;
+const MAX_DISH_NAME_LENGTH = 255;
+const MAX_DISH_DESCRIPTION_LENGTH = 2000;
+
+const clampAIVariants = (value: number): number => {
+  if (!Number.isFinite(value)) {
+    return MIN_AI_VARIANTS;
+  }
+  return Math.max(MIN_AI_VARIANTS, Math.min(MAX_AI_VARIANTS, Math.floor(value)));
+};
 
 export default function MenuItemFormPage() {
   const { t } = useTranslation();
@@ -44,6 +60,10 @@ export default function MenuItemFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiVariants, setAiVariants] = useState(4);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
 
   useEffect(() => {
     fetchCategories();
@@ -124,12 +144,89 @@ export default function MenuItemFormPage() {
           },
         ]);
       }
-    } catch {
-      setError(t("dashboard.menu.errors.detail_load_failed"));
-      message.error(t("dashboard.menu.toasts.detail_error_message"));
+
+      setAiSuggestions([]);
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.toasts.detail_error_message"),
+      );
+
+      setError(errorMsg);
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGenerateDescription = async () => {
+    const normalizedDishName = formData.name.trim();
+    if (!normalizedDishName) {
+      message.warning(
+        t("dashboard.menu.ai_content.name_required", {
+          defaultValue: "Please enter dish name before generating AI content.",
+        }),
+      );
+      return;
+    }
+
+    const normalizedVariants = clampAIVariants(Number(aiVariants));
+    const promptText = aiPrompt.trim().slice(0, MAX_AI_PROMPT_LENGTH);
+
+    try {
+      setAiGenerating(true);
+      setAiSuggestions([]);
+
+      const response = await aiService.generateContent({
+        dishId: isNewItem ? null : id,
+        dishName: normalizedDishName,
+        comboId: null,
+        promotionId: null,
+        variants: normalizedVariants,
+        tone: "friendly",
+        customContext: promptText || undefined,
+      });
+
+      const variants = (response?.variants || []).filter(
+        (item) => typeof item?.content === "string" && item.content.trim().length > 0,
+      );
+
+      if (variants.length === 0) {
+        message.warning(
+          t("dashboard.menu.ai_content.empty_result", {
+            defaultValue: "AI did not return any content. Please try another prompt.",
+          }),
+        );
+        return;
+      }
+
+      setAiSuggestions(variants);
+      message.success(
+        t("dashboard.menu.ai_content.generate_success", {
+          defaultValue: "AI content generated. Choose one variant below.",
+        }),
+      );
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ai_content.generate_failed", {
+          defaultValue: "Failed to generate content with AI.",
+        }),
+      );
+
+      message.error(errorMsg);
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  const applyAIVariant = (variant: AIContentVariant) => {
+    setFormData((prev) => ({ ...prev, description: variant.content || prev.description }));
+    message.success(
+      t("dashboard.menu.ai_content.apply_success", {
+        defaultValue: "Description updated from AI variant.",
+      }),
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,9 +236,34 @@ export default function MenuItemFormPage() {
       setLoading(true);
       setError(null);
 
+      const normalizedName = formData.name.trim();
+      const normalizedDescription = formData.description.trim();
+
       // Validation
-      if (!formData.name.trim()) {
+      if (!normalizedName) {
         setError(t("dashboard.menu.errors.name_required"));
+        message.error(t("dashboard.menu.toasts.validation_error_message"));
+        setLoading(false);
+        return;
+      }
+
+      if (normalizedName.length > MAX_DISH_NAME_LENGTH) {
+        setError(
+          t("dashboard.menu.errors.name_too_long", {
+            defaultValue: "Dish name must be at most 255 characters",
+          }),
+        );
+        message.error(t("dashboard.menu.toasts.validation_error_message"));
+        setLoading(false);
+        return;
+      }
+
+      if (normalizedDescription.length > MAX_DISH_DESCRIPTION_LENGTH) {
+        setError(
+          t("dashboard.menu.errors.description_too_long", {
+            defaultValue: "Description must be at most 2000 characters",
+          }),
+        );
         message.error(t("dashboard.menu.toasts.validation_error_message"));
         setLoading(false);
         return;
@@ -191,10 +313,10 @@ export default function MenuItemFormPage() {
       }));
 
       const submitData: any = {
-        name: formData.name.trim(),
+        name: normalizedName,
         categoryId: formData.categoryId,
         price: priceValue,
-        description: formData.description.trim(),
+        description: normalizedDescription,
         unit: formData.unit,
         quantity: formData.quantity ? parseInt(formData.quantity) : 0,
         isActive: formData.isActive,
@@ -215,53 +337,17 @@ export default function MenuItemFormPage() {
 
       router.push("/admin/menu");
     } catch (err: any) {
-      let errorMsg = "Failed to save menu item";
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.toasts.save_error_message"),
+      );
 
-      if (err.response) {
-        // Server responded with error
-        const status = err.response.status;
-        const data = err.response.data;
-
-        if (status === 400) {
-          // Try to extract validation errors
-          if (data?.errors) {
-            const validationErrors = Object.entries(data.errors)
-              .map(
-                ([field, messages]: [string, any]) =>
-                  `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`,
-              )
-              .join("\n");
-            errorMsg = `Validation errors:\n${validationErrors}`;
-          } else {
-            errorMsg =
-              data?.message ||
-              data?.title ||
-              data?.error ||
-              "Invalid data. Please check your input.";
-          }
-        } else if (status === 401) {
-          errorMsg = "Unauthorized. Please login again.";
-          setTimeout(() => router.push("/login"), 2000);
-        } else if (status === 403) {
-          errorMsg = "You don't have permission to perform this action.";
-        } else if (status === 404) {
-          errorMsg = "Menu item not found.";
-        } else if (status === 500) {
-          errorMsg = `Server error: ${data?.message || data?.title || "Please try again later."}`;
-        } else {
-          errorMsg =
-            data?.message || data?.title || data?.error || `Error ${status}`;
-        }
-      } else if (err.request) {
-        // Request sent but no response
-        errorMsg = "No response from server. Please check your connection.";
-      } else {
-        // Error in request setup
-        errorMsg = err.message || "Unknown error occurred";
+      if (err?.response?.status === 401) {
+        setTimeout(() => router.push("/login"), 2000);
       }
 
       setError(errorMsg);
-      message.error(t("dashboard.menu.toasts.save_error_message"));
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -283,8 +369,12 @@ export default function MenuItemFormPage() {
         );
         setFormData((prev) => ({ ...prev, isActive: nextStatus }));
       })
-      .catch(() => {
-        message.error(t("dashboard.menu.ingredients.status.update_failed"));
+      .catch((err: unknown) => {
+        const errorMsg = extractApiErrorMessage(
+          err,
+          t("dashboard.menu.ingredients.status.update_failed"),
+        );
+        message.error(errorMsg);
       });
   };
 
@@ -410,7 +500,6 @@ export default function MenuItemFormPage() {
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
                         }
-                        placeholder="e.g., Grilled Salmon"
                       />
                     </div>
 
@@ -489,7 +578,6 @@ export default function MenuItemFormPage() {
                           onBlur={(e) =>
                             (e.currentTarget.style.boxShadow = "none")
                           }
-                          placeholder="0"
                         />
                         <span
                           className="absolute right-4 top-1/2 -translate-y-1/2 font-bold"
@@ -499,13 +587,86 @@ export default function MenuItemFormPage() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="space-y-3">
                       <label
                         htmlFor="description"
                         className="block text-sm font-medium mb-2"
                         style={{ color: "var(--text)" }}>
                         Description
                       </label>
+
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                        <input
+                          type="text"
+                          value={aiPrompt}
+                          onChange={(e) =>
+                            setAiPrompt(e.target.value.slice(0, MAX_AI_PROMPT_LENGTH))
+                          }
+                          maxLength={MAX_AI_PROMPT_LENGTH}
+                          disabled={aiGenerating}
+                          className="md:col-span-2 w-full px-3 py-2 rounded-lg outline-none"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }}
+                        />
+
+                        <input
+                          type="number"
+                          min={MIN_AI_VARIANTS}
+                          max={MAX_AI_VARIANTS}
+                          step={1}
+                          value={aiVariants}
+                          onChange={(e) =>
+                            setAiVariants(clampAIVariants(Number(e.target.value)))
+                          }
+                          disabled={aiGenerating}
+                          className="w-full px-3 py-2 rounded-lg outline-none"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text)",
+                          }}
+                          aria-label={t("dashboard.menu.ai_content.variants_label", {
+                            defaultValue: "Number of variants",
+                          })}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={handleGenerateDescription}
+                          disabled={aiGenerating}
+                          className="px-4 py-2 rounded-lg font-medium transition-opacity disabled:opacity-60"
+                          style={{
+                            background: "var(--primary)",
+                            border: "1px solid var(--primary)",
+                            color: "#fff",
+                          }}>
+                          {aiGenerating
+                            ? t("dashboard.menu.ai_content.generating", {
+                                defaultValue: "Generating...",
+                              })
+                            : t("dashboard.menu.ai_content.generate", {
+                                defaultValue: "Generate AI",
+                              })}
+                        </button>
+                      </div>
+
+                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                        {t("dashboard.menu.ai_content.variants_hint", {
+                          defaultValue:
+                            "The number above controls how many AI description variants will be generated (1-10).",
+                        })}
+                      </p>
+
+                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                        {t("dashboard.menu.ai_content.name_based_hint", {
+                          defaultValue:
+                            "AI uses dish name as main context. Optional prompt adds extra direction.",
+                        })}
+                      </p>
+
                       <textarea
                         id="description"
                         name="description"
@@ -525,8 +686,72 @@ export default function MenuItemFormPage() {
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
                         }
-                        placeholder="Describe the dish, ingredients, or special features..."
                       />
+
+                      {aiSuggestions.length > 0 && (
+                        <div
+                          className="rounded-xl p-3 space-y-2"
+                          style={{
+                            background: "var(--surface)",
+                            border: "1px solid var(--border)",
+                          }}>
+                          <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                            {t("dashboard.menu.ai_content.variants_title", {
+                              defaultValue: "AI variants (click one to apply)",
+                            })}
+                          </p>
+
+                          <div className="space-y-2">
+                            {aiSuggestions.map((variant, index) => (
+                              <button
+                                key={`dish-ai-variant-${index}`}
+                                type="button"
+                                onClick={() => applyAIVariant(variant)}
+                                className="w-full text-left rounded-lg px-3 py-2 transition-colors"
+                                style={{
+                                  background: "var(--card)",
+                                  border: "1px solid var(--border)",
+                                }}>
+                                <div className="flex items-center justify-between gap-3">
+                                  <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                                    {variant.headline ||
+                                      t("dashboard.menu.ai_content.variant_label", {
+                                        defaultValue: "Variant {{index}}",
+                                        index: index + 1,
+                                      })}
+                                  </p>
+
+                                  {typeof variant.score === "number" && (
+                                    <span
+                                      className="text-xs px-2 py-1 rounded"
+                                      style={{
+                                        background: "rgba(0,0,0,0.08)",
+                                        color: "var(--text-muted)",
+                                      }}>
+                                      {t("dashboard.menu.ai_content.score_label", {
+                                        defaultValue: "Score: {{score}}",
+                                        score: variant.score,
+                                      })}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p
+                                  className="text-sm mt-2"
+                                  style={{ color: "var(--text-muted)" }}>
+                                  {variant.content}
+                                </p>
+
+                                {variant.scoreNote && (
+                                  <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                                    {variant.scoreNote}
+                                  </p>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -556,7 +781,6 @@ export default function MenuItemFormPage() {
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
                         }
-                        placeholder="0"
                       />
                     </div>
                   </div>

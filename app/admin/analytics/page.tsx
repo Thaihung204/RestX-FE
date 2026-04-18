@@ -5,6 +5,7 @@ import AIStrategySection from "@/components/admin/analytics/AIStrategySection";
 import AIStrategySummaryCard from "@/components/admin/analytics/AIStrategySummaryCard";
 import MenuStrategyCard from "@/components/admin/analytics/MenuStrategyCard";
 import aiService from "@/lib/services/aiService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { Drawer, Tabs, Dropdown, message } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -113,7 +114,9 @@ export default function AnalyticsPage() {
       message.success(t('dashboard.analytics.success.generate'));
     } catch (error) {
       console.error("Lỗi khi tạo báo cáo AI:", error);
-      message.error(t('dashboard.analytics.error.generate'));
+      message.error(
+        extractApiErrorMessage(error, t('dashboard.analytics.error.generate')),
+      );
     } finally {
       setLoading(false);
     }

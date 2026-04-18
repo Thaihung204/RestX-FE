@@ -3,6 +3,7 @@
 import { DropDown } from "@/components/ui/DropDown";
 import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
 import supplierService, { SupplierItem } from "@/lib/services/supplierService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -86,8 +87,12 @@ export default function IngredientFormPage() {
       setLoadingSuppliers(true);
       const data = await supplierService.getAll();
       setSuppliers(data.filter((s) => s.isActive));
-    } catch {
-      message.warning(t("dashboard.ingredients.fetch_suppliers_failed"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.ingredients.fetch_suppliers_failed"),
+      );
+      message.warning(errorMsg);
     } finally {
       setLoadingSuppliers(false);
     }
@@ -98,8 +103,12 @@ export default function IngredientFormPage() {
       setLoadingCategories(true);
       const data = await ingredientService.getAllCategories();
       setIngredientCategories(data.filter((c) => c.isActive !== false));
-    } catch {
-      message.warning(t("dashboard.ingredients.fetch_categories_failed"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.ingredients.fetch_categories_failed"),
+      );
+      message.warning(errorMsg);
     } finally {
       setLoadingCategories(false);
     }
@@ -121,8 +130,12 @@ export default function IngredientFormPage() {
         currentQuantity: data.currentQuantity ?? 0,
         status: data.status ?? 0,
       });
-    } catch {
-      message.error(t("dashboard.ingredients.fetch_ingredient_failed"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.ingredients.fetch_ingredient_failed"),
+      );
+      message.error(errorMsg);
     } finally {
       setLoadingData(false);
     }
@@ -166,8 +179,12 @@ export default function IngredientFormPage() {
         message.success(t("dashboard.ingredients.update_success"));
       }
       router.push("/admin/ingredients");
-    } catch (err: any) {
-      message.error(t("dashboard.ingredients.save_failed"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.ingredients.save_failed"),
+      );
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -179,8 +196,12 @@ export default function IngredientFormPage() {
       await ingredientService.delete(id);
       message.success(t("dashboard.ingredients.delete_success"));
       router.push("/admin/ingredients");
-    } catch (err: any) {
-      message.error(t("dashboard.ingredients.delete_failed"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.ingredients.delete_failed"),
+      );
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -266,7 +287,6 @@ export default function IngredientFormPage() {
                       <input
                         type="text" name="name" value={form.name} onChange={handleChange} required
                         disabled={cannotSave}
-                        placeholder={t("dashboard.ingredients.name")}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                         style={cannotSave ? disabledFieldStyle : fieldStyle}
                       />
@@ -281,7 +301,6 @@ export default function IngredientFormPage() {
                         type="text" name="code" value={form.code} onChange={handleChange}
                         required maxLength={20}
                         disabled={cannotSave}
-                        placeholder={t("dashboard.ingredients.code")}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20 font-mono"
                         style={cannotSave ? disabledFieldStyle : fieldStyle}
                       />

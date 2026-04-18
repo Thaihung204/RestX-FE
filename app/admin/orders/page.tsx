@@ -1,11 +1,13 @@
 "use client";
 
+import { DropDown } from "@/components/ui/DropDown";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
   OrderStatus,
 } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
@@ -27,7 +29,7 @@ interface OrderRow {
   raw: OrderDto;
 }
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 
 export default function OrdersPage() {
   const { t } = useTranslation("common");
@@ -36,32 +38,22 @@ export default function OrdersPage() {
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
   const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const [page, setPage] = useState(1);
-  const [orderSearch, setOrderSearch] = useState("");
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [tableSearch, setTableSearch] = useState("");
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [paymentFilter, setPaymentFilter] = useState<"" | "paid" | "unpaid">(
-    "",
-  );
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [exporting, setExporting] = useState<boolean>(false);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
 
-  const searchQuery = [orderSearch.trim(), customerSearch.trim(), tableSearch.trim()]
-    .filter(Boolean)
-    .join(" ");
-
   const orderFilterParams = useMemo(
     () => ({
-      search: searchQuery || undefined,
-      orderStatusId: statusFilter ? Number(statusFilter) : undefined,
-      paymentStatusId: paymentFilter
-        ? paymentFilter === "paid"
-          ? 1
-          : 0
-        : undefined,
+      Status: statusFilter === "" ? undefined : Number(statusFilter),
+      From: fromDate || undefined,
+      To: toDate || undefined,
     }),
-    [paymentFilter, searchQuery, statusFilter],
+    [fromDate, statusFilter, toDate],
   );
 
   const mapPaymentStatus = (statusId: number): "unpaid" | "paid" => {
@@ -74,6 +66,14 @@ export default function OrdersPage() {
       .then((data) => setOrderStatuses(data ?? []))
       .catch((error) => {
         console.error("Failed to load order statuses:", error);
+        message.error(
+          extractApiErrorMessage(
+            error,
+            t("admin.orders.messages.statuses_load_failed", {
+              defaultValue: "Khong the tai trang thai don hang",
+            }),
+          ),
+        );
       });
   }, []);
 
@@ -128,7 +128,7 @@ export default function OrdersPage() {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
-      const data = await orderService.getOrdersByFilter(orderFilterParams);
+      const data = await orderService.getAllOrders(orderFilterParams);
       setOrders(
         data.map((o) => {
           const distinctCount = o.orderDetails?.length ?? 0;
@@ -167,6 +167,7 @@ export default function OrdersPage() {
       );
     } catch (error) {
       console.error("Failed to load orders:", error);
+      throw error;
     } finally {
       inFlightRef.current = false;
     }
@@ -181,6 +182,17 @@ export default function OrdersPage() {
       if (showLoading) setLoading(true);
       try {
         await loadOrders();
+      } catch (error) {
+        if (showLoading) {
+          message.error(
+            extractApiErrorMessage(
+              error,
+              t("admin.orders.messages.load_failed", {
+                defaultValue: "Khong the tai danh sach don hang",
+              }),
+            ),
+          );
+        }
       } finally {
         if (showLoading) setLoading(false);
       }
@@ -241,7 +253,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [orderSearch, customerSearch, tableSearch, statusFilter, paymentFilter]);
+  }, [fromDate, statusFilter, toDate, pageSize, searchTerm]);
 
   const handleExportOrders = useCallback(async () => {
     setExporting(true);
@@ -252,19 +264,40 @@ export default function OrdersPage() {
       message.success(t("common.messages.export_success"));
     } catch (error) {
       console.error("Failed to export orders:", error);
-      message.error(t("common.messages.export_failed"));
+      message.error(
+        extractApiErrorMessage(error, t("common.messages.export_failed")),
+      );
     } finally {
       setExporting(false);
     }
   }, [orderFilterParams, t]);
 
-  const totalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE));
+  const filteredOrders = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    if (!normalizedSearch) return orders;
+
+    return orders.filter((order) => {
+      const haystack = [
+        order.orderNumber,
+        order.customerName,
+        order.id,
+        order.raw?.reference ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(normalizedSearch);
+    });
+  }, [orders, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
   const currentPage = Math.min(page, totalPages);
 
   const pagedOrders = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return orders.slice(start, start + PAGE_SIZE);
-  }, [currentPage, orders]);
+    const start = (currentPage - 1) * pageSize;
+    return filteredOrders.slice(start, start + pageSize);
+  }, [currentPage, filteredOrders, pageSize]);
 
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -316,111 +349,127 @@ export default function OrdersPage() {
             background: "var(--card)",
             border: "1px solid var(--border)",
           }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
-            <input
-              type="text"
-              placeholder={t("dashboard.orders.table.order", {
-                defaultValue: "Mã đơn",
-              })}
-              value={orderSearch}
-              onChange={(e) => setOrderSearch(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
 
-            <input
-              type="text"
-              placeholder={t("dashboard.orders.table.customer", {
-                defaultValue: "Khách hàng",
-              })}
-              value={customerSearch}
-              onChange={(e) => setCustomerSearch(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}
-            />
-
-            <input
-              type="text"
-              placeholder={t("dashboard.orders.table.table", {
-                defaultValue: "Bàn",
-              })}
-              value={tableSearch}
-              onChange={(e) => setTableSearch(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}
-            />
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}>
-              <option value="">
-                {t("admin.reservations.filter.all_status", {
-                  defaultValue: "Tất cả trạng thái",
+            <div className="space-y-1">
+              <label
+                htmlFor="orders-filter-search"
+                className="block text-xs"
+                style={{ color: "var(--text-muted)" }}>
+                {t("dashboard.orders.search.label", {
+                  defaultValue: "Tìm kiếm",
                 })}
-              </option>
-              {orderStatuses.map((status) => (
-                <option key={status.id} value={status.id}>
-                  {status.name}
+              </label>
+              <input
+                id="orders-filter-search"
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={t("dashboard.orders.search.placeholder", {
+                  defaultValue: "Tìm mã đơn hoặc khách hàng",
+                })}
+                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label
+                htmlFor="orders-filter-status"
+                className="block text-xs"
+                style={{ color: "var(--text-muted)" }}>
+                {t("dashboard.orders.table.status", {
+                  defaultValue: "Trạng thái",
+                })}
+              </label>
+              <select
+                id="orders-filter-status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full h-14 px-4 rounded-lg text-sm"
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }}>
+                <option value="">
+                  {t("admin.reservations.filter.all_status", {
+                    defaultValue: "Tất cả trạng thái",
+                  })}
                 </option>
-              ))}
-            </select>
+                {orderStatuses.map((status) => (
+                  <option key={status.id} value={status.id}>
+                    {status.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <select
-              value={paymentFilter}
-              onChange={(e) =>
-                setPaymentFilter(e.target.value as "" | "paid" | "unpaid")
-              }
-              className="w-full px-3 py-2 rounded-lg text-sm"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}>
-              <option value="">
-                {t("dashboard.orders.table.payment", {
-                  defaultValue: "Thanh toán",
+            <div className="space-y-1">
+              <label
+                htmlFor="orders-filter-from-date"
+                className="block text-xs"
+                style={{ color: "var(--text-muted)" }}>
+                {t("admin.reservations.filter.from_date", {
+                  defaultValue: "Từ ngày",
                 })}
-              </option>
-              <option value="paid">
-                {t("dashboard.orders.payment_status.paid")}
-              </option>
-              <option value="unpaid">
-                {t("dashboard.orders.payment_status.unpaid")}
-              </option>
-            </select>
+              </label>
+              <input
+                id="orders-filter-from-date"
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
+                aria-label={t("admin.reservations.filter.from_date", {
+                  defaultValue: "Từ ngày",
+                })}
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label
+                htmlFor="orders-filter-to-date"
+                className="block text-xs"
+                style={{ color: "var(--text-muted)" }}>
+                {t("admin.reservations.filter.to_date", {
+                  defaultValue: "Đến ngày",
+                })}
+              </label>
+              <input
+                id="orders-filter-to-date"
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
+                aria-label={t("admin.reservations.filter.to_date", {
+                  defaultValue: "Đến ngày",
+                })}
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }}
+              />
+            </div>
           </div>
 
-          {(orderSearch ||
-            customerSearch ||
-            tableSearch ||
-            statusFilter ||
-            paymentFilter) && (
+          {(statusFilter !== "" || fromDate || toDate || searchTerm.trim()) && (
             <div className="mt-3 flex justify-end">
               <button
                 onClick={() => {
-                  setOrderSearch("");
-                  setCustomerSearch("");
-                  setTableSearch("");
+                  setSearchTerm("");
                   setStatusFilter("");
-                  setPaymentFilter("");
+                  setFromDate("");
+                  setToDate("");
                 }}
                 className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                 style={{
@@ -534,7 +583,7 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className="text-green-500 font-bold">
+                        <span className="font-bold" style={{ color: "#000000" }}>
                           {order.total.toLocaleString("vi-VN")}₫
                         </span>
                       </td>
@@ -579,9 +628,12 @@ export default function OrdersPage() {
                                 } catch (err) {
                                   console.error("Failed to update status", err);
                                   message.error(
-                                    t(
-                                      "admin.order_detail.messages.update_error",
-                                      { defaultValue: "Cập nhật lỗi" },
+                                    extractApiErrorMessage(
+                                      err,
+                                      t(
+                                        "admin.order_detail.messages.update_error",
+                                        { defaultValue: "Cap nhat loi" },
+                                      ),
                                     ),
                                   );
                                 }
@@ -661,18 +713,42 @@ export default function OrdersPage() {
             </table>
           </div>
 
-          {!loading && orders.length > 0 && totalPages > 1 && (
+          {!loading && filteredOrders.length > 0 && (
             <div
               className="flex items-center justify-between px-4 py-3"
               style={{ borderTop: "1px solid var(--border)" }}>
-              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                {t("admin.reservations.pagination.page_info", {
-                  page: currentPage,
-                  total: totalPages,
-                  count: orders.length,
-                  defaultValue: `Trang ${currentPage}/${totalPages} • ${orders.length} bản ghi`,
-                })}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {t("admin.reservations.pagination.page_info_compact", {
+                    page: currentPage,
+                    total: totalPages,
+                    defaultValue: `Trang ${currentPage}/${totalPages} ·`,
+                  })}
+                </p>
+                <div className="flex items-center gap-2">
+                  <DropDown
+                    value={String(pageSize)}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    containerClassName="w-[110px]"
+                    className="!h-9 !py-1.5 !pl-3 !pr-8 !text-sm"
+                    aria-label={t("common.pagination.items_per_page", {
+                      defaultValue: "Items/page",
+                    })}>
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </DropDown>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                    {t("admin.reservations.pagination.results_label", {
+                      defaultValue: "kết quả",
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              {totalPages > 1 && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPage((p: number) => Math.max(1, p - 1))}
@@ -724,6 +800,7 @@ export default function OrdersPage() {
                   })}
                 </button>
               </div>
+              )}
             </div>
           )}
         </div>

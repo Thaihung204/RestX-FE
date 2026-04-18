@@ -11,6 +11,8 @@ import ingredientService, {
 } from "@/lib/services/ingredientService";
 import menuService from "@/lib/services/menuService";
 import recipeService, { DishRecipeItem } from "@/lib/services/recipeService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { PlusOutlined } from "@ant-design/icons";
 import { App, Button, Modal } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -117,9 +119,13 @@ export default function MenuPage() {
       } else {
         setError(t("dashboard.menu.errors.load_failed"));
       }
-    } catch {
-      setError(t("dashboard.menu.errors.load_failed"));
-      message.error(t("dashboard.menu.toasts.fetch_error_message"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.toasts.fetch_error_message"),
+      );
+      setError(errorMsg);
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -130,8 +136,12 @@ export default function MenuPage() {
       setIngredientsLoading(true);
       const data = await ingredientService.getAll();
       setIngredients(data.filter((item) => item.isActive !== false));
-    } catch {
-      message.error(t("dashboard.menu.ingredients.errors.fetch_ingredients"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.errors.fetch_ingredients"),
+      );
+      message.error(errorMsg);
     } finally {
       setIngredientsLoading(false);
     }
@@ -142,8 +152,12 @@ export default function MenuPage() {
       setLoadingRecipes(true);
       const data = await recipeService.getByDishId(dishId);
       setDishRecipes(data);
-    } catch {
-      message.error(t("dashboard.menu.ingredients.errors.fetch_recipes"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.errors.fetch_recipes"),
+      );
+      message.error(errorMsg);
     } finally {
       setLoadingRecipes(false);
     }
@@ -168,9 +182,13 @@ export default function MenuPage() {
       const data = await menuService.getDishesByCategory(categoryId);
       const arrayData = Array.isArray(data) ? data : [];
       setMenuItems(arrayData.map((item: any, index: number) => normalizeMenuItem(item, index)));
-    } catch {
-      setError(t("dashboard.menu.errors.load_failed"));
-      message.error(t("dashboard.menu.toasts.fetch_error_message"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.toasts.fetch_error_message"),
+      );
+      setError(errorMsg);
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -211,8 +229,12 @@ export default function MenuPage() {
             : dish,
         ),
       );
-    } catch {
-      message.error(t("dashboard.menu.ingredients.status.update_failed"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.status.update_failed"),
+      );
+      message.error(errorMsg);
     }
   };
 
@@ -257,8 +279,12 @@ export default function MenuPage() {
       await fetchRecipes(activeDish.id);
       setSelectedIngredientId("");
       setQuantity("1");
-    } catch {
-      message.error(t("dashboard.menu.ingredients.toasts.add_error"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.toasts.add_error"),
+      );
+      message.error(errorMsg);
     } finally {
       setSavingRecipe(false);
     }
@@ -281,8 +307,12 @@ export default function MenuPage() {
       });
       message.success(t("dashboard.menu.ingredients.toasts.update_success"));
       await fetchRecipes(activeDish.id);
-    } catch {
-      message.error(t("dashboard.menu.ingredients.toasts.update_error"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.toasts.update_error"),
+      );
+      message.error(errorMsg);
     } finally {
       setSavingRecipe(false);
     }
@@ -295,8 +325,12 @@ export default function MenuPage() {
       await recipeService.delete(recipe.id);
       message.success(t("dashboard.menu.ingredients.toasts.delete_success"));
       await fetchRecipes(activeDish.id);
-    } catch {
-      message.error(t("dashboard.menu.ingredients.toasts.delete_error"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.toasts.delete_error"),
+      );
+      message.error(errorMsg);
     } finally {
       setSavingRecipe(false);
     }
@@ -337,24 +371,16 @@ export default function MenuPage() {
               <MenuManagementTabs activeTab="dishes" />
 
               <Link href="/admin/menu/new">
-                <button
-                  className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-                  style={{ background: "var(--primary)", color: "white" }}
-                  suppressHydrationWarning>
-                  <svg
-                    className="w-5 h-5 inline-block mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  className="!inline-flex !h-12 !items-center !rounded-xl !px-6 !text-base !font-semibold"
+                  style={{
+                    background: "var(--primary)",
+                    borderColor: "var(--primary)",
+                  }}>
                   {t("dashboard.menu.add_item")}
-                </button>
+                </Button>
               </Link>
             </div>
           </div>

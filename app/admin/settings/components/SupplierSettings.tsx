@@ -2,6 +2,7 @@
 
 import StatusToggle from "@/components/ui/StatusToggle";
 import supplierService, { SupplierItem } from "@/lib/services/supplierService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { App, Button, Popconfirm, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -28,8 +29,10 @@ export default function SupplierSettings() {
       setLoading(true);
       const data = await supplierService.getAll();
       setSuppliers(data as Supplier[]);
-    } catch {
-      message.error(t("dashboard.manage.suppliers.fetch_failed"));
+    } catch (error) {
+      message.error(
+        extractApiErrorMessage(error, t("dashboard.manage.suppliers.fetch_failed")),
+      );
     } finally {
       setLoading(false);
     }
@@ -56,8 +59,10 @@ export default function SupplierSettings() {
       }
       await fetchSuppliers();
       handleCloseModal();
-    } catch {
-      message.error(t("dashboard.manage.suppliers.save_failed"));
+    } catch (error) {
+      message.error(
+        extractApiErrorMessage(error, t("dashboard.manage.suppliers.save_failed")),
+      );
     } finally {
       setSaving(false);
     }
@@ -68,8 +73,10 @@ export default function SupplierSettings() {
       await supplierService.delete(id);
       message.success(t("dashboard.manage.suppliers.deleted", { defaultValue: "Đã xoá" }));
       setSuppliers((prev) => prev.filter((s) => s.id !== id));
-    } catch {
-      message.error(t("dashboard.manage.suppliers.delete_failed"));
+    } catch (error) {
+      message.error(
+        extractApiErrorMessage(error, t("dashboard.manage.suppliers.delete_failed")),
+      );
     }
   };
 
@@ -79,9 +86,14 @@ export default function SupplierSettings() {
     setSuppliers((prev) => prev.map((s) => (s.id === supplier.id ? updated : s)));
     try {
       await supplierService.update(supplier.id, updated);
-    } catch {
+    } catch (error) {
       setSuppliers((prev) => prev.map((s) => (s.id === supplier.id ? supplier : s)));
-      message.error(t("dashboard.manage.suppliers.status_update_failed"));
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.suppliers.status_update_failed"),
+        ),
+      );
     }
   };
 

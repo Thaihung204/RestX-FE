@@ -8,6 +8,7 @@ import {
 } from "@/lib/constants/themeDefaults";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { Alert, App, Select, Spin } from "antd";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -328,11 +329,19 @@ export default function TenantBrandingSettings() {
         }
       } catch (err) {
         console.error("[TenantBranding] Failed to fetch tenant:", err);
+        message.error(
+          extractApiErrorMessage(
+            err,
+            t("dashboard.settings.appearance.fetch_tenant_failed", {
+              defaultValue: "Failed to load tenant branding",
+            }),
+          ),
+        );
       } finally {
         setSelfLoading(false);
       }
     },
-    [populateFromTenant],
+    [message, populateFromTenant, t],
   );
 
   // On mount: decide whether to use context tenant or self-fetch
@@ -363,9 +372,26 @@ export default function TenantBrandingSettings() {
             })),
           );
         })
-        .catch(console.error);
+        .catch((error) => {
+          console.error(error);
+          message.error(
+            extractApiErrorMessage(
+              error,
+              t("dashboard.settings.appearance.fetch_tenant_list_failed", {
+                defaultValue: "Failed to load tenant list",
+              }),
+            ),
+          );
+        });
     }
-  }, [contextTenant, tenantLoading, fetchTenantByHostname, populateFromTenant]);
+  }, [
+    contextTenant,
+    fetchTenantByHostname,
+    message,
+    populateFromTenant,
+    t,
+    tenantLoading,
+  ]);
 
   // Active tenant: prefer context tenant, fall back to self-fetched
   const tenant = contextTenant || selfTenant;
@@ -434,9 +460,12 @@ export default function TenantBrandingSettings() {
     } catch (error) {
       console.error("Failed to update branding:", error);
       message.error(
-        t("dashboard.settings.notifications.error_update", {
-          defaultValue: "Failed to update branding",
-        }),
+        extractApiErrorMessage(
+          error,
+          t("dashboard.settings.notifications.error_update", {
+            defaultValue: "Failed to update branding",
+          }),
+        ),
       );
     } finally {
       setLoading(false);

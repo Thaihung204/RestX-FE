@@ -1,6 +1,7 @@
 "use client";
 
 import { Category, categoryService } from "@/lib/services/categoryService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, message, Popconfirm, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -83,8 +84,15 @@ export default function CategorySettings() {
       setLoading(true);
       const data = await categoryService.getCategories();
       setCategories(data);
-    } catch {
-      message.error(t("dashboard.settings.notifications.error_fetch", { defaultValue: "Failed to load categories" }));
+    } catch (error) {
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.settings.notifications.error_fetch", {
+            defaultValue: "Failed to load categories",
+          }),
+        ),
+      );
     } finally {
       setLoading(false);
     }
@@ -149,8 +157,15 @@ export default function CategorySettings() {
       }
       await fetchCategories();
       handleCloseModal();
-    } catch {
-      message.error(t("dashboard.settings.notifications.error_save", { defaultValue: "Failed to save category" }));
+    } catch (error) {
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.settings.notifications.error_save", {
+            defaultValue: "Failed to save category",
+          }),
+        ),
+      );
     }
   };
 
@@ -159,8 +174,15 @@ export default function CategorySettings() {
       await categoryService.deleteCategory(id);
       message.success(t("dashboard.settings.notifications.success_delete", { defaultValue: "Category deleted successfully" }));
       setCategories(categories.filter((c) => c.id !== id));
-    } catch {
-      message.error(t("dashboard.settings.notifications.error_delete", { defaultValue: "Failed to delete category" }));
+    } catch (error) {
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.settings.notifications.error_delete", {
+            defaultValue: "Failed to delete category",
+          }),
+        ),
+      );
     }
   };
 
@@ -287,7 +309,7 @@ export default function CategorySettings() {
                             src={localPreviewUrl || (formData.imageUrl as string)}
                             alt="Preview" position={imagePosition} onPositionChange={setImagePosition}
                             hintText={t("dashboard.settings.appearance.drag_to_adjust", { defaultValue: "Drag to adjust" })}
-                            onError={(e) => { e.currentTarget.style.display = "none"; message.error("Invalid image URL"); }} />
+                            onError={(e) => { e.currentTarget.style.display = "none"; message.error(t("dashboard.settings.categories.invalid_image_url", { defaultValue: "Invalid image URL" })); }} />
                           <div className="z-10 bg-black/50 text-white px-4 py-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 duration-300">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                             {t("dashboard.settings.categories.change_image", { defaultValue: "Change Image" })}

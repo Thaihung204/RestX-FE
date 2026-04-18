@@ -3,6 +3,7 @@
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import employeeService from "@/lib/services/employeeService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -141,8 +142,15 @@ export default function StaffFormPage() {
         isActive: employee.isActive !== undefined ? employee.isActive : true,
       });
       setCurrentAvatarUrl(employee.avatarUrl || null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to load staff:", err);
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.staff.errors.load_failed", {
+          defaultValue: "Failed to load staff",
+        }),
+      );
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -168,11 +176,19 @@ export default function StaffFormPage() {
   const validateAndSetFile = (file: File) => {
     const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
     if (!validTypes.includes(file.type)) {
-      message.error("Only PNG, JPG, JPEG, and WEBP files are allowed");
+      message.error(
+        t("dashboard.staff.errors.avatar_invalid_type", {
+          defaultValue: "Only PNG, JPG, JPEG, and WEBP files are allowed",
+        }),
+      );
       return false;
     }
     if (file.size > 5 * 1024 * 1024) {
-      message.error("File size must be less than 5MB");
+      message.error(
+        t("dashboard.staff.errors.avatar_too_large", {
+          defaultValue: "File size must be less than 5MB",
+        }),
+      );
       return false;
     }
     setAvatarFile(file);
@@ -242,8 +258,12 @@ export default function StaffFormPage() {
         message.success(t("dashboard.toasts.staff.updated_message"));
       }
       setTimeout(() => router.push("/admin/staff"), 1500);
-    } catch (err: any) {
-      message.error(t("dashboard.staff.errors.save_failed"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.staff.errors.save_failed"),
+      );
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }

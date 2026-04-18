@@ -5,6 +5,7 @@ import orderService from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, { OrderStatus } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import Link from "next/link";
@@ -134,9 +135,13 @@ export default function AdminOrderDetailPage() {
     if (!orderId) return;
     try {
       await orderService.updateOrderDetailStatus(orderId, detailId, newStatusId);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to update status", err);
-      message.error(t("admin.order_detail.messages.update_error"));
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("admin.order_detail.messages.update_error"),
+      );
+      message.error(errorMsg);
     }
   };
 
@@ -197,9 +202,13 @@ export default function AdminOrderDetailPage() {
     try {
       const data = (await orderService.getOrderById(orderId)) as OrderDetailsResponse;
       setOrder(data);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to fetch order details by id:", err);
-      setError(t("admin.order_detail.messages.load_error"));
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("admin.order_detail.messages.load_error"),
+      );
+      setError(errorMsg);
     } finally {
       if (showLoading) setLoading(false);
       inFlightRef.current = false;
@@ -340,9 +349,13 @@ export default function AdminOrderDetailPage() {
                       if (!orderId || !e.target.value) return;
                       try {
                         await orderService.updateOrderStatus(orderId, Number(e.target.value));
-                      } catch (err) {
+                      } catch (err: unknown) {
                         console.error("Failed to update order status", err);
-                        message.error(t("admin.order_detail.messages.update_error"));
+                        const errorMsg = extractApiErrorMessage(
+                          err,
+                          t("admin.order_detail.messages.update_error"),
+                        );
+                        message.error(errorMsg);
                       }
                     }}
                   >
