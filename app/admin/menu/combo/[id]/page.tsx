@@ -4,8 +4,8 @@ import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import aiService from "@/lib/services/aiService";
 import dishService, {
-  ComboDetailItemDto,
-  DishResponseDto,
+    ComboDetailItemDto,
+    DishResponseDto,
 } from "@/lib/services/dishService";
 import type { AIContentVariant } from "@/lib/types/ai";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
@@ -640,7 +640,7 @@ export default function ComboFormPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.price}
+                    value={formData.price || ""}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, price: e.target.value }))
                     }
@@ -920,9 +920,6 @@ export default function ComboFormPage() {
                         handleDetailChange(index, "dishId", e.target.value)
                       }>
                       <option value="">
-                        {t("dashboard.menu.combo.placeholders.select_dish", {
-                          defaultValue: "Select dish",
-                        })}
                       </option>
                       {availableDishes.map((dish) => (
                         <option key={dish.id} value={dish.id}>
@@ -934,7 +931,7 @@ export default function ComboFormPage() {
                     <input
                       type="number"
                       min="1"
-                      value={detail.quantity}
+                      value={detail.quantity || ""}
                       onChange={(e) =>
                         handleDetailChange(index, "quantity", e.target.value)
                       }

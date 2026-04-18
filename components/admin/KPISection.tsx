@@ -3,6 +3,7 @@
 import type { DashboardSummary } from "@/lib/services/dashboardService";
 import { useTranslation } from "react-i18next";
 import KPICard from "./KPICard";
+import { formatVND } from "@/lib/utils/currency";
 
 type DashboardFilterOption = "day" | "week" | "month" | "year";
 
@@ -18,9 +19,6 @@ export default function KPISection({
   filter = "week",
 }: KPISectionProps) {
   const { t } = useTranslation();
-
-  const formatVND = (amount: number) =>
-    new Intl.NumberFormat("vi-VN").format(amount) + "đ";
 
   const toTrend = (changePercent?: number) => {
     if (typeof changePercent !== "number" || Number.isNaN(changePercent)) {

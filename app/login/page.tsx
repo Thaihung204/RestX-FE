@@ -294,7 +294,6 @@ export default function LoginPage() {
                   label={t('login_page.phone_label')}
                   icon={<PhoneOutlined />}
                   type="tel"
-                  placeholder="0123456789"
                   required
                   value={phone}
                   onChange={handlePhoneChange}
@@ -324,7 +323,6 @@ export default function LoginPage() {
                     label={t('login_page.name_label')}
                     icon={<UserOutlined />}
                     type="text"
-                    placeholder={t('login_page.name_placeholder')}
                     required
                     value={name}
                     onChange={(e) => {

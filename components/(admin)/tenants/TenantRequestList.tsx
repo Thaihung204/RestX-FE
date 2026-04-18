@@ -326,7 +326,6 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
         <div className="flex flex-col sm:flex-row flex-1 gap-2 max-w-2xl">
           <Input
             allowClear
-            placeholder={t("tenant_requests.list.search_placeholder")}
             prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}

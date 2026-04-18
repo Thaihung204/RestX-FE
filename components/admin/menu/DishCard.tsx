@@ -3,7 +3,7 @@
 import StatusToggle from "@/components/ui/StatusToggle";
 import { EditOutlined } from "@ant-design/icons";
 import Link from "next/link";
-
+import { formatVND } from "@/lib/utils/currency";
 export interface DishCardItem {
   id: string;
   name: string;
@@ -18,7 +18,6 @@ export interface DishCardItem {
 
 interface DishCardProps {
   item: DishCardItem;
-  formatPrice: (price: number) => string;
   onToggleStatus: (item: DishCardItem) => void;
   onAddIngredients: (item: DishCardItem) => void;
   labels: {
@@ -38,7 +37,6 @@ interface DishCardProps {
 
 export default function DishCard({
   item,
-  formatPrice,
   onToggleStatus,
   onAddIngredients,
   labels,
@@ -138,7 +136,7 @@ export default function DishCard({
             <p
               className="text-[20px] sm:text-base font-semibold"
               style={{ color: "var(--primary)" }}>
-              {formatPrice(item.price)}đ
+              {formatVND(item.price)}
             </p>
           </div>
           <StatusToggle

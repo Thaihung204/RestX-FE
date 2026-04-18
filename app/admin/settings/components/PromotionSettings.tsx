@@ -2,6 +2,8 @@
 
 import StatusToggle from "@/components/ui/StatusToggle";
 import promotionService, { Promotion } from "@/lib/services/promotionService";
+import { formatVND } from "@/lib/utils/currency";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { App, Button, Popconfirm, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -9,7 +11,6 @@ import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 
 export default function PromotionSettings() {
   const { t } = useTranslation("common");
@@ -19,9 +20,7 @@ export default function PromotionSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(
-    null,
-  );
+  const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
 
   const [formData, setFormData] = useState<Promotion>({
     id: "",
@@ -97,11 +96,26 @@ export default function PromotionSettings() {
 
   const handleSave = async () => {
     if (!formData.code?.trim() || !formData.name?.trim()) {
-      message.warning(
-        t("dashboard.manage.promotion.toasts.required_fields", {
-          defaultValue: "Please fill in required fields",
-        }),
-      );
+      message.warning(t("dashboard.manage.promotion.toasts.required_fields"));
+      return;
+    }
+
+    if (formData.discountType === "PERCENTAGE" && (formData.discountValue ?? 0) > 100) {
+      message.warning(t("dashboard.manage.promotion.toasts.percentage_max"));
+      return;
+    }
+
+    const validFrom = formData.validFrom ? new Date(formData.validFrom) : null;
+    const validTo = formData.validTo ? new Date(formData.validTo) : null;
+    const now = new Date();
+
+    if (validTo && validTo < now && formData.isActive) {
+      message.warning(t("dashboard.manage.promotion.toasts.valid_to_past_active"));
+      return;
+    }
+
+    if (validFrom && validTo && validTo <= validFrom) {
+      message.warning(t("dashboard.manage.promotion.toasts.valid_to_before_from"));
       return;
     }
 
@@ -188,8 +202,17 @@ export default function PromotionSettings() {
   };
 
   const handleToggleStatus = async (promotion: Promotion) => {
+    const nextStatus = !promotion.isActive;
+
+    if (nextStatus === true) {
+      const validTo = promotion.validTo ? new Date(promotion.validTo) : null;
+      if (validTo && validTo < new Date()) {
+        message.warning(t("dashboard.manage.promotion.toasts.cannot_activate_expired"));
+        return;
+      }
+    }
+
     try {
-      const nextStatus = !promotion.isActive;
       await promotionService.updatePromotion(promotion.id, {
         ...promotion,
         isActive: nextStatus,
@@ -201,21 +224,13 @@ export default function PromotionSettings() {
       );
       message.success(
         nextStatus
-          ? t("dashboard.manage.promotion.toasts.activate_success", {
-              defaultValue: "Promotion activated",
-            })
-          : t("dashboard.manage.promotion.toasts.deactivate_success", {
-              defaultValue: "Promotion deactivated",
-            }),
+          ? t("dashboard.manage.promotion.toasts.activate_success")
+          : t("dashboard.manage.promotion.toasts.deactivate_success"),
       );
     } catch (error: unknown) {
       console.error("Failed to update status:", error);
       const errorMsg = extractApiErrorMessage(
-        error,
-        t("dashboard.manage.promotion.toasts.status_error", {
-          defaultValue: "Unable to update status",
-        }),
-      );
+        error,t("dashboard.manage.promotion.toasts.status_error"));
       message.error(errorMsg);
     }
   };
@@ -223,7 +238,7 @@ export default function PromotionSettings() {
   const formatDiscount = (discountValue: number, discountType: string) => {
     return discountType === "PERCENTAGE"
       ? `${discountValue}%`
-      : `₫${discountValue.toLocaleString()}`;
+      : formatVND(discountValue);
   };
 
   const columns: ColumnsType<Promotion> = [
@@ -266,7 +281,7 @@ export default function PromotionSettings() {
       key: "minOrderAmount",
       render: (val) => (
         <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-          ₫{(val ?? 0).toLocaleString()}
+          {formatVND(val ?? 0)}
         </span>
       ),
     },
@@ -489,8 +504,8 @@ export default function PromotionSettings() {
                         borderColor: "var(--border)",
                         color: "var(--text)",
                       }}>
-                      <option value="PERCENTAGE">Percentage (%)</option>
-                      <option value="FIXED">Fixed Amount (₫)</option>
+                      <option value="PERCENTAGE">{t("dashboard.manage.promotion.discount_type_percentage")}</option>
+                      <option value="FIXED">{t("dashboard.manage.promotion.discount_type_fixed")}</option>
                     </select>
                   </div>
 
@@ -502,22 +517,54 @@ export default function PromotionSettings() {
                         defaultValue: "Discount Value",
                       })}
                     </label>
-                    <input
-                      type="number"
-                      value={formData.discountValue ?? 0}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          discountValue: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
-                      style={{
-                        background: "var(--bg-base)",
-                        borderColor: "var(--border)",
-                        color: "var(--text)",
-                      }}
-                    />
+                    {formData.discountType === "PERCENTAGE" ? (
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={formData.discountValue || ""}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setFormData({ ...formData, discountValue: val > 100 ? 100 : val });
+                          }}
+                          className="w-full px-4 py-2.5 pr-10 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
+                          style={{
+                            background: "var(--bg-base)",
+                            borderColor: (formData.discountValue ?? 0) > 100 ? "var(--danger)" : "var(--border)",
+                            color: "var(--text)",
+                          }}
+                        />
+                        <span
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold pointer-events-none"
+                          style={{ color: "var(--text-muted)" }}>
+                          %
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={formData.discountValue ? new Intl.NumberFormat("vi-VN").format(formData.discountValue) : ""}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+                            setFormData({ ...formData, discountValue: raw ? parseInt(raw) : 0 });
+                          }}
+                          className="w-full px-4 py-2.5 pr-10 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
+                          style={{
+                            background: "var(--bg-base)",
+                            borderColor: "var(--border)",
+                            color: "var(--text)",
+                          }}
+                        />
+                        <span
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold pointer-events-none"
+                          style={{ color: "var(--text-muted)" }}>
+                          ₫
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -530,22 +577,28 @@ export default function PromotionSettings() {
                         defaultValue: "Max Discount Amount",
                       })}
                     </label>
-                    <input
-                      type="number"
-                      value={formData.maxDiscountAmount ?? 0}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          maxDiscountAmount: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
-                      style={{
-                        background: "var(--bg-base)",
-                        borderColor: "var(--border)",
-                        color: "var(--text)",
-                      }}
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={formData.maxDiscountAmount ? new Intl.NumberFormat("vi-VN").format(formData.maxDiscountAmount) : ""}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+                          setFormData({ ...formData, maxDiscountAmount: raw ? parseInt(raw) : 0 });
+                        }}
+                        className="w-full px-4 py-2.5 pr-10 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
+                        style={{
+                          background: "var(--bg-base)",
+                          borderColor: "var(--border)",
+                          color: "var(--text)",
+                        }}
+                      />
+                      <span
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold pointer-events-none"
+                        style={{ color: "var(--text-muted)" }}>
+                        ₫
+                      </span>
+                    </div>
                   </div>
 
                   <div>
@@ -556,22 +609,28 @@ export default function PromotionSettings() {
                         defaultValue: "Min Order Amount",
                       })}
                     </label>
-                    <input
-                      type="number"
-                      value={formData.minOrderAmount ?? 0}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          minOrderAmount: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
-                      style={{
-                        background: "var(--bg-base)",
-                        borderColor: "var(--border)",
-                        color: "var(--text)",
-                      }}
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={formData.minOrderAmount ? new Intl.NumberFormat("vi-VN").format(formData.minOrderAmount) : ""}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+                          setFormData({ ...formData, minOrderAmount: raw ? parseInt(raw) : 0 });
+                        }}
+                        className="w-full px-4 py-2.5 pr-10 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
+                        style={{
+                          background: "var(--bg-base)",
+                          borderColor: "var(--border)",
+                          color: "var(--text)",
+                        }}
+                      />
+                      <span
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold pointer-events-none"
+                        style={{ color: "var(--text-muted)" }}>
+                        ₫
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -586,7 +645,7 @@ export default function PromotionSettings() {
                     </label>
                     <input
                       type="number"
-                      value={formData.usageLimit ?? 0}
+                      value={formData.usageLimit || ""}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -612,7 +671,7 @@ export default function PromotionSettings() {
                     </label>
                     <input
                       type="number"
-                      value={formData.usagePerCustomer ?? 1}
+                      value={formData.usagePerCustomer || ""}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -670,6 +729,11 @@ export default function PromotionSettings() {
                     </label>
                     <input
                       type="datetime-local"
+                      min={
+                        formData.validFrom
+                          ? dayjs(formData.validFrom).add(1, "minute").format("YYYY-MM-DDTHH:mm")
+                          : undefined
+                      }
                       value={
                         formData.validTo
                           ? dayjs(formData.validTo).format("YYYY-MM-DDTHH:mm")

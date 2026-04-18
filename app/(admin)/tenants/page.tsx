@@ -278,7 +278,6 @@ const TenantPage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row flex-1 gap-2 max-w-3xl">
                   <Input
                     allowClear
-                    placeholder={t("tenants.filter.search_placeholder")}
                     prefix={
                       <SearchOutlined style={{ color: "var(--text-muted)" }} />
                     }

@@ -636,7 +636,6 @@ const TenantEditPage: React.FC = () => {
                     ]}>
                     <Input
                       size="large"
-                      placeholder={t("tenants.create.fields.name_placeholder")}
                       prefix={<ShopOutlined className="text-gray-400 mr-1" />}
                     />
                   </Form.Item>
@@ -653,9 +652,6 @@ const TenantEditPage: React.FC = () => {
                       name="prefix">
                       <Input
                         size="large"
-                        placeholder={t(
-                          "tenants.create.fields.prefix_placeholder",
-                        )}
                       />
                     </Form.Item>
 
@@ -680,9 +676,6 @@ const TenantEditPage: React.FC = () => {
                         <Input
                           disabled
                           value={formData.hostname || ""}
-                          placeholder={t(
-                            "tenants.create.fields.host_name_placeholder",
-                          )}
                         />
                         <span className="url-segment">.restx.food</span>
                       </div>
@@ -709,9 +702,6 @@ const TenantEditPage: React.FC = () => {
                       ]}>
                       <Input
                         size="large"
-                        placeholder={t(
-                          "tenants.create.fields.business_name_placeholder",
-                        )}
                         prefix={<ShopOutlined className="text-gray-400 mr-1" />}
                       />
                     </Form.Item>
@@ -739,9 +729,6 @@ const TenantEditPage: React.FC = () => {
                       ]}>
                       <Input
                         size="large"
-                        placeholder={t(
-                          "tenants.create.fields.phone_placeholder",
-                        )}
                         prefix={
                           <PhoneOutlined className="text-gray-400 mr-1" />
                         }
@@ -773,9 +760,6 @@ const TenantEditPage: React.FC = () => {
                     <Input
                       size="large"
                       type="email"
-                      placeholder={t(
-                        "tenants.create.fields.mail_restaurant_placeholder",
-                      )}
                       prefix={<MailOutlined className="text-gray-400 mr-1" />}
                     />
                   </Form.Item>
@@ -802,9 +786,6 @@ const TenantEditPage: React.FC = () => {
                         cityFieldName="businessAddressLine3"
                         districtWardFieldName="businessAddressLine2"
                         countryFieldName="businessCountry"
-                        placeholder={t(
-                          "tenants.create.fields.address_line1_placeholder",
-                        )}
                       />
                     </Form.Item>
                     <VnAddressSelect
@@ -838,9 +819,6 @@ const TenantEditPage: React.FC = () => {
                       name="businessPostCode">
                       <Input
                         size="large"
-                        placeholder={t(
-                          "tenants.edit.fields.post_code_placeholder",
-                        )}
                       />
                     </Form.Item>
                     <Form.Item
@@ -854,9 +832,6 @@ const TenantEditPage: React.FC = () => {
                       name="businessCountry">
                       <Input
                         size="large"
-                        placeholder={t(
-                          "tenants.edit.fields.country_placeholder",
-                        )}
                       />
                     </Form.Item>
                     <Form.Item
@@ -870,9 +845,6 @@ const TenantEditPage: React.FC = () => {
                       name="businessCompanyNumber">
                       <Input
                         size="large"
-                        placeholder={t(
-                          "tenants.edit.fields.company_number_placeholder",
-                        )}
                       />
                     </Form.Item>
                     <Form.Item
@@ -886,9 +858,6 @@ const TenantEditPage: React.FC = () => {
                       name="businessSecondaryPhone">
                       <Input
                         size="large"
-                        placeholder={t(
-                          "tenants.edit.fields.secondary_phone_placeholder",
-                        )}
                         prefix={
                           <PhoneOutlined className="text-gray-400 mr-1" />
                         }
@@ -905,7 +874,6 @@ const TenantEditPage: React.FC = () => {
                       name="businessOpeningHours">
                       <Input
                         size="large"
-                        placeholder={t("tenants.edit.fields.opening_hours")}
                       />
                     </Form.Item>
                   </div>
@@ -924,9 +892,6 @@ const TenantEditPage: React.FC = () => {
                       name="aboutUs">
                       <TextArea
                         rows={4}
-                        placeholder={t(
-                          "tenants.edit.fields.about_us_placeholder",
-                        )}
                       />
                     </Form.Item>
                   </div>
@@ -949,9 +914,6 @@ const TenantEditPage: React.FC = () => {
                   <Form.Item name="tenantSettings">
                     <TextArea
                       rows={4}
-                      placeholder={t(
-                        "tenants.edit.tenant_settings.placeholder",
-                      )}
                     />
                   </Form.Item>
                 </Card>
@@ -1515,7 +1477,6 @@ const TenantEditPage: React.FC = () => {
           </div>
 
           <Input
-            placeholder={t("tenants.edit.delete_modal.input_placeholder")}
             value={confirmInput}
             onChange={(e) => setConfirmInput(e.target.value)}
             size="large"

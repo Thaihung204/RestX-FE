@@ -2,14 +2,15 @@
 
 import axiosInstance from "@/lib/services/axiosInstance";
 import {
-  ComboSummaryDto,
-  dishService,
-  MenuCategory,
-  MenuItem,
+    ComboSummaryDto,
+    dishService,
+    MenuCategory,
+    MenuItem,
 } from "@/lib/services/dishService";
 import { message } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 interface MenuSelectionModalProps {
   orderId: string;
@@ -220,7 +221,7 @@ export default function MenuSelectionModal({
                           )}
                           <h4 className="font-semibold text-sm truncate" style={{ color: "var(--text)" }}>{dish.name}</h4>
                           <p className="text-sm font-medium mt-1" style={{ color: "var(--primary)" }}>
-                            {(dish.price ?? 0).toLocaleString("vi-VN")}đ
+                            {formatVND(dish.price ?? 0)}
                           </p>
                         </div>
                       ))}
@@ -262,7 +263,7 @@ export default function MenuSelectionModal({
                               </p>
                             </div>
                             <span className="text-sm font-semibold" style={{ color: "var(--primary)" }}>
-                              {Number(combo.price || 0).toLocaleString("vi-VN")}đ
+                              {formatVND(Number(combo.price || 0))}
                             </span>
                           </div>
                         </button>
@@ -284,7 +285,7 @@ export default function MenuSelectionModal({
                 <div key={item.dishId} className="flex flex-col gap-1 rounded-lg border p-3 shadow-sm" style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}>
                   <div className="font-medium text-sm" style={{ color: "var(--text)" }}>{item.name}</div>
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-sm font-semibold" style={{ color: "var(--primary)" }}>{(item.price * item.quantity).toLocaleString("vi-VN")}đ</span>
+                    <span className="text-sm font-semibold" style={{ color: "var(--primary)" }}>{formatVND(item.price * item.quantity)}</span>
                     <div className="flex items-center gap-2">
                         <button onClick={() => handleUpdateQuantity(item.dishId, item.quantity - 1)} className="rounded p-1 w-6 h-6 flex items-center justify-center font-bold" style={{ backgroundColor: "var(--border)", color: "var(--text)" }}>-</button>
                         <span className="text-sm w-4 text-center font-medium" style={{ color: "var(--text)" }}>{item.quantity}</span>

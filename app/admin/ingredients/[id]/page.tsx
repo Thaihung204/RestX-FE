@@ -408,7 +408,7 @@ export default function IngredientFormPage() {
                       <input
                         type="number" name="minStockLevel"
                         min={0} step="0.001"
-                        value={form.minStockLevel}
+                        value={form.minStockLevel || ""}
                         onChange={handleChange}
                         disabled={cannotSave}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
@@ -422,7 +422,7 @@ export default function IngredientFormPage() {
                       <input
                         type="number" name="maxStockLevel"
                         min={0} step="0.001"
-                        value={form.maxStockLevel}
+                        value={form.maxStockLevel || ""}
                         onChange={handleChange}
                         disabled={cannotSave}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"

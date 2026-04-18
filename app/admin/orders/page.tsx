@@ -4,7 +4,7 @@ import { DropDown } from "@/components/ui/DropDown";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
-  OrderStatus,
+    OrderStatus,
 } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
@@ -15,6 +15,7 @@ import { message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 interface OrderRow {
   id: string;

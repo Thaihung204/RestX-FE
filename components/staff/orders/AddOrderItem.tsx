@@ -2,6 +2,7 @@ import type { ComboSummaryDto } from "@/lib/services/dishService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Modal, Row, Select, Typography } from "antd";
+import { formatVND } from "@/lib/utils/currency";
 
 const { Text } = Typography;
 
@@ -137,7 +138,7 @@ export default function AddOrderItem({
                               color: "var(--primary)",
                               fontWeight: 600,
                             }}>
-                            {item.price.toLocaleString("vi-VN")}đ
+                            {formatVND(item.price)}
                           </div>
                         </div>
 
@@ -264,7 +265,7 @@ export default function AddOrderItem({
                                 color: "var(--primary)",
                                 fontWeight: 600,
                               }}>
-                              {Number(combo.price || 0).toLocaleString("vi-VN")}đ
+                              {formatVND(Number(combo.price || 0))}
                             </div>
                           </div>
 

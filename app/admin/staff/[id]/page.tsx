@@ -4,6 +4,7 @@ import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import employeeService from "@/lib/services/employeeService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { formatVND } from "@/lib/utils/currency";
 import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -269,11 +270,7 @@ export default function StaffFormPage() {
     }
   };
 
-  const formatSalary = (amount: number) =>
-    new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
+  const formatSalary = (amount: number) => formatVND(amount);
 
   if (loading && !isNewStaff) {
     return (
@@ -511,7 +508,7 @@ export default function StaffFormPage() {
                     <input
                       type="number"
                       name="salary"
-                      value={formData.salary}
+                      value={formData.salary || ""}
                       onChange={handleChange}
                       min={0}
                       step={100000}

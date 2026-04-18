@@ -2,14 +2,15 @@
 
 import { useCart } from "@/lib/contexts/CartContext";
 import {
-  CloseOutlined,
-  MinusOutlined,
-  PlusOutlined,
-  ShoppingCartOutlined,
+    CloseOutlined,
+    MinusOutlined,
+    PlusOutlined,
+    ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { Button, Card, Modal, Tabs, Tag, Typography } from "antd";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 const { Text } = Typography;
 
@@ -41,15 +42,6 @@ export default function CartModal() {
 
     return Array.from(grouped.entries());
   }, [orderedItems]);
-
-  const formatPrice = (price: string | number) => {
-    const priceNum = typeof price === "string" ? parseFloat(price) : price;
-    return new Intl.NumberFormat("vi-VN").format(priceNum);
-  };
-
-  const formatVND = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN").format(amount) + "đ";
-  };
 
   const getStatusColor = (status?: string) => {
     const normalized = (status || "pending").toLowerCase();
@@ -282,12 +274,7 @@ export default function CartModal() {
                                     fontSize: 14,
                                     fontWeight: 600,
                                   }}>
-                                  {formatPrice(
-                                    (
-                                      parseFloat(item.price) * item.quantity
-                                    ).toString(),
-                                  )}
-                                  đ
+                                  {formatVND(parseFloat(item.price) * item.quantity)}
                                 </Text>
                               </div>
 
@@ -493,7 +480,7 @@ export default function CartModal() {
                                             fontSize: 13,
                                             fontWeight: 600,
                                           }}>
-                                          {formatPrice(item.price)}đ x{" "}
+                                          {formatVND(parseFloat(item.price))} x{" "}
                                           {item.quantity}
                                         </Text>
                                       </div>
@@ -515,13 +502,7 @@ export default function CartModal() {
                                             fontSize: 14,
                                             fontWeight: 600,
                                           }}>
-                                          {formatPrice(
-                                            (
-                                              parseFloat(item.price) *
-                                              item.quantity
-                                            ).toString(),
-                                          )}
-                                          đ
+                                          {formatVND(parseFloat(item.price) * item.quantity)}
                                         </Text>
                                       </div>
                                     </div>

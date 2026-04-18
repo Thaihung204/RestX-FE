@@ -522,12 +522,6 @@ export default function TenantBrandingSettings() {
           </label>
           <Select
             showSearch
-            placeholder={t(
-              "dashboard.settings.appearance.choose_tenant_placeholder",
-              {
-                defaultValue: "Choose a tenant...",
-              },
-            )}
             options={allTenants}
             value={selectedHostname}
             onChange={async (hostname) => {

@@ -6,23 +6,24 @@ import CustomerDetails from "@/components/customer/CustomerDetails";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
 import customerService, {
-  CustomerResponseDto,
+    CustomerResponseDto,
 } from "@/lib/services/customerService";
 import reservationService, {
-  ReservationListItem,
+    ReservationListItem,
 } from "@/lib/services/reservationService";
 import {
-  BellOutlined,
-  BulbOutlined,
-  CloseOutlined,
-  GlobalOutlined,
-  MoonOutlined,
-  ShoppingCartOutlined,
+    BellOutlined,
+    BulbOutlined,
+    CloseOutlined,
+    GlobalOutlined,
+    MoonOutlined,
+    ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { Button, Modal, Typography, message } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 const { Text } = Typography;
 
@@ -106,10 +107,6 @@ export default function CustomerFooter({
 
   const handleAskService = () => {
     messageApi.success(t("customer_page.footer.service_called"));
-  };
-
-  const formatVND = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN").format(amount) + "đ";
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

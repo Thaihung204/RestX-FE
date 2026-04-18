@@ -7,15 +7,16 @@ import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { Cake, Cancel, CheckCircle } from "@mui/icons-material";
 import { message } from "antd";
 import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
+    forwardRef,
+    useCallback,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useState,
 } from "react";
 import { useTranslation } from "react-i18next";
 import CustomerDetail from "./CustomerDetail";
+import { formatVND } from "@/lib/utils/currency";
 
 const PAGE_SIZE = 10;
 
@@ -355,7 +356,7 @@ const CustomerList = forwardRef<CustomerListHandle>(
 
                         <td className="px-4 py-3 whitespace-nowrap text-center"><p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.totalOrders}</p></td>
 
-                        <td className="px-4 py-3 whitespace-nowrap text-center"><p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.totalSpent.toLocaleString("vi-VN")}₫</p></td>
+                        <td className="px-4 py-3 whitespace-nowrap text-center"><p className="text-sm font-medium" style={{ color: "var(--text)" }}>{formatVND(customer.totalSpent)}</p></td>
 
                         <td className="px-4 py-3 whitespace-nowrap text-center"><p className="text-sm font-medium" style={{ color: "var(--text)" }}>{customer.loyaltyPoints}</p></td>
 
@@ -412,7 +413,7 @@ const CustomerList = forwardRef<CustomerListHandle>(
 
                     <div className="grid grid-cols-2 gap-2 text-sm mt-3 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
                       <div><span className="block text-xs" style={{ color: "var(--text-muted)" }}>{t("customers.list.headers.orders")}</span><span className="font-semibold" style={{ color: "var(--text)" }}>{customer.totalOrders}</span></div>
-                      <div><span className="block text-xs" style={{ color: "var(--text-muted)" }}>{t("customers.list.headers.total_spent")}</span><span className="font-semibold" style={{ color: "var(--text)" }}>{customer.totalSpent.toLocaleString("vi-VN")}₫</span></div>
+                      <div><span className="block text-xs" style={{ color: "var(--text-muted)" }}>{t("customers.list.headers.total_spent")}</span><span className="font-semibold" style={{ color: "var(--text)" }}>{formatVND(customer.totalSpent)}</span></div>
                       <div><span className="block text-xs" style={{ color: "var(--text-muted)" }}>{t("customers.list.headers.points")}</span><span className="font-semibold" style={{ color: "var(--text)" }}>{customer.loyaltyPoints}</span></div>
                       <div><span className="block text-xs" style={{ color: "var(--text-muted)" }}>{t("customers.list.headers.status")}</span><div className="flex items-center gap-1">{customer.isActive ? <CheckCircle sx={{ fontSize: 18, color: "#22c55e" }} /> : <Cancel sx={{ fontSize: 18, color: "#ef4444" }} />}<span style={{ color: customer.isActive ? "#22c55e" : "#ef4444", fontSize: "0.875rem" }}>{customer.isActive ? t("customers.list.status.active") : t("customers.list.status.inactive")}</span></div></div>
                     </div>

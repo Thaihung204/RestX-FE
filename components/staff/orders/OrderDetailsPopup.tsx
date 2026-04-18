@@ -1,6 +1,7 @@
 import { DollarOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Modal, Select, Space, Tag, Typography } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
+import { formatVND } from "@/lib/utils/currency";
 
 const { Text } = Typography;
 
@@ -186,7 +187,7 @@ export default function OrderDetailsPopup({
                           color: mode === "dark" ? "rgba(255, 255, 255, 0.85)" : "#333",
                           lineHeight: 1.3,
                         }}>
-                        {((item.price || 0) * item.quantity).toLocaleString("vi-VN")}đ
+                        {formatVND((item.price || 0) * item.quantity)}
                       </Text>
                     </div>
 
@@ -237,7 +238,7 @@ export default function OrderDetailsPopup({
         <Text
           strong
           style={{ color: "var(--primary)", fontSize: textSizes.totalValue }}>
-          {order.total.toLocaleString("vi-VN")}đ
+          {formatVND(order.total)}
         </Text>
       </div>
 

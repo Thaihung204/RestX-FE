@@ -1,21 +1,22 @@
 "use client";
 
-import { TableMap2D, Layout } from "@/app/admin/tables/components/TableMap2D";
-import { tableService, floorService, FloorLayoutTableItem } from "@/lib/services/tableService";
 import { TableData } from "@/app/admin/tables/components/DraggableTable";
+import { Layout, TableMap2D } from "@/app/admin/tables/components/TableMap2D";
+import TablePreview3DModal from "@/app/restaurant/components/TablePreview3DModal";
 import { useTenant } from "@/lib/contexts/TenantContext";
-import orderService, { OrderDto } from "@/lib/services/orderService";
-import dishService, { MenuCategory, MenuItem } from "@/lib/services/dishService";
 import customerService from "@/lib/services/customerService";
+import dishService, { MenuCategory, MenuItem } from "@/lib/services/dishService";
+import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import reservationService, { ReservationDetail, ReservationStatus } from "@/lib/services/reservationService";
-import { message, Drawer, Tag } from "antd";
+import { FloorLayoutTableItem, floorService, tableService } from "@/lib/services/tableService";
+import { HubConnectionState } from "@microsoft/signalr";
+import { Drawer, message, Tag } from "antd";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { HubConnectionState } from "@microsoft/signalr";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import TablePreview3DModal from "@/app/restaurant/components/TablePreview3DModal";
+import { formatVND } from "@/lib/utils/currency";
 
 interface ReservationDetailsViewProps {
   reservationId: string;
@@ -83,7 +84,6 @@ const statusBg: Record<string, string> = {
 const getLocaleTag = (language: string): string =>
   language.toLowerCase().startsWith("vi") ? "vi-VN" : "en-US";
 
-const currency = (v?: number, locale = "vi-VN") => `${(v || 0).toLocaleString(locale)}đ`;
 const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const isGuidLike = (value: string): boolean => GUID_REGEX.test(value.trim());
@@ -291,8 +291,8 @@ function DepositBadge({ paid, amount }: { paid: boolean; amount: number }) {
         <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       )}
       {paid
-        ? `${currency(amount, localeTag)} - ${t("reservation_detail.deposit.badge_paid")}`
-        : `${currency(amount, localeTag)} - ${t("reservation_detail.deposit.badge_unpaid")}`}
+        ? `${formatVND(amount)} - ${t("reservation_detail.deposit.badge_paid")}`
+        : `${formatVND(amount)} - ${t("reservation_detail.deposit.badge_unpaid")}`}
     </span>
   );
 }
@@ -332,7 +332,7 @@ function OrderPanel({ orders, firstTableId, isCustomer }: { orders: OrderDto[]; 
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>{orders.length} {t("reservation_detail.order.orders_count")}</p>
           </div>
         </div>
-        {orders.length > 0 && <span className="text-sm font-black tracking-wide" style={{ color: "var(--primary)" }}>{currency(totalAmount, localeTag)}</span>}
+        {orders.length > 0 && <span className="text-sm font-black tracking-wide" style={{ color: "var(--primary)" }}>{formatVND(totalAmount)}</span>}
       </div>
 
       <div className="p-5 space-y-3" style={{ background: "var(--card)" }}>
@@ -360,7 +360,7 @@ function OrderPanel({ orders, firstTableId, isCustomer }: { orders: OrderDto[]; 
                         {order.reference || order.id || t("reservation_detail.order.unnamed_order")}
                       </p>
                     </div>
-                    <span className="text-sm font-bold shrink-0" style={{ color: "var(--primary)" }}>{currency(order.totalAmount, localeTag)}</span>
+                    <span className="text-sm font-bold shrink-0" style={{ color: "var(--primary)" }}>{formatVND(order.totalAmount)}</span>
                   </div>
 
                   <div className="mt-2 flex flex-wrap gap-2">
@@ -845,7 +845,7 @@ function TableMapCard({
                       <span>{order.itemCount} {t("reservation_detail.order.items", { defaultValue: "món" })}</span>
                       <span>{order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "—"}</span>
                     </div>
-                    <p className="text-sm font-black mt-1" style={{ color: "var(--primary)" }}>{currency(order.totalAmount)}</p>
+                    <p className="text-sm font-black mt-1" style={{ color: "var(--primary)" }}>{formatVND(order.totalAmount)}</p>
                   </div>
                 ))}
               </div>
@@ -856,7 +856,7 @@ function TableMapCard({
             </div>
             <div className="flex items-center justify-between text-sm" style={{ color: "var(--text-muted)" }}>
               <span>{t("reservation_detail.floor_activity.latest_order", { defaultValue: "Đơn gần nhất" })}: {selectedTableActivity.latestOrderAt ? new Date(selectedTableActivity.latestOrderAt).toLocaleString("vi-VN") : "—"}</span>
-              <span className="font-black" style={{ color: "var(--primary)" }}>{currency(selectedTableActivity.estimatedAmount)}</span>
+              <span className="font-black" style={{ color: "var(--primary)" }}>{formatVND(selectedTableActivity.estimatedAmount)}</span>
             </div>
 
             <div className="flex flex-wrap gap-2 pt-1">
@@ -1674,7 +1674,7 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                       className="w-2 h-2 rounded-full"
                       style={{ background: detail.depositPaid ? "var(--success)" : "var(--warning)", boxShadow: detail.depositPaid ? "0 0 8px var(--success)" : "none" }}
                     />
-                    <p className="text-lg font-black" style={{ color: "var(--text)" }}>{currency(detail.depositAmount, localeTag)}</p>
+                    <p className="text-lg font-black" style={{ color: "var(--text)" }}>{formatVND(detail.depositAmount)}</p>
                   </div>
                 </div>
                 {isCustomer && (
