@@ -20,20 +20,12 @@ interface ComboDetailFormItem {
   quantity: string;
 }
 
-const MIN_AI_VARIANTS = 1;
-const MAX_AI_VARIANTS = 10;
+const DEFAULT_AI_VARIANTS = 4;
 const MAX_AI_PROMPT_LENGTH = 500;
 const MAX_COMBO_NAME_LENGTH = 255;
 const MAX_COMBO_DESCRIPTION_LENGTH = 2000;
 const GUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const clampAIVariants = (value: number): number => {
-  if (!Number.isFinite(value)) {
-    return MIN_AI_VARIANTS;
-  }
-  return Math.max(MIN_AI_VARIANTS, Math.min(MAX_AI_VARIANTS, Math.floor(value)));
-};
 
 export default function ComboFormPage() {
   const { t } = useTranslation();
@@ -64,7 +56,6 @@ export default function ComboFormPage() {
   const [existingImageUrl, setExistingImageUrl] = useState<string>("");
   const [isImageDropActive, setIsImageDropActive] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
-  const [aiVariants, setAiVariants] = useState(4);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
 
@@ -317,7 +308,6 @@ export default function ComboFormPage() {
       return;
     }
 
-    const normalizedVariants = clampAIVariants(Number(aiVariants));
     const promptText = aiPrompt.trim().slice(0, MAX_AI_PROMPT_LENGTH);
     const contextParts = [
       formData.name.trim() ? `Name: ${formData.name.trim()}` : "",
@@ -332,7 +322,7 @@ export default function ComboFormPage() {
         dishId: null,
         comboId: id,
         promotionId: null,
-        variants: normalizedVariants,
+        variants: DEFAULT_AI_VARIANTS,
         tone: "friendly",
         customContext: contextParts.join("\n") || undefined,
       });
@@ -671,7 +661,7 @@ export default function ComboFormPage() {
                   })}
                 </label>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
                   <input
                     type="text"
                     value={aiPrompt}
@@ -686,27 +676,6 @@ export default function ComboFormPage() {
                       border: "1px solid var(--border)",
                       color: "var(--text)",
                     }}
-                  />
-
-                  <input
-                    type="number"
-                    min={MIN_AI_VARIANTS}
-                    max={MAX_AI_VARIANTS}
-                    step={1}
-                    value={aiVariants}
-                    onChange={(e) =>
-                      setAiVariants(clampAIVariants(Number(e.target.value)))
-                    }
-                    disabled={isNewCombo || aiGenerating}
-                    className="w-full px-3 py-2.5 rounded-lg outline-none"
-                    style={{
-                      background: "var(--surface)",
-                      border: "1px solid var(--border)",
-                      color: "var(--text)",
-                    }}
-                    aria-label={t("dashboard.menu.combo.ai_content.variants_label", {
-                      defaultValue: "Number of variants",
-                    })}
                   />
 
                   <button
@@ -728,13 +697,6 @@ export default function ComboFormPage() {
                         })}
                   </button>
                 </div>
-
-                <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>
-                  {t("dashboard.menu.combo.ai_content.variants_hint", {
-                    defaultValue:
-                      "The number above controls how many AI description variants will be generated (1-10).",
-                  })}
-                </p>
 
                 {isNewCombo && (
                   <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>

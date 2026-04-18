@@ -21,18 +21,10 @@ interface ImageItem {
   isMain: boolean;
 }
 
-const MIN_AI_VARIANTS = 1;
-const MAX_AI_VARIANTS = 10;
+const DEFAULT_AI_VARIANTS = 4;
 const MAX_AI_PROMPT_LENGTH = 500;
 const MAX_DISH_NAME_LENGTH = 255;
 const MAX_DISH_DESCRIPTION_LENGTH = 2000;
-
-const clampAIVariants = (value: number): number => {
-  if (!Number.isFinite(value)) {
-    return MIN_AI_VARIANTS;
-  }
-  return Math.max(MIN_AI_VARIANTS, Math.min(MAX_AI_VARIANTS, Math.floor(value)));
-};
 
 export default function MenuItemFormPage() {
   const { t } = useTranslation();
@@ -61,7 +53,6 @@ export default function MenuItemFormPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
-  const [aiVariants, setAiVariants] = useState(4);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
 
@@ -170,7 +161,6 @@ export default function MenuItemFormPage() {
       return;
     }
 
-    const normalizedVariants = clampAIVariants(Number(aiVariants));
     const promptText = aiPrompt.trim().slice(0, MAX_AI_PROMPT_LENGTH);
 
     try {
@@ -182,7 +172,7 @@ export default function MenuItemFormPage() {
         dishName: normalizedDishName,
         comboId: null,
         promotionId: null,
-        variants: normalizedVariants,
+        variants: DEFAULT_AI_VARIANTS,
         tone: "friendly",
         customContext: promptText || undefined,
       });
@@ -595,7 +585,7 @@ export default function MenuItemFormPage() {
                         Description
                       </label>
 
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                         <input
                           type="text"
                           value={aiPrompt}
@@ -610,27 +600,6 @@ export default function MenuItemFormPage() {
                             border: "1px solid var(--border)",
                             color: "var(--text)",
                           }}
-                        />
-
-                        <input
-                          type="number"
-                          min={MIN_AI_VARIANTS}
-                          max={MAX_AI_VARIANTS}
-                          step={1}
-                          value={aiVariants}
-                          onChange={(e) =>
-                            setAiVariants(clampAIVariants(Number(e.target.value)))
-                          }
-                          disabled={aiGenerating}
-                          className="w-full px-3 py-2 rounded-lg outline-none"
-                          style={{
-                            background: "var(--surface)",
-                            border: "1px solid var(--border)",
-                            color: "var(--text)",
-                          }}
-                          aria-label={t("dashboard.menu.ai_content.variants_label", {
-                            defaultValue: "Number of variants",
-                          })}
                         />
 
                         <button
@@ -652,13 +621,6 @@ export default function MenuItemFormPage() {
                               })}
                         </button>
                       </div>
-
-                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.menu.ai_content.variants_hint", {
-                          defaultValue:
-                            "The number above controls how many AI description variants will be generated (1-10).",
-                        })}
-                      </p>
 
                       <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.menu.ai_content.name_based_hint", {
