@@ -764,7 +764,6 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
               allowClear
               value={reservationKeyword}
               onChange={(e) => setReservationKeyword(e.target.value)}
-              placeholder={t('staff.floor_activity.search_placeholder')}
             />
 
             <div className="floor-activity-action-row">

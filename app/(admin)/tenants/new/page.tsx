@@ -200,7 +200,6 @@ const TenantCreatePage: React.FC = () => {
                   ]}>
                   <Input
                     size="large"
-                    placeholder={t("tenants.create.fields.name_placeholder")}
                     prefix={<ShopOutlined className="text-gray-400 mr-1" />}
                   />
                 </Form.Item>
@@ -225,9 +224,6 @@ const TenantCreatePage: React.FC = () => {
                   <div className="url-bar">
                     <span className="url-segment url-scheme">https://</span>
                     <Input
-                      placeholder={t(
-                        "tenants.create.fields.host_name",
-                      )}
                       value={hostNameValue}
                       onChange={(e) => {
                         const value = e.target.value
@@ -262,9 +258,6 @@ const TenantCreatePage: React.FC = () => {
                     ]}>
                     <Input
                       size="large"
-                      placeholder={t(
-                        "tenants.create.fields.business_name_placeholder",
-                      )}
                       prefix={<ShopOutlined className="text-gray-400 mr-1" />}
                     />
                   </Form.Item>
@@ -290,7 +283,6 @@ const TenantCreatePage: React.FC = () => {
                     ]}>
                     <Input
                       size="large"
-                      placeholder={t("tenants.create.fields.phone_placeholder")}
                       prefix={<PhoneOutlined className="text-gray-400 mr-1" />}
                     />
                   </Form.Item>
@@ -320,9 +312,6 @@ const TenantCreatePage: React.FC = () => {
                   <Input
                     size="large"
                     type="email"
-                    placeholder={t(
-                      "tenants.create.fields.mail_restaurant_placeholder",
-                    )}
                     prefix={<MailOutlined className="text-gray-400 mr-1" />}
                   />
                 </Form.Item>
@@ -349,7 +338,6 @@ const TenantCreatePage: React.FC = () => {
                       fieldName="addressLine1"
                       cityFieldName="addressLine3"
                       districtWardFieldName="addressLine2"
-                      placeholder={t("tenants.create.fields.address_line1_placeholder")}
                     />
                   </Form.Item>
 

@@ -100,7 +100,6 @@ export default function HelpPage() {
               </svg>
               <input
                 type="text"
-                placeholder={t("dashboard.help.search_placeholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 rounded-lg focus:outline-none"

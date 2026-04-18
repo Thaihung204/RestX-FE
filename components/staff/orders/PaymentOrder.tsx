@@ -13,6 +13,7 @@ import {
 } from "@ant-design/icons";
 import { Button, InputNumber, Modal, Spin, Typography } from "antd";
 import { useCallback, useEffect, useState } from "react";
+import { formatVND } from "@/lib/utils/currency";
 
 const { Text } = Typography;
 
@@ -201,7 +202,7 @@ export default function PaymentOrder({
                       color: "#262626",
                       marginTop: 2,
                     }}>
-                    {subTotal.toLocaleString("vi-VN")}đ
+                    {formatVND(subTotal)}
                   </div>
                 </div>
 
@@ -216,7 +217,7 @@ export default function PaymentOrder({
                       color: "var(--primary, #1677ff)",
                       marginTop: 2,
                     }}>
-                    {finalTotal.toLocaleString("vi-VN")}đ
+                    {formatVND(finalTotal)}
                   </div>
                 </div>
               </div>
@@ -234,7 +235,7 @@ export default function PaymentOrder({
                     style={{ color: "#52c41a", fontSize: 11 }}
                   />
                   <Text style={{ fontSize: 12, color: "#52c41a" }}>
-                    -{discountData!.discountAmount.toLocaleString("vi-VN")}đ
+                    -{formatVND(discountData!.discountAmount)}
                   </Text>
                 </div>
               )}
@@ -346,7 +347,7 @@ export default function PaymentOrder({
                               }}>
                               {isPct
                                 ? `-${promo.discountValue}%`
-                                : `-${promo.discountValue.toLocaleString("vi-VN")}đ`}
+                                : `-${formatVND(promo.discountValue)}`}
                             </span>
                           </div>
                           <Text type="secondary" style={{ fontSize: 12 }}>
@@ -367,7 +368,7 @@ export default function PaymentOrder({
                                 display: "block",
                               }}>
                               {t("staff.orders.payment.discount.min_order")}:{" "}
-                              {promo.minOrderAmount.toLocaleString("vi-VN")}đ
+                              {formatVND(promo.minOrderAmount)}
                             </Text>
                           )}
                         </div>
@@ -584,7 +585,7 @@ export default function PaymentOrder({
                     type={cashReceived === amount ? "primary" : "default"}
                     onClick={() => setCashReceived(amount)}
                     style={{ borderRadius: 6, fontSize: 11 }}>
-                    {amount.toLocaleString("vi-VN")}
+                    {formatVND(amount)}
                   </Button>
                 ))}
               </div>
@@ -606,7 +607,7 @@ export default function PaymentOrder({
                       {t("staff.orders.payment.modal.missing_label")}
                     </Text>
                     <Text type="danger" strong style={{ fontSize: 15 }}>
-                      -{(finalTotal - cashReceived).toLocaleString("vi-VN")}đ
+                      -{formatVND(finalTotal - cashReceived)}
                     </Text>
                   </>
                 ) : (
@@ -615,7 +616,7 @@ export default function PaymentOrder({
                       {t("staff.orders.payment.modal.change_label")}
                     </Text>
                     <Text strong style={{ fontSize: 16, color: "#52c41a" }}>
-                      {(cashReceived - finalTotal).toLocaleString("vi-VN")}đ
+                      {formatVND(cashReceived - finalTotal)}
                     </Text>
                   </>
                 )}
@@ -639,7 +640,7 @@ export default function PaymentOrder({
               marginTop: 2,
             }}>
             {t("staff.orders.payment.actions.confirm")} ·{" "}
-            {finalTotal.toLocaleString("vi-VN")}đ
+            {formatVND(finalTotal)}
           </Button>
         </div>
       )}

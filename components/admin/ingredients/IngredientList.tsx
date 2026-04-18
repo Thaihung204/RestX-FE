@@ -280,7 +280,7 @@ export default function IngredientList() {
                     <td className="px-3 py-3 text-center">
                       <input
                         type="number"
-                        value={item.currentQuantity ?? 0}
+                        value={item.currentQuantity || ""}
                         onChange={(e) =>
                           setIngredients((prev) =>
                             prev.map((ingredient) =>
@@ -293,7 +293,7 @@ export default function IngredientList() {
                             ),
                           )
                         }
-                        onBlur={() =>
+                      onBlur={() =>
                           handleUpdateIngredient(item.id as string, {
                             currentQuantity: item.currentQuantity ?? 0,
                           })
@@ -429,7 +429,7 @@ export default function IngredientList() {
                     </span>
                     <input
                       type="number"
-                      value={item.currentQuantity ?? 0}
+                      value={item.currentQuantity || ""}
                       onChange={(e) =>
                         setIngredients((prev) =>
                           prev.map((ingredient) =>

@@ -2,6 +2,7 @@ import { AIMessage, AIOrderDraft, AIOrderDraftItem } from "@/lib/types/ai";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Typography } from "antd";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 const { Text } = Typography;
 

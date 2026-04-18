@@ -266,7 +266,6 @@ export default function IngredientFormPage() {
                       <input
                         type="text" name="name" value={form.name} onChange={handleChange} required
                         disabled={cannotSave}
-                        placeholder={t("dashboard.ingredients.name")}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                         style={cannotSave ? disabledFieldStyle : fieldStyle}
                       />
@@ -281,7 +280,6 @@ export default function IngredientFormPage() {
                         type="text" name="code" value={form.code} onChange={handleChange}
                         required maxLength={20}
                         disabled={cannotSave}
-                        placeholder={t("dashboard.ingredients.code")}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20 font-mono"
                         style={cannotSave ? disabledFieldStyle : fieldStyle}
                       />
@@ -389,7 +387,7 @@ export default function IngredientFormPage() {
                       <input
                         type="number" name="minStockLevel"
                         min={0} step="0.001"
-                        value={form.minStockLevel}
+                        value={form.minStockLevel || ""}
                         onChange={handleChange}
                         disabled={cannotSave}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
@@ -403,7 +401,7 @@ export default function IngredientFormPage() {
                       <input
                         type="number" name="maxStockLevel"
                         min={0} step="0.001"
-                        value={form.maxStockLevel}
+                        value={form.maxStockLevel || ""}
                         onChange={handleChange}
                         disabled={cannotSave}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"

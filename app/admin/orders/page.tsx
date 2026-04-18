@@ -3,7 +3,7 @@
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
-  OrderStatus,
+    OrderStatus,
 } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
@@ -13,6 +13,7 @@ import { message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 interface OrderRow {
   id: string;
@@ -319,9 +320,6 @@ export default function OrdersPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
             <input
               type="text"
-              placeholder={t("dashboard.orders.table.order", {
-                defaultValue: "Mã đơn",
-              })}
               value={orderSearch}
               onChange={(e) => setOrderSearch(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none"
@@ -334,9 +332,6 @@ export default function OrdersPage() {
 
             <input
               type="text"
-              placeholder={t("dashboard.orders.table.customer", {
-                defaultValue: "Khách hàng",
-              })}
               value={customerSearch}
               onChange={(e) => setCustomerSearch(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none"
@@ -349,9 +344,6 @@ export default function OrdersPage() {
 
             <input
               type="text"
-              placeholder={t("dashboard.orders.table.table", {
-                defaultValue: "Bàn",
-              })}
               value={tableSearch}
               onChange={(e) => setTableSearch(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none"
@@ -535,7 +527,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className="text-green-500 font-bold">
-                          {order.total.toLocaleString("vi-VN")}₫
+                          {formatVND(order.total)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">

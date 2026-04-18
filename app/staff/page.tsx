@@ -1,14 +1,15 @@
 'use client';
 
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import orderService from '@/lib/services/orderService';
 import orderSignalRService from '@/lib/services/orderSignalRService';
 import { tableService, TableStatus } from '@/lib/services/tableService';
 import {
-  RightOutlined,
-  ShoppingCartOutlined,
-  SmileOutlined,
-  TableOutlined
+    RightOutlined,
+    ShoppingCartOutlined,
+    SmileOutlined,
+    TableOutlined
 } from '@ant-design/icons';
 import { HubConnectionState } from '@microsoft/signalr';
 import { Button, Card, Col, Progress, Row, Space, Table, Tag, Typography } from 'antd';
@@ -17,7 +18,7 @@ import Link from 'next/link';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useThemeMode } from '../theme/AntdProvider';
-import { useAuth } from '@/lib/contexts/AuthContext';
+import { formatVND } from "@/lib/utils/currency";
 
 const { Title, Text } = Typography;
 
@@ -238,7 +239,7 @@ export default function StaffDashboard() {
       align: 'right' as const,
       render: (total: number) => (
         <Text strong style={{ color: 'var(--primary)', fontSize: 14 }}>
-          {total.toLocaleString('vi-VN')}đ
+          {formatVND(total)}
         </Text>
       ),
     },

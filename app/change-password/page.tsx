@@ -200,7 +200,6 @@ export default function ChangePasswordPage() {
                                 value={currentPassword}
                                 onChange={handleCurrentPasswordChange}
                                 onBlur={() => setCurrentPasswordTouched(true)}
-                                placeholder={t('change_password_page.current_password_placeholder')}
                                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                                 style={{
                                     borderColor: currentPasswordTouched && currentPasswordError ? '#ef4444' : undefined,
@@ -224,7 +223,6 @@ export default function ChangePasswordPage() {
                                 value={newPassword}
                                 onChange={handleNewPasswordChange}
                                 onBlur={() => setNewPasswordTouched(true)}
-                                placeholder={t('change_password_page.new_password_placeholder')}
                                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                                 style={{
                                     borderColor: newPasswordTouched && newPasswordError ? '#ef4444' : undefined,
@@ -251,7 +249,6 @@ export default function ChangePasswordPage() {
                                 value={confirmNewPassword}
                                 onChange={handleConfirmPasswordChange}
                                 onBlur={() => setConfirmPasswordTouched(true)}
-                                placeholder={t('change_password_page.confirm_password_placeholder')}
                                 className="w-full px-4 py-3 border-2 rounded-lg outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 auth-input"
                                 style={{
                                     borderColor: confirmPasswordTouched && confirmPasswordError ? '#ef4444' : undefined,

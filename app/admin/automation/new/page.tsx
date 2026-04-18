@@ -85,7 +85,7 @@ export default function NewAutomationTriggerPage() {
   const [showCriteriaModal, setShowCriteriaModal] = useState(false);
 
   const [groupName, setGroupName] = useState("");
-  const [actionType, setActionType] = useState("0");
+  const [actionType, setActionType] = useState("");
   const [actionName, setActionName] = useState("");
   const [actionCustomProperties, setActionCustomProperties] = useState('{"newItemStatusId":35}');
   const [actionGroups, setActionGroups] = useState<string[]>([]);
@@ -398,7 +398,6 @@ export default function NewAutomationTriggerPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
-                      placeholder={t("automation.new.placeholders.name")}
                       className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                       style={fieldStyle}
                     />
@@ -411,7 +410,6 @@ export default function NewAutomationTriggerPage() {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={3}
-                      placeholder={t("automation.new.placeholders.description")}
                       className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20 resize-none"
                       style={fieldStyle}
                     />
@@ -695,7 +693,6 @@ export default function NewAutomationTriggerPage() {
             <input
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              placeholder={t("automation.new.placeholders.group_name")}
               className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
               style={fieldStyle}
             />
@@ -733,7 +730,6 @@ export default function NewAutomationTriggerPage() {
                 <input
                   value={actionName}
                   onChange={(e) => setActionName(e.target.value)}
-                  placeholder={t("automation.new.placeholders.action")}
                   className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                   style={fieldStyle}
                 />
@@ -830,7 +826,6 @@ export default function NewAutomationTriggerPage() {
                 <input
                   value={criteriaPropertyName}
                   onChange={(e) => setCriteriaPropertyName(e.target.value)}
-                  placeholder={t("automation.new.placeholders.property_name")}
                   className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                   style={fieldStyle}
                 />
@@ -842,7 +837,6 @@ export default function NewAutomationTriggerPage() {
                 <input
                   value={criteriaPropertyValue}
                   onChange={(e) => setCriteriaPropertyValue(e.target.value)}
-                  placeholder={t("automation.new.placeholders.property_value")}
                   className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                   style={fieldStyle}
                 />
@@ -886,7 +880,6 @@ export default function NewAutomationTriggerPage() {
                 <input
                   value={criteriaDescription}
                   onChange={(e) => setCriteriaDescription(e.target.value)}
-                  placeholder={t("automation.new.placeholders.computed_description")}
                   className="w-full px-4 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
                   style={fieldStyle}
                 />

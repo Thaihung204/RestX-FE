@@ -1,12 +1,13 @@
 "use client";
 
 import reservationService, {
-  ReservationDetail,
-  ReservationStatus,
+    ReservationDetail,
+    ReservationStatus,
 } from "@/lib/services/reservationService";
 import { Select } from "antd";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 type ReservationDetailModalProps = {
   reservationId: string;
@@ -127,7 +128,7 @@ export default function ReservationDetailsModal({ reservationId, onClose, onStat
                   <InfoRow label={t("admin.reservations.modal.booking.date_time")} value={new Date(detail.reservationDateTime).toLocaleString()} />
                   <InfoRow label={t("admin.reservations.modal.booking.guests")} value={`${detail.numberOfGuests} ${t("admin.reservations.modal.booking.guests_suffix")}`} />
                   <InfoRow label={t("admin.reservations.modal.booking.table")} value={detail.tables.map((tb) => `${tb.code} (${tb.floorName})`).join(", ")} />
-                  <InfoRow label={t("admin.reservations.modal.booking.deposit")} value={`${detail.depositAmount.toLocaleString()}đ`} />
+                  <InfoRow label={t("admin.reservations.modal.booking.deposit")} value={formatVND(detail.depositAmount)} />
                   <InfoRow label={t("admin.reservations.modal.booking.deposit_paid")} value={detail.depositPaid ? t("admin.reservations.modal.booking.deposit_yes") : t("admin.reservations.modal.booking.deposit_no")} />
                 </div>
               </div>

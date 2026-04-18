@@ -3,6 +3,7 @@
 import type { RevenueTrendPoint } from "@/lib/services/dashboardService";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 interface RevenueChartProps {
   data?: RevenueTrendPoint[];
@@ -73,9 +74,6 @@ export default function RevenueChart({
 
   const getX = (index: number) => leftPadding + (index / steps) * plotWidth;
   const getY = (value: number) => bottomY - (value / maxValue) * chartHeight;
-
-  const formatVND = (amount: number) =>
-    new Intl.NumberFormat("vi-VN").format(amount) + "đ";
 
   const formatShort = (amount: number) => {
     if (amount >= 1000000) return (amount / 1000000).toFixed(1) + "tr";

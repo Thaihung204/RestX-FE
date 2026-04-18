@@ -220,7 +220,6 @@ function ResetPasswordPageContent() {
                 label={t('reset_password_page.new_password_label')}
                 icon={<LockOutlined />}
                 type={showPassword ? "text" : "password"}
-                placeholder={t('reset_password_page.new_password_placeholder')}
                 value={password}
                 onChange={handlePasswordChange}
                 onBlur={() => setPasswordTouched(true)}
@@ -250,7 +249,6 @@ function ResetPasswordPageContent() {
                 label={t('reset_password_page.confirm_password_label')}
                 icon={<LockOutlined />}
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder={t('reset_password_page.confirm_password_placeholder')}
                 value={confirmPassword}
                 onChange={handleConfirmPasswordChange}
                 onBlur={() => setConfirmPasswordTouched(true)}
