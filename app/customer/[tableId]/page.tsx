@@ -1,6 +1,5 @@
 "use client";
 
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CartModal from "@/components/customer/CartModal";
 import CustomerFooter from "@/components/customer/CustomerFooter";
 import MenuCTA from "@/components/customer/MenuCTA";
@@ -99,8 +98,7 @@ export default function CustomerHomePageByTable() {
   };
 
   return (
-    <ProtectedRoute>
-      <ConfigProvider
+    <ConfigProvider
         theme={{
           algorithm:
             themeMode === "dark" ? theme.darkAlgorithm : theme.defaultAlgorithm,
@@ -240,6 +238,5 @@ export default function CustomerHomePageByTable() {
         />
         <CartModal />
       </ConfigProvider>
-    </ProtectedRoute>
   );
 }

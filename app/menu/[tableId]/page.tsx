@@ -1,6 +1,5 @@
 "use client";
 
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CartModal from "@/components/customer/CartModal";
 import CustomerFooter from "@/components/customer/CustomerFooter";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -354,8 +353,7 @@ export default function MenuPage() {
   }
 
   return (
-    <ProtectedRoute>
-      <>
+    <>
       {contextHolder}
       <ConfigProvider
         theme={{
@@ -1195,6 +1193,5 @@ export default function MenuPage() {
         />
       </ConfigProvider>
     </>
-    </ProtectedRoute>
   );
 }
