@@ -2383,7 +2383,15 @@
       "createNew": "Create New Report",
       "generating": "Generating report...",
       "filter": {
-        "by": "Analyze by"
+        "by": "Analyze by",
+        "month": "Month",
+        "quarter": "Quarter",
+        "year": "Year",
+        "subtitle": {
+          "month": "monthly business strategy",
+          "quarter": "quarterly business strategy",
+          "year": "yearly business strategy"
+        }
       },
       "time": {
         "justNow": "Just now",
