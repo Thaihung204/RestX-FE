@@ -926,24 +926,40 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
         throw new Error("Reservation identifier is empty");
       }
 
-      const shouldLoadByCode = isCustomer && !isGuidLike(reservationSlug);
       let d: ReservationDetailViewModel;
 
-      if (shouldLoadByCode) {
-        d = await reservationService.lookupReservation({ code: reservationSlug });
-      } else {
-        try {
-          d = await reservationService.getReservationById(reservationSlug);
-        } catch (error) {
-          const statusCode = (error as { response?: { status?: number } })?.response?.status;
+      if (isCustomer) {
+        const codeCandidates = Array.from(
+          new Set(
+            [
+              reservationCodeQuery,
+              !isGuidLike(reservationSlug) ? reservationSlug : "",
+              isGuidLike(reservationSlug) ? deriveConfirmationCodeFromGuid(reservationSlug) : "",
+            ]
+              .map((value) => value.trim().toUpperCase())
+              .filter(Boolean),
+          ),
+        );
 
-          if (isCustomer && statusCode === 401) {
-            const fallbackCode = reservationCodeQuery || deriveConfirmationCodeFromGuid(reservationSlug);
-            d = await reservationService.lookupReservation({ code: fallbackCode });
-          } else {
-            throw error;
+        let loadedByCode: ReservationDetailViewModel | null = null;
+        let lastLookupError: unknown = null;
+
+        for (const code of codeCandidates) {
+          try {
+            loadedByCode = await reservationService.lookupReservation({ code });
+            break;
+          } catch (error) {
+            lastLookupError = error;
           }
         }
+
+        if (!loadedByCode) {
+          throw (lastLookupError ?? new Error("Reservation lookup failed"));
+        }
+
+        d = loadedByCode;
+      } else {
+        d = await reservationService.getReservationById(reservationSlug);
       }
 
       let normalizedDetail = normalizeReservationDetail(d);
