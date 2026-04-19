@@ -248,7 +248,7 @@ class OrderService {
   }
 
   async exportOrders(
-    params: OrderFilterParams = {},
+    params: OrderFilterParams | StaffOrderQueryParams = {},
   ): Promise<DownloadableFile> {
     const response = await axiosInstance.get<Blob>("/orders/export/csv", {
       params,

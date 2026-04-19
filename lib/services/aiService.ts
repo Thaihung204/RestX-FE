@@ -2,6 +2,8 @@ import {
     AIChatHistoryResponse,
     AIChatRequest,
     AIChatResponse,
+  AIContentGenerateRequest,
+  AIContentGenerateResponse,
     AIConfirmOrderRequest,
 } from "@/lib/types/ai";
 import axiosInstance from "./axiosInstance";
@@ -34,6 +36,16 @@ export const aiService = {
   analyzeDashboard: async (payload: { filterType: string; analysisType?: string; fromDate?: string; toDate?: string }): Promise<any> => {
     const response = await axiosInstance.post<any>("/ai/analytics", payload);
     return response.data;
+  },
+
+  generateContent: async (
+    payload: AIContentGenerateRequest,
+  ): Promise<AIContentGenerateResponse> => {
+    const response = await axiosInstance.post<AIContentGenerateResponse>(
+      "/ai/content/generate",
+      payload,
+    );
+    return response.data ?? { variants: [] };
   },
 };
 

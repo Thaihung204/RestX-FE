@@ -1,10 +1,10 @@
 "use client";
 
 import { DropDown } from "@/components/ui/DropDown";
+import { Spin } from "antd";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Spin } from "antd";
 
 interface Table {
   id: string;
@@ -757,7 +757,6 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                               number: e.target.value,
                             });
                           }}
-                          placeholder={tDetails("table_code_placeholder", { defaultValue: "Nhập mã bàn" })}
                           style={{
                             width: "100%",
                             padding: "14px 16px",
@@ -784,7 +783,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                         <input
                           type="number"
                           min="1"
-                          value={formData.capacity}
+                          value={formData.capacity || ""}
                           onChange={(e) => {
                             setFormData({
                               ...formData,
@@ -830,7 +829,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                         </label>
                         <input
                           type="number"
-                          value={formData.rotation}
+                          value={formData.rotation || ""}
                           onChange={(e) => setFormData({ ...formData, rotation: parseInt(e.target.value) || 0 })}
                           style={{
                             width: "100%",
@@ -853,7 +852,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                         </label>
                         <input
                           type="number"
-                          value={formData.width}
+                          value={formData.width || ""}
                           onChange={(e) => setFormData({ ...formData, width: parseInt(e.target.value) || 0 })}
                           style={{
                             width: "100%",
@@ -872,7 +871,7 @@ export const TableDetailsDrawer: React.FC<TableDetailsDrawerProps> = ({
                         </label>
                         <input
                           type="number"
-                          value={formData.height}
+                          value={formData.height || ""}
                           onChange={(e) => setFormData({ ...formData, height: parseInt(e.target.value) || 0 })}
                           style={{
                             width: "100%",

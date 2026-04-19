@@ -6,6 +6,7 @@ import loyaltyService, {
     LoyaltyPointBand,
     TIER_COLORS,
 } from "@/lib/services/loyaltyService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import {
     Button,
@@ -48,9 +49,12 @@ export default function LoyaltyPointBandSettings() {
     } catch (error) {
       console.error("Failed to fetch loyalty point bands:", error);
       messageApi.error(
-        t("dashboard.manage.errors.fetch_failed", {
-          defaultValue: "Failed to fetch loyalty point bands",
-        }),
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.errors.fetch_failed", {
+            defaultValue: "Failed to fetch loyalty point bands",
+          }),
+        ),
       );
     } finally {
       setLoading(false);
@@ -95,9 +99,12 @@ export default function LoyaltyPointBandSettings() {
     } catch (error) {
       console.error("Failed to delete loyalty point band:", error);
       messageApi.error(
-        t("dashboard.manage.errors.delete_failed", {
-          defaultValue: "Failed to delete",
-        }),
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.errors.delete_failed", {
+            defaultValue: "Failed to delete",
+          }),
+        ),
       );
     }
   };
@@ -130,10 +137,12 @@ export default function LoyaltyPointBandSettings() {
     } catch (error: any) {
       console.error("Failed to save loyalty point band:", error);
       messageApi.error(
-        error?.message ||
+        extractApiErrorMessage(
+          error,
           t("dashboard.manage.errors.save_failed", {
             defaultValue: "Failed to save loyalty point band",
           }),
+        ),
       );
     }
   };
@@ -151,9 +160,12 @@ export default function LoyaltyPointBandSettings() {
     } catch (error) {
       console.error("Failed to update status:", error);
       messageApi.error(
-        t("dashboard.manage.errors.update_failed", {
-          defaultValue: "Failed to update status",
-        }),
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.errors.update_failed", {
+            defaultValue: "Failed to update status",
+          }),
+        ),
       );
     }
   };

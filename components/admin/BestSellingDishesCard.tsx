@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 interface TopDish {
   dishId: string;
@@ -100,10 +101,7 @@ export default function BestSellingDishesCard({
           const rank = index + 1;
           
           // Format currency
-          const formattedRevenue = new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-          }).format(dish.revenue);
+          const formattedRevenue = formatVND(dish.revenue);
 
           return (
             <div

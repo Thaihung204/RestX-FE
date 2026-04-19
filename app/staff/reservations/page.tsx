@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { Tooltip, Select } from "antd";
+import orderSignalRService from "@/lib/services/orderSignalRService";
 import reservationService, {
-    ReservationListItem,
-    ReservationDetail,
     PaginatedReservations,
+    ReservationDetail,
+    ReservationListItem,
     ReservationStatus,
 } from "@/lib/services/reservationService";
-import orderSignalRService from "@/lib/services/orderSignalRService";
-import { HubConnectionState } from "@microsoft/signalr";
 import { tenantService } from "@/lib/services/tenantService";
+import { HubConnectionState } from "@microsoft/signalr";
+import { Select } from "antd";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 // ─── Status actions (keys mapped to i18n) ────────────────────────────────────
 const STATUS_ACTIONS_KEYS: Record<
@@ -237,7 +238,7 @@ function ReservationDetailModal({
                                     />
                                     <InfoRow
                                         label={t('admin.reservations.modal.booking.deposit')}
-                                        value={`${detail.depositAmount.toLocaleString()}đ`}
+                                        value={formatVND(detail.depositAmount)}
                                     />
                                     <InfoRow
                                         label={t('admin.reservations.modal.booking.deposit_paid')}
@@ -457,7 +458,6 @@ export default function ReservationsPage() {
                         </svg>
                         <input
                             type="text"
-                            placeholder={t('admin.reservations.filter.search_placeholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-9 pr-4 py-2 rounded-lg text-sm outline-none"

@@ -143,12 +143,21 @@ export function middleware(req: NextRequest) {
       return NextResponse.next();
     }
 
-    // Customer-facing authenticated routes: require access token
+    // Customer-facing routes:
+    // - Table-scoped QR routes (/customer/{tableId}, /menu/{tableId}) are public.
+    // - Non table-scoped customer/menu routes still require authentication.
+    const customerTableRoutePattern = /^\/customer\/[0-9a-fA-F-]{36}$/;
+    const menuTableRoutePattern = /^\/menu\/[0-9a-fA-F-]{36}$/;
+    const isPublicTableRoute =
+      customerTableRoutePattern.test(pathname) ||
+      menuTableRoutePattern.test(pathname);
+
+    // Customer-facing authenticated routes: require access token unless table route is public
     if (
       (pathname === '/customer' || pathname.startsWith('/customer/')) ||
       (pathname === '/menu' || pathname.startsWith('/menu/'))
     ) {
-      if (!hasAuthToken) {
+      if (!isPublicTableRoute && !hasAuthToken) {
         const loginUrl = new URL('/login', req.url);
         loginUrl.searchParams.set('redirect', pathname);
         return NextResponse.redirect(loginUrl);

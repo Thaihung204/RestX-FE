@@ -3,14 +3,15 @@
 import OrdersBarChart from "@/components/admin/charts/OrdersBarChart";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import {
-  DashboardOutlined,
-  PieChartOutlined,
-  RiseOutlined,
+    DashboardOutlined,
+    PieChartOutlined,
+    RiseOutlined,
 } from "@ant-design/icons";
 import { Button, Card, Col, Row, Typography } from "antd";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -369,7 +370,7 @@ export default function AnalyticsTourPage() {
                 }}>
                 <Button style={{ borderRadius: 999 }}>
                   {t("tour.analytics.summary.total_revenue")}:{" "}
-                  {new Intl.NumberFormat("vi-VN").format(totalRevenue)}đ
+                  {formatVND(totalRevenue)}
                 </Button>
                 <Button style={{ borderRadius: 999 }}>
                   {t("tour.analytics.summary.total_orders")}:{" "}

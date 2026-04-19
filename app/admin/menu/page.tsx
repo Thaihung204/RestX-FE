@@ -7,9 +7,12 @@ import { DropDown } from "@/components/ui/DropDown";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import ingredientService, {
-  IngredientItem,
+    IngredientItem,
 } from "@/lib/services/ingredientService";
+import menuService from "@/lib/services/menuService";
 import recipeService, { DishRecipeItem } from "@/lib/services/recipeService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { PlusOutlined } from "@ant-design/icons";
 import { App, Button, Modal } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -23,11 +26,8 @@ export default function MenuPage() {
   const { t } = useTranslation();
   const { message } = App.useApp();
 
-  const formatPrice = (price: number) => {
-    return price.toLocaleString("vi-VN");
-  };
-
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [allMenuItems, setAllMenuItems] = useState<MenuItem[]>([]);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,6 +42,50 @@ export default function MenuPage() {
   const [selectedIngredientId, setSelectedIngredientId] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("1");
   const [savingRecipe, setSavingRecipe] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("All");
+
+  const normalizeMenuItem = (item: any, index: number): MenuItem => ({
+    id:
+      item.id?.toString() ||
+      item.dishId?.toString() ||
+      `dish-${index}-${Date.now()}`,
+    name: item.name || "",
+    categoryId:
+      item.categoryId?.toString() ||
+      item.category?.id?.toString() ||
+      item.category?.categoryId?.toString() ||
+      "",
+    categoryName:
+      item.categoryName?.trim() ||
+      item.category?.categoryName?.trim() ||
+      item.category?.name?.trim() ||
+      item.category?.trim() ||
+      "",
+    price: item.price || 0,
+    image:
+      item.mainImageUrl ||
+      item.imageUrl ||
+      item.image ||
+      (item.images && item.images.length > 0
+        ? (item.images.find((img: any) => img.imageType === 0) || item.images[0])
+            .imageUrl
+        : null) ||
+      "/placeholder-dish.jpg",
+    description: item.description || "",
+    isActive:
+      item.isActive !== undefined
+        ? item.isActive
+        : item.available !== undefined
+          ? item.available
+          : true,
+    available:
+      item.isActive !== undefined
+        ? item.isActive
+        : item.available !== undefined
+          ? item.available
+          : true,
+    isBestSeller: item.isBestSeller !== undefined ? item.isBestSeller : false,
+  });
 
   const fetchMenuItems = async () => {
     try {
@@ -61,60 +105,23 @@ export default function MenuPage() {
         (Array.isArray(data) ? data : null);
 
       if (arrayData && Array.isArray(arrayData)) {
-        const mappedData = arrayData.map((item: any, index: number) => ({
-          id:
-            item.id?.toString() ||
-            item.dishId?.toString() ||
-            `dish-${index}-${Date.now()}`,
-          name: item.name || "",
-          categoryId:
-            item.categoryId?.toString() ||
-            item.category?.id?.toString() ||
-            item.category?.categoryId?.toString() ||
-            "",
-          categoryName:
-            item.categoryName?.trim() ||
-            item.category?.categoryName?.trim() ||
-            item.category?.name?.trim() ||
-            item.category?.trim() ||
-            "",
-          price: item.price || 0,
-          image:
-            item.mainImageUrl ||
-            item.imageUrl ||
-            item.image ||
-            (item.images && item.images.length > 0
-              ? (
-                  item.images.find((img: any) => img.imageType === 0) ||
-                  item.images[0]
-                ).imageUrl
-              : null) ||
-            "/placeholder-dish.jpg",
-          description: item.description || "",
-          isActive:
-            item.isActive !== undefined
-              ? item.isActive
-              : item.available !== undefined
-                ? item.available
-                : true,
-          available:
-            item.isActive !== undefined
-              ? item.isActive
-              : item.available !== undefined
-                ? item.available
-                : true,
-          isBestSeller:
-            item.isBestSeller !== undefined ? item.isBestSeller : false,
-        }));
+        const mappedData = arrayData.map((item: any, index: number) =>
+          normalizeMenuItem(item, index),
+        );
 
+        setAllMenuItems(mappedData);
         setMenuItems(mappedData);
         setError(null);
       } else {
         setError(t("dashboard.menu.errors.load_failed"));
       }
-    } catch {
-      setError(t("dashboard.menu.errors.load_failed"));
-      message.error(t("dashboard.menu.toasts.fetch_error_message"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.toasts.fetch_error_message"),
+      );
+      setError(errorMsg);
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -125,8 +132,12 @@ export default function MenuPage() {
       setIngredientsLoading(true);
       const data = await ingredientService.getAll();
       setIngredients(data.filter((item) => item.isActive !== false));
-    } catch {
-      message.error(t("dashboard.menu.ingredients.errors.fetch_ingredients"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.errors.fetch_ingredients"),
+      );
+      message.error(errorMsg);
     } finally {
       setIngredientsLoading(false);
     }
@@ -137,8 +148,12 @@ export default function MenuPage() {
       setLoadingRecipes(true);
       const data = await recipeService.getByDishId(dishId);
       setDishRecipes(data);
-    } catch {
-      message.error(t("dashboard.menu.ingredients.errors.fetch_recipes"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.errors.fetch_recipes"),
+      );
+      message.error(errorMsg);
     } finally {
       setLoadingRecipes(false);
     }
@@ -148,6 +163,32 @@ export default function MenuPage() {
     fetchMenuItems();
     fetchIngredients();
   }, []);
+
+  const handleCategoryChange = async (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+
+    if (categoryId === "All") {
+      setMenuItems(allMenuItems);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await menuService.getDishesByCategory(categoryId);
+      const arrayData = Array.isArray(data) ? data : [];
+      setMenuItems(arrayData.map((item: any, index: number) => normalizeMenuItem(item, index)));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.toasts.fetch_error_message"),
+      );
+      setError(errorMsg);
+      message.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleToggleStatus = async (item: DishCardItem) => {
     const nextStatus = !item.isActive;
@@ -173,8 +214,23 @@ export default function MenuPage() {
             : dish,
         ),
       );
-    } catch {
-      message.error(t("dashboard.menu.ingredients.status.update_failed"));
+      setAllMenuItems((prev) =>
+        prev.map((dish) =>
+          dish.id === item.id
+            ? {
+                ...dish,
+                isActive: nextStatus,
+                available: nextStatus,
+              }
+            : dish,
+        ),
+      );
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.status.update_failed"),
+      );
+      message.error(errorMsg);
     }
   };
 
@@ -219,8 +275,12 @@ export default function MenuPage() {
       await fetchRecipes(activeDish.id);
       setSelectedIngredientId("");
       setQuantity("1");
-    } catch {
-      message.error(t("dashboard.menu.ingredients.toasts.add_error"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.toasts.add_error"),
+      );
+      message.error(errorMsg);
     } finally {
       setSavingRecipe(false);
     }
@@ -243,8 +303,12 @@ export default function MenuPage() {
       });
       message.success(t("dashboard.menu.ingredients.toasts.update_success"));
       await fetchRecipes(activeDish.id);
-    } catch {
-      message.error(t("dashboard.menu.ingredients.toasts.update_error"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.toasts.update_error"),
+      );
+      message.error(errorMsg);
     } finally {
       setSavingRecipe(false);
     }
@@ -257,8 +321,12 @@ export default function MenuPage() {
       await recipeService.delete(recipe.id);
       message.success(t("dashboard.menu.ingredients.toasts.delete_success"));
       await fetchRecipes(activeDish.id);
-    } catch {
-      message.error(t("dashboard.menu.ingredients.toasts.delete_error"));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
+        t("dashboard.menu.ingredients.toasts.delete_error"),
+      );
+      message.error(errorMsg);
     } finally {
       setSavingRecipe(false);
     }
@@ -275,13 +343,6 @@ export default function MenuPage() {
         .sort((a, b) => a.name.localeCompare(b.name)),
     ];
   }, [dbCategories, t]);
-
-  const [selectedCategoryId, setSelectedCategoryId] = useState("All");
-
-  const filteredItems =
-    selectedCategoryId === "All"
-      ? menuItems
-      : menuItems.filter((item) => item.categoryId === selectedCategoryId);
 
   const isNumericInput = (value: string) => /^\d*\.?\d*$/.test(value);
 
@@ -306,24 +367,16 @@ export default function MenuPage() {
               <MenuManagementTabs activeTab="dishes" />
 
               <Link href="/admin/menu/new">
-                <button
-                  className="px-4 py-2 text-white rounded-lg font-medium transition-all"
-                  style={{ background: "var(--primary)", color: "white" }}
-                  suppressHydrationWarning>
-                  <svg
-                    className="w-5 h-5 inline-block mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  className="!inline-flex !h-12 !items-center !rounded-xl !px-6 !text-base !font-semibold"
+                  style={{
+                    background: "var(--primary)",
+                    borderColor: "var(--primary)",
+                  }}>
                   {t("dashboard.menu.add_item")}
-                </button>
+                </Button>
               </Link>
             </div>
           </div>
@@ -344,7 +397,7 @@ export default function MenuPage() {
                   <p
                     className="text-3xl font-bold mt-1"
                     style={{ color: "var(--text)" }}>
-                    {menuItems.length}
+                    {allMenuItems.length}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
@@ -376,7 +429,7 @@ export default function MenuPage() {
                     {t("dashboard.menu.stats.available")}
                   </p>
                   <p className="text-3xl font-bold text-green-500 mt-1">
-                    {menuItems.filter((i) => i.isActive).length}
+                    {allMenuItems.filter((i) => i.isActive).length}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
@@ -410,7 +463,7 @@ export default function MenuPage() {
                   <p
                     className="text-3xl font-bold mt-1"
                     style={{ color: "var(--primary)" }}>
-                    {menuItems.filter((i) => i.isBestSeller).length}
+                    {allMenuItems.filter((i) => i.isBestSeller).length}
                   </p>
                 </div>
                 <div
@@ -503,7 +556,7 @@ export default function MenuPage() {
                 {categoryFilters.map((category) => (
                   <button
                     key={category.id}
-                    onClick={() => setSelectedCategoryId(category.id)}
+                    onClick={() => void handleCategoryChange(category.id)}
                     className={`px-4 py-2 rounded-lg font-medium transition-all`}
                     style={
                       selectedCategoryId === category.id
@@ -525,7 +578,7 @@ export default function MenuPage() {
               </div>
 
               {/* Empty State */}
-              {filteredItems.length === 0 ? (
+              {menuItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <svg
                     className="w-16 h-16 mb-4"
@@ -560,11 +613,10 @@ export default function MenuPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
-                  {filteredItems.map((item) => (
+                  {menuItems.map((item) => (
                     <div key={item.id} className="space-y-2">
                       <DishCard
                         item={item}
-                        formatPrice={formatPrice}
                         onToggleStatus={handleToggleStatus}
                         onAddIngredients={handleOpenIngredients}
                         labels={{
@@ -622,7 +674,6 @@ export default function MenuPage() {
               onChange={(e) => setSelectedIngredientId(e.target.value)}
               disabled={ingredientsLoading}>
               <option value="">
-                {t("dashboard.menu.ingredients.modal.select_placeholder")}
               </option>
               {ingredients.map((ingredient) => (
                 <option
@@ -641,9 +692,6 @@ export default function MenuPage() {
                   setQuantity(nextValue);
                 }
               }}
-              placeholder={t(
-                "dashboard.menu.ingredients.modal.quantity_placeholder",
-              )}
               className="w-full px-4 py-2.5 rounded-lg outline-none transition-all"
               style={{
                 background: "var(--surface)",

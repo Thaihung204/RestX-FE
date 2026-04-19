@@ -1,27 +1,24 @@
 'use client';
 
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { useTenant } from '@/lib/contexts/TenantContext';
+import orderService from '@/lib/services/orderService';
+import orderSignalRService from '@/lib/services/orderSignalRService';
 import { tableService, TableStatus } from '@/lib/services/tableService';
 import {
-  CalendarOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  CloseCircleOutlined,
-  DollarOutlined,
-  ExclamationCircleOutlined,
-  ReloadOutlined,
-  RightOutlined,
-  ShoppingCartOutlined,
-  SmileOutlined,
-  SyncOutlined,
-  TableOutlined,
-  ThunderboltOutlined
+    RightOutlined,
+    ShoppingCartOutlined,
+    SmileOutlined,
+    TableOutlined
 } from '@ant-design/icons';
-import { Button, Card, Col, Flex, Progress, Row, Space, Table, Tag, Tooltip, Typography } from 'antd';
+import { HubConnectionState } from '@microsoft/signalr';
+import { Button, Card, Col, Progress, Row, Space, Table, Tag, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useThemeMode } from '../theme/AntdProvider';
+import { formatVND } from "@/lib/utils/currency";
 
 const { Title, Text } = Typography;
 
@@ -45,90 +42,14 @@ const itemVariants = {
   }
 };
 
-// Mock data omitted - using localized statsData inside component
-
-// Mock data for urgent orders logic omitted as it is used locally via recentOrders
-// Mock data needed for local logic below
-const urgentOrders = [
-  {
-    key: '1',
-    table: '05',
-    items: 4,
-    status: 'pending',
-    time: 5,
-    priority: 'high',
-  },
-  {
-    key: '2',
-    table: '12',
-    items: 6,
-    status: 'served',
-    time: 12,
-    priority: 'medium',
-  },
-  {
-    key: '3',
-    table: '03',
-    items: 2,
-    status: 'completed',
-    time: 18,
-    priority: 'urgent',
-  },
-  {
-    key: '5',
-    table: '15',
-    items: 3,
-    status: 'cancelled',
-    time: 32,
-    priority: 'medium',
-  },
-  {
-    key: '6',
-    table: '02',
-    items: 7,
-    status: 'pending',
-    time: 45,
-    priority: 'high',
-  },
-];
-
-// Mock data for recent orders
-const recentOrders = urgentOrders.slice(0, 5);
-
-// Mock data omitted - using localized tableStatus inside component
-
-
-
-
-// Animated counter component
-const AnimatedCounter = ({ value, duration = 1 }: { value: number; duration?: number }) => {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    let start = 0;
-    const end = value;
-    const incrementTime = (duration * 1000) / end;
-
-    const timer = setInterval(() => {
-      start += Math.ceil(end / 50);
-      if (start >= end) {
-        setCount(end);
-        clearInterval(timer);
-      } else {
-        setCount(start);
-      }
-    }, incrementTime);
-
-    return () => clearInterval(timer);
-  }, [value, duration]);
-
-  return <span>{count.toLocaleString('vi-VN')}</span>;
-};
-
 export default function StaffDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
+  const { tenant } = useTenant();
+  const { user } = useAuth();
+  const lastRefreshRef = useRef<number | null>(null);
+  const ordersInFlightRef = useRef(false);
 
   // Check mobile viewport
   useEffect(() => {
@@ -138,10 +59,8 @@ export default function StaffDashboard() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-
-  // ... (top of file)
-
   const [tables, setTables] = useState<any[]>([]);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
 
   // Update time every minute
   useEffect(() => {
@@ -162,96 +81,118 @@ export default function StaffDashboard() {
     fetchTables();
   }, []);
 
+  // Fetch recent orders — called once on mount, then driven by SignalR
+  const fetchOrders = useCallback(async () => {
+    if (ordersInFlightRef.current) return;
+    ordersInFlightRef.current = true;
+
+    try {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const query = {
+        Status: 0,
+        From: `${yyyy}-${mm}-${dd}T00:00:00Z`,
+        To: `${yyyy}-${mm}-${dd}T23:59:59Z`,
+      };
+      const data = await orderService.getAllOrders(query);
+      const mapped = (data ?? []).map((order: any) => {
+        const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
+        const tableSessions: Array<{ tableCode?: string; table?: { code?: string } }> =
+          order.tableSessions ?? [];
+
+        const tableCodes = tableSessions
+          .map((s) => s?.tableCode || s?.table?.code)
+          .filter((code): code is string => !!code);
+
+        const tableDisplay =
+          tableCodes.length > 0
+            ? tableCodes.join(' - ')
+            : order.tableId && order.tableId !== EMPTY_GUID
+            ? order.tableId
+            : '—';
+
+        const itemCount = (order.orderDetails ?? []).length;
+        const subTotal = Number(order.subTotal ?? order.totalAmount ?? 0);
+
+        return {
+          key: order.id,
+          table: tableDisplay,
+          items: itemCount,
+          total: subTotal,
+        };
+      });
+      setRecentOrders(mapped);
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+    } finally {
+      ordersInFlightRef.current = false;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // stable — getTodayOrderQuery is pure, no deps needed
+
+  const refreshOrders = useCallback(async () => {
+    const now = Date.now();
+    if (lastRefreshRef.current && now - lastRefreshRef.current < 2000) return;
+    lastRefreshRef.current = now;
+    await fetchOrders();
+  }, [fetchOrders]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []); // run once on mount only
+
+  // SignalR realtime for orders
+  useEffect(() => {
+    if (!tenant?.id) return;
+
+    const tenantId = tenant.id;
+    let isMounted = true;
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const handleOrderChange = (payload: any) => {
+      if (!isMounted) return;
+      const changedTenantId = payload?.tenantId || payload?.order?.tenantId;
+      if (changedTenantId && changedTenantId !== tenantId) return;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (!isMounted) return;
+        refreshOrders();
+      }, 300);
+    };
+
+    const events = ['orders.created', 'orders.updated', 'orders.deleted'];
+
+    const setupSignalR = async () => {
+      try {
+        await orderSignalRService.start();
+        if (!isMounted) return;
+
+        const conn = orderSignalRService.getConnection();
+        if (conn.state === HubConnectionState.Connected) {
+          await orderSignalRService.joinTenantGroup(tenantId);
+          if (!isMounted) return;
+
+          events.forEach((event) => orderSignalRService.on(event, handleOrderChange));
+        }
+      } catch (error) {
+        console.error('SignalR: Setup failed', error);
+      }
+    };
+
+    setupSignalR();
+
+    return () => {
+      isMounted = false;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      events.forEach((event) => orderSignalRService.off(event, handleOrderChange));
+      orderSignalRService.leaveTenantGroup(tenantId).catch(() => {});
+    };
+  }, [tenant?.id, refreshOrders]);
+
   const { t } = useTranslation();
   const { mode } = useThemeMode();
-
-  // const statsData = [
-  //   {
-  //     title: t('staff.dashboard.stats.serving_tables'), // 'Bàn đang phục vụ'
-  //     value: tables.filter(table => table.tableStatusId === TableStatus.Occupied).length,
-  //     total: tables.length,
-  //     icon: <TableOutlined />,
-  //     color: 'var(--primary)',
-  //     bgColor: 'rgba(255, 56, 11, 0.1)',
-  //     suffix: t('staff.orders.order.table'),
-  //   },
-  //   {
-  //     title: t('staff.dashboard.stats.processing_orders'), // 'Order đang xử lý'
-  //     value: 8,
-  //     icon: <ShoppingCartOutlined />,
-  //     color: '#1890ff',
-  //     bgColor: 'rgba(24, 144, 255, 0.1)',
-  //     suffix: t('staff.dashboard.stats.orders_suffix'), // 'đơn'
-  //   },
-  //   {
-  //     title: t('staff.dashboard.stats.today_revenue'), // 'Doanh thu hôm nay'
-  //     value: 15750000,
-  //     icon: <DollarOutlined />,
-  //     color: '#52c41a',
-  //     bgColor: 'rgba(82, 196, 26, 0.1)',
-  //     prefix: '',
-  //     isMoney: true,
-  //   },
-  //   {
-  //     title: t('staff.dashboard.stats.today_hours'), // 'Giờ làm hôm nay'
-  //     value: 5.5,
-  //     icon: <ClockCircleOutlined />,
-  //     color: '#722ed1',
-  //     bgColor: 'rgba(114, 46, 209, 0.1)',
-  //     suffix: t('staff.dashboard.stats.hours_suffix'), // 'giờ'
-  //   },
-  // ];
-
-  const recentOrders = [
-    {
-      key: '1',
-      table: '05',
-      items: 4,
-      total: 850000,
-      status: 'pending',
-      time: 5,
-    },
-    {
-      key: '2',
-      table: '12',
-      items: 6,
-      total: 1250000,
-      status: 'served',
-      time: 12,
-    },
-    {
-      key: '3',
-      table: '03',
-      items: 2,
-      total: 420000,
-      status: 'completed',
-      time: 18,
-    },
-    {
-      key: '4',
-      table: '08',
-      items: 5,
-      total: 980000,
-      status: 'served',
-      time: 25,
-    },
-    {
-      key: '5',
-      table: '15',
-      items: 3,
-      total: 520000,
-      status: 'cancelled',
-      time: 32,
-    },
-    {
-      key: '6',
-      table: '02',
-      items: 7,
-      total: 1680000,
-      status: 'pending',
-      time: 45,
-    },
-  ];
 
   const tableStatus = React.useMemo(() => {
     // Group tables by zone
@@ -275,63 +216,34 @@ export default function StaffDashboard() {
 
   const orderColumns = [
     {
-      title: t('staff.orders.order.table'), // 'Bàn'
+      title: t('staff.orders.order.table'),
       dataIndex: 'table',
       key: 'table',
-      width: '18%',
+      width: '34%',
+      align: 'left' as const,
       render: (text: string) => <Text strong style={{ fontSize: 14 }}>{t('staff.orders.order.table')} {text}</Text>,
     },
     {
-      title: t('staff.tables.table.dishes'), // 'Món'
+      title: t('staff.tables.table.dishes'),
       dataIndex: 'items',
       key: 'items',
-      width: '14%',
-      render: (items: number) => <Text style={{ fontSize: 14 }}>{items} {t('staff.tables.table.dishes')}</Text>,
+      width: '32%',
+      align: 'center' as const,
+      render: (items: number) => <Text style={{ fontSize: 14 }}>{items}</Text>,
     },
     {
-      title: t('staff.orders.order.total'), // 'Tổng tiền'
+      title: t('staff.orders.order.total'),
       dataIndex: 'total',
       key: 'total',
-      width: '22%',
+      width: '34%',
+      align: 'right' as const,
       render: (total: number) => (
         <Text strong style={{ color: 'var(--primary)', fontSize: 14 }}>
-          {total.toLocaleString('vi-VN')}đ
+          {formatVND(total)}
         </Text>
       ),
     },
-    {
-      title: t('staff.orders.order.status'), // 'Trạng thái'
-      dataIndex: 'status',
-      key: 'status',
-      width: '24%',
-      render: (status: string) => {
-        const statusConfig: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-          pending: { color: 'orange', text: t('staff.orders.status.pending'), icon: <ExclamationCircleOutlined /> },
-          served: { color: 'blue', text: t('staff.orders.status.served'), icon: <SyncOutlined spin /> },
-          completed: { color: 'green', text: t('staff.orders.status.completed'), icon: <CheckCircleOutlined /> },
-          cancelled: { color: 'red', text: t('staff.orders.status.cancelled'), icon: <CloseCircleOutlined /> },
-        };
-        const config = statusConfig[status] || { color: 'default', text: status, icon: null };
-        return (
-          <Tag icon={config.icon} color={config.color} style={{ margin: 0 }}>
-            {config.text}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: t('staff.orders.order.time'), // 'Thời gian'
-      dataIndex: 'time',
-      key: 'time',
-      width: '22%',
-      render: (time: number) => <Text type="secondary" style={{ fontSize: 14 }}>{t('time.minutes_ago', { ns: 'common', count: time, defaultValue: '{{count}} phút trước' })}</Text>,
-    },
   ];
-
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
-  };
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
@@ -368,10 +280,10 @@ export default function StaffDashboard() {
                     transition={{ delay: 0.2 }}
                   >
                     <Title level={isMobile ? 4 : 3} style={{ color: 'var(--primary)', margin: 0, marginBottom: isMobile ? 12 : 8, fontWeight: 700 }}>
-                      {getGreeting()}, Nguyễn Văn A! <SmileOutlined style={{ marginLeft: 8 }} />
+                      {getGreeting()}, {user?.fullName || user?.name || user?.email?.split('@')[0]}! <SmileOutlined style={{ marginLeft: 8 }} />
                     </Title>
                     <Text style={{ color: 'var(--text)', fontSize: isMobile ? 14 : 16 }}>
-                      <Trans i18nKey="staff.dashboard.welcome_message" values={{ orders: 8, tables: 12 }} components={[
+                      <Trans i18nKey="staff.dashboard.welcome_message" values={{ orders: recentOrders.length, tables: tables.filter(tb => tb.tableStatusId === TableStatus.Available).length }} components={[
                         <span key="0" />,
                         <motion.strong
                           key="1"
@@ -383,94 +295,6 @@ export default function StaffDashboard() {
                         <strong key="3" style={{ color: 'var(--primary)' }} />
                       ]} />
                     </Text>
-
-                    <div style={{ marginTop: isMobile ? 16 : 16, display: 'flex', gap: isMobile ? 10 : 16, flexWrap: 'wrap' }}>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        background: mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : 'rgba(255, 56, 11, 0.12)',
-                        padding: isMobile ? '8px 16px' : '10px 20px',
-                        borderRadius: 8,
-                        border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.3)' : '1px solid rgba(255, 56, 11, 0.25)',
-                      }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#52c41a' }} />
-                        <Text style={{
-                          color: 'var(--text)',
-                          fontSize: isMobile ? 13 : 14,
-                          fontWeight: 500,
-                        }}>3 {t('staff.dashboard.live_status.dishes_ready')}</Text>
-                      </div>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        background: mode === 'dark' ? 'rgba(255, 56, 11, 0.15)' : 'rgba(255, 56, 11, 0.12)',
-                        padding: isMobile ? '8px 16px' : '10px 20px',
-                        borderRadius: 8,
-                        border: mode === 'dark' ? '1px solid rgba(255, 56, 11, 0.3)' : '1px solid rgba(255, 56, 11, 0.25)',
-                      }}>
-                        <DollarOutlined style={{ color: 'var(--primary)', fontSize: isMobile ? 14 : 16 }} />
-                        <Text style={{
-                          color: 'var(--text)',
-                          fontSize: isMobile ? 13 : 14,
-                          fontWeight: 500,
-                        }}>2 {t('staff.dashboard.live_status.tables_payment')}</Text>
-                      </div>
-                    </div>
-                  </motion.div>
-                </Col>
-                <Col xs={24} md={8}>
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                    style={{ textAlign: isMobile ? 'left' : 'right' }}
-                  >
-                    <Flex vertical={!isMobile} gap={isMobile ? 10 : 12} wrap="wrap" style={{ display: 'inline-flex' }}>
-                      <Link href="/staff/attendance" style={{ display: 'inline-block' }}>
-                        <Button
-                          size={isMobile ? 'middle' : 'large'}
-                          icon={<CalendarOutlined />}
-                          style={{
-                            background: '#fff',
-                            border: '1px solid var(--primary)',
-                            color: 'var(--primary)',
-                            borderRadius: 10,
-                            fontWeight: 600,
-                            fontSize: isMobile ? 12 : 14,
-                            minWidth: isMobile ? 150 : 180,
-                            height: isMobile ? 36 : 44,
-                            transition: 'all 0.2s ease',
-                          }}
-                          className="welcome-btn"
-                        >
-                          {t('staff.dashboard.actions.view_schedule')}
-                        </Button>
-                      </Link>
-                      <Link href="/staff/orders" style={{ display: 'inline-block' }}>
-                        <Button
-                          type="primary"
-                          size={isMobile ? 'middle' : 'large'}
-                          icon={<ShoppingCartOutlined />}
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.95)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 10,
-                            fontWeight: 600,
-                            fontSize: isMobile ? 12 : 14,
-                            minWidth: isMobile ? 150 : 180,
-                            height: isMobile ? 36 : 44,
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-                            transition: 'all 0.2s ease',
-                          }}
-                          className="welcome-btn-primary"
-                        >
-                          {t('staff.dashboard.quick_action_items.create_order')}
-                        </Button>
-                      </Link>
-                    </Flex>
                   </motion.div>
                 </Col>
               </Row>
@@ -518,105 +342,6 @@ export default function StaffDashboard() {
           </Card>
         </motion.div>
 
-        {/* <motion.div variants={itemVariants}>
-          <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ marginBottom: isMobile ? 16 : 24 }}>
-            {statsData.map((stat, index) => (
-              <Col xs={12} sm={12} lg={6} key={index} style={{ display: 'flex' }}>
-                <motion.div
-                  variants={itemVariants}
-                  whileHover={!isMobile ? { y: -5, transition: { duration: 0.2 } } : undefined}
-                  style={{ width: '100%' }}
-                >
-                  <Card
-                    hoverable={!isMobile}
-                    style={{
-                      borderRadius: isMobile ? 12 : 16,
-                      border: '1px solid var(--border)',
-                      boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
-                      transition: 'all 0.3s ease',
-                      height: '100%',
-                    }}
-                    styles={{ body: { padding: isMobile ? 14 : 24, height: '100%' } }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14, display: 'block' }}>
-                          {stat.title}
-                        </Text>
-                        <div style={{ marginTop: isMobile ? 4 : 8 }}>
-                          <motion.span
-                            style={{
-                              fontSize: isMobile ? 22 : 32,
-                              fontWeight: 700,
-                              color: stat.isMoney ? stat.color : 'var(--text)',
-                              display: 'inline-block'
-                            }}
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: index * 0.1, duration: 0.3 }}
-                          >
-                            {stat.isMoney ? (
-                              <AnimatedCounter value={stat.value} />
-                            ) : (
-                              stat.value
-                            )}
-                          </motion.span>
-                          {stat.suffix && (
-                            <span style={{ fontSize: isMobile ? 12 : 16, color: 'var(--text-muted)', marginLeft: 4 }}>
-                              {stat.suffix}
-                            </span>
-                          )}
-                          {stat.isMoney && (
-                            <span style={{ fontSize: isMobile ? 12 : 16, color: 'var(--text-muted)' }}>đ</span>
-                          )}
-                        </div>
-                        {stat.total && (
-                          <div style={{ marginTop: isMobile ? 8 : 12 }}>
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: '100%' }}
-                              transition={{ delay: 0.5, duration: 0.8 }}
-                            >
-                              <Progress
-                                percent={(stat.value / stat.total) * 100}
-                                showInfo={false}
-                                strokeColor={{
-                                  '0%': stat.color,
-                                  '100%': `${stat.color}80`,
-                                }}
-                                railColor="var(--border)"
-                                size="small"
-                              />
-                            </motion.div>
-                            <Text type="secondary" style={{ fontSize: isMobile ? 10 : 12 }}>
-                              {stat.value}/{stat.total} {stat.suffix}
-                            </Text>
-                          </div>
-                        )}
-                      </div>
-                      <motion.div
-                        whileHover={!isMobile ? { scale: 1.1, rotate: 5 } : undefined}
-                        transition={{ type: 'spring', stiffness: 300 }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: isMobile ? 20 : 28,
-                          color: stat.color,
-                          flexShrink: 0,
-                          marginLeft: 8,
-                        }}
-                      >
-                        {stat.icon}
-                      </motion.div>
-                    </div>
-                  </Card>
-                </motion.div>
-              </Col>
-            ))}
-          </Row>
-        </motion.div> */}
-
         <Row gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]} style={{ display: 'flex', flexWrap: 'wrap' }}>
           {/* Recent Orders */}
           <Col xs={24} lg={16} style={{ display: 'flex' }}>
@@ -633,7 +358,7 @@ export default function StaffDashboard() {
                       </motion.div>
                       <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>{t('staff.dashboard.recent_orders.title')}</span>
                       <Tag color="orange" style={{ borderRadius: 20, fontSize: isMobile ? 11 : 12, margin: 0 }}>
-                        {t('staff.dashboard.recent_orders.processing_count', { count: recentOrders.filter(o => o.status === 'pending').length })}
+                        {t('staff.dashboard.recent_orders.processing_count', { count: recentOrders.length })}
                       </Tag>
                     </Space>
                     <Link href="/staff/orders">
@@ -655,7 +380,7 @@ export default function StaffDashboard() {
                 styles={{ body: { padding: 0 } }}
               >
                 <Table
-                  columns={isMobile ? orderColumns.filter((_, i) => i !== 2 && i !== 4) : orderColumns}
+                  columns={orderColumns}
                   dataSource={recentOrders}
                   pagination={false}
                   size="middle"
@@ -798,85 +523,6 @@ export default function StaffDashboard() {
             </motion.div>
           </Col>
         </Row>
-
-        {/* Quick Actions */}
-        <motion.div variants={itemVariants}>
-          <Card
-            title={
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }}>
-                  <ThunderboltOutlined style={{ marginRight: 6 }} /> {t('staff.dashboard.actions.quick_actions')}
-                </span>
-                <Tooltip title={t('staff.dashboard.actions.refresh_data')}>
-                  <motion.div
-                    animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <Button
-                      type="text"
-                      icon={<ReloadOutlined />}
-                      onClick={handleRefresh}
-                      loading={isRefreshing}
-                      size={isMobile ? 'small' : 'middle'}
-                    />
-                  </motion.div>
-                </Tooltip>
-              </div>
-            }
-            style={{
-              marginTop: isMobile ? 16 : 24,
-              borderRadius: isMobile ? 12 : 16,
-              border: '1px solid var(--border)',
-              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
-            }}
-          >
-            <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}>
-              {[
-                { icon: <TableOutlined />, title: t('staff.dashboard.quick_action_items.open_table'), color: 'var(--primary)', href: '/staff/activity' },
-                { icon: <ShoppingCartOutlined />, title: t('staff.dashboard.quick_action_items.create_order'), color: '#1890ff', href: '/staff/orders' },
-                { icon: <DollarOutlined />, title: t('staff.dashboard.quick_action_items.checkout'), color: '#52c41a', href: '/staff/checkout' },
-                { icon: <ClockCircleOutlined />, title: t('staff.dashboard.quick_action_items.attendance'), color: '#722ed1', href: '/staff/attendance' },
-              ].map((action, index) => (
-                <Col xs={12} sm={6} key={index}>
-                  <Link href={action.href}>
-                    <motion.div
-                      whileHover={!isMobile ? {
-                        scale: 1.03,
-                        y: -5,
-                        boxShadow: `0 10px 30px ${action.color}25`,
-                      } : undefined}
-                      whileTap={{ scale: 0.97 }}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <Button
-                        style={{
-                          width: '100%',
-                          height: isMobile ? 70 : 90,
-                          borderRadius: 12,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: isMobile ? 4 : 8,
-                          border: mode === 'dark' ? `1px solid rgba(255, 56, 11, 0.2)` : `1px solid ${action.color}30`,
-                          background: mode === 'dark' ? 'rgba(255, 56, 11, 0.08)' : `${action.color}08`,
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <span style={{ fontSize: isMobile ? 22 : 28, color: action.color }}>
-                          {action.icon}
-                        </span>
-                        <span style={{ fontWeight: 500, color: 'var(--text)', fontSize: isMobile ? 12 : 14 }}>{action.title}</span>
-                      </Button>
-                    </motion.div>
-                  </Link>
-                </Col>
-              ))}
-            </Row>
-          </Card>
-        </motion.div>
 
         <style jsx global>{`
         .luxury-btn:hover {

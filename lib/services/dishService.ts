@@ -458,9 +458,6 @@ class DishService {
     }
 
     (combo.details || []).forEach((detail, index) => {
-      if (detail.id) {
-        formData.append(`Details[${index}].Id`, detail.id);
-      }
       formData.append(`Details[${index}].DishId`, detail.dishId);
       formData.append(
         `Details[${index}].Quantity`,

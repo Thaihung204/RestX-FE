@@ -224,7 +224,6 @@ export default function AdminLoginPage() {
                   label={t('login_admin_page.email_label')}
                   icon={<MailOutlined />}
                   type="email"
-                  placeholder={t('login_admin_page.email_placeholder')}
                   required
                   value={email}
                   onChange={handleEmailChange}
@@ -242,7 +241,6 @@ export default function AdminLoginPage() {
                   label={t('login_admin_page.password_label')}
                   icon={<LockOutlined />}
                   type={showPassword ? "text" : "password"}
-                  placeholder={t('login_admin_page.password_placeholder')}
                   required
                   value={password}
                   onChange={handlePasswordChange}

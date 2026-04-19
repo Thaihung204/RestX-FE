@@ -1114,7 +1114,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                 <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">person</span>
                                                 <input
                                                     type="text"
-                                                    placeholder={t('landing.booking.confirm.name_placeholder')}
                                                     className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                                                     value={userDetails.name}
                                                     onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })}
@@ -1127,7 +1126,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                 <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">call</span>
                                                 <input
                                                     type="tel"
-                                                    placeholder={t('landing.booking.confirm.phone_placeholder')}
                                                     className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                                                     value={userDetails.phone}
                                                     onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
@@ -1142,7 +1140,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">mail</span>
                                             <input
                                                 type="email"
-                                                placeholder={t('landing.booking.confirm.email_placeholder')}
                                                 className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                                                 value={userDetails.email}
                                                 onChange={(e) => setUserDetails({ ...userDetails, email: e.target.value })}
@@ -1153,7 +1150,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     <div className="group">
                                         <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.special_requests')} <span className="text-[var(--text-muted)] font-normal ml-1">{t('landing.booking.confirm.special_requests_optional')}</span></label>
                                         <textarea
-                                            className="w-full p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none h-24 sm:h-28"
+                                            className="w-full p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none h-28"
                                             value={userDetails.requests}
                                             onChange={(e) => setUserDetails({ ...userDetails, requests: e.target.value })}
                                         />

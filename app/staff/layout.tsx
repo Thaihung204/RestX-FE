@@ -127,11 +127,11 @@ export default function StaffLayout({
       icon: <FireOutlined />,
       label: t("dashboard.staff.menu.kitchen"),
     },
-    {
-      key: "/staff/checkout",
-      icon: <WalletOutlined />,
-      label: t("dashboard.staff.menu.checkout"),
-    },
+    // {
+    //   key: "/staff/checkout",
+    //   icon: <WalletOutlined />,
+    //   label: t("dashboard.staff.menu.checkout"),
+    // },
     {
       key: "/staff/reservations",
       icon: <CalendarOutlined />,
@@ -149,7 +149,7 @@ export default function StaffLayout({
 
     if (isKitchenPosition) {
       return ![
-        "/staff/checkout",
+        // "/staff/checkout",
         "/staff/orders",
         "/staff/reservations",
         "/staff/activity",
@@ -273,7 +273,7 @@ export default function StaffLayout({
     if (!isStaffRole) return;
 
     const hiddenPathsForKitchen = [
-      "/staff/checkout",
+      // "/staff/checkout",
       "/staff/orders",
       "/staff/reservations",
       "/staff/activity",

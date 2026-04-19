@@ -1,48 +1,48 @@
 "use client";
 
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CartModal from "@/components/customer/CartModal";
 import CustomerFooter from "@/components/customer/CustomerFooter";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCart } from "@/lib/contexts/CartContext";
 import { useTheme } from "@/lib/hooks/useTheme";
 import customerService, {
-  CustomerResponseDto,
+    CustomerResponseDto,
 } from "@/lib/services/customerService";
 import menuService from "@/lib/services/menuService";
 import type {
-  CartItem,
-  Category,
-  CategoryWithDishes,
-  MenuItem,
+    CartItem,
+    Category,
+    CategoryWithDishes,
+    MenuItem,
 } from "@/lib/types/menu";
 import {
-  ArrowLeftOutlined,
-  CloseOutlined,
-  
-  MinusOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  StarFilled,
+    ArrowLeftOutlined,
+    CloseOutlined,
+
+    MinusOutlined,
+    PlusOutlined,
+    SearchOutlined,
+    StarFilled,
 } from "@ant-design/icons";
 import {
-  Affix,
-  Button,
-  Card,
-  Col,
-  ConfigProvider,
-  Grid,
-  Input,
-  message,
-  Modal,
-  Row,
-  Spin,
-  theme,
-  Typography,
+    Affix,
+    Button,
+    Card,
+    Col,
+    ConfigProvider,
+    Grid,
+    Input,
+    message,
+    Modal,
+    Row,
+    Spin,
+    theme,
+    Typography,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -283,11 +283,6 @@ export default function MenuPage() {
     }, 450);
   };
 
-  const formatPrice = (price: string | number) => {
-    const priceNum = typeof price === "string" ? parseFloat(price) : price;
-    return new Intl.NumberFormat("vi-VN").format(priceNum);
-  };
-
   // Loading state
   if (loading) {
     return (
@@ -358,8 +353,7 @@ export default function MenuPage() {
   }
 
   return (
-    <ProtectedRoute>
-      <>
+    <>
       {contextHolder}
       <ConfigProvider
         theme={{
@@ -508,7 +502,6 @@ export default function MenuPage() {
               <div style={{ maxWidth: 1200, margin: "0 auto" }}>
                 <Input
                   size={isSmallPhone ? "middle" : "large"}
-                  placeholder={t("menu_page.search_placeholder")}
                   prefix={<SearchOutlined />}
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
@@ -677,7 +670,7 @@ export default function MenuPage() {
                                   fontSize: isSmallPhone ? 15 : 16,
                                   display: "block",
                                 }}>
-                                {formatPrice(item.price)}đ
+                                {formatVND(typeof item.price === "string" ? parseFloat(item.price) : item.price)}
                               </Text>
 
                               {/* Tags mini */}
@@ -1200,6 +1193,5 @@ export default function MenuPage() {
         />
       </ConfigProvider>
     </>
-    </ProtectedRoute>
   );
 }

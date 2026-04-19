@@ -15,6 +15,7 @@ import { App, Spin } from "antd";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import { HubConnectionState } from "@microsoft/signalr";
 import { tenantService } from "@/lib/services/tenantService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 
 interface Table {
   id: string;
@@ -93,30 +94,6 @@ export default function TablesPage() {
   const [isUploadingPanorama, setIsUploadingPanorama] = useState(false);
   const [isMergingTableRequest, setIsMergingTableRequest] = useState(false);
   usePageLoading(loading, { onlyInitial: true, key: "admin-tables-initial" });
-
-  const getApiErrorMessage = (error: unknown): string | null => {
-    const responseData = (error as { response?: { data?: unknown } })?.response?.data;
-
-    if (typeof responseData === "string" && responseData.trim()) {
-      return responseData;
-    }
-
-    if (responseData && typeof responseData === "object") {
-      const obj = responseData as Record<string, unknown>;
-      if (typeof obj.message === "string" && obj.message.trim()) {
-        return obj.message;
-      }
-      if (typeof obj.title === "string" && obj.title.trim()) {
-        return obj.title;
-      }
-    }
-
-    if (error instanceof Error && error.message.trim()) {
-      return error.message;
-    }
-
-    return null;
-  };
 
   // Fetch tables + floors from BE API
   const fetchTables = async () => {
@@ -249,6 +226,14 @@ export default function TablesPage() {
       setBeFloors(updatedFloors);
     } catch (err) {
       console.error('Failed to upload floor background to BE:', err);
+      message.error(
+        extractApiErrorMessage(
+          err,
+          tDashboard("tables.errors.update_failed", {
+            defaultValue: "Failed to update floor",
+          }),
+        ),
+      );
     }
   };
 
@@ -379,6 +364,14 @@ export default function TablesPage() {
       ));
     } catch (err) {
       console.error("Failed to move table:", err);
+      message.error(
+        extractApiErrorMessage(
+          err,
+          tDashboard("tables.errors.update_failed", {
+            defaultValue: "Failed to update table",
+          }),
+        ),
+      );
       fetchTables();
     }
   };
@@ -432,6 +425,14 @@ export default function TablesPage() {
       ));
     } catch (err) {
       console.error("Failed to resize table:", err);
+      message.error(
+        extractApiErrorMessage(
+          err,
+          tDashboard("tables.errors.update_failed", {
+            defaultValue: "Failed to update table",
+          }),
+        ),
+      );
       fetchTables();
     }
   };
@@ -486,8 +487,12 @@ export default function TablesPage() {
     } catch (err) {
       console.error("Merge failed:", err);
       message.error(
-        getApiErrorMessage(err) ||
-        tDashboard("floor_activity.merge.error", { defaultValue: "Failed to merge tables" }),
+        extractApiErrorMessage(
+          err,
+          tDashboard("floor_activity.merge.error", {
+            defaultValue: "Failed to merge tables",
+          }),
+        ),
       );
       await fetchTables();
     } finally {
@@ -542,8 +547,8 @@ export default function TablesPage() {
       setAddModalOpen(false);
     } catch (err) {
       console.error("Failed to add table:", err);
-      alert(
-        tDashboard("tables.errors.add_failed"),
+      message.error(
+        extractApiErrorMessage(err, tDashboard("tables.errors.add_failed")),
       );
     }
   };
@@ -616,6 +621,14 @@ export default function TablesPage() {
         }
       } catch (err) {
         console.error("Update failed", err);
+        message.error(
+          extractApiErrorMessage(
+            err,
+            tDashboard("tables.errors.update_failed", {
+              defaultValue: "Failed to update table",
+            }),
+          ),
+        );
       } finally {
         fetchTables();
       }
@@ -688,7 +701,14 @@ export default function TablesPage() {
       }
     } catch (err) {
       console.error('Failed to save panorama:', err);
-      message.error(tDashboard('tables.panorama_save_failed', { defaultValue: 'Lưu ảnh panorama thất bại' }));
+      message.error(
+        extractApiErrorMessage(
+          err,
+          tDashboard('tables.panorama_save_failed', {
+            defaultValue: 'Lưu ảnh panorama thất bại',
+          }),
+        ),
+      );
       // Only refetch all tables on error to restore consistent state
       await fetchTables();
     }
@@ -703,7 +723,12 @@ export default function TablesPage() {
         setSelectedTable(null);
       } catch (err) {
         console.error("Delete failed", err);
-        message.error(tDashboard("tables.errors.cannot_delete_due_to_booking"));
+        message.error(
+          extractApiErrorMessage(
+            err,
+            tDashboard("tables.errors.cannot_delete_due_to_booking"),
+          ),
+        );
       }
       setDeleteConfirmOpen(false);
     }
@@ -732,6 +757,14 @@ export default function TablesPage() {
         await fetchTables();
       } catch (err) {
         console.error('Failed to delete floor:', err);
+        message.error(
+          extractApiErrorMessage(
+            err,
+            tDashboard("tables.errors.delete_floor_failed", {
+              defaultValue: "Failed to delete floor",
+            }),
+          ),
+        );
       }
 
       setZoneToDelete(null);
@@ -748,9 +781,11 @@ export default function TablesPage() {
       setAddAreaModalOpen(false);
     } catch (err) {
       console.error('Failed to create floor on BE:', err);
-      // Fallback: show error
-      alert(
-        tDashboard("tables.errors.create_floor_failed"),
+      message.error(
+        extractApiErrorMessage(
+          err,
+          tDashboard("tables.errors.create_floor_failed"),
+        ),
       );
     }
   };
@@ -777,7 +812,14 @@ export default function TablesPage() {
       setSelectedFloorId(null);
     } catch (err) {
       console.error('Failed to update floor on BE:', err);
-      alert(tDashboard("tables.errors.update_failed", { defaultValue: "Failed to update floor" }));
+      message.error(
+        extractApiErrorMessage(
+          err,
+          tDashboard("tables.errors.update_failed", {
+            defaultValue: "Failed to update floor",
+          }),
+        ),
+      );
     }
   };
 

@@ -3,6 +3,7 @@
 import { DropDown } from "@/components/ui/DropDown";
 import { triggerService } from "@/lib/services/triggerService";
 import { Trigger, TriggerObject } from "@/lib/types/trigger";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { App, Button, Space, Switch, Tag, Typography } from "antd";
 import { useRouter } from "next/navigation";
@@ -73,6 +74,14 @@ export default function AutomationPage() {
       console.error(t("automation.logs.fetch_triggers_failed"), error);
       setTriggerObjects([]);
       setTriggerList([]);
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("automation.messages.fetch_failed", {
+            defaultValue: "Failed to load automations",
+          }),
+        ),
+      );
     } finally {
       setLoading(false);
     }
@@ -107,7 +116,9 @@ export default function AutomationPage() {
       message.success(t("automation.messages.delete_success"));
     } catch (error) {
       console.error(t("automation.logs.delete_trigger_failed"), error);
-      message.error(t("automation.messages.delete_failed"));
+      message.error(
+        extractApiErrorMessage(error, t("automation.messages.delete_failed")),
+      );
     } finally {
       setDeletingId(null);
     }

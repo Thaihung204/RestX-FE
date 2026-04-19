@@ -4,13 +4,14 @@ import AIMessageBubble from "@/components/customer/AIMessageBubble";
 import aiService from "@/lib/services/aiService";
 import orderService, { OrderRequestDto } from "@/lib/services/orderService";
 import {
-  AIChatHistoryResponse,
-  AIChatRequest,
-  AIChatResponse,
-  AIMessage,
-  AIOrderDraft,
-  AIOrderDraftItem,
+    AIChatHistoryResponse,
+    AIChatRequest,
+    AIChatResponse,
+    AIMessage,
+    AIOrderDraft,
+    AIOrderDraftItem,
 } from "@/lib/types/ai";
+import { formatVND } from "@/lib/utils/currency";
 import { CloseOutlined, SendOutlined } from "@ant-design/icons";
 import { Button, Input, Typography, message } from "antd";
 import { useEffect, useRef, useState } from "react";
@@ -28,9 +29,6 @@ interface AISuggestionPopupProps {
   tableId?: string;
   customerId?: string;
 }
-
-const formatVND = (amount: number) =>
-  new Intl.NumberFormat("vi-VN").format(amount) + "đ";
 
 export default function AIFullScreenChat({ open, onClose, tableId, customerId }: AISuggestionPopupProps) {
   const { t } = useTranslation("common");

@@ -19,7 +19,7 @@ export default function MenuManagementTabs({
       aria-label={t("dashboard.menu.tabs.navigation", {
         defaultValue: "Menu management navigation",
       })}
-      className="flex items-center rounded-lg p-1"
+      className="flex h-12 items-center rounded-xl p-1.5"
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
@@ -27,7 +27,7 @@ export default function MenuManagementTabs({
       <Link
         href="/admin/menu"
         aria-current={activeTab === "dishes" ? "page" : undefined}
-        className="px-4 py-2 rounded-md text-sm font-medium transition-all"
+        className="inline-flex h-9 min-w-[130px] items-center justify-center rounded-lg px-5 text-base font-semibold transition-all"
         style={
           activeTab === "dishes"
             ? {
@@ -47,7 +47,7 @@ export default function MenuManagementTabs({
       <Link
         href="/admin/menu/combo"
         aria-current={activeTab === "combos" ? "page" : undefined}
-        className="px-4 py-2 rounded-md text-sm font-medium transition-all"
+        className="inline-flex h-9 min-w-[130px] items-center justify-center rounded-lg px-5 text-base font-semibold transition-all"
         style={
           activeTab === "combos"
             ? {

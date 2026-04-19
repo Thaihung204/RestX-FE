@@ -200,7 +200,6 @@ function LoginEmailPageContent() {
                   label={t('login_email_page.email_label')}
                   icon={<MailOutlined />}
                   type="email"
-                  placeholder={t('login_email_page.email_placeholder')}
                   required
                   value={email}
                   onChange={handleEmailChange}
@@ -218,7 +217,6 @@ function LoginEmailPageContent() {
                   label={t('login_email_page.password_label')}
                   icon={<LockOutlined />}
                   type={showPassword ? "text" : "password"}
-                  placeholder={t('login_email_page.password_placeholder')}
                   required
                   value={password}
                   onChange={handlePasswordChange}

@@ -273,13 +273,33 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('landing.booking.form.preferred_time')}
                       </label>
-                      <input
-                        type="time"
-                        value={form.time}
-                        min={form.date === getTodayLocalDate() ? dayjs().format('HH:mm') : undefined}
-                        onChange={(e) => setForm((prev) => ({ ...prev, time: e.target.value }))}
-                        style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)' }}
-                      />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <select
+                          value={form.time.split(':')[0]}
+                          onChange={(e) => {
+                            const min = form.time.split(':')[1] || '00';
+                            setForm((prev) => ({ ...prev, time: `${e.target.value}:${min}` }));
+                          }}
+                          style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14 }}
+                        >
+                          {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <span style={{ display: 'flex', alignItems: 'center', color: 'var(--text-muted)', fontWeight: 700 }}>:</span>
+                        <select
+                          value={form.time.split(':')[1] || '00'}
+                          onChange={(e) => {
+                            const hr = form.time.split(':')[0] || '00';
+                            setForm((prev) => ({ ...prev, time: `${hr}:${e.target.value}` }));
+                          }}
+                          style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14 }}
+                        >
+                          {['00', '15', '30', '45'].map((m) => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
 

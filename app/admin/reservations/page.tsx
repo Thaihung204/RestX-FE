@@ -2,17 +2,19 @@
 
 import { DropDown } from "@/components/ui/DropDown";
 import reservationService, {
-  PaginatedReservations,
-  ReservationDetail,
-  ReservationListItem,
-  ReservationStatus,
+    PaginatedReservations,
+    ReservationDetail,
+    ReservationListItem,
+    ReservationStatus,
 } from "@/lib/services/reservationService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Select, message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatVND } from "@/lib/utils/currency";
 
 const tableHeaderKeys = [
   "reservation_code",
@@ -23,6 +25,8 @@ const tableHeaderKeys = [
   "status",
   "actions",
 ] as const;
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 
 // ─── Badge component ──────────────────────────────────────────────────────────
 function StatusBadge({
@@ -76,7 +80,17 @@ function ReservationDetailModal({
     reservationService
       .getReservationStatuses()
       .then(setAllStatuses)
-      .catch(console.error);
+      .catch((error) => {
+        console.error(error);
+        message.error(
+          extractApiErrorMessage(
+            error,
+            t("admin.reservations.messages.statuses_load_failed", {
+              defaultValue: "Khong the tai trang thai dat ban",
+            }),
+          ),
+        );
+      });
   }, []);
 
   useEffect(() => {
@@ -86,7 +100,16 @@ function ReservationDetailModal({
         setDetail(d);
         setSelectedStatusId(d.status.id);
       })
-      .catch(console.error)
+      .catch((error) => {
+        console.error(error);
+        setDetail(null);
+        message.error(
+          extractApiErrorMessage(
+            error,
+            t("admin.reservations.modal.load_error"),
+          ),
+        );
+      })
       .finally(() => setLoading(false));
   }, [reservationId]);
 
@@ -103,6 +126,14 @@ function ReservationDetailModal({
       onClose();
     } catch (e) {
       console.error(e);
+      message.error(
+        extractApiErrorMessage(
+          e,
+          t("admin.reservations.messages.update_status_failed", {
+            defaultValue: "Khong the cap nhat trang thai dat ban",
+          }),
+        ),
+      );
       setSelectedStatusId(detail.status.id);
     } finally {
       setActionLoading(false);
@@ -297,7 +328,7 @@ function ReservationDetailModal({
                   />
                   <InfoRow
                     label={t("admin.reservations.modal.booking.deposit")}
-                    value={`${detail.depositAmount.toLocaleString()}đ`}
+                    value={formatVND(detail.depositAmount)}
                   />
                   <InfoRow
                     label={t("admin.reservations.modal.booking.deposit_paid")}
@@ -379,6 +410,7 @@ export default function ReservationsPage() {
   const [statusId, setStatusId] = useState<number | "">("");
   const [date, setDate] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -386,7 +418,7 @@ export default function ReservationsPage() {
     try {
       const result = await reservationService.getReservations({
         pageNumber: page,
-        pageSize: 10,
+        pageSize,
         search: search || undefined,
         statusId: statusId !== "" ? statusId : undefined,
         date: date || undefined,
@@ -396,10 +428,18 @@ export default function ReservationsPage() {
       setData(result);
     } catch (e) {
       console.error(e);
+      message.error(
+        extractApiErrorMessage(
+          e,
+          t("admin.reservations.messages.load_failed", {
+            defaultValue: "Khong the tai danh sach dat ban",
+          }),
+        ),
+      );
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusId, date]);
+  }, [date, page, pageSize, search, statusId]);
 
   useEffect(() => {
     fetchData();
@@ -407,13 +447,23 @@ export default function ReservationsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusId, date]);
+  }, [date, pageSize, search, statusId]);
 
   useEffect(() => {
     reservationService
       .getReservationStatuses()
       .then(setStatuses)
-      .catch(console.error);
+      .catch((error) => {
+        console.error(error);
+        message.error(
+          extractApiErrorMessage(
+            error,
+            t("admin.reservations.messages.statuses_load_failed", {
+              defaultValue: "Khong the tai trang thai dat ban",
+            }),
+          ),
+        );
+      });
   }, []);
 
   const handleExportReservations = useCallback(async () => {
@@ -431,7 +481,9 @@ export default function ReservationsPage() {
       message.success(t("common.messages.export_success"));
     } catch (error) {
       console.error("Failed to export reservations:", error);
-      message.error(t("common.messages.export_failed"));
+      message.error(
+        extractApiErrorMessage(error, t("common.messages.export_failed")),
+      );
     } finally {
       setExporting(false);
     }
@@ -547,7 +599,6 @@ export default function ReservationsPage() {
           }}>
           <input
             type="text"
-            placeholder={t("admin.reservations.filter.search_placeholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1 min-w-[200px] px-3 py-2 rounded-lg text-sm outline-none"
@@ -871,68 +922,94 @@ export default function ReservationsPage() {
           </div>
 
           {/* ── Pagination ── */}
-          {data && data.totalPages > 1 && (
+          {data && data.totalCount > 0 && (
             <div
               className="flex items-center justify-between px-4 py-3"
               style={{ borderTop: "1px solid var(--border)" }}>
-              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                {t("admin.reservations.pagination.page_info", {
-                  page: data.pageNumber,
-                  total: data.totalPages,
-                  count: data.totalCount,
-                })}
-              </p>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={!data.hasPreviousPage}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
-                  style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    color: "var(--text)",
-                  }}>
-                  {t("admin.reservations.pagination.prev")}
-                </button>
-                {Array.from(
-                  { length: Math.min(5, data.totalPages) },
-                  (_, i) => {
-                    const p =
-                      Math.max(
-                        1,
-                        Math.min(data.totalPages - 4, data.pageNumber - 2),
-                      ) + i;
-                    return (
-                      <button
-                        key={p}
-                        onClick={() => setPage(p)}
-                        className="w-8 h-8 rounded-lg text-sm font-medium transition-all"
-                        style={
-                          p === data.pageNumber
-                            ? { background: "var(--primary)", color: "white" }
-                            : {
-                                background: "var(--surface)",
-                                border: "1px solid var(--border)",
-                                color: "var(--text-muted)",
-                              }
-                        }>
-                        {p}
-                      </button>
-                    );
-                  },
-                )}
-                <button
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={!data.hasNextPage}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
-                  style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    color: "var(--text)",
-                  }}>
-                  {t("admin.reservations.pagination.next")}
-                </button>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {t("admin.reservations.pagination.page_info_compact", {
+                    page: data.pageNumber,
+                    total: data.totalPages,
+                    defaultValue: `Trang ${data.pageNumber}/${data.totalPages} ·`,
+                  })}
+                </p>
+                <div className="flex items-center gap-2">
+                  <DropDown
+                    value={String(pageSize)}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    containerClassName="w-[110px]"
+                    className="!h-9 !py-1.5 !pl-3 !pr-8 !text-sm"
+                    aria-label={t("common.pagination.items_per_page", {
+                      defaultValue: "Items/page",
+                    })}>
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </DropDown>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                    {t("admin.reservations.pagination.results_label", {
+                      defaultValue: "kết quả",
+                    })}
+                  </p>
+                </div>
               </div>
+
+              {data.totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={!data.hasPreviousPage}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}>
+                    {t("admin.reservations.pagination.prev")}
+                  </button>
+                  {Array.from(
+                    { length: Math.min(5, data.totalPages) },
+                    (_, i) => {
+                      const p =
+                        Math.max(
+                          1,
+                          Math.min(data.totalPages - 4, data.pageNumber - 2),
+                        ) + i;
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => setPage(p)}
+                          className="w-8 h-8 rounded-lg text-sm font-medium transition-all"
+                          style={
+                            p === data.pageNumber
+                              ? { background: "var(--primary)", color: "white" }
+                              : {
+                                  background: "var(--surface)",
+                                  border: "1px solid var(--border)",
+                                  color: "var(--text-muted)",
+                                }
+                          }>
+                          {p}
+                        </button>
+                      );
+                    },
+                  )}
+                  <button
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={!data.hasNextPage}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}>
+                    {t("admin.reservations.pagination.next")}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

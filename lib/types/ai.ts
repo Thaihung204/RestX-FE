@@ -57,3 +57,24 @@ export interface AIChatHistoryResponse {
   sessionId?: string;
   messages?: AIChatHistoryItem[];
 }
+
+export interface AIContentGenerateRequest {
+  dishId?: string | null;
+  dishName?: string | null;
+  comboId?: string | null;
+  promotionId?: string | null;
+  tone?: string;
+  customContext?: string;
+  variants?: number;
+}
+
+export interface AIContentVariant {
+  content: string;
+  headline?: string | null;
+  score?: number | null;
+  scoreNote?: string | null;
+}
+
+export interface AIContentGenerateResponse {
+  variants: AIContentVariant[];
+}

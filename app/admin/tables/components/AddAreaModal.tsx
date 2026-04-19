@@ -112,9 +112,7 @@ export const AddAreaModal: React.FC<AddAreaModalProps> = ({
               required
               defaultValue={initialName}
               className="w-full px-4 py-2 rounded-lg bg-[var(--bg-base)] border border-[var(--border)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50"
-              placeholder={t(
-                "dashboard.tables.add_area_modal.name_placeholder",
-              )}
+
             />
             {errors.name && (
               <p className="text-xs text-red-500 mt-1">{errors.name}</p>
