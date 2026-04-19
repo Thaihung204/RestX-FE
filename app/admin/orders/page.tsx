@@ -4,10 +4,11 @@ import { DropDown } from "@/components/ui/DropDown";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
-    OrderStatus,
+  OrderStatus,
 } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { formatVND } from "@/lib/utils/currency";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
@@ -15,7 +16,6 @@ import { message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatVND } from "@/lib/utils/currency";
 
 interface OrderRow {
   id: string;
@@ -45,6 +45,7 @@ export default function OrdersPage() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [exporting, setExporting] = useState<boolean>(false);
+
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
 
@@ -76,7 +77,7 @@ export default function OrdersPage() {
           ),
         );
       });
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let isMounted = true;
@@ -128,8 +129,10 @@ export default function OrdersPage() {
   const loadOrders = useCallback(async () => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
+
     try {
       const data = await orderService.getAllOrders(orderFilterParams);
+
       setOrders(
         data.map((o) => {
           const distinctCount = o.orderDetails?.length ?? 0;
@@ -181,6 +184,7 @@ export default function OrdersPage() {
       lastRefreshRef.current = now;
 
       if (showLoading) setLoading(true);
+
       try {
         await loadOrders();
       } catch (error) {
@@ -198,7 +202,7 @@ export default function OrdersPage() {
         if (showLoading) setLoading(false);
       }
     },
-    [loadOrders],
+    [loadOrders, t],
   );
 
   useEffect(() => {
@@ -211,10 +215,16 @@ export default function OrdersPage() {
     let isMounted = true;
     let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const handleOrderChange = (payload: any) => {
+    const handleOrderChange = (payload: unknown) => {
       if (!isMounted) return;
-      const changedTenantId = payload?.tenantId || payload?.order?.tenantId;
+
+      const payloadObj = payload as {
+        tenantId?: string;
+        order?: { tenantId?: string };
+      };
+      const changedTenantId = payloadObj?.tenantId || payloadObj?.order?.tenantId;
       if (changedTenantId && changedTenantId !== tenant.id) return;
+
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         if (!isMounted) return;
@@ -231,9 +241,9 @@ export default function OrdersPage() {
         const conn = orderSignalRService.getConnection();
         if (conn.state === HubConnectionState.Connected) {
           await orderSignalRService.invoke("JoinTenantGroup", tenant.id);
-          events.forEach((event) =>
-            orderSignalRService.on(event, handleOrderChange),
-          );
+          events.forEach((event) => {
+            orderSignalRService.on(event, handleOrderChange);
+          });
         }
       } catch (error) {
         console.error("SignalR: Setup failed", error);
@@ -245,9 +255,9 @@ export default function OrdersPage() {
     return () => {
       isMounted = false;
       if (debounceTimer) clearTimeout(debounceTimer);
-      events.forEach((event) =>
-        orderSignalRService.off(event, handleOrderChange),
-      );
+      events.forEach((event) => {
+        orderSignalRService.off(event, handleOrderChange);
+      });
       orderSignalRService.invoke("LeaveTenantGroup", tenant.id).catch(() => {});
     };
   }, [refreshOrders, tenant?.id]);
@@ -260,7 +270,6 @@ export default function OrdersPage() {
     setExporting(true);
     try {
       const file = await orderService.exportOrders(orderFilterParams);
-
       triggerBrowserDownload(file.blob, file.fileName);
       message.success(t("common.messages.export_success"));
     } catch (error) {
@@ -314,6 +323,7 @@ export default function OrdersPage() {
               {t("dashboard.orders.subtitle")}
             </p>
           </div>
+
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportOrders}
@@ -339,7 +349,7 @@ export default function OrdersPage() {
                 color: "var(--text)",
               }}>
               <ReloadOutlined />
-              {t("admin.reservations.refresh", { defaultValue: "Làm mới" })}
+              {t("admin.reservations.refresh", { defaultValue: "Lam moi" })}
             </button>
           </div>
         </div>
@@ -351,7 +361,6 @@ export default function OrdersPage() {
             border: "1px solid var(--border)",
           }}>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-
             <div className="space-y-1">
               <label
                 htmlFor="orders-filter-search"
@@ -366,9 +375,6 @@ export default function OrdersPage() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t("dashboard.orders.search.placeholder", {
-                  defaultValue: "Tìm mã đơn hoặc khách hàng",
-                })}
                 className="w-full h-14 px-4 rounded-lg text-sm outline-none"
                 style={{
                   background: "var(--surface)",
@@ -384,7 +390,7 @@ export default function OrdersPage() {
                 className="block text-xs"
                 style={{ color: "var(--text-muted)" }}>
                 {t("dashboard.orders.table.status", {
-                  defaultValue: "Trạng thái",
+                  defaultValue: "Trang thai",
                 })}
               </label>
               <select
@@ -399,7 +405,7 @@ export default function OrdersPage() {
                 }}>
                 <option value="">
                   {t("admin.reservations.filter.all_status", {
-                    defaultValue: "Tất cả trạng thái",
+                    defaultValue: "Tat ca trang thai",
                   })}
                 </option>
                 {orderStatuses.map((status) => (
@@ -416,7 +422,7 @@ export default function OrdersPage() {
                 className="block text-xs"
                 style={{ color: "var(--text-muted)" }}>
                 {t("admin.reservations.filter.from_date", {
-                  defaultValue: "Từ ngày",
+                  defaultValue: "Tu ngay",
                 })}
               </label>
               <input
@@ -426,7 +432,7 @@ export default function OrdersPage() {
                 onChange={(e) => setFromDate(e.target.value)}
                 className="w-full h-14 px-4 rounded-lg text-sm outline-none"
                 aria-label={t("admin.reservations.filter.from_date", {
-                  defaultValue: "Từ ngày",
+                  defaultValue: "Tu ngay",
                 })}
                 style={{
                   background: "var(--surface)",
@@ -442,7 +448,7 @@ export default function OrdersPage() {
                 className="block text-xs"
                 style={{ color: "var(--text-muted)" }}>
                 {t("admin.reservations.filter.to_date", {
-                  defaultValue: "Đến ngày",
+                  defaultValue: "Den ngay",
                 })}
               </label>
               <input
@@ -452,7 +458,7 @@ export default function OrdersPage() {
                 onChange={(e) => setToDate(e.target.value)}
                 className="w-full h-14 px-4 rounded-lg text-sm outline-none"
                 aria-label={t("admin.reservations.filter.to_date", {
-                  defaultValue: "Đến ngày",
+                  defaultValue: "Den ngay",
                 })}
                 style={{
                   background: "var(--surface)",
@@ -479,7 +485,7 @@ export default function OrdersPage() {
                   border: "1px solid rgba(239,68,68,0.2)",
                 }}>
                 {t("admin.reservations.filter.clear", {
-                  defaultValue: "Xóa lọc",
+                  defaultValue: "Xoa loc",
                 })}
               </button>
             </div>
@@ -569,6 +575,7 @@ export default function OrdersPage() {
                           {order.orderNumber}
                         </span>
                       </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-left">
                         <span
                           className="font-medium"
@@ -576,6 +583,7 @@ export default function OrdersPage() {
                           {order.customerName}
                         </span>
                       </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span style={{ color: "var(--text-muted)" }}>
                           {t("dashboard.orders.labels.items_count", {
@@ -583,16 +591,19 @@ export default function OrdersPage() {
                           })}
                         </span>
                       </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className="font-bold" style={{ color: "#000000" }}>
-                          {order.total.toLocaleString("vi-VN")}₫
+                        <span className="font-bold" style={{ color: "var(--text)" }}>
+                          {formatVND(order.total)}
                         </span>
                       </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {(() => {
                           const st = orderStatuses.find(
                             (s) => s.id === String(order.orderStatusId),
                           );
+
                           return (
                             <select
                               className="px-2 py-1 rounded-full text-xs font-medium border cursor-pointer outline-none transition-colors"
@@ -612,29 +623,35 @@ export default function OrdersPage() {
                               }
                               onChange={async (e) => {
                                 if (!e.target.value) return;
+                                const nextStatusId = Number(e.target.value);
+
                                 try {
                                   await orderService.updateOrderStatus(
                                     order.id,
-                                    Number(e.target.value),
+                                    nextStatusId,
                                   );
-                                  message.success(
-                                    t(
-                                      "admin.order_detail.messages.update_success",
-                                      {
-                                        defaultValue:
-                                          "Cập nhật trạng thái thành công",
-                                      },
+
+                                  setOrders((prev) =>
+                                    prev.map((item) =>
+                                      item.id === order.id
+                                        ? { ...item, orderStatusId: nextStatusId }
+                                        : item,
                                     ),
+                                  );
+
+                                  message.success(
+                                    t("admin.order_detail.messages.update_success", {
+                                      defaultValue: "Cap nhat trang thai thanh cong",
+                                    }),
                                   );
                                 } catch (err) {
                                   console.error("Failed to update status", err);
                                   message.error(
                                     extractApiErrorMessage(
                                       err,
-                                      t(
-                                        "admin.order_detail.messages.update_error",
-                                        { defaultValue: "Cap nhat loi" },
-                                      ),
+                                      t("admin.order_detail.messages.update_error", {
+                                        defaultValue: "Cap nhat loi",
+                                      }),
                                     ),
                                   );
                                 }
@@ -659,6 +676,7 @@ export default function OrdersPage() {
                           );
                         })()}
                       </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -671,11 +689,13 @@ export default function OrdersPage() {
                             : t("dashboard.orders.payment_status.unpaid")}
                         </span>
                       </td>
+
                       <td
                         className="px-6 py-4 whitespace-nowrap text-sm text-center"
                         style={{ color: "var(--text-muted)" }}>
                         {order.time}
                       </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex gap-2 justify-center">
                           <Link
@@ -723,7 +743,7 @@ export default function OrdersPage() {
                   {t("admin.reservations.pagination.page_info_compact", {
                     page: currentPage,
                     total: totalPages,
-                    defaultValue: `Trang ${currentPage}/${totalPages} ·`,
+                    defaultValue: `Trang ${currentPage}/${totalPages} Â·`,
                   })}
                 </p>
                 <div className="flex items-center gap-2">
@@ -743,64 +763,66 @@ export default function OrdersPage() {
                   </DropDown>
                   <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                     {t("admin.reservations.pagination.results_label", {
-                      defaultValue: "kết quả",
+                      defaultValue: "ket qua",
                     })}
                   </p>
                 </div>
               </div>
 
               {totalPages > 1 && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPage((p: number) => Math.max(1, p - 1))}
-                  disabled={currentPage <= 1}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
-                  style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    color: "var(--text)",
-                  }}>
-                  {t("admin.reservations.pagination.prev", {
-                    defaultValue: "Trước",
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}>
+                    {t("admin.reservations.pagination.prev", {
+                      defaultValue: "Truoc",
+                    })}
+                  </button>
+
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const p =
+                      Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className="w-8 h-8 rounded-lg text-sm font-medium transition-all"
+                        style={
+                          p === currentPage
+                            ? { background: "var(--primary)", color: "white" }
+                            : {
+                                background: "var(--surface)",
+                                border: "1px solid var(--border)",
+                                color: "var(--text-muted)",
+                              }
+                        }>
+                        {p}
+                      </button>
+                    );
                   })}
-                </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const p =
-                    Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p)}
-                      className="w-8 h-8 rounded-lg text-sm font-medium transition-all"
-                      style={
-                        p === currentPage
-                          ? { background: "var(--primary)", color: "white" }
-                          : {
-                              background: "var(--surface)",
-                              border: "1px solid var(--border)",
-                              color: "var(--text-muted)",
-                            }
-                      }>
-                      {p}
-                    </button>
-                  );
-                })}
-                <button
-                  onClick={() =>
-                    setPage((p: number) => Math.min(totalPages, p + 1))
-                  }
-                  disabled={currentPage >= totalPages}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
-                  style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    color: "var(--text)",
-                  }}>
-                  {t("admin.reservations.pagination.next", {
-                    defaultValue: "Sau",
-                  })}
-                </button>
-              </div>
+
+                  <button
+                    onClick={() =>
+                      setPage((p: number) => Math.min(totalPages, p + 1))
+                    }
+                    disabled={currentPage >= totalPages}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}>
+                    {t("admin.reservations.pagination.next", {
+                      defaultValue: "Sau",
+                    })}
+                  </button>
+                </div>
               )}
             </div>
           )}

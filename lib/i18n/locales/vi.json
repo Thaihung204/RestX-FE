@@ -1681,6 +1681,9 @@
     "orders": {
       "title": "Quản lý đơn hàng",
       "subtitle": "Theo dõi và quản lý đơn hàng",
+      "search": {
+        "label": "Tìm kiếm"
+      },
       "new_order": "Đơn mới",
       "stats": {
         "pending": "Chờ xử lý",

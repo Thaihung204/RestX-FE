@@ -1787,6 +1787,9 @@
     "orders": {
       "title": "Order Management",
       "subtitle": "Track and manage all restaurant orders",
+      "search": {
+        "label": "Search"
+      },
       "new_order": "New Order",
       "stats": {
         "pending": "Pending",

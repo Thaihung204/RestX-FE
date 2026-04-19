@@ -1,6 +1,6 @@
 import {
-  DownloadableFile,
-  getFileNameFromContentDisposition,
+    DownloadableFile,
+    getFileNameFromContentDisposition,
 } from "@/lib/utils/fileDownload";
 import axiosInstance from "./axiosInstance";
 
@@ -130,6 +130,7 @@ export interface OrderFilterParams {
   customerId?: string;
   orderStatusId?: number;
   paymentStatusId?: number;
+  createdDate?: string;
   pageNumber?: number;
   pageSize?: number;
   sortBy?: string;
