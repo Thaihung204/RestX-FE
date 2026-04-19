@@ -22,6 +22,7 @@ import reportService, { ReportType } from "@/lib/services/reportService";
 import reservationService, {
   PaginatedReservations,
 } from "@/lib/services/reservationService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined } from "@ant-design/icons";
 import { App } from "antd";
@@ -392,9 +393,10 @@ export default function DashboardPage() {
     } catch (error) {
       console.error(error);
       setDashboardError(
-        error instanceof Error
-          ? error.message
-          : t("dashboard.messages.overview_load_failed"),
+        extractApiErrorMessage(
+          error,
+          t("dashboard.messages.overview_load_failed"),
+        ),
       );
     } finally {
       setDashboardLoading(false);
@@ -486,6 +488,14 @@ export default function DashboardPage() {
       setReservationData(result);
     } catch (error) {
       console.error(error);
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.messages.reservations_load_failed", {
+            defaultValue: "Failed to load reservations",
+          }),
+        ),
+      );
     } finally {
       setReservationLoading(false);
     }
@@ -502,7 +512,9 @@ export default function DashboardPage() {
       message.success(t("dashboard.messages.export_success"));
     } catch (error) {
       console.error("Failed to export report:", error);
-      message.error(t("dashboard.messages.export_failed"));
+      message.error(
+        extractApiErrorMessage(error, t("dashboard.messages.export_failed")),
+      );
     } finally {
       setExportingReport(false);
     }

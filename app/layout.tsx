@@ -8,6 +8,7 @@ import { ToastProvider } from "@/lib/contexts/ToastContext";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Suspense } from "react";
+import "timepicker-ui/main.css";
 import "./globals.css";
 import AntdProvider from "./theme/AntdProvider";
 

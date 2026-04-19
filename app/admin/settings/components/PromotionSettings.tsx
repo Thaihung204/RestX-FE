@@ -4,6 +4,7 @@ import StatusToggle from "@/components/ui/StatusToggle";
 import promotionService, { Promotion } from "@/lib/services/promotionService";
 import { formatVND } from "@/lib/utils/currency";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { App, Button, Popconfirm, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -42,14 +43,16 @@ export default function PromotionSettings() {
     try {
       const data = await promotionService.getAllPromotions();
       setPromotions(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to fetch promotions:", error);
       setPromotions([]);
-      message.error(
+      const errorMsg = extractApiErrorMessage(
+        error,
         t("dashboard.manage.promotion.toasts.fetch_error", {
           defaultValue: "Unable to load promotions",
         }),
       );
+      message.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -163,13 +166,15 @@ export default function PromotionSettings() {
         );
       }
       handleCloseModal();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to save promotion:", error);
-      message.error(
+      const errorMsg = extractApiErrorMessage(
+        error,
         t("dashboard.manage.promotion.toasts.save_error", {
           defaultValue: "Unable to save promotion",
         }),
       );
+      message.error(errorMsg);
     } finally {
       setIsSaving(false);
     }
@@ -184,13 +189,15 @@ export default function PromotionSettings() {
           defaultValue: "Promotion deleted successfully",
         }),
       );
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to delete promotion:", error);
-      message.error(
+      const errorMsg = extractApiErrorMessage(
+        error,
         t("dashboard.manage.promotion.toasts.delete_error", {
           defaultValue: "Unable to delete promotion",
         }),
       );
+      message.error(errorMsg);
     }
   };
 
@@ -220,9 +227,11 @@ export default function PromotionSettings() {
           ? t("dashboard.manage.promotion.toasts.activate_success")
           : t("dashboard.manage.promotion.toasts.deactivate_success"),
       );
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to update status:", error);
-      message.error(t("dashboard.manage.promotion.toasts.status_error"));
+      const errorMsg = extractApiErrorMessage(
+        error,t("dashboard.manage.promotion.toasts.status_error"));
+      message.error(errorMsg);
     }
   };
 

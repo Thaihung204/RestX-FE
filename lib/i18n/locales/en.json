@@ -13,6 +13,8 @@
       "filter": {
         "search_placeholder": "Search by name, phone, booking code...",
         "all_status": "All statuses",
+        "from_date": "From date",
+        "to_date": "To date",
         "clear": "Clear filters"
       },
       "status": {
@@ -36,6 +38,8 @@
       "empty": "No reservations found",
       "pagination": {
         "page_info": "Page {{page}} of {{total}} · {{count}} results",
+        "page_info_compact": "Page {{page}} of {{total}} ·",
+        "results_label": "results",
         "prev": "Prev",
         "next": "Next"
       },
@@ -268,6 +272,7 @@
     "orders": {
       "title": "Order Management",
       "search": {
+        "label": "Search",
         "placeholder": "Search orders...",
         "placeholder_full": "Search by order ID or table name..."
       },
@@ -1554,12 +1559,29 @@
           "image_current": "Current saved image",
           "image_pending_hint": "This image will be uploaded when you save the combo",
           "image_current_hint": "No new image selected. The current image will be kept.",
-          "total_items": "Total items"
+          "total_items": "Total items",
+          "included_dishes": "Included dishes",
+          "no_dishes": "No dishes in this combo yet"
         },
         "placeholders": {
           "name": "Enter combo name",
           "description": "Describe this combo",
           "select_dish": "Select dish"
+        },
+        "ai_content": {
+          "generate": "Generate AI",
+          "generating": "Generating...",
+          "prompt_placeholder": "Optional prompt (e.g., emphasize value-for-money and family sharing)",
+          "variants_label": "Number of variants",
+          "variants_hint": "The number above controls how many AI description variants will be generated (1-10).",
+          "variants_title": "AI variants (click one to apply)",
+          "variant_label": "Variant {{index}}",
+          "score_label": "Score: {{score}}",
+          "requires_existing_item": "Please save this combo first so AI can use its detail ID.",
+          "empty_result": "AI did not return any content. Please try another prompt.",
+          "generate_success": "AI content generated. Choose one variant below.",
+          "generate_failed": "Failed to generate content with AI.",
+          "apply_success": "Description updated from AI variant."
         },
         "form": {
           "create_title": "Create Combo",
@@ -1572,6 +1594,7 @@
           "manage": "Manage Combos",
           "back_to_menu": "Back to Menu",
           "add_combo": "Add Combo",
+          "view_dishes": "View dishes",
           "add_row": "Add Dish",
           "change_image": "Choose image",
           "clear_image": "Clear selection",
@@ -1600,14 +1623,18 @@
           "validation_error": "Please review combo information",
           "create_success": "Combo created successfully",
           "update_success": "Combo updated successfully",
-          "save_error": "Unable to save combo"
+          "save_error": "Unable to save combo",
+          "save_error_bad_request": "Unable to save combo. Please review combo dishes and try again.",
+          "save_error_server": "The system is busy and cannot save the combo right now. Please try again later."
         },
         "errors": {
           "load_failed": "Failed to load combo data",
+          "invalid_combo_id": "Invalid combo ID",
+          "combo_not_found": "Combo not found in current tenant. Please refresh combo list.",
           "name_required": "Combo name is required",
           "name_too_short": "Combo name must be at least 3 characters",
-          "name_too_long": "Combo name must be at most 60 characters",
-          "description_too_long": "Description must be at most 300 characters",
+          "name_too_long": "Combo name must be at most 255 characters",
+          "description_too_long": "Description must be at most 2000 characters",
           "price_invalid": "Price must be greater than zero",
           "price_too_high": "Price must be less than 100,000,000",
           "details_required": "Please select at least one dish",
@@ -1660,6 +1687,23 @@
         "save_error_message": "Failed to save dish. Please try again.",
         "detail_error_message": "Failed to load dish details.",
         "validation_error_message": "Invalid data. Please check your input."
+      },
+      "ai_content": {
+        "generate": "Generate AI",
+        "generating": "Generating...",
+        "prompt_placeholder": "Optional prompt (e.g., focus on spicy flavor and premium ingredients)",
+        "variants_label": "Number of variants",
+        "variants_hint": "The number above controls how many AI description variants will be generated (1-10).",
+        "name_required": "Please enter dish name before generating AI content.",
+        "name_based_hint": "AI uses dish name as main context. Optional prompt adds extra direction.",
+        "variants_title": "AI variants (click one to apply)",
+        "variant_label": "Variant {{index}}",
+        "score_label": "Score: {{score}}",
+        "requires_existing_item": "Please save this item first so AI can use its detail ID.",
+        "empty_result": "AI did not return any content. Please try another prompt.",
+        "generate_success": "AI content generated. Choose one variant below.",
+        "generate_failed": "Failed to generate content with AI.",
+        "apply_success": "Description updated from AI variant."
       },
       "images": {
         "main_image": "Main",
@@ -1732,8 +1776,10 @@
       "errors": {
         "load_failed": "Failed to load menu items",
         "name_required": "Dish name is required",
+        "name_too_long": "Dish name must be at most 255 characters",
         "category_required": "Please select a category",
         "price_invalid": "Price must be a positive number",
+        "description_too_long": "Description must be at most 2000 characters",
         "detail_load_failed": "Failed to load dish details",
         "retry_hint": "Please try again later"
       }
@@ -1741,6 +1787,9 @@
     "orders": {
       "title": "Order Management",
       "subtitle": "Track and manage all restaurant orders",
+      "search": {
+        "label": "Search"
+      },
       "new_order": "New Order",
       "stats": {
         "pending": "Pending",
@@ -1922,8 +1971,11 @@
         "account_disabled": "This account is currently disabled"
       },
       "errors": {
+        "load_failed": "Failed to load staff",
         "save_failed": "Failed to save staff",
-        "update_failed": "Failed to update staff status"
+        "update_failed": "Failed to update staff status",
+        "avatar_invalid_type": "Only PNG, JPG, JPEG, and WEBP files are allowed",
+        "avatar_too_large": "File size must be less than 5MB"
       },
       "modal": {
         "activate_title": "Activate Staff Member",
@@ -1978,6 +2030,20 @@
           "manual_required": "Manual resolution required due to multiple active orders."
         },
         "modal": {
+          "session": "Session",
+          "session_id": "Session ID",
+          "start_time": "Started",
+          "end_time": "Ended",
+          "reservation": "Reservation",
+          "reserved_by": "Reserved by",
+          "phone": "Phone",
+          "reservation_time": "Reservation time",
+          "guest_count": "Guests",
+          "guests": "guests",
+          "seats": "seats",
+          "order": "Order",
+          "total": "Total",
+          "checkin_btn": "Check-in",
           "checkin_success": "Check-in successful!",
           "checkin_error": "Check-in failed"
         }
@@ -3927,8 +3993,20 @@
         "arrival_date": "Arrival Date",
         "preferred_time": "Time",
         "party_size": "Party Size",
+        "decrease_guests": "Decrease guests",
+        "increase_guests": "Increase guests",
         "choose_table": "Choose Table",
-        "no_slots": "No available time slots"
+        "no_slots": "No available time slots",
+        "restaurant_closed_today": "Restaurant closed",
+        "restaurant_closed_on_day": "Restaurant is closed on {{day}}",
+        "closed_overlay_badge": "Restaurant Closed",
+        "closed_overlay_title": "Reservations are unavailable for this day",
+        "closed_overlay_description": "Please choose another date to continue your booking.",
+        "closed_overlay_selected_date": "Selected date",
+        "closed_overlay_notice": "Notice",
+        "closed_overlay_cta": "Pick next available date",
+        "closed_overlay_hint": "Use the date picker below to select another day.",
+        "closed_overlay_no_next": "No available date found in the next 30 days."
       },
       "features": {
         "fine_dining": {
@@ -3959,9 +4037,13 @@
         "no_table_selected": "No table selected",
         "info_timer": "Please select a table on the map",
         "confirm_table": "Confirm Table",
+        "legend_available": "Available",
+        "legend_selected": "Selected",
+        "legend_occupied": "Occupied",
+        "zoom_hint": "Pinch to zoom, drag to move",
         "mobile_selected": "Selected",
         "mobile_none": "None",
-        "mobile_confirm": "Done",
+        "mobile_confirm": "Confirm",
         "view_360": "View 360",
         "total_capacity": "Total Capacity",
         "selected_table_label": "Selected Table"
@@ -3974,7 +4056,7 @@
         "table_label": "Table {{name}}",
         "status_available": "Available",
         "status_occupied": "Occupied",
-        "drag_hint": "Drag to rotate - Scroll to zoom",
+        "drag_hint": "Drag to rotate, pinch to zoom",
         "back_to_map": "Back to map",
         "book_now": "Book this table"
       },

@@ -1,6 +1,7 @@
 "use client";
 
 import StatusToggle from "@/components/ui/StatusToggle";
+import { EditOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { formatVND } from "@/lib/utils/currency";
 export interface DishCardItem {
@@ -145,10 +146,13 @@ export default function DishCard({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-4">
+        <div className="mt-4 grid grid-cols-[44px_1fr] gap-2">
           <Link href={`/admin/menu/${item.id}`} className="block">
             <button
-              className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
+              type="button"
+              aria-label={labels.edit}
+              title={labels.edit}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-base transition-all"
               style={{
                 backgroundColor: "rgba(255,56,11,0.1)",
                 color: "var(--primary)",
@@ -160,12 +164,12 @@ export default function DishCard({
                 (e.currentTarget.style.backgroundColor = "rgba(255,56,11,0.1)")
               }
               suppressHydrationWarning>
-              {labels.edit}
+              <EditOutlined />
             </button>
           </Link>
           <button
             onClick={() => onAddIngredients(item)}
-            className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-all"
+            className="h-11 w-full rounded-lg px-3 text-sm font-medium transition-all"
             style={{
               background: "var(--surface)",
               color: "var(--text)",

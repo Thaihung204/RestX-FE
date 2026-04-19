@@ -18,9 +18,12 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { HubConnectionState } from '@microsoft/signalr';
-import { App, Button, Card, Col, Input, Modal, Row, Tag, Typography } from 'antd';
+import { App, Button, Card, Col, DatePicker, Input, Modal, Row, Tag, Typography } from 'antd';
+import dayjs from 'dayjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { PluginRegistry, TimepickerUI } from 'timepicker-ui';
+import { WheelPlugin } from 'timepicker-ui/plugins/wheel';
 import { useTranslation } from 'react-i18next';
 import { useThemeMode } from '../../theme/AntdProvider';
 
@@ -28,11 +31,68 @@ const { Title, Text } = Typography;
 
 type TableStatus = 'available' | 'occupied';
 
-const CHECKIN_LATE_MINUTES = 15;
+const DEFAULT_SESSION_BUFFER_MINUTES = 120;
+const TIME_FILTER_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
-function isPastReservationWithinLateWindow(reservationDate: Date, filterDateTime: Date): boolean {
+function parsePositiveInteger(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return Math.trunc(value);
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value.trim(), 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+function resolveSessionBufferMinutes(tenant: unknown): number {
+  const tenantRecord = tenant as Record<string, unknown> | null;
+  if (!tenantRecord) return DEFAULT_SESSION_BUFFER_MINUTES;
+
+  const configuration = tenantRecord.configuration as Record<string, unknown> | undefined;
+  const directConfig = parsePositiveInteger(
+    configuration?.sessionBufferMinutes ?? configuration?.SessionBufferMinutes,
+  );
+  if (directConfig) return directConfig;
+
+  const settingsRaw = tenantRecord.tenantSettings;
+  const settings = Array.isArray(settingsRaw) ? settingsRaw : [];
+
+  for (const entryRaw of settings) {
+    const entry = entryRaw as Record<string, unknown> | null;
+    if (!entry) continue;
+
+    const rawKey = String(entry.key ?? entry.Key ?? '').trim().toLowerCase();
+    if (!rawKey) continue;
+
+    const compactKey = rawKey.replace(/[^a-z0-9]/g, '');
+    const isSessionBufferKey =
+      compactKey === 'sessionbufferminutes' ||
+      compactKey === 'reservationbufferminutes' ||
+      compactKey === 'reservationsessionbufferminutes';
+
+    if (!isSessionBufferKey) continue;
+
+    const resolvedValue = parsePositiveInteger(entry.value ?? entry.Value);
+    if (resolvedValue) {
+      return resolvedValue;
+    }
+  }
+
+  return DEFAULT_SESSION_BUFFER_MINUTES;
+}
+
+function isPastReservationWithinLateWindow(
+  reservationDate: Date,
+  filterDateTime: Date,
+  lateWindowMinutes: number,
+): boolean {
   const minutesAfterReservation = (filterDateTime.getTime() - reservationDate.getTime()) / (60 * 1000);
-  return minutesAfterReservation >= 0 && minutesAfterReservation <= CHECKIN_LATE_MINUTES;
+  return minutesAfterReservation >= 0 && minutesAfterReservation <= lateWindowMinutes;
 }
 
 function toYmd(date: Date): string {
@@ -46,6 +106,46 @@ function toHm(date: Date): string {
   const hour = String(date.getHours()).padStart(2, '0');
   const minute = String(date.getMinutes()).padStart(2, '0');
   return `${hour}:${minute}`;
+}
+
+function normalizeFilterTime(value: string): string | null {
+  const trimmed = value.trim();
+  const match = trimmed.match(TIME_FILTER_PATTERN);
+  if (!match) return null;
+
+  return `${Number(match[1]).toString().padStart(2, '0')}:${match[2]}`;
+}
+
+function ensureWheelPluginRegistered(): void {
+  if (!PluginRegistry.has('wheel')) {
+    PluginRegistry.register(WheelPlugin);
+  }
+}
+
+function normalizePickerTime(hourValue?: string, minuteValue?: string, periodValue?: string): string | null {
+  const parsedHour = Number.parseInt(hourValue ?? '', 10);
+  const parsedMinute = Number.parseInt(minuteValue ?? '', 10);
+
+  if (
+    Number.isNaN(parsedHour) ||
+    Number.isNaN(parsedMinute) ||
+    parsedHour < 0 ||
+    parsedMinute < 0 ||
+    parsedMinute > 59
+  ) {
+    return null;
+  }
+
+  let hour = parsedHour;
+  const period = (periodValue || '').trim().toLowerCase();
+  if (period === 'am' || period === 'pm') {
+    const normalized12Hour = ((hour % 12) + 12) % 12;
+    hour = period === 'pm' ? normalized12Hour + 12 : normalized12Hour;
+  }
+
+  if (hour > 23) return null;
+
+  return `${hour.toString().padStart(2, '0')}:${parsedMinute.toString().padStart(2, '0')}`;
 }
 
 function parseFilterDateTime(dateValue: string, timeValue: string): Date | null {
@@ -63,6 +163,7 @@ function toLocalDateTimeParam(date: Date): string {
 function pickReservationForSlot(
   reservations: ReservationListItem[],
   filterDateTime: Date,
+  lateWindowMinutes: number,
 ): ReservationListItem | undefined {
   if (!reservations.length) return undefined;
 
@@ -84,7 +185,7 @@ function pickReservationForSlot(
   const latestPast = pastCandidates[pastCandidates.length - 1];
   if (!latestPast) return undefined;
 
-  if (isPastReservationWithinLateWindow(latestPast.date, filterDateTime)) {
+  if (isPastReservationWithinLateWindow(latestPast.date, filterDateTime, lateWindowMinutes)) {
     return latestPast.reservation;
   }
 
@@ -174,11 +275,87 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
   const [isMerging, setIsMerging] = useState(false);
   const [manualMergeGroupsByTable, setManualMergeGroupsByTable] = useState<Record<string, string[]>>({});
   const inFlightRef = useRef(false);
+  const timeInputRef = useRef<HTMLInputElement | null>(null);
+  const timePickerRef = useRef<TimepickerUI | null>(null);
 
   const selectedFilterDateTime = useMemo(
     () => parseFilterDateTime(reservationFilterDate, reservationFilterTime),
     [reservationFilterDate, reservationFilterTime],
   );
+
+  const sessionBufferMinutes = useMemo(
+    () => resolveSessionBufferMinutes(tenant),
+    [tenant],
+  );
+
+  useEffect(() => {
+    const input = timeInputRef.current;
+
+    if (timePickerRef.current) {
+      timePickerRef.current.destroy({ keepInputValue: true });
+      timePickerRef.current = null;
+    }
+
+    if (!input) return;
+
+    ensureWheelPluginRegistered();
+
+    const picker = new TimepickerUI(input, {
+      clock: {
+        type: '24h',
+        incrementMinutes: 1,
+        incrementHours: 1,
+      },
+      ui: {
+        theme: 'basic',
+        mode: 'compact-wheel',
+        animation: false,
+        backdrop: false,
+        editable: false,
+      },
+      wheel: {
+        placement: 'auto',
+        commitOnScroll: false,
+        hideDisabled: false,
+      },
+      labels: {
+        ok: t('common.actions.confirm', { defaultValue: 'Xác nhận' }),
+        cancel: t('common.actions.cancel', { defaultValue: 'Cancel' }),
+        time: t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' }),
+      },
+      callbacks: {
+        onConfirm: ({ hour, minutes, type }) => {
+          const normalized = normalizePickerTime(hour, minutes, type);
+          if (!normalized) return;
+
+          setReservationFilterTime((prev) => (prev === normalized ? prev : normalized));
+        },
+      },
+    });
+
+    picker.create();
+
+    const normalizedCurrentTime = normalizeFilterTime(reservationFilterTime) || toHm(new Date());
+    picker.setValue(normalizedCurrentTime, true);
+
+    timePickerRef.current = picker;
+
+    return () => {
+      if (timePickerRef.current) {
+        timePickerRef.current.destroy({ keepInputValue: true });
+        timePickerRef.current = null;
+      }
+    };
+  }, [t]);
+
+  useEffect(() => {
+    if (!timePickerRef.current) return;
+
+    const normalized = normalizeFilterTime(reservationFilterTime);
+    if (!normalized) return;
+
+    timePickerRef.current.setValue(normalized, true);
+  }, [reservationFilterTime]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -255,7 +432,11 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
 
       const reservationMap = new Map<string, ReservationListItem>();
       for (const [tableId, reservations] of reservationsByTable) {
-        const pickedReservation = pickReservationForSlot(reservations, filterDateTime);
+        const pickedReservation = pickReservationForSlot(
+          reservations,
+          filterDateTime,
+          sessionBufferMinutes,
+        );
         if (pickedReservation) reservationMap.set(tableId, pickedReservation);
       }
 
@@ -267,7 +448,10 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           const linkedResDate = new Date(linkedRes.reservationDateTime);
           if (Number.isNaN(linkedResDate.getTime())) continue;
 
-          if (linkedResDate.getTime() <= filterDateTime.getTime() && !isPastReservationWithinLateWindow(linkedResDate, filterDateTime)) {
+          if (
+            linkedResDate.getTime() <= filterDateTime.getTime() &&
+            !isPastReservationWithinLateWindow(linkedResDate, filterDateTime, sessionBufferMinutes)
+          ) {
             continue;
           }
 
@@ -316,7 +500,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     } finally {
       inFlightRef.current = false;
     }
-  }, [reservationFilterDate, selectedFilterDateTime]);
+  }, [reservationFilterDate, selectedFilterDateTime, sessionBufferMinutes]);
 
   useEffect(() => {
     fetchData();
@@ -732,13 +916,17 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
               <Text className="floor-activity-filter-label">
                 {t('staff.floor_activity.date_filter_label', { defaultValue: 'Ngày' })}
               </Text>
-              <Input
-                className="floor-activity-filter-input floor-activity-filter-input--date"
-                type="date"
-                value={reservationFilterDate}
-                onChange={(e) => {
-                  if (!e.target.value) return;
-                  setReservationFilterDate(e.target.value);
+              <DatePicker
+                className="floor-activity-filter-input floor-activity-filter-input--date-picker"
+                classNames={{ popup: { root: 'floor-activity-date-popup' } }}
+                value={reservationFilterDate ? dayjs(reservationFilterDate, 'YYYY-MM-DD') : null}
+                format="DD/MM/YYYY"
+                allowClear={false}
+                inputReadOnly
+                suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">calendar_month</span>}
+                onChange={(value) => {
+                  if (!value) return;
+                  setReservationFilterDate(value.format('YYYY-MM-DD'));
                 }}
               />
             </div>
@@ -747,14 +935,22 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
               <Text className="floor-activity-filter-label">
                 {t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' })}
               </Text>
-              <Input
-                className="floor-activity-filter-input floor-activity-filter-input--time"
-                type="time"
-                step={300}
-                value={reservationFilterTime}
-                onChange={(e) => {
-                  if (!e.target.value) return;
-                  setReservationFilterTime(e.target.value);
+              <input
+                ref={timeInputRef}
+                type="text"
+                className="floor-activity-filter-input floor-activity-filter-input--time-picker"
+                value={normalizeFilterTime(reservationFilterTime) || ''}
+                readOnly
+                inputMode="numeric"
+                autoComplete="off"
+                aria-label={t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' })}
+                onClick={() => timePickerRef.current?.open()}
+                onFocus={() => timePickerRef.current?.open()}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    timePickerRef.current?.open();
+                  }
                 }}
               />
             </div>
@@ -988,7 +1184,10 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           const cfg = statusConfig[selectedTable.status];
           const hasReservation = !!(selectedTable.reservationCode || selectedTable.reservationContactName || selectedTable.reservationTime);
           const hasOrder = !!(selectedTable.orderId || selectedTable.orderReference || selectedTable.orderTotal);
-          const canShowCheckInButton = !!selectedTable.reservationCode && selectedTable.status === 'available';
+          const canShowCheckInButton =
+            !!selectedTable.reservationCode &&
+            (selectedTable.reservationStatusCode || '').toUpperCase() === 'CONFIRMED' &&
+            !selectedTable.orderId;
           const hasNamedGuest = selectedTable.status === 'occupied' && !!(selectedTable.reservationContactName || selectedTable.customerName);
           const selectedMergedTableNames = getMergedTableNames(selectedTable);
           const selectedMergedTableCount = selectedMergedTableNames.length;

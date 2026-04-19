@@ -2,10 +2,13 @@
 
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
+import aiService from "@/lib/services/aiService";
 import dishService, {
     ComboDetailItemDto,
     DishResponseDto,
 } from "@/lib/services/dishService";
+import type { AIContentVariant } from "@/lib/types/ai";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { App, Button } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -16,6 +19,13 @@ interface ComboDetailFormItem {
   dishId: string;
   quantity: string;
 }
+
+const DEFAULT_AI_VARIANTS = 4;
+const MAX_AI_PROMPT_LENGTH = 500;
+const MAX_COMBO_NAME_LENGTH = 255;
+const MAX_COMBO_DESCRIPTION_LENGTH = 2000;
+const GUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default function ComboFormPage() {
   const { t } = useTranslation();
@@ -45,6 +55,9 @@ export default function ComboFormPage() {
   const [imageFile, setImageFile] = useState<File | undefined>(undefined);
   const [existingImageUrl, setExistingImageUrl] = useState<string>("");
   const [isImageDropActive, setIsImageDropActive] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
 
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputId = "combo-image-upload-input";
@@ -84,6 +97,7 @@ export default function ComboFormPage() {
     });
 
     setExistingImageUrl(combo.imageUrl || "");
+    setAiSuggestions([]);
 
     if (combo.details && combo.details.length > 0) {
       setDetails(
@@ -101,26 +115,63 @@ export default function ComboFormPage() {
 
   useEffect(() => {
     const initialize = async () => {
+      const defaultLoadError = t("dashboard.menu.combo.errors.load_failed", {
+        defaultValue: "Failed to load combo data",
+      });
+
       try {
         setLoadingInitialData(true);
+        setError(null);
+
+        if (!isNewCombo && !GUID_PATTERN.test(id)) {
+          setError(
+            t("dashboard.menu.combo.errors.invalid_combo_id", {
+              defaultValue: "Invalid combo ID",
+            }),
+          );
+          return;
+        }
+
         await loadDishes();
 
         if (!isNewCombo) {
           await loadComboById(id);
         }
-      } catch {
-        setError(
-          t("dashboard.menu.combo.errors.load_failed", {
-            defaultValue: "Failed to load combo data",
-          }),
-        );
+      } catch (err: unknown) {
+        const loadErrorMessage = extractApiErrorMessage(err, defaultLoadError);
+
+        setError(loadErrorMessage);
+
+        const status = (err as { response?: { status?: unknown } })?.response
+          ?.status;
+
+        // When ID no longer exists in current tenant, bounce back to list page.
+        if (
+          status === 400 &&
+          /combo not found|khong tim thay combo|không tìm thấy combo/i.test(
+            loadErrorMessage,
+          )
+        ) {
+          message.error(
+            t("dashboard.menu.combo.errors.combo_not_found", {
+              defaultValue:
+                "Combo not found in current tenant. Please refresh combo list.",
+            }),
+          );
+          router.replace("/admin/menu/combo");
+          return;
+        }
+
+        message.error(loadErrorMessage);
       } finally {
         setLoadingInitialData(false);
       }
     };
 
     initialize();
-  }, [id, isNewCombo, t]);
+    // Keep initialization stable for current route id to avoid duplicated fetch loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isNewCombo]);
 
   useEffect(() => {
     return () => {
@@ -247,8 +298,76 @@ export default function ComboFormPage() {
     );
   };
 
+  const handleGenerateDescription = async () => {
+    if (isNewCombo) {
+      message.warning(
+        t("dashboard.menu.combo.ai_content.requires_existing_item", {
+          defaultValue: "Please save this combo first so AI can use its detail ID.",
+        }),
+      );
+      return;
+    }
+
+    const promptText = aiPrompt.trim().slice(0, MAX_AI_PROMPT_LENGTH);
+    const contextParts = [
+      formData.name.trim() ? `Name: ${formData.name.trim()}` : "",
+      promptText ? `Prompt: ${promptText}` : "",
+    ].filter(Boolean);
+
+    try {
+      setAiGenerating(true);
+      setAiSuggestions([]);
+
+      const response = await aiService.generateContent({
+        dishId: null,
+        comboId: id,
+        promotionId: null,
+        variants: DEFAULT_AI_VARIANTS,
+        tone: "friendly",
+        customContext: contextParts.join("\n") || undefined,
+      });
+
+      const variants = (response?.variants || []).filter(
+        (item) => typeof item?.content === "string" && item.content.trim().length > 0,
+      );
+
+      if (variants.length === 0) {
+        message.warning(
+          t("dashboard.menu.combo.ai_content.empty_result", {
+            defaultValue: "AI did not return any content. Please try another prompt.",
+          }),
+        );
+        return;
+      }
+
+      setAiSuggestions(variants);
+      message.success(
+        t("dashboard.menu.combo.ai_content.generate_success", {
+          defaultValue: "AI content generated. Choose one variant below.",
+        }),
+      );
+    } catch {
+      message.error(
+        t("dashboard.menu.combo.ai_content.generate_failed", {
+          defaultValue: "Failed to generate content with AI.",
+        }),
+      );
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  const applyAIVariant = (variant: AIContentVariant) => {
+    setFormData((prev) => ({ ...prev, description: variant.content || prev.description }));
+    message.success(
+      t("dashboard.menu.combo.ai_content.apply_success", {
+        defaultValue: "Description updated from AI variant.",
+      }),
+    );
+  };
+
   const validatePayload = (): ComboDetailItemDto[] | null => {
-    // Name required, min 3, max 60 chars
+    // Name required, max length aligned with backend model
     const name = formData.name.trim();
     if (!name) {
       setError(
@@ -258,28 +377,23 @@ export default function ComboFormPage() {
       );
       return null;
     }
-    if (name.length < 3) {
-      setError(
-        t("dashboard.menu.combo.errors.name_too_short", {
-          defaultValue: "Combo name must be at least 3 characters",
-        }),
-      );
-      return null;
-    }
-    if (name.length > 60) {
+    if (name.length > MAX_COMBO_NAME_LENGTH) {
       setError(
         t("dashboard.menu.combo.errors.name_too_long", {
-          defaultValue: "Combo name must be at most 60 characters",
+          defaultValue: "Combo name must be at most 255 characters",
         }),
       );
       return null;
     }
 
-    // Description max 300 chars
-    if (formData.description && formData.description.length > 300) {
+    // Description max length aligned with backend model
+    if (
+      formData.description &&
+      formData.description.trim().length > MAX_COMBO_DESCRIPTION_LENGTH
+    ) {
       setError(
         t("dashboard.menu.combo.errors.description_too_long", {
-          defaultValue: "Description must be at most 300 characters",
+          defaultValue: "Description must be at most 2000 characters",
         }),
       );
       return null;
@@ -306,12 +420,12 @@ export default function ComboFormPage() {
 
     // Image: if selected, must be image/* and <= 5MB (already checked in setSelectedImage)
 
-    // At least 1 dish, max 20
+    // At least 1 dish
     const normalizedDetails = details
       .map((detail) => ({
         id: detail.id,
         dishId: detail.dishId,
-        quantity: Number(detail.quantity || "0"),
+        quantity: Math.floor(Number(detail.quantity || "0")),
       }))
       .filter((detail) => !!detail.dishId);
 
@@ -323,17 +437,13 @@ export default function ComboFormPage() {
       );
       return null;
     }
-    if (normalizedDetails.length > 20) {
-      setError(
-        t("dashboard.menu.combo.errors.too_many_dishes", {
-          defaultValue: "A combo can have at most 20 dishes",
-        }),
-      );
-      return null;
-    }
 
-    // Each quantity > 0, max 99
-    if (normalizedDetails.some((detail) => detail.quantity <= 0)) {
+    // Each quantity must be a positive integer
+    if (
+      normalizedDetails.some(
+        (detail) => !Number.isFinite(detail.quantity) || detail.quantity <= 0,
+      )
+    ) {
       setError(
         t("dashboard.menu.combo.errors.quantity_invalid", {
           defaultValue: "Dish quantity must be greater than zero",
@@ -341,33 +451,29 @@ export default function ComboFormPage() {
       );
       return null;
     }
-    if (normalizedDetails.some((detail) => detail.quantity > 99)) {
-      setError(
-        t("dashboard.menu.combo.errors.quantity_too_high", {
-          defaultValue: "Dish quantity must be at most 99",
-        }),
-      );
-      return null;
-    }
 
-    // No duplicate dish
-    const uniqueDishCount = new Set(normalizedDetails.map((x) => x.dishId)).size;
-    if (uniqueDishCount !== normalizedDetails.length) {
-      setError(
-        t("dashboard.menu.combo.errors.duplicate_dish", {
-          defaultValue: "A dish can only be selected once",
-        }),
-      );
-      return null;
-    }
+    // Merge duplicate dishes instead of blocking save.
+    const mergedDetailsByDish = new Map<
+      string,
+      { id?: string; dishId: string; quantity: number }
+    >();
+    normalizedDetails.forEach((detail) => {
+      const existing = mergedDetailsByDish.get(detail.dishId);
+      if (existing) {
+        existing.quantity += detail.quantity;
+        return;
+      }
+
+      mergedDetailsByDish.set(detail.dishId, {
+        id: detail.id,
+        dishId: detail.dishId,
+        quantity: detail.quantity,
+      });
+    });
 
     setError(null);
 
-    return normalizedDetails.map((detail) => ({
-      id: detail.id,
-      dishId: detail.dishId,
-      quantity: Math.floor(detail.quantity),
-    }));
+    return Array.from(mergedDetailsByDish.values());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -388,7 +494,7 @@ export default function ComboFormPage() {
 
       const payload = {
         name: formData.name.trim(),
-        description: formData.description.trim(),
+        description: formData.description.trim().slice(0, MAX_COMBO_DESCRIPTION_LENGTH),
         price: Number(formData.price),
         isActive: formData.isActive,
         details: normalizedDetails,
@@ -412,12 +518,44 @@ export default function ComboFormPage() {
       }
 
       router.push("/admin/menu/combo");
-    } catch {
-      message.error(
-        t("dashboard.menu.combo.toasts.save_error", {
-          defaultValue: "Unable to save combo",
-        }),
+    } catch (err: unknown) {
+      const defaultSaveError = t("dashboard.menu.combo.toasts.save_error", {
+        defaultValue: "Unable to save combo",
+      });
+
+      const badRequestSaveError = t(
+        "dashboard.menu.combo.toasts.save_error_bad_request",
+        {
+          defaultValue:
+            "Unable to save combo. Please review combo dishes and try again.",
+        },
       );
+
+      const serverSaveError = t("dashboard.menu.combo.toasts.save_error_server", {
+        defaultValue:
+          "The system is busy and cannot save the combo right now. Please try again later.",
+      });
+
+      const extractedError = extractApiErrorMessage(
+        err,
+        defaultSaveError,
+      );
+
+      const status = (err as { response?: { status?: unknown } })?.response?.status;
+
+      let errorMsg = extractedError;
+      if (status === 400 && extractedError === defaultSaveError) {
+        errorMsg = badRequestSaveError;
+      } else if (
+        typeof status === "number" &&
+        status >= 500 &&
+        extractedError === defaultSaveError
+      ) {
+        errorMsg = serverSaveError;
+      }
+
+      setError(errorMsg);
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -426,27 +564,27 @@ export default function ComboFormPage() {
   return (
     <main className="flex-1 p-6 lg:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 mb-2 transition-colors p-2 rounded-lg"
+            style={{ color: "var(--text-muted)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
           <div>
             <h2 className="text-3xl font-bold mb-2" style={{ color: "var(--text)" }}>
               {isNewCombo
-                ? t("dashboard.menu.combo.form.create_title", {
-                    defaultValue: "Create Combo",
-                  })
-                : t("dashboard.menu.combo.form.edit_title", {
-                    defaultValue: "Edit Combo",
-                  })}
+                ? t("dashboard.menu.combo.form.create_title", { defaultValue: "Create Combo" })
+                : t("dashboard.menu.combo.form.edit_title", { defaultValue: "Edit Combo" })}
             </h2>
             <p style={{ color: "var(--text-muted)" }}>
-              {t("dashboard.menu.combo.form.subtitle", {
-                defaultValue: "Configure combo information and included dishes",
-              })}
+              {t("dashboard.menu.combo.form.subtitle", { defaultValue: "Configure combo information and included dishes" })}
             </p>
           </div>
-
-          <Button onClick={() => router.push("/admin/menu/combo")}>
-            {t("common.actions.back", { defaultValue: "Back" })}
-          </Button>
         </div>
 
         {error && (
@@ -522,6 +660,52 @@ export default function ComboFormPage() {
                     defaultValue: "Description",
                   })}
                 </label>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={aiPrompt}
+                    onChange={(e) =>
+                      setAiPrompt(e.target.value.slice(0, MAX_AI_PROMPT_LENGTH))
+                    }
+                    maxLength={MAX_AI_PROMPT_LENGTH}
+                    disabled={isNewCombo || aiGenerating}
+                    className="md:col-span-2 w-full px-3 py-2.5 rounded-lg outline-none"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleGenerateDescription}
+                    disabled={isNewCombo || aiGenerating}
+                    className="px-4 py-2.5 rounded-lg font-medium transition-opacity disabled:opacity-60"
+                    style={{
+                      background: "var(--primary)",
+                      border: "1px solid var(--primary)",
+                      color: "#fff",
+                    }}>
+                    {aiGenerating
+                      ? t("dashboard.menu.combo.ai_content.generating", {
+                          defaultValue: "Generating...",
+                        })
+                      : t("dashboard.menu.combo.ai_content.generate", {
+                          defaultValue: "Generate AI",
+                        })}
+                  </button>
+                </div>
+
+                {isNewCombo && (
+                  <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.menu.combo.ai_content.requires_existing_item", {
+                      defaultValue: "Please save this combo first so AI can use its detail ID.",
+                    })}
+                  </p>
+                )}
+
                 <textarea
                   value={formData.description}
                   onChange={(e) =>
@@ -535,6 +719,69 @@ export default function ComboFormPage() {
                     color: "var(--text)",
                   }}
                 />
+
+                {aiSuggestions.length > 0 && (
+                  <div
+                    className="rounded-xl p-3 space-y-2 mt-3"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                    }}>
+                    <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                      {t("dashboard.menu.combo.ai_content.variants_title", {
+                        defaultValue: "AI variants (click one to apply)",
+                      })}
+                    </p>
+
+                    <div className="space-y-2">
+                      {aiSuggestions.map((variant, index) => (
+                        <button
+                          key={`combo-ai-variant-${index}`}
+                          type="button"
+                          onClick={() => applyAIVariant(variant)}
+                          className="w-full text-left rounded-lg px-3 py-2 transition-colors"
+                          style={{
+                            background: "var(--card)",
+                            border: "1px solid var(--border)",
+                          }}>
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                              {variant.headline ||
+                                t("dashboard.menu.combo.ai_content.variant_label", {
+                                  defaultValue: "Variant {{index}}",
+                                  index: index + 1,
+                                })}
+                            </p>
+
+                            {typeof variant.score === "number" && (
+                              <span
+                                className="text-xs px-2 py-1 rounded"
+                                style={{
+                                  background: "rgba(0,0,0,0.08)",
+                                  color: "var(--text-muted)",
+                                }}>
+                                {t("dashboard.menu.combo.ai_content.score_label", {
+                                  defaultValue: "Score: {{score}}",
+                                  score: variant.score,
+                                })}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
+                            {variant.content}
+                          </p>
+
+                          {variant.scoreNote && (
+                            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                              {variant.scoreNote}
+                            </p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between rounded-lg px-4 py-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>

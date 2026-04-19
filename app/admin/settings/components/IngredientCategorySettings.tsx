@@ -2,8 +2,9 @@
 
 import { getTypeTranslation, upsertTypeTranslations, type SupportedLocale } from "@/lib/i18n/dynamicTypeTranslations";
 import ingredientService, { IngredientCategory } from "@/lib/services/ingredientService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Popconfirm, Table } from "antd";
+import { App, Button, Popconfirm, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -19,6 +20,7 @@ const generateCode = (en?: string | null, vi?: string | null, fallback?: string 
 
 export default function IngredientCategorySettings() {
   const { t, i18n } = useTranslation("common");
+  const { message } = App.useApp();
   const locale: SupportedLocale = i18n.language?.startsWith("en") ? "en" : "vi";
 
   const [categories, setCategories] = useState<IngredientCategory[]>([]);
@@ -40,8 +42,16 @@ export default function IngredientCategorySettings() {
       setIsLoading(true);
       const data = await ingredientService.getAllCategories();
       setCategories(data);
-    } catch {
+    } catch (error) {
       setCategories([]);
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.ingredient_categories.fetch_failed", {
+            defaultValue: "Failed to load ingredient categories",
+          }),
+        ),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -79,8 +89,16 @@ export default function IngredientCategorySettings() {
       upsertTypeTranslations(code, { vi: resolvedName, en: resolvedName });
       await loadCategories();
       handleCloseModal();
-    } catch {
-      console.error("Failed to save ingredient category");
+    } catch (error) {
+      console.error("Failed to save ingredient category", error);
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.ingredient_categories.save_failed", {
+            defaultValue: "Failed to save ingredient category",
+          }),
+        ),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -90,8 +108,16 @@ export default function IngredientCategorySettings() {
     try {
       await ingredientService.deleteCategory(id);
       await loadCategories();
-    } catch {
-      console.error("Failed to delete ingredient category");
+    } catch (error) {
+      console.error("Failed to delete ingredient category", error);
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.manage.ingredient_categories.delete_failed", {
+            defaultValue: "Failed to delete ingredient category",
+          }),
+        ),
+      );
     }
   };
 

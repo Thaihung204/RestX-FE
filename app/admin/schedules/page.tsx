@@ -16,10 +16,11 @@ import {
   ScheduleOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { Button } from "antd";
+import { App, Button } from "antd";
 import { addDays, endOfWeek, format, startOfWeek } from "date-fns";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 
 const DEFAULT_TIME_SLOTS: TimeSlot[] = [
   { id: "slot1", startTime: "07:00", endTime: "09:00" },
@@ -33,6 +34,7 @@ const DEFAULT_TIME_SLOTS: TimeSlot[] = [
 
 export default function SchedulesPage() {
   const { t } = useTranslation("common");
+  const { message } = App.useApp();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [weekSchedule, setWeekSchedule] = useState<WeekSchedule | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,6 +62,14 @@ export default function SchedulesPage() {
       setWeekSchedule(schedule);
     } catch (error) {
       console.error("Failed to load schedule:", error);
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("schedule.error.load", {
+            defaultValue: "Failed to load schedule",
+          }),
+        ),
+      );
       const schedule = getMockSchedule();
       schedule.timeSlots = timeSlots;
       setWeekSchedule(schedule);
@@ -131,7 +141,7 @@ export default function SchedulesPage() {
   };
 
   const handleExport = () => {
-    alert(t("schedule.export.alert"));
+    message.info(t("schedule.export.alert"));
   };
 
   return (

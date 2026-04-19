@@ -27,15 +27,27 @@ const initialFormState = {
   requests: '',
 };
 
+const MAX_RESERVATION_ADVANCE_MONTHS = 1;
+
 const getTodayLocalDate = () => {
   const now = new Date();
   const tzOffset = now.getTimezoneOffset() * 60000;
   return new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
 };
 
+const getMaxBookableDate = () => dayjs().add(MAX_RESERVATION_ADVANCE_MONTHS, 'month').format('YYYY-MM-DD');
+
 const isFutureReservationTime = (date: string, time: string) => {
   const selectedDateTime = dayjs(`${date}T${time}:00`);
   return selectedDateTime.isValid() && selectedDateTime.isAfter(dayjs());
+};
+
+const isWithinBookingHorizon = (date: string, time: string) => {
+  const selectedDateTime = dayjs(`${date}T${time}:00`);
+  if (!selectedDateTime.isValid()) return false;
+
+  const maxAllowedDateTime = dayjs().add(MAX_RESERVATION_ADVANCE_MONTHS, 'month');
+  return !selectedDateTime.isAfter(maxAllowedDateTime);
 };
 
 export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
@@ -79,6 +91,15 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
 
     if (!isFutureReservationTime(form.date, form.time)) {
       setError(t('reservation_detail.edit.date_in_past', { defaultValue: 'Reservation time must be in the future.' }));
+      return;
+    }
+
+    if (!isWithinBookingHorizon(form.date, form.time)) {
+      setError(
+        t('landing.booking.confirm.error_too_far', {
+          defaultValue: 'Reservation can only be made up to 1 month in advance.',
+        }),
+      );
       return;
     }
 
@@ -259,12 +280,18 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                         style={{ width: '100%', marginTop: 8 }}
                         disabledDate={(current) => {
                           if (!current) return false;
-                          return current.startOf('day').isBefore(dayjs().startOf('day'));
+                          const today = getTodayLocalDate();
+                          const maxBookableDate = getMaxBookableDate();
+                          const currentDate = current.format('YYYY-MM-DD');
+                          return currentDate < today || currentDate > maxBookableDate;
                         }}
                         onChange={(value) => {
                           if (!value) return;
                           const selectedDate = value.format('YYYY-MM-DD');
-                          const safeDate = selectedDate < getTodayLocalDate() ? getTodayLocalDate() : selectedDate;
+                          const today = getTodayLocalDate();
+                          const maxBookableDate = getMaxBookableDate();
+                          let safeDate = selectedDate < today ? today : selectedDate;
+                          if (safeDate > maxBookableDate) safeDate = maxBookableDate;
                           setForm((prev) => ({ ...prev, date: safeDate }));
                         }}
                       />
@@ -273,13 +300,33 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('landing.booking.form.preferred_time')}
                       </label>
-                      <input
-                        type="time"
-                        value={form.time}
-                        min={form.date === getTodayLocalDate() ? dayjs().format('HH:mm') : undefined}
-                        onChange={(e) => setForm((prev) => ({ ...prev, time: e.target.value }))}
-                        style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)' }}
-                      />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <select
+                          value={form.time.split(':')[0]}
+                          onChange={(e) => {
+                            const min = form.time.split(':')[1] || '00';
+                            setForm((prev) => ({ ...prev, time: `${e.target.value}:${min}` }));
+                          }}
+                          style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14 }}
+                        >
+                          {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <span style={{ display: 'flex', alignItems: 'center', color: 'var(--text-muted)', fontWeight: 700 }}>:</span>
+                        <select
+                          value={form.time.split(':')[1] || '00'}
+                          onChange={(e) => {
+                            const hr = form.time.split(':')[0] || '00';
+                            setForm((prev) => ({ ...prev, time: `${hr}:${e.target.value}` }));
+                          }}
+                          style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14 }}
+                        >
+                          {['00', '15', '30', '45'].map((m) => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
 

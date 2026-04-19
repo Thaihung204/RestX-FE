@@ -2,7 +2,6 @@
 
 import StaffAuthGuard from "@/components/auth/StaffAuthGuard";
 import {
-  ApartmentOutlined,
   BellOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
@@ -108,7 +107,21 @@ export default function StaffLayout({
     },
     {
       key: "/staff/activity",
-      icon: <ApartmentOutlined />,
+      icon: (
+        <svg
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          style={{ width: 16, height: 16 }}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          />
+        </svg>
+      ),
       label:
         isMobile || isTablet
           ? t("staff.menu.activity_short", {

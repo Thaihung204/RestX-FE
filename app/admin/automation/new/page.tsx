@@ -2,6 +2,7 @@
 
 import { DropDown } from "@/components/ui/DropDown";
 import { triggerService } from "@/lib/services/triggerService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { App } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -157,7 +158,12 @@ export default function NewAutomationTriggerPage() {
         if (mappedActionTypes.length > 0) setActionType((prev) => prev || mappedActionTypes[0].value);
       } catch (error) {
         console.error(error);
-        message.error(t("automation.new.messages.load_metadata_failed"));
+        message.error(
+          extractApiErrorMessage(
+            error,
+            t("automation.new.messages.load_metadata_failed"),
+          ),
+        );
       } finally {
         setLoadingMeta(false);
       }
@@ -234,7 +240,12 @@ export default function NewAutomationTriggerPage() {
         setCriteria(mappedCriteria);
       } catch (error) {
         console.error(error);
-        message.error(t("automation.new.messages.load_detail_failed"));
+        message.error(
+          extractApiErrorMessage(
+            error,
+            t("automation.new.messages.load_detail_failed"),
+          ),
+        );
       } finally {
         setLoadingMeta(false);
       }
@@ -351,9 +362,12 @@ export default function NewAutomationTriggerPage() {
     } catch (error) {
       console.error(error);
       message.error(
-        isEditMode
-          ? t("automation.new.messages.update_failed")
-          : t("automation.new.messages.create_failed")
+        extractApiErrorMessage(
+          error,
+          isEditMode
+            ? t("automation.new.messages.update_failed")
+            : t("automation.new.messages.create_failed"),
+        ),
       );
     } finally {
       setSubmitting(false);

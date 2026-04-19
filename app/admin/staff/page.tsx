@@ -4,6 +4,7 @@ import ContentAreaLoader from "@/components/admin/ContentAreaLoader";
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import employeeService from "@/lib/services/employeeService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { App } from "antd";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -22,7 +23,7 @@ interface Staff {
   avatarUrl?: string;
 }
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 
 export default function StaffPage() {
   const { t } = useTranslation(["common", "dashboard"]);
@@ -34,6 +35,7 @@ export default function StaffPage() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -54,7 +56,7 @@ export default function StaffPage() {
 
       const data = await employeeService.getEmployees({
         page,
-        itemsPerPage: PAGE_SIZE,
+        itemsPerPage: pageSize,
         search: searchQuery.trim() || undefined,
         position: filterRole === "all" ? undefined : filterRole,
       });
@@ -89,7 +91,7 @@ export default function StaffPage() {
         const tc =
           paginatedData?.totalCount ?? data.totalCount ?? mappedData.length;
         const tp =
-          (paginatedData?.totalPages ?? Math.ceil(tc / PAGE_SIZE)) || 1;
+          (paginatedData?.totalPages ?? Math.ceil(tc / pageSize)) || 1;
         setTotalCount(tc);
         setTotalPages(tp);
 
@@ -111,9 +113,14 @@ export default function StaffPage() {
       } else {
         setError(t("dashboard.staff.errors.load_failed"));
       }
-    } catch {
+    } catch (error) {
       setError(t("dashboard.staff.errors.load_failed"));
-      message.error(t("dashboard.toasts.staff.load_error_message"));
+      message.error(
+        extractApiErrorMessage(
+          error,
+          t("dashboard.toasts.staff.load_error_message"),
+        ),
+      );
     } finally {
       setLoading(false);
     }
@@ -122,7 +129,7 @@ export default function StaffPage() {
   useEffect(() => {
     fetchStaffList(currentPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, searchQuery, filterRole]);
+  }, [currentPage, filterRole, pageSize, searchQuery]);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -167,8 +174,10 @@ export default function StaffPage() {
       setTotalInactive((prev) =>
         newStatus ? Math.max(0, prev - 1) : prev + 1,
       );
-    } catch {
-      message.error(t("dashboard.staff.errors.update_failed"));
+    } catch (error) {
+      message.error(
+        extractApiErrorMessage(error, t("dashboard.staff.errors.update_failed")),
+      );
     }
   };
 
@@ -630,16 +639,40 @@ export default function StaffPage() {
             )}
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {totalCount > 0 && (
               <div className="flex items-center justify-between pt-2">
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                  {t("common.showing", {
-                    from: (currentPage - 1) * PAGE_SIZE + 1,
-                    to: Math.min(currentPage * PAGE_SIZE, totalCount),
-                    total: totalCount,
-                    defaultValue: `Showing ${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, totalCount)} of ${totalCount}`,
-                  })}
-                </p>
+                <div className="flex items-center gap-4">
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                    {t("common.showing", {
+                      from: (currentPage - 1) * pageSize + 1,
+                      to: Math.min(currentPage * pageSize, totalCount),
+                      total: totalCount,
+                      defaultValue: `Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, totalCount)} of ${totalCount}`,
+                    })}
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <DropDown
+                      value={String(pageSize)}
+                      onChange={(e) => {
+                        setCurrentPage(1);
+                        setPageSize(Number(e.target.value));
+                      }}
+                      containerClassName="w-[110px]"
+                      className="!h-9 !py-1.5 !pl-3 !pr-8 !text-sm"
+                      aria-label={t("common.pagination.items_per_page", {
+                        defaultValue: "Items/page",
+                      })}>
+                      {PAGE_SIZE_OPTIONS.map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </DropDown>
+                  </div>
+                </div>
+
+                {totalPages > 1 && (
                 <div className="flex items-center gap-1">
                   {/* Prev */}
                   <button
@@ -720,6 +753,7 @@ export default function StaffPage() {
                     </svg>
                   </button>
                 </div>
+                )}
               </div>
             )}
           </div>

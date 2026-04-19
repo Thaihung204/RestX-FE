@@ -1,8 +1,15 @@
 "use client";
 
 import MenuManagementTabs from "@/components/admin/menu/MenuManagementTabs";
+import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import { App, Button, Popconfirm } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -22,12 +29,14 @@ export default function ComboManagementPage() {
       setLoading(true);
       const data = await dishService.getCombos(true);
       setCombos(Array.isArray(data) ? data : []);
-    } catch {
-      message.error(
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
         t("dashboard.menu.combo.toasts.fetch_error", {
           defaultValue: "Failed to load combos",
         }),
       );
+      message.error(errorMsg);
       setCombos([]);
     } finally {
       setLoading(false);
@@ -64,12 +73,14 @@ export default function ComboManagementPage() {
               defaultValue: "Combo deactivated",
             }),
       );
-    } catch {
-      message.error(
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
         t("dashboard.menu.combo.toasts.status_error", {
           defaultValue: "Unable to update combo status",
         }),
       );
+      message.error(errorMsg);
     } finally {
       setLoadingActionId(null);
     }
@@ -86,12 +97,14 @@ export default function ComboManagementPage() {
           defaultValue: "Combo deleted successfully",
         }),
       );
-    } catch {
-      message.error(
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(
+        err,
         t("dashboard.menu.combo.toasts.delete_error", {
           defaultValue: "Unable to delete combo",
         }),
       );
+      message.error(errorMsg);
     } finally {
       setLoadingActionId(null);
     }
@@ -115,7 +128,11 @@ export default function ComboManagementPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <MenuManagementTabs activeTab="combos" />
             <Link href="/admin/menu/combo/new">
-              <Button type="primary" style={{ background: "var(--primary)", borderColor: "var(--primary)" }}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                className="!inline-flex !h-12 !items-center !rounded-xl !px-6 !text-base !font-semibold"
+                style={{ background: "var(--primary)", borderColor: "var(--primary)" }}>
                 {t("dashboard.menu.combo.actions.add_combo", {
                   defaultValue: "Add Combo",
                 })}
@@ -179,7 +196,11 @@ export default function ComboManagementPage() {
             </p>
             <div className="mt-4">
               <Link href="/admin/menu/combo/new">
-                <Button type="primary" style={{ background: "var(--primary)", borderColor: "var(--primary)" }}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  className="!inline-flex !h-12 !items-center !rounded-xl !px-6 !text-base !font-semibold"
+                  style={{ background: "var(--primary)", borderColor: "var(--primary)" }}>
                   {t("dashboard.menu.combo.actions.add_combo", {
                     defaultValue: "Add Combo",
                   })}
@@ -188,19 +209,33 @@ export default function ComboManagementPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
             {combos.map((combo) => {
-              const itemCount = combo.details?.reduce(
+              const comboDetails = combo.details || [];
+              const itemCount = comboDetails.reduce(
                 (sum, detail) => sum + (detail.quantity || 0),
                 0,
               );
+              const totalDishTypes = comboDetails.length;
+              const hasDishes = totalDishTypes > 0;
 
               return (
                 <div
                   key={combo.id}
-                  className="rounded-xl overflow-hidden"
-                  style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-                  <div className="h-44" style={{ background: "var(--surface)" }}>
+                  className="rounded-xl overflow-hidden transition-all group h-full flex flex-col"
+                  style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.borderColor = "rgba(255,56,11,0.5)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.borderColor = "var(--border)")
+                  }>
+                  <div
+                    className="relative overflow-hidden"
+                    style={{
+                      background: "var(--surface)",
+                      aspectRatio: "4/3",
+                    }}>
                     {combo.imageUrl ? (
                       <img
                         src={combo.imageUrl}
@@ -212,25 +247,26 @@ export default function ComboManagementPage() {
                         {t("dashboard.menu.combo.no_image", { defaultValue: "No image" })}
                       </div>
                     )}
-                  </div>
 
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
-                          {combo.name}
-                        </h3>
-                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                          {combo.code || "-"}
-                        </p>
-                      </div>
+                    <div className="absolute top-3 left-3">
                       <span
-                        className="px-2.5 py-1 rounded-full text-xs font-medium"
+                        className="px-2.5 py-1 rounded-full text-white text-xs font-semibold"
+                        style={{ background: "rgba(15, 23, 42, 0.72)" }}>
+                        {t("dashboard.menu.combo.fields.total_items", {
+                          defaultValue: "Total items",
+                        })}
+                        : {itemCount}
+                      </span>
+                    </div>
+
+                    <div className="absolute top-3 right-3">
+                      <span
+                        className="px-2.5 py-1 rounded-full text-xs font-semibold"
                         style={{
                           background: combo.isActive
-                            ? "rgba(34, 197, 94, 0.12)"
-                            : "rgba(156, 163, 175, 0.12)",
-                          color: combo.isActive ? "#22c55e" : "#6b7280",
+                            ? "rgba(34, 197, 94, 0.15)"
+                            : "rgba(107, 114, 128, 0.2)",
+                          color: combo.isActive ? "#16a34a" : "#6b7280",
                         }}>
                         {combo.isActive
                           ? t("common.active", { defaultValue: "Active" })
@@ -238,56 +274,107 @@ export default function ComboManagementPage() {
                       </span>
                     </div>
 
+                    {!combo.isActive && (
+                      <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                        <span className="px-4 py-2 bg-red-500 text-white rounded-lg font-bold">
+                          {t("dashboard.menu.out_of_stock", { defaultValue: "Out of Stock" })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-4 flex flex-1 flex-col">
+                    <div className="flex items-start justify-between mb-2 gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-bold mb-1 truncate" style={{ color: "var(--text)" }}>
+                          {combo.name}
+                        </h3>
+                        <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+                          {combo.code || "-"}
+                        </p>
+                      </div>
+                    </div>
+
                     <p
-                      className="text-sm line-clamp-2"
-                      style={{ color: "var(--text-muted)" }}>
+                      className="text-sm min-h-10"
+                      style={{
+                        color: "var(--text-muted)",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}>
                       {combo.description ||
                         t("dashboard.menu.combo.no_description", {
                           defaultValue: "No description",
                         })}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                          {t("dashboard.menu.combo.fields.price", { defaultValue: "Price" })}
-                        </p>
-                        <p className="font-semibold" style={{ color: "var(--primary)" }}>
-                          {formatVND(combo.price)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                          {t("dashboard.menu.combo.fields.total_items", {
-                            defaultValue: "Total items",
-                          })}
-                        </p>
-                        <p className="font-semibold" style={{ color: "var(--text)" }}>
-                          {itemCount}
-                        </p>
-                      </div>
+                    <div className="mt-3 min-h-10">
+                      <DropDown
+                        aria-label={t("dashboard.menu.combo.actions.view_dishes", {
+                          defaultValue: "View dishes",
+                        })}
+                        defaultValue=""
+                        disabled={!hasDishes}
+                        className="!h-10 !py-2 !text-sm">
+                        <option value="" disabled>
+                          {hasDishes
+                            ? `${t("dashboard.menu.combo.actions.view_dishes", {
+                                defaultValue: "View dishes",
+                              })} (${totalDishTypes})`
+                            : t("dashboard.menu.combo.fields.no_dishes", {
+                                defaultValue: "No dishes in this combo yet",
+                              })}
+                        </option>
+                        {comboDetails.map((detail, index) => (
+                          <option
+                            key={`${combo.id}-dish-${detail.dishId || index}`}
+                            value={`${detail.dishId || "dish"}-${index}`}>
+                            {(detail.dishName ||
+                              t("dashboard.menu.combo.placeholders.select_dish", {
+                                defaultValue: "Dish",
+                              })) + ` x${detail.quantity || 1}`}
+                          </option>
+                        ))}
+                      </DropDown>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <StatusToggle
-                        checked={combo.isActive}
-                        onChange={() => handleToggleStatus(combo)}
-                        ariaLabel={
-                          combo.isActive
-                            ? t("dashboard.menu.combo.actions.deactivate", {
-                                defaultValue: "Deactivate combo",
-                              })
-                            : t("dashboard.menu.combo.actions.activate", {
-                                defaultValue: "Activate combo",
-                              })
-                        }
-                      />
+                    <div className="mt-auto pt-4">
+                      <div className="flex items-center justify-between gap-1">
+                        <div>
+                          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                            {t("dashboard.menu.combo.fields.price", { defaultValue: "Price" })}
+                          </p>
+                          <p className="text-[20px] sm:text-base font-semibold" style={{ color: "var(--primary)" }}>
+                            {formatVND(combo.price)}
+                          </p>
+                        </div>
+                        <StatusToggle
+                          checked={combo.isActive}
+                          onChange={() => handleToggleStatus(combo)}
+                          ariaLabel={
+                            combo.isActive
+                              ? t("dashboard.menu.combo.actions.deactivate", {
+                                  defaultValue: "Deactivate combo",
+                                })
+                              : t("dashboard.menu.combo.actions.activate", {
+                                  defaultValue: "Activate combo",
+                                })
+                          }
+                        />
+                      </div>
 
-                      <div className="flex gap-2">
+                      <div className="mt-4 flex items-center justify-end gap-2">
                         <Link href={`/admin/menu/combo/${combo.id}`}>
-                          <Button size="small">
-                            {t("common.actions.edit", { defaultValue: "Edit" })}
-                          </Button>
+                          <Button
+                            size="small"
+                            icon={<EditOutlined />}
+                            aria-label={t("common.actions.edit", { defaultValue: "Edit" })}
+                            title={t("common.actions.edit", { defaultValue: "Edit" })}
+                            className="!h-9 !w-9 !rounded-lg"
+                          />
                         </Link>
                         <Popconfirm
                           title={t("dashboard.menu.combo.confirm.delete_title", {
@@ -305,10 +392,13 @@ export default function ComboManagementPage() {
                           onConfirm={() => handleDeleteCombo(combo.id)}>
                           <Button
                             size="small"
+                            icon={<DeleteOutlined />}
                             danger
-                            loading={loadingActionId === combo.id}>
-                            {t("common.actions.delete", { defaultValue: "Delete" })}
-                          </Button>
+                            aria-label={t("common.actions.delete", { defaultValue: "Delete" })}
+                            title={t("common.actions.delete", { defaultValue: "Delete" })}
+                            loading={loadingActionId === combo.id}
+                            className="!h-9 !w-9 !rounded-lg"
+                          />
                         </Popconfirm>
                       </div>
                     </div>

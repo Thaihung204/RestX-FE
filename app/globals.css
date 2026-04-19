@@ -35,6 +35,7 @@
   /* Accessible “on color” tokens (can be auto-adjusted by JS) */
   --text-inverse: #FFFFFF;
   --on-primary: var(--text-inverse);
+  --reservation-hero-description: color-mix(in srgb, var(--text-inverse), transparent 12%);
 
   --primary-soft: color-mix(in srgb, var(--primary), transparent 85%);
   --primary-faint: color-mix(in srgb, var(--primary), transparent 94%);
@@ -94,6 +95,7 @@
   /* Accessible “on color” tokens (can be auto-adjusted by JS) */
   --text-inverse: #FFFFFF;
   --on-primary: var(--text-inverse);
+  --reservation-hero-description: color-mix(in srgb, var(--text-inverse), transparent 8%);
 
   /* Functional Tokens (auto-calculated from --primary) */
   --primary-soft: color-mix(in srgb, var(--primary), transparent 82%);
@@ -115,6 +117,81 @@
   --modal-overlay: color-mix(in srgb, black, transparent 30%);
   --decoration-glow: color-mix(in srgb, var(--primary), transparent 88%);
   --backdrop-blur: color-mix(in srgb, var(--surface), transparent 20%);
+}
+
+/* =========================================================
+ * Timepicker UI Theme Tokens
+ * Keep library colors centralized in global theme variables
+ * ========================================================= */
+:root,
+[data-theme="light"] {
+  --tp-border-radius: 28px;
+  --tp-bg: #ffffff;
+  --tp-surface: #ffffff;
+  --tp-surface-hover: color-mix(in srgb, #ffffff, var(--primary) 8%);
+  --tp-input-bg: #ffffff;
+  --tp-text: var(--text-light-dynamic);
+  --tp-text-secondary: var(--text-muted-light-dynamic);
+  --tp-text-disabled: color-mix(in srgb, var(--text-light-dynamic), transparent 58%);
+  --tp-text-type-time: var(--text-muted-light-dynamic);
+  --tp-text-icon: var(--text-muted-light-dynamic);
+  --tp-am-pm-active: var(--primary-soft);
+  --tp-am-pm-text-selected: var(--on-primary);
+  --tp-am-pm-text-unselected: var(--text-muted-light-dynamic);
+  --tp-primary: var(--primary);
+  --tp-on-primary: var(--on-primary);
+  --tp-primary-container: var(--primary-soft);
+  --tp-on-primary-container: var(--text-light-dynamic);
+  --tp-on-surface: var(--text-light-dynamic);
+  --tp-on-surface-rgb: 17, 17, 17;
+  --tp-border: var(--border);
+  --tp-outline: var(--primary);
+  --tp-outline-variant: color-mix(in srgb, var(--border), transparent 40%);
+  --tp-hover-bg: color-mix(in srgb, #ffffff, var(--text-light-dynamic) 6%);
+  --tp-shadow: 0 10px 26px color-mix(in srgb, var(--primary), transparent 92%);
+  --tp-shadow-focus: 0 0 0 3px var(--primary-soft);
+  --tp-dropdown-option-bg: #ffffff;
+  --tp-dropdown-option-text: var(--text-light-dynamic);
+  --tp-wheel-highlight-bg: var(--primary-faint);
+  --tp-wheel-highlight-border: var(--primary-border);
+  --tp-wheel-text-color: var(--text-light-dynamic);
+  --tp-wheel-selected-color: var(--primary);
+  --tp-wheel-fade-opacity: 0.7;
+}
+
+[data-theme="dark"] {
+  --tp-border-radius: 28px;
+  --tp-bg: color-mix(in srgb, var(--card), black 6%);
+  --tp-surface: color-mix(in srgb, var(--surface), black 4%);
+  --tp-surface-hover: color-mix(in srgb, var(--surface), var(--text) 12%);
+  --tp-input-bg: color-mix(in srgb, var(--card), var(--text) 8%);
+  --tp-text: var(--text);
+  --tp-text-secondary: var(--text-muted);
+  --tp-text-disabled: color-mix(in srgb, var(--text), transparent 52%);
+  --tp-text-type-time: var(--text-muted);
+  --tp-text-icon: var(--text-muted);
+  --tp-am-pm-active: var(--primary-soft);
+  --tp-am-pm-text-selected: var(--on-primary);
+  --tp-am-pm-text-unselected: var(--text-muted);
+  --tp-primary: var(--primary);
+  --tp-on-primary: var(--on-primary);
+  --tp-primary-container: var(--primary-soft);
+  --tp-on-primary-container: var(--text);
+  --tp-on-surface: var(--text);
+  --tp-on-surface-rgb: 236, 236, 236;
+  --tp-border: color-mix(in srgb, var(--text), transparent 82%);
+  --tp-outline: var(--primary);
+  --tp-outline-variant: color-mix(in srgb, var(--text), transparent 84%);
+  --tp-hover-bg: color-mix(in srgb, var(--surface), var(--text) 10%);
+  --tp-shadow: var(--shadow-lg);
+  --tp-shadow-focus: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 82%);
+  --tp-dropdown-option-bg: var(--card);
+  --tp-dropdown-option-text: var(--text);
+  --tp-wheel-highlight-bg: color-mix(in srgb, var(--primary), transparent 88%);
+  --tp-wheel-highlight-border: color-mix(in srgb, var(--primary), transparent 72%);
+  --tp-wheel-text-color: var(--text);
+  --tp-wheel-selected-color: var(--primary-tint);
+  --tp-wheel-fade-opacity: 0.8;
 }
 
 body {
@@ -765,7 +842,7 @@ textarea::placeholder {
 .table-360-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1001;
+  z-index: 1600;
   background: #000;
 }
 
@@ -832,11 +909,15 @@ textarea::placeholder {
   left: 0;
   right: 0;
   z-index: 10;
-  padding: 14px 20px;
+  padding: calc(env(safe-area-inset-top) + 14px) 20px 14px;
   display: flex;
   align-items: center;
   gap: 12px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+}
+
+.table-360-header-meta {
+  min-width: 0;
 }
 
 .table-360-back-btn {
@@ -861,12 +942,18 @@ textarea::placeholder {
   font-weight: 700;
   font-size: 16px;
   color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table-360-header-subtitle {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.55);
   margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table-360-badge {
@@ -882,7 +969,7 @@ textarea::placeholder {
 /* Drag hint pill */
 .table-360-hint {
   position: absolute;
-  bottom: 90px;
+  bottom: calc(env(safe-area-inset-bottom) + 94px);
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.55);
@@ -904,7 +991,7 @@ textarea::placeholder {
 /* Bottom action bar */
 .table-360-action-bar {
   position: absolute;
-  bottom: 24px;
+  bottom: calc(env(safe-area-inset-bottom) + 24px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -956,20 +1043,48 @@ textarea::placeholder {
 }
 
 @media (max-width: 640px) {
+  .table-360-header {
+    padding: calc(env(safe-area-inset-top) + 10px) 12px 10px;
+    gap: 10px;
+  }
+
+  .table-360-header-title {
+    font-size: 14px;
+  }
+
+  .table-360-header-subtitle {
+    font-size: 11px;
+  }
+
+  .table-360-back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .table-360-badge {
+    display: none;
+  }
+
   .table-360-action-bar {
     flex-direction: column;
-    width: calc(100% - 32px);
-    bottom: 16px;
+    width: calc(100% - 24px);
+    bottom: calc(env(safe-area-inset-bottom) + 12px);
   }
 
   .table-360-action-secondary,
   .table-360-action-primary {
     width: 100%;
     justify-content: center;
+    min-height: 46px;
   }
 
   .table-360-hint {
-    bottom: 160px;
+    width: calc(100% - 32px);
+    white-space: normal;
+    text-align: center;
+    justify-content: center;
+    bottom: calc(env(safe-area-inset-bottom) + 154px);
   }
 }
 
@@ -1424,15 +1539,619 @@ img {
 .reservation-section-animate:nth-child(3) { animation-delay: 0.15s; }
 .reservation-section-animate:nth-child(4) { animation-delay: 0.20s; }
 
+/* Reservation outer frame: always fit one viewport */
+.reservation-root-frame {
+  --reservation-header-offset: clamp(64px, 8vh, 84px);
+  height: calc(100vh - var(--reservation-header-offset));
+  height: calc(100dvh - var(--reservation-header-offset));
+  min-height: calc(100vh - var(--reservation-header-offset));
+  min-height: calc(100dvh - var(--reservation-header-offset));
+  max-height: calc(100vh - var(--reservation-header-offset));
+  max-height: calc(100dvh - var(--reservation-header-offset));
+  overflow: hidden;
+  isolation: isolate;
+  scroll-margin-top: calc(var(--reservation-header-offset) + 8px);
+}
+
+html.reservation-overlay-open,
+body.reservation-overlay-open {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+.reservation-bg-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.reservation-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Reservation search hero sizing and readability across viewport ranges */
+.reservation-main-shell {
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  overflow: visible;
+  padding-top: clamp(14px, 4.5vh, 72px) !important;
+  padding-bottom: clamp(14px, 4.5vh, 72px) !important;
+}
+
+.reservation-search-shell {
+  width: min(1100px, calc(100vw - 2rem));
+  max-width: min(1100px, calc(100vw - 2rem)) !important;
+  margin-inline: auto;
+}
+
+.reservation-search-overlay {
+  position: relative;
+  width: 100%;
+}
+
+.reservation-hero-block {
+  margin-bottom: clamp(14px, 3.6vh, 40px) !important;
+}
+
+.reservation-hero-title {
+  font-size: clamp(2rem, 6.6vw, 5.2rem) !important;
+  line-height: 1.04 !important;
+}
+
+.reservation-hero-description {
+  color: var(--reservation-hero-description) !important;
+  max-width: min(720px, 92vw) !important;
+}
+
+.reservation-search-card {
+  width: 100%;
+  padding: clamp(14px, 2.1vw, 38px) !important;
+}
+
+.reservation-main-shell-blocked {
+  pointer-events: none;
+  opacity: 0.34;
+  user-select: none;
+}
+
+.reservation-closed-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  background: color-mix(in srgb, var(--modal-overlay), black 8%);
+}
+
+.reservation-closed-overlay-panel {
+  width: min(760px, calc(100vw - 1rem));
+  border-radius: 28px;
+  border: 1px solid color-mix(in srgb, var(--danger), transparent 52%);
+  background: color-mix(in srgb, var(--card), var(--surface) 20%);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.36);
+  color: var(--text);
+  padding: clamp(18px, 2.5vw, 34px);
+  display: grid;
+  gap: clamp(10px, 1.4vh, 16px);
+}
+
+.reservation-closed-overlay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--danger), transparent 30%);
+  background: color-mix(in srgb, var(--danger), transparent 86%);
+  color: color-mix(in srgb, var(--danger), white 8%);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.reservation-closed-overlay-badge .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+.reservation-closed-overlay-title {
+  font-size: clamp(1.42rem, 1.1rem + 1.2vw, 2.25rem);
+  line-height: 1.18;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.reservation-closed-overlay-description {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.reservation-closed-overlay-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.reservation-closed-overlay-meta-item {
+  display: grid;
+  gap: 6px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface), var(--card) 50%);
+  padding: 12px;
+}
+
+.reservation-closed-overlay-meta-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.reservation-closed-overlay-meta-value {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.reservation-closed-overlay-hint {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.reservation-closed-overlay-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  border: 1px solid var(--primary-border);
+  background: var(--primary-soft);
+  color: var(--text);
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.18s ease-out, background-color 0.18s ease-out;
+}
+
+.reservation-closed-overlay-action:hover {
+  transform: translateY(-1px);
+  background: var(--primary-faint);
+}
+
+.reservation-closed-overlay-action .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+.reservation-search-features {
+  margin-top: clamp(14px, 2.6vh, 38px) !important;
+  padding-top: clamp(12px, 2.2vh, 30px) !important;
+}
+
+.reservation-main-shell-compact {
+  padding-top: clamp(8px, 1.5vh, 18px) !important;
+  padding-bottom: clamp(8px, 1.5vh, 18px) !important;
+  scrollbar-gutter: stable;
+}
+
+.reservation-confirm-shell {
+  width: min(1080px, calc(100vw - 1rem));
+  max-width: min(1080px, calc(100vw - 1rem)) !important;
+  margin-inline: auto;
+  font-size: clamp(0.84rem, 0.14vw + 0.81rem, 0.92rem);
+}
+
+.reservation-confirm-back {
+  margin-bottom: clamp(8px, 1.6vh, 18px) !important;
+}
+
+.reservation-confirm-card {
+  min-height: 0 !important;
+}
+
+.reservation-confirm-side-left,
+.reservation-confirm-side-right {
+  min-height: 0;
+}
+
+.reservation-confirm-side-left {
+  padding: clamp(14px, 2vh, 32px) !important;
+}
+
+.reservation-confirm-side-content {
+  justify-content: flex-start;
+}
+
+.reservation-confirm-side-right {
+  padding: clamp(14px, 2vh, 34px) !important;
+  overflow-y: auto;
+}
+
+.reservation-confirm-title {
+  font-size: clamp(1.3rem, 0.9vw + 1rem, 1.75rem) !important;
+  line-height: 1.08;
+}
+
+.reservation-confirm-side-right h3 {
+  line-height: 1.1;
+}
+
+.reservation-confirm-form {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.7vh, 20px);
+}
+
+.reservation-confirm-metrics {
+  flex: 0 0 auto;
+}
+
+.reservation-confirm-metric-item .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.reservation-confirm-input,
+.reservation-confirm-textarea {
+  font-size: 0.92rem;
+}
+
+@media (min-width: 1024px) {
+  .reservation-confirm-side-content {
+    justify-content: center;
+  }
+}
+
+.reservation-confirm-submit {
+  min-height: 48px;
+}
+
+.reservation-success-shell {
+  max-width: min(680px, calc(100vw - 1rem)) !important;
+  max-height: calc(100dvh - 170px);
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .reservation-confirm-card {
+    max-height: calc(100dvh - 170px);
+  }
+}
+
+/* Reservation table-selection: keep within one screen frame */
+.reservation-table-shell {
+  width: min(1640px, calc(100vw - 1rem));
+  max-width: min(1640px, calc(100vw - 1rem));
+  margin-inline: auto;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.reservation-table-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  background: rgba(9, 12, 18, 0.56);
+}
+
+.reservation-flow-overlay-panel {
+  width: min(1160px, calc(100vw - 1rem));
+  max-height: min(94dvh, 980px);
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+
+.reservation-confirm-overlay-panel {
+  width: min(1160px, calc(100vw - 1rem));
+}
+
+.reservation-success-overlay-panel {
+  width: min(760px, calc(100vw - 1rem));
+  max-height: min(92dvh, 820px);
+}
+
+.reservation-table-overlay-panel {
+  width: min(1700px, calc(100vw - 1.25rem));
+  height: min(94dvh, 980px);
+  max-height: 94dvh;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.reservation-table-shell-overlay {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-inline: 0;
+}
+
+.reservation-table-topbar {
+  margin-bottom: clamp(10px, 1.8vh, 20px) !important;
+}
+
+.reservation-table-frame {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto !important;
+  max-height: none;
+}
+
+.reservation-table-map-pane {
+  min-height: 0 !important;
+}
+
+.reservation-table-side-left,
+.reservation-table-side-right {
+  min-height: 0;
+}
+
+.reservation-table-side-right {
+  overflow-y: auto;
+}
+
+@media (min-width: 1025px) and (max-height: 960px) {
+  .reservation-table-shell {
+    width: min(1560px, calc(100vw - 0.75rem));
+    max-width: min(1560px, calc(100vw - 0.75rem));
+  }
+
+  .reservation-table-frame {
+    height: auto !important;
+    max-height: none;
+  }
+
+  .reservation-table-side-left {
+    width: 270px !important;
+    padding: 20px !important;
+  }
+
+  .reservation-table-side-right {
+    width: 290px !important;
+    padding: 24px !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .reservation-table-shell {
+    width: calc(100vw - 0.75rem);
+    max-width: calc(100vw - 0.75rem);
+  }
+
+  .reservation-table-frame {
+    height: auto !important;
+    max-height: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .reservation-closed-overlay {
+    padding: max(0.4rem, env(safe-area-inset-top)) max(0.4rem, env(safe-area-inset-right)) max(0.4rem, env(safe-area-inset-bottom)) max(0.4rem, env(safe-area-inset-left));
+  }
+
+  .reservation-closed-overlay-panel {
+    width: calc(100vw - 0.55rem);
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .reservation-closed-overlay-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .reservation-flow-overlay-panel {
+    width: calc(100vw - 0.5rem);
+    max-height: 96dvh;
+  }
+
+  .reservation-success-overlay-panel {
+    width: calc(100vw - 0.5rem);
+    max-height: 95dvh;
+  }
+
+  .reservation-confirm-shell {
+    width: calc(100vw - 0.5rem);
+    max-width: calc(100vw - 0.5rem) !important;
+  }
+
+  .reservation-success-shell {
+    max-width: calc(100vw - 0.5rem) !important;
+    max-height: calc(100dvh - 128px);
+  }
+
+  .reservation-table-overlay {
+    padding: max(0.3rem, env(safe-area-inset-top)) max(0.3rem, env(safe-area-inset-right)) max(0.3rem, env(safe-area-inset-bottom)) max(0.3rem, env(safe-area-inset-left));
+  }
+
+  .reservation-table-overlay-panel {
+    width: calc(100vw - 0.5rem);
+    height: min(96dvh, 920px);
+    max-height: 96dvh;
+  }
+
+  .reservation-table-shell {
+    width: calc(100vw - 0.5rem);
+    max-width: calc(100vw - 0.5rem);
+  }
+
+  .reservation-table-topbar {
+    margin-bottom: 10px !important;
+  }
+
+  .reservation-table-frame {
+    height: auto !important;
+    max-height: none;
+    border-radius: 18px !important;
+  }
+
+  .reservation-table-mobile-footer {
+    padding: 10px !important;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.6rem) !important;
+    gap: 8px !important;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1366px), (min-width: 1025px) and (max-height: 900px) {
+  .reservation-main-shell {
+    padding-top: clamp(8px, 1.8vh, 20px) !important;
+    padding-bottom: clamp(8px, 1.8vh, 20px) !important;
+  }
+
+  .reservation-search-shell {
+    position: relative;
+    padding-bottom: clamp(132px, 24vh, 216px);
+  }
+
+  .reservation-hero-block {
+    margin-bottom: clamp(8px, 1.5vh, 18px) !important;
+  }
+
+  .reservation-hero-title {
+    font-size: clamp(2rem, 4.6vw, 4.2rem) !important;
+    line-height: 1.02 !important;
+    margin-bottom: clamp(8px, 1.4vh, 16px) !important;
+  }
+
+  .reservation-hero-description {
+    font-size: clamp(0.95rem, 1.4vw, 1.15rem) !important;
+    line-height: 1.35 !important;
+    margin-bottom: clamp(8px, 1.3vh, 14px) !important;
+  }
+
+  .reservation-search-overlay {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: min(1120px, calc(100vw - 1rem));
+    z-index: 18;
+  }
+
+  .reservation-search-card {
+    border-radius: 22px !important;
+    padding: clamp(12px, 1.7vh, 18px) !important;
+    box-shadow: var(--shadow-md) !important;
+  }
+
+  .reservation-search-features {
+    display: none !important;
+  }
+}
+
+@media (max-height: 900px) {
+  .reservation-main-shell {
+    padding-top: clamp(10px, 2vh, 26px) !important;
+    padding-bottom: clamp(10px, 2vh, 26px) !important;
+  }
+
+  .reservation-confirm-shell {
+    width: min(1024px, calc(100vw - 0.75rem));
+    max-width: min(1024px, calc(100vw - 0.75rem)) !important;
+  }
+
+  .reservation-confirm-card {
+    max-height: calc(100dvh - 138px);
+  }
+
+  .reservation-confirm-side-left {
+    padding: 14px 16px !important;
+  }
+
+  .reservation-confirm-side-right {
+    padding: 14px 16px !important;
+  }
+
+  .reservation-confirm-title {
+    font-size: clamp(1.15rem, 0.72vw + 0.9rem, 1.45rem) !important;
+    margin-bottom: clamp(12px, 1.6vh, 18px) !important;
+    padding-bottom: 10px !important;
+  }
+
+  .reservation-confirm-side-right h3 {
+    font-size: clamp(1.45rem, 3.2vw, 2rem) !important;
+  }
+
+  .reservation-success-shell {
+    max-height: calc(100dvh - 134px);
+    padding: clamp(14px, 1.8vh, 24px) !important;
+  }
+
+  .reservation-hero-title {
+    font-size: clamp(1.9rem, 5.9vw, 4.8rem) !important;
+    margin-bottom: clamp(10px, 1.8vh, 20px) !important;
+  }
+
+  .reservation-hero-description {
+    font-size: clamp(0.9rem, 2vw, 1.05rem) !important;
+    margin-bottom: clamp(10px, 1.8vh, 20px) !important;
+    line-height: 1.45 !important;
+  }
+
+  .reservation-search-card {
+    padding: clamp(12px, 1.6vh, 22px) !important;
+  }
+
+  .reservation-search-features {
+    margin-top: clamp(10px, 1.5vh, 16px) !important;
+    padding-top: clamp(10px, 1.4vh, 14px) !important;
+  }
+}
+
 @media (max-width: 1024px) {
   .reservation-hero-orb {
     width: 9rem;
     height: 9rem;
     filter: blur(28px);
   }
+
+  .reservation-search-shell {
+    width: min(960px, calc(100vw - 1.25rem));
+    max-width: min(960px, calc(100vw - 1.25rem)) !important;
+  }
 }
 
 @media (max-width: 768px) {
+  .reservation-search-shell {
+    width: calc(100vw - 0.75rem);
+    max-width: calc(100vw - 0.75rem) !important;
+  }
+
+  .reservation-hero-title {
+    font-size: clamp(1.85rem, 10vw, 3rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .reservation-hero-description {
+    font-size: clamp(0.9rem, 3.8vw, 1rem) !important;
+    line-height: 1.5 !important;
+    margin-bottom: 14px !important;
+  }
+
+  .reservation-search-card {
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .reservation-search-features {
+    margin-top: 12px !important;
+    padding-top: 10px !important;
+    gap: 10px !important;
+  }
+
   .reservation-code-display {
     width: 100%;
     max-width: 100%;
@@ -1743,6 +2462,7 @@ img {
 
 .floor-activity-toolbar .ant-input,
 .floor-activity-toolbar .ant-input-affix-wrapper,
+.floor-activity-toolbar .ant-picker,
 .floor-activity-toolbar .ant-btn {
   min-height: 44px;
   height: 44px;
@@ -1752,10 +2472,43 @@ img {
 .floor-activity-toolbar .ant-input,
 .floor-activity-toolbar .ant-input-outlined,
 .floor-activity-toolbar .ant-input-affix-wrapper,
-.floor-activity-toolbar .ant-input-affix-wrapper.ant-input-outlined {
+.floor-activity-toolbar .ant-input-affix-wrapper.ant-input-outlined,
+.floor-activity-toolbar .ant-picker,
+.floor-activity-toolbar .ant-picker-outlined {
   background: #ffffff !important;
   background-color: #ffffff !important;
   border-color: var(--border) !important;
+}
+
+.floor-activity-toolbar .ant-picker {
+  width: 100%;
+  padding-inline: 12px;
+}
+
+.floor-activity-toolbar .ant-picker .ant-picker-input > input {
+  color: var(--text) !important;
+  font-weight: 600;
+}
+
+.floor-activity-toolbar .ant-picker .ant-picker-suffix,
+.floor-activity-toolbar .ant-picker .ant-picker-clear {
+  color: var(--text-muted) !important;
+}
+
+.floor-activity-toolbar .floor-activity-filter-input--time-picker {
+  min-height: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text);
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+  width: 100%;
+  cursor: pointer;
+  outline: none;
 }
 
 .floor-activity-toolbar .ant-input {
@@ -1783,7 +2536,11 @@ img {
 .floor-activity-toolbar .ant-input:hover,
 .floor-activity-toolbar .ant-input:focus,
 .floor-activity-toolbar .ant-input-affix-wrapper:hover,
-.floor-activity-toolbar .ant-input-affix-wrapper-focused {
+.floor-activity-toolbar .ant-input-affix-wrapper-focused,
+.floor-activity-toolbar .ant-picker:hover,
+.floor-activity-toolbar .ant-picker-focused,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker:hover,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker:focus {
   border-color: var(--primary-border) !important;
 }
 
@@ -1797,9 +2554,60 @@ img {
 [data-theme="dark"] .floor-activity-toolbar .ant-input-outlined,
 [data-theme="dark"] .floor-activity-toolbar .ant-input-affix-wrapper,
 [data-theme="dark"] .floor-activity-toolbar .ant-input-affix-wrapper.ant-input-outlined,
+[data-theme="dark"] .floor-activity-toolbar .ant-picker,
+[data-theme="dark"] .floor-activity-toolbar .ant-picker-outlined,
+[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--time-picker,
 [data-theme="dark"] .floor-activity-action-row .floor-activity-action-btn.ant-btn-default {
   background: var(--card) !important;
   background-color: var(--card) !important;
+}
+
+.floor-activity-date-popup {
+  z-index: 1200 !important;
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.floor-activity-date-popup .ant-picker-panel-container,
+.floor-activity-date-popup .ant-picker-panel,
+.floor-activity-date-popup .ant-picker-date-panel,
+.floor-activity-date-popup .ant-picker-content {
+  background: var(--card) !important;
+  color: var(--text) !important;
+}
+
+.floor-activity-date-popup .ant-picker-header,
+.floor-activity-date-popup .ant-picker-footer {
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+.floor-activity-date-popup .ant-picker-header button,
+.floor-activity-date-popup .ant-picker-header-view,
+.floor-activity-date-popup .ant-picker-content th,
+.floor-activity-date-popup .ant-picker-content td,
+.floor-activity-date-popup .ant-picker-cell .ant-picker-cell-inner,
+.floor-activity-date-popup .ant-picker-now-btn,
+.floor-activity-date-popup .ant-picker-today-btn {
+  color: var(--text) !important;
+}
+
+.floor-activity-date-popup .ant-picker-cell-disabled .ant-picker-cell-inner {
+  color: var(--text-muted) !important;
+  opacity: 0.45;
+}
+
+.floor-activity-date-popup .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner,
+.floor-activity-date-popup .ant-picker-cell-in-view.ant-picker-cell-range-start .ant-picker-cell-inner,
+.floor-activity-date-popup .ant-picker-cell-in-view.ant-picker-cell-range-end .ant-picker-cell-inner {
+  background: color-mix(in srgb, var(--primary) 24%, transparent) !important;
+  color: var(--text) !important;
+}
+
+.floor-activity-date-popup .ant-picker-cell:hover .ant-picker-cell-inner {
+  background: var(--surface-subtle) !important;
 }
 
 .floor-activity-action-row .floor-activity-action-btn--confirm.ant-btn-primary {

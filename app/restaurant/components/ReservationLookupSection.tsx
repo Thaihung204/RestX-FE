@@ -50,6 +50,13 @@ export default function ReservationLookupSection() {
         CANCELLED: 'landing.lookup.status.cancelled',
     };
 
+    const normalizedLookupCode = code.replace(/#/g, '').trim().toUpperCase();
+    const reservationDetailToken = (result?.confirmationCode || normalizedLookupCode || result?.id || '').trim();
+    const reservationDetailQuery =
+        result && !result.confirmationCode && normalizedLookupCode
+            ? `?code=${encodeURIComponent(normalizedLookupCode)}`
+            : '';
+
     return (
         <section className="relative py-24 px-4 bg-[var(--surface)] overflow-hidden">
             <div className="pointer-events-none absolute inset-0 opacity-30">
@@ -218,7 +225,7 @@ export default function ReservationLookupSection() {
 
                             <div className="pt-2 mt-2">
                                 <Link
-                                    href={`/your-reservation/${encodeURIComponent(result.confirmationCode || result.id)}`}
+                                    href={`/your-reservation/${encodeURIComponent(reservationDetailToken)}${reservationDetailQuery}`}
                                     className="flex w-full items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all hover:brightness-110"
                                     style={{
                                         background: 'var(--primary)',
