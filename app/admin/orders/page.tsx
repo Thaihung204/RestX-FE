@@ -52,8 +52,8 @@ export default function OrdersPage() {
   const orderFilterParams = useMemo(
     () => ({
       Status: statusFilter === "" ? undefined : Number(statusFilter),
-      From: fromDate || undefined,
-      To: toDate || undefined,
+      From: fromDate ? `${fromDate}T00:00:00Z` : undefined,
+      To: toDate ? `${toDate}T23:59:59Z` : undefined,
     }),
     [fromDate, statusFilter, toDate],
   );
