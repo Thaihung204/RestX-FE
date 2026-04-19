@@ -1,8 +1,14 @@
 'use client';
 
 import orderSignalRService from '@/lib/services/orderSignalRService';
-import reservationService, { ReservationListItem } from '@/lib/services/reservationService';
-import { floorService, FloorSummary, tableService, TableSessionInfo } from '@/lib/services/tableService';
+import reservationService from '@/lib/services/reservationService';
+import {
+  floorService,
+  FloorSummary,
+  tableService,
+  TableSessionInfo,
+  TableSessionReservationInfo,
+} from '@/lib/services/tableService';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import {
   LinkOutlined,
@@ -161,16 +167,16 @@ function toLocalDateTimeParam(date: Date): string {
 }
 
 function pickReservationForSlot(
-  reservations: ReservationListItem[],
+  reservations: TableSessionReservationInfo[],
   filterDateTime: Date,
   lateWindowMinutes: number,
-): ReservationListItem | undefined {
+): TableSessionReservationInfo | undefined {
   if (!reservations.length) return undefined;
 
   const sorted = reservations
     .map((reservation) => ({
       reservation,
-      date: new Date(reservation.reservationDateTime),
+      date: new Date(reservation.reservationDateTime ?? ''),
     }))
     .filter((item) => !Number.isNaN(item.date.getTime()))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -379,31 +385,13 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
         }
       };
 
-      const filterDateForApi = reservationFilterDate || toYmd(new Date());
       const filterDateTime = selectedFilterDateTime ?? new Date();
       const filterAtParam = toLocalDateTimeParam(filterDateTime);
 
-      const [tableData, floorData, sessionData, reservationData] = await Promise.all([
+      const [tableData, floorData, sessionData] = await Promise.all([
         safe(tableService.getAllTables(), [], 'Tables'),
         safe(floorService.getAllFloors(), [], 'Floors'),
         safe(tableService.getTableSessions(filterAtParam), [], 'Sessions'),
-        safe(
-          reservationService.getReservations({ 
-            pageNumber: 1, 
-            pageSize: 500,
-            date: filterDateForApi,
-          }),
-          {
-            items: [],
-            totalCount: 0,
-            pageNumber: 1,
-            pageSize: 200,
-            totalPages: 1,
-            hasNextPage: false,
-            hasPreviousPage: false,
-          },
-          'Reservations',
-        ),
       ]);
 
       setFloors(floorData);
@@ -413,24 +401,23 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
         if (session.isActive) sessionMap.set(session.tableId, session);
       }
 
-      const validReservations = (reservationData.items ?? []).filter((reservation) => {
+      const reservationsByTable = new Map<string, TableSessionReservationInfo[]>();
+
+      for (const session of sessionData) {
+        const reservation = session.reservation;
+        if (!reservation) continue;
+
         const code = reservation.status?.code?.toUpperCase();
-        return !['CANCELLED', 'NO_SHOW', 'NOSHOW', 'COMPLETED', 'CHECKED_IN'].includes(code || '');
-      });
-
-      const reservationsById = new Map<string, ReservationListItem>();
-      const reservationsByTable = new Map<string, ReservationListItem[]>();
-
-      for (const reservation of validReservations) {
-        reservationsById.set(reservation.id, reservation);
-        for (const table of reservation.tables ?? []) {
-          const list = reservationsByTable.get(table.id) || [];
-          list.push(reservation);
-          reservationsByTable.set(table.id, list);
+        if (['CANCELLED', 'NO_SHOW', 'NOSHOW', 'COMPLETED', 'CHECKED_IN'].includes(code || '')) {
+          continue;
         }
+
+        const list = reservationsByTable.get(session.tableId) || [];
+        list.push(reservation);
+        reservationsByTable.set(session.tableId, list);
       }
 
-      const reservationMap = new Map<string, ReservationListItem>();
+      const reservationMap = new Map<string, TableSessionReservationInfo>();
       for (const [tableId, reservations] of reservationsByTable) {
         const pickedReservation = pickReservationForSlot(
           reservations,
@@ -438,25 +425,6 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           sessionBufferMinutes,
         );
         if (pickedReservation) reservationMap.set(tableId, pickedReservation);
-      }
-
-      for (const session of sessionData) {
-        if (session.reservationId && !reservationMap.has(session.tableId)) {
-          const linkedRes = reservationsById.get(session.reservationId);
-          if (!linkedRes) continue;
-
-          const linkedResDate = new Date(linkedRes.reservationDateTime);
-          if (Number.isNaN(linkedResDate.getTime())) continue;
-
-          if (
-            linkedResDate.getTime() <= filterDateTime.getTime() &&
-            !isPastReservationWithinLateWindow(linkedResDate, filterDateTime, sessionBufferMinutes)
-          ) {
-            continue;
-          }
-
-          reservationMap.set(session.tableId, linkedRes);
-        }
       }
 
       const mapped: TableActivityData[] = tableData.map((item) => {
@@ -482,8 +450,8 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           reservationId: reservation?.id,
           reservationTime: reservation?.reservationDateTime,
           reservationGuests: reservation?.numberOfGuests,
-          reservationContactName: reservation?.contactName,
-          reservationContactPhone: reservation?.contactPhone,
+          reservationContactName: reservation?.contact?.name,
+          reservationContactPhone: reservation?.contact?.phone,
           reservationStatusName: reservation?.status?.name,
           reservationStatusCode: reservation?.status?.code,
           sessionId: session?.sessionId ?? session?.id,
@@ -500,7 +468,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     } finally {
       inFlightRef.current = false;
     }
-  }, [reservationFilterDate, selectedFilterDateTime, sessionBufferMinutes]);
+  }, [selectedFilterDateTime, sessionBufferMinutes]);
 
   useEffect(() => {
     fetchData();

@@ -48,6 +48,35 @@ export interface TableSessionInfo {
     isActive: boolean;
     orderReference?: string | null;
     orderTotalAmount?: number | null;
+    reservation?: TableSessionReservationInfo | null;
+}
+
+export interface TableSessionReservationStatusInfo {
+    id?: number;
+    code?: string;
+    name?: string;
+    colorCode?: string;
+}
+
+export interface TableSessionReservationContactInfo {
+    name?: string;
+    phone?: string;
+    email?: string;
+    customerId?: string;
+    membershipLevel?: string;
+    loyaltyPoints?: number;
+}
+
+export interface TableSessionReservationInfo {
+    id: string;
+    confirmationCode?: string;
+    reservationDateTime?: string;
+    numberOfGuests?: number;
+    specialRequests?: string;
+    contact?: TableSessionReservationContactInfo;
+    status?: TableSessionReservationStatusInfo;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export interface MergeTableRequest {
@@ -64,6 +93,76 @@ export interface MergeTableResponse {
     sessions: TableSessionInfo[];
 }
 
+const normalizeReservationStatus = (payload: unknown): TableSessionReservationStatusInfo | undefined => {
+    if (!payload || typeof payload !== 'object') return undefined;
+
+    const data = payload as Record<string, unknown>;
+    const code = typeof data.code === 'string' ? data.code : undefined;
+    const name = typeof data.name === 'string' ? data.name : undefined;
+    const colorCode = typeof data.colorCode === 'string' ? data.colorCode : undefined;
+    const id = typeof data.id === 'number' ? data.id : undefined;
+
+    if (id == null && !code && !name && !colorCode) return undefined;
+
+    return {
+        id,
+        code,
+        name,
+        colorCode,
+    };
+};
+
+const normalizeReservationContact = (payload: unknown): TableSessionReservationContactInfo | undefined => {
+    if (!payload || typeof payload !== 'object') return undefined;
+
+    const data = payload as Record<string, unknown>;
+    const name = typeof data.name === 'string' ? data.name : undefined;
+    const phone = typeof data.phone === 'string' ? data.phone : undefined;
+    const email = typeof data.email === 'string' ? data.email : undefined;
+    const customerId = typeof data.customerId === 'string' ? data.customerId : undefined;
+    const membershipLevel =
+        typeof data.membershipLevel === 'string' ? data.membershipLevel : undefined;
+    const loyaltyPoints =
+        typeof data.loyaltyPoints === 'number' ? data.loyaltyPoints : undefined;
+
+    if (!name && !phone && !email && !customerId && !membershipLevel && loyaltyPoints == null) {
+        return undefined;
+    }
+
+    return {
+        name,
+        phone,
+        email,
+        customerId,
+        membershipLevel,
+        loyaltyPoints,
+    };
+};
+
+const normalizeSessionReservation = (payload: unknown): TableSessionReservationInfo | null => {
+    if (!payload || typeof payload !== 'object') return null;
+
+    const data = payload as Record<string, unknown>;
+    const id = typeof data.id === 'string' ? data.id.trim() : '';
+    if (!id) return null;
+
+    return {
+        id,
+        confirmationCode:
+            typeof data.confirmationCode === 'string' ? data.confirmationCode : undefined,
+        reservationDateTime:
+            typeof data.reservationDateTime === 'string' ? data.reservationDateTime : undefined,
+        numberOfGuests:
+            typeof data.numberOfGuests === 'number' ? data.numberOfGuests : undefined,
+        specialRequests:
+            typeof data.specialRequests === 'string' ? data.specialRequests : undefined,
+        contact: normalizeReservationContact(data.contact),
+        status: normalizeReservationStatus(data.status),
+        createdAt: typeof data.createdAt === 'string' ? data.createdAt : undefined,
+        updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : undefined,
+    };
+};
+
 const normalizeSessionInfo = (payload: unknown): TableSessionInfo | null => {
     if (!payload || typeof payload !== 'object') return null;
 
@@ -73,6 +172,8 @@ const normalizeSessionInfo = (payload: unknown): TableSessionInfo | null => {
     const startedAt = String(data.startedAt ?? '').trim();
 
     if (!id || !tableId || !startedAt) return null;
+
+    const normalizedReservation = normalizeSessionReservation(data.reservation);
 
     return {
         id,
@@ -86,6 +187,7 @@ const normalizeSessionInfo = (payload: unknown): TableSessionInfo | null => {
         isActive: Boolean(data.isActive),
         orderReference: typeof data.orderReference === 'string' ? data.orderReference : null,
         orderTotalAmount: typeof data.orderTotalAmount === 'number' ? data.orderTotalAmount : null,
+        reservation: normalizedReservation,
     };
 };
 

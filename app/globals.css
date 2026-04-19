@@ -1383,6 +1383,25 @@ img {
   min-height: 100vh;
 }
 
+.reservation-detail-floor-activity-drawer .ant-drawer-content {
+  background: var(--card) !important;
+}
+
+.reservation-detail-floor-activity-drawer .ant-drawer-header {
+  background: var(--card) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.reservation-detail-floor-activity-drawer .ant-drawer-title,
+.reservation-detail-floor-activity-drawer .ant-drawer-close {
+  color: var(--text) !important;
+}
+
+.reservation-detail-floor-activity-drawer .ant-drawer-body {
+  background: var(--bg-base) !important;
+  color: var(--text) !important;
+}
+
 /* Hero banner gradient — adapts to tenant primary color */
 .reservation-hero-banner {
   background: linear-gradient(
