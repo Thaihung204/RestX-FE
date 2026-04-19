@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { GoogleGenAI, Type } from "@google/genai";
 import { ReservationStep, BookingData, Table, UserDetails } from './types';
 import { TenantConfig } from '@/lib/services/tenantService';
@@ -10,11 +11,12 @@ import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
 import TablePreview3DModal from './TablePreview3DModal';
 
-import { DatePicker, Select } from 'antd';
+import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { PluginRegistry, TimepickerUI } from 'timepicker-ui';
+import { WheelPlugin } from 'timepicker-ui/plugins/wheel';
 
 // ─────────────────────────────────────────────────────
 // Constants & Helpers
@@ -22,8 +24,189 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const DEFAULT_TIME_SLOTS = ['17:30', '18:00', '18:30', '19:00', '19:30', '20:00'];
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
+const MAX_RESERVATION_ADVANCE_MONTHS = 1;
+const WEEK_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 
 const TIME_SLOT_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+
+const normalizeDiacritics = (value: string) =>
+    value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+const dayTokenToIndex = (token: string): number | null => {
+    const normalized = normalizeDiacritics(token).replace(/[^a-z0-9]/g, '');
+
+    const mapping: Record<string, number> = {
+        sunday: 0,
+        sun: 0,
+        cn: 0,
+        chunhat: 0,
+        monday: 1,
+        mon: 1,
+        t2: 1,
+        thu2: 1,
+        tuesday: 2,
+        tue: 2,
+        t3: 2,
+        thu3: 2,
+        wednesday: 3,
+        wed: 3,
+        t4: 3,
+        thu4: 3,
+        thursday: 4,
+        thu: 4,
+        t5: 4,
+        thu5: 4,
+        friday: 5,
+        fri: 5,
+        t6: 5,
+        thu6: 5,
+        saturday: 6,
+        sat: 6,
+        t7: 6,
+        thu7: 6,
+    };
+
+    return mapping[normalized] ?? null;
+};
+
+const expandWeekdayRange = (start: number, end: number) => {
+    const values: number[] = [];
+    let cursor = start;
+
+    while (true) {
+        values.push(cursor);
+        if (cursor === end) break;
+        cursor = (cursor + 1) % 7;
+        if (values.length > 7) break;
+    }
+
+    return values;
+};
+
+const collectWeekdayIndexes = (raw: string) => {
+    const result = new Set<number>();
+    const normalized = normalizeDiacritics(raw);
+    const dayTokenPattern = '(sunday|sun|monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|chu\\s*nhat|cn|t\\s*[2-7]|thu\\s*[2-7])';
+
+    const rangeRegex = new RegExp(`${dayTokenPattern}\\s*(?:-|to|den|->|=>)\\s*${dayTokenPattern}`, 'g');
+    for (const match of normalized.matchAll(rangeRegex)) {
+        const start = dayTokenToIndex(match[1] ?? '');
+        const end = dayTokenToIndex(match[2] ?? '');
+        if (start === null || end === null) continue;
+        expandWeekdayRange(start, end).forEach((day) => result.add(day));
+    }
+
+    const singleTokenRegex = new RegExp(dayTokenPattern, 'g');
+    for (const match of normalized.matchAll(singleTokenRegex)) {
+        const day = dayTokenToIndex(match[0] ?? '');
+        if (day !== null) result.add(day);
+    }
+
+    return result;
+};
+
+const parseTenantSettingsEntries = (raw: unknown): Array<{ key: string; value: string }> => {
+    const pushEntry = (
+        source: unknown,
+        bucket: Array<{ key: string; value: string }>,
+    ) => {
+        if (!source || typeof source !== 'object') return;
+        const key = ((source as any).key ?? (source as any).Key ?? '').toString().trim();
+        if (!key) return;
+        const value = ((source as any).value ?? (source as any).Value ?? '').toString();
+        bucket.push({ key, value });
+    };
+
+    if (Array.isArray(raw)) {
+        const entries: Array<{ key: string; value: string }> = [];
+        raw.forEach((item) => pushEntry(item, entries));
+        return entries;
+    }
+
+    if (typeof raw === 'string') {
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                const entries: Array<{ key: string; value: string }> = [];
+                parsed.forEach((item) => pushEntry(item, entries));
+                return entries;
+            }
+        } catch {
+            return [];
+        }
+    }
+
+    return [];
+};
+
+const parseClosedWeekdaysValue = (raw: string) => {
+    const parsedIndexes = new Set<number>();
+
+    const trimmed = raw.trim();
+    if (!trimmed) return parsedIndexes;
+
+    try {
+        const parsedJson = JSON.parse(trimmed);
+        if (Array.isArray(parsedJson)) {
+            parsedJson.forEach((item) => {
+                if (typeof item === 'number' && item >= 0 && item <= 6) {
+                    parsedIndexes.add(item);
+                    return;
+                }
+                if (typeof item === 'string') {
+                    const day = dayTokenToIndex(item);
+                    if (day !== null) parsedIndexes.add(day);
+                }
+            });
+            return parsedIndexes;
+        }
+    } catch {
+        // Fallback to plain-text parsing below
+    }
+
+    collectWeekdayIndexes(trimmed).forEach((day) => parsedIndexes.add(day));
+
+    for (const match of trimmed.matchAll(/(^|[\s,;\[\]])([0-6])(?=$|[\s,;\[\]])/g)) {
+        const numericDay = Number(match[2]);
+        if (numericDay >= 0 && numericDay <= 6) {
+            parsedIndexes.add(numericDay);
+        }
+    }
+
+    return parsedIndexes;
+};
+
+const parseWeeklyScheduleFromOpeningHours = (raw?: string | null) => {
+    const openDays = new Set<number>();
+    const closedDays = new Set<number>();
+    if (!raw) return { openDays, closedDays };
+
+    const segments = raw.split(/[;\n]+/).map((segment) => segment.trim()).filter(Boolean);
+    if (!segments.length) {
+        return { openDays, closedDays };
+    }
+
+    const closedKeywords = /(closed|off|nghi|dong\s*cua|khong\s*phuc\s*vu)/;
+
+    for (const segment of segments) {
+        const segmentDays = collectWeekdayIndexes(segment);
+        if (!segmentDays.size) continue;
+
+        if (closedKeywords.test(normalizeDiacritics(segment))) {
+            segmentDays.forEach((day) => closedDays.add(day));
+            continue;
+        }
+
+        if (parseOpeningHours(segment)) {
+            segmentDays.forEach((day) => openDays.add(day));
+        }
+    }
+
+    return { openDays, closedDays };
+};
 
 const normalizeTimeSlot = (slot: string) => {
     const trimmed = slot.trim();
@@ -44,6 +227,14 @@ const toMinutes = (slot: string) => {
     return (hour * 60) + minute;
 };
 
+const fromMinutes = (totalMinutes: number) => {
+    const dayMinutes = 24 * 60;
+    const normalizedTotal = ((totalMinutes % dayMinutes) + dayMinutes) % dayMinutes;
+    const hour = Math.floor(normalizedTotal / 60);
+    const minute = normalizedTotal % 60;
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+};
+
 const normalizeTimeSlots = (slots: string[]) => {
     const unique = new Set<string>();
     for (const slot of slots) {
@@ -58,23 +249,163 @@ const normalizeTimeSlots = (slots: string[]) => {
     });
 };
 
+const getSlotIntervalMinutes = (slots: string[]) => {
+    const normalized = normalizeTimeSlots(slots);
+    if (normalized.length < 2) return DEFAULT_SLOT_INTERVAL_MINUTES;
+
+    let minDiff = Number.POSITIVE_INFINITY;
+    for (let index = 1; index < normalized.length; index += 1) {
+        const current = toMinutes(normalized[index]);
+        const previous = toMinutes(normalized[index - 1]);
+        if (current === null || previous === null) continue;
+
+        const diff = current - previous;
+        if (diff > 0 && diff < minDiff) {
+            minDiff = diff;
+        }
+    }
+
+    return Number.isFinite(minDiff) ? minDiff : DEFAULT_SLOT_INTERVAL_MINUTES;
+};
+
 const getTodayLocalDate = () => {
     const now = new Date();
     const tzOffset = now.getTimezoneOffset() * 60000;
     return new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
 };
 
-const getAvailableSlotsForDate = (date: string, slots: string[]) => {
-    const today = getTodayLocalDate();
-    if (!slots.length) return [] as string[];
-    if (date < today) return [] as string[];
-    if (date > today) return slots;
+const getMaxBookableDate = () => dayjs().add(MAX_RESERVATION_ADVANCE_MONTHS, 'month').format('YYYY-MM-DD');
 
-    const now = dayjs();
-    return slots.filter((slot) => {
-        const slotDateTime = dayjs(`${today}T${slot}:00`);
-        return slotDateTime.isAfter(now);
-    });
+const getSelectableTimeBounds = (date: string, slots: string[]) => {
+    const normalizedSlots = normalizeTimeSlots(slots);
+    if (!normalizedSlots.length) return null;
+
+    const firstSlotMinutes = toMinutes(normalizedSlots[0]);
+    const lastSlotMinutes = toMinutes(normalizedSlots[normalizedSlots.length - 1]);
+    if (firstSlotMinutes === null || lastSlotMinutes === null) return null;
+
+    const intervalMinutes = Math.max(1, getSlotIntervalMinutes(normalizedSlots));
+    const latestAllowedMinutes = Math.min((24 * 60) - 1, lastSlotMinutes + intervalMinutes);
+
+    let minMinutes = firstSlotMinutes;
+    if (date === getTodayLocalDate()) {
+        const now = dayjs();
+        const nowMinutes = (now.hour() * 60) + now.minute();
+        minMinutes = Math.max(minMinutes, nowMinutes + 1);
+    }
+
+    if (minMinutes > latestAllowedMinutes) return null;
+
+    return {
+        min: fromMinutes(minMinutes),
+        max: fromMinutes(latestAllowedMinutes),
+    };
+};
+
+const isTimeWithinBounds = (
+    time: string,
+    bounds: { min: string; max: string } | null,
+) => {
+    if (!bounds) return false;
+
+    const selectedMinutes = toMinutes(time);
+    const minMinutes = toMinutes(bounds.min);
+    const maxMinutes = toMinutes(bounds.max);
+
+    if (selectedMinutes === null || minMinutes === null || maxMinutes === null) {
+        return false;
+    }
+
+    return selectedMinutes >= minMinutes && selectedMinutes <= maxMinutes;
+};
+
+const clampTimeToBounds = (
+    time: string,
+    bounds: { min: string; max: string } | null,
+) => {
+    if (!bounds) return normalizeTimeSlot(time) || '';
+
+    const selectedMinutes = toMinutes(time);
+    const minMinutes = toMinutes(bounds.min);
+    const maxMinutes = toMinutes(bounds.max);
+
+    if (minMinutes === null || maxMinutes === null) {
+        return normalizeTimeSlot(time) || '';
+    }
+
+    if (selectedMinutes === null) {
+        return bounds.min;
+    }
+
+    if (selectedMinutes < minMinutes) {
+        return bounds.min;
+    }
+
+    if (selectedMinutes > maxMinutes) {
+        return bounds.max;
+    }
+
+    return fromMinutes(selectedMinutes);
+};
+
+const buildDisabledIntervalsFromBounds = (
+    bounds: { min: string; max: string } | null,
+) => {
+    if (!bounds) return [] as string[];
+
+    const minMinutes = toMinutes(bounds.min);
+    const maxMinutes = toMinutes(bounds.max);
+    if (minMinutes === null || maxMinutes === null) return [] as string[];
+
+    const intervals: string[] = [];
+
+    const firstDisabledEnd = minMinutes - 1;
+    if (firstDisabledEnd >= 0) {
+        intervals.push(`00:00 - ${fromMinutes(firstDisabledEnd)}`);
+    }
+
+    const secondDisabledStart = maxMinutes + 1;
+    if (secondDisabledStart <= ((24 * 60) - 1)) {
+        intervals.push(`${fromMinutes(secondDisabledStart)} - 23:59`);
+    }
+
+    return intervals;
+};
+
+const ensureWheelPluginRegistered = () => {
+    if (!PluginRegistry.has('wheel')) {
+        PluginRegistry.register(WheelPlugin);
+    }
+};
+
+const normalizePickerTime = (
+    hourValue?: string,
+    minuteValue?: string,
+    periodValue?: string,
+) => {
+    const parsedHour = Number.parseInt(hourValue ?? '', 10);
+    const parsedMinute = Number.parseInt(minuteValue ?? '', 10);
+
+    if (
+        Number.isNaN(parsedHour) ||
+        Number.isNaN(parsedMinute) ||
+        parsedHour < 0 ||
+        parsedMinute < 0 ||
+        parsedMinute > 59
+    ) {
+        return null;
+    }
+
+    let hour = parsedHour;
+    const period = (periodValue || '').trim().toLowerCase();
+    if (period === 'am' || period === 'pm') {
+        const normalized12Hour = ((hour % 12) + 12) % 12;
+        hour = period === 'pm' ? normalized12Hour + 12 : normalized12Hour;
+    }
+
+    if (hour > 23) return null;
+
+    return `${hour.toString().padStart(2, '0')}:${parsedMinute.toString().padStart(2, '0')}`;
 };
 
 
@@ -110,6 +441,8 @@ const buildTimeSlotsFromHours = (open: string, close: string, intervalMinutes = 
 const getTenantReservationConfig = (tenant: TenantConfig | null) => {
     let timeSlots = DEFAULT_TIME_SLOTS;
     let maxGuestsOverride: number | undefined;
+    let closedNotice = '';
+    const closedWeekdays = new Set<number>();
 
     const openingHours = parseOpeningHours(tenant?.businessOpeningHours);
     if (openingHours) {
@@ -117,28 +450,49 @@ const getTenantReservationConfig = (tenant: TenantConfig | null) => {
         if (generatedSlots.length) timeSlots = generatedSlots;
     }
 
-    const settings = (tenant as any)?.tenantSettings ?? [];
-    if (Array.isArray(settings)) {
-        for (const raw of settings) {
-            const key = (raw?.key ?? raw?.Key ?? '').toString();
-            const value = (raw?.value ?? raw?.Value ?? '').toString();
-            if (!key) continue;
-            const lowerKey = key.toLowerCase();
-
-            if (lowerKey === 'reservation.timeslots') {
-                const parsed = value
-                    .split(/[,\s]+/)
-                    .map((v: string) => v.trim())
-                    .filter(Boolean);
-                if (parsed.length) timeSlots = parsed;
+    const weeklySchedule = parseWeeklyScheduleFromOpeningHours(tenant?.businessOpeningHours);
+    if (weeklySchedule.openDays.size) {
+        WEEK_DAYS.forEach((day) => {
+            if (!weeklySchedule.openDays.has(day)) {
+                closedWeekdays.add(day);
             }
+        });
+    }
+    weeklySchedule.closedDays.forEach((day) => closedWeekdays.add(day));
 
-            if (lowerKey === 'reservation.maxguests') {
-                const n = parseInt(value, 10);
-                if (!Number.isNaN(n) && n > 0) {
-                    maxGuestsOverride = n;
-                }
+    const settings = parseTenantSettingsEntries((tenant as any)?.tenantSettings ?? []);
+    for (const raw of settings) {
+        const key = raw.key.toString();
+        const value = raw.value.toString();
+        if (!key) continue;
+        const lowerKey = key.toLowerCase();
+
+        if (lowerKey === 'reservation.timeslots') {
+            const parsed = value
+                .split(/[,\s]+/)
+                .map((v: string) => v.trim())
+                .filter(Boolean);
+            if (parsed.length) timeSlots = parsed;
+        }
+
+        if (lowerKey === 'reservation.maxguests') {
+            const n = parseInt(value, 10);
+            if (!Number.isNaN(n) && n > 0) {
+                maxGuestsOverride = n;
             }
+        }
+
+        if (
+            lowerKey === 'reservation.closeddays' ||
+            lowerKey === 'reservation.closedweekdays' ||
+            lowerKey === 'reservation.offdays' ||
+            lowerKey === 'reservation.closeddaysofweek'
+        ) {
+            parseClosedWeekdaysValue(value).forEach((day) => closedWeekdays.add(day));
+        }
+
+        if (lowerKey === 'reservation.closednotice' && value.trim()) {
+            closedNotice = value.trim();
         }
     }
 
@@ -147,6 +501,8 @@ const getTenantReservationConfig = (tenant: TenantConfig | null) => {
     return {
         timeSlots: normalizedTimeSlots.length ? normalizedTimeSlots : DEFAULT_TIME_SLOTS,
         maxGuestsOverride,
+        closedWeekdays,
+        closedNotice,
     };
 };
 
@@ -154,8 +510,8 @@ interface ReservationSectionProps {
     tenant: TenantConfig | null;
 }
 
-const StepIndicator: React.FC<{ active: number; t: (key: string, options?: any) => string }> = ({ active, t }) => (
-    <div className="flex items-center gap-3 justify-center mb-8">
+const StepIndicator: React.FC<{ active: number; t: (key: string, options?: any) => string; className?: string }> = ({ active, t, className = '' }) => (
+    <div className={`flex items-center gap-3 justify-center mb-8 ${className}`}>
         {[1, 2, 3].map((s) => (
             <React.Fragment key={s}>
                 <div className={`flex items-center gap-2 ${active === s ? 'text-[var(--text-inverse)]' : 'text-[var(--text-inverse)] opacity-40'}`}>
@@ -181,21 +537,106 @@ const StepIndicator: React.FC<{ active: number; t: (key: string, options?: any) 
 );
 
 const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const [step, setStep] = useState<ReservationStep>(ReservationStep.SEARCH);
     const autoFilledRef = useRef(false);
+    const timeInputRef = useRef<HTMLInputElement | null>(null);
+    const timePickerRef = useRef<TimepickerUI | null>(null);
 
-    const { timeSlots } = useMemo(
+    const { timeSlots, closedWeekdays, closedNotice } = useMemo(
         () => getTenantReservationConfig(tenant),
         [tenant],
     );
+
+    const isDateClosedByTenantSettings = useCallback((date: string) => {
+        if (!closedWeekdays.size || !date) return false;
+        const dayIndex = dayjs(date, 'YYYY-MM-DD').day();
+        return closedWeekdays.has(dayIndex);
+    }, [closedWeekdays]);
 
     const [booking, setBooking] = useState<BookingData>(() => ({
         date: getTodayLocalDate(),
         time: timeSlots.includes('19:00') ? '19:00' : (timeSlots[0] || '19:00'),
         guests: 4,
     }));
+
+    const isBookingDayClosed = useMemo(
+        () => isDateClosedByTenantSettings(booking.date),
+        [booking.date, isDateClosedByTenantSettings],
+    );
+
+    const closedBookingDateValue = useMemo(() => {
+        const value = new Date(`${booking.date}T00:00:00`);
+        return Number.isNaN(value.getTime()) ? null : value;
+    }, [booking.date]);
+
+    const closedBookingWeekdayLabel = useMemo(() => {
+        if (!closedBookingDateValue) return dayjs(booking.date, 'YYYY-MM-DD').format('dddd');
+        try {
+            return new Intl.DateTimeFormat(i18n.language || undefined, { weekday: 'long' }).format(closedBookingDateValue);
+        } catch {
+            return dayjs(booking.date, 'YYYY-MM-DD').format('dddd');
+        }
+    }, [booking.date, closedBookingDateValue, i18n.language]);
+
+    const closedBookingDateLabel = useMemo(() => {
+        if (!closedBookingDateValue) return booking.date;
+        try {
+            return new Intl.DateTimeFormat(i18n.language || undefined, {
+                weekday: 'long',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+            }).format(closedBookingDateValue);
+        } catch {
+            return booking.date;
+        }
+    }, [booking.date, closedBookingDateValue, i18n.language]);
+
+    const closedBookingMessage = useMemo(() => {
+        if (closedNotice) return closedNotice;
+        return t('landing.booking.form.restaurant_closed_on_day', {
+            day: closedBookingWeekdayLabel,
+            defaultValue: `Restaurant is closed on ${closedBookingWeekdayLabel}`,
+        });
+    }, [closedNotice, closedBookingWeekdayLabel, t]);
+
+    const isClosedOverlayVisible = step === ReservationStep.SEARCH && isBookingDayClosed;
+
+    const nextAvailableBooking = useMemo(() => {
+        if (!isBookingDayClosed) return null;
+
+        const start = dayjs(booking.date, 'YYYY-MM-DD');
+        for (let offset = 1; offset <= 30; offset += 1) {
+            const candidateDate = start.add(offset, 'day').format('YYYY-MM-DD');
+            if (isDateClosedByTenantSettings(candidateDate)) continue;
+
+            const candidateBounds = getSelectableTimeBounds(candidateDate, timeSlots);
+            if (!candidateBounds) continue;
+
+            return {
+                date: candidateDate,
+                time: candidateBounds.min,
+            };
+        }
+
+        return null;
+    }, [booking.date, isBookingDayClosed, isDateClosedByTenantSettings, timeSlots]);
+
+    const handlePickNextAvailableDate = useCallback(() => {
+        if (!nextAvailableBooking) return;
+        setBooking((prev) => ({
+            ...prev,
+            date: nextAvailableBooking.date,
+            time: nextAvailableBooking.time,
+        }));
+    }, [nextAvailableBooking]);
+
+    const effectiveTimeSlots = useMemo(
+        () => (isBookingDayClosed ? [] : timeSlots),
+        [isBookingDayClosed, timeSlots],
+    );
 
     const [layout, setLayout] = useState<Layout | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(false);
@@ -218,37 +659,133 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [reservationId, setReservationId] = useState<string>('');
     const [depositCheckoutUrl, setDepositCheckoutUrl] = useState<string>('');
     const [depositPaymentDeadline, setDepositPaymentDeadline] = useState<string>('');
+    const isTableSelectionStep = step === ReservationStep.TABLE_SELECTION;
+    const isOverlayReservationStep = isTableSelectionStep || step === ReservationStep.CONFIRMATION || step === ReservationStep.SUCCESS;
+    const isCompactReservationStep = step === ReservationStep.CONFIRMATION || step === ReservationStep.SUCCESS;
 
     const totalSelectedCapacity = useMemo(
         () => selectedTables.reduce((sum, table) => sum + (table.capacity || 0), 0),
         [selectedTables],
     );
 
-    const availableSlotsForSelectedDate = useMemo(
-        () => getAvailableSlotsForDate(booking.date, timeSlots),
-        [booking.date, timeSlots],
+    const selectableTimeBounds = useMemo(
+        () => getSelectableTimeBounds(booking.date, effectiveTimeSlots),
+        [booking.date, effectiveTimeSlots],
     );
+
+    const isSelectedTimeValid = useMemo(
+        () => isTimeWithinBounds(booking.time, selectableTimeBounds),
+        [booking.time, selectableTimeBounds],
+    );
+
+    useEffect(() => {
+        const input = timeInputRef.current;
+
+        if (timePickerRef.current) {
+            timePickerRef.current.destroy({ keepInputValue: true });
+            timePickerRef.current = null;
+        }
+
+        if (!input || !selectableTimeBounds) return;
+
+        ensureWheelPluginRegistered();
+        const disabledIntervals = buildDisabledIntervalsFromBounds(selectableTimeBounds);
+
+        const picker = new TimepickerUI(input, {
+            clock: {
+                type: '24h',
+                incrementMinutes: 1,
+                incrementHours: 1,
+                disabledTime: disabledIntervals.length > 0
+                    ? { interval: disabledIntervals }
+                    : undefined,
+            },
+            ui: {
+                theme: 'basic',
+                mode: 'compact-wheel',
+                animation: false,
+                backdrop: false,
+                editable: false,
+            },
+            wheel: {
+                placement: 'auto',
+                commitOnScroll: false,
+                hideDisabled: false,
+            },
+            labels: {
+                ok: t('landing.booking.table_map.mobile_confirm', { defaultValue: 'Confirm' }),
+                cancel: t('common.actions.cancel', { defaultValue: 'Cancel' }),
+                time: t('landing.booking.form.preferred_time'),
+            },
+            callbacks: {
+                onConfirm: ({ hour, minutes, type }) => {
+                    const normalized = normalizePickerTime(hour, minutes, type);
+                    if (!normalized) return;
+
+                    const clampedTime = clampTimeToBounds(normalized, selectableTimeBounds);
+                    if (!clampedTime) return;
+
+                    setBooking((prev) => (
+                        prev.time === clampedTime
+                            ? prev
+                            : { ...prev, time: clampedTime }
+                    ));
+                },
+            },
+        });
+
+        picker.create();
+
+        const safeTime = clampTimeToBounds(booking.time, selectableTimeBounds);
+        if (safeTime) {
+            picker.setValue(safeTime, true);
+        }
+
+        timePickerRef.current = picker;
+
+        return () => {
+            if (timePickerRef.current) {
+                timePickerRef.current.destroy({ keepInputValue: true });
+                timePickerRef.current = null;
+            }
+        };
+    }, [selectableTimeBounds, t]);
+
+    useEffect(() => {
+        if (!timePickerRef.current || !selectableTimeBounds) return;
+
+        const safeTime = clampTimeToBounds(booking.time, selectableTimeBounds);
+        if (!safeTime) return;
+
+        timePickerRef.current.setValue(safeTime, true);
+    }, [booking.time, selectableTimeBounds]);
 
 
     useEffect(() => {
         const today = getTodayLocalDate();
+        const maxBookableDate = getMaxBookableDate();
         let nextDate = booking.date < today ? today : booking.date;
+        if (nextDate > maxBookableDate) nextDate = maxBookableDate;
 
-        let availableSlots = getAvailableSlotsForDate(nextDate, timeSlots);
-        if (nextDate === today && availableSlots.length === 0 && timeSlots.length > 0) {
+        if (isDateClosedByTenantSettings(nextDate)) return;
+
+        let nextBounds = getSelectableTimeBounds(nextDate, timeSlots);
+        if (nextDate === today && !nextBounds && timeSlots.length > 0) {
             nextDate = dayjs(today).add(1, 'day').format('YYYY-MM-DD');
-            availableSlots = getAvailableSlotsForDate(nextDate, timeSlots);
+            if (nextDate > maxBookableDate) return;
+            if (isDateClosedByTenantSettings(nextDate)) return;
+            nextBounds = getSelectableTimeBounds(nextDate, timeSlots);
         }
 
-        const fallbackTime = availableSlots[0] || timeSlots[0] || '19:00';
-        const nextTime = availableSlots.includes(booking.time)
-            ? booking.time
-            : fallbackTime;
+        if (!nextBounds) return;
+
+        const normalizedCurrentTime = normalizeTimeSlot(booking.time) || nextBounds.min;
+        const nextTime = clampTimeToBounds(normalizedCurrentTime, nextBounds);
 
         if (nextDate !== booking.date || nextTime !== booking.time) {
             setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
         }
-    }, [booking.date, booking.time, timeSlots]);
+    }, [booking.date, booking.time, isDateClosedByTenantSettings, timeSlots]);
 
     // Auto-fill user info when logged in (only once, first time CONFIRMATION is opened)
     useEffect(() => {
@@ -412,6 +949,26 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         }
     }, [step, tenant]);
 
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+
+        const root = document.documentElement;
+        const body = document.body;
+
+        if (isOverlayReservationStep) {
+            root.classList.add('reservation-overlay-open');
+            body.classList.add('reservation-overlay-open');
+
+            return () => {
+                root.classList.remove('reservation-overlay-open');
+                body.classList.remove('reservation-overlay-open');
+            };
+        }
+
+        root.classList.remove('reservation-overlay-open');
+        body.classList.remove('reservation-overlay-open');
+    }, [isOverlayReservationStep]);
+
     const buildSelectedTable = (table: TableData): Table => ({
                 id: table.id,
                 label: table.name,
@@ -531,20 +1088,25 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const today = getTodayLocalDate();
-        let nextDate = booking.date < today ? today : booking.date;
-        let availableSlots = getAvailableSlotsForDate(nextDate, timeSlots);
-
-        if (nextDate === today && availableSlots.length === 0 && timeSlots.length > 0) {
-            nextDate = dayjs(today).add(1, 'day').format('YYYY-MM-DD');
-            availableSlots = getAvailableSlotsForDate(nextDate, timeSlots);
+        if (isBookingDayClosed) {
+            return;
         }
 
-        if (availableSlots.length === 0) return;
+        const today = getTodayLocalDate();
+        const maxBookableDate = getMaxBookableDate();
+        let nextDate = booking.date < today ? today : booking.date;
+        if (nextDate > maxBookableDate) nextDate = maxBookableDate;
+        let nextBounds = getSelectableTimeBounds(nextDate, timeSlots);
 
-        const nextTime = availableSlots.includes(booking.time)
-            ? booking.time
-            : availableSlots[0];
+        if (nextDate === today && !nextBounds && timeSlots.length > 0) {
+            nextDate = dayjs(today).add(1, 'day').format('YYYY-MM-DD');
+            if (nextDate > maxBookableDate) return;
+            nextBounds = getSelectableTimeBounds(nextDate, timeSlots);
+        }
+
+        if (!nextBounds) return;
+
+        const nextTime = clampTimeToBounds(booking.time, nextBounds);
 
         if (nextDate !== booking.date || nextTime !== booking.time) {
             setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
@@ -559,6 +1121,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
     const handleCompleteReservation = async () => {
         if (selectedTables.length === 0) return;
+
+        if (isBookingDayClosed) {
+            setSubmitError(closedBookingMessage);
+            return;
+        }
 
         // Basic validation
         if (!userDetails.name || !userDetails.phone || !userDetails.email) {
@@ -636,51 +1203,107 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         ? selectedTables.find((table) => table.id === active360TableId && panoramaMap.has(table.id))
         : undefined) || selectedTables.find((table) => panoramaMap.has(table.id));
 
+    const mobileSelectedTableSummary = selectedTables.length <= 2
+        ? selectedTables.map((table) => `#${table.label}`).join(', ')
+        : `${selectedTables.slice(0, 2).map((table) => `#${table.label}`).join(', ')} +${selectedTables.length - 2}`;
+
     return (
-        <div id="reservation" className="min-h-dvh relative text-[var(--text)]">
+        <div id="reservation" className="reservation-root-frame relative text-[var(--text)]">
             {/* Background Layer */}
-            <div className="absolute inset-0 z-0">
+            <div className="reservation-bg-layer absolute inset-0 z-0">
                 <img
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfPFwjLEKDFOt-mxPmzwYjzNLMEX3sT58UZGugJPCINRcDIw57-nX-MzWGzA5TyIMujN9sgVaAduJDds0CehlPSOV-sM1tcFsO5HkoObZMdVizGg68w6Z4wUrxxLYQh6j5_BJuPKL0ZWsABXLDlqrbMZcBCLWqecFrgUf0o_7_6X-peTbMorUQvBLZ3mdERB9kTTwNVnaNz11aTT9BQgKfyyGn7Wa_avn--DQijsUy8CG2lp80Pbia-cQMT8ekuG3rPRmDB3oR3xs"
                     alt="Restaurant Ambiance"
-                    className="w-full h-full object-cover"
+                    className="reservation-bg-image w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             </div>
 
-            <main className={`relative z-10 mx-auto px-4 py-8 md:py-20 min-h-dvh flex flex-col items-center justify-center ${step === ReservationStep.TABLE_SELECTION ? 'w-full max-w-[98vw]' : 'container'}`}>
+            {isClosedOverlayVisible && (
+                <div className="reservation-closed-overlay" role="status" aria-live="polite">
+                    <div className="reservation-closed-overlay-panel fade-in">
+                        <div className="reservation-closed-overlay-badge">
+                            <span className="material-symbols-outlined" aria-hidden="true">event_busy</span>
+                            <span>{t('landing.booking.form.closed_overlay_badge', { defaultValue: 'Restaurant Closed' })}</span>
+                        </div>
 
-                {/* Language Switcher — top right corner */}
-                <div className="absolute top-4 right-4 z-20">
-                    <LanguageSwitcher
-                        style={{
-                            color: 'white',
-                            background: 'rgba(255,255,255,0.12)',
-                            border: '1px solid rgba(255,255,255,0.2)',
-                            backdropFilter: 'blur(8px)',
-                        }}
-                    />
+                        <h2 className="reservation-closed-overlay-title text-balance">
+                            {t('landing.booking.form.closed_overlay_title', {
+                                defaultValue: 'Reservations are unavailable for this day',
+                            })}
+                        </h2>
+
+                        <p className="reservation-closed-overlay-description text-pretty">
+                            {t('landing.booking.form.closed_overlay_description', {
+                                defaultValue: 'Please choose another date to continue your booking.',
+                            })}
+                        </p>
+
+                        <div className="reservation-closed-overlay-meta">
+                            <div className="reservation-closed-overlay-meta-item">
+                                <span className="reservation-closed-overlay-meta-label">
+                                    {t('landing.booking.form.closed_overlay_selected_date', { defaultValue: 'Selected date' })}
+                                </span>
+                                <span className="reservation-closed-overlay-meta-value">{closedBookingDateLabel}</span>
+                            </div>
+
+                            <div className="reservation-closed-overlay-meta-item">
+                                <span className="reservation-closed-overlay-meta-label">
+                                    {t('landing.booking.form.closed_overlay_notice', { defaultValue: 'Notice' })}
+                                </span>
+                                <span className="reservation-closed-overlay-meta-value">{closedBookingMessage}</span>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handlePickNextAvailableDate}
+                            disabled={!nextAvailableBooking}
+                            className="reservation-closed-overlay-action disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span className="material-symbols-outlined" aria-hidden="true">event_available</span>
+                            <span>
+                                {t('landing.booking.form.closed_overlay_cta', {
+                                    defaultValue: 'Pick next available date',
+                                })}
+                            </span>
+                        </button>
+
+                        <p className="reservation-closed-overlay-hint text-pretty">
+                            {nextAvailableBooking
+                                ? t('landing.booking.form.closed_overlay_hint', {
+                                    defaultValue: 'Use the date picker below to select another day.',
+                                })
+                                : t('landing.booking.form.closed_overlay_no_next', {
+                                    defaultValue: 'No available date found in the next 30 days.',
+                                })}
+                        </p>
+                    </div>
                 </div>
+            )}
+
+            <main className={`reservation-main-shell relative z-10 mx-auto px-4 h-full flex flex-col items-center ${isClosedOverlayVisible ? 'reservation-main-shell-blocked' : ''} ${step === ReservationStep.TABLE_SELECTION ? 'w-full max-w-[98vw] justify-start py-3 sm:py-4 md:py-5' : isCompactReservationStep ? 'container reservation-main-shell-compact justify-start py-2 sm:py-3 md:py-4 overflow-y-auto' : 'container justify-center py-8 md:py-20'}`}>
 
                 {step === ReservationStep.SEARCH && (
-                    <div className="w-full max-w-5xl px-1 sm:px-0 fade-in">
-                        <div className="text-center mb-8 sm:mb-12">
+                    <div className="reservation-search-shell w-full max-w-5xl px-1 sm:px-0 fade-in">
+                        <div className="reservation-hero-block text-center mb-8 sm:mb-12">
                             <div className="inline-block px-4 py-1.5 rounded-full border border-[var(--primary-border)] bg-black/30 backdrop-blur-md text-[var(--primary)] text-xs font-bold tracking-[0.2em] uppercase mb-6 shadow-xl">
                                 {t('landing.booking.hero.badge')}
                             </div>
-                            <h1 className="text-3xl sm:text-4xl md:text-7xl font-bold mb-4 sm:mb-6 leading-tight font-serif text-balance" style={{ color: 'var(--text-inverse)' }}>
+                            <h1 className="reservation-hero-title text-3xl sm:text-4xl md:text-7xl font-bold mb-4 sm:mb-6 leading-tight font-serif text-balance" style={{ color: 'var(--text-inverse)' }}>
                                 {t('landing.booking.hero.title_prefix')} <br />
                                 <span style={{ color: 'var(--primary)' }}>
                                     {t('landing.booking.hero.title_highlight')}
                                 </span>
                             </h1>
-                            <p className="text-sm sm:text-base md:text-xl text-[var(--text-muted)] mb-6 sm:mb-8 max-w-2xl mx-auto font-light leading-relaxed text-pretty">
+                            <p className="reservation-hero-description text-sm sm:text-base md:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto font-light leading-relaxed text-pretty">
                                 {t('landing.booking.hero.description')}
                             </p>
                         </div>
 
-                        <div className="bg-[var(--card)] rounded-2xl sm:rounded-[2rem] shadow-2xl p-4 sm:p-6 md:p-10 border border-white/10 relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--primary)] via-[var(--primary-soft)] to-[var(--primary)]"></div>
+                        <div className="reservation-search-overlay">
+                            <div className="reservation-search-card bg-[var(--card)] rounded-2xl sm:rounded-[2rem] shadow-2xl p-4 sm:p-6 md:p-10 border border-white/10 relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--primary)] via-[var(--primary-soft)] to-[var(--primary)]"></div>
 
                             <form onSubmit={handleSearchSubmit} className="reservation-pill">
                                 <div className="pill-segment">
@@ -696,24 +1319,40 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             disabledDate={(current) => {
                                                 if (!current) return false;
                                                 const today = getTodayLocalDate();
+                                                const maxBookableDate = getMaxBookableDate();
                                                 const currentDate = current.format('YYYY-MM-DD');
                                                 if (currentDate < today) return true;
+                                                if (currentDate > maxBookableDate) return true;
+                                                if (isDateClosedByTenantSettings(currentDate)) return true;
                                                 if (!timeSlots.length) return true;
-                                                if (currentDate === today) return getAvailableSlotsForDate(today, timeSlots).length === 0;
+                                                if (currentDate === today) return !getSelectableTimeBounds(today, timeSlots);
                                                 return false;
                                             }}
                                             onChange={(value) => {
                                                 if (!value) return;
                                                 const selectedDate = value.format('YYYY-MM-DD');
                                                 const today = getTodayLocalDate();
-                                                const safeDate = selectedDate < today ? today : selectedDate;
+                                                const maxBookableDate = getMaxBookableDate();
+                                                let safeDate = selectedDate < today ? today : selectedDate;
+                                                if (safeDate > maxBookableDate) safeDate = maxBookableDate;
 
-                                                const availableSlots = getAvailableSlotsForDate(safeDate, timeSlots);
+                                                if (isDateClosedByTenantSettings(safeDate)) {
+                                                    setBooking((prev) => ({ ...prev, date: safeDate }));
+                                                    return;
+                                                }
+
+                                                let nextBounds = getSelectableTimeBounds(safeDate, timeSlots);
+                                                if (safeDate === today && !nextBounds && timeSlots.length > 0) {
+                                                    safeDate = dayjs(today).add(1, 'day').format('YYYY-MM-DD');
+                                                    if (isDateClosedByTenantSettings(safeDate)) {
+                                                        setBooking((prev) => ({ ...prev, date: safeDate }));
+                                                        return;
+                                                    }
+                                                    nextBounds = getSelectableTimeBounds(safeDate, timeSlots);
+                                                }
+
                                                 setBooking((prev) => {
-                                                    const fallbackTime = availableSlots[0] || timeSlots[0] || prev.time;
-                                                    const nextTime = availableSlots.includes(prev.time)
-                                                        ? prev.time
-                                                        : fallbackTime;
+                                                    const nextTime = clampTimeToBounds(prev.time, nextBounds);
                                                     return { ...prev, date: safeDate, time: nextTime };
                                                 });
                                             }}
@@ -724,17 +1363,30 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                                 <div className="pill-segment">
                                     <span className="pill-label">{t('landing.booking.form.preferred_time')}</span>
-                                    <Select
-                                        className="reservation-time-select pill-control"
-                                        popupClassName="reservation-time-popup"
-                                        value={booking.time}
-                                        options={availableSlotsForSelectedDate.map((slot) => ({ value: slot, label: slot }))}
-                                        disabled={availableSlotsForSelectedDate.length === 0}
-                                        suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">expand_more</span>}
-                                        onChange={(selectedTime) => {
-                                            if (!selectedTime) return;
-                                            if (!availableSlotsForSelectedDate.includes(selectedTime)) return;
-                                            setBooking((prev) => ({ ...prev, time: selectedTime }));
+                                    <input
+                                        ref={timeInputRef}
+                                        type="text"
+                                        className="pill-time-input"
+                                        value={normalizeTimeSlot(booking.time) || selectableTimeBounds?.min || ''}
+                                        readOnly
+                                        inputMode="numeric"
+                                        autoComplete="off"
+                                        disabled={!selectableTimeBounds}
+                                        aria-label={t('landing.booking.form.preferred_time')}
+                                        onClick={() => {
+                                            if (!selectableTimeBounds) return;
+                                            timePickerRef.current?.open();
+                                        }}
+                                        onFocus={() => {
+                                            if (!selectableTimeBounds) return;
+                                            timePickerRef.current?.open();
+                                        }}
+                                        onKeyDown={(event) => {
+                                            if (!selectableTimeBounds) return;
+                                            if (event.key === 'Enter' || event.key === ' ') {
+                                                event.preventDefault();
+                                                timePickerRef.current?.open();
+                                            }
                                         }}
                                     />
                                 </div>
@@ -771,6 +1423,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         <div className="pill-guest-actions">
                                         <button
                                             type="button"
+                                            aria-label={t('landing.booking.form.decrease_guests')}
                                             onClick={() => setBooking((b) => {
                                                 const currentGuests = Math.max(1, Number(b.guests) || 1);
                                                 return { ...b, guests: Math.max(1, currentGuests - 1) };
@@ -781,6 +1434,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         </button>
                                         <button
                                             type="button"
+                                            aria-label={t('landing.booking.form.increase_guests')}
                                             onClick={() => setBooking((b) => {
                                                 const currentGuests = Math.max(1, Number(b.guests) || 1);
                                                 return { ...b, guests: currentGuests + 1 };
@@ -795,15 +1449,15 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                                 <button
                                     type="submit"
-                                    disabled={availableSlotsForSelectedDate.length === 0 || !availableSlotsForSelectedDate.includes(booking.time)}
+                                    disabled={isBookingDayClosed || !selectableTimeBounds || !isSelectedTimeValid}
                                     className="pill-submit disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                                 >
-                                    <span>{availableSlotsForSelectedDate.length === 0 ? t('landing.booking.form.no_slots') : t('landing.booking.form.choose_table')}</span>
+                                    <span>{isBookingDayClosed ? t('landing.booking.form.restaurant_closed_today', { defaultValue: 'Restaurant is closed today' }) : !selectableTimeBounds ? t('landing.booking.form.no_slots') : t('landing.booking.form.choose_table')}</span>
                                     <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
                                 </button>
                             </form>
 
-                            <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-[var(--border)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                <div className="reservation-search-features mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-[var(--border)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                 {[
                                     { icon: 'restaurant', label: t('landing.booking.features.fine_dining.label'), desc: t('landing.booking.features.fine_dining.desc') },
                                     { icon: 'check_circle', label: t('landing.booking.features.instant_confirm.label'), desc: t('landing.booking.features.instant_confirm.desc') },
@@ -819,42 +1473,45 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                         </div>
                                     </div>
                                 ))}
+                                </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {step === ReservationStep.TABLE_SELECTION && (
-                    <div className="w-full fade-in">
-                        <StepIndicator active={2} t={t} />
+                {step === ReservationStep.TABLE_SELECTION && typeof document !== 'undefined' && createPortal(
+                    <div className="reservation-table-overlay" role="dialog" aria-modal="true" aria-label={t('landing.booking.table_map.title')}>
+                        <div className="reservation-table-overlay-panel fade-in">
+                            <div className="reservation-table-shell reservation-table-shell-overlay w-full">
+                                <StepIndicator active={2} t={t} />
 
-                        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-6 text-[var(--text-inverse)] px-1 sm:px-2">
-                            <button onClick={() => setStep(ReservationStep.SEARCH)} className="flex items-center gap-2 text-[var(--text-inverse)] opacity-70 hover:opacity-100 group">
-                                <span className="material-symbols-outlined text-lg p-2 bg-white/10 rounded-full group-hover:bg-white/20">arrow_back</span>
-                                <span className="font-medium text-sm">{t('landing.booking.table_map.change_schedule')}</span>
-                            </button>
-                            <div className="text-left sm:text-right">
-                                <div className="text-[10px] opacity-60 uppercase tracking-widest font-bold mb-1">{t('landing.booking.table_map.reservation_for')}</div>
-                                <div className="text-sm font-bold flex flex-wrap items-center gap-2">
-                                    <span>{new Date(booking.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                                    <span className="w-1 h-1 bg-[var(--text-inverse)] opacity-30 rounded-full" />
-                                    <span>{booking.time}</span>
-                                    <span className="w-1 h-1 bg-[var(--text-inverse)] opacity-30 rounded-full" />
-                                    <span className="text-[var(--primary)]">{booking.guests} {t('landing.booking.table_map.guests')}</span>
+                                <div className="reservation-table-topbar flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-6 text-[var(--text-inverse)] px-1 sm:px-2">
+                                    <button onClick={() => setStep(ReservationStep.SEARCH)} className="flex items-center gap-2 text-[var(--text-inverse)] opacity-70 hover:opacity-100 group">
+                                        <span className="material-symbols-outlined text-lg p-2 bg-white/10 rounded-full group-hover:bg-white/20">arrow_back</span>
+                                        <span className="font-medium text-sm">{t('landing.booking.table_map.change_schedule')}</span>
+                                    </button>
+                                    <div className="text-left sm:text-right">
+                                        <div className="text-[10px] opacity-60 uppercase tracking-widest font-bold mb-1">{t('landing.booking.table_map.reservation_for')}</div>
+                                        <div className="text-sm font-bold flex flex-wrap items-center gap-2">
+                                            <span>{new Date(booking.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                            <span className="w-1 h-1 bg-[var(--text-inverse)] opacity-30 rounded-full" />
+                                            <span>{booking.time}</span>
+                                            <span className="w-1 h-1 bg-[var(--text-inverse)] opacity-30 rounded-full" />
+                                            <span className="text-[var(--primary)]">{booking.guests} {t('landing.booking.table_map.guests')}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="bg-[var(--card)] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row h-[76dvh] sm:h-[82dvh] lg:h-[85vh]">
+                                <div className="reservation-table-frame bg-[var(--card)] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row h-[76dvh] sm:h-[82dvh] lg:h-[85vh]">
                             {/* Sidebar */}
-                            <div className="hidden lg:flex w-80 bg-[var(--surface)] p-8 flex-col border-r border-[var(--border)]">
+                            <div className="reservation-table-side-left hidden lg:flex w-80 bg-[var(--surface)] p-8 flex-col border-r border-[var(--border)]">
                                 <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-4">{t('landing.booking.table_map.title')}</h3>
 
                                 <div className="space-y-5 mb-8">
                                     {[
-                                        { bg: 'bg-[#f6ffed]', border: 'border-[#52c41a]', label: 'Available' },
-                                        { bg: 'bg-[var(--primary-soft)]', border: 'border-[var(--primary)] shadow-md shadow-[var(--primary-glow)]', label: 'Selected' },
-                                        { bg: 'bg-[#fff1f0]', border: 'border-[#ff4d4f] diagonal-stripe opacity-60', label: 'Occupied' }
+                                        { bg: 'bg-[#f6ffed]', border: 'border-[#52c41a]', label: t('landing.booking.table_map.legend_available') },
+                                        { bg: 'bg-[var(--primary-soft)]', border: 'border-[var(--primary)] shadow-md shadow-[var(--primary-glow)]', label: t('landing.booking.table_map.legend_selected') },
+                                        { bg: 'bg-[#fff1f0]', border: 'border-[#ff4d4f] diagonal-stripe opacity-60', label: t('landing.booking.table_map.legend_occupied') }
                                     ].map((legend, i) => (
                                         <div key={i} className="flex items-center gap-4">
                                             <div className={`w-6 h-6 rounded-lg border-2 ${legend.bg} ${legend.border}`} />
@@ -883,15 +1540,15 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
 
                             {/* Floor Plan Canvas */}
-                            <div className="flex-1 relative bg-[var(--surface-subtle)] overflow-hidden p-0 min-h-[46dvh] lg:min-h-0">
-                                <div className="lg:hidden absolute top-3 left-3 z-10 rounded-full border border-[var(--border)] bg-[var(--card)]/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] shadow-sm">
-                                    {t('landing.booking.table_map.zoom_hint', { defaultValue: 'Pinch to zoom, drag to move' })}
+                            <div className="reservation-table-map-pane flex-1 relative bg-[var(--surface-subtle)] overflow-hidden p-0 min-h-[46dvh] lg:min-h-0">
+                                <div className="lg:hidden absolute top-3 left-3 right-3 z-10 rounded-full border border-[var(--border)] bg-[var(--card)]/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] shadow-sm text-center">
+                                    {t('landing.booking.table_map.zoom_hint')}
                                 </div>
                                 {isLayoutLoading && (
                                     <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--card)]/70 backdrop-blur-sm">
                                         <div className="flex flex-col items-center gap-3 text-[var(--text-muted)]">
                                             <div className="mini-loader" />
-                                            <span className="text-xs font-semibold uppercase tracking-[0.2em]">{t('landing.booking.table_map.loading', 'Đang tải sơ đồ...')}</span>
+                                            <span className="text-xs font-semibold uppercase tracking-[0.2em]">{t('landing.booking.table_map.loading')}</span>
                                         </div>
                                     </div>
                                 )}
@@ -904,7 +1561,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             onTablePositionChange={() => undefined}
                                             readOnly
                                             selectedTableIds={selectedTables.map(t => t.id)}
-                                            focusOnSelected
                                         />
                                     </div>
                                 ) : (
@@ -915,7 +1571,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
 
                             {/* Right Summary Panel */}
-                            <div className="hidden lg:flex w-80 bg-[var(--card)] p-10 flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.02)]">
+                            <div className="reservation-table-side-right hidden lg:flex w-80 bg-[var(--card)] p-10 flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.02)]">
                                 <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-5">{t('landing.booking.table_map.booking_title')}</h3>
 
                                 <div className="flex-1 space-y-6">
@@ -953,7 +1609,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                             style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}
                                                         >
                                                             <span className="material-symbols-outlined text-base">3d_rotation</span>
-                                                            {t('landing.booking.table_map.view_360', 'Xem 360')}
+                                                            {t('landing.booking.table_map.view_360')}
                                                         </button>
                                                     )}
                                                 </div>
@@ -981,33 +1637,33 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
 
                             {/* Mobile Sticky Footer */}
-                            <div className="lg:hidden p-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] bg-[var(--card)] border-t border-[var(--border)] flex flex-col gap-3">
-                                <div className="flex items-center justify-between gap-3">
+                            <div className="reservation-table-mobile-footer lg:hidden p-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] bg-[var(--card)] border-t border-[var(--border)] flex flex-col gap-3">
+                                <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                                     <div>
                                         <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">{t('landing.booking.table_map.mobile_selected')}</p>
-                                        <p className="font-bold text-[var(--text)]">
+                                        <p className="font-bold text-[var(--text)] max-w-[70vw] sm:max-w-[56vw] truncate">
                                             {selectedTables.length > 0
-                                                ? selectedTables.map((table) => `#${table.label}`).join(', ')
+                                                ? mobileSelectedTableSummary
                                                 : t('landing.booking.table_map.mobile_none')}
                                         </p>
                                         <p className="text-xs text-[var(--text-muted)]">
                                             {t('landing.booking.table_map.total_capacity')}: {totalSelectedCapacity} {t('landing.booking.table_map.guests')}
                                         </p>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex w-full sm:w-auto items-center gap-2">
                                         {mobilePanoramaTable && (
                                             <button
                                                 type="button"
                                                 onClick={() => openPanoramaPreview(mobilePanoramaTable)}
-                                                className="px-4 py-2 border border-[var(--primary-border)] text-[var(--primary)] rounded-xl font-bold text-xs"
+                                                className="flex-1 sm:flex-none px-4 py-2 border border-[var(--primary-border)] text-[var(--primary)] rounded-xl font-bold text-xs"
                                             >
-                                                360
+                                                {t('landing.booking.table_map.view_360')}
                                             </button>
                                         )}
                                         <button
                                             disabled={selectedTables.length === 0}
                                             onClick={() => setStep(ReservationStep.CONFIRMATION)}
-                                            className="px-5 py-2.5 bg-[var(--primary)] text-[var(--on-primary)] rounded-xl font-bold text-sm disabled:opacity-50"
+                                            className="flex-1 sm:flex-none px-5 py-2.5 bg-[var(--primary)] text-[var(--on-primary)] rounded-xl font-bold text-sm disabled:opacity-50"
                                         >
                                             {t('landing.booking.table_map.mobile_confirm')}
                                         </button>
@@ -1033,15 +1689,20 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 )}
                             </div>
                         </div>
-                    </div>
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
                 )}
 
-                {step === ReservationStep.CONFIRMATION && (
-                    <div className="w-full max-w-5xl fade-in">
-                        <StepIndicator active={3} t={t} />
+                {step === ReservationStep.CONFIRMATION && typeof document !== 'undefined' && createPortal(
+                    <div className="reservation-table-overlay reservation-flow-overlay" role="dialog" aria-modal="true" aria-label={t('landing.booking.confirm.title')}>
+                        <div className="reservation-flow-overlay-panel reservation-confirm-overlay-panel fade-in">
+                            <div className="reservation-confirm-shell w-full max-w-5xl">
+                        <StepIndicator active={3} t={t} className="mb-3 sm:mb-4" />
 
                         {/* Back button */}
-                        <div className="mb-6 px-2">
+                        <div className="reservation-confirm-back mb-6 px-2">
                             <button
                                 onClick={() => setStep(ReservationStep.TABLE_SELECTION)}
                                 className="flex items-center gap-2 text-[var(--text-inverse)] opacity-70 hover:opacity-100 group transition-opacity"
@@ -1051,39 +1712,39 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </button>
                         </div>
 
-                        <div className="bg-[var(--card)] rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-0 md:min-h-[560px]">
+                        <div className="reservation-confirm-card bg-[var(--card)] rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-0 md:min-h-[520px]">
                             {/* Left Summary Panel */}
-                            <div className="md:w-[35%] bg-black text-white p-6 sm:p-8 md:p-10 flex flex-col relative overflow-hidden">
+                            <div className="reservation-confirm-side-left md:w-[32%] bg-black text-white p-5 sm:p-6 md:p-7 flex flex-col relative overflow-hidden">
                                 <div className="absolute inset-0 bg-[var(--primary)] opacity-90" />
                                 <div className="absolute -top-10 -right-10 text-white opacity-10">
                                     <span className="material-symbols-outlined text-[180px]">restaurant_menu</span>
                                 </div>
 
-                                <div className="relative z-10 h-full flex flex-col">
-                                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif mb-6 sm:mb-10 border-b border-white/20 pb-4 sm:pb-5 text-balance">{t('landing.booking.confirm.title')}</h2>
+                                <div className="reservation-confirm-side-content relative z-10 h-full flex flex-col">
+                                    <h2 className="reservation-confirm-title font-serif mb-4 sm:mb-5 border-b border-white/20 pb-3 sm:pb-4 text-balance">{t('landing.booking.confirm.title')}</h2>
 
-                                    <div className="space-y-6 sm:space-y-8 md:space-y-10 flex-1">
+                                    <div className="reservation-confirm-metrics space-y-4 sm:space-y-5 md:space-y-6">
                                         {[
                                             { icon: 'calendar_today', label: t('landing.booking.confirm.date_time'), value: new Date(booking.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }), sub: booking.time },
                                             { icon: 'table_restaurant', label: t('landing.booking.confirm.selected_table'), value: selectedTables.map(t => `Table ${t.label}`).join(', '), sub: `${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')}` },
                                             { icon: 'group', label: t('landing.booking.confirm.party_size', { count: booking.guests }), value: `${booking.guests} ${t('landing.booking.table_map.guests')}`, sub: t('landing.booking.confirm.standard_seating') }
                                         ].map((item, idx) => (
-                                            <div key={idx} className="flex gap-3 sm:gap-5">
-                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
+                                            <div key={idx} className="reservation-confirm-metric-item flex gap-3 sm:gap-4">
+                                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
                                                     <span className="material-symbols-outlined text-white">{item.icon}</span>
                                                 </div>
                                                 <div>
-                                                    <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-1">{item.label}</p>
-                                                    <p className="text-base sm:text-lg font-bold text-pretty">{item.value}</p>
-                                                    <p className="text-white/80 text-xs sm:text-sm">{item.sub}</p>
+                                                    <p className="text-white/65 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-0.5">{item.label}</p>
+                                                    <p className="text-[0.9rem] sm:text-[0.98rem] font-bold text-pretty leading-snug">{item.value}</p>
+                                                    <p className="text-white/80 text-[11px] sm:text-xs">{item.sub}</p>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/20">
-                                        <div className="flex items-start gap-4 opacity-70">
-                                            <span className="material-symbols-outlined text-lg mt-1">location_on</span>
+                                    <div className="reservation-confirm-address mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-white/20">
+                                        <div className="flex items-start gap-3 opacity-70">
+                                            <span className="material-symbols-outlined text-base mt-0.5">location_on</span>
                                             <p className="text-xs sm:text-sm font-medium leading-relaxed text-pretty">
                                                 {tenant?.businessAddressLine1 || '—'}<br />
                                                 {tenant?.businessAddressLine2 || ''}
@@ -1094,39 +1755,39 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
 
                             {/* Right Form Panel */}
-                            <div className="md:w-[65%] p-6 sm:p-8 md:p-14 bg-[var(--card)]">
-                                <div className="mb-8 sm:mb-10">
-                                    <h3 className="text-2xl sm:text-3xl font-serif text-[var(--text)] mb-3 text-balance">{t('landing.booking.confirm.finalize_title')}</h3>
-                                    <p className="text-sm sm:text-base text-[var(--text-muted)] font-medium text-pretty">{t('landing.booking.confirm.finalize_desc')}</p>
+                            <div className="reservation-confirm-side-right md:w-[68%] p-5 sm:p-6 md:p-8 bg-[var(--card)]">
+                                <div className="mb-4 sm:mb-5">
+                                    <h3 className="text-[1.35rem] sm:text-[1.55rem] md:text-[1.65rem] font-serif text-[var(--text)] mb-2 text-balance">{t('landing.booking.confirm.finalize_title')}</h3>
+                                    <p className="text-[13px] sm:text-sm text-[var(--text-muted)] font-medium text-pretty">{t('landing.booking.confirm.finalize_desc')}</p>
                                     {user && (
-                                        <div className="mt-3 flex items-center gap-2 text-xs text-[var(--primary)] font-semibold">
+                                        <div className="mt-2 flex items-center gap-2 text-[11px] sm:text-xs text-[var(--primary)] font-semibold">
                                             <span className="material-symbols-outlined text-sm">verified_user</span>
                                             <span>{t('landing.booking.confirm.logged_in_hint', { name: user.name || user.fullName || user.email })}</span>
                                         </div>
                                     )}
                                 </div>
 
-                                <form className="space-y-6 sm:space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
+                                <form className="reservation-confirm-form">
+                                    <div className="reservation-confirm-grid grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                                         <div className="group">
-                                            <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.full_name')}</label>
+                                            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-widest">{t('landing.booking.confirm.full_name')}</label>
                                             <div className="relative">
-                                                <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">person</span>
+                                                <span className="material-symbols-outlined absolute left-3.5 top-3 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">person</span>
                                                 <input
                                                     type="text"
-                                                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
+                                                    className="reservation-confirm-input w-full pl-11 pr-3.5 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                                                     value={userDetails.name}
                                                     onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })}
                                                 />
                                             </div>
                                         </div>
                                         <div className="group">
-                                            <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.phone_number')}</label>
+                                            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-widest">{t('landing.booking.confirm.phone_number')}</label>
                                             <div className="relative">
-                                                <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">call</span>
+                                                <span className="material-symbols-outlined absolute left-3.5 top-3 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">call</span>
                                                 <input
                                                     type="tel"
-                                                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
+                                                    className="reservation-confirm-input w-full pl-11 pr-3.5 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                                                     value={userDetails.phone}
                                                     onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
                                                 />
@@ -1135,12 +1796,12 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     </div>
 
                                     <div className="group">
-                                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.email')}</label>
+                                        <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-widest">{t('landing.booking.confirm.email')}</label>
                                         <div className="relative">
-                                            <span className="material-symbols-outlined absolute left-4 top-3.5 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">mail</span>
+                                            <span className="material-symbols-outlined absolute left-3.5 top-3 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">mail</span>
                                             <input
                                                 type="email"
-                                                className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
+                                                className="reservation-confirm-input w-full pl-11 pr-3.5 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
                                                 value={userDetails.email}
                                                 onChange={(e) => setUserDetails({ ...userDetails, email: e.target.value })}
                                             />
@@ -1148,15 +1809,15 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                     </div>
 
                                     <div className="group">
-                                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-widest">{t('landing.booking.confirm.special_requests')} <span className="text-[var(--text-muted)] font-normal ml-1">{t('landing.booking.confirm.special_requests_optional')}</span></label>
+                                        <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-widest">{t('landing.booking.confirm.special_requests')} <span className="text-[var(--text-muted)] font-normal ml-1">{t('landing.booking.confirm.special_requests_optional')}</span></label>
                                         <textarea
-                                            className="w-full p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none h-28"
+                                            className="reservation-confirm-textarea w-full p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none h-24"
                                             value={userDetails.requests}
                                             onChange={(e) => setUserDetails({ ...userDetails, requests: e.target.value })}
                                         />
                                     </div>
 
-                                    <div className="pt-6">
+                                    <div className="pt-2 sm:pt-3">
                                         {submitError && (
                                             <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center gap-2">
                                                 <span className="material-symbols-outlined text-lg">error</span>
@@ -1167,7 +1828,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             type="button"
                                             onClick={handleCompleteReservation}
                                             disabled={isSubmitting}
-                                            className="w-full py-4 sm:py-5 bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] font-bold text-base sm:text-lg md:text-xl rounded-2xl shadow-xl shadow-[var(--primary-glow)] transition-all transform hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
+                                            className="reservation-confirm-submit w-full py-3.5 bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] font-bold text-sm sm:text-base rounded-xl shadow-xl shadow-[var(--primary-glow)] transition-all transform hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 group"
                                         >
                                             {isSubmitting ? (
                                                 <>
@@ -1181,7 +1842,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                 </>
                                             )}
                                         </button>
-                                        <p className="text-center text-[10px] text-[var(--text-muted)] mt-6 leading-relaxed">
+                                        <p className="text-center text-[10px] text-[var(--text-muted)] mt-4 leading-relaxed">
                                             {t('landing.booking.confirm.terms').replace('<a>', '').replace('</a>', '')}
                                         </p>
                                     </div>
@@ -1189,20 +1850,25 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                             </div>
                         </div>
                     </div>
+                        </div>
+                    </div>,
+                    document.body
                 )}
 
-                {step === ReservationStep.SUCCESS && (
-                    <div className="max-w-lg w-full fade-in text-center bg-[var(--card)] rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden">
+                {step === ReservationStep.SUCCESS && typeof document !== 'undefined' && createPortal(
+                    <div className="reservation-table-overlay reservation-flow-overlay" role="dialog" aria-modal="true" aria-label={t('landing.booking.success.title')}>
+                        <div className="reservation-flow-overlay-panel reservation-success-overlay-panel fade-in">
+                            <div className="reservation-success-shell max-w-lg w-full text-center bg-[var(--card)] rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 shadow-2xl relative overflow-hidden">
                         {/* Green top accent */}
                         <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--success)]" />
 
                         {/* Success icon */}
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[var(--success-soft)] rounded-full flex items-center justify-center mx-auto mb-5 sm:mb-6">
-                            <span className="material-symbols-outlined text-[var(--success)] text-4xl sm:text-5xl">verified</span>
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[var(--success-soft)] rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5">
+                            <span className="material-symbols-outlined text-[var(--success)] text-3xl sm:text-4xl">verified</span>
                         </div>
 
-                        <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[var(--text)] mb-3 text-balance">{t('landing.booking.success.title')}</h2>
-                        <p className="text-[var(--text-muted)] text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed px-1 sm:px-2 text-pretty">
+                        <h2 className="text-xl sm:text-2xl font-serif font-bold text-[var(--text)] mb-2 text-balance">{t('landing.booking.success.title')}</h2>
+                        <p className="text-[var(--text-muted)] text-sm mb-4 sm:mb-6 leading-relaxed px-1 sm:px-2 text-pretty">
                             {t('landing.booking.success.thank_you')}{' '}
                             <span className="text-[var(--text)] font-semibold">{userDetails.name}</span>.{' '}
                             {t('landing.booking.success.table_label')}{' '}
@@ -1222,7 +1888,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                         </p>
 
                         {/* Info block */}
-                        <div className="bg-[var(--surface)] rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8 text-left border border-[var(--border)] space-y-3">
+                        <div className="bg-[var(--surface)] rounded-2xl p-3.5 sm:p-4 mb-5 sm:mb-6 text-left border border-[var(--border)] space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold">{t('landing.booking.success.booking_ref')}</span>
                                 <span className="text-sm font-bold text-[var(--primary)] font-mono tracking-wider">
@@ -1277,7 +1943,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                         >
                             {t('landing.booking.success.view_details', { defaultValue: 'Xem chi tiết' })}
                         </button>
+                            </div>
+                        </div>
                     </div>
+                    ,
+                    document.body
                 )}
 
             </main>
@@ -1491,6 +2161,59 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     color: var(--primary) !important;
                 }
 
+                .pill-time-input {
+                    width: 100%;
+                    height: 42px;
+                    border: none;
+                    background: transparent;
+                    color: var(--text);
+                    font-size: 15px;
+                    font-weight: 600;
+                    text-align: center;
+                    outline: none;
+                    padding: 0;
+                    cursor: pointer;
+                }
+
+                .pill-time-input::-webkit-calendar-picker-indicator {
+                    opacity: 0.6;
+                    cursor: pointer;
+                }
+
+                .pill-time-input:disabled {
+                    color: var(--text-muted);
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+
+                .tp-ui {
+                    --tp-bg: var(--card);
+                    --tp-surface: var(--surface);
+                    --tp-input-bg: var(--surface-subtle);
+                    --tp-text: var(--text);
+                    --tp-text-secondary: var(--text-muted);
+                    --tp-primary: var(--primary);
+                    --tp-on-primary: var(--on-primary);
+                    --tp-primary-container: var(--primary-faint);
+                    --tp-on-primary-container: var(--text);
+                    --tp-outline: var(--primary);
+                    --tp-outline-variant: var(--border);
+                    --tp-border: var(--border);
+                    --tp-surface-hover: color-mix(in srgb, var(--primary) 14%, var(--surface));
+                    --tp-backdrop: color-mix(in srgb, black 55%, transparent);
+                    --tp-shadow: 0 24px 42px rgba(0, 0, 0, 0.24);
+                }
+
+                .tp-ui .tp-ui-wrapper {
+                    border: 1px solid var(--border);
+                    font-family: inherit;
+                }
+
+                .tp-ui .tp-ui-cancel-btn,
+                .tp-ui .tp-ui-ok-btn {
+                    font-weight: 700;
+                }
+
                 .pill-guest-row {
                     display: flex;
                     align-items: center;
@@ -1594,7 +2317,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     }
 
                     .pill-control .ant-select-selection-item,
-                    .pill-control .ant-picker-input > input {
+                    .pill-control .ant-picker-input > input,
+                    .pill-time-input {
                         font-size: 14px;
                     }
 

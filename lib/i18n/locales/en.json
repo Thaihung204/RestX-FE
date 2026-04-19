@@ -3990,8 +3990,20 @@
         "arrival_date": "Arrival Date",
         "preferred_time": "Time",
         "party_size": "Party Size",
+        "decrease_guests": "Decrease guests",
+        "increase_guests": "Increase guests",
         "choose_table": "Choose Table",
-        "no_slots": "No available time slots"
+        "no_slots": "No available time slots",
+        "restaurant_closed_today": "Restaurant closed",
+        "restaurant_closed_on_day": "Restaurant is closed on {{day}}",
+        "closed_overlay_badge": "Restaurant Closed",
+        "closed_overlay_title": "Reservations are unavailable for this day",
+        "closed_overlay_description": "Please choose another date to continue your booking.",
+        "closed_overlay_selected_date": "Selected date",
+        "closed_overlay_notice": "Notice",
+        "closed_overlay_cta": "Pick next available date",
+        "closed_overlay_hint": "Use the date picker below to select another day.",
+        "closed_overlay_no_next": "No available date found in the next 30 days."
       },
       "features": {
         "fine_dining": {
@@ -4022,9 +4034,13 @@
         "no_table_selected": "No table selected",
         "info_timer": "Please select a table on the map",
         "confirm_table": "Confirm Table",
+        "legend_available": "Available",
+        "legend_selected": "Selected",
+        "legend_occupied": "Occupied",
+        "zoom_hint": "Pinch to zoom, drag to move",
         "mobile_selected": "Selected",
         "mobile_none": "None",
-        "mobile_confirm": "Done",
+        "mobile_confirm": "Confirm",
         "view_360": "View 360",
         "total_capacity": "Total Capacity",
         "selected_table_label": "Selected Table"
@@ -4037,7 +4053,7 @@
         "table_label": "Table {{name}}",
         "status_available": "Available",
         "status_occupied": "Occupied",
-        "drag_hint": "Drag to rotate - Scroll to zoom",
+        "drag_hint": "Drag to rotate, pinch to zoom",
         "back_to_map": "Back to map",
         "book_now": "Book this table"
       },

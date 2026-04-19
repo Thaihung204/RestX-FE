@@ -289,6 +289,13 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
     if (!canDragPan) return;
 
+    const targetElement = event.target as HTMLElement | null;
+    if (targetElement?.closest('[data-table-node="true"]')) {
+      lastTapRef.current = null;
+      lastDoubleTapZoomRef.current = null;
+      return;
+    }
+
     if (event.touches.length < 2) {
       pinchStartDistanceRef.current = null;
       isPinchingRef.current = false;
@@ -330,6 +337,11 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canDragPan || !containerRef.current) return;
     if (isPinchingRef.current) return;
+
+    const targetElement = event.target as HTMLElement | null;
+    if (targetElement?.closest('[data-table-node="true"]')) {
+      return;
+    }
 
     if (event.pointerType === "mouse" && event.button !== 0) return;
     stopInertia();

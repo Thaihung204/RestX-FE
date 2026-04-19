@@ -4047,8 +4047,20 @@
         "arrival_date": "Ngày đến",
         "preferred_time": "Giờ đến",
         "party_size": "Số người",
+        "decrease_guests": "Giảm số khách",
+        "increase_guests": "Tăng số khách",
         "choose_table": "Chọn bàn",
-        "no_slots": "Đã hết khung giờ trống"
+        "no_slots": "Đã hết khung giờ trống",
+        "restaurant_closed_today": "Nhà hàng đang đóng cửa",
+        "restaurant_closed_on_day": "Nhà hàng đóng cửa vào {{day}}",
+        "closed_overlay_badge": "Nhà Hàng Đang Đóng Cửa",
+        "closed_overlay_title": "Hiện không nhận đặt bàn cho ngày này",
+        "closed_overlay_description": "Vui lòng chọn ngày khác để tiếp tục đặt bàn.",
+        "closed_overlay_selected_date": "Ngày đã chọn",
+        "closed_overlay_notice": "Thông báo",
+        "closed_overlay_cta": "Chọn ngày khả dụng gần nhất",
+        "closed_overlay_hint": "Hãy dùng ô chọn ngày bên dưới để chuyển sang ngày khác.",
+        "closed_overlay_no_next": "Không tìm thấy ngày khả dụng trong 30 ngày tới."
       },
       "features": {
         "fine_dining": {
@@ -4079,9 +4091,13 @@
         "no_table_selected": "Chưa chọn bàn nào",
         "info_timer": "Vui lòng chọn bàn trên sơ đồ",
         "confirm_table": "Xác nhận bàn",
+        "legend_available": "Còn trống",
+        "legend_selected": "Đang chọn",
+        "legend_occupied": "Đang có khách",
+        "zoom_hint": "Chụm để zoom, kéo để di chuyển",
         "mobile_selected": "Đã chọn",
         "mobile_none": "Chưa chọn bàn",
-        "mobile_confirm": "Xong",
+        "mobile_confirm": "Xác nhận",
         "view_360": "Xem 360",
         "total_capacity": "Tổng sức chứa",
         "selected_table_label": "Bàn đã chọn"
@@ -4094,7 +4110,7 @@
         "table_label": "Bàn {{name}}",
         "status_available": "Còn trống",
         "status_occupied": "Đang có khách",
-        "drag_hint": "Kéo để xoay - Cuộn để zoom",
+        "drag_hint": "Kéo để xoay, chụm để zoom",
         "back_to_map": "Quay lại sơ đồ",
         "book_now": "Đặt bàn này"
       },

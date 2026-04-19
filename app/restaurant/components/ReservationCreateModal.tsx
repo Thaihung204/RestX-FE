@@ -27,15 +27,27 @@ const initialFormState = {
   requests: '',
 };
 
+const MAX_RESERVATION_ADVANCE_MONTHS = 1;
+
 const getTodayLocalDate = () => {
   const now = new Date();
   const tzOffset = now.getTimezoneOffset() * 60000;
   return new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
 };
 
+const getMaxBookableDate = () => dayjs().add(MAX_RESERVATION_ADVANCE_MONTHS, 'month').format('YYYY-MM-DD');
+
 const isFutureReservationTime = (date: string, time: string) => {
   const selectedDateTime = dayjs(`${date}T${time}:00`);
   return selectedDateTime.isValid() && selectedDateTime.isAfter(dayjs());
+};
+
+const isWithinBookingHorizon = (date: string, time: string) => {
+  const selectedDateTime = dayjs(`${date}T${time}:00`);
+  if (!selectedDateTime.isValid()) return false;
+
+  const maxAllowedDateTime = dayjs().add(MAX_RESERVATION_ADVANCE_MONTHS, 'month');
+  return !selectedDateTime.isAfter(maxAllowedDateTime);
 };
 
 export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
@@ -79,6 +91,15 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
 
     if (!isFutureReservationTime(form.date, form.time)) {
       setError(t('reservation_detail.edit.date_in_past', { defaultValue: 'Reservation time must be in the future.' }));
+      return;
+    }
+
+    if (!isWithinBookingHorizon(form.date, form.time)) {
+      setError(
+        t('landing.booking.confirm.error_too_far', {
+          defaultValue: 'Reservation can only be made up to 1 month in advance.',
+        }),
+      );
       return;
     }
 
@@ -259,12 +280,18 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                         style={{ width: '100%', marginTop: 8 }}
                         disabledDate={(current) => {
                           if (!current) return false;
-                          return current.startOf('day').isBefore(dayjs().startOf('day'));
+                          const today = getTodayLocalDate();
+                          const maxBookableDate = getMaxBookableDate();
+                          const currentDate = current.format('YYYY-MM-DD');
+                          return currentDate < today || currentDate > maxBookableDate;
                         }}
                         onChange={(value) => {
                           if (!value) return;
                           const selectedDate = value.format('YYYY-MM-DD');
-                          const safeDate = selectedDate < getTodayLocalDate() ? getTodayLocalDate() : selectedDate;
+                          const today = getTodayLocalDate();
+                          const maxBookableDate = getMaxBookableDate();
+                          let safeDate = selectedDate < today ? today : selectedDate;
+                          if (safeDate > maxBookableDate) safeDate = maxBookableDate;
                           setForm((prev) => ({ ...prev, date: safeDate }));
                         }}
                       />

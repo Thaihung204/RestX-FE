@@ -208,6 +208,8 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
 
   return (
     <div
+      data-table-node="true"
+      data-table-id={table.id}
       onPointerDown={handleDragPointerDown}
       onClick={handleClick}
       style={{
