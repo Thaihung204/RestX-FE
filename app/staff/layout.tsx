@@ -98,14 +98,6 @@ export default function StaffLayout({
       label: t("dashboard.staff.menu.dashboard"),
     },
     {
-      key: "/staff/orders",
-      icon: <ShoppingCartOutlined />,
-      label:
-        isMobile || isTablet
-          ? t("dashboard.staff.menu.orders_short")
-          : t("dashboard.staff.menu.orders"),
-    },
-    {
       key: "/staff/activity",
       icon: (
         <svg
@@ -134,6 +126,14 @@ export default function StaffLayout({
                 defaultValue: "Tables",
               }),
             }),
+    },
+    {
+      key: "/staff/orders",
+      icon: <ShoppingCartOutlined />,
+      label:
+        isMobile || isTablet
+          ? t("dashboard.staff.menu.orders_short")
+          : t("dashboard.staff.menu.orders"),
     },
     {
       key: "/staff/kitchen",

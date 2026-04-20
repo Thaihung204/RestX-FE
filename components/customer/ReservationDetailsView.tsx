@@ -767,6 +767,7 @@ function TableMapCard({
           setDrawerOpen(false);
           setSelectedTableActivity(null);
         }}
+        className="reservation-detail-floor-activity-drawer"
         title={
           selectedTableActivity
             ? `${t("reservation_detail.floor_activity.title", { defaultValue: "Floor activity" })} · ${selectedTableActivity.tableCode}`
@@ -1340,54 +1341,6 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
             </div>
           </div>
 
-          {/* Share URL */}
-          <div
-            className="mb-6 rounded-2xl p-3 sm:p-4"
-            style={{
-              background: heroSurface,
-              border: `1px solid ${heroBorder}`,
-              backdropFilter: hasTenantHeroBanner ? "blur(8px)" : undefined,
-              boxShadow: hasTenantHeroBanner ? "0 12px 32px rgba(2,6,23,0.22)" : undefined,
-            }}
-          >
-            <div className="flex flex-col md:flex-row md:items-center gap-3">
-              <div
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl shrink-0"
-                style={{
-                  background: hasTenantHeroBanner ? "rgba(15,23,42,0.5)" : "var(--surface)",
-                  border: `1px solid ${heroBorder}`,
-                }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ color: hasTenantHeroBanner ? "#F8FAFC" : "var(--primary)" }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.5-1.5M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.5 1.5" />
-                </svg>
-                <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: heroTextMuted }}>
-                  {t("reservation_detail.share.label")}
-                </span>
-              </div>
-
-              <div className="flex-1 min-w-0 flex items-center gap-2">
-                <input
-                  value={reservationShareUrl}
-                  readOnly
-                  className="flex-1 min-w-0 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium"
-                  style={{
-                    background: "var(--card)",
-                    color: "var(--text)",
-                    border: `1px solid ${heroBorder}`,
-                  }}
-                />
-                <button
-                  onClick={handleCopyReservationUrl}
-                  className="px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all hover:brightness-110"
-                  style={{ background: "var(--primary)", color: "var(--on-primary)" }}
-                >
-                  {t("reservation_detail.share.copy")}
-                </button>
-              </div>
-            </div>
-          </div>
-
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             {/* Left: title + badges */}
             <div className="flex-1 min-w-0">
@@ -1453,6 +1406,53 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
       {/* ── Body ──────────────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-10">
+        {/* Share URL */}
+        <div
+          className="mb-6 rounded-2xl p-3 sm:p-4"
+          style={{
+            background: "var(--card)",
+            border: "1px solid var(--border)",
+            boxShadow: "var(--shadow-sm)",
+          }}
+        >
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl shrink-0"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ color: "var(--primary)" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.5-1.5M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.5 1.5" />
+              </svg>
+              <span className="text-[11px] font-bold uppercase" style={{ color: "var(--text-muted)" }}>
+                {t("reservation_detail.share.label")}
+              </span>
+            </div>
+
+            <div className="flex-1 min-w-0 flex items-center gap-2">
+              <input
+                value={reservationShareUrl}
+                readOnly
+                className="flex-1 min-w-0 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium"
+                style={{
+                  background: "var(--bg-base)",
+                  color: "var(--text)",
+                  border: "1px solid var(--border)",
+                }}
+              />
+              <button
+                onClick={handleCopyReservationUrl}
+                className="px-4 py-2.5 rounded-xl text-xs font-black uppercase shrink-0 transition-all hover:brightness-110"
+                style={{ background: "var(--primary)", color: "var(--on-primary)" }}
+              >
+                {t("reservation_detail.share.copy")}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-8 items-start">
 
           {/* ── Left Column (7/12) ─────────────────────────────────────────── */}
@@ -1666,9 +1666,9 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
 
             {/* Deposit Status */}
             <div className="rounded-2xl p-4 sm:p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col gap-4">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-2" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.deposit.label")}</p>
+                  <p className="text-[11px] font-black mb-2" style={{ color: "var(--text-muted)" }}>{t("reservation_detail.deposit.label")}</p>
                   <div className="flex items-center gap-2">
                     <span
                       className="w-2 h-2 rounded-full"
@@ -1677,31 +1677,40 @@ export default function ReservationDetailsView({ reservationId, mode: viewMode }
                     <p className="text-lg font-black" style={{ color: "var(--text)" }}>{formatVND(detail.depositAmount)}</p>
                   </div>
                 </div>
-                {isCustomer && (
-                  <button
-                    id="pay-deposit-btn"
-                    onClick={handlePayDeposit}
-                    disabled={depositLoading || !isDepositPaymentAllowed}
-                    className="w-full sm:w-auto shrink-0 px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all disabled:opacity-60 flex items-center justify-center gap-2"
-                    style={{
-                      background: isDepositPaymentAllowed ? "var(--success)" : "var(--surface)",
-                      color: isDepositPaymentAllowed ? "#fff" : "var(--text-muted)",
-                      border: isDepositPaymentAllowed ? "none" : "1px solid var(--border)",
-                    }}
-                  >
-                    {depositLoading ? (
-                      <div className="w-3.5 h-3.5 border border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                    )}
-                    {depositLoading ? t("reservation_detail.deposit.creating_link") : t("reservation_detail.deposit.pay_now")}
-                  </button>
-                )}
-                {!isDepositPaymentAllowed && (
-                  <span className="px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest opacity-50 cursor-default" style={{ background: "var(--surface)", color: detail.depositPaid ? "var(--success)" : "var(--danger)", border: `1px solid ${detail.depositPaid ? "var(--success-border)" : "var(--danger-border)"}` }}>
-                    {detail.depositPaid ? t("reservation_detail.deposit.status_paid") : t("reservation_detail.deposit.status_unpaid")}
-                  </span>
-                )}
+                <div className="w-full flex flex-wrap items-stretch gap-2">
+                  {isCustomer && (
+                    <button
+                      id="pay-deposit-btn"
+                      onClick={handlePayDeposit}
+                      disabled={depositLoading || !isDepositPaymentAllowed}
+                      className="flex-1 min-w-[180px] h-11 px-4 rounded-xl text-[11px] font-black uppercase transition-all disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                      style={{
+                        background: isDepositPaymentAllowed ? "var(--success)" : "var(--surface)",
+                        color: isDepositPaymentAllowed ? "#fff" : "var(--text-muted)",
+                        border: isDepositPaymentAllowed ? "none" : "1px solid var(--border)",
+                      }}
+                    >
+                      {depositLoading ? (
+                        <div className="w-3.5 h-3.5 border border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                      )}
+                      {depositLoading ? t("reservation_detail.deposit.creating_link") : t("reservation_detail.deposit.pay_now")}
+                    </button>
+                  )}
+                  {!isDepositPaymentAllowed && (
+                    <span
+                      className="flex-1 min-w-[180px] h-11 px-4 rounded-xl text-[11px] font-black whitespace-nowrap cursor-default inline-flex items-center justify-center"
+                      style={{
+                        background: "var(--surface)",
+                        color: detail.depositPaid ? "var(--success)" : "var(--danger)",
+                        border: `1px solid ${detail.depositPaid ? "var(--success-border)" : "var(--danger-border)"}`,
+                      }}
+                    >
+                      {detail.depositPaid ? t("reservation_detail.deposit.status_paid") : t("reservation_detail.deposit.status_unpaid")}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="mt-4">
