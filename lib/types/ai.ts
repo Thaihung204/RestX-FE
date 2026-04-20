@@ -2,6 +2,9 @@ export interface AISuggestionItem {
   dishId: string;
   dishName: string;
   price: number;
+  quantity?: number;
+  totalPrice?: number;
+  category?: string;
   reason: string;
   imageUrl?: string;
 }
