@@ -5,6 +5,7 @@ import customerService, {
   Customer,
   CustomerResponseDto,
 } from "@/lib/services/customerService";
+import { formatVND } from "@/lib/utils/currency";
 import {
   Cake,
   Cancel,
@@ -22,11 +23,15 @@ interface CustomerDetailProps {
   onClose: () => void;
 }
 
-export default function CustomerDetail({ customer, onClose }: CustomerDetailProps) {
+export default function CustomerDetail({
+  customer,
+  onClose,
+}: CustomerDetailProps) {
   const { t } = useTranslation("common");
   const primaryColor = "var(--primary)";
 
-  const [customerProfile, setCustomerProfile] = useState<CustomerResponseDto | null>(null);
+  const [customerProfile, setCustomerProfile] =
+    useState<CustomerResponseDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -103,12 +108,19 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
     customerProfile?.avatarUrl ||
     customer.avatar ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
-  const displayMembership = customerProfile?.membershipLevel || customer.vipTier || "Bronze";
-  const displayPoints = customerProfile?.loyaltyPoints ?? customer.loyaltyPoints ?? 0;
-  const displayTotalOrders = customerProfile?.totalOrders ?? customer.totalOrders ?? 0;
+  const displayMembership =
+    customerProfile?.membershipLevel || customer.vipTier || "Bronze";
+  const displayPoints =
+    customerProfile?.loyaltyPoints ?? customer.loyaltyPoints ?? 0;
+  const displayTotalOrders =
+    customerProfile?.totalOrders ?? customer.totalOrders ?? 0;
+  const displayTotalSpent =
+    customerProfile?.totalSpent ?? customer.totalSpent ?? 0;
   const displayTotalReservations = customerProfile?.totalReservations ?? 0;
-  const displayCreatedDate = customerProfile?.createdDate || customer.memberSince;
-  const displayModifiedDate = customerProfile?.modifiedDate || customer.lastVisit;
+  const displayCreatedDate =
+    customerProfile?.createdDate || customer.memberSince;
+  const displayModifiedDate =
+    customerProfile?.modifiedDate || customer.lastVisit;
   const displayIsActive = customerProfile?.isActive ?? customer.isActive;
   const isBirthday = customerService.isBirthday(customer.birthday);
 
@@ -153,13 +165,19 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
               style={{ borderColor: "var(--border)" }}
             />
             <div className="min-w-0">
-              <h3 className="text-xl font-bold truncate" style={{ color: "var(--text)" }}>
+              <h3
+                className="text-lg md:text-xl font-bold truncate"
+                style={{ color: "var(--text)" }}>
                 {displayName}
               </h3>
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] md:text-xs">
                 <span
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
-                  style={{ color: statusStyles.color, background: statusStyles.bg, borderColor: statusStyles.border }}>
+                  style={{
+                    color: statusStyles.color,
+                    background: statusStyles.bg,
+                    borderColor: statusStyles.border,
+                  }}>
                   {statusStyles.icon}
                   {statusStyles.label}
                 </span>
@@ -171,14 +189,21 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
                     background: "var(--surface)",
                     borderColor: "var(--border)",
                   }}>
-                  <LoyaltyBandIcon color={getVipBadgeColor(displayMembership)} size={14} />
+                  <LoyaltyBandIcon
+                    color={getVipBadgeColor(displayMembership)}
+                    size={14}
+                  />
                   {String(displayMembership).toUpperCase()}
                 </span>
 
                 {isBirthday && (
                   <span
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
-                    style={{ color: primaryColor, background: "var(--primary-soft)", borderColor: "var(--primary-border)" }}>
+                    style={{
+                      color: primaryColor,
+                      background: "var(--primary-soft)",
+                      borderColor: "var(--primary-border)",
+                    }}>
                     <Cake sx={{ fontSize: 14 }} />
                     {t("customers.list.status.birthday")}
                   </span>
@@ -199,91 +224,164 @@ export default function CustomerDetail({ customer, onClose }: CustomerDetailProp
 
         <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
           {isLoading && (
-            <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
+            <p
+              className="text-xs md:text-sm mb-4"
+              style={{ color: "var(--text-muted)" }}>
               {t("customers.detail.loading")}
             </p>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-            <div className="rounded-xl border p-4" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
-              <p className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "var(--text-muted)" }}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+            <div
+              className="rounded-xl border p-4"
+              style={{
+                borderColor: "var(--border)",
+                background: "var(--surface)",
+              }}>
+              <p
+                className="text-[10px] md:text-[11px] uppercase tracking-wider font-semibold"
+                style={{ color: "var(--text-muted)" }}>
                 {t("customers.detail.orders")}
               </p>
-              <p className="text-2xl font-bold mt-1" style={{ color: "var(--text)" }}>
+              <p
+                className="text-[10px] md:text-[14px] font-bold leading-tight mt-1"
+                style={{ color: "var(--text)" }}>
                 {displayTotalOrders}
               </p>
             </div>
 
-            <div className="rounded-xl border p-4" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
-              <p className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "var(--text-muted)" }}>
+            <div
+              className="rounded-xl border p-4"
+              style={{
+                borderColor: "var(--border)",
+                background: "var(--surface)",
+              }}>
+              <p
+                className="text-[10px] md:text-[11px] uppercase tracking-wider font-semibold"
+                style={{ color: "var(--text-muted)" }}>
+                {t("customers.list.headers.total_spent")}
+              </p>
+              <p
+                className="text-[10px] md:text-[14px] font-bold leading-tight mt-1 break-words"
+                style={{ color: "var(--text)" }}>
+                {formatVND(displayTotalSpent)}
+              </p>
+            </div>
+
+            <div
+              className="rounded-xl border p-4"
+              style={{
+                borderColor: "var(--border)",
+                background: "var(--surface)",
+              }}>
+              <p
+                className="text-[10px] md:text-[11px] uppercase tracking-wider font-semibold"
+                style={{ color: "var(--text-muted)" }}>
                 {t("customers.detail.reservations")}
               </p>
-              <p className="text-2xl font-bold mt-1" style={{ color: "var(--text)" }}>
+              <p
+                className="text-[10px] md:text-[14px] font-bold leading-tight mt-1"
+                style={{ color: "var(--text)" }}>
                 {displayTotalReservations}
               </p>
             </div>
 
-            <div className="rounded-xl border p-4" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
-              <p className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "var(--text-muted)" }}>
+            <div
+              className="rounded-xl border p-4"
+              style={{
+                borderColor: "var(--border)",
+                background: "var(--surface)",
+              }}>
+              <p
+                className="text-[10px] md:text-[11px] uppercase tracking-wider font-semibold"
+                style={{ color: "var(--text-muted)" }}>
                 {t("customers.detail.points")}
               </p>
-              <p className="text-2xl font-bold mt-1" style={{ color: primaryColor }}>
+              <p
+                className="text-[10px] md:text-[14px] font-bold leading-tight mt-1"
+                style={{ color: primaryColor }}>
                 {displayPoints}
               </p>
             </div>
           </div>
 
-          <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+          <div
+            className="rounded-xl border overflow-hidden"
+            style={{ borderColor: "var(--border)" }}>
             <div
-              className="px-4 py-3 border-b text-sm font-semibold"
-              style={{ borderColor: "var(--border)", color: "var(--text)", background: "var(--surface)" }}>
+              className="px-4 py-3 border-b text-sm md:text-[15px] font-semibold"
+              style={{
+                borderColor: "var(--border)",
+                color: "var(--text)",
+                background: "var(--surface)",
+              }}>
               {t("customers.detail.customer_information")}
             </div>
 
             <div className="divide-y" style={{ borderColor: "var(--border)" }}>
               <div className="px-4 py-3 flex items-center justify-between gap-3">
-                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                <span
+                  className="text-[13px] md:text-sm"
+                  style={{ color: "var(--text-muted)" }}>
                   {t("customers.detail.phone_number")}
                 </span>
-                <span className="text-sm font-medium inline-flex items-center gap-2" style={{ color: "var(--text)" }}>
+                <span
+                  className="text-[13px] md:text-sm font-medium inline-flex items-center gap-2"
+                  style={{ color: "var(--text)" }}>
                   <Phone sx={{ fontSize: 16, color: primaryColor }} />
                   {displayPhone}
                 </span>
               </div>
 
               <div className="px-4 py-3 flex items-center justify-between gap-3">
-                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                <span
+                  className="text-[13px] md:text-sm"
+                  style={{ color: "var(--text-muted)" }}>
                   {t("customers.detail.registration_date")}
                 </span>
-                <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                <span
+                  className="text-[13px] md:text-sm font-medium"
+                  style={{ color: "var(--text)" }}>
                   {formatDateTime(displayCreatedDate)}
                 </span>
               </div>
 
               <div className="px-4 py-3 flex items-center justify-between gap-3">
-                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                <span
+                  className="text-[13px] md:text-sm"
+                  style={{ color: "var(--text-muted)" }}>
                   {t("customers.detail.last_modified_date")}
                 </span>
-                <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                <span
+                  className="text-[13px] md:text-sm font-medium"
+                  style={{ color: "var(--text)" }}>
                   {formatDateTime(displayModifiedDate)}
                 </span>
               </div>
 
               <div className="px-4 py-3 flex items-center justify-between gap-3">
-                <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                <span
+                  className="text-[13px] md:text-sm"
+                  style={{ color: "var(--text-muted)" }}>
                   {t("customers.detail.member_since_label")}
                 </span>
-                <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                <span
+                  className="text-[13px] md:text-sm font-medium"
+                  style={{ color: "var(--text)" }}>
                   {formatDate(displayCreatedDate)}
                 </span>
               </div>
 
               <div className="px-4 py-3 flex items-center justify-between gap-3">
-                <span className="text-sm inline-flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
+                <span
+                  className="text-[13px] md:text-sm inline-flex items-center gap-2"
+                  style={{ color: "var(--text-muted)" }}>
                   <History sx={{ fontSize: 16 }} />
                   {t("customers.detail.last_activity")}
                 </span>
-                <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                <span
+                  className="text-[13px] md:text-sm font-medium"
+                  style={{ color: "var(--text)" }}>
                   {formatDateTime(displayModifiedDate)}
                 </span>
               </div>

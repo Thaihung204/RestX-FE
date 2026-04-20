@@ -1,16 +1,16 @@
 "use client";
 
 import { useCart } from "@/lib/contexts/CartContext";
+import { formatVND } from "@/lib/utils/currency";
 import {
-    CloseOutlined,
-    MinusOutlined,
-    PlusOutlined,
-    ShoppingCartOutlined,
+  CloseOutlined,
+  MinusOutlined,
+  PlusOutlined,
+  ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { Button, Card, Modal, Tabs, Tag, Typography } from "antd";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { formatVND } from "@/lib/utils/currency";
 
 const { Text } = Typography;
 
@@ -54,6 +54,7 @@ export default function CartModal() {
   return (
     <Modal
       open={cartModalOpen}
+      zIndex={2600}
       onCancel={closeCartModal}
       footer={null}
       closeIcon={null}
@@ -274,7 +275,9 @@ export default function CartModal() {
                                     fontSize: 14,
                                     fontWeight: 600,
                                   }}>
-                                  {formatVND(parseFloat(item.price) * item.quantity)}
+                                  {formatVND(
+                                    parseFloat(item.price) * item.quantity,
+                                  )}
                                 </Text>
                               </div>
 
@@ -502,7 +505,10 @@ export default function CartModal() {
                                             fontSize: 14,
                                             fontWeight: 600,
                                           }}>
-                                          {formatVND(parseFloat(item.price) * item.quantity)}
+                                          {formatVND(
+                                            parseFloat(item.price) *
+                                              item.quantity,
+                                          )}
                                         </Text>
                                       </div>
                                     </div>
