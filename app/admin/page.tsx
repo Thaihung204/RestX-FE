@@ -50,6 +50,22 @@ const filterToReportType: Record<DashboardFilterOption, ReportType> = {
   year: "yearly",
 };
 
+const AI_FILTER_STORAGE_KEY = "ai_strategy_filter";
+
+const isAIReportFilterOption = (
+  value: string | null,
+): value is AIReportFilterOption =>
+  value === "month" || value === "quarter" || value === "year";
+
+const getStoredAiFilter = (): AIReportFilterOption => {
+  try {
+    const stored = localStorage.getItem(AI_FILTER_STORAGE_KEY);
+    return isAIReportFilterOption(stored) ? stored : "month";
+  } catch {
+    return "month";
+  }
+};
+
 const pad2 = (value: number) => String(value).padStart(2, "0");
 
 const toBusinessPseudoDate = (date: Date) =>
@@ -340,26 +356,26 @@ export default function DashboardPage() {
   const [dashboardFilter, setDashboardFilter] =
     useState<DashboardFilterOption>("week");
   const [exportingReport, setExportingReport] = useState(false);
+  const [downloadingAiReport, setDownloadingAiReport] = useState(false);
   const [aiReport, setAiReport] = useState<AIStrategyReport | null>(() => {
     try {
       const raw = localStorage.getItem("ai_strategy_report");
       if (!raw) return null;
       const { data, cachedAt } = JSON.parse(raw);
-      const ONE_DAY_MS = 24 * 60 * 60 * 1000;//lưu 24h
+      const ONE_DAY_MS = 24 * 60 * 60 * 1000;
       if (Date.now() - cachedAt > ONE_DAY_MS) {
         localStorage.removeItem("ai_strategy_report");
         return null;
       }
       return data;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   });
   const [aiLoading, setAiLoading] = useState(false);
-  // add filter type to cache
-  const [aiFilter, setAiFilter] = useState<AIReportFilterOption>(() => {
-    try {
-      return (localStorage.getItem("ai_strategy_filter") as AIReportFilterOption) || "month";
-    } catch { return "month"; }
-  });
+  const [aiFilter, setAiFilter] = useState<AIReportFilterOption>(() =>
+    getStoredAiFilter(),
+  );
 
   const filterOptions: DashboardFilterOption[] = [
     "day",
@@ -452,8 +468,11 @@ export default function DashboardPage() {
 
   const generateAIReport = useCallback(async (filter: AIReportFilterOption) => {
     setAiFilter(filter);
-    // add filter type to local storage
-    try { localStorage.setItem("ai_strategy_filter", filter); } catch {}
+    try {
+      localStorage.setItem(AI_FILTER_STORAGE_KEY, filter);
+    } catch {
+      // ignore storage errors
+    }
     setAiLoading(true);
     try {
       const apiFilterType = filter === "month" ? "month" : filter;
@@ -465,8 +484,13 @@ export default function DashboardPage() {
       };
       setAiReport(report);
       try {
-        localStorage.setItem("ai_strategy_report", JSON.stringify({ data: report, cachedAt: Date.now() }));
-      } catch {}
+        localStorage.setItem(
+          "ai_strategy_report",
+          JSON.stringify({ data: report, cachedAt: Date.now() }),
+        );
+      } catch {
+        // ignore storage errors
+      }
       message.success(t("dashboard.analytics.success.generate"));
     } catch (err) {
       console.error(err);
@@ -519,6 +543,26 @@ export default function DashboardPage() {
       setExportingReport(false);
     }
   }, [dashboardFilter, message, t]);
+
+  const handleDownloadAiReport = useCallback(async () => {
+    if (!aiReport) return;
+
+    const activeFilter = getStoredAiFilter();
+    setAiFilter(activeFilter);
+    setDownloadingAiReport(true);
+
+    try {
+      const blob = await aiService.downloadAnalytics(aiReport, activeFilter);
+      const fileName = `ai-report-${activeFilter}-${new Date().toISOString().slice(0, 10)}.pdf`;
+      triggerBrowserDownload(blob, fileName);
+      message.success(t(`dashboard.analytics.success.download.${activeFilter}`));
+    } catch (error) {
+      console.error("Failed to download AI analytics:", error);
+      message.error(t("dashboard.analytics.error.download"));
+    } finally {
+      setDownloadingAiReport(false);
+    }
+  }, [aiReport, message, t]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -609,6 +653,8 @@ export default function DashboardPage() {
             report={aiReport}
             loading={aiLoading}
             onGenerate={generateAIReport}
+            onDownload={handleDownloadAiReport}
+            downloading={downloadingAiReport}
             currentFilter={aiFilter}
           />
         </section>

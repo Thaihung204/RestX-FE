@@ -2411,10 +2411,16 @@
         "daysAgo": "days ago"
       },
       "success": {
-        "generate": "Report generated successfully"
+        "generate": "Report generated successfully",
+        "download": {
+          "month": "Monthly strategy downloaded",
+          "quarter": "Quarterly strategy downloaded",
+          "year": "Yearly strategy downloaded"
+        }
       },
       "error": {
-        "generate": "Failed to generate report"
+        "generate": "Failed to generate report",
+        "download": "Failed to download strategy"
       },
       "empty": {
         "title": "No strategy report yet",
