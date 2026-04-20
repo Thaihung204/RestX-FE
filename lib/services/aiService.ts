@@ -34,7 +34,18 @@ export const aiService = {
   },
 
   analyzeDashboard: async (payload: { filterType: string; analysisType?: string; fromDate?: string; toDate?: string }): Promise<any> => {
-    const response = await axiosInstance.post<any>("/ai/analytics", payload);
+    const response = await axiosInstance.post<any>("/ai/analytics", payload, {
+      withCredentials: true,
+    });
+    return response.data;
+  },
+
+  downloadAnalytics: async (payload: any, filterType: string): Promise<Blob> => {
+    const response = await axiosInstance.post("/ai/analytics/download", payload, {
+      withCredentials: true,
+      responseType: "blob",
+      params: { filterType },
+    });
     return response.data;
   },
 

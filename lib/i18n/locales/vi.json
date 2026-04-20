@@ -2456,10 +2456,16 @@
         "daysAgo": "ngày trước"
       },
       "success": {
-        "generate": "Tạo báo cáo thành công"
+        "generate": "Tạo báo cáo thành công",
+        "download": {
+          "month": "Đã tải chiến lược tháng",
+          "quarter": "Đã tải chiến lược quý",
+          "year": "Đã tải chiến lược năm"
+        }
       },
       "error": {
-        "generate": "Tạo báo cáo thất bại"
+        "generate": "Tạo báo cáo thất bại",
+        "download": "Tải chiến lược thất bại"
       },
       "empty": {
         "title": "Chưa có báo cáo chiến lược",
