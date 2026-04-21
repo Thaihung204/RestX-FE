@@ -1,30 +1,27 @@
 "use client";
 
 import StaffAuthGuard from "@/components/auth/StaffAuthGuard";
+import StaffNotificationDrawer from "@/components/staff/StaffNotificationDrawer";
 import {
-  BellOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-  DashboardOutlined,
-  FireOutlined,
-  HomeOutlined,
-  LogoutOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  SettingOutlined,
-  ShoppingCartOutlined,
-
-  UserOutlined,
-  WalletOutlined,
+    CalendarOutlined,
+    ClockCircleOutlined,
+    DashboardOutlined,
+    FireOutlined,
+    HomeOutlined,
+    LogoutOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+    SettingOutlined,
+    ShoppingCartOutlined,
+    UserOutlined
 } from "@ant-design/icons";
 import {
-  Avatar,
-  Badge,
-  Button,
-  Dropdown,
-  Layout,
-  Menu,
-  Typography,
+    Avatar,
+    Button,
+    Dropdown,
+    Layout,
+    Menu,
+    Typography,
 } from "antd";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -695,28 +692,7 @@ export default function StaffLayout({
               )}
 
               {/* Notifications */}
-              <Badge count={3} size="small" offset={[-4, 4]}>
-                <Button
-                  type="text"
-                  icon={
-                    <BellOutlined
-                      style={{
-                        fontSize: isMobile ? 16 : 18,
-                        color: "var(--text-muted)",
-                      }}
-                    />
-                  }
-                  style={{
-                    width: isMobile ? 32 : 36,
-                    height: isMobile ? 32 : 36,
-                    borderRadius: 8,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: 0,
-                  }}
-                />
-              </Badge>
+              <StaffNotificationDrawer />
 
               {/* Theme toggle */}
               <ThemeToggle />
