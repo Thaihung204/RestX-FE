@@ -18,6 +18,8 @@ export default function SupplierSettings() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [formData, setFormData] = useState<Supplier>({ name: "", phone: "", email: "", address: "", isActive: true });
@@ -69,7 +71,9 @@ export default function SupplierSettings() {
   };
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
     try {
+      setDeletingId(id);
       await supplierService.delete(id);
       message.success(t("dashboard.manage.suppliers.deleted", { defaultValue: "Đã xoá" }));
       setSuppliers((prev) => prev.filter((s) => s.id !== id));
@@ -77,14 +81,17 @@ export default function SupplierSettings() {
       message.error(
         extractApiErrorMessage(error, t("dashboard.manage.suppliers.delete_failed")),
       );
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const toggleStatus = async (supplier: Supplier) => {
-    if (!supplier.id) return;
+    if (!supplier.id || togglingId) return;
     const updated = { ...supplier, isActive: !supplier.isActive };
     setSuppliers((prev) => prev.map((s) => (s.id === supplier.id ? updated : s)));
     try {
+      setTogglingId(supplier.id);
       await supplierService.update(supplier.id, updated);
     } catch (error) {
       setSuppliers((prev) => prev.map((s) => (s.id === supplier.id ? supplier : s)));
@@ -94,6 +101,8 @@ export default function SupplierSettings() {
           t("dashboard.manage.suppliers.status_update_failed"),
         ),
       );
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -142,6 +151,7 @@ export default function SupplierSettings() {
         <StatusToggle
           checked={s.isActive}
           onChange={() => toggleStatus(s)}
+          disabled={!!togglingId || !!deletingId}
           ariaLabel={s.isActive ? t("dashboard.manage.suppliers.deactivate") : t("dashboard.manage.suppliers.activate")}
         />
       ),
@@ -153,14 +163,14 @@ export default function SupplierSettings() {
       width: 100,
       render: (_, s) => (
         <div className="flex justify-end gap-2">
-          <Button type="text" icon={<EditOutlined className="text-blue-500" />} onClick={() => handleOpenModal(s)} className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" />
+          <Button type="text" icon={<EditOutlined className="text-blue-500" />} onClick={() => handleOpenModal(s)} disabled={!!deletingId || !!togglingId || saving} className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" />
           <Popconfirm
             title={t("dashboard.manage.suppliers.confirm_delete")}
             onConfirm={() => s.id && handleDelete(s.id)}
             okText={t("common.actions.yes", { defaultValue: "Yes" })}
             cancelText={t("common.actions.no", { defaultValue: "No" })}
             okButtonProps={{ danger: true }}>
-            <Button type="text" icon={<DeleteOutlined className="text-red-500" />} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
+            <Button type="text" icon={<DeleteOutlined className="text-red-500" />} loading={deletingId === s.id} disabled={!!deletingId || !!togglingId || saving} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
           </Popconfirm>
         </div>
       ),
@@ -178,12 +188,13 @@ export default function SupplierSettings() {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => handleOpenModal()}
+          disabled={loading}
           style={{ background: "linear-gradient(to right, var(--primary), var(--primary-hover))", border: "none" }}>
           {t("dashboard.manage.suppliers.add")}
         </Button>
       </div>
 
-      <Table columns={columns} dataSource={suppliers} rowKey={(r) => r.id || r.name} loading={loading} pagination={{ pageSize: 10 }} className="admin-loyalty-table" />
+      <Table columns={columns} dataSource={suppliers} rowKey={(r) => r.id || r.name} loading={loading} pagination={false} className="admin-loyalty-table" />
 
       {isModalOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={handleCloseModal}>

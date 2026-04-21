@@ -335,12 +335,10 @@ export default function MenuPage() {
   const categoryFilters = useMemo(() => {
     return [
       { id: "All", name: t("dashboard.menu.categories.all") },
-      ...dbCategories
-        .map((category) => ({
-          id: category.id,
-          name: category.name,
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name)),
+      ...dbCategories.map((category) => ({
+        id: category.id,
+        name: category.name,
+      })),
     ];
   }, [dbCategories, t]);
 
@@ -628,12 +626,8 @@ export default function MenuPage() {
                           ingredients: t(
                             "dashboard.menu.ingredients.actions.ingredients",
                           ),
-                          active: t("common.active", {
-                            defaultValue: "Active",
-                          }),
-                          inactive: t("common.inactive", {
-                            defaultValue: "Inactive",
-                          }),
+                          active: t("common.active"),
+                          inactive: t("common.inactive"),
                           activate: t(
                             "dashboard.menu.ingredients.actions.activate",
                           ),

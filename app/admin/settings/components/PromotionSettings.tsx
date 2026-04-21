@@ -3,8 +3,8 @@
 import StatusToggle from "@/components/ui/StatusToggle";
 import promotionService, { Promotion } from "@/lib/services/promotionService";
 import { formatVND } from "@/lib/utils/currency";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { App, Button, Popconfirm, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -19,6 +19,8 @@ export default function PromotionSettings() {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
 
@@ -181,7 +183,9 @@ export default function PromotionSettings() {
   };
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
     try {
+      setDeletingId(id);
       await promotionService.deletePromotion(id);
       setPromotions((prev) => prev.filter((item) => item.id !== id));
       message.success(
@@ -198,10 +202,13 @@ export default function PromotionSettings() {
         }),
       );
       message.error(errorMsg);
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const handleToggleStatus = async (promotion: Promotion) => {
+    if (togglingId) return;
     const nextStatus = !promotion.isActive;
 
     if (nextStatus === true) {
@@ -213,6 +220,7 @@ export default function PromotionSettings() {
     }
 
     try {
+      setTogglingId(promotion.id);
       await promotionService.updatePromotion(promotion.id, {
         ...promotion,
         isActive: nextStatus,
@@ -232,6 +240,8 @@ export default function PromotionSettings() {
       const errorMsg = extractApiErrorMessage(
         error,t("dashboard.manage.promotion.toasts.status_error"));
       message.error(errorMsg);
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -302,6 +312,7 @@ export default function PromotionSettings() {
         <StatusToggle
           checked={promo.isActive}
           onChange={() => handleToggleStatus(promo)}
+          disabled={!!togglingId || !!deletingId}
           ariaLabel={
             promo.isActive
               ? t("common.status.deactivate", { defaultValue: "Deactivate" })
@@ -320,6 +331,7 @@ export default function PromotionSettings() {
             type="text"
             icon={<EditOutlined />}
             onClick={() => handleOpenModal(promo)}
+            disabled={!!deletingId || !!togglingId || isSaving}
             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
           />
           <Popconfirm
@@ -336,6 +348,8 @@ export default function PromotionSettings() {
             <Button
               type="text"
               icon={<DeleteOutlined />}
+              loading={deletingId === promo.id}
+              disabled={!!deletingId || !!togglingId || isSaving}
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
             />
           </Popconfirm>
@@ -379,7 +393,7 @@ export default function PromotionSettings() {
         dataSource={promotions}
         rowKey="id"
         loading={isLoading}
-        pagination={{ pageSize: 10 }}
+        pagination={false}
         className="admin-loyalty-table"
       />
 
