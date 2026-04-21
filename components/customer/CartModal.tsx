@@ -9,8 +9,9 @@ import {
   ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { Button, Card, Modal, Tabs, Tag, Typography } from "antd";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import FeedbackModal from "./FeedbackModal";
 
 const { Text } = Typography;
 
@@ -30,6 +31,18 @@ export default function CartModal() {
     closeCartModal,
     setActiveCartTab,
   } = useCart();
+
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  const handleRequestPayment = () => {
+    closeCartModal();
+    setFeedbackOpen(true);
+  };
+
+  const handleFeedbackSubmit = (rating: number, feedback: string) => {
+    setFeedbackOpen(false);
+    requestPayment();
+  };
 
   const orderedItemsByStatus = useMemo(() => {
     const grouped = new Map<string, typeof orderedItems>();
@@ -52,6 +65,7 @@ export default function CartModal() {
   };
 
   return (
+    <>
     <Modal
       open={cartModalOpen}
       zIndex={2600}
@@ -559,7 +573,7 @@ export default function CartModal() {
                         block
                         type="primary"
                         size="large"
-                        onClick={requestPayment}
+                        onClick={handleRequestPayment}
                         style={{
                           background: "var(--primary)",
                           border: "none",
@@ -584,5 +598,11 @@ export default function CartModal() {
         />
       </div>
     </Modal>
+    <FeedbackModal
+      open={feedbackOpen}
+      onClose={() => setFeedbackOpen(false)}
+      onSubmit={handleFeedbackSubmit}
+    />
+    </>
   );
 }
