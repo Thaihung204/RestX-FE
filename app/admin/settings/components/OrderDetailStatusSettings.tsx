@@ -254,7 +254,6 @@ export default function OrderDetailStatusSettings() {
                 <StarOutlined className="text-gray-400 hover:text-yellow-400 text-lg transition-colors" />
               )
             }
-            disabled={record.isDefault}
           />
         </Tooltip>
       ),
