@@ -76,13 +76,12 @@ export default function StaffNotificationDrawer() {
         onClose={() => setOpen(false)}
         placement="right"
         size="default"
-        style={{ maxWidth: 360 }}
+        style={{ maxWidth: 360, background: "var(--card)" }}
         styles={{
           header: { display: "none" },
           body: { padding: 0, background: "var(--card)" },
           wrapper: { boxShadow: "-4px 0 24px rgba(0,0,0,0.12)" },
         }}
-        style={{ background: "var(--card)" }}
       >
         {/* Header */}
         <div
