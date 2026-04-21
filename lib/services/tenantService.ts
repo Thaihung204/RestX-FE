@@ -1,10 +1,10 @@
 import {
-  ITenant,
-  ITenantRequest,
-  TenantApiResponse,
-  TenantCreateInput,
-  TenantRequestInput,
-  TenantUpdateInput,
+    ITenant,
+    ITenantRequest,
+    TenantApiResponse,
+    TenantCreateInput,
+    TenantRequestInput,
+    TenantUpdateInput,
 } from "../types/tenant";
 import adminAxiosInstance from "./adminAxiosInstance";
 
@@ -528,6 +528,10 @@ export const tenantService = {
    */
   deleteTenant: async (id: string): Promise<void> => {
     await adminAxiosInstance.delete(`/tenants/${id}`);
+  },
+
+  changeStatus: async (id: string, status: boolean): Promise<void> => {
+    await adminAxiosInstance.put(`/tenants/${id}/changeStatus`, { status });
   },
 
   // ============ TENANT REQUESTS API ============

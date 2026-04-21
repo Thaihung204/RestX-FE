@@ -1,7 +1,10 @@
 "use client";
 
+import StatusToggle from "@/components/ui/StatusToggle";
 import {
   CheckCircleOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
   EyeOutlined,
   MailOutlined,
   PhoneOutlined,
@@ -9,9 +12,9 @@ import {
   ReloadOutlined,
   RiseOutlined,
   SearchOutlined,
-  ShopOutlined,
+  ShopOutlined
 } from "@ant-design/icons";
-import { App, Avatar, Button, Card, Input, Select, Table } from "antd";
+import { App, Avatar, Button, Card, Input, Modal, Select, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,7 +22,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TenantsSystemRevenue from "../../../components/(admin)/tenants/SystemRevenueTab";
 import TenantRequestList from "../../../components/(admin)/tenants/TenantRequestList";
-import TenantStatusPill from "../../../components/(admin)/tenants/TenantStatusPill";
 import { tenantService } from "../../../lib/services/tenantService";
 import { ITenant } from "../../../lib/types/tenant";
 import { useTenantLayout } from "./TenantLayoutProvider";
@@ -34,6 +36,8 @@ const TenantPage: React.FC = () => {
   const [tenants, setTenants] = useState<ITenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deactivateModal, setDeactivateModal] = useState<{ visible: boolean; tenant: ITenant | null }>({ visible: false, tenant: null });
 
   const { activeTab, setActiveTab, setTabItems } = useTenantLayout();
 
@@ -102,6 +106,45 @@ const TenantPage: React.FC = () => {
 
   const handleRefresh = async () => {
     await fetchTenants();
+  };
+
+  const handleToggleStatus = (record: ITenant) => {
+    const isActive = record.status === "active";
+    if (isActive) {
+      // Deactivating — show confirm modal
+      setDeactivateModal({ visible: true, tenant: record });
+    } else {
+      // Activating — no confirm needed
+      doToggleStatus(record, true);
+    }
+  };
+
+  const doToggleStatus = async (record: ITenant, activate: boolean) => {
+    if (togglingId) return;
+    setTogglingId(record.id);
+    try {
+      await tenantService.changeStatus(record.id, activate);
+      setTenants((prev) =>
+        prev.map((t) =>
+          t.id === record.id ? { ...t, status: activate ? "active" : "inactive" } : t
+        )
+      );
+      message.success(
+        activate
+          ? t("tenants.toasts.activate_success")
+          : t("tenants.toasts.deactivate_success")
+      );
+    } catch {
+      message.error(t("tenants.toasts.save_error_message"));
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handleDeactivateConfirm = async () => {
+    if (!deactivateModal.tenant) return;
+    await doToggleStatus(deactivateModal.tenant, false);
+    setDeactivateModal({ visible: false, tenant: null });
   };
 
   const STATUS_OPTIONS_TRANSLATED = [
@@ -222,8 +265,15 @@ const TenantPage: React.FC = () => {
       title: t("tenants.table.status"),
       dataIndex: "status",
       key: "status",
-      width: 140,
-      render: (value: ITenant["status"]) => <TenantStatusPill status={value} />,
+      width: 100,
+      render: (value: ITenant["status"], record: ITenant) => (
+        <StatusToggle
+          checked={value === "active"}
+          onChange={() => handleToggleStatus(record)}
+          disabled={togglingId === record.id}
+          ariaLabel={t("tenants.table.status")}
+        />
+      ),
     },
     {
       title: t("dashboard.tables.card.view_details"),
@@ -353,6 +403,52 @@ const TenantPage: React.FC = () => {
           {activeTab === "revenue" && <TenantsSystemRevenue />}
         </div>
       </main>
+
+      {/* Deactivate Confirm Modal */}
+      <Modal
+        centered
+        maskClosable={!togglingId}
+        keyboard={!togglingId}
+        title={
+          <div className="flex items-center gap-3">
+            <ExclamationCircleOutlined className="text-orange-500 text-2xl" />
+            <span className="text-lg font-semibold">
+              {t("tenants.deactivate_modal.title")}
+            </span>
+          </div>
+        }
+        open={deactivateModal.visible}
+        onCancel={() => setDeactivateModal({ visible: false, tenant: null })}
+        footer={[
+          <Button key="cancel" onClick={() => setDeactivateModal({ visible: false, tenant: null })} size="large">
+            {t("tenants.edit.delete_modal.button_cancel")}
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger
+            loading={!!togglingId}
+            onClick={handleDeactivateConfirm}
+            size="large"
+            icon={<DeleteOutlined />}>
+            {t("tenants.deactivate_modal.button_confirm")}
+          </Button>,
+        ]}
+        width={480}
+        styles={{
+          mask: { backdropFilter: "blur(10px)", background: "var(--modal-overlay)" },
+        }}>
+        <div className="py-4 space-y-4">
+          <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900 rounded-lg p-4">
+            <p className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-1">
+              {t("tenants.deactivate_modal.warning_title")}
+            </p>
+            <p className="text-sm text-orange-700 dark:text-orange-300">
+              {t("tenants.deactivate_modal.warning_description")}
+            </p>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };

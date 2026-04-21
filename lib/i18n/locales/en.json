@@ -2217,7 +2217,13 @@
         "file_size_error": "File size must be less than 5MB",
         "name_placeholder": "e.g. Appetizers",
         "description_placeholder": "Brief description of the category",
-        "no_categories": "No categories found. Click \"Add Category\" to create one."
+        "no_categories": "No categories found. Click \"Add Category\" to create one.",
+        "name_required": "Category name is required",
+        "invalid_image_url": "Invalid image URL",
+        "display_order": "Display Order",
+        "drag_to_reorder": "Drag rows to reorder display order",
+        "order_saved": "Display order saved successfully",
+        "order_error": "Failed to save display order"
       },
       "general": {
         "restaurant_info": "Restaurant Information",
@@ -2259,7 +2265,12 @@
       },
       "notifications": {
         "success_update": "Updated successfully",
-        "error_update": "Update failed"
+        "success_create": "Created successfully",
+        "success_delete": "Deleted successfully",
+        "error_update": "Update failed",
+        "error_fetch": "Failed to load data",
+        "error_save": "Failed to save",
+        "error_delete": "Failed to delete"
       },
       "security": {
         "change_password": "Change Password",
@@ -2473,7 +2484,12 @@
   },
   "common": {
     "cancel": "Cancel",
+    "active": "Active",
+    "inactive": "Inactive",
+    "saving": "Saving...",
     "actions": {
+      "yes": "Yes",
+      "no": "No",
       "exporting": "Exporting..."
     },
     "theme": {
@@ -2548,7 +2564,41 @@
       "name_required": "Name is required",
       "category_required": "Please select a category",
       "price_invalid": "Price must be greater than 0"
-    }
+    },
+    "title_new": "Add New Menu Item",
+    "title_edit": "Edit Menu Item",
+    "subtitle_new": "Create a new dish for your restaurant menu",
+    "subtitle_edit": "Update the menu item information",
+    "loading": "Loading...",
+    "basic_information": "Basic Information",
+    "item_name": "Item Name",
+    "category": "Category",
+    "select_category": "Select a category",
+    "unit": "Unit",
+    "unit_portion": "Portion",
+    "unit_plate": "Plate",
+    "unit_bowl": "Bowl",
+    "unit_cup": "Cup",
+    "unit_glass": "Glass",
+    "unit_piece": "Piece",
+    "unit_serving": "Serving",
+    "price": "Price",
+    "description": "Description",
+    "quantity_in_stock": "Quantity in Stock",
+    "item_properties": "Item Properties",
+    "vegetarian": "Vegetarian",
+    "vegetarian_desc": "This item is suitable for vegetarians",
+    "spicy": "Spicy",
+    "spicy_desc": "This item contains spicy ingredients",
+    "best_seller": "Best Seller",
+    "best_seller_desc": "Mark as best selling item",
+    "settings": "Settings",
+    "auto_disable_by_stock": "Auto-Disable by Stock",
+    "auto_disable_by_stock_desc": "Automatically disable when out of stock",
+    "item_images": "Item Images",
+    "cancel": "Cancel",
+    "create": "Create Menu Item",
+    "update": "Update Menu Item"
   },
   "table_form": {
     "errors": {
@@ -3578,7 +3628,9 @@
       "update_success_title": "Success",
       "update_success_message": "Tenant updated successfully",
       "save_error_title": "Save Failed",
-      "save_error_message": "Failed to save tenant. Please try again."
+      "save_error_message": "Failed to save tenant. Please try again.",
+      "activate_success": "Tenant activated",
+      "deactivate_success": "Tenant deactivated"
     },
     "detail": {
       "back": "Back",
@@ -3596,6 +3648,12 @@
       "visit_site": "Visit Site",
       "configure_domain": "Configure Domain",
       "suspend_tenant": "Suspend Tenant"
+    },
+    "deactivate_modal": {
+      "title": "Deactivate Tenant",
+      "button_confirm": "Confirm Deactivate",
+      "warning_title": "Are you sure?",
+      "warning_description": "Deactivating this tenant will make it inaccessible to users."
     },
     "status": {
       "active": "Active",

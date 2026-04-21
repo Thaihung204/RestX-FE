@@ -37,6 +37,9 @@ export default function OrderDetailStatusSettings() {
   );
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
 
   const defaultValues = {
     name: "",
@@ -95,7 +98,9 @@ export default function OrderDetailStatusSettings() {
   };
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
     try {
+      setDeletingId(id);
       await orderDetailStatusService.deleteStatus(id);
       messageApi.success(t("dashboard.manage.notifications.delete_success"));
       fetchStatuses();
@@ -107,11 +112,15 @@ export default function OrderDetailStatusSettings() {
           t("dashboard.manage.order_status.errors.delete_failed"),
         ),
       );
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
     try {
+      setIsSaving(true);
       const values = await form.validateFields();
 
       const colorValue =
@@ -141,6 +150,7 @@ export default function OrderDetailStatusSettings() {
       fetchStatuses();
     } catch (error: any) {
       if (error?.errorFields) {
+        setIsSaving(false);
         return;
       }
       console.error("Failed to save order detail status:", error);
@@ -150,13 +160,15 @@ export default function OrderDetailStatusSettings() {
           t("dashboard.manage.order_status.errors.save_failed"),
         ),
       );
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleSetDefault = async (record: OrderDetailStatus) => {
-    if (record.isDefault) return;
-
+    if (record.isDefault || settingDefaultId) return;
     try {
+      setSettingDefaultId(record.id);
       await orderDetailStatusService.setAsDefault(record);
       messageApi.success(t("dashboard.manage.notifications.update_success"));
       fetchStatuses();
@@ -168,6 +180,8 @@ export default function OrderDetailStatusSettings() {
           t("dashboard.manage.order_status.errors.update_failed"),
         ),
       );
+    } finally {
+      setSettingDefaultId(null);
     }
   };
 
@@ -231,6 +245,8 @@ export default function OrderDetailStatusSettings() {
             type="text"
             shape="circle"
             onClick={() => handleSetDefault(record)}
+            loading={settingDefaultId === record.id}
+            disabled={record.isDefault || !!settingDefaultId || !!deletingId}
             icon={
               record.isDefault ? (
                 <StarFilled className="text-yellow-400 text-lg" />
@@ -255,6 +271,7 @@ export default function OrderDetailStatusSettings() {
               type="text"
               icon={<EditOutlined className="text-blue-500" />}
               onClick={() => handleEdit(record)}
+              disabled={!!deletingId || !!settingDefaultId || isSaving}
               className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
             />
           </Tooltip>
@@ -269,6 +286,8 @@ export default function OrderDetailStatusSettings() {
               <Button
                 type="text"
                 icon={<DeleteOutlined className="text-red-500" />}
+                loading={deletingId === record.id}
+                disabled={!!deletingId || !!settingDefaultId || isSaving}
                 className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                 style={{ color: "var(--primary)" }}
               />
@@ -295,6 +314,7 @@ export default function OrderDetailStatusSettings() {
           type="primary"
           onClick={handleAdd}
           icon={<PlusOutlined />}
+          disabled={loading}
           style={{ background: "linear-gradient(to right, var(--primary), var(--primary-hover))", border: "none" }}>
           {t("dashboard.manage.order_status.add_status")}
         </Button>
@@ -305,7 +325,7 @@ export default function OrderDetailStatusSettings() {
         dataSource={statuses}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={false}
         className="admin-loyalty-table"
       />
 
@@ -339,10 +359,12 @@ export default function OrderDetailStatusSettings() {
         }
         open={modalVisible}
         onOk={handleSave}
-        onCancel={() => setModalVisible(false)}
+        onCancel={() => !isSaving && setModalVisible(false)}
         okText={t("common.save")}
         cancelText={t("common.cancel")}
         okButtonProps={{
+          loading: isSaving,
+          disabled: isSaving,
           className:
             "bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] border-none text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all",
           size: "large",

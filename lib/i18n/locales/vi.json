@@ -2240,7 +2240,13 @@
         "file_size_error": "Kích thước tệp phải nhỏ hơn 5MB",
         "name_placeholder": "ví dụ: Khai vị",
         "description_placeholder": "Mô tả ngắn gọn về danh mục",
-        "no_categories": "Chưa có danh mục nào. Nhấn \"Thêm danh mục\" để tạo mới."
+        "no_categories": "Chưa có danh mục nào. Nhấn \"Thêm danh mục\" để tạo mới.",
+        "name_required": "Tên danh mục là bắt buộc",
+        "invalid_image_url": "URL hình ảnh không hợp lệ",
+        "display_order": "Thứ tự hiển thị",
+        "drag_to_reorder": "Kéo thả các hàng để sắp xếp thứ tự hiển thị",
+        "order_saved": "Đã lưu thứ tự hiển thị thành công",
+        "order_error": "Lưu thứ tự hiển thị thất bại"
       },
       "general": {
         "restaurant_info": "Thông tin nhà hàng",
@@ -2304,7 +2310,12 @@
       },
       "notifications": {
         "success_update": "Cập nhật thành công",
-        "error_update": "Cập nhật thất bại"
+        "success_create": "Tạo mới thành công",
+        "success_delete": "Xóa thành công",
+        "error_update": "Cập nhật thất bại",
+        "error_fetch": "Tải dữ liệu thất bại",
+        "error_save": "Lưu thất bại",
+        "error_delete": "Xóa thất bại"
       },
       "security": {
         "change_password": "Đổi mật khẩu",
@@ -2518,7 +2529,12 @@
   },
   "common": {
     "cancel": "Hủy",
+    "active": "Hoạt động",
+    "inactive": "Ngừng hoạt động",
+    "saving": "Đang lưu...",
     "actions": {
+      "yes": "Có",
+      "no": "Không",
       "exporting": "Đang xuất..."
     },
     "theme": {
@@ -2593,7 +2609,41 @@
       "name_required": "Vui lòng nhập tên món",
       "category_required": "Vui lòng chọn danh mục",
       "price_invalid": "Giá phải lớn hơn 0"
-    }
+    },
+    "title_new": "Thêm món mới",
+    "title_edit": "Chỉnh sửa món",
+    "subtitle_new": "Tạo món ăn mới cho thực đơn nhà hàng",
+    "subtitle_edit": "Cập nhật thông tin món ăn",
+    "loading": "Đang tải...",
+    "basic_information": "Thông tin cơ bản",
+    "item_name": "Tên món",
+    "category": "Danh mục",
+    "select_category": "Chọn danh mục",
+    "unit": "Đơn vị",
+    "unit_portion": "Phần",
+    "unit_plate": "Đĩa",
+    "unit_bowl": "Tô",
+    "unit_cup": "Ly nhỏ",
+    "unit_glass": "Ly",
+    "unit_piece": "Cái",
+    "unit_serving": "Suất",
+    "price": "Giá",
+    "description": "Mô tả",
+    "quantity_in_stock": "Số lượng tồn kho",
+    "item_properties": "Thuộc tính món",
+    "vegetarian": "Chay",
+    "vegetarian_desc": "Món này phù hợp cho người ăn chay",
+    "spicy": "Cay",
+    "spicy_desc": "Món này có thành phần cay",
+    "best_seller": "Bán chạy",
+    "best_seller_desc": "Đánh dấu là món bán chạy nhất",
+    "settings": "Cài đặt",
+    "auto_disable_by_stock": "Tự động tắt theo tồn kho",
+    "auto_disable_by_stock_desc": "Tự động tắt khi hết hàng",
+    "item_images": "Hình ảnh món",
+    "cancel": "Hủy",
+    "create": "Tạo món",
+    "update": "Cập nhật món"
   },
   "table_form": {
     "errors": {
@@ -3623,7 +3673,9 @@
       "update_success_title": "Thành công",
       "update_success_message": "Cập nhật nhà hàng thành công",
       "save_error_title": "Lưu thất bại",
-      "save_error_message": "Không thể lưu nhà hàng. Vui lòng thử lại."
+      "save_error_message": "Không thể lưu nhà hàng. Vui lòng thử lại.",
+      "activate_success": "Đã kích hoạt nhà hàng",
+      "deactivate_success": "Đã tắt nhà hàng"
     },
     "detail": {
       "back": "Quay lại",
@@ -3641,6 +3693,12 @@
       "visit_site": "Truy cập trang web",
       "configure_domain": "Cấu hình tên miền",
       "suspend_tenant": "Tạm ngừng nhà hàng"
+    },
+    "deactivate_modal": {
+      "title": "Tắt hoạt động nhà hàng",
+      "button_confirm": "Xác nhận tắt",
+      "warning_title": "Bạn có chắc chắn không?",
+      "warning_description": "Tắt nhà hàng này sẽ khiến người dùng không thể truy cập."
     },
     "status": {
       "active": "Hoạt động",

@@ -235,6 +235,7 @@ const TenantEditPage: React.FC = () => {
   const [confirmInput, setConfirmInput] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [tenantStatus, setTenantStatus] = useState<boolean>(true);
+  const [deactivateModalVisible, setDeactivateModalVisible] = useState(false);
   const [logoFileList, setLogoFileList] = useState<UploadFile[]>([]);
   const [faviconFileList, setFaviconFileList] = useState<UploadFile[]>([]);
   const [backgroundFileList, setBackgroundFileList] = useState<UploadFile[]>(
@@ -585,6 +586,16 @@ const TenantEditPage: React.FC = () => {
   const handleDeleteCancel = () => {
     setDeleteModalVisible(false);
     setConfirmInput("");
+  };
+
+  const handleStatusToggle = () => {
+    if (tenantStatus) {
+      // Turning off — show confirm
+      setDeactivateModalVisible(true);
+    } else {
+      // Turning on — no confirm needed
+      setTenantStatus(true);
+    }
   };
 
   return (
@@ -1267,7 +1278,8 @@ const TenantEditPage: React.FC = () => {
                   <Form
                     form={paymentForm}
                     layout="vertical"
-                    className="tenant-form">
+                    className="tenant-form"
+                    component={false}>
                     <Form.Item
                       label={t("dashboard.settings.payment.fields.client_id")}
                       name="clientId"
@@ -1364,7 +1376,7 @@ const TenantEditPage: React.FC = () => {
                     </div>
                     <StatusToggle
                       checked={tenantStatus}
-                      onChange={() => setTenantStatus((prev) => !prev)}
+                      onChange={handleStatusToggle}
                       ariaLabel={t("tenants.edit.fields.status")}
                     />
                   </div>
@@ -1498,6 +1510,48 @@ const TenantEditPage: React.FC = () => {
               {t("tenants.edit.delete_modal.name_match")}
             </p>
           )}
+        </div>
+      </Modal>
+
+      {/* Deactivate Confirm Modal */}
+      <Modal
+        centered
+        title={
+          <div className="flex items-center gap-3">
+            <ExclamationCircleOutlined className="text-orange-500 text-2xl" />
+            <span className="text-lg font-semibold">
+              {t("tenants.deactivate_modal.title")}
+            </span>
+          </div>
+        }
+        open={deactivateModalVisible}
+        onCancel={() => setDeactivateModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setDeactivateModalVisible(false)} size="large">
+            {t("tenants.edit.delete_modal.button_cancel")}
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger
+            onClick={() => { setTenantStatus(false); setDeactivateModalVisible(false); }}
+            size="large">
+            {t("tenants.deactivate_modal.button_confirm")}
+          </Button>,
+        ]}
+        width={480}
+        styles={{
+          mask: { backdropFilter: "blur(10px)", background: "var(--modal-overlay)" },
+        }}>
+        <div className="py-4 space-y-4">
+          <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900 rounded-lg p-4">
+            <p className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-1">
+              {t("tenants.deactivate_modal.warning_title")}
+            </p>
+            <p className="text-sm text-orange-700 dark:text-orange-300">
+              {t("tenants.deactivate_modal.warning_description")}
+            </p>
+          </div>
         </div>
       </Modal>
     </>
