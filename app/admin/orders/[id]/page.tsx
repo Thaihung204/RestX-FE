@@ -1,5 +1,6 @@
 "use client";
 
+import CancelDishConfirm from "@/components/admin/orders/CancelDishConfirm";
 import orderDetailStatusService, { OrderDetailStatus } from "@/lib/services/orderDetailStatusService";
 import orderService from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
@@ -9,7 +10,7 @@ import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import MenuSelectionModal from "../../../../components/admin/orders/MenuSelectionModal";
@@ -101,6 +102,7 @@ const formatDateTime = (value?: string | null) => {
 
 export default function AdminOrderDetailPage() {
   const { t } = useTranslation("common");
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const orderId = useMemo(() => params?.id ?? "", [params]);
 
@@ -112,6 +114,8 @@ export default function AdminOrderDetailPage() {
   const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+  const [cancelConfirm, setCancelConfirm] = useState<{ detailId: string; dishName: string; newStatusId: number } | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
   const inFlightRef = useRef(false);
   const lastFetchRef = useRef<number | null>(null);
 
@@ -131,8 +135,15 @@ export default function AdminOrderDetailPage() {
     fetchStatuses();
   }, []);
 
-  const handleDetailStatusChange = async (detailId: string, newStatusId: number) => {
+  const handleDetailStatusChange = async (detailId: string, newStatusId: number, dishName?: string) => {
     if (!orderId) return;
+    const cancelStatus = availableStatuses.find(
+      (s) => s.code?.toLowerCase() === "cancelled" || s.name?.toLowerCase() === "cancelled",
+    );
+    if (cancelStatus && String(newStatusId) === cancelStatus.id) {
+      setCancelConfirm({ detailId, dishName: dishName ?? "", newStatusId });
+      return;
+    }
     try {
       await orderService.updateOrderDetailStatus(orderId, detailId, newStatusId);
     } catch (err: unknown) {
@@ -142,6 +153,29 @@ export default function AdminOrderDetailPage() {
         t("admin.order_detail.messages.update_error"),
       );
       message.error(errorMsg);
+    }
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelConfirm || !orderId) return;
+    setIsCancelling(true);
+    try {
+      await orderService.updateOrderDetailStatus(orderId, cancelConfirm.detailId, cancelConfirm.newStatusId);
+      setOrder((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          orderDetails: (prev.orderDetails ?? []).map((d) =>
+            d.id === cancelConfirm.detailId ? { ...d, status: "Cancelled" } : d,
+          ),
+        };
+      });
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(err, t("admin.order_detail.messages.update_error"));
+      message.error(errorMsg);
+    } finally {
+      setIsCancelling(false);
+      setCancelConfirm(null);
     }
   };
 
@@ -285,12 +319,12 @@ export default function AdminOrderDetailPage() {
                 : t("admin.order_detail.id", { id: orderId })}
             </p> */}
           </div>
-          <Link
-            href="/admin/orders"
-            className="rounded-lg border px-4 py-2 text-sm font-medium transition hover:opacity-80"
-            style={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }}>
-            {t("admin.order_detail.back_to_list")}
-          </Link>
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
+            ← {t("admin.order_detail.actions.back")}
+          </button>
         </div>
 
         {loading ? (
@@ -451,9 +485,10 @@ export default function AdminOrderDetailPage() {
                                   className="w-full rounded-md border p-1 text-xs"
                                   style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--text)" }}
                                   value={availableStatuses.find(s => s.name === item.status)?.id ?? ""}
+                                  disabled={item.status?.toLowerCase() === "cancelled"}
                                   onChange={(e) => {
                                     if (e.target.value && item.id) {
-                                      handleDetailStatusChange(item.id, Number(e.target.value));
+                                      handleDetailStatusChange(item.id, Number(e.target.value), item.dishName ?? undefined);
                                     }
                                   }}
                                 >
@@ -513,6 +548,13 @@ export default function AdminOrderDetailPage() {
         isOpen={isAddMenuOpen}
         onClose={() => setIsAddMenuOpen(false)}
         onSuccess={() => loadOrderDetails(false)}
+      />
+      <CancelDishConfirm
+        open={!!cancelConfirm}
+        dishName={cancelConfirm?.dishName}
+        loading={isCancelling}
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setCancelConfirm(null)}
       />
     </>
   );

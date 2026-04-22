@@ -36,6 +36,37 @@ export interface PaymentDetail {
   paymentStatusCode?: string | null;
   status?: number;
   statusName?: string | null;
+  purpose?: number;
+  purposeName?: string | null;
+  customerName?: string | null;
+  customer?: {
+    id: string;
+    fullName: string;
+    phone?: string | null;
+    email?: string | null;
+    membershipLevel?: string | null;
+    loyaltyPoints?: number;
+  } | null;
+  order?: {
+    id: string;
+    reference?: string | null;
+    subTotal?: number;
+    discountAmount?: number;
+    taxAmount?: number;
+    serviceCharge?: number;
+    totalAmount?: number;
+    items?: Array<{
+      id: string;
+      dishName: string;
+      price: number;
+      quantity: number;
+      note?: string | null;
+      itemStatus?: string | null;
+    }>;
+    promotions?: any[];
+  } | null;
+  reservation?: any | null;
+  depositPaid?: any | null;
 }
 
 class PaymentService {
@@ -45,10 +76,23 @@ class PaymentService {
     method?: string;
     status?: string;
   }): Promise<PaymentDetail[]> {
-    const response = await axiosInstance.get<PaymentDetail[]>("/payments", {
-      params,
-    });
+    const response = await axiosInstance.get<PaymentDetail[]>("/payments", { params });
     return response.data;
+  }
+
+  async getPaymentById(id: string): Promise<PaymentDetail> {
+    const response = await axiosInstance.get<PaymentDetail>(`/payments/${id}`);
+    return response.data;
+  }
+
+  async getReceipt(id: string): Promise<{ blob: Blob; fileName: string }> {
+    const response = await axiosInstance.get(`/payments/${id}/receipt`, {
+      responseType: "blob",
+    });
+    const contentDisposition = response.headers["content-disposition"] || "";
+    const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    const fileName = match ? match[1].replace(/['"]/g, "") : `receipt-${id}.pdf`;
+    return { blob: response.data, fileName };
   }
 
   async payByCash(

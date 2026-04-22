@@ -160,7 +160,8 @@
       "actions": {
         "add_dish": "Thêm món",
         "confirm_add_dish": "Xác nhận thêm món",
-        "processing": "Đang xử lý..."
+        "processing": "Đang xử lý...",
+        "back": "Quay lại"
       },
       "money": {
         "sub_total": "Tạm tính",
@@ -179,6 +180,11 @@
         "loading": "Đang tải...",
         "no_image": "Không có ảnh",
         "no_menu_items": "Không có món ăn nào."
+      },
+      "cancel_dish": {
+        "title": "Hủy món",
+        "confirm": "Xác nhận hủy",
+        "message": "Bạn có chắc muốn hủy món \"{{name}}\"? Hành động này không thể hoàn tác."
       }
     }
   },
@@ -1110,6 +1116,7 @@
         "menu": "Thực đơn",
         "ingredients": "Nguyên liệu",
         "orders": "Đơn hàng",
+        "payments": "Thanh toán",
         "customers": "Khách hàng",
         "staff": "Nhân viên",
         "schedules": "Lịch làm việc",
@@ -2604,6 +2611,52 @@
     "request_bill": "Tính tiền",
     "give_feedback": "Góp ý dịch vụ"
   },
+  "payments": {
+    "title": "Thanh toán",
+    "subtitle": "Quản lý lịch sử thanh toán",
+    "fetch_error": "Không thể tải danh sách thanh toán",
+    "empty": "Không có giao dịch nào",
+    "total": "{{count}} giao dịch",
+    "search_placeholder": "Tên khách, mã đơn...",
+    "open_checkout": "Mở trang thanh toán PayOS",
+    "view_details": "Xem chi tiết",
+    "view_reservation": "Xem đặt bàn",
+    "columns": {
+      "customer": "Khách hàng",
+      "method": "Phương thức",
+      "amount": "Số tiền",
+      "purpose": "Mục đích",
+      "status": "Trạng thái",
+      "date": "Ngày thanh toán",
+      "checkout": "Thanh toán online",
+      "actions": "Thao tác"
+    },
+    "filter": {
+      "status_label": "Trạng thái",
+      "method_label": "Phương thức",
+      "date_label": "Ngày thanh toán",
+      "all_status": "Tất cả trạng thái",
+      "all_methods": "Tất cả",
+      "pending": "Chờ xử lý",
+      "success": "Thành công",
+      "failed": "Thất bại",
+      "cancelled": "Đã hủy",
+      "apply": "Lọc"
+    },
+    "detail": {
+      "title": "Chi tiết thanh toán",
+      "load_error": "Không thể tải chi tiết thanh toán",
+      "payment_info": "Thông tin thanh toán",
+      "money_summary": "Tóm tắt thanh toán",
+      "customer_info": "Thông tin khách hàng",
+      "order_info": "Thông tin đơn hàng",
+      "view_order": "Xem đơn hàng",
+      "cash_receive": "Tiền nhận",
+      "cashback": "Tiền thối",
+      "export_receipt": "Xuất hóa đơn",
+      "receipt_error": "Không thể xuất hóa đơn"
+    }
+  },
   "menu_form": {
     "errors": {
       "load_failed": "Không thể tải thông tin món ăn",
@@ -3007,7 +3060,8 @@
       "total": "Tổng cộng:",
       "items_count": "{{count}} món",
       "confirm_order": "Gửi yêu cầu gọi món",
-      "request_payment": "Xác nhận thanh toán"
+      "request_payment": "Xác nhận thanh toán",
+      "note_placeholder": "Ghi chú cho món này"
     },
     "welcome_card": {
       "greeting": "Xin chào quý khách",

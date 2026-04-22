@@ -160,7 +160,8 @@
       "actions": {
         "add_dish": "Add Dish",
         "confirm_add_dish": "Confirm Add Dish",
-        "processing": "Processing..."
+        "processing": "Processing...",
+        "back": "Back"
       },
       "money": {
         "sub_total": "SubTotal",
@@ -179,6 +180,11 @@
         "loading": "Loading...",
         "no_image": "No Image",
         "no_menu_items": "No dishes available."
+      },
+      "cancel_dish": {
+        "title": "Cancel dish",
+        "confirm": "Yes, cancel",
+        "message": "Are you sure you want to cancel \"{{name}}\"? This action cannot be undone."
       }
     }
   },
@@ -1216,6 +1222,7 @@
         "menu": "Menu",
         "ingredients": "Ingredients",
         "orders": "Orders",
+        "payments": "Payments",
         "customers": "Customers",
         "staff": "Staff",
         "schedules": "Schedules",
@@ -2559,6 +2566,52 @@
     "request_bill": "Request Bill",
     "give_feedback": "Give Feedback"
   },
+  "payments": {
+    "title": "Payments",
+    "subtitle": "Manage payment history",
+    "fetch_error": "Failed to load payments",
+    "empty": "No transactions found",
+    "total": "{{count}} transactions",
+    "search_placeholder": "Customer name, order ID...",
+    "open_checkout": "Open PayOS checkout",
+    "view_details": "View details",
+    "view_reservation": "View reservation",
+    "columns": {
+      "customer": "Customer",
+      "method": "Method",
+      "amount": "Amount",
+      "purpose": "Purpose",
+      "status": "Status",
+      "date": "Payment Date",
+      "checkout": "Online Payment",
+      "actions": "Actions"
+    },
+    "filter": {
+      "status_label": "Status",
+      "method_label": "Method",
+      "date_label": "Payment Date",
+      "all_status": "All statuses",
+      "all_methods": "All",
+      "pending": "Pending",
+      "success": "Success",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "apply": "Apply"
+    },
+    "detail": {
+      "title": "Payment Details",
+      "load_error": "Failed to load payment details",
+      "payment_info": "Payment Information",
+      "money_summary": "Payment Summary",
+      "customer_info": "Customer Information",
+      "order_info": "Order Information",
+      "view_order": "View Order",
+      "cash_receive": "Cash Received",
+      "cashback": "Change",
+      "export_receipt": "Export Receipt",
+      "receipt_error": "Failed to export receipt"
+    }
+  },
   "menu_form": {
     "errors": {
       "load_failed": "Failed to load menu item",
@@ -2962,7 +3015,8 @@
       "total": "Total:",
       "items_count": "{{count}} items",
       "confirm_order": "Send Order Request",
-      "request_payment": "Request Payment"
+      "request_payment": "Request Payment",
+      "note_placeholder": "Note for this dish"
     },
     "welcome_card": {
       "greeting": "Welcome",

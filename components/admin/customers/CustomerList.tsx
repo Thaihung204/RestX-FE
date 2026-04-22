@@ -1,22 +1,23 @@
 "use client";
 
 import LoyaltyBandIcon from "@/components/loyalty/LoyaltyBandIcon";
+import { DropDown } from "@/components/ui/DropDown";
 import customerService, { Customer } from "@/lib/services/customerService";
 import loyaltyService, { LoyaltyPointBand } from "@/lib/services/loyaltyService";
+import { formatVND } from "@/lib/utils/currency";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { Cake, Cancel, CheckCircle } from "@mui/icons-material";
 import { message } from "antd";
 import {
-    forwardRef,
-    useCallback,
-    useEffect,
-    useImperativeHandle,
-    useMemo,
-    useState,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
 } from "react";
 import { useTranslation } from "react-i18next";
 import CustomerDetail from "./CustomerDetail";
-import { formatVND } from "@/lib/utils/currency";
 
 const PAGE_SIZE = 10;
 
@@ -175,67 +176,62 @@ const CustomerList = forwardRef<CustomerListHandle>(
             border: "1px solid var(--border)",
           }}>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-            <input
-              type="text"
-              placeholder={t("customers.list.headers.customer", {
-                defaultValue: "Tên khách hàng",
-              })}
-              value={nameSearch}
-              onChange={(e) => setNameSearch(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}
-            />
+            <div className="space-y-1">
+              <label className="block text-xs" style={{ color: "var(--text-muted)" }}>
+                {t("customers.list.headers.customer", { defaultValue: "Tên khách hàng" })}
+              </label>
+              <input
+                type="text"
+                placeholder={t("customers.list.headers.customer", { defaultValue: "Tên khách hàng" })}
+                value={nameSearch}
+                onChange={(e) => setNameSearch(e.target.value)}
+                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              />
+            </div>
 
-            <input
-              type="text"
-              placeholder={t("customers.list.headers.contact", {
-                defaultValue: "Email",
-              })}
-              value={emailSearch}
-              onChange={(e) => setEmailSearch(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}
-            />
+            <div className="space-y-1">
+              <label className="block text-xs" style={{ color: "var(--text-muted)" }}>
+                {t("customers.list.headers.contact", { defaultValue: "Email" })}
+              </label>
+              <input
+                type="text"
+                placeholder={t("customers.list.headers.contact", { defaultValue: "Email" })}
+                value={emailSearch}
+                onChange={(e) => setEmailSearch(e.target.value)}
+                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              />
+            </div>
 
-            <input
-              type="text"
-              placeholder={t("tenant_requests.form.phone_number", {
-                defaultValue: "Số điện thoại",
-              })}
-              value={phoneSearch}
-              onChange={(e) => setPhoneSearch(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}
-            />
+            <div className="space-y-1">
+              <label className="block text-xs" style={{ color: "var(--text-muted)" }}>
+                {t("tenant_requests.form.phone_number", { defaultValue: "Số điện thoại" })}
+              </label>
+              <input
+                type="text"
+                placeholder={t("tenant_requests.form.phone_number", { defaultValue: "Số điện thoại" })}
+                value={phoneSearch}
+                onChange={(e) => setPhoneSearch(e.target.value)}
+                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+              />
+            </div>
 
-            <select
-              value={filterTier}
-              onChange={(e) => setFilterTier(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}>
-              <option value="all">{t("customers.filters.all_tiers")}</option>
-              {bands.map((band) => (
-                <option key={band.id} value={band.name}>
-                  {band.name}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-1">
+              <label className="block text-xs" style={{ color: "var(--text-muted)" }}>
+                {t("customers.filters.tier_label", { defaultValue: "Hạng thành viên" })}
+              </label>
+              <DropDown
+                value={filterTier}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterTier(e.target.value)}
+                className="!h-14 !px-4">
+                <option value="all">{t("customers.filters.all_tiers")}</option>
+                {bands.map((band) => (
+                  <option key={band.id} value={band.name}>{band.name}</option>
+                ))}
+              </DropDown>
+            </div>
           </div>
 
           {(nameSearch ||
@@ -442,32 +438,41 @@ const CustomerList = forwardRef<CustomerListHandle>(
             <div
               className="flex items-center justify-between px-4 py-3"
               style={{ borderTop: "1px solid var(--border)" }}>
-              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                {t("admin.reservations.pagination.page_info", {
-                  page: currentPage,
-                  total: totalPages,
-                  count: totalCount,
-                  defaultValue: `Trang ${currentPage}/${totalPages} • ${totalCount} khách hàng`,
-                })}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {t("admin.reservations.pagination.page_info_compact", {
+                    page: currentPage,
+                    total: totalPages,
+                    defaultValue: `Trang ${currentPage}/${totalPages} ·`,
+                  })}
+                </p>
+                <div className="flex items-center gap-2">
+                  <DropDown
+                    value={String(PAGE_SIZE)}
+                    onChange={() => {}}
+                    containerClassName="w-[110px]"
+                    className="!h-9 !py-1.5 !pl-3 !pr-8 !text-sm"
+                    aria-label={t("common.pagination.items_per_page", { defaultValue: "Items/page" })}>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                  </DropDown>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                    {t("admin.reservations.pagination.results_label", { defaultValue: "kết quả" })}
+                  </p>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage <= 1}
                   className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
-                  style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    color: "var(--text)",
-                  }}>
-                  {t("admin.reservations.pagination.prev", {
-                    defaultValue: "Trước",
-                  })}
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>
+                  {t("admin.reservations.pagination.prev", { defaultValue: "Trước" })}
                 </button>
 
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const p =
-                    Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                  const p = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
                   return (
                     <button
                       key={p}
@@ -476,11 +481,7 @@ const CustomerList = forwardRef<CustomerListHandle>(
                       style={
                         p === currentPage
                           ? { background: "var(--primary)", color: "white" }
-                          : {
-                            background: "var(--surface)",
-                            border: "1px solid var(--border)",
-                            color: "var(--text-muted)",
-                          }
+                          : { background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)" }
                       }>
                       {p}
                     </button>
@@ -491,14 +492,8 @@ const CustomerList = forwardRef<CustomerListHandle>(
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage >= totalPages}
                   className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
-                  style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    color: "var(--text)",
-                  }}>
-                  {t("admin.reservations.pagination.next", {
-                    defaultValue: "Sau",
-                  })}
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>
+                  {t("admin.reservations.pagination.next", { defaultValue: "Sau" })}
                 </button>
               </div>
             </div>
