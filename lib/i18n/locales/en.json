@@ -179,6 +179,11 @@
         "loading": "Loading...",
         "no_image": "No Image",
         "no_menu_items": "No dishes available."
+      },
+      "cancel_dish": {
+        "title": "Cancel dish",
+        "confirm": "Yes, cancel",
+        "message": "Are you sure you want to cancel \"{{name}}\"? This action cannot be undone."
       }
     }
   },

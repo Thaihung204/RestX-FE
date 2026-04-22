@@ -1,7 +1,7 @@
+import { formatVND } from "@/lib/utils/currency";
 import { DollarOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Modal, Select, Space, Tag, Typography } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
-import { formatVND } from "@/lib/utils/currency";
 
 const { Text } = Typography;
 
@@ -206,7 +206,7 @@ export default function OrderDetailsPopup({
                         value={normalizedValue}
                         size="small"
                         onChange={(value) => handleUpdateDetailStatus(order.id, item.id, String(value))}
-                        disabled={isUpdatingDetailStatus}
+                        disabled={isUpdatingDetailStatus || normalizedValue === normalizeStatusValue("cancelled")}
                         options={statusOptions}
                         style={{ minWidth: isMobile ? 82 : 98, fontSize: isMobile ? 11 : 12 }}
                         className="order-detail-status-select"

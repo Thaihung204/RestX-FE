@@ -179,6 +179,11 @@
         "loading": "Đang tải...",
         "no_image": "Không có ảnh",
         "no_menu_items": "Không có món ăn nào."
+      },
+      "cancel_dish": {
+        "title": "Hủy món",
+        "confirm": "Xác nhận hủy",
+        "message": "Bạn có chắc muốn hủy món \"{{name}}\"? Hành động này không thể hoàn tác."
       }
     }
   },
