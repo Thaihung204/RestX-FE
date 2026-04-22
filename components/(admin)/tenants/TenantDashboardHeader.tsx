@@ -3,14 +3,13 @@
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { useLanguage } from "@/components/I18nProvider";
 import adminAuthService from "@/lib/services/adminAuthService";
-import { SettingOutlined, UserOutlined } from "@ant-design/icons";
-import { Avatar, Button, Dropdown } from "antd";
+import { UserOutlined } from "@ant-design/icons";
+import { Avatar, Dropdown } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-// --- Types & Interfaces ---
 export interface TenantDashboardTabItem {
   key: string;
   label: string;
@@ -24,57 +23,6 @@ interface TenantDashboardHeaderProps {
   onTabChange: (key: string) => void;
 }
 
-// --- Sub-component: Tabs ---
-const TenantDashboardHeaderTabs: React.FC<TenantDashboardHeaderProps> = ({
-  items,
-  activeTab,
-  onTabChange,
-}) => {
-  return (
-    <div className="w-full overflow-x-auto">
-      <div className="flex items-center min-w-max">
-        {items.map((item) => {
-          const isActive = activeTab === item.key;
-
-          return (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => onTabChange(item.key)}
-              className="relative flex items-center gap-2 px-5 py-3 border-b-2 transition-all duration-200"
-              style={
-                isActive
-                  ? {
-                      borderColor: "var(--text)",
-                      color: "var(--text)",
-                      fontWeight: 600,
-                    }
-                  : {
-                      borderColor: "transparent",
-                      color: "var(--text-muted)",
-                    }
-              }>
-              {item.icon && <span className="text-sm">{item.icon}</span>}
-              <span className="text-sm whitespace-nowrap">{item.label}</span>
-              {typeof item.badgeCount === "number" && (
-                <span
-                  className="text-[11px] px-1.5 py-0.5 rounded-md leading-none"
-                  style={{
-                    background: isActive ? "var(--surface)" : "var(--surface-subtle)",
-                    color: isActive ? "var(--text)" : "var(--text-muted)",
-                  }}>
-                  {item.badgeCount}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// --- Main Component: Header ---
 const TENANTS_BRAND_LOGO = "https://res.cloudinary.com/dzz8yqhcr/image/upload/v1773461233/DemoRestaurant/LogoUrl/logo.png";
 
 const TenantDashboardHeader: React.FC<TenantDashboardHeaderProps> = ({ items, activeTab, onTabChange }) => {
@@ -104,7 +52,6 @@ const TenantDashboardHeader: React.FC<TenantDashboardHeaderProps> = ({ items, ac
         }
         link.href = TENANTS_BRAND_LOGO;
       };
-
       setOrCreateLink("icon");
       setOrCreateLink("shortcut icon");
       setOrCreateLink("apple-touch-icon");
@@ -112,230 +59,129 @@ const TenantDashboardHeader: React.FC<TenantDashboardHeaderProps> = ({ items, ac
   }, []);
 
   return (
-    <header
-      className="sticky top-0 z-30"
-      style={{
-        background: "var(--card)",
-        borderBottom: "1px solid var(--border)",
-        backdropFilter: "blur(8px)",
-      }}>
-      <div className="max-w-7xl mx-auto pl-3 pr-6 lg:pl-4 lg:pr-8 py-4">
-        <div className="flex items-center justify-between gap-2">
+    <header className="tenant-header">
+      <div className="tenant-header-inner">
+        {/* Left: Brand + Nav */}
+        <div className="tenant-header-left">
+          <Link href="/tenants" className="tenant-header-brand">
+            <img
+              src={TENANTS_BRAND_LOGO}
+              alt="RestX Logo"
+              className="tenant-header-brand-logo"
+            />
+            <span>
+              Rest<span className="tenant-header-brand-accent">X</span>
+            </span>
+          </Link>
 
-          <div className="min-w-0 flex-1 flex items-center gap-5">
-            <div className="flex items-center gap-2 shrink-0 mr-1">
-              <img
-                src={TENANTS_BRAND_LOGO}
-                alt="RestX Logo"
-                className="w-9 h-9 rounded-lg object-contain"
-              />
-              <span className="text-[20px] font-extrabold tracking-tight leading-none select-none" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
-                <span style={{ color: "var(--text)" }}>Rest</span>
-                <span style={{ color: "#FF380B" }}>X</span>
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <TenantDashboardHeaderTabs items={items} activeTab={activeTab} onTabChange={onTabChange} />
-            </div>
-          </div>
+          {/* Inline Nav Tabs */}
+          <nav className="tenant-tabs" style={{ border: "none", padding: 0 }}>
+            {items.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => onTabChange(item.key)}
+                className={`tenant-tab ${activeTab === item.key ? "tenant-tab-active" : ""}`}>
+                <span>{item.label}</span>
+                {typeof item.badgeCount === "number" && (
+                  <span className="tenant-tab-badge">{item.badgeCount}</span>
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
 
-          {/* Bên phải: Các nút chức năng */}
-          <div className="flex flex-wrap items-center gap-3">
+        {/* Right: Actions */}
+        <div className="tenant-header-actions">
+          {/* Language + Theme group */}
+          <div className="tenant-header-actions-group">
+            {/* Language Switcher */}
             <div className="relative">
               <button
                 onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                className="p-2 rounded-lg transition-colors group flex items-center gap-2.5 h-10"
-                style={{
-                  background: "var(--surface)",
-                  color: "var(--text-muted)",
-                }}>
+                className="tenant-header-action-btn"
+                style={{ width: "auto", padding: "0.25rem 0.625rem", gap: "0.375rem", display: "flex", alignItems: "center" }}>
                 {language === "vi" ? (
-                  <svg
-                    className="w-6 h-4 rounded-[2px] shadow-sm"
-                    viewBox="0 0 3 2"
-                    xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-5 h-3.5 rounded-[2px]" viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg">
                     <rect width="3" height="2" fill="#DA251D" />
-                    <polygon
-                      points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836"
-                      fill="#FF0"
-                    />
+                    <polygon points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836" fill="#FF0" />
                   </svg>
                 ) : (
-                  <svg
-                    className="w-6 h-4 rounded-[2px] shadow-sm"
-                    viewBox="0 0 60 30"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <clipPath id="s">
-                      <path d="M0,0 v30 h60 v-30 z" />
-                    </clipPath>
-                    <clipPath id="t">
-                      <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
-                    </clipPath>
+                  <svg className="w-5 h-3.5 rounded-[2px]" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+                    <clipPath id="s"><path d="M0,0 v30 h60 v-30 z" /></clipPath>
+                    <clipPath id="t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" /></clipPath>
                     <g clipPath="url(#s)">
                       <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
-                      <path
-                        d="M0,0 L60,30 M60,0 L0,30"
-                        stroke="#fff"
-                        strokeWidth="6"
-                      />
-                      <path
-                        d="M0,0 L60,30 M60,0 L0,30"
-                        clipPath="url(#t)"
-                        stroke="#C8102E"
-                        strokeWidth="4"
-                      />
-                      <path
-                        d="M30,0 v30 M0,15 h60"
-                        stroke="#fff"
-                        strokeWidth="10"
-                      />
-                      <path
-                        d="M30,0 v30 M0,15 h60"
-                        stroke="#C8102E"
-                        strokeWidth="6"
-                      />
+                      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+                      <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t)" stroke="#C8102E" strokeWidth="4" />
+                      <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
+                      <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
                     </g>
                   </svg>
                 )}
-                <span className="text-sm font-medium uppercase group-hover:text-orange-500 leading-none pt-[1px]">
+                <span style={{ fontSize: "0.6875rem", fontWeight: 600, textTransform: "uppercase" }}>
                   {language}
                 </span>
-                <svg
-                  className="w-3 h-3 text-[var(--text-muted)] opacity-70"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
               </button>
 
               {isLangMenuOpen && (
                 <>
+                  <div className="fixed inset-0 z-30" onClick={() => setIsLangMenuOpen(false)} />
                   <div
-                    className="fixed inset-0 z-30"
-                    onClick={() => setIsLangMenuOpen(false)}
-                  />
-                  <div
-                    className="absolute top-full right-0 mt-2 w-40 rounded-xl shadow-lg border p-1 z-40 transition-all"
-                    style={{
-                      background: "var(--card)",
-                      borderColor: "var(--border)",
-                    }}>
-                    <button
-                      onClick={() => {
-                        changeLanguage("en");
-                        setIsLangMenuOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${
-                        language === "en"
-                          ? "bg-orange-500/10 text-orange-500"
-                          : "hover:bg-[var(--bg-base)]"
-                      }`}
-                      style={{
-                        color: language === "en" ? undefined : "var(--text)",
-                      }}>
-                      <svg
-                        className="w-6 h-4 rounded-[2px] shadow-sm flex-shrink-0"
-                        viewBox="0 0 60 30"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <clipPath id="s2">
-                          <path d="M0,0 v30 h60 v-30 z" />
-                        </clipPath>
-                        <clipPath id="t2">
-                          <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
-                        </clipPath>
-                        <g clipPath="url(#s2)">
-                          <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
-                          <path
-                            d="M0,0 L60,30 M60,0 L0,30"
-                            stroke="#fff"
-                            strokeWidth="6"
-                          />
-                          <path
-                            d="M0,0 L60,30 M60,0 L0,30"
-                            clipPath="url(#t2)"
-                            stroke="#C8102E"
-                            strokeWidth="4"
-                          />
-                          <path
-                            d="M30,0 v30 M0,15 h60"
-                            stroke="#fff"
-                            strokeWidth="10"
-                          />
-                          <path
-                            d="M30,0 v30 M0,15 h60"
-                            stroke="#C8102E"
-                            strokeWidth="6"
-                          />
-                        </g>
-                      </svg>
-                      <span className="font-medium">English</span>
-                      {language === "en" && (
-                        <svg
-                          className="w-4 h-4 ml-auto"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        changeLanguage("vi");
-                        setIsLangMenuOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-3 ${
-                        language === "vi"
-                          ? "bg-orange-500/10 text-orange-500"
-                          : "hover:bg-[var(--bg-base)]"
-                      }`}
-                      style={{
-                        color: language === "vi" ? undefined : "var(--text)",
-                      }}>
-                      <svg
-                        className="w-6 h-4 rounded-[2px] shadow-sm flex-shrink-0"
-                        viewBox="0 0 3 2"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <rect width="3" height="2" fill="#DA251D" />
-                        <polygon
-                          points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836"
-                          fill="#FF0"
-                        />
-                      </svg>
-                      <span className="font-medium">Tiếng Việt</span>
-                      {language === "vi" && (
-                        <svg
-                          className="w-4 h-4 ml-auto"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      )}
-                    </button>
+                    className="absolute top-full right-0 mt-2 w-40 rounded-xl shadow-lg border p-1 z-40"
+                    style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                    {["en", "vi"].map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => { changeLanguage(lang); setIsLangMenuOpen(false); }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-3 ${language === lang ? "bg-orange-500/10 text-orange-500" : "hover:bg-[var(--bg-base)]"
+                          }`}
+                        style={{ color: language === lang ? undefined : "var(--text)" }}>
+                        {lang === "vi" ? (
+                          <svg className="w-5 h-3.5 rounded-[2px] flex-shrink-0" viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="3" height="2" fill="#DA251D" />
+                            <polygon points="1.5,0.6 1.577,0.836 1.826,0.836 1.625,0.982 1.702,1.218 1.5,1.072 1.298,1.218 1.375,0.982 1.174,0.836 1.423,0.836" fill="#FF0" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-3.5 rounded-[2px] flex-shrink-0" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+                            <clipPath id="s2"><path d="M0,0 v30 h60 v-30 z" /></clipPath>
+                            <clipPath id="t2"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" /></clipPath>
+                            <g clipPath="url(#s2)">
+                              <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
+                              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+                              <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t2)" stroke="#C8102E" strokeWidth="4" />
+                              <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
+                              <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
+                            </g>
+                          </svg>
+                        )}
+                        <span className="font-medium">{lang === "vi" ? "Ti\u1EBFng Vi\u1EC7t" : "English"}</span>
+                        {language === lang && (
+                          <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
                   </div>
                 </>
               )}
             </div>
 
             <ThemeToggle />
+          </div>
 
+          {/* Jobs Button */}
+          <Link href="https://admin.restx.food/hangfire" target="_blank" rel="noreferrer">
+            <span className="tenant-header-jobs-btn">Hangfire Jobs</span>
+          </Link>
+
+          {/* User dropdown */}
+          <div className="tenant-header-user">
+            <div className="tenant-header-user-info">
+              <p className="tenant-header-user-name">{adminName}</p>
+              <span className="tenant-header-user-role">{adminRole}</span>
+            </div>
             <Dropdown
               menu={{
                 items: [
@@ -362,14 +208,10 @@ const TenantDashboardHeader: React.FC<TenantDashboardHeaderProps> = ({ items, ac
               }}
               placement="bottomRight"
               trigger={["click"]}>
-              <button className="flex items-center justify-center rounded-full" style={{ background: "var(--surface)", border: "1px solid var(--border)", width: 36, height: 36 }}>
+              <button className="tenant-header-action-btn" style={{ borderRadius: "50%", padding: 0, width: "2.5rem", height: "2.5rem" }}>
                 <Avatar size={32} icon={<UserOutlined />} style={{ background: "var(--primary)", color: "white" }} />
               </button>
             </Dropdown>
-
-            <Link href="https://admin.restx.food/hangfire" target="_blank" rel="noreferrer">
-              <Button icon={<SettingOutlined />}>Hangfire Jobs</Button>
-            </Link>
           </div>
         </div>
       </div>

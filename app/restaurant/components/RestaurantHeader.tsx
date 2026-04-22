@@ -13,9 +13,9 @@ import {
 } from '@ant-design/icons';
 import { Button, Drawer, Dropdown, Space } from 'antd';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Navbar from './Navbar';
+import Navbar, { handleScroll } from './Navbar';
 
 import { TenantConfig } from '@/lib/services/tenantService';
 import { Category } from '@/lib/services/categoryService';
@@ -31,16 +31,17 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
   const tenant = propTenant || contextTenant;
   const { mode } = useThemeMode();
   const [scrolled, setScrolled] = useState(false);
-  
-  // Debug
-  console.log('[RestaurantHeader] tenant:', tenant);
-  console.log('[RestaurantHeader] businessName:', tenant?.businessName);
-  console.log('[RestaurantHeader] name:', tenant?.name);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [activeItem, setActiveItem] = useState('home');
   const [user, setUser] = useState<User | null>(null);
   const headerContentColor = scrolled ? (mode === 'dark' ? 'white' : '#1a1a1a') : 'white';
+
+  const syncUserFromStorage = useCallback(() => {
+    const localUser = authService.getCurrentUser();
+    setUser(localUser);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,11 +50,6 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
 
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
-    };
-
-    const syncUserFromStorage = () => {
-      const localUser = authService.getCurrentUser();
-      setUser(localUser);
     };
 
     handleResize();
@@ -67,9 +63,9 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('focus', syncUserFromStorage);
     };
-  }, []);
+  }, [syncUserFromStorage]);
 
-  const menuItems = React.useMemo(() => [
+  const desktopMenuItems = useMemo(() => [
     {
       key: 'home',
       label: t('restaurant.header.home'),
@@ -113,6 +109,71 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
     },
   ], [t, categories]);
 
+  const mobileMenuItems = useMemo(() => [
+    {
+      key: 'home',
+      label: t('restaurant.header.home'),
+      href: '/restaurant'
+    },
+    {
+      key: 'about',
+      label: t('restaurant.header.about'),
+      href: '/restaurant#about'
+    },
+    {
+      key: 'featured',
+      label: t('restaurant.header.featured'),
+      href: '/restaurant#featured'
+    },
+    {
+      key: 'menu',
+      label: t('restaurant.header.menu.title'),
+      href: '/restaurant#menu'
+    },
+    {
+      key: 'news',
+      label: t('restaurant.header.news'),
+      href: '/restaurant#news'
+    },
+    {
+      key: 'reservation',
+      label: t('restaurant.header.book_table'),
+      href: '/restaurant#reservation'
+    },
+  ], [t]);
+
+  const handleLogout = useCallback(async () => {
+    await authService.logoutServer();
+    authService.logout();
+    setUser(null);
+    window.location.href = '/login';
+  }, []);
+
+  const handleMobileNavigation = useCallback((href: string, key: string) => {
+    setActiveItem(key);
+    setDrawerOpen(false);
+
+    if (typeof window === 'undefined') return;
+
+    const [targetPath, targetHash] = href.split('#');
+    const currentPath = window.location.pathname;
+    const isSamePage = currentPath === targetPath;
+
+    if (isSamePage && targetHash) {
+      handleScroll(targetHash);
+      window.history.pushState(null, '', `${targetPath}#${targetHash}`);
+      return;
+    }
+
+    if (isSamePage && !targetHash) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.history.pushState(null, '', targetPath);
+      return;
+    }
+
+    window.location.href = href;
+  }, []);
+
   return (
     <header
       style={{
@@ -132,12 +193,12 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
         style={{
           maxWidth: 1400,
           margin: '0 auto',
-          padding: '12px 24px',
+          padding: isMobile ? '10px 12px' : '12px 24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'nowrap',
-          gap: 16,
+          gap: isMobile ? 8 : 16,
         }}>
         {/* Logo */}
         <Link
@@ -148,7 +209,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
             gap: 12,
             textDecoration: 'none',
             flexShrink: 0,
-            maxWidth: 280,
+            maxWidth: isMobile ? 'min(58vw, 240px)' : 280,
             minWidth: 0,
           }}
         >
@@ -177,7 +238,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
           </div>
           <span
             style={{
-              fontSize: 15,
+              fontSize: isMobile ? 14 : 15,
               fontWeight: 700,
               color: headerContentColor,
               whiteSpace: 'nowrap',
@@ -190,21 +251,31 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
         </Link>
 
         {/* Desktop Navigation */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-          <div style={{ display: isMobile ? 'none' : 'block' }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, flexShrink: 0 }}>
+          {!isMobile && (
             <Navbar
-              items={menuItems}
+              items={desktopMenuItems}
               scrolled={scrolled}
               textColor={headerContentColor}
             />
-          </div>
+          )}
 
-          <Space size="middle" style={{ marginLeft: 24 }}>
-            {/* Add Language Switcher and Theme Toggle here */}
-            <LanguageSwitcher style={{ color: headerContentColor }} />
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: isMobile ? 6 : 12,
+            marginLeft: isMobile ? 0 : 18,
+          }}>
+            <LanguageSwitcher
+              className={isMobile ? 'restaurant-header-lang-mobile' : undefined}
+              style={{
+                color: headerContentColor,
+                padding: isMobile ? '4px 6px' : '6px 10px',
+              }}
+            />
             <ThemeToggle style={{ color: headerContentColor }} />
 
-            {user ? (
+            {!isMobile && user ? (
               <Dropdown
                 menu={{
                   className: 'restaurant-user-dropdown-menu',
@@ -218,10 +289,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
                   ],
                   onClick: async ({ key }) => {
                     if (key === 'logout') {
-                      await authService.logoutServer();
-                      authService.logout();
-                      setUser(null);
-                      window.location.href = '/login';
+                      await handleLogout();
                     }
                   },
                 }}
@@ -244,13 +312,15 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
                   )}
                 </Space>
               </Dropdown>
-            ) : (
+            ) : null}
+
+            {!isMobile && !user ? (
               <Button
                 type="text"
                 href="/login"
                 style={{
                   background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.22)',
+                  border: scrolled ? '1px solid var(--border)' : '1px solid rgba(255,255,255,0.22)',
                   color: headerContentColor,
                   borderRadius: 8,
                   fontWeight: 600,
@@ -259,8 +329,10 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
                 }}>
                 {t('homepage.header.login')}
               </Button>
-            )}
-            <Button
+            ) : null}
+
+            {!isMobile && (
+              <Button
               type="primary"
               href="#reservation"
               style={{
@@ -273,21 +345,30 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
                 boxShadow: '0 4px 12px rgba(255, 56, 11, 0.3)',
               }}>
               {t('restaurant.header.book_table')}
-            </Button>
-            <MenuOutlined
-              style={{
-                fontSize: 24,
-                color: headerContentColor,
-                cursor: 'pointer',
-                display: isMobile ? 'block' : 'none',
-              }}
-              onClick={() => setDrawerOpen(true)}
-            />
-          </Space>
+              </Button>
+            )}
+
+            {isMobile && (
+              <Button
+                type="text"
+                aria-label={t('common.actions.menu', { defaultValue: 'Menu' })}
+                icon={<MenuOutlined style={{ fontSize: 22, color: headerContentColor }} />}
+                onClick={() => setDrawerOpen(true)}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  border: scrolled ? '1px solid var(--border)' : '1px solid rgba(255,255,255,0.22)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              />
+            )}
+          </div>
         </nav>
       </div>
 
-      {/* Mobile Drawer */}
       {/* Mobile Drawer */}
       <Drawer
         title={<span style={{ color: 'var(--text)' }}>Menu</span>}
@@ -298,40 +379,63 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
         style={{ background: 'var(--bg-base)' }}
         styles={{ body: { background: 'var(--bg-base)' } }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          {menuItems.map((item, index) => (
-            <div
+          {mobileMenuItems.map((item) => (
+            <button
               key={item.key}
-              onClick={() => {
-                setActiveItem(item.key);
-                setDrawerOpen(false);
-              }}
+              type="button"
+              onClick={() => handleMobileNavigation(item.href, item.key)}
               style={{
+                width: '100%',
+                textAlign: 'left',
                 color: 'var(--text)',
                 fontSize: 16,
                 padding: '12px 16px',
                 borderRadius: 8,
                 background: activeItem === item.key ? 'rgba(255, 107, 59, 0.1)' : 'transparent',
                 borderLeft: activeItem === item.key ? '3px solid #FF6B3B' : '3px solid transparent',
+                borderTop: 'none',
+                borderRight: 'none',
+                borderBottom: 'none',
                 transition: 'all 0.3s ease',
                 cursor: 'pointer',
-                animation: `slideIn 0.3s ease ${index * 0.1}s both`,
-              }}
-              onMouseEnter={(e) => {
-                if (activeItem !== item.key) {
-                  e.currentTarget.style.background = 'rgba(255, 107, 59, 0.05)';
-                  e.currentTarget.style.transform = 'translateX(8px)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeItem !== item.key) {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.transform = 'translateX(0)';
-                }
               }}>
               {item.label}
-            </div>
+            </button>
           ))}
-          <div style={{ display: 'flex', gap: 16, marginTop: 24 }}>
+
+          <div style={{ width: '100%', height: 1, background: 'var(--border)' }} />
+
+          <Button
+            type="primary"
+            block
+            onClick={() => handleMobileNavigation('/restaurant#reservation', 'reservation')}
+            style={{
+              height: 42,
+              borderRadius: 10,
+              fontWeight: 700,
+            }}
+          >
+            {t('restaurant.header.book_table')}
+          </Button>
+
+          {user ? (
+            <Button danger block onClick={handleLogout} style={{ height: 40, borderRadius: 10 }}>
+              {t('staff.user_menu.logout')}
+            </Button>
+          ) : (
+            <Button
+              block
+              onClick={() => {
+                setDrawerOpen(false);
+                window.location.href = '/login';
+              }}
+              style={{ height: 40, borderRadius: 10 }}
+            >
+              {t('homepage.header.login')}
+            </Button>
+          )}
+
+          <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
             <LanguageSwitcher />
             <ThemeToggle />
           </div>
@@ -340,6 +444,10 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ tenant: propTenant,
 
       {/* Keyframe animations */}
       <style jsx global>{`
+        .restaurant-header-lang-mobile .ant-space-item:nth-child(2) {
+          display: none;
+        }
+
         .restaurant-user-dropdown-menu {
           background: var(--card) !important;
           border: 1px solid var(--border) !important;

@@ -58,7 +58,7 @@ export default function ReservationLookupSection() {
             : '';
 
     return (
-        <section className="relative py-24 px-4 bg-[var(--surface)] overflow-hidden">
+        <section className="reservation-lookup-section relative px-4 bg-[var(--surface)] overflow-hidden">
             <div className="pointer-events-none absolute inset-0 opacity-30">
                 <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-[var(--primary)] blur-3xl" />
                 <div className="absolute -bottom-24 -right-20 h-72 w-72 rounded-full bg-orange-300 blur-3xl" />

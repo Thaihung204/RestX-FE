@@ -804,10 +804,26 @@
         "description": "Hệ thống hạng thành viên tự động nâng cấp theo chi tiêu. Càng lên hạng cao, ưu đãi càng hấp dẫn.",
         "points_path_title": "Lộ trình tích điểm",
         "tiers": {
-          "bronze": { "name": "Bronze", "discount": "Giảm 3%", "points": "Từ 0 điểm" },
-          "silver": { "name": "Silver", "discount": "Giảm 5%", "points": "Từ 500 điểm" },
-          "gold": { "name": "Gold", "discount": "Giảm 8%", "points": "Từ 1500 điểm" },
-          "platinum": { "name": "Platinum", "discount": "Giảm 12%", "points": "Từ 5000 điểm" }
+          "bronze": {
+            "name": "Bronze",
+            "discount": "Giảm 3%",
+            "points": "Từ 0 điểm"
+          },
+          "silver": {
+            "name": "Silver",
+            "discount": "Giảm 5%",
+            "points": "Từ 500 điểm"
+          },
+          "gold": {
+            "name": "Gold",
+            "discount": "Giảm 8%",
+            "points": "Từ 1500 điểm"
+          },
+          "platinum": {
+            "name": "Platinum",
+            "discount": "Giảm 12%",
+            "points": "Từ 5000 điểm"
+          }
         }
       },
       "section_3": {
@@ -879,9 +895,18 @@
         "title_highlight": "thông minh",
         "description": "Hệ thống quản lý nhân viên toàn diện — từ tạo tài khoản, phân quyền, đến xử lý order và thanh toán ngay tại bàn.",
         "staff": {
-          "an": { "name": "Nguyễn Văn An", "role": "Phục vụ" },
-          "bich": { "name": "Trần Thị Bích", "role": "Thu ngân" },
-          "duc": { "name": "Lê Minh Đức", "role": "Phục vụ" }
+          "an": {
+            "name": "Nguyễn Văn An",
+            "role": "Phục vụ"
+          },
+          "bich": {
+            "name": "Trần Thị Bích",
+            "role": "Thu ngân"
+          },
+          "duc": {
+            "name": "Lê Minh Đức",
+            "role": "Phục vụ"
+          }
         }
       },
       "section_1": {
@@ -1100,23 +1125,30 @@
       "subtitle": "Các hành động mới nhất"
     },
     "sidebar": {
-      "management": "Quản lý",
+      "management": "Qu\u1EA3n l\u00FD",
+      "sections": {
+        "overview": "T\u1ED5ng quan",
+        "operations": "V\u1EADn h\u00E0nh",
+        "catalog": "Danh m\u1EE5c",
+        "team": "Nh\u00E2n s\u1EF1",
+        "system": "H\u1EC7 th\u1ED1ng"
+      },
       "items": {
-        "dashboard": "Tổng quan",
-        "analytics": "Phân tích",
-        "tables": "Bàn",
-        "activity": "Hoạt động",
-        "reservations": "Đặt bàn",
-        "menu": "Thực đơn",
-        "ingredients": "Nguyên liệu",
-        "orders": "Đơn hàng",
-        "customers": "Khách hàng",
-        "staff": "Nhân viên",
-        "schedules": "Lịch làm việc",
-        "automation": "Tự động hóa",
-        "settings": "Cài đặt",
-        "manage": "Quản lý",
-        "help": "Trợ giúp"
+        "dashboard": "T\u1ED5ng quan",
+        "analytics": "Ph\u00E2n t\u00EDch",
+        "tables": "B\u00E0n",
+        "activity": "Ho\u1EA1t \u0111\u1ED9ng",
+        "reservations": "\u0110\u1EB7t b\u00E0n",
+        "menu": "Th\u1EF1c \u0111\u01A1n",
+        "ingredients": "Nguy\u00EAn li\u1EC7u",
+        "orders": "\u0110\u01A1n h\u00E0ng",
+        "customers": "Kh\u00E1ch h\u00E0ng",
+        "staff": "Nh\u00E2n vi\u00EAn",
+        "schedules": "L\u1ECBch l\u00E0m vi\u1EC7c",
+        "automation": "T\u1EF1 \u0111\u1ED9ng h\u00F3a",
+        "settings": "C\u00E0i \u0111\u1EB7t",
+        "manage": "Qu\u1EA3n l\u00FD",
+        "help": "Tr\u1EE3 gi\u00FAp"
       }
     },
     "manage": {
@@ -2542,7 +2574,8 @@
     "revenue": {
       "title": "Xu hướng doanh thu",
       "subtitle": "Hiệu suất 7 ngày qua",
-      "total_period": "Tổng kỳ"
+      "total_period": "Tổng kỳ",
+      "no_data": "Chưa có dữ liệu doanh thu"
     },
     "orders": {
       "title": "Tổng quan đơn hàng",
@@ -3472,7 +3505,11 @@
     "stats": {
       "total_tenants": "Tổng nhà hàng",
       "active_tenants": "Đang hoạt động",
-      "monthly_revenue": "Doanh thu tháng"
+      "monthly_revenue": "Doanh thu tháng",
+      "total": "Tổng nhà hàng",
+      "active": "Hoạt động",
+      "inactive": "Ngưng hoạt động",
+      "maintenance": "Bảo trì"
     },
     "table": {
       "tenant_info": "Thông tin nhà hàng",
@@ -3515,7 +3552,10 @@
       "day": "Ngày",
       "week": "Tuần",
       "month": "Tháng",
-      "year": "Năm"
+      "year": "Năm",
+      "total_revenue": "Tổng doanh thu",
+      "orders_period": "Đơn hàng kỳ này",
+      "avg_order_value": "Giá trị đơn TB"
     },
     "tabs": {
       "restaurant_list": "Tenants",
@@ -3617,7 +3657,10 @@
       "update_success_title": "Thành công",
       "update_success_message": "Cập nhật nhà hàng thành công",
       "save_error_title": "Lưu thất bại",
-      "save_error_message": "Không thể lưu nhà hàng. Vui lòng thử lại."
+      "save_error_message": "Kh\u00f4ng th\u1ec3 l\u01b0u nh\u00e0 h\u00e0ng. Vui l\u00f2ng th\u1eed l\u1ea1i.",
+      "activated": "\u0110\u00e3 k\u00edch ho\u1ea1t nh\u00e0 h\u00e0ng th\u00e0nh c\u00f4ng",
+      "deactivated": "\u0110\u00e3 ng\u01b0ng ho\u1ea1t \u0111\u1ed9ng nh\u00e0 h\u00e0ng th\u00e0nh c\u00f4ng",
+      "toggle_error": "Kh\u00f4ng th\u1ec3 thay \u0111\u1ed5i tr\u1ea1ng th\u00e1i. Vui l\u00f2ng th\u1eed l\u1ea1i."
     },
     "detail": {
       "back": "Quay lại",
@@ -3641,6 +3684,20 @@
       "inactive": "Không hoạt động",
       "maintenance": "Bảo trì"
     },
+    "detail_tabs": {
+      "general": "Th\u00f4ng tin chung",
+      "branding": "Th\u01b0\u01a1ng hi\u1ec7u & Giao di\u1ec7n",
+      "payment": "C\u00e0i \u0111\u1eb7t thanh to\u00e1n",
+      "system": "Th\u00f4ng tin h\u1ec7 th\u1ed1ng",
+      "tenant_detail": "Chi ti\u1ebft nh\u00e0 h\u00e0ng",
+      "light_mode": "Giao di\u1ec7n s\u00e1ng",
+      "dark_mode": "Giao di\u1ec7n t\u1ed1i",
+      "general_profile": "H\u1ed3 s\u01a1 chung",
+      "general_profile_desc": "C\u1ea5u h\u00ecnh danh t\u00ednh v\u00e0 th\u00f4ng tin li\u00ean h\u1ec7 c\u1ed1t l\u00f5i cho nh\u00e0 h\u00e0ng n\u00e0y. C\u00e1c thay \u0111\u1ed5i s\u1ebd \u0111\u01b0\u1ee3c \u00e1p d\u1ee5ng tr\u00ean to\u00e0n b\u1ed9 h\u1ec7 th\u1ed1ng RestX.",
+      "active_tenant": "Ho\u1ea1t \u0111\u1ed9ng",
+      "inactive_tenant": "Kh\u00f4ng ho\u1ea1t \u0111\u1ed9ng",
+      "view_details": "Xem chi ti\u1ebft"
+    },
     "plans": {
       "basic": "CƠ BẢN",
       "pro": "CHUYÊN NGHIỆP",
@@ -3648,6 +3705,7 @@
     },
     "create": {
       "breadcrumb_create": "Tạo mới",
+      "page_title": "Tạo nhà hàng mới",
       "title": "Tạo nhà hàng mới",
       "subtitle": "Thêm nhà hàng mới vào hệ thống Nền tảng Nhà hàng.",
       "back": "Quay lại",
@@ -3670,6 +3728,7 @@
         "prefix": "Tiền tố",
         "prefix_placeholder": "VD: NHS",
         "address": "Địa chỉ nhà hàng",
+        "street_address": "Địa chỉ đường",
         "address_line1_placeholder": "Số nhà",
         "address_line2_placeholder": "Phường/Quận",
         "address_line3_placeholder": "Thành phố/Tỉnh",
@@ -3934,6 +3993,7 @@
       "load_error": "Không thể tải danh sách yêu cầu tenant",
       "invalid_id": "ID yêu cầu không hợp lệ",
       "no_data": "Không có yêu cầu đang chờ",
+      "no_data_desc": "Tất cả yêu cầu hợp tác đã được xử lý hoặc chưa có yêu cầu mới nào.",
       "total_requests": "Tổng {{count}} yêu cầu",
       "total_requests_singular": "Tổng 1 yêu cầu đang chờ"
     },
@@ -3992,6 +4052,7 @@
       },
       "confirm": {
         "error_required": "Vui lòng điền đầy đủ thông tin",
+        "error_invalid_email": "Vui lòng nhập địa chỉ email hợp lệ",
         "error_generic": "Có lỗi xảy ra, vui lòng thử lại",
         "change_table": "Đổi bàn",
         "title": "Xác nhận đặt bàn",
@@ -4056,6 +4117,7 @@
         "no_slots": "Đã hết khung giờ trống",
         "restaurant_closed_today": "Nhà hàng đang đóng cửa",
         "restaurant_closed_on_day": "Nhà hàng đóng cửa vào {{day}}",
+        "restaurant_past_hours_on_day": "Nhà hàng đã quá giờ nhận đặt bàn trong ngày {{day}}",
         "closed_overlay_badge": "Nhà Hàng Đang Đóng Cửa",
         "closed_overlay_title": "Hiện không nhận đặt bàn cho ngày này",
         "closed_overlay_description": "Vui lòng chọn ngày khác để tiếp tục đặt bàn.",
@@ -4244,13 +4306,13 @@
       "create_failed": "Tạo link thanh toán thất bại.",
       "paid_desc": "Khoản đặt cọc đã được thanh toán thành công.",
       "unpaid_desc": "Bạn chưa thanh toán đặt cọc. Hãy thanh toán sớm để giữ bàn.",
-      "deadline_cancel_desc": "Reservation đã bị hủy do quá hạn thanh toán cọc.",
+      "deadline_cancel_desc": "Đặt bàn đã bị huỷ",
       "deadline_passed_desc": "Đã quá hạn thanh toán đặt cọc.",
       "deadline": "Hạn thanh toán",
       "open_checkout": "Mở link thanh toán",
-      "badge_paid": "Đã thanh toán",
+      "badge_paid": "Đã xác nhận đặt cọc",
       "badge_unpaid": "Chưa thanh toán",
-      "status_paid": "Đã thanh toán",
+      "status_paid": "Đã xác nhận đặt cọc",
       "status_unpaid": "Chưa thanh toán"
     },
     "order": {
@@ -4570,10 +4632,26 @@
         "description": "Hệ thống hạng thành viên tự động nâng cấp theo chi tiêu. Càng lên hạng cao, ưu đãi càng hấp dẫn.",
         "points_path_title": "Lộ trình tích điểm",
         "tiers": {
-          "bronze": { "name": "Bronze", "discount": "Giảm 3%", "points": "Từ 0 điểm" },
-          "silver": { "name": "Silver", "discount": "Giảm 5%", "points": "Từ 500 điểm" },
-          "gold": { "name": "Gold", "discount": "Giảm 8%", "points": "Từ 1500 điểm" },
-          "platinum": { "name": "Platinum", "discount": "Giảm 12%", "points": "Từ 5000 điểm" }
+          "bronze": {
+            "name": "Bronze",
+            "discount": "Giảm 3%",
+            "points": "Từ 0 điểm"
+          },
+          "silver": {
+            "name": "Silver",
+            "discount": "Giảm 5%",
+            "points": "Từ 500 điểm"
+          },
+          "gold": {
+            "name": "Gold",
+            "discount": "Giảm 8%",
+            "points": "Từ 1500 điểm"
+          },
+          "platinum": {
+            "name": "Platinum",
+            "discount": "Giảm 12%",
+            "points": "Từ 5000 điểm"
+          }
         }
       },
       "section_3": {
@@ -4645,9 +4723,18 @@
         "title_highlight": "thông minh",
         "description": "Hệ thống quản lý nhân viên toàn diện — từ tạo tài khoản, phân quyền, đến xử lý order và thanh toán ngay tại bàn.",
         "staff": {
-          "an": { "name": "Nguyễn Văn An", "role": "Phục vụ" },
-          "bich": { "name": "Trần Thị Bích", "role": "Thu ngân" },
-          "duc": { "name": "Lê Minh Đức", "role": "Phục vụ" }
+          "an": {
+            "name": "Nguyễn Văn An",
+            "role": "Phục vụ"
+          },
+          "bich": {
+            "name": "Trần Thị Bích",
+            "role": "Thu ngân"
+          },
+          "duc": {
+            "name": "Lê Minh Đức",
+            "role": "Phục vụ"
+          }
         }
       },
       "section_1": {

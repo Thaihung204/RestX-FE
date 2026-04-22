@@ -20,7 +20,6 @@ interface ComboDetailFormItem {
   quantity: string;
 }
 
-const DEFAULT_AI_VARIANTS = 4;
 const MAX_AI_PROMPT_LENGTH = 500;
 const MAX_COMBO_NAME_LENGTH = 255;
 const MAX_COMBO_DESCRIPTION_LENGTH = 2000;
@@ -299,32 +298,49 @@ export default function ComboFormPage() {
   };
 
   const handleGenerateDescription = async () => {
-    if (isNewCombo) {
+    const normalizedComboName = formData.name.trim();
+    if (!normalizedComboName) {
       message.warning(
-        t("dashboard.menu.combo.ai_content.requires_existing_item", {
-          defaultValue: "Please save this combo first so AI can use its detail ID.",
+        t("dashboard.menu.ai_content.name_required", {
+          defaultValue: "Please enter combo name before generating AI content.",
         }),
       );
       return;
     }
 
-    const promptText = aiPrompt.trim().slice(0, MAX_AI_PROMPT_LENGTH);
-    const contextParts = [
-      formData.name.trim() ? `Name: ${formData.name.trim()}` : "",
-      promptText ? `Prompt: ${promptText}` : "",
-    ].filter(Boolean);
+    const dishNameMap = new Map(
+      dishes.map((dish) => [dish.id, dish.name?.trim() || ""]),
+    );
+    const comboDishes = details
+      .map((detail) => {
+        const normalizedDishId = detail.dishId.trim();
+        const resolvedDishName = dishNameMap.get(normalizedDishId) || normalizedDishId;
+        const quantity = Math.floor(Number(detail.quantity || "0"));
+
+        if (!resolvedDishName || !Number.isFinite(quantity) || quantity <= 0) {
+          return null;
+        }
+
+        return `${quantity} ${resolvedDishName}`;
+      })
+      .filter((item): item is string => Boolean(item));
+
+    if (comboDishes.length === 0) {
+      message.warning(
+        t("dashboard.menu.combo.errors.details_required", {
+          defaultValue: "Please select at least one valid dish before generating AI content.",
+        }),
+      );
+      return;
+    }
 
     try {
       setAiGenerating(true);
       setAiSuggestions([]);
 
       const response = await aiService.generateContent({
-        dishId: null,
-        comboId: id,
-        promotionId: null,
-        variants: DEFAULT_AI_VARIANTS,
-        tone: "friendly",
-        customContext: contextParts.join("\n") || undefined,
+        comboName: normalizedComboName,
+        comboDishes,
       });
 
       const variants = (response?.variants || []).filter(
@@ -669,7 +685,7 @@ export default function ComboFormPage() {
                       setAiPrompt(e.target.value.slice(0, MAX_AI_PROMPT_LENGTH))
                     }
                     maxLength={MAX_AI_PROMPT_LENGTH}
-                    disabled={isNewCombo || aiGenerating}
+                    disabled={aiGenerating}
                     className="md:col-span-2 w-full px-3 py-2.5 rounded-lg outline-none"
                     style={{
                       background: "var(--surface)",
@@ -681,7 +697,7 @@ export default function ComboFormPage() {
                   <button
                     type="button"
                     onClick={handleGenerateDescription}
-                    disabled={isNewCombo || aiGenerating}
+                    disabled={aiGenerating}
                     className="px-4 py-2.5 rounded-lg font-medium transition-opacity disabled:opacity-60"
                     style={{
                       background: "var(--primary)",
@@ -697,14 +713,6 @@ export default function ComboFormPage() {
                         })}
                   </button>
                 </div>
-
-                {isNewCombo && (
-                  <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>
-                    {t("dashboard.menu.combo.ai_content.requires_existing_item", {
-                      defaultValue: "Please save this combo first so AI can use its detail ID.",
-                    })}
-                  </p>
-                )}
 
                 <textarea
                   value={formData.description}
