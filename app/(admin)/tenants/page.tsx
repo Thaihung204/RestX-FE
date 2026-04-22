@@ -70,7 +70,7 @@ const TenantPage: React.FC = () => {
   const [tenants, setTenants] = useState<ITenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [deactivateModal, setDeactivateModal] = useState<{ visible: boolean; tenant: ITenant | null }>({ visible: false, tenant: null });
 
   const { activeTab, setActiveTab, setTabItems } = useTenantLayout();
@@ -167,10 +167,10 @@ const TenantPage: React.FC = () => {
   };
 
   const doToggleStatus = async (record: ITenant, activate: boolean) => {
-    if (togglingId) return;
-    setTogglingId(record.id);
+    if (togglingIds.has(record.id)) return;
+    setTogglingIds((prev) => new Set(prev).add(record.id));
     try {
-      await tenantService.changeStatus(record.id, activate);
+      await tenantService.upsertTenant({ id: record.id, name: record.name, businessName: record.businessName, status: activate } as any);
       setTenants((prev) =>
         prev.map((t) =>
           t.id === record.id ? { ...t, status: activate ? "active" : "inactive" } : t
@@ -182,9 +182,13 @@ const TenantPage: React.FC = () => {
           : t("tenants.toasts.deactivate_success")
       );
     } catch {
-      message.error(t("tenants.toasts.save_error_message"));
+      message.error(t("tenants.toasts.toggle_error"));
     } finally {
-      setTogglingId(null);
+      setTogglingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(record.id);
+        return next;
+      });
     }
   };
 
@@ -295,7 +299,7 @@ const TenantPage: React.FC = () => {
         <div className="tenant-status-toggle">
           <Switch
             checked={record.status === "active"}
-            loading={togglingId === record.id}
+            loading={togglingIds.has(record.id)}
             onChange={() => handleToggleStatus(record)}
             size="small"
           />
@@ -442,8 +446,8 @@ const TenantPage: React.FC = () => {
       {/* Deactivate Confirm Modal */}
       <Modal
         centered
-        maskClosable={!togglingId}
-        keyboard={!togglingId}
+        maskClosable={!deactivateModal.tenant || !togglingIds.has(deactivateModal.tenant.id)}
+        keyboard={!deactivateModal.tenant || !togglingIds.has(deactivateModal.tenant.id)}
         title={
           <div className="flex items-center gap-3">
             <ExclamationCircleOutlined className="text-orange-500 text-2xl" />
@@ -462,7 +466,7 @@ const TenantPage: React.FC = () => {
             key="confirm"
             type="primary"
             danger
-            loading={!!togglingId}
+            loading={deactivateModal.tenant ? togglingIds.has(deactivateModal.tenant.id) : false}
             onClick={handleDeactivateConfirm}
             size="large"
             icon={<DeleteOutlined />}>
