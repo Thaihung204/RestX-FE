@@ -11,7 +11,7 @@ import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
 import { TableData } from '@/app/admin/tables/components/DraggableTable';
 import TablePreview3DModal from './TablePreview3DModal';
 
-import { DatePicker } from 'antd';
+import { DatePicker, message } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -1119,7 +1119,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         }
     };
 
-    const handleSearchSubmit = (e: React.FormEvent) => {
+    const handleSearchSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (isBookingDayClosed || isBookingPastHoursToday) {
@@ -1140,8 +1140,34 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
         }
 
+        try {
+            const reservationDateTime = `${nextDate}T${nextTime}:00`;
+            await reservationService.checkTime({ reservationDateTime });
+        } catch (error: any) {
+            console.error("Check time failed:", error);
+            const beMessage = error?.response?.data?.message || error?.message;
+            message.error(beMessage || t('landing.booking.confirm.error_generic', { defaultValue: 'An error occurred' }));
+            return;
+        }
+
         getSmartRecommendation(Number(booking.guests) || 1, nextTime);
         setStep(ReservationStep.TABLE_SELECTION);
+    };
+
+    const handleConfirmTableSelection = async () => {
+        try {
+            const reservationDateTime = `${booking.date}T${booking.time}:00`;
+            await reservationService.checkTables({
+                tableIds: selectedTables.map(t => t.id),
+                reservationDateTime,
+                numberOfGuests: booking.guests
+            });
+            setStep(ReservationStep.CONFIRMATION);
+        } catch (error: any) {
+            console.error("Check tables failed:", error);
+            const beMessage = error?.response?.data?.message || error?.message;
+            message.error(beMessage || t('landing.booking.confirm.error_generic', { defaultValue: 'An error occurred' }));
+        }
     };
 
 
@@ -1659,7 +1685,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                                         <button
                                             disabled={selectedTables.length === 0}
-                                            onClick={() => setStep(ReservationStep.CONFIRMATION)}
+                                            onClick={handleConfirmTableSelection}
                                             className={`
                     w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all transform hover:-translate-y-1 active:translate-y-0
                     ${selectedTables.length > 0 ? 'bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] shadow-[0_4px_14px_0_var(--primary-glow)]' : 'bg-[var(--surface-subtle)] text-[var(--text-muted)] cursor-not-allowed'}
@@ -1695,7 +1721,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                 )}
                                                 <button
                                                     disabled={selectedTables.length === 0}
-                                                    onClick={() => setStep(ReservationStep.CONFIRMATION)}
+                                                    onClick={handleConfirmTableSelection}
                                                     className="flex-1 sm:flex-none px-5 py-2.5 bg-[var(--primary)] text-[var(--on-primary)] rounded-xl font-bold text-sm disabled:opacity-50"
                                                 >
                                                     {t('landing.booking.table_map.mobile_confirm')}
@@ -1901,8 +1927,28 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                 {step === ReservationStep.SUCCESS && typeof document !== 'undefined' && createPortal(
                     <div className="reservation-table-overlay reservation-flow-overlay" role="dialog" aria-modal="true" aria-label={t('landing.booking.success.title')}>
-                        <div className="reservation-flow-overlay-panel reservation-success-overlay-panel fade-in">
+                        <div
+                            className="reservation-flow-overlay-backdrop absolute inset-0 transition-opacity"
+                            onClick={() => {
+                                setStep(ReservationStep.SEARCH);
+                                setBooking(prev => ({ ...prev, time: '' }));
+                                setSelectedTables([]);
+                            }}
+                        />
+                        <div className="reservation-flow-overlay-panel reservation-success-overlay-panel fade-in relative pointer-events-auto">
                             <div className="reservation-success-shell max-w-lg w-full text-center bg-[var(--card)] rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                                {/* Close Button */}
+                                <button
+                                    onClick={() => {
+                                        setStep(ReservationStep.SEARCH);
+                                        setBooking(prev => ({ ...prev, time: '' }));
+                                        setSelectedTables([]);
+                                    }}
+                                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--surface)] hover:bg-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors z-10"
+                                >
+                                    <span className="material-symbols-outlined text-lg">close</span>
+                                </button>
+
                                 {/* Green top accent */}
                                 <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--success)]" />
 

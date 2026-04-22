@@ -287,6 +287,7 @@ export default function VnAddressSelect({
           <Form.Item label={resolvedCityLabel} rules={cityRules}>
             <Select
               showSearch
+              size="large"
               loading={loadingProvinces}
               placeholder={resolvedCityPlaceholder}
               value={provinceValue}
@@ -300,6 +301,7 @@ export default function VnAddressSelect({
           <Form.Item label={resolvedWardLabel} rules={wardRules}>
             <Select
               showSearch
+              size="large"
               loading={loadingWards}
               placeholder={resolvedWardPlaceholder}
               value={wardValue}

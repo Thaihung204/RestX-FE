@@ -90,10 +90,10 @@
         "checked_in_at": "Check-in lúc:"
       },
       "messages": {
-        "checkin_success": "Check-in thanh cong",
-        "checkin_failed": "Khong the check-in reservation",
-        "already_checked_in": "Reservation nay da check-in roi",
-        "checked_in_at": "Da check-in luc"
+        "checkin_success": "Check-in thành công",
+        "checkin_failed": "Không thể check-in đặt bàn",
+        "already_checked_in": "Đặt bàn này đã check-in rồi",
+        "checked_in_at": "Đã check-in lúc"
       }
     },
     "order_detail": {
@@ -3839,6 +3839,10 @@
       }
     },
     "edit": {
+      "custom_domain_notice": {
+        "title": "Tên miền tùy chỉnh",
+        "description": "Bạn cần mua tên miền từ nhà cung cấp khác nếu muốn sử dụng tên miền tùy chỉnh (ví dụ: myrestaurant.com)."
+      },
       "breadcrumb_edit": "Chỉnh sửa",
       "title": "Chỉnh sửa nhà hàng",
       "subtitle": "Cập nhật thông tin nhà hàng trong hệ thống Nền tảng Nhà hàng.",

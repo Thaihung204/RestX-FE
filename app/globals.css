@@ -5908,7 +5908,8 @@ html.reservation-overlay-open header {
 }
 
 .tc-input,
-.tc-form .ant-input-affix-wrapper {
+.tc-form .ant-input-affix-wrapper,
+.tc-form .ant-select-selector {
   border-radius: 0.75rem !important;
   background: color-mix(in srgb, var(--bg-base), var(--card) 30%) !important;
   border: 1px solid color-mix(in srgb, var(--text), transparent 84%) !important;
@@ -5921,7 +5922,10 @@ html.reservation-overlay-open header {
 .tc-form .ant-input-affix-wrapper:focus,
 .tc-form .ant-input-affix-wrapper-focused,
 .tc-form .ant-input-affix-wrapper:hover,
-.tc-input:hover {
+.tc-input:hover,
+.tc-form .ant-select:hover .ant-select-selector,
+.tc-form .ant-select-focused .ant-select-selector,
+.tc-form .ant-select-open .ant-select-selector {
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 85%) !important;
 }
@@ -5944,7 +5948,7 @@ html.reservation-overlay-open header {
 .tc-url-bar {
   display: flex;
   align-items: center;
-  border: 1px solid transparent;
+  border: 1px solid color-mix(in srgb, var(--text), transparent 84%);
   border-radius: 0.75rem;
   height: 2.5rem;
   overflow: hidden;
@@ -5994,6 +5998,10 @@ html.reservation-overlay-open header {
   background: color-mix(in srgb, var(--bg-base), var(--card) 30%) !important;
   border: 1px solid color-mix(in srgb, var(--text), transparent 84%) !important;
   transition: all 0.25s !important;
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .tc-form .ant-select-focused .ant-select-selector,
@@ -6008,9 +6016,12 @@ html.reservation-overlay-open header {
   background: color-mix(in srgb, var(--bg-base), var(--card) 30%) !important;
   border: 1px solid color-mix(in srgb, var(--text), transparent 84%) !important;
   transition: all 0.25s !important;
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
 }
 
-.tc-form .ant-select-selection-item {
+.tc-form .ant-select-selection-item,
+.tc-form .ant-select-selection-search-input {
   color: var(--text) !important;
 }
 
@@ -6023,6 +6034,22 @@ html.reservation-overlay-open header {
 .tc-form .ant-input:hover {
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 85%) !important;
+}
+
+/* AutoComplete (VnStreetAutocomplete) — same look as other inputs */
+.tc-form .ant-select-auto-complete .ant-select-selector {
+  padding: 0 0.75rem !important;
+}
+
+.tc-form .ant-select-auto-complete .ant-select-selector .ant-select-selection-search {
+  inset-inline-start: 0.75rem !important;
+  inset-inline-end: 0.75rem !important;
+}
+
+.tc-form .ant-select-auto-complete .ant-select-selector .ant-select-selection-search-input {
+  height: 2.5rem !important;
+  font-size: 0.875rem !important;
+  background: transparent !important;
 }
 
 /* Keep url-bar input borderless */

@@ -9,38 +9,10 @@ import reservationService, {
 } from "@/lib/services/reservationService";
 import { tenantService } from "@/lib/services/tenantService";
 import { HubConnectionState } from "@microsoft/signalr";
-import { Select } from "antd";
+import { Select, message } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatVND } from "@/lib/utils/currency";
-
-// ─── Status actions (keys mapped to i18n) ────────────────────────────────────
-const STATUS_ACTIONS_KEYS: Record<
-    string,
-    { actionKey: string; nextStatusId: number; color: string }[]
-> = {
-    PENDING: [
-        { actionKey: "confirm", nextStatusId: 2, color: "var(--primary)" },
-        { actionKey: "cancel", nextStatusId: 5, color: "#ef4444" },
-    ],
-    CONFIRMED: [
-        { actionKey: "complete", nextStatusId: 4, color: "#22c55e" },
-        { actionKey: "cancel", nextStatusId: 5, color: "#ef4444" },
-    ],
-    CHECKED_IN: [
-        { actionKey: "complete", nextStatusId: 4, color: "#22c55e" },
-    ],
-    COMPLETED: [],
-    CANCELLED: [],
-};
-
-// Map nextStatusId → status code key for side effects lookup
-const STATUS_ID_TO_CODE: Record<number, string> = {
-    2: "CONFIRMED",
-    3: "CHECKED_IN",
-    4: "COMPLETED",
-    5: "CANCELLED",
-};
 
 // ─── Badge component ──────────────────────────────────────────────────────────
 function StatusBadge({ code, name, colorCode }: { code: string; name: string; colorCode: string }) {
@@ -90,18 +62,80 @@ function ReservationDetailModal({
             .catch(console.error)
             .finally(() => setLoading(false));
     }, [reservationId]);
+    const cancelledStatusId = allStatuses.find((s) => s.code === "CANCELLED")?.id;
 
     const handleStatusChange = async (newStatusId: number) => {
         if (!detail || newStatusId === detail.status.id) return;
-        setSelectedStatusId(newStatusId);
+
+        const selectedStatus = allStatuses.find((s) => s.id === newStatusId);
+        if (selectedStatus?.code !== "CANCELLED") {
+            message.warning(
+                t("admin.reservations.messages.update_status_failed", {
+                    defaultValue: "Chỉ hỗ trợ hủy đặt bàn từ danh sách trạng thái",
+                }),
+            );
+            setSelectedStatusId(detail.status.id);
+            return;
+        }
+
+        const confirmed = window.confirm(
+            t("admin.reservations.modal.confirm_action", {
+                action: t("admin.reservations.actions.cancel", { defaultValue: "Hủy" }),
+            }),
+        );
+        if (!confirmed) {
+            setSelectedStatusId(detail.status.id);
+            return;
+        }
+
         setActionLoading(true);
         try {
             await reservationService.updateReservationStatus(reservationId, newStatusId);
+            message.success(
+                t("admin.reservations.messages.status_updated", {
+                    defaultValue: "Đã cập nhật trạng thái",
+                }),
+            );
             onStatusUpdated();
             onClose();
         } catch (e) {
             console.error(e);
+            message.error(
+                t("admin.reservations.messages.update_status_failed", {
+                    defaultValue: "Không thể cập nhật trạng thái đặt bàn",
+                }),
+            );
             setSelectedStatusId(detail.status.id);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const now = new Date();
+    const canCheckIn =
+        detail?.status.code === "CONFIRMED" &&
+        !detail.checkedInAt &&
+        isSameLocalDate(detail.reservationDateTime, now.getFullYear(), now.getMonth(), now.getDate());
+
+    const handleCheckIn = async () => {
+        if (!detail || !canCheckIn) return;
+        setActionLoading(true);
+        try {
+            await reservationService.checkInReservation(detail.confirmationCode);
+            message.success(
+                t("admin.reservations.messages.checkin_success", {
+                    defaultValue: "Check-in thành công",
+                }),
+            );
+            onStatusUpdated();
+            onClose();
+        } catch (e) {
+            console.error(e);
+            message.error(
+                t("admin.reservations.messages.checkin_failed", {
+                    defaultValue: "Không thể check-in đặt bàn",
+                }),
+            );
         } finally {
             setActionLoading(false);
         }
@@ -167,35 +201,55 @@ function ReservationDetailModal({
                                     value={selectedStatusId !== "" ? selectedStatusId : undefined}
                                     disabled={actionLoading || allStatuses.length === 0}
                                     loading={actionLoading}
-                                    onChange={(val) => handleStatusChange(val)}
+                                    onChange={(val: number) => handleStatusChange(val)}
                                     style={{ minWidth: 180 }}
                                     optionLabelProp="label"
-                                    options={allStatuses.filter((s) => s.code !== "CHECKED_IN").map((s) => {
-                                        const color = s.code === "CONFIRMED" ? "#3b82f6" : s.colorCode;
-                                        const label = t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name });
-                                        return {
-                                            value: s.id,
-                                            label: (
-                                                <span style={{ color, fontWeight: 600, fontSize: 13 }}>
-                                                    {label}
-                                                </span>
-                                            ),
-                                            rawLabel: label,
-                                            color,
-                                        };
-                                    })}
-                                    optionRender={(opt) => (
+                                    options={allStatuses
+                                        .filter(
+                                            (s) =>
+                                                s.id === detail.status.id ||
+                                                (s.code === "CANCELLED" && detail.status.code !== "CANCELLED" && !detail.checkedInAt),
+                                        )
+                                        .map((s) => {
+                                            const color = s.code === "CONFIRMED" ? "#3b82f6" : s.colorCode;
+                                            const label = t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name });
+                                            return {
+                                                value: s.id,
+                                                label: (
+                                                    <span style={{ color, fontWeight: 600, fontSize: 13 }}>
+                                                        {label}
+                                                    </span>
+                                                ),
+                                                rawlabel: label,
+                                                color,
+                                            };
+                                        })}
+                                    optionRender={(opt: any) => (
                                         <div className="flex items-center gap-2">
                                             <span
                                                 className="w-2 h-2 rounded-full shrink-0"
                                                 style={{ background: (opt.data as any).color }}
                                             />
                                             <span style={{ color: (opt.data as any).color, fontWeight: 600 }}>
-                                                {(opt.data as any).rawLabel}
+                                                {(opt.data as any).rawlabel}
                                             </span>
                                         </div>
                                     )}
                                 />
+                                {canCheckIn && (
+                                    <button
+                                        type="button"
+                                        onClick={handleCheckIn}
+                                        disabled={actionLoading}
+                                        className="px-3 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+                                        style={{
+                                            background: "var(--primary)",
+                                            color: "#fff",
+                                        }}
+                                    >
+                                        {t("admin.reservations.actions.checkin")}
+                                    </button>
+                                )}
                             </div>
 
                             {/* Info grid */}
@@ -287,21 +341,31 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     );
 }
 
+const isSameLocalDate = (value: string | Date, y: number, m: number, d: number) => {
+    const dt = new Date(value);
+    return dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d;
+};
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ReservationsPage() {
     const { t } = useTranslation();
     const [data, setData] = useState<PaginatedReservations | null>(null);
     const [loading, setLoading] = useState(true);
+    const now = new Date();
+    const todayYear = now.getFullYear();
+    const todayMonth = now.getMonth();
+    const todayDay = now.getDate();
+    const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
     // Filters
     const [search, setSearch] = useState("");
     const [statusId, setStatusId] = useState<number | "">("");
-    const [date, setDate] = useState("");
     const [page, setPage] = useState(1);
 
     // Detail modal
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [tenantId, setTenantId] = useState<string>("");
+    const [checkingInId, setCheckingInId] = useState<string | null>(null);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -311,22 +375,57 @@ export default function ReservationsPage() {
                 pageSize: 10,
                 search: search || undefined,
                 statusId: statusId !== "" ? statusId : undefined,
-                date: date || undefined,
+                date: todayDate,
                 sortBy: "reservationDateTime",
                 sortDescending: false,
             });
-            setData(result);
+            const todayItems = result.items.filter((item) =>
+                isSameLocalDate(item.reservationDateTime, todayYear, todayMonth, todayDay),
+            );
+            setData({
+                ...result,
+                items: todayItems,
+                totalCount: todayItems.length,
+                totalPages: 1,
+                hasNextPage: false,
+                hasPreviousPage: false,
+            });
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
         }
-    }, [page, search, statusId, date]);
+    }, [page, search, statusId, todayDate, todayDay, todayMonth, todayYear]);
 
     const [statuses, setStatuses] = useState<ReservationStatus[]>([]);
+    const [globalStats, setGlobalStats] = useState<{ total: number; byStatus: Record<number, number> }>({ total: 0, byStatus: {} });
+
+    const fetchStats = useCallback(async () => {
+        if (statuses.length === 0) return;
+        try {
+            const baseParams: any = { pageSize: 1, date: todayDate };
+            if (search) baseParams.search = search;
+
+            const resTotal = await reservationService.getReservations(baseParams);
+            const statsMap: Record<number, number> = {};
+
+            const promises = statuses.map((s) =>
+                reservationService.getReservations({ ...baseParams, statusId: s.id })
+                    .then((res) => { statsMap[s.id] = res.totalCount; })
+                    .catch(() => { })
+            );
+            await Promise.all(promises);
+
+            setGlobalStats({ total: resTotal.totalCount, byStatus: statsMap });
+        } catch (e) {
+            console.error(e);
+        }
+    }, [search, todayDate, statuses]);
+
+    useEffect(() => { fetchStats(); }, [fetchStats, data]);
 
     useEffect(() => { fetchData(); }, [fetchData]);
-    useEffect(() => { setPage(1); }, [search, statusId, date]);
+    useEffect(() => { setPage(1); }, [search, statusId]);
     useEffect(() => {
         reservationService.getReservationStatuses()
             .then(setStatuses)
@@ -336,8 +435,30 @@ export default function ReservationsPage() {
     useEffect(() => {
         tenantService.getTenantConfig(window.location.hostname).then((tenant) => {
             if (tenant?.id) setTenantId(tenant.id);
-        }).catch(() => {});
+        }).catch(() => { });
     }, []);
+
+    const handleCheckInReservation = async (reservationId: string, confirmationCode: string) => {
+        setCheckingInId(reservationId);
+        try {
+            await reservationService.checkInReservation(confirmationCode);
+            message.success(
+                t("admin.reservations.messages.checkin_success", {
+                    defaultValue: "Check-in thành công",
+                }),
+            );
+            await fetchData();
+        } catch (e) {
+            console.error(e);
+            message.error(
+                t("admin.reservations.messages.checkin_failed", {
+                    defaultValue: "Không thể check-in đặt bàn",
+                }),
+            );
+        } finally {
+            setCheckingInId(null);
+        }
+    };
 
     useEffect(() => {
         if (!tenantId) return;
@@ -383,13 +504,20 @@ export default function ReservationsPage() {
             isMounted = false;
             if (debounceTimer) clearTimeout(debounceTimer);
             events.forEach((event) => orderSignalRService.off(event, handleReservationChanged));
-            orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => {});
+            orderSignalRService.invoke("LeaveTenantGroup", tenantId).catch(() => { });
         };
     }, [tenantId, fetchData]);
 
-    const pendingCount = data?.items.filter(i => i.status.code === "PENDING").length ?? 0;
-    const confirmedCount = data?.items.filter(i => i.status.code === "CONFIRMED").length ?? 0;
-    const completedCount = data?.items.filter(i => i.status.code === "COMPLETED").length ?? 0;
+    useEffect(() => {
+        const timer = setInterval(() => {
+            if (typeof document !== "undefined" && document.visibilityState === "visible") {
+                fetchData();
+            }
+        }, 5 * 60 * 1000);
+
+        return () => clearInterval(timer);
+    }, [fetchData]);
+
     const totalCount = data?.totalCount ?? 0;
 
     const tableHeaderKeys = ["code", "customer", "table_floor", "date_time", "guests", "status", "actions"] as const;
@@ -420,31 +548,47 @@ export default function ReservationsPage() {
                 </div>
 
                 {/* ── Stats ── */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {[
-                        { labelKey: "total", value: totalCount, color: "var(--primary)", bg: "var(--primary-soft)" },
-                        { labelKey: "pending", value: pendingCount, color: "#FFA500", bg: "rgba(255,165,0,0.1)" },
-                        { labelKey: "confirmed", value: confirmedCount, color: "#3b82f6", bg: "rgba(59,130,246,0.1)" },
-                        { labelKey: "completed", value: completedCount, color: "#22c55e", bg: "rgba(34,197,94,0.1)" },
-                    ].map((stat) => (
-                        <div
-                            key={stat.labelKey}
-                            className="rounded-xl p-4 flex items-center justify-between"
-                            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-                        >
-                            <div>
-                                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                                    {t(`admin.reservations.stats.${stat.labelKey}`)}
-                                </p>
-                                <p className="text-2xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}</p>
-                            </div>
-                            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: stat.bg }}>
-                                <svg className="w-5 h-5" style={{ color: stat.color }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
+                <div className="flex flex-wrap gap-4">
+                    <div
+                        className="flex-1 min-w-[200px] rounded-xl p-4 flex items-center justify-between"
+                        style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+                    >
+                        <div>
+                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                                {t(`admin.reservations.stats.total`, { defaultValue: "Tổng cộng" })}
+                            </p>
+                            <p className="text-2xl font-bold mt-1" style={{ color: "var(--primary)" }}>{globalStats.total}</p>
                         </div>
-                    ))}
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "var(--primary-soft)" }}>
+                            <svg className="w-5 h-5" style={{ color: "var(--primary)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    {statuses.map(s => {
+                        const count = globalStats.byStatus[s.id] || 0;
+                        const finalColor = s.code === "CONFIRMED" ? "#3b82f6" : (s.colorCode || "var(--primary)");
+                        const bg = `${finalColor}18`;
+                        return (
+                            <div
+                                key={s.id}
+                                className="flex-1 min-w-[200px] rounded-xl p-4 flex items-center justify-between"
+                                style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+                            >
+                                <div>
+                                    <p className="text-sm truncate w-[80px] xl:w-[100px]" style={{ color: "var(--text-muted)" }} title={t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name })}>
+                                        {t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name })}
+                                    </p>
+                                    <p className="text-2xl font-bold mt-1" style={{ color: finalColor }}>{count}</p>
+                                </div>
+                                <div className="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center" style={{ background: bg }}>
+                                    <svg className="w-5 h-5" style={{ color: finalColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* ── Filters ── */}
@@ -481,15 +625,17 @@ export default function ReservationsPage() {
 
                     <input
                         type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="px-3 py-2 rounded-lg text-sm outline-none"
-                        style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
+                        value={todayDate}
+                        readOnly
+                        disabled
+                        className="px-3 py-2 rounded-lg text-sm outline-none cursor-not-allowed"
+                        style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-muted)", opacity: 0.8 }}
+                        aria-label={t("admin.reservations.filter.from_date")}
                     />
 
-                    {(search || statusId !== "" || date) && (
+                    {(search || statusId !== "") && (
                         <button
-                            onClick={() => { setSearch(""); setStatusId(""); setDate(""); }}
+                            onClick={() => { setSearch(""); setStatusId(""); }}
                             className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                             style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}
                         >
@@ -623,17 +769,51 @@ export default function ReservationsPage() {
 
 
                                             <td className="px-4 py-3 whitespace-nowrap text-center">
-                                                <button
-                                                    onClick={() => setSelectedId(item.id)}
-                                                    className="p-2 rounded-lg transition-all"
-                                                    style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
-                                                    title={t('admin.reservations.actions.view_detail')}
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                    </svg>
-                                                </button>
+                                                <div className="flex items-center justify-center gap-2">
+                                                    {item.status.code === "CONFIRMED" &&
+                                                        isSameLocalDate(item.reservationDateTime, todayYear, todayMonth, todayDay) &&
+                                                        !item.checkedInAt && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleCheckInReservation(item.id, item.confirmationCode)}
+                                                                disabled={checkingInId === item.id}
+                                                                className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                                                                style={{
+                                                                    background: "var(--primary)",
+                                                                    color: "#fff",
+                                                                }}
+                                                                title={t("admin.reservations.actions.checkin")}
+                                                            >
+                                                                {checkingInId === item.id
+                                                                    ? t("admin.reservations.modal.processing")
+                                                                    : t("admin.reservations.actions.checkin")}
+                                                            </button>
+                                                        )}
+                                                    {item.status.code === "CONFIRMED" && item.checkedInAt && (
+                                                        <span
+                                                            className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap"
+                                                            style={{
+                                                                background: "rgba(34, 197, 94, 0.1)",
+                                                                color: "#22c55e",
+                                                                border: "1px solid rgba(34, 197, 94, 0.2)",
+                                                            }}
+                                                            title={t("admin.reservations.checked_in_at", { defaultValue: "Đã check-in lúc" }) + " " + new Date(item.checkedInAt).toLocaleTimeString()}
+                                                        >
+                                                            {t("admin.reservations.checked_in", { defaultValue: "Đã check-in" })}
+                                                        </span>
+                                                    )}
+                                                    <button
+                                                        onClick={() => setSelectedId(item.id)}
+                                                        className="p-2 rounded-lg transition-all"
+                                                        style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
+                                                        title={t('admin.reservations.actions.view_detail')}
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -710,14 +890,40 @@ export default function ReservationsPage() {
                                         </div>
 
                                         {/* Actions */}
-                                        <button
-                                            onClick={() => setSelectedId(item.id)}
-                                            className="w-full py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all"
-                                            style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                            {t('admin.reservations.actions.view_detail')}
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            {item.status.code === "CONFIRMED" &&
+                                                isSameLocalDate(item.reservationDateTime, todayYear, todayMonth, todayDay) &&
+                                                !item.checkedInAt && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleCheckInReservation(item.id, item.confirmationCode)}
+                                                        disabled={checkingInId === item.id}
+                                                        className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+                                                        style={{ background: "var(--primary)", color: "#fff" }}
+                                                    >
+                                                        {checkingInId === item.id
+                                                            ? t("admin.reservations.modal.processing")
+                                                            : t("admin.reservations.actions.checkin")}
+                                                    </button>
+                                                )}
+                                            {item.status.code === "CONFIRMED" && item.checkedInAt && (
+                                                <span
+                                                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center text-center"
+                                                    style={{ background: "rgba(34, 197, 94, 0.1)", color: "#22c55e", border: "1px solid rgba(34, 197, 94, 0.2)" }}
+                                                    title={t("admin.reservations.checked_in_at", { defaultValue: "Đã check-in lúc" }) + " " + new Date(item.checkedInAt).toLocaleTimeString()}
+                                                >
+                                                    {t("admin.reservations.checked_in", { defaultValue: "Đã check-in" })}
+                                                </span>
+                                            )}
+                                            <button
+                                                onClick={() => setSelectedId(item.id)}
+                                                className="flex-1 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all"
+                                                style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                {t('admin.reservations.actions.view_detail')}
+                                            </button>
+                                        </div>
                                     </div>
                                 ))
                             )}

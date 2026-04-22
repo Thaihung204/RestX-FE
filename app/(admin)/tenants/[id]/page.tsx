@@ -15,6 +15,7 @@ import {
 } from "@ant-design/icons";
 import type { FormProps, UploadFile } from "antd";
 import {
+  Alert,
   App,
   Button,
   ColorPicker,
@@ -455,10 +456,19 @@ const TenantEditPage: React.FC = () => {
             label={<span className={labelStyle}>{t("tenants.create.fields.host_name")}</span>}
             name="hostname"
             extra={<span className="td-field-extra">{t("tenants.create.fields.hostname_disabled_text")}</span>}>
-            <div className="td-url-bar">
-              <span className="td-url-segment">https://</span>
-              <Input disabled value={formData.hostname || ""} />
-              <span className="td-url-segment">.restx.food</span>
+            <div className="flex flex-col gap-3">
+              <div className="td-url-bar">
+                <span className="td-url-segment">https://</span>
+                <Input disabled value={formData.hostname || ""} />
+                <span className="td-url-segment">.restx.food</span>
+              </div>
+              <Alert
+                message={t("tenants.edit.custom_domain_notice.title")}
+                description={t("tenants.edit.custom_domain_notice.description")}
+                type="info"
+                showIcon
+                className="bg-sky-500/10 border-sky-500/20 [&_.ant-alert-message]:text-sky-600 dark:[&_.ant-alert-message]:text-sky-400 [&_.ant-alert-description]:text-slate-600 dark:[&_.ant-alert-description]:text-slate-300 [&_.ant-alert-icon]:text-sky-600 dark:[&_.ant-alert-icon]:text-sky-400"
+              />
             </div>
           </Form.Item>
           <Form.Item

@@ -10,9 +10,10 @@ import {
   MailOutlined,
   PhoneOutlined,
   ShopOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
 import type { FormProps } from "antd";
-import { App, Button, Form, Input } from "antd";
+import { Alert, App, Button, Checkbox, Form, Input } from "antd";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,6 +26,7 @@ const TenantCreatePage: React.FC = () => {
   const { message } = App.useApp();
   const [form] = Form.useForm<TenantCreateInput>();
   const [hostNameValue, setHostNameValue] = useState("");
+  const [isCustomDomain, setIsCustomDomain] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ const TenantCreatePage: React.FC = () => {
     if (loading) return;
     setLoading(true);
     try {
-      await tenantService.createTenant(values);
+      await tenantService.createTenant({ ...values, isCustomDomain });
       message.success(t("tenants.toasts.create_success_message"));
       router.push("/tenants");
     } catch (error: any) {
@@ -72,9 +74,11 @@ const TenantCreatePage: React.FC = () => {
       return Promise.resolve();
     }
 
-    if (!/^[a-z0-9-]+$/.test(value)) {
+    const regex = isCustomDomain ? /^[a-z0-9-\.]+$/ : /^[a-z0-9-]+$/;
+
+    if (!regex.test(value)) {
       return Promise.reject(
-        new Error(t("tenants.create.validation.slug_invalid")),
+        new Error(isCustomDomain ? t("tenants.create.validation.domain_invalid", "Tên miền không hợp lệ") : t("tenants.create.validation.slug_invalid")),
       );
     }
     return Promise.resolve();
@@ -149,26 +153,65 @@ const TenantCreatePage: React.FC = () => {
                 name="hostName"
                 rules={[{ validator: validateSlug }]}
                 extra={
-                  <span className="tc-field-hint">
-                    {`${t("tenants.create.fields.access_url")} hostname.restx.food`}
-                  </span>
+                  <div className="flex flex-col gap-2 mt-2">
+                    <Checkbox
+                      checked={isCustomDomain}
+                      onChange={(e) => {
+                        setIsCustomDomain(e.target.checked);
+                        form.validateFields(['hostName']);
+                      }}
+                    >
+                      {t("tenants.create.fields.allow_custom_domain", "Sử dụng tên miền riêng")}
+                    </Checkbox>
+                    {!isCustomDomain && (
+                      <span className="tc-field-hint">
+                        {t("tenants.create.fields.access_url")} hostname.restx.food
+                      </span>
+                    )}
+                    {isCustomDomain && (
+                      <Alert
+                        message={t("tenants.edit.custom_domain_notice.title")}
+                        description={t("tenants.edit.custom_domain_notice.description")}
+                        type="info"
+                        showIcon
+                        className="bg-sky-500/10 border-sky-500/20 [&_.ant-alert-message]:text-sky-600 dark:[&_.ant-alert-message]:text-sky-400 [&_.ant-alert-description]:text-slate-600 dark:[&_.ant-alert-description]:text-slate-300 [&_.ant-alert-icon]:text-sky-600 dark:[&_.ant-alert-icon]:text-sky-400 mt-2"
+                      />
+                    )}
+                  </div>
                 }>
-                <div className="tc-url-bar">
-                  <span className="tc-url-scheme">https://</span>
+                {isCustomDomain ? (
                   <Input
+                    prefix={<GlobalOutlined className="tc-input-icon" />}
                     value={hostNameValue}
                     onChange={(e) => {
                       const value = e.target.value
                         .toLowerCase()
                         .replace(/\s+/g, "-")
-                        .replace(/[^a-z0-9-]/g, "");
+                        .replace(/[^a-z0-9-\.]/g, "");
                       form.setFieldValue("hostName", value);
                       setHostNameValue(value);
                     }}
-                    className="tc-url-input"
+                    className="tc-input"
+                    size="large"
                   />
-                  <span className="tc-url-suffix">.restx.food</span>
-                </div>
+                ) : (
+                  <div className="tc-url-bar">
+                    <span className="tc-url-scheme">https://</span>
+                    <Input
+                      value={hostNameValue}
+                      onChange={(e) => {
+                        const value = e.target.value
+                          .toLowerCase()
+                          .replace(/\s+/g, "-")
+                          .replace(/[^a-z0-9-]/g, "");
+                        form.setFieldValue("hostName", value);
+                        setHostNameValue(value);
+                      }}
+                      className="tc-url-input"
+                    />
+                    <span className="tc-url-suffix">.restx.food</span>
+                  </div>
+                )}
               </Form.Item>
 
               <div className="tc-grid-2">

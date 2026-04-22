@@ -3794,6 +3794,10 @@
       }
     },
     "edit": {
+      "custom_domain_notice": {
+        "title": "Custom Domain",
+        "description": "If you wish to use a custom domain (e.g., myrestaurant.com), you must purchase it from a third-party provider and configure your DNS to point to our system."
+      },
       "breadcrumb_edit": "Edit",
       "title": "Edit Restaurant",
       "subtitle": "Update tenant (restaurant) information in the Restaurant Platform system.",
