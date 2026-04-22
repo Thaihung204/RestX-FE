@@ -19,9 +19,8 @@ export default function AIStrategySummaryCard({
     <div
       className="rounded-2xl p-6 shadow-lg"
       style={{
-        background:
-          "linear-gradient(135deg, rgba(255,56,11,0.12) 0%, rgba(255,56,11,0.04) 100%), var(--card)",
-        border: "1px solid var(--primary-border)",
+        background: "var(--card)",
+        border: "1px solid var(--border)",
       }}>
       <div className="flex items-start gap-4">
         <div
