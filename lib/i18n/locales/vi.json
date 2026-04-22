@@ -2513,7 +2513,8 @@
       },
       "labels": {
         "action": "Hành động:",
-        "time": "Thời gian:"
+        "time": "Thời gian:",
+        "evidence": "Dẫn chứng"
       },
       "summary": {
         "title": "Tóm tắt chiến lược",

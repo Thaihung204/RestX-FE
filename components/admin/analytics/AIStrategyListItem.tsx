@@ -10,6 +10,7 @@ interface AIStrategyListItemProps {
   impact: "high" | "medium" | "low";
   type?: string;
   variant?: "risk" | "opportunity" | "action" | "default";
+  evidence?: string;
 }
 
 import { useTranslation } from "react-i18next";
@@ -23,6 +24,7 @@ export default function AIStrategyListItem({
   impact,
   type,
   variant = "default",
+  evidence,
 }: AIStrategyListItemProps) {
   const { t } = useTranslation("common");
 
@@ -113,7 +115,33 @@ export default function AIStrategyListItem({
         </p>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-3">
+        {evidence && (
+          <div className="flex items-start gap-2">
+            <svg
+              className="w-4 h-4 mt-0.5 flex-shrink-0"
+              style={{ color: "var(--text-muted)" }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+            <div>
+              <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+                {t('dashboard.analytics.labels.evidence')}
+              </p>
+              <p className="text-sm font-bold" style={{ color: "var(--text)" }}>
+                {evidence}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-start gap-2">
           <svg
             className="w-4 h-4 mt-0.5 flex-shrink-0"
@@ -132,7 +160,7 @@ export default function AIStrategyListItem({
             <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
               {t('dashboard.analytics.labels.action')}
             </p>
-            <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+            <p className="text-sm font-bold" style={{ color: "var(--text)" }}>
               {action}
             </p>
           </div>
