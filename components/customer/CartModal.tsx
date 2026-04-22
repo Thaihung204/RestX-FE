@@ -1,16 +1,17 @@
 "use client";
 
 import { useCart } from "@/lib/contexts/CartContext";
+import { formatVND } from "@/lib/utils/currency";
 import {
-    CloseOutlined,
-    MinusOutlined,
-    PlusOutlined,
-    ShoppingCartOutlined,
+  CloseOutlined,
+  MinusOutlined,
+  PlusOutlined,
+  ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { Button, Card, Modal, Tabs, Tag, Typography } from "antd";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatVND } from "@/lib/utils/currency";
+import FeedbackModal from "./FeedbackModal";
 
 const { Text } = Typography;
 
@@ -30,6 +31,18 @@ export default function CartModal() {
     closeCartModal,
     setActiveCartTab,
   } = useCart();
+
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  const handleRequestPayment = () => {
+    closeCartModal();
+    setFeedbackOpen(true);
+  };
+
+  const handleFeedbackSubmit = (rating: number, feedback: string) => {
+    setFeedbackOpen(false);
+    requestPayment();
+  };
 
   const orderedItemsByStatus = useMemo(() => {
     const grouped = new Map<string, typeof orderedItems>();
@@ -52,8 +65,10 @@ export default function CartModal() {
   };
 
   return (
+    <>
     <Modal
       open={cartModalOpen}
+      zIndex={2600}
       onCancel={closeCartModal}
       footer={null}
       closeIcon={null}
@@ -274,7 +289,9 @@ export default function CartModal() {
                                     fontSize: 14,
                                     fontWeight: 600,
                                   }}>
-                                  {formatVND(parseFloat(item.price) * item.quantity)}
+                                  {formatVND(
+                                    parseFloat(item.price) * item.quantity,
+                                  )}
                                 </Text>
                               </div>
 
@@ -502,7 +519,10 @@ export default function CartModal() {
                                             fontSize: 14,
                                             fontWeight: 600,
                                           }}>
-                                          {formatVND(parseFloat(item.price) * item.quantity)}
+                                          {formatVND(
+                                            parseFloat(item.price) *
+                                              item.quantity,
+                                          )}
                                         </Text>
                                       </div>
                                     </div>
@@ -553,7 +573,7 @@ export default function CartModal() {
                         block
                         type="primary"
                         size="large"
-                        onClick={requestPayment}
+                        onClick={handleRequestPayment}
                         style={{
                           background: "var(--primary)",
                           border: "none",
@@ -578,5 +598,11 @@ export default function CartModal() {
         />
       </div>
     </Modal>
+    <FeedbackModal
+      open={feedbackOpen}
+      onClose={() => setFeedbackOpen(false)}
+      onSubmit={handleFeedbackSubmit}
+    />
+    </>
   );
 }

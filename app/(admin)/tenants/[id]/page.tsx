@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import StatusToggle from "@/components/ui/StatusToggle";
 import VnAddressSelect from "@/components/ui/VnAddressSelect";
@@ -86,6 +86,7 @@ const TenantEditPage: React.FC = () => {
   const [confirmInput, setConfirmInput] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [tenantStatus, setTenantStatus] = useState<boolean>(true);
+  const [deactivateModalVisible, setDeactivateModalVisible] = useState(false);
   const [logoFileList, setLogoFileList] = useState<UploadFile[]>([]);
   const [faviconFileList, setFaviconFileList] = useState<UploadFile[]>([]);
   const [backgroundFileList, setBackgroundFileList] = useState<UploadFile[]>([]);
@@ -389,6 +390,14 @@ const TenantEditPage: React.FC = () => {
     setConfirmInput("");
   };
 
+  const handleStatusToggle = () => {
+    if (tenantStatus) {
+      setDeactivateModalVisible(true);
+    } else {
+      setTenantStatus(true);
+    }
+  };
+
   const TABS: { key: DetailTab; label: string }[] = [
     { key: "general", label: t("tenants.detail_tabs.general") },
     { key: "branding", label: t("tenants.detail_tabs.branding") },
@@ -398,7 +407,7 @@ const TenantEditPage: React.FC = () => {
 
   const labelStyle = "td-field-label";
 
-  /* ───── TAB: General Info ───── */
+  /* ΓöÇΓöÇΓöÇΓöÇΓöÇ TAB: General Info ΓöÇΓöÇΓöÇΓöÇΓöÇ */
   const renderGeneralTab = () => (
     <div className="td-tab-content">
       {/* Hero Pulse Card */}
@@ -412,7 +421,7 @@ const TenantEditPage: React.FC = () => {
           <div className="td-hero-badge">
             <StatusToggle
               checked={tenantStatus}
-              onChange={() => setTenantStatus((prev) => !prev)}
+              onChange={handleStatusToggle}
               ariaLabel={t("tenants.edit.fields.status")}
             />
             <span className="td-hero-badge-text">
@@ -544,7 +553,7 @@ const TenantEditPage: React.FC = () => {
     </div>
   );
 
-  /* ───── TAB: Branding & Theme ───── */
+  /* ΓöÇΓöÇΓöÇΓöÇΓöÇ TAB: Branding & Theme ΓöÇΓöÇΓöÇΓöÇΓöÇ */
   const renderBrandingTab = () => (
     <div className="td-tab-content">
       <div className="td-glass-card">
@@ -670,7 +679,7 @@ const TenantEditPage: React.FC = () => {
     </div>
   );
 
-  /* ───── TAB: Payment Settings ───── */
+  /* ΓöÇΓöÇΓöÇΓöÇΓöÇ TAB: Payment Settings ΓöÇΓöÇΓöÇΓöÇΓöÇ */
   const renderPaymentTab = () => (
     <div className="td-tab-content">
       <div className="td-glass-card">
@@ -699,7 +708,7 @@ const TenantEditPage: React.FC = () => {
     </div>
   );
 
-  /* ───── TAB: System Info ───── */
+  /* ΓöÇΓöÇΓöÇΓöÇΓöÇ TAB: System Info ΓöÇΓöÇΓöÇΓöÇΓöÇ */
   const renderSystemTab = () => (
     <div className="td-tab-content">
       <div className="td-glass-card">
@@ -742,7 +751,7 @@ const TenantEditPage: React.FC = () => {
   return (
     <>
       <main className="td-page">
-        {/* ───── STICKY HEADER BAR ───── */}
+        {/* ΓöÇΓöÇΓöÇΓöÇΓöÇ STICKY HEADER BAR ΓöÇΓöÇΓöÇΓöÇΓöÇ */}
         <header className="td-topbar">
           <div className="td-topbar-left">
             <button className="td-back-btn" onClick={handleCancel}>
@@ -781,7 +790,7 @@ const TenantEditPage: React.FC = () => {
           <div className="td-topbar-glow" />
         </header>
 
-        {/* ───── PAGE CANVAS ───── */}
+        {/* ΓöÇΓöÇΓöÇΓöÇΓöÇ PAGE CANVAS ΓöÇΓöÇΓöÇΓöÇΓöÇ */}
         <div className="td-canvas">
           {/* Tabs */}
           <div className="td-tabs">
@@ -884,6 +893,50 @@ const TenantEditPage: React.FC = () => {
           {confirmInput === formData.name && (
             <p className="text-sm text-green-500 mt-1">{t("tenants.edit.delete_modal.name_match")}</p>
           )}
+        </div>
+      </Modal>
+
+      {/* Deactivate Confirmation Modal */}
+      <Modal
+        getContainer={() => document.body}
+        centered
+        title={
+          <div className="flex items-center gap-3">
+            <ExclamationCircleOutlined className="text-orange-500 text-2xl" />
+            <span className="text-lg font-semibold">{t("tenants.deactivate_modal.title")}</span>
+          </div>
+        }
+        open={deactivateModalVisible}
+        onCancel={() => setDeactivateModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setDeactivateModalVisible(false)} size="large">
+            {t("tenants.edit.delete_modal.button_cancel")}
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger
+            onClick={() => {
+              setTenantStatus(false);
+              setDeactivateModalVisible(false);
+            }}
+            size="large">
+            {t("tenants.deactivate_modal.button_confirm")}
+          </Button>,
+        ]}
+        width={480}
+        styles={{
+          mask: { backdropFilter: "blur(10px)", background: "var(--modal-overlay)" },
+        }}>
+        <div className="py-4 space-y-4">
+          <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900 rounded-lg p-4">
+            <p className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-1">
+              {t("tenants.deactivate_modal.warning_title")}
+            </p>
+            <p className="text-sm text-orange-700 dark:text-orange-300">
+              {t("tenants.deactivate_modal.warning_description")}
+            </p>
+          </div>
         </div>
       </Modal>
     </>

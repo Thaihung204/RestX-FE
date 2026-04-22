@@ -412,12 +412,10 @@ export default function MenuItemFormPage() {
               <h2
                 className="text-3xl font-bold mb-2"
                 style={{ color: "var(--text)" }}>
-                {isNewItem ? "Add New Menu Item" : "Edit Menu Item"}
+                {isNewItem ? t("menu_form.title_new") : t("menu_form.title_edit")}
               </h2>
               <p style={{ color: "var(--text-muted)" }}>
-                {isNewItem
-                  ? "Create a new dish for your restaurant menu"
-                  : "Update the menu item information"}
+                {isNewItem ? t("menu_form.subtitle_new") : t("menu_form.subtitle_edit")}
               </p>
             </div>
           </div>
@@ -435,7 +433,7 @@ export default function MenuItemFormPage() {
                   className="animate-spin rounded-full h-8 w-8 border-b-2"
                   style={{ borderColor: "var(--primary)" }}></div>
                 <p className="ml-4" style={{ color: "var(--text-muted)" }}>
-                  Loading...
+                  {t("menu_form.loading")}
                 </p>
               </div>
             )}
@@ -448,18 +446,13 @@ export default function MenuItemFormPage() {
                     background: "var(--card)",
                     border: "1px solid var(--border)",
                   }}>
-                  <h3
-                    className="text-lg font-bold mb-3"
-                    style={{ color: "var(--text)" }}>
-                    Basic Information
+                  <h3 className="text-lg font-bold mb-3" style={{ color: "var(--text)" }}>
+                    {t("menu_form.basic_information")}
                   </h3>
                   <div className="space-y-3">
                     <div>
-                      <label
-                        htmlFor="name"
-                        className="block text-sm font-medium mb-2"
-                        style={{ color: "var(--text)" }}>
-                        Item Name
+                      <label htmlFor="name" className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
+                        {t("menu_form.item_name")}
                       </label>
                       <input
                         type="text"
@@ -485,20 +478,11 @@ export default function MenuItemFormPage() {
                     </div>
 
                     <div>
-                      <label
-                        htmlFor="categoryId"
-                        className="block text-sm font-medium mb-2"
-                        style={{ color: "var(--text)" }}>
-                        Category
+                      <label htmlFor="categoryId" className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
+                        {t("menu_form.category")}
                       </label>
-                      <DropDown
-                        id="categoryId"
-                        name="categoryId"
-                        value={formData.categoryId}
-                        onChange={handleChange}
-                        required
-                        className="py-3">
-                        <option value="">Select a category</option>
+                      <DropDown id="categoryId" name="categoryId" value={formData.categoryId} onChange={handleChange} required className="py-3">
+                        <option value="">{t("menu_form.select_category")}</option>
                         {categories.map((cat) => (
                           <option key={cat.id} value={cat.id}>
                             {cat.name}
@@ -508,35 +492,23 @@ export default function MenuItemFormPage() {
                     </div>
 
                     <div>
-                      <label
-                        htmlFor="unit"
-                        className="block text-sm font-medium mb-2"
-                        style={{ color: "var(--text)" }}>
-                        Unit
+                      <label htmlFor="unit" className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
+                        {t("menu_form.unit")}
                       </label>
-                      <DropDown
-                        id="unit"
-                        name="unit"
-                        value={formData.unit}
-                        onChange={handleChange}
-                        required
-                        className="py-3">
-                        <option value="portion">Portion</option>
-                        <option value="plate">Plate</option>
-                        <option value="bowl">Bowl</option>
-                        <option value="cup">Cup</option>
-                        <option value="glass">Glass</option>
-                        <option value="piece">Piece</option>
-                        <option value="serving">Serving</option>
+                      <DropDown id="unit" name="unit" value={formData.unit} onChange={handleChange} required className="py-3">
+                        <option value="portion">{t("menu_form.unit_portion")}</option>
+                        <option value="plate">{t("menu_form.unit_plate")}</option>
+                        <option value="bowl">{t("menu_form.unit_bowl")}</option>
+                        <option value="cup">{t("menu_form.unit_cup")}</option>
+                        <option value="glass">{t("menu_form.unit_glass")}</option>
+                        <option value="piece">{t("menu_form.unit_piece")}</option>
+                        <option value="serving">{t("menu_form.unit_serving")}</option>
                       </DropDown>
                     </div>
 
                     <div>
-                      <label
-                        htmlFor="price"
-                        className="block text-sm font-medium mb-2"
-                        style={{ color: "var(--text)" }}>
-                        Price
+                      <label htmlFor="price" className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
+                        {t("menu_form.price")}
                       </label>
                       <div className="relative">
                         <input
@@ -569,11 +541,8 @@ export default function MenuItemFormPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <label
-                        htmlFor="description"
-                        className="block text-sm font-medium mb-2"
-                        style={{ color: "var(--text)" }}>
-                        Description
+                      <label htmlFor="description" className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
+                        {t("menu_form.description")}
                       </label>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -708,11 +677,8 @@ export default function MenuItemFormPage() {
                     </div>
 
                     <div>
-                      <label
-                        htmlFor="quantity"
-                        className="block text-sm font-medium mb-2"
-                        style={{ color: "var(--text)" }}>
-                        Quantity in Stock
+                      <label htmlFor="quantity" className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
+                        {t("menu_form.quantity_in_stock")}
                       </label>
                       <input
                         type="number"
@@ -745,103 +711,42 @@ export default function MenuItemFormPage() {
                     background: "var(--card)",
                     border: "1px solid var(--border)",
                   }}>
-                  <h3
-                    className="text-lg font-bold mb-3"
-                    style={{ color: "var(--text)" }}>
-                    Item Properties
+                  <h3 className="text-lg font-bold mb-3" style={{ color: "var(--text)" }}>
+                    {t("menu_form.item_properties")}
                   </h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p
-                          className="font-medium text-sm"
-                          style={{ color: "var(--text)" }}>
-                          Vegetarian
+                        <p className="font-medium text-sm" style={{ color: "var(--text)" }}>
+                          {t("menu_form.vegetarian")}
                         </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: "var(--text-muted)" }}>
-                          This item is suitable for vegetarians
+                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          {t("menu_form.vegetarian_desc")}
                         </p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="isVegetarian"
-                          checked={formData.isVegetarian}
-                          onChange={handleChange}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
-                          style={{
-                            backgroundColor: formData.isVegetarian
-                              ? "var(--primary)"
-                              : "#4b5563",
-                          }}></div>
-                      </label>
+                      <StatusToggle checked={formData.isVegetarian} onChange={() => setFormData((prev) => ({ ...prev, isVegetarian: !prev.isVegetarian }))} />
                     </div>
-
                     <div className="flex items-center justify-between">
                       <div>
-                        <p
-                          className="font-medium text-sm"
-                          style={{ color: "var(--text)" }}>
-                          Spicy
+                        <p className="font-medium text-sm" style={{ color: "var(--text)" }}>
+                          {t("menu_form.spicy")}
                         </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: "var(--text-muted)" }}>
-                          This item contains spicy ingredients
+                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          {t("menu_form.spicy_desc")}
                         </p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="isSpicy"
-                          checked={formData.isSpicy}
-                          onChange={handleChange}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
-                          style={{
-                            backgroundColor: formData.isSpicy
-                              ? "var(--primary)"
-                              : "#4b5563",
-                          }}></div>
-                      </label>
+                      <StatusToggle checked={formData.isSpicy} onChange={() => setFormData((prev) => ({ ...prev, isSpicy: !prev.isSpicy }))} />
                     </div>
-
                     <div className="flex items-center justify-between">
                       <div>
-                        <p
-                          className="font-medium text-sm"
-                          style={{ color: "var(--text)" }}>
-                          Best Seller
+                        <p className="font-medium text-sm" style={{ color: "var(--text)" }}>
+                          {t("menu_form.best_seller")}
                         </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: "var(--text-muted)" }}>
-                          Mark as best selling item
+                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          {t("menu_form.best_seller_desc")}
                         </p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="isBestSeller"
-                          checked={formData.isBestSeller}
-                          onChange={handleChange}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
-                          style={{
-                            backgroundColor: formData.isBestSeller
-                              ? "var(--primary)"
-                              : "#4b5563",
-                          }}></div>
-                      </label>
+                      <StatusToggle checked={formData.isBestSeller} onChange={() => setFormData((prev) => ({ ...prev, isBestSeller: !prev.isBestSeller }))} />
                     </div>
                   </div>
                 </div>
@@ -852,41 +757,20 @@ export default function MenuItemFormPage() {
                     background: "var(--card)",
                     border: "1px solid var(--border)",
                   }}>
-                  <h3
-                    className="text-lg font-bold mb-3"
-                    style={{ color: "var(--text)" }}>
-                    Settings
+                  <h3 className="text-lg font-bold mb-3" style={{ color: "var(--text)" }}>
+                    {t("menu_form.settings")}
                   </h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p
-                          className="font-medium text-sm"
-                          style={{ color: "var(--text)" }}>
-                          Auto-Disable by Stock
+                        <p className="font-medium text-sm" style={{ color: "var(--text)" }}>
+                          {t("menu_form.auto_disable_by_stock")}
                         </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: "var(--text-muted)" }}>
-                          Automatically disable when out of stock
+                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          {t("menu_form.auto_disable_by_stock_desc")}
                         </p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="autoDisableByStock"
-                          checked={formData.autoDisableByStock}
-                          onChange={handleChange}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
-                          style={{
-                            backgroundColor: formData.autoDisableByStock
-                              ? "var(--primary)"
-                              : "#4b5563",
-                          }}></div>
-                      </label>
+                      <StatusToggle checked={formData.autoDisableByStock} onChange={() => setFormData((prev) => ({ ...prev, autoDisableByStock: !prev.autoDisableByStock }))} />
                     </div>
                   </div>
                 </div>
@@ -897,10 +781,8 @@ export default function MenuItemFormPage() {
                     background: "var(--card)",
                     border: "1px solid var(--border)",
                   }}>
-                  <h3
-                    className="text-lg font-bold mb-3"
-                    style={{ color: "var(--text)" }}>
-                    Item Images
+                  <h3 className="text-lg font-bold mb-3" style={{ color: "var(--text)" }}>
+                    {t("menu_form.item_images")}
                   </h3>
 
                   <MultiImageUpload
@@ -1023,27 +905,15 @@ export default function MenuItemFormPage() {
             </div>
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => router.back()}
+              <button type="button" onClick={() => router.back()}
                 className="flex-1 px-4 py-2.5 rounded-lg font-medium transition-all hover:bg-gray-500/10"
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}>
-                Cancel
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>
+                {t("menu_form.cancel")}
               </button>
-
-              <button
-                type="submit"
-                disabled={loading}
+              <button type="submit" disabled={loading}
                 className="flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  background: "var(--primary)",
-                  color: "white",
-                }}>
-                {isNewItem ? "Create Menu Item" : "Update Menu Item"}
+                style={{ background: "var(--primary)", color: "white" }}>
+                {isNewItem ? t("menu_form.create") : t("menu_form.update")}
               </button>
             </div>
           </form>

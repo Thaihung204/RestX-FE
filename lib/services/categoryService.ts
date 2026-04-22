@@ -7,6 +7,8 @@ export interface Category {
   imageUrl?: string;
   parentId?: string | null;
   isActive?: boolean;
+  displayOrder?: number;
+  categoryChildrens?: Category[];
 }
 
 let categoriesCache: Category[] | null = null;
@@ -176,6 +178,23 @@ export const categoryService = {
   deleteCategory: async (id: string): Promise<void> => {
     await axiosInstance.delete(`/categories/${id}`);
     invalidateCategoryCache(id);
+  },
+
+  // PUT /api/categories/display-order
+  updateDisplayOrder: async (categories: Category[]): Promise<void> => {
+    const payload = categories.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      description: cat.description,
+      file: null,
+      imageUrl: cat.imageUrl || null,
+      parentId: cat.parentId || null,
+      isActive: cat.isActive ?? true,
+      displayOrder: cat.displayOrder ?? 0,
+      categoryChildrens: cat.categoryChildrens ?? [],
+    }));
+    await axiosInstance.put("/categories/display-order", payload);
+    invalidateCategoryCache();
   },
 };
 

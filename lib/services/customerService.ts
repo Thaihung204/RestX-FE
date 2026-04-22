@@ -29,11 +29,12 @@ export interface CustomerResponseDto {
   createdDate: string;
   modifiedDate?: string;
   userId: string;
-  email: string;
+  email: string | null;
   fullName: string;
   phoneNumber?: string;
   avatarUrl?: string;
   totalOrders: number;
+  totalSpent?: number;
   totalReservations: number;
 }
 
@@ -60,7 +61,7 @@ export interface CustomerFilterParams {
 
 export interface CustomerListItemDto {
   id: string;
-  email: string;
+  email: string | null;
   fullName: string;
   phoneNumber?: string;
   avatarUrl?: string | null;
@@ -68,6 +69,8 @@ export interface CustomerListItemDto {
   loyaltyPoints: number;
   isActive: boolean;
   createdDate: string;
+  totalOrders: number;
+  totalSpent: number;
 }
 
 interface ApiResponse<T> {
@@ -103,13 +106,13 @@ const membershipToVipTier = (level: string): Customer["vipTier"] => {
 const mapCustomerResponseToCustomer = (dto: CustomerResponseDto): Customer => ({
   id: dto.id,
   name: dto.fullName,
-  email: dto.email,
+  email: dto.email || "",
   phone: dto.phoneNumber || "",
   avatar:
     dto.avatarUrl ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(dto.fullName)}&background=4F46E5&color=fff`,
   totalOrders: dto.totalOrders,
-  totalSpent: 0,
+  totalSpent: Number(dto.totalSpent ?? 0),
   memberSince: dto.createdDate,
   lastVisit: dto.modifiedDate,
   loyaltyPoints: dto.loyaltyPoints,
@@ -120,13 +123,13 @@ const mapCustomerResponseToCustomer = (dto: CustomerResponseDto): Customer => ({
 const mapListItemToCustomer = (dto: CustomerListItemDto): Customer => ({
   id: dto.id,
   name: dto.fullName,
-  email: dto.email,
+  email: dto.email || "",
   phone: dto.phoneNumber || "",
   avatar:
     dto.avatarUrl ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(dto.fullName)}&background=4F46E5&color=fff`,
-  totalOrders: 0,
-  totalSpent: 0,
+  totalOrders: Number(dto.totalOrders ?? 0),
+  totalSpent: Number(dto.totalSpent ?? 0),
   memberSince: dto.createdDate,
   loyaltyPoints: dto.loyaltyPoints,
   vipTier: membershipToVipTier(dto.membershipLevel),
@@ -313,7 +316,7 @@ const customerService = {
 
     if (response.data.success && response.data.data?.items?.length > 0) {
       const customer = response.data.data.items.find(
-        (c) => c.email.toLowerCase() === email.toLowerCase(),
+        (c) => (c.email ?? "").toLowerCase() === email.toLowerCase(),
       );
       if (customer) {
         return this.getCustomerProfile(customer.id);

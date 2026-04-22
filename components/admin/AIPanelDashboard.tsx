@@ -3,8 +3,8 @@
 import AIStrategyListItem from "@/components/admin/analytics/AIStrategyListItem";
 import AIStrategySection from "@/components/admin/analytics/AIStrategySection";
 import AIStrategySummaryCard from "@/components/admin/analytics/AIStrategySummaryCard";
-import MenuStrategyCard from "@/components/admin/analytics/MenuStrategyCard";
 import { ButtonDropDown } from "@/components/ui/DropDown";
+import { DownloadOutlined } from "@ant-design/icons";
 import { Tabs } from "antd";
 import NextImage from "next/image";
 import { useTranslation } from "react-i18next";
@@ -22,28 +22,72 @@ export interface AIOpportunityItem extends AIInsightItem {
   type: string;
 }
 
+type AIReportImpact = "high" | "medium" | "low";
+
 export interface AIStrategyReport {
-  id: string;
-  generatedAt: string;
-  summary: string;
-  alertCount: number;
-  hiddenRisks: AIInsightItem[];
-  hiddenOpportunities: AIOpportunityItem[];
-  menuStrategy: {
+  id?: string;
+  generatedAt?: string;
+  summary?: string;
+  alertCount?: number;
+  insights?: Array<{
+    category?: "risk" | "opportunity" | string;
+    title?: string;
+    evidence?: string;
+    analysis?: string;
+    action?: string;
+    impact?: AIReportImpact;
+  }>;
+  menu?: {
+    topDishes?: Array<{
+      rank?: number;
+      dishName?: string;
+      evidence?: string;
+      reason?: string;
+      action?: string;
+    }>;
+    suggestedDishes?: Array<{
+      rank?: number;
+      dishName?: string;
+      evidence?: string;
+      reason?: string;
+      action?: string;
+    }>;
+    combosToCreate?: Array<{
+      rank?: number;
+      dishes?: string[];
+      suggestedPrice?: number;
+      evidence?: string;
+      reason?: string;
+    }>;
+  };
+  customers?: {
+    evidence?: string;
+    insight?: string;
+    action?: string;
+  };
+  actionPlan?: Array<{
+    priority?: number;
+    title?: string;
+    evidence?: string;
+    action?: string;
+    impact?: AIReportImpact;
+  }>;
+  hiddenRisks?: AIInsightItem[];
+  hiddenOpportunities?: AIOpportunityItem[];
+  menuStrategy?: {
     trendingDish?: { dishName: string; whyTrending: string; action: string };
     timeBasedDishes?: Array<{ context: string; dishName: string; reason: string }>;
     suggestedAdditions?: Array<{ dishName: string; reason: string; action: string }>;
     comboSuggestions?: Array<{ dishes: string[]; suggestedPrice: number; aovIncrease: number; reason: string }>;
   };
-  marketingStrategy: {
+  marketingStrategy?: {
     trend: string;
     promoStrategy: string;
-    upcomingActions: Array<{ title: string; reason: string; action: string; when: string; impact: "high" | "medium" | "low" }>;
+    upcomingActions: Array<{ title: string; reason: string; action: string; when: string; impact: AIReportImpact }>;
   };
-  customerStrategy: {
-    actions: Array<{ title: string; reason: string; action: string; when: string; impact: "high" | "medium" | "low" }>;
+  customerStrategy?: {
+    actions: Array<{ title: string; reason: string; action: string; when: string; impact: AIReportImpact }>;
   };
-  actionPlan: Array<{ title: string; reason: string; action: string; when: string; impact: "high" | "medium" | "low" }>;
 }
 
 export type AIReportFilterOption = "month" | "quarter" | "year";
@@ -52,11 +96,33 @@ export interface AIPanelDashboardProps {
   report: AIStrategyReport | null;
   loading: boolean;
   onGenerate: (filter: AIReportFilterOption) => void;
+  onDownload: () => void;
+  downloading: boolean;
   currentFilter: AIReportFilterOption;
 }
 
 // Pure helper 
-const IMPACT_ORDER: Record<"high" | "medium" | "low", number> = { high: 0, medium: 1, low: 2 };
+const IMPACT_ORDER: Record<AIReportImpact, number> = { high: 0, medium: 1, low: 2 };
+
+const safeArray = <T,>(items?: T[]) => items ?? [];
+
+const parseReportItems = (report: AIStrategyReport | null) => {
+  const insights = safeArray(report?.insights);
+  const fallbackRisks = safeArray(report?.hiddenRisks);
+  const fallbackOpportunities = safeArray(report?.hiddenOpportunities);
+
+  const risks = insights.filter((item) => item.category === "risk");
+  const opportunities = insights.filter((item) => item.category === "opportunity");
+
+  return {
+    risks: risks.length ? risks : fallbackRisks,
+    opportunities: opportunities.length ? opportunities : fallbackOpportunities,
+    topDishes: safeArray(report?.menu?.topDishes),
+    suggestedDishes: safeArray(report?.menu?.suggestedDishes),
+    combosToCreate: safeArray(report?.menu?.combosToCreate),
+    actionPlan: safeArray(report?.actionPlan),
+  };
+};
 
 export function getTopInsights<T extends { impact: "high" | "medium" | "low" }>(
   items: T[],
@@ -83,6 +149,8 @@ export default function AIPanelDashboard({
   report,
   loading,
   onGenerate,
+  onDownload,
+  downloading,
   currentFilter,
 }: AIPanelDashboardProps) {
   const { t } = useTranslation("common");
@@ -93,6 +161,16 @@ export default function AIPanelDashboard({
     key: option,
     label: `${t("dashboard.analytics.filter.by")} ${t(`dashboard.analytics.filter.${option}`).toLowerCase()}`,
   }));
+
+  const filterLabelByOption: Record<AIReportFilterOption, string> = {
+    month: "tháng",
+    quarter: "quý",
+    year: "năm",
+  };
+
+  const downloadLabel = `Tải chiến lược ${filterLabelByOption[currentFilter]}`;
+
+  const parsed = parseReportItems(report);
 
   const triggerContent = loading ? (
     <span className="inline-flex items-center gap-2">
@@ -143,13 +221,33 @@ export default function AIPanelDashboard({
           </h3>
         </div>
 
-        <ButtonDropDown
-          trigger={triggerContent}
-          options={dropdownOptions}
-          onSelect={(key) => onGenerate(key as AIReportFilterOption)}
-          disabled={loading}
-          width={200}
-        />
+        <div className="flex items-center gap-2">
+          {report && (
+            <button
+              type="button"
+              onClick={onDownload}
+              disabled={downloading}
+              className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:opacity-50"
+              style={{
+                background: "var(--primary-soft)",
+                border: "1px solid var(--primary-border)",
+                color: "var(--primary)",
+              }}>
+              <DownloadOutlined />
+              {downloading
+                ? t("common.actions.exporting", { defaultValue: "Exporting..." })
+                : downloadLabel}
+            </button>
+          )}
+
+          <ButtonDropDown
+            trigger={triggerContent}
+            options={dropdownOptions}
+            onSelect={(key) => onGenerate(key as AIReportFilterOption)}
+            disabled={loading}
+            width={200}
+          />
+        </div>
       </div>
 
       {/* Loading */}
@@ -193,12 +291,12 @@ export default function AIPanelDashboard({
                   children: (
                     <div className="space-y-6 pt-4">
                       <AIStrategySummaryCard
-                        summary={report.summary}
-                        alertCount={report.alertCount}
-                        generatedAt={report.generatedAt}
+                        summary={report.summary ?? t("dashboard.analytics.empty.subtitle")}
+                        alertCount={report.alertCount ?? parsed.risks.length}
+                        generatedAt={report.generatedAt ?? new Date().toISOString()}
                       />
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {report.hiddenRisks.length > 0 && (
+                        {parsed.risks.length > 0 && (
                           <AIStrategySection
                             title={t("dashboard.analytics.sections.risks")}
                             variant="warning"
@@ -208,13 +306,13 @@ export default function AIPanelDashboard({
                               </svg>
                             }>
                             <div className="space-y-3">
-                              {report.hiddenRisks.map((risk, i) => (
-                                <AIStrategyListItem key={i} title={risk.title} insight={risk.insight} action={risk.action} when={risk.when} impact={risk.impact} variant="risk" />
+                              {parsed.risks.map((risk, i) => (
+                                <AIStrategyListItem key={i} title={(risk as any).title ?? t("dashboard.analytics.labels.risk", { defaultValue: "Rủi ro" })} insight={(risk as any).analysis ?? (risk as any).insight ?? (risk as any).evidence ?? ""} action={(risk as any).action ?? ""} when={(risk as any).when ?? t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={(risk as any).impact ?? "medium"} variant="risk" />
                               ))}
                             </div>
                           </AIStrategySection>
                         )}
-                        {report.hiddenOpportunities.length > 0 && (
+                        {parsed.opportunities.length > 0 && (
                           <AIStrategySection
                             title={t("dashboard.analytics.sections.opportunities")}
                             variant="success"
@@ -224,8 +322,8 @@ export default function AIPanelDashboard({
                               </svg>
                             }>
                             <div className="space-y-3">
-                              {report.hiddenOpportunities.map((opp, i) => (
-                                <AIStrategyListItem key={i} title={opp.title} insight={opp.insight} action={opp.action} when={opp.when} impact={opp.impact} type={opp.type} variant="opportunity" />
+                              {parsed.opportunities.map((opp, i) => (
+                                <AIStrategyListItem key={i} title={(opp as any).title ?? t("dashboard.analytics.labels.opportunity", { defaultValue: "Cơ hội" })} insight={(opp as any).analysis ?? (opp as any).insight ?? (opp as any).evidence ?? ""} action={(opp as any).action ?? ""} when={(opp as any).when ?? t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={(opp as any).impact ?? "medium"} type={(opp as any).type} variant="opportunity" />
                               ))}
                             </div>
                           </AIStrategySection>
@@ -247,7 +345,58 @@ export default function AIPanelDashboard({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                           </svg>
                         }>
-                        <MenuStrategyCard menuStrategy={report.menuStrategy} />
+                        <div className="space-y-4">
+                          {parsed.topDishes.length > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              {parsed.topDishes.map((dish, index) => (
+                                <div key={index} className="rounded-lg p-4 border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+                                  <div className="text-xs font-semibold mb-1" style={{ color: "var(--text-muted)" }}>
+                                    {t("dashboard.analytics.menu.topDish", { defaultValue: "Món chủ lực" })} {dish.rank ?? index + 1}
+                                  </div>
+                                  <div className="font-semibold" style={{ color: "var(--text)" }}>{dish.dishName}</div>
+                                  <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{dish.evidence ?? dish.reason}</p>
+                                  {dish.action && <p className="text-sm mt-3" style={{ color: "var(--primary)" }}>{dish.action}</p>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {parsed.suggestedDishes.length > 0 && (
+                            <div>
+                              <h5 className="font-bold text-sm mb-2" style={{ color: "var(--text)" }}>{t("dashboard.analytics.menu.suggestedAdditions")}</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {parsed.suggestedDishes.map((dish, index) => (
+                                  <div key={index} className="rounded-lg p-4 border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+                                    <div className="font-semibold" style={{ color: "var(--text)" }}>{dish.dishName}</div>
+                                    <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{dish.evidence ?? dish.reason}</p>
+                                    {dish.action && <p className="text-sm mt-3" style={{ color: "var(--success)" }}>{dish.action}</p>}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {parsed.combosToCreate.length > 0 && (
+                            <div>
+                              <h5 className="font-bold text-sm mb-2" style={{ color: "var(--text)" }}>{t("dashboard.analytics.menu.comboSuggestions")}</h5>
+                              <div className="space-y-2">
+                                {parsed.combosToCreate.map((combo, index) => (
+                                  <div key={index} className="rounded-lg p-4 border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+                                    <div className="flex items-center justify-between gap-3">
+                                      <div className="font-semibold" style={{ color: "var(--text)" }}>
+                                        {(combo.dishes ?? []).join(" + ")}
+                                      </div>
+                                      {typeof combo.suggestedPrice === "number" && (
+                                        <span className="text-sm font-bold" style={{ color: "var(--primary)" }}>{new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(combo.suggestedPrice)}</span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{combo.evidence ?? combo.reason}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </AIStrategySection>
                     </div>
                   ),
@@ -268,18 +417,18 @@ export default function AIPanelDashboard({
                         <div className="space-y-4">
                           <div>
                             <h5 className="font-bold text-sm mb-2" style={{ color: "var(--text)" }}>{t("dashboard.analytics.sections.currentTrend")}</h5>
-                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{report.marketingStrategy.trend}</p>
+                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{report.marketingStrategy?.trend ?? report.summary ?? ""}</p>
                           </div>
                           <div>
                             <h5 className="font-bold text-sm mb-2" style={{ color: "var(--text)" }}>{t("dashboard.analytics.sections.promoStrategy")}</h5>
-                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{report.marketingStrategy.promoStrategy}</p>
+                            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{report.marketingStrategy?.promoStrategy ?? ""}</p>
                           </div>
-                          {report.marketingStrategy.upcomingActions.length > 0 && (
+                          {safeArray(report.marketingStrategy?.upcomingActions).length > 0 && (
                             <div>
                               <h5 className="font-bold text-sm mb-2 mt-4" style={{ color: "var(--text)" }}>{t("dashboard.analytics.sections.upcomingEvents")}</h5>
                               <div className="space-y-2">
-                                {report.marketingStrategy.upcomingActions.map((action, i) => (
-                                  <AIStrategyListItem key={i} title={action.title} reason={action.reason} action={action.action} when={action.when} impact={action.impact} variant="default" />
+                                {safeArray(report.marketingStrategy?.upcomingActions).map((action, i) => (
+                                  <AIStrategyListItem key={i} title={action.title} reason={action.reason} action={action.action} when={action.when ?? t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={action.impact} variant="default" />
                                 ))}
                               </div>
                             </div>
@@ -287,7 +436,7 @@ export default function AIPanelDashboard({
                         </div>
                       </AIStrategySection>
 
-                      {report.customerStrategy.actions.length > 0 && (
+                      {safeArray(report.customerStrategy?.actions).length > 0 && (
                         <AIStrategySection
                           title={t("dashboard.analytics.sections.customerStrategy")}
                           variant="primary"
@@ -297,7 +446,7 @@ export default function AIPanelDashboard({
                             </svg>
                           }>
                           <div className="space-y-3">
-                            {report.customerStrategy.actions.map((action, i) => (
+                            {safeArray(report.customerStrategy?.actions).map((action, i) => (
                               <AIStrategyListItem key={i} title={action.title} reason={action.reason} action={action.action} when={action.when} impact={action.impact} variant="default" />
                             ))}
                           </div>
@@ -311,7 +460,7 @@ export default function AIPanelDashboard({
                   label: t("dashboard.analytics.tabs.actionPlan"),
                   children: (
                     <div className="pt-4">
-                      {report.actionPlan.length > 0 && (
+                      {parsed.actionPlan.length > 0 && (
                         <AIStrategySection
                           title={t("dashboard.analytics.sections.executionPlan")}
                           variant="primary"
@@ -321,10 +470,10 @@ export default function AIPanelDashboard({
                             </svg>
                           }>
                           <div className="space-y-3">
-                            {[...report.actionPlan]
-                              .sort((a, b) => IMPACT_ORDER[a.impact] - IMPACT_ORDER[b.impact])
+                            {[...parsed.actionPlan]
+                              .sort((a, b) => IMPACT_ORDER[(a.impact ?? "medium")] - IMPACT_ORDER[(b.impact ?? "medium")])
                               .map((action, i) => (
-                                <AIStrategyListItem key={i} title={action.title} reason={action.reason} action={action.action} when={action.when} impact={action.impact} variant="action" />
+                                <AIStrategyListItem key={i} title={action.title ?? `#{action.priority ?? i + 1}`} reason={action.evidence ?? ""} action={action.action ?? ""} when={action.priority ? `Ưu tiên ${action.priority}` : t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={action.impact ?? "medium"} variant="action" />
                               ))}
                           </div>
                         </AIStrategySection>

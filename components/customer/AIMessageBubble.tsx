@@ -1,8 +1,14 @@
-import { AIMessage, AIOrderDraft, AIOrderDraftItem } from "@/lib/types/ai";
+import {
+  AIMessage,
+  AIOrderDraft,
+  AIOrderDraftItem,
+  AISuggestionItem,
+} from "@/lib/types/ai";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Typography } from "antd";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatVND } from "@/lib/utils/currency";
+import SuggestionModal from "./SuggestionModal";
 
 const { Text } = Typography;
 
@@ -14,11 +20,18 @@ interface AIMessageBubbleProps {
   editedDraftItems?: AIOrderDraftItem[];
   onDraftItemsChange: (messageId: string, items: AIOrderDraftItem[]) => void;
   onConfirmOrder: (messageId: string, draft: AIOrderDraft) => void;
+  onAddSuggestionToCart: (item: AISuggestionItem) => void;
   isLoading: boolean;
   isConfirming: boolean;
 }
 
-const AssistantIcon = ({ size, robotAlt }: { size: number; robotAlt: string }) => (
+const AssistantIcon = ({
+  size,
+  robotAlt,
+}: {
+  size: number;
+  robotAlt: string;
+}) => (
   <span
     aria-label={robotAlt}
     role="img"
@@ -48,17 +61,23 @@ export default function AIMessageBubble({
   editedDraftItems,
   onDraftItemsChange,
   onConfirmOrder,
+  onAddSuggestionToCart,
   isLoading,
   isConfirming,
 }: AIMessageBubbleProps) {
   const { t } = useTranslation("common");
   const draftItems = editedDraftItems ?? msg.orderDraft?.items ?? [];
+  const shouldShowSuggestionScrollbar = (msg.suggestions?.length ?? 0) > 2;
+  const [selectedSuggestion, setSelectedSuggestion] =
+    useState<AISuggestionItem | null>(null);
 
   const updateDraftItemQuantity = (dishId: string, nextQuantity: number) => {
     const sourceItems = editedDraftItems ?? msg.orderDraft?.items ?? [];
 
     const updated = sourceItems.map((item) =>
-      item.dishId === dishId ? { ...item, quantity: Math.max(0, nextQuantity) } : item
+      item.dishId === dishId
+        ? { ...item, quantity: Math.max(0, nextQuantity) }
+        : item,
     );
 
     onDraftItemsChange(msg.id, updated);
@@ -72,7 +91,9 @@ export default function AIMessageBubble({
         gap: 12,
         alignItems: "flex-start",
       }}>
-      {msg.role === "assistant" ? <AssistantIcon size={34} robotAlt={robotAlt} /> : null}
+      {msg.role === "assistant" ? (
+        <AssistantIcon size={34} robotAlt={robotAlt} />
+      ) : null}
 
       <div
         style={{
@@ -86,7 +107,8 @@ export default function AIMessageBubble({
             padding: "12px 16px",
             borderRadius:
               msg.role === "user" ? "18px 2px 18px 18px" : "2px 18px 18px 18px",
-            background: msg.role === "user" ? "var(--primary)" : "var(--surface)",
+            background:
+              msg.role === "user" ? "var(--primary)" : "var(--surface)",
             color: msg.role === "user" ? "var(--text-inverse)" : "var(--text)",
             boxShadow: "var(--shadow-sm)",
             fontSize: 15,
@@ -97,54 +119,176 @@ export default function AIMessageBubble({
         </div>
 
         {!!msg.suggestions?.length && (
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              overflowX: "auto",
-              paddingBottom: 8,
-              marginTop: 4,
-              width: "calc(100vw - 80px)",
-            }}>
-            {msg.suggestions.map((item) => (
-              <div
-                key={item.dishId}
-                style={{
-                  minWidth: 150,
-                  background: popupBg,
-                  borderRadius: 12,
-                  border: "1px solid var(--border)",
-                  overflow: "hidden",
-                }}>
-                <div style={{ height: 100, background: "var(--surface-subtle)" }}>
-                  {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.dishName}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  ) : null}
-                </div>
-                <div style={{ padding: 10 }}>
-                  <Text strong style={{ display: "block", color: "var(--text)" }}>
-                    {item.dishName}
-                  </Text>
-                  <Text style={{ color: "var(--danger)", fontSize: 12 }}>
-                    {formatVND(item.price)}
-                  </Text>
-                  <Text
+          <>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                overflowX: shouldShowSuggestionScrollbar ? "scroll" : "auto",
+                paddingBottom: 8,
+                marginTop: 4,
+                width: "calc(100vw - 80px)",
+                scrollbarWidth: shouldShowSuggestionScrollbar ? "thin" : "none",
+                msOverflowStyle: shouldShowSuggestionScrollbar
+                  ? "auto"
+                  : "none",
+              }}
+              className={
+                shouldShowSuggestionScrollbar ? undefined : "hide-scrollbar"
+              }>
+              {msg.suggestions.map((item) => {
+                const quantityRaw = Number(item.quantity ?? 1);
+                const quantity =
+                  Number.isFinite(quantityRaw) && quantityRaw > 0
+                    ? Math.floor(quantityRaw)
+                    : 1;
+                const basePriceRaw = Number(item.price ?? 0);
+                const basePrice =
+                  Number.isFinite(basePriceRaw) && basePriceRaw > 0
+                    ? basePriceRaw
+                    : 0;
+                const totalPriceRaw = Number(
+                  item.totalPrice ?? basePrice * quantity,
+                );
+                const totalPrice = Number.isFinite(totalPriceRaw)
+                  ? totalPriceRaw
+                  : 0;
+
+                return (
+                  <div
+                    key={item.dishId}
+                    onClick={() => setSelectedSuggestion(item)}
                     style={{
-                      display: "block",
-                      color: "var(--text-muted)",
-                      fontSize: 12,
-                      marginTop: 4,
+                      width: 160,
+                      minWidth: 160,
+                      flexShrink: 0,
+                      background: popupBg,
+                      borderRadius: 12,
+                      border: "1px solid var(--border)",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
                     }}>
-                    {item.reason}
-                  </Text>
-                </div>
-              </div>
-            ))}
-          </div>
+                    {/* Image */}
+                    <div
+                      style={{
+                        height: 100,
+                        background: "var(--surface-subtle)",
+                        flexShrink: 0,
+                        overflow: "hidden",
+                      }}>
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.dishName}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : null}
+                    </div>
+
+                    {/* Body */}
+                    <div
+                      style={{
+                        padding: "8px 10px 10px",
+                        display: "flex",
+                        flexDirection: "column",
+                        flex: 1,
+                      }}>
+                      <Text
+                        strong
+                        style={{
+                          display: "block",
+                          color: "var(--text)",
+                          fontSize: 13,
+                          lineHeight: 1.3,
+                          marginBottom: 2,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}>
+                        {item.dishName}
+                      </Text>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 6,
+                          marginTop: 4,
+                        }}>
+                        <Text
+                          style={{
+                            color: "var(--text-muted)",
+                            fontSize: 11,
+                            fontWeight: 600,
+                          }}>
+                          x{quantity}
+                        </Text>
+                        <Text
+                          style={{
+                            color: "var(--danger, #ff4d4f)",
+                            fontSize: 12,
+                            fontWeight: 700,
+                          }}>
+                          {formatVND(totalPrice)}
+                        </Text>
+                      </div>
+
+                      {/* Reason — 2 lines max */}
+                      {item.reason && (
+                        <Text
+                          style={
+                            {
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              color: "var(--text-muted)",
+                              fontSize: 11,
+                              lineHeight: 1.4,
+                              marginTop: 4,
+                            } as React.CSSProperties
+                          }>
+                          {item.reason}
+                        </Text>
+                      )}
+
+                      <Button
+                        type="primary"
+                        size="small"
+                        block
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddSuggestionToCart(item);
+                        }}
+                        disabled={isLoading || isConfirming}
+                        style={{
+                          marginTop: "auto",
+                          paddingTop: 8,
+                          fontSize: 11,
+                        }}>
+                        {t("menu_page.detail_modal.add_to_cart")}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <SuggestionModal
+              item={selectedSuggestion}
+              open={!!selectedSuggestion}
+              onClose={() => setSelectedSuggestion(null)}
+              onAddToCart={onAddSuggestionToCart}
+              isLoading={isLoading || isConfirming}
+            />
+          </>
         )}
 
         {!!msg.orderDraft?.items?.length && (
@@ -155,7 +299,6 @@ export default function AIMessageBubble({
               borderRadius: 12,
               padding: 10,
             }}>
-              
             <div
               style={{
                 display: "flex",
@@ -256,17 +399,31 @@ export default function AIMessageBubble({
                       }}>
                       {formatVND(item.price)}
                     </Text>
-
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 6px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "4px 6px",
+                    }}>
                     {item.quantity > 0 ? (
                       <>
                         <Button
                           type="text"
                           size="small"
-                          icon={<MinusOutlined style={{ color: "var(--text)", fontSize: 10 }} />}
-                          onClick={() => updateDraftItemQuantity(item.dishId, item.quantity - 1)}
+                          icon={
+                            <MinusOutlined
+                              style={{ color: "var(--text)", fontSize: 10 }}
+                            />
+                          }
+                          onClick={() =>
+                            updateDraftItemQuantity(
+                              item.dishId,
+                              item.quantity - 1,
+                            )
+                          }
                           disabled={isLoading || isConfirming}
                           style={{
                             border: "1px solid var(--border)",
@@ -284,15 +441,29 @@ export default function AIMessageBubble({
 
                         <Text
                           strong
-                          style={{ minWidth: 14, textAlign: "center", color: "var(--text)", fontSize: 12 }}>
+                          style={{
+                            minWidth: 14,
+                            textAlign: "center",
+                            color: "var(--text)",
+                            fontSize: 12,
+                          }}>
                           {item.quantity}
                         </Text>
 
                         <Button
                           type="text"
                           size="small"
-                          icon={<PlusOutlined style={{ color: "var(--text)", fontSize: 10 }} />}
-                          onClick={() => updateDraftItemQuantity(item.dishId, item.quantity + 1)}
+                          icon={
+                            <PlusOutlined
+                              style={{ color: "var(--text)", fontSize: 10 }}
+                            />
+                          }
+                          onClick={() =>
+                            updateDraftItemQuantity(
+                              item.dishId,
+                              item.quantity + 1,
+                            )
+                          }
                           disabled={isLoading || isConfirming}
                           style={{
                             border: "1px solid var(--border)",
@@ -331,8 +502,6 @@ export default function AIMessageBubble({
                 </div>
               ))}
             </div>
-
-            
           </div>
         )}
       </div>

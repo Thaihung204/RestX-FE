@@ -1,7 +1,10 @@
 "use client";
 
+import StatusToggle from "@/components/ui/StatusToggle";
 import {
   CheckCircleOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
   EyeOutlined,
   MailOutlined,
   PhoneOutlined,
@@ -13,7 +16,7 @@ import {
   WarningOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { App, Input, Select, Switch, Table } from "antd";
+import { App, Button, Input, Modal, Select, Switch, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -67,6 +70,8 @@ const TenantPage: React.FC = () => {
   const [tenants, setTenants] = useState<ITenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deactivateModal, setDeactivateModal] = useState<{ visible: boolean; tenant: ITenant | null }>({ visible: false, tenant: null });
 
   const { activeTab, setActiveTab, setTabItems } = useTenantLayout();
 
@@ -150,6 +155,45 @@ const TenantPage: React.FC = () => {
     await fetchTenants();
   };
 
+  const handleToggleStatus = (record: ITenant) => {
+    const isActive = record.status === "active";
+    if (isActive) {
+      // Deactivating — show confirm modal
+      setDeactivateModal({ visible: true, tenant: record });
+    } else {
+      // Activating — no confirm needed
+      doToggleStatus(record, true);
+    }
+  };
+
+  const doToggleStatus = async (record: ITenant, activate: boolean) => {
+    if (togglingId) return;
+    setTogglingId(record.id);
+    try {
+      await tenantService.changeStatus(record.id, activate);
+      setTenants((prev) =>
+        prev.map((t) =>
+          t.id === record.id ? { ...t, status: activate ? "active" : "inactive" } : t
+        )
+      );
+      message.success(
+        activate
+          ? t("tenants.toasts.activate_success")
+          : t("tenants.toasts.deactivate_success")
+      );
+    } catch {
+      message.error(t("tenants.toasts.save_error_message"));
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handleDeactivateConfirm = async () => {
+    if (!deactivateModal.tenant) return;
+    await doToggleStatus(deactivateModal.tenant, false);
+    setDeactivateModal({ visible: false, tenant: null });
+  };
+
   const STATUS_OPTIONS_TRANSLATED = [
     { label: t("tenants.filter.all_status"), value: "all" },
     { label: t("tenants.filter.active"), value: "active" },
@@ -157,29 +201,7 @@ const TenantPage: React.FC = () => {
     { label: t("tenants.filter.maintenance"), value: "maintenance" },
   ];
 
-  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
 
-  const handleToggleStatus = async (record: ITenant) => {
-    const newStatus = record.status === "active" ? false : true;
-    setTogglingIds((prev) => new Set(prev).add(record.id));
-    try {
-      await tenantService.upsertTenant({ id: record.id, name: record.name, businessName: record.businessName, status: newStatus } as any);
-      setTenants((prev) =>
-        prev.map((t) =>
-          t.id === record.id ? { ...t, status: newStatus ? "active" : "inactive" } : t
-        )
-      );
-      message.success(t(newStatus ? "tenants.toasts.activated" : "tenants.toasts.deactivated"));
-    } catch {
-      message.error(t("tenants.toasts.toggle_error"));
-    } finally {
-      setTogglingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(record.id);
-        return next;
-      });
-    }
-  };
 
   const handleViewDetails = (record: ITenant) => {
     router.push(`/tenants/${record.id}`);
@@ -273,7 +295,7 @@ const TenantPage: React.FC = () => {
         <div className="tenant-status-toggle">
           <Switch
             checked={record.status === "active"}
-            loading={togglingIds.has(record.id)}
+            loading={togglingId === record.id}
             onChange={() => handleToggleStatus(record)}
             size="small"
           />
@@ -283,8 +305,9 @@ const TenantPage: React.FC = () => {
         </div>
       ),
     },
+
     {
-      title: "",
+      title: t("dashboard.tables.card.view_details"),
       key: "actions",
       width: 80,
       align: "right" as const,
@@ -306,114 +329,162 @@ const TenantPage: React.FC = () => {
   }
 
   return (
-    <main style={{ background: "var(--bg-base)", color: "var(--text)", flex: 1 }}>
-      <div className="tenant-content">
-        {activeTab === "tenants" && (
-          <div className="dashboard-animate-in" style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
-            {/* KPI Stats (Glass Slabs) */}
-            <div className="tenant-stats-bar">
-              {STAT_CONFIGS.map((cfg) => {
-                const count = tenants.filter(cfg.filter).length;
-                return (
-                  <div key={cfg.key} className="tenant-stat-card">
-                    <div className="tenant-stat-glow" style={{ background: cfg.glowColor }} />
-                    <div className="tenant-stat-top">
-                      <div>
-                        <p className="tenant-stat-label">{t(`tenants.stats.${cfg.key}`)}</p>
-                        <h3 className="tenant-stat-value">{count}</h3>
+    <>
+      <main style={{ background: "var(--bg-base)", color: "var(--text)", flex: 1 }}>
+        <div className="tenant-content">
+          {activeTab === "tenants" && (
+            <div className="dashboard-animate-in" style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+              {/* KPI Stats (Glass Slabs) */}
+              <div className="tenant-stats-bar">
+                {STAT_CONFIGS.map((cfg) => {
+                  const count = tenants.filter(cfg.filter).length;
+                  return (
+                    <div key={cfg.key} className="tenant-stat-card">
+                      <div className="tenant-stat-glow" style={{ background: cfg.glowColor }} />
+                      <div className="tenant-stat-top">
+                        <div>
+                          <p className="tenant-stat-label">{t(`tenants.stats.${cfg.key}`)}</p>
+                          <h3 className="tenant-stat-value">{count}</h3>
+                        </div>
+                        <span className="tenant-stat-icon" style={{ color: cfg.iconColor }}>
+                          {cfg.icon}
+                        </span>
                       </div>
-                      <span className="tenant-stat-icon" style={{ color: cfg.iconColor }}>
-                        {cfg.icon}
-                      </span>
                     </div>
+                  );
+                })}
+              </div>
+
+              {/* Toolbar */}
+              <div className="tenant-toolbar">
+                <div className="tenant-toolbar-left">
+                  <div className="tenant-toolbar-search">
+                    <Input
+                      allowClear
+                      prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      style={{ borderRadius: "999px", padding: "0.625rem 1rem" }}
+                    />
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Toolbar */}
-            <div className="tenant-toolbar">
-              <div className="tenant-toolbar-left">
-                <div className="tenant-toolbar-search">
-                  <Input
-                    allowClear
-                    prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    style={{ borderRadius: "999px", padding: "0.625rem 1rem" }}
+                  <Select
+                    style={{ width: 160 }}
+                    value={status}
+                    onChange={setStatus}
+                    options={STATUS_OPTIONS_TRANSLATED}
                   />
-                </div>
-                <Select
-                  style={{ width: 160 }}
-                  value={status}
-                  onChange={setStatus}
-                  options={STATUS_OPTIONS_TRANSLATED}
-                />
-                <span className="tenant-toolbar-count">
-                  {t("tenants.filter.total_filtered", {
-                    total: tenants.length,
-                    filtered: filteredData.length,
-                  })}
-                </span>
-              </div>
-              <div className="tenant-toolbar-right">
-                <button
-                  className={`tenant-refresh-btn ${loading ? "tenant-refresh-btn-loading" : ""}`}
-                  onClick={handleRefresh}
-                  disabled={loading}>
-                  <ReloadOutlined />
-                  <span>{t("tenants.filter.refresh")}</span>
-                </button>
-                <Link href="/tenants/new">
-                  <span className="tenant-add-btn">
-                    <PlusOutlined />
-                    {t("tenants.add_tenant")}
+                  <span className="tenant-toolbar-count">
+                    {t("tenants.filter.total_filtered", {
+                      total: tenants.length,
+                      filtered: filteredData.length,
+                    })}
                   </span>
-                </Link>
+                </div>
+                <div className="tenant-toolbar-right">
+                  <button
+                    className={`tenant-refresh-btn ${loading ? "tenant-refresh-btn-loading" : ""}`}
+                    onClick={handleRefresh}
+                    disabled={loading}>
+                    <ReloadOutlined />
+                    <span>{t("tenants.filter.refresh")}</span>
+                  </button>
+                  <Link href="/tenants/new">
+                    <span className="tenant-add-btn">
+                      <PlusOutlined />
+                      {t("tenants.add_tenant")}
+                    </span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="tenant-table-wrap">
+                <Table
+                  rowKey="id"
+                  columns={columns}
+                  dataSource={filteredData}
+                  size="small"
+                  loading={loading}
+                  pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showTotal: (total) => (
+                      <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
+                        {t("tenants.table.total", { count: total })}
+                      </span>
+                    ),
+                    className: "px-4 pb-3",
+                    responsive: true,
+                    showLessItems: true,
+                  }}
+                  scroll={{ x: "max-content", y: "calc(100vh - 520px)" }}
+                />
               </div>
             </div>
+          )}
 
-            {/* Table */}
-            <div className="tenant-table-wrap">
-              <Table
-                rowKey="id"
-                columns={columns}
-                dataSource={filteredData}
-                size="small"
-                loading={loading}
-                pagination={{
-                  pageSize: 10,
-                  showSizeChanger: true,
-                  showTotal: (total) => (
-                    <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
-                      {t("tenants.table.total", { count: total })}
-                    </span>
-                  ),
-                  className: "px-4 pb-3",
-                  responsive: true,
-                  showLessItems: true,
-                }}
-                scroll={{ x: "max-content", y: "calc(100vh - 520px)" }}
-              />
+          {activeTab === "requests" && (
+            <div className="dashboard-animate-in">
+              <TenantRequestList />
             </div>
-          </div>
-        )}
+          )}
+          {activeTab === "revenue" && (
+            <div className="dashboard-animate-in">
+              <TenantsSystemRevenue />
+            </div>
+          )}
+        </div>
 
-        {activeTab === "requests" && (
-          <div className="dashboard-animate-in">
-            <TenantRequestList />
-          </div>
-        )}
-        {activeTab === "revenue" && (
-          <div className="dashboard-animate-in">
-            <TenantsSystemRevenue />
-          </div>
-        )}
-      </div>
+        {/* Bottom refractive glow */}
+        <div className="tenant-bottom-glow" />
+      </main>
 
-      {/* Bottom refractive glow */}
-      <div className="tenant-bottom-glow" />
-    </main>
+      {/* Deactivate Confirm Modal */}
+      <Modal
+        centered
+        maskClosable={!togglingId}
+        keyboard={!togglingId}
+        title={
+          <div className="flex items-center gap-3">
+            <ExclamationCircleOutlined className="text-orange-500 text-2xl" />
+            <span className="text-lg font-semibold">
+              {t("tenants.deactivate_modal.title")}
+            </span>
+          </div>
+        }
+        open={deactivateModal.visible}
+        onCancel={() => setDeactivateModal({ visible: false, tenant: null })}
+        footer={[
+          <Button key="cancel" onClick={() => setDeactivateModal({ visible: false, tenant: null })} size="large">
+            {t("tenants.edit.delete_modal.button_cancel")}
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger
+            loading={!!togglingId}
+            onClick={handleDeactivateConfirm}
+            size="large"
+            icon={<DeleteOutlined />}>
+            {t("tenants.deactivate_modal.button_confirm")}
+          </Button>,
+        ]}
+        width={480}
+        styles={{
+          mask: { backdropFilter: "blur(10px)", background: "var(--modal-overlay)" },
+        }}>
+        <div className="py-4 space-y-4">
+          <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900 rounded-lg p-4">
+            <p className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-1">
+              {t("tenants.deactivate_modal.warning_title")}
+            </p>
+            <p className="text-sm text-orange-700 dark:text-orange-300">
+              {t("tenants.deactivate_modal.warning_description")}
+            </p>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 

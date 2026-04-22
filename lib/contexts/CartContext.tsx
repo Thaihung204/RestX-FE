@@ -7,13 +7,13 @@ import type { CartItem } from "@/lib/types/menu";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
 } from "react";
 import { useTenant } from "./TenantContext";
 
@@ -59,6 +59,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [messageApi, contextHolder] = message.useMessage();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
+  const [orderedSubTotal, setOrderedSubTotal] = useState<number>(0);
   const [cartModalOpen, setCartModalOpen] = useState(false);
   const [activeCartTab, setActiveCartTabState] = useState<string>("1");
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
@@ -81,14 +82,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [cartItems],
   );
 
-  const totalOrderAmount = useMemo(
-    () =>
-      orderedItems.reduce(
-        (sum, item) => sum + parseFloat(item.price) * item.quantity,
-        0,
-      ),
-    [orderedItems],
-  );
+  const totalOrderAmount = orderedSubTotal;
 
   // Order context
   const setOrderContext = useCallback(
@@ -104,20 +98,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Cart actions
   const addToCart = useCallback(
     (item: CartItem) => {
+      const rawQuantity = Number(item.quantity ?? 1);
+      const quantityToAdd =
+        Number.isFinite(rawQuantity) && rawQuantity > 0
+          ? Math.floor(rawQuantity)
+          : 1;
+
       setCartItems((prev) => {
         const existingItem = prev.find((cartItem) => cartItem.id === item.id);
 
         if (existingItem) {
           return prev.map((cartItem) =>
             cartItem.id === item.id
-              ? { ...cartItem, quantity: cartItem.quantity + 1 }
+              ? { ...cartItem, quantity: cartItem.quantity + quantityToAdd }
               : cartItem,
           );
         } else {
-          return [...prev, { ...item, quantity: 1 }];
+          return [...prev, { ...item, quantity: quantityToAdd }];
         }
       });
-      messageApi.success(`Đã thêm ${item.name} vào giỏ hàng`);
+      messageApi.success(
+        quantityToAdd > 1
+          ? `Đã thêm ${quantityToAdd} món ${item.name} vào giỏ hàng`
+          : `Đã thêm ${item.name} vào giỏ hàng`,
+      );
     },
     [messageApi],
   );
@@ -214,6 +218,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       setOrderedItems(Array.from(aggregatedByDishAndStatus.values()));
+
+      // Sum subTotal from all orders (from response, not FE-calculated)
+      const responseSubTotal = orders.reduce(
+        (sum, order) => sum + (order.subTotal ?? 0),
+        0,
+      );
+      setOrderedSubTotal(responseSubTotal);
     } catch (error) {
       console.error("Fetch ordered items failed:", error);
     }
@@ -380,8 +391,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Modal actions
   const openCartModal = useCallback(() => {
+    setActiveCartTabState(cartItems.length > 0 ? "1" : "2");
     setCartModalOpen(true);
-  }, []);
+  }, [cartItems]);
 
   const closeCartModal = useCallback(() => {
     setCartModalOpen(false);
@@ -399,7 +411,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setOrderContext,
       cartItemCount,
       totalCartAmount,
-      totalOrderAmount,
+      totalOrderAmount: orderedSubTotal,
       addToCart,
       removeFromCart,
       updateQuantity,
@@ -421,7 +433,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       orderCustomerId,
       cartItemCount,
       totalCartAmount,
-      totalOrderAmount,
+      orderedSubTotal,
       addToCart,
       removeFromCart,
       updateQuantity,
