@@ -1,9 +1,9 @@
 "use client";
 
 import StatusToggle from "@/components/ui/StatusToggle";
+import { formatVND } from "@/lib/utils/currency";
 import { EditOutlined } from "@ant-design/icons";
 import Link from "next/link";
-import { formatVND } from "@/lib/utils/currency";
 export interface DishCardItem {
   id: string;
   name: string;
@@ -146,7 +146,26 @@ export default function DishCard({
           />
         </div>
 
-        <div className="mt-4 grid grid-cols-[44px_1fr] gap-2">
+        <div className="mt-4 grid grid-cols-[1fr_44px] gap-2">
+          <button
+            onClick={() => onAddIngredients(item)}
+            className="h-11 w-full rounded-lg px-3 text-sm font-medium transition-all"
+            style={{
+              background: "var(--surface)",
+              color: "var(--text)",
+              border: "1px solid var(--border)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(59, 130, 246, 0.08)";
+              e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.3)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--surface)";
+              e.currentTarget.style.borderColor = "var(--border)";
+            }}
+            suppressHydrationWarning>
+            {labels.ingredients}
+          </button>
           <Link href={`/admin/menu/${item.id}`} className="block">
             <button
               type="button"
@@ -167,25 +186,6 @@ export default function DishCard({
               <EditOutlined />
             </button>
           </Link>
-          <button
-            onClick={() => onAddIngredients(item)}
-            className="h-11 w-full rounded-lg px-3 text-sm font-medium transition-all"
-            style={{
-              background: "var(--surface)",
-              color: "var(--text)",
-              border: "1px solid var(--border)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(59, 130, 246, 0.08)";
-              e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.3)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "var(--surface)";
-              e.currentTarget.style.borderColor = "var(--border)";
-            }}
-            suppressHydrationWarning>
-            {labels.ingredients}
-          </button>
         </div>
       </div>
     </div>

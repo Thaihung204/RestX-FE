@@ -819,14 +819,14 @@ export default function OrderManagement() {
       <div>
         {filteredOrders.length > 0 ? (
           filteredOrders.map((order) => {
-            const defaultStatuses = orderDetailStatuses
-              .filter((s) => s.isDefault)
+            const preparingStatuses = orderDetailStatuses
+              .filter((s) => s.code?.toLowerCase() === "preparing")
               .map((s) => s.code?.toLowerCase() || s.id);
 
             const filteredDetailItems = order.detailItems.filter((item) => {
-              if (defaultStatuses.length === 0) return true;
+              if (preparingStatuses.length === 0) return true;
               const nStatus = normalizeStatusValue(item.status).toLowerCase();
-              return defaultStatuses.includes(nStatus);
+              return preparingStatuses.includes(nStatus);
             });
 
             return (
