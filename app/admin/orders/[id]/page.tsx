@@ -9,7 +9,7 @@ import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import MenuSelectionModal from "../../../../components/admin/orders/MenuSelectionModal";
@@ -101,6 +101,7 @@ const formatDateTime = (value?: string | null) => {
 
 export default function AdminOrderDetailPage() {
   const { t } = useTranslation("common");
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const orderId = useMemo(() => params?.id ?? "", [params]);
 
@@ -285,12 +286,12 @@ export default function AdminOrderDetailPage() {
                 : t("admin.order_detail.id", { id: orderId })}
             </p> */}
           </div>
-          <Link
-            href="/admin/orders"
-            className="rounded-lg border px-4 py-2 text-sm font-medium transition hover:opacity-80"
-            style={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }}>
-            {t("admin.order_detail.back_to_list")}
-          </Link>
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
+            ← {t("admin.order_detail.actions.back")}
+          </button>
         </div>
 
         {loading ? (
