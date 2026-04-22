@@ -39,6 +39,7 @@ interface CartContextType {
   addToCart: (item: CartItem) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
+  updateNote: (itemId: string, note: string) => void;
   clearCart: () => void;
 
   // Order actions
@@ -140,6 +141,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const updateNote = useCallback((itemId: string, note: string) => {
+    setCartItems((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, note } : item)),
+    );
+  }, []);
+
   const clearCart = useCallback(() => {
     setCartItems([]);
   }, []);
@@ -185,6 +192,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           if (quantity <= 0) return;
 
           const status = detail.status?.trim() || "Pending";
+          // We include note in the aggregation key so that items with different notes don't get merged incorrectly.
+          // Or we can just merge notes. Let's merge notes.
           const aggregationKey = `${detail.dishId}__${status.toLowerCase()}`;
           const existing = aggregatedByDishAndStatus.get(aggregationKey);
           const fallbackPrice =
@@ -193,9 +202,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               : "0";
 
           if (existing) {
+            let combinedNote = existing.note || "";
+            if (detail.note) {
+              combinedNote = combinedNote ? `${combinedNote}; ${detail.note}` : detail.note;
+            }
+
             aggregatedByDishAndStatus.set(aggregationKey, {
               ...existing,
               quantity: existing.quantity + quantity,
+              note: combinedNote || undefined,
             });
             return;
           }
@@ -208,6 +223,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               `Dish ${detail.dishId.slice(0, 8)}`,
             price: dish?.price || fallbackPrice,
             quantity,
+            note: detail.note || undefined,
             category: "food",
             categoryId: dish?.categoryId || "",
             categoryName: dish?.categoryName,
@@ -252,6 +268,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const orderDetails = cartItems.map((cartItem) => ({
         dishId: cartItem.id,
         quantity: cartItem.quantity,
+        note: cartItem.note,
       }));
 
       const payload: OrderRequestDto = {
@@ -415,6 +432,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       addToCart,
       removeFromCart,
       updateQuantity,
+      updateNote,
       clearCart,
       confirmOrder,
       requestPayment,
@@ -437,6 +455,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       addToCart,
       removeFromCart,
       updateQuantity,
+      updateNote,
       clearCart,
       confirmOrder,
       requestPayment,

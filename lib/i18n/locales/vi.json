@@ -179,6 +179,11 @@
         "loading": "Đang tải...",
         "no_image": "Không có ảnh",
         "no_menu_items": "Không có món ăn nào."
+      },
+      "cancel_dish": {
+        "title": "Hủy món",
+        "confirm": "Xác nhận hủy",
+        "message": "Bạn có chắc muốn hủy món \"{{name}}\"? Hành động này không thể hoàn tác."
       }
     }
   },
@@ -3006,7 +3011,8 @@
       "total": "Tổng cộng:",
       "items_count": "{{count}} món",
       "confirm_order": "Gửi yêu cầu gọi món",
-      "request_payment": "Xác nhận thanh toán"
+      "request_payment": "Xác nhận thanh toán",
+      "note_placeholder": "Ghi chú cho món này"
     },
     "welcome_card": {
       "greeting": "Xin chào quý khách",
