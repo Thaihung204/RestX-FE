@@ -2601,7 +2601,9 @@
       "order_info": "Order Information",
       "view_order": "View Order",
       "cash_receive": "Cash Received",
-      "cashback": "Change"
+      "cashback": "Change",
+      "export_receipt": "Export Receipt",
+      "receipt_error": "Failed to export receipt"
     }
   },
   "menu_form": {

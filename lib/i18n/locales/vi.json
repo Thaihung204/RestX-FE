@@ -2646,7 +2646,9 @@
       "order_info": "Thông tin đơn hàng",
       "view_order": "Xem đơn hàng",
       "cash_receive": "Tiền nhận",
-      "cashback": "Tiền thối"
+      "cashback": "Tiền thối",
+      "export_receipt": "Xuất hóa đơn",
+      "receipt_error": "Không thể xuất hóa đơn"
     }
   },
   "menu_form": {

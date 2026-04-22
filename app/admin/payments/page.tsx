@@ -16,7 +16,6 @@ const STATUS_MAP: Record<number, { label: string; color: string }> = {
   0: { label: "Pending", color: "#f97316" },
   1: { label: "Success", color: "#22c55e" },
   2: { label: "Failed", color: "#ef4444" },
-  3: { label: "Cancelled", color: "#6b7280" },
 };
 
 export default function PaymentsPage() {
@@ -188,7 +187,6 @@ export default function PaymentsPage() {
                 <option value="0">{t("payments.filter.pending")}</option>
                 <option value="1">{t("payments.filter.success")}</option>
                 <option value="2">{t("payments.filter.failed")}</option>
-                <option value="3">{t("payments.filter.cancelled")}</option>
               </DropDown>
             </div>
 

@@ -85,6 +85,16 @@ class PaymentService {
     return response.data;
   }
 
+  async getReceipt(id: string): Promise<{ blob: Blob; fileName: string }> {
+    const response = await axiosInstance.get(`/payments/${id}/receipt`, {
+      responseType: "blob",
+    });
+    const contentDisposition = response.headers["content-disposition"] || "";
+    const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    const fileName = match ? match[1].replace(/['"]/g, "") : `receipt-${id}.pdf`;
+    return { blob: response.data, fileName };
+  }
+
   async payByCash(
     orderId: string,
     cashReceive: number,

@@ -3,6 +3,9 @@
 import paymentService, { PaymentDetail } from "@/lib/services/paymentService";
 import { formatVND } from "@/lib/utils/currency";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
+import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
+import { DownloadOutlined } from "@ant-design/icons";
+import { message } from "antd";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -56,8 +59,23 @@ export default function PaymentDetailPage() {
   const [payment, setPayment] = useState<PaymentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const tRef = useRef(t);
   useEffect(() => { tRef.current = t; }, [t]);
+
+  const handleExportReceipt = async () => {
+    if (!id || exporting) return;
+    setExporting(true);
+    try {
+      const file = await paymentService.getReceipt(id);
+      triggerBrowserDownload(file.blob, file.fileName);
+      message.success(t("common.messages.export_success"));
+    } catch (err) {
+      message.error(extractApiErrorMessage(err, t("payments.detail.receipt_error")));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -87,12 +105,24 @@ export default function PaymentDetailPage() {
               {t("payments.detail.title")}
             </h1>
           </div>
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
-            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
-            ← {t("admin.order_detail.actions.back")}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportReceipt}
+              disabled={exporting || !payment}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
+              style={{ background: "var(--primary-soft)", border: "1px solid var(--primary-border)", color: "var(--primary)" }}>
+              <DownloadOutlined />
+              {exporting
+                ? t("common.actions.exporting_report")
+                : t("payments.detail.export_receipt")}
+            </button>
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>
+              ← {t("admin.order_detail.actions.back")}
+            </button>
+          </div>
         </div>
 
         {loading && (
