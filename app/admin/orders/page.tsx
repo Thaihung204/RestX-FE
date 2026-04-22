@@ -4,11 +4,11 @@ import { DropDown } from "@/components/ui/DropDown";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
-  OrderStatus,
+    OrderStatus,
 } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
-import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { formatVND } from "@/lib/utils/currency";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
@@ -393,27 +393,18 @@ export default function OrdersPage() {
                   defaultValue: "Trang thai",
                 })}
               </label>
-              <select
+              <DropDown
                 id="orders-filter-status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg text-sm"
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}>
+                className="!h-14 !px-4">
                 <option value="">
-                  {t("admin.reservations.filter.all_status", {
-                    defaultValue: "Tat ca trang thai",
-                  })}
+                  {t("admin.reservations.filter.all_status", { defaultValue: "Tat ca trang thai" })}
                 </option>
                 {orderStatuses.map((status) => (
-                  <option key={status.id} value={status.id}>
-                    {status.name}
-                  </option>
+                  <option key={status.id} value={status.id}>{status.name}</option>
                 ))}
-              </select>
+              </DropDown>
             </div>
 
             <div className="space-y-1">
