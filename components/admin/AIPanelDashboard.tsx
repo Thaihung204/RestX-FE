@@ -307,7 +307,7 @@ export default function AIPanelDashboard({
                             }>
                             <div className="space-y-3">
                               {parsed.risks.map((risk, i) => (
-                                <AIStrategyListItem key={i} title={(risk as any).title ?? t("dashboard.analytics.labels.risk", { defaultValue: "Rủi ro" })} insight={(risk as any).analysis ?? (risk as any).insight ?? (risk as any).evidence ?? ""} action={(risk as any).action ?? ""} when={(risk as any).when ?? t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={(risk as any).impact ?? "medium"} variant="risk" />
+                                <AIStrategyListItem key={i} title={(risk as any).title ?? t("dashboard.analytics.labels.risk", { defaultValue: "Rủi ro" })} insight={(risk as any).analysis ?? (risk as any).insight ?? ""} evidence={(risk as any).evidence ?? ""} action={(risk as any).action ?? ""} when={(risk as any).when ?? t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={(risk as any).impact ?? "medium"} variant="risk" />
                               ))}
                             </div>
                           </AIStrategySection>
@@ -323,7 +323,7 @@ export default function AIPanelDashboard({
                             }>
                             <div className="space-y-3">
                               {parsed.opportunities.map((opp, i) => (
-                                <AIStrategyListItem key={i} title={(opp as any).title ?? t("dashboard.analytics.labels.opportunity", { defaultValue: "Cơ hội" })} insight={(opp as any).analysis ?? (opp as any).insight ?? (opp as any).evidence ?? ""} action={(opp as any).action ?? ""} when={(opp as any).when ?? t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={(opp as any).impact ?? "medium"} type={(opp as any).type} variant="opportunity" />
+                                <AIStrategyListItem key={i} title={(opp as any).title ?? t("dashboard.analytics.labels.opportunity", { defaultValue: "Cơ hội" })} insight={(opp as any).analysis ?? (opp as any).insight ?? ""} evidence={(opp as any).evidence ?? ""} action={(opp as any).action ?? ""} when={(opp as any).when ?? t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={(opp as any).impact ?? "medium"} type={(opp as any).type} variant="opportunity" />
                               ))}
                             </div>
                           </AIStrategySection>
@@ -354,8 +354,27 @@ export default function AIPanelDashboard({
                                     {t("dashboard.analytics.menu.topDish", { defaultValue: "Món chủ lực" })} {dish.rank ?? index + 1}
                                   </div>
                                   <div className="font-semibold" style={{ color: "var(--text)" }}>{dish.dishName}</div>
-                                  <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{dish.evidence ?? dish.reason}</p>
-                                  {dish.action && <p className="text-sm mt-3" style={{ color: "var(--primary)" }}>{dish.action}</p>}
+                                  {dish.reason && <p className="text-sm mt-3 leading-relaxed" style={{ color: "var(--text-muted)" }}>{dish.reason}</p>}
+                                  <div className="space-y-3 mt-4">
+                                    {dish.evidence && (
+                                      <div className="flex items-start gap-2">
+                                        <svg className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--text-muted)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                        <div>
+                                          <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t('dashboard.analytics.labels.evidence', { defaultValue: 'Cơ sở dữ liệu' })}</p>
+                                          <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{dish.evidence}</p>
+                                        </div>
+                                      </div>
+                                    )}
+                                    {dish.action && (
+                                      <div className="flex items-start gap-2">
+                                        <svg className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--primary)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                        <div>
+                                          <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t('dashboard.analytics.labels.action', { defaultValue: 'Hành động' })}</p>
+                                          <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{dish.action}</p>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -368,8 +387,27 @@ export default function AIPanelDashboard({
                                 {parsed.suggestedDishes.map((dish, index) => (
                                   <div key={index} className="rounded-lg p-4 border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
                                     <div className="font-semibold" style={{ color: "var(--text)" }}>{dish.dishName}</div>
-                                    <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{dish.evidence ?? dish.reason}</p>
-                                    {dish.action && <p className="text-sm mt-3" style={{ color: "var(--success)" }}>{dish.action}</p>}
+                                    {dish.reason && <p className="text-sm mt-3 leading-relaxed" style={{ color: "var(--text-muted)" }}>{dish.reason}</p>}
+                                    <div className="space-y-3 mt-4">
+                                      {dish.evidence && (
+                                        <div className="flex items-start gap-2">
+                                          <svg className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--text-muted)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                          <div>
+                                            <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t('dashboard.analytics.labels.evidence', { defaultValue: 'Cơ sở dữ liệu' })}</p>
+                                            <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{dish.evidence}</p>
+                                          </div>
+                                        </div>
+                                      )}
+                                      {dish.action && (
+                                        <div className="flex items-start gap-2">
+                                          <svg className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--success)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                          <div>
+                                            <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t('dashboard.analytics.labels.action', { defaultValue: 'Hành động' })}</p>
+                                            <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{dish.action}</p>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -390,7 +428,16 @@ export default function AIPanelDashboard({
                                         <span className="text-sm font-bold" style={{ color: "var(--primary)" }}>{new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(combo.suggestedPrice)}</span>
                                       )}
                                     </div>
-                                    <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{combo.evidence ?? combo.reason}</p>
+                                    {combo.reason && <p className="text-sm mt-3 leading-relaxed" style={{ color: "var(--text-muted)" }}>{combo.reason}</p>}
+                                    {combo.evidence && (
+                                      <div className="flex items-start gap-2 mt-4">
+                                        <svg className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--text-muted)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                        <div>
+                                          <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t('dashboard.analytics.labels.evidence', { defaultValue: 'Cơ sở dữ liệu' })}</p>
+                                          <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{combo.evidence}</p>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -473,7 +520,7 @@ export default function AIPanelDashboard({
                             {[...parsed.actionPlan]
                               .sort((a, b) => IMPACT_ORDER[(a.impact ?? "medium")] - IMPACT_ORDER[(b.impact ?? "medium")])
                               .map((action, i) => (
-                                <AIStrategyListItem key={i} title={action.title ?? `#{action.priority ?? i + 1}`} reason={action.evidence ?? ""} action={action.action ?? ""} when={action.priority ? `Ưu tiên ${action.priority}` : t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={action.impact ?? "medium"} variant="action" />
+                                <AIStrategyListItem key={i} title={action.title ?? `#{action.priority ?? i + 1}`} evidence={action.evidence ?? ""} action={action.action ?? ""} when={action.priority ? `Ưu tiên ${action.priority}` : t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={action.impact ?? "medium"} variant="action" />
                               ))}
                           </div>
                         </AIStrategySection>

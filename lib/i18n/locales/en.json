@@ -2461,7 +2461,8 @@
       },
       "labels": {
         "action": "Action:",
-        "time": "Time:"
+        "time": "Time:",
+        "evidence": "Evidence:"
       },
       "summary": {
         "title": "Strategy Summary",
