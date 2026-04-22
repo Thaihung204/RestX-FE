@@ -4,11 +4,12 @@ import { useCart } from "@/lib/contexts/CartContext";
 import { formatVND } from "@/lib/utils/currency";
 import {
   CloseOutlined,
+  EditOutlined,
   MinusOutlined,
   PlusOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Modal, Tabs, Tag, Typography } from "antd";
+import { Button, Card, Input, Modal, Tabs, Tag, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import FeedbackModal from "./FeedbackModal";
@@ -26,6 +27,7 @@ export default function CartModal() {
     cartItemCount,
     totalOrderAmount,
     updateQuantity,
+    updateNote,
     confirmOrder,
     requestPayment,
     closeCartModal,
@@ -349,6 +351,30 @@ export default function CartModal() {
                                 />
                               </div>
                             </div>
+                            <Input
+                              prefix={
+                                <EditOutlined
+                                  style={{
+                                    color: "var(--text)",
+                                    fontSize: 14,
+                                    opacity: item.note ? 1 : 0.6,
+                                  }}
+                                />
+                              }
+                              placeholder={t("customer_page.cart_modal.note_placeholder")}
+                              value={item.note || ""}
+                              onChange={(e) => updateNote(item.id, e.target.value)}
+                              style={{
+                                marginTop: 12,
+                                background: "var(--background)",
+                                borderRadius: 8,
+                                padding: "6px 12px",
+                                color: "var(--text)",
+                                fontSize: 13,
+                                border: "1px solid var(--border)",
+                                boxShadow: "none",
+                              }}
+                            />
                           </Card>
                         ))}
                       </>
@@ -527,6 +553,36 @@ export default function CartModal() {
                                       </div>
                                     </div>
                                   </div>
+                                  {item.note && (
+                                    <div
+                                      style={{
+                                        marginTop: 8,
+                                        background: "var(--background)",
+                                        borderRadius: 8,
+                                        padding: "6px 12px",
+                                        display: "flex",
+                                        alignItems: "flex-start",
+                                        gap: 8,
+                                        border: "1px solid var(--border)",
+                                      }}>
+                                      <EditOutlined
+                                        style={{
+                                          color: "var(--text)",
+                                          fontSize: 13,
+                                          marginTop: 2,
+                                          opacity: 0.8,
+                                        }}
+                                      />
+                                      <Text
+                                        style={{
+                                          color: "var(--text)",
+                                          fontSize: 13,
+                                          fontStyle: "italic",
+                                        }}>
+                                        {item.note}
+                                      </Text>
+                                    </div>
+                                  )}
                                 </Card>
                               ))}
                             </div>

@@ -2961,7 +2961,8 @@
       "total": "Total:",
       "items_count": "{{count}} items",
       "confirm_order": "Send Order Request",
-      "request_payment": "Request Payment"
+      "request_payment": "Request Payment",
+      "note_placeholder": "Note for this dish"
     },
     "welcome_card": {
       "greeting": "Welcome",

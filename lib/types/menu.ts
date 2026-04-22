@@ -74,6 +74,7 @@ export interface CartItem {
   categoryName?: string;
   image?: string;
   status?: string;
+  note?: string;
 }
 
 export type DishTag = "spicy" | "vegan" | "best" | "popular";

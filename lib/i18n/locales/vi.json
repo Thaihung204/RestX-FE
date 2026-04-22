@@ -3006,7 +3006,8 @@
       "total": "Tổng cộng:",
       "items_count": "{{count}} món",
       "confirm_order": "Gửi yêu cầu gọi món",
-      "request_payment": "Xác nhận thanh toán"
+      "request_payment": "Xác nhận thanh toán",
+      "note_placeholder": "Ghi chú cho món này"
     },
     "welcome_card": {
       "greeting": "Xin chào quý khách",
