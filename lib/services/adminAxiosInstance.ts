@@ -59,13 +59,20 @@ adminAxiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response) {
-            console.error('[adminAxios] Error response:', {
-                status: error.response.status,
-                url: error.config?.url,
-                method: error.config?.method?.toUpperCase(),
-                data: error.response.data,
-                headers: error.response.headers,
-            });
+            // Mute Expected 404s to avoid console clutter. 
+            const isExpected404 =
+                error.response.status === 404 &&
+                (error.config?.url?.includes("/payment-settings"));
+
+            if (!isExpected404) {
+                console.error('[adminAxios] Error response:', {
+                    status: error.response.status,
+                    url: error.config?.url,
+                    method: error.config?.method?.toUpperCase(),
+                    data: error.response.data,
+                    headers: error.response.headers,
+                });
+            }
         }
         return Promise.reject(error);
     }

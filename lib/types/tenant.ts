@@ -20,6 +20,7 @@ export interface ITenant {
 export interface TenantCreateInput {
   name: string;
   hostName?: string;
+  isCustomDomain?: boolean;
   businessName: string;
   phoneNumber: string;
   addressLine1: string;

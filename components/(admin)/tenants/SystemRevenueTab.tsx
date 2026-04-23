@@ -1,9 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, DatePicker, Radio, Typography } from "antd";
+import { DatePicker } from "antd";
 import RevenueChart from "@/components/admin/charts/RevenueChart";
 import { useTranslation } from "react-i18next";
+import {
+  DollarOutlined,
+  ShoppingCartOutlined,
+  RiseOutlined,
+} from "@ant-design/icons";
 
 const SystemRevenueTab: React.FC = () => {
   const { t } = useTranslation();
@@ -11,47 +16,91 @@ const SystemRevenueTab: React.FC = () => {
     "day" | "week" | "month" | "year"
   >("month");
 
+  const rangeOptions = [
+    { label: t("tenants.revenue.day"), value: "day" as const },
+    { label: t("tenants.revenue.week"), value: "week" as const },
+    { label: t("tenants.revenue.month"), value: "month" as const },
+    { label: t("tenants.revenue.year"), value: "year" as const },
+  ];
+
   return (
-    <div className="space-y-4">
-      <Card
-        variant="borderless"
-        style={{
-          background: "var(--card)",
-          borderColor: "var(--border)",
-        }}>
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <Typography.Title
-              level={4}
-              style={{
-                margin: 0,
-                color: "var(--text)",
-              }}>
-              {t("tenants.revenue.title")}
-            </Typography.Title>
-            <Typography.Text style={{ color: "var(--text-muted)" }}>
-              {t("tenants.revenue.subtitle")}
-            </Typography.Text>
+    <div className="sr-shell">
+      {/* ── Header Bar ── */}
+      <div className="sr-header-bar">
+        <div className="sr-header-text">
+          <h2 className="sr-header-title">{t("tenants.revenue.title")}</h2>
+          <p className="sr-header-subtitle">{t("tenants.revenue.subtitle")}</p>
+        </div>
+        <div className="sr-header-controls">
+          <div className="sr-range-group">
+            {rangeOptions.map((opt) => (
+              <button
+                key={opt.value}
+                className={`sr-range-btn ${activeRevenueRange === opt.value ? "sr-range-btn-active" : ""}`}
+                onClick={() => setActiveRevenueRange(opt.value)}>
+                {opt.label}
+              </button>
+            ))}
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Radio.Group
-              value={activeRevenueRange}
-              onChange={(e) => setActiveRevenueRange(e.target.value)}
-              options={[
-                { label: t("tenants.revenue.day"), value: "day" },
-                { label: t("tenants.revenue.week"), value: "week" },
-                { label: t("tenants.revenue.month"), value: "month" },
-                { label: t("tenants.revenue.year"), value: "year" },
-              ]}
-              optionType="button"
-              buttonStyle="solid"
-            />
-            <DatePicker.RangePicker />
+          <DatePicker.RangePicker
+            className="sr-date-picker"
+            classNames={{ popup: { root: "sr-date-popup" } }}
+          />
+        </div>
+      </div>
+
+      {/* ── KPI Summary Row ── */}
+      <div className="sr-kpi-row">
+        <div className="sr-kpi-card">
+          <div className="sr-kpi-accent" />
+          <div className="sr-kpi-icon-wrap">
+            <DollarOutlined />
+          </div>
+          <div className="sr-kpi-content">
+            <span className="sr-kpi-value">0d</span>
+            <span className="sr-kpi-label">{t("tenants.revenue.total_revenue")}</span>
+          </div>
+          <div className="sr-kpi-trend sr-kpi-trend-neutral">
+            <RiseOutlined />
+            <span>0%</span>
           </div>
         </div>
-      </Card>
 
-      <RevenueChart />
+        <div className="sr-kpi-card">
+          <div className="sr-kpi-accent" />
+          <div className="sr-kpi-icon-wrap">
+            <ShoppingCartOutlined />
+          </div>
+          <div className="sr-kpi-content">
+            <span className="sr-kpi-value">0</span>
+            <span className="sr-kpi-label">{t("tenants.revenue.orders_period")}</span>
+          </div>
+          <div className="sr-kpi-trend sr-kpi-trend-neutral">
+            <RiseOutlined />
+            <span>0%</span>
+          </div>
+        </div>
+
+        <div className="sr-kpi-card">
+          <div className="sr-kpi-accent" />
+          <div className="sr-kpi-icon-wrap">
+            <DollarOutlined />
+          </div>
+          <div className="sr-kpi-content">
+            <span className="sr-kpi-value">0d</span>
+            <span className="sr-kpi-label">{t("tenants.revenue.avg_order_value")}</span>
+          </div>
+          <div className="sr-kpi-trend sr-kpi-trend-neutral">
+            <RiseOutlined />
+            <span>0%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Revenue Chart ── */}
+      <div className="sr-chart-wrap">
+        <RevenueChart />
+      </div>
     </div>
   );
 };
