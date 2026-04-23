@@ -1,6 +1,6 @@
 import {
-    DownloadableFile,
-    getFileNameFromContentDisposition,
+  DownloadableFile,
+  getFileNameFromContentDisposition,
 } from "@/lib/utils/fileDownload";
 import axiosInstance from "./axiosInstance";
 
@@ -124,17 +124,26 @@ const extractOrders = (data: unknown): OrderDto[] => {
 };
 
 export interface OrderFilterParams {
-  search?: string;
+  page?: number;
+  itemsPerPage?: number;
+  from?: string;
+  to?: string;
+  status?: number;
+  customerName?: string;
   reference?: string;
-  tableId?: string;
-  customerId?: string;
-  orderStatusId?: number;
-  paymentStatusId?: number;
-  createdDate?: string;
-  pageNumber?: number;
-  pageSize?: number;
+  itemCount?: number;
+  total?: number;
+  paymentStatus?: number;
+  time?: string;
   sortBy?: string;
-  sortOrder?: "asc" | "desc";
+}
+
+export interface PaginatedOrderResult {
+  orders: OrderDto[];
+  totalCount: number;
+  page: number;
+  itemsPerPage: number;
+  totalPages: number;
 }
 
 export interface StaffOrderQueryParams {
@@ -228,6 +237,21 @@ class OrderService {
       params,
     });
     return extractOrders(response.data);
+  }
+
+  async getPaginatedOrders(params: OrderFilterParams): Promise<PaginatedOrderResult> {
+    const response = await axiosInstance.get("/orders", { params });
+    const data = response.data as any;
+
+    const orders = data.orders || data.Orders || extractOrders(data);
+
+    return {
+      orders,
+      totalCount: data.totalCount ?? data.TotalCount ?? orders.length,
+      page: data.page ?? data.Page ?? 1,
+      itemsPerPage: data.itemsPerPage ?? data.ItemsPerPage ?? orders.length,
+      totalPages: data.totalPages ?? data.TotalPages ?? 1,
+    };
   }
 
   async getOrdersByTable(tableId: string): Promise<OrderDto[]> {
