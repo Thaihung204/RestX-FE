@@ -49,7 +49,8 @@ function StatusBadge({
         color: finalColorCode,
         backgroundColor: bg,
         borderColor: `${finalColorCode}44`,
-      }}>
+      }}
+    >
       {code
         ? t(`admin.reservations.status.${code.toLowerCase()}`, {
           defaultValue: fallbackName,
@@ -115,6 +116,26 @@ function ReservationDetailModal({
 
   const cancelledStatusId = allStatuses.find((s) => s.code === "CANCELLED")?.id;
 
+  // Define the logical order of statuses for enabling/disabling
+  const STATUS_FLOW_ORDER: Record<string, number> = {
+    PENDING: 0,
+    CONFIRMED: 1,
+    CHECKED_IN: 2,
+    COMPLETED: 3,
+    CANCELLED: 99,
+    NO_SHOW: 99,
+    NOSHOW: 99,
+  };
+
+  const currentFlowOrder =
+    STATUS_FLOW_ORDER[detail?.status?.code?.toUpperCase() ?? ""] ?? 0;
+  const isTerminalStatus = [
+    "CANCELLED",
+    "NO_SHOW",
+    "NOSHOW",
+    "COMPLETED",
+  ].includes(detail?.status?.code?.toUpperCase() ?? "");
+
   const handleStatusChange = async (newStatusId: number) => {
     if (!detail || newStatusId === detail.status.id) return;
 
@@ -142,7 +163,10 @@ function ReservationDetailModal({
 
     setActionLoading(true);
     try {
-      await reservationService.updateReservationStatus(reservationId, newStatusId);
+      await reservationService.updateReservationStatus(
+        reservationId,
+        newStatusId,
+      );
       message.success(
         t("admin.reservations.messages.status_updated", {
           defaultValue: "Đã cập nhật trạng thái",
@@ -211,17 +235,20 @@ function ReservationDetailModal({
         backgroundColor: "rgba(0,0,0,0.6)",
         backdropFilter: "blur(4px)",
       }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}>
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div
         className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden"
         style={{
           background: "var(--card)",
           border: "1px solid var(--border)",
-        }}>
+        }}
+      >
         {/* Header */}
         <div
           className="flex items-center justify-between px-6 py-4"
-          style={{ borderBottom: "1px solid var(--border)" }}>
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
           <div>
             <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
               {t("admin.reservations.modal.title")}
@@ -229,7 +256,8 @@ function ReservationDetailModal({
             {detail && (
               <span
                 className="text-sm font-mono"
-                style={{ color: "var(--primary)" }}>
+                style={{ color: "var(--primary)" }}
+              >
                 #{detail.confirmationCode}
               </span>
             )}
@@ -240,12 +268,14 @@ function ReservationDetailModal({
             style={{
               background: "var(--surface)",
               color: "var(--text-muted)",
-            }}>
+            }}
+          >
             <svg
               className="w-4 h-4"
               fill="none"
               stroke="currentColor"
-              viewBox="0 0 24 24">
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -277,52 +307,80 @@ function ReservationDetailModal({
               {/* Status + Actions */}
               <div
                 className="rounded-xl p-4 flex flex-wrap items-center gap-3"
-                style={{ background: "var(--surface)" }}>
+                style={{ background: "var(--surface)" }}
+              >
                 <span
                   className="text-sm font-medium shrink-0"
-                  style={{ color: "var(--text-muted)" }}>
+                  style={{ color: "var(--text-muted)" }}
+                >
                   {t("admin.reservations.modal.status_label")}
                 </span>
                 <Select
                   value={selectedStatusId !== "" ? selectedStatusId : undefined}
-                  disabled={actionLoading || allStatuses.length === 0}
+                  disabled={
+                    actionLoading ||
+                    allStatuses.length === 0 ||
+                    isTerminalStatus
+                  }
                   loading={actionLoading}
                   onChange={(val: number) => handleStatusChange(val)}
                   style={{ minWidth: 180 }}
                   optionLabelProp="label"
-                  options={allStatuses
-                    .filter(
-                      (s) =>
-                        s.id === detail.status.id ||
-                        (s.code === "CANCELLED" && detail.status.code !== "CANCELLED" && !detail.checkedInAt),
-                    )
-                    .map((s) => {
-                      const color = s.code === "CONFIRMED" ? "#3b82f6" : s.colorCode;
-                      const label = t(`admin.reservations.status.${s.code.toLowerCase()}`, {
+                  options={allStatuses.map((s) => {
+                    const color =
+                      s.code === "CONFIRMED" ? "#3b82f6" : s.colorCode;
+                    const label = t(
+                      `admin.reservations.status.${s.code.toLowerCase()}`,
+                      {
                         defaultValue: s.name,
-                      });
-                      return {
-                        value: s.id,
-                        label: (
-                          <span style={{ color, fontWeight: 600, fontSize: 13 }}>
-                            {label}
-                          </span>
-                        ),
-                        rawlabel: label,
-                        color,
-                      };
-                    })}
+                      },
+                    );
+                    const statusOrder =
+                      STATUS_FLOW_ORDER[s.code?.toUpperCase() ?? ""] ?? 0;
+                    const isPast =
+                      statusOrder < currentFlowOrder &&
+                      s.id !== detail.status.id;
+                    const isDisabled =
+                      isPast ||
+                      isTerminalStatus ||
+                      (s.code !== "CANCELLED" && s.id !== detail.status.id);
+                    return {
+                      value: s.id,
+                      disabled: isDisabled,
+                      label: (
+                        <span
+                          style={{
+                            color: isPast ? "var(--text-muted)" : color,
+                            fontWeight: 600,
+                            fontSize: 13,
+                            opacity: isPast ? 0.45 : 1,
+                          }}
+                        >
+                          {label}
+                        </span>
+                      ),
+                      rawlabel: label,
+                      color,
+                      isPast,
+                    };
+                  })}
                   optionRender={(opt: any) => (
-                    <div className="flex items-center gap-2">
+                    <div
+                      className="flex items-center gap-2"
+                      style={{ opacity: opt.data.isPast ? 0.4 : 1 }}
+                    >
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{ background: (opt.data as any).color }}
                       />
                       <span
                         style={{
-                          color: (opt.data as any).color,
+                          color: opt.data.isPast
+                            ? "var(--text-muted)"
+                            : (opt.data as any).color,
                           fontWeight: 600,
-                        }}>
+                        }}
+                      >
                         {(opt.data as any).rawlabel}
                       </span>
                     </div>
@@ -337,9 +395,28 @@ function ReservationDetailModal({
                     style={{
                       background: "var(--primary)",
                       color: "#fff",
-                    }}>
+                    }}
+                  >
                     {t("admin.reservations.actions.checkin")}
                   </button>
+                )}
+                {detail.checkedInAt && (
+                  <span
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap"
+                    style={{
+                      background: "rgba(34, 197, 94, 0.1)",
+                      color: "#22c55e",
+                      border: "1px solid rgba(34, 197, 94, 0.2)",
+                    }}
+                    title={
+                      t("admin.reservations.checked_in_at") +
+                      " " +
+                      new Date(detail.checkedInAt).toLocaleTimeString()
+                    }
+                  >
+                    {t("admin.reservations.checked_in")}{" "}
+                    {new Date(detail.checkedInAt).toLocaleTimeString()}
+                  </span>
                 )}
               </div>
 
@@ -348,10 +425,12 @@ function ReservationDetailModal({
                 {/* Contact */}
                 <div
                   className="rounded-xl p-4 space-y-2"
-                  style={{ background: "var(--surface)" }}>
+                  style={{ background: "var(--surface)" }}
+                >
                   <p
                     className="text-xs font-bold uppercase tracking-widest mb-3"
-                    style={{ color: "var(--text-muted)" }}>
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {t("admin.reservations.modal.contact_title")}
                   </p>
                   <InfoRow
@@ -385,10 +464,12 @@ function ReservationDetailModal({
                 {/* Booking info */}
                 <div
                   className="rounded-xl p-4 space-y-2"
-                  style={{ background: "var(--surface)" }}>
+                  style={{ background: "var(--surface)" }}
+                >
                   <p
                     className="text-xs font-bold uppercase tracking-widest mb-3"
-                    style={{ color: "var(--text-muted)" }}>
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {t("admin.reservations.modal.booking_title")}
                   </p>
                   <InfoRow
@@ -426,15 +507,18 @@ function ReservationDetailModal({
               {detail.specialRequests && (
                 <div
                   className="rounded-xl p-4"
-                  style={{ background: "var(--surface)" }}>
+                  style={{ background: "var(--surface)" }}
+                >
                   <p
                     className="text-xs font-bold uppercase tracking-widest mb-2"
-                    style={{ color: "var(--text-muted)" }}>
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {t("admin.reservations.modal.special_requests")}
                   </p>
                   <p
                     className="text-sm italic"
-                    style={{ color: "var(--text)" }}>
+                    style={{ color: "var(--text)" }}
+                  >
                     &ldquo;{detail.specialRequests}&rdquo;
                   </p>
                 </div>
@@ -443,7 +527,8 @@ function ReservationDetailModal({
               {/* Timestamps */}
               <div
                 className="flex flex-wrap gap-4 text-xs"
-                style={{ color: "var(--text-muted)" }}>
+                style={{ color: "var(--text-muted)" }}
+              >
                 <span>
                   {t("admin.reservations.modal.created_at")}{" "}
                   {new Date(detail.createdAt).toLocaleString()}
@@ -451,8 +536,7 @@ function ReservationDetailModal({
                 {detail.checkedInAt &&
                   ["CHECKED_IN", "COMPLETED"].includes(detail.status.code) && (
                     <span style={{ color: "#8b5cf6" }}>
-                      ✓ Checked in:{" "}
-                      {new Date(detail.checkedInAt).toLocaleString()}
+                      {t("admin.reservations.checked_in_at")} {new Date(detail.checkedInAt).toLocaleString()}
                     </span>
                   )}
               </div>
@@ -472,14 +556,20 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       </span>
       <span
         className="text-xs font-medium text-right"
-        style={{ color: "var(--text)" }}>
+        style={{ color: "var(--text)" }}
+      >
         {value}
       </span>
     </div>
   );
 }
 
-const isSameLocalDate = (value: string | Date, y: number, m: number, d: number) => {
+const isSameLocalDate = (
+  value: string | Date,
+  y: number,
+  m: number,
+  d: number,
+) => {
   const dt = new Date(value);
   return dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d;
 };
@@ -499,6 +589,7 @@ export default function ReservationsPage() {
   const [pageSize, setPageSize] = useState<number>(10);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
+  const [checkedInIds, setCheckedInIds] = useState<Set<string>>(new Set());
   const [confirmingCashId, setConfirmingCashId] = useState<string | null>(null);
   const now = new Date();
   const todayYear = now.getFullYear();
@@ -533,7 +624,10 @@ export default function ReservationsPage() {
     }
   }, [date, page, pageSize, search, statusId]);
 
-  const [globalStats, setGlobalStats] = useState<{ total: number; byStatus: Record<number, number> }>({ total: 0, byStatus: {} });
+  const [globalStats, setGlobalStats] = useState<{
+    total: number;
+    byStatus: Record<number, number>;
+  }>({ total: 0, byStatus: {} });
 
   const fetchStats = useCallback(async () => {
     if (statuses.length === 0) return;
@@ -546,9 +640,12 @@ export default function ReservationsPage() {
       const statsMap: Record<number, number> = {};
 
       const promises = statuses.map((s) =>
-        reservationService.getReservations({ ...baseParams, statusId: s.id })
-          .then((res) => { statsMap[s.id] = res.totalCount; })
-          .catch(() => { })
+        reservationService
+          .getReservations({ ...baseParams, statusId: s.id })
+          .then((res) => {
+            statsMap[s.id] = res.totalCount;
+          })
+          .catch(() => { }),
       );
       await Promise.all(promises);
 
@@ -558,7 +655,9 @@ export default function ReservationsPage() {
     }
   }, [search, date, statuses]);
 
-  useEffect(() => { fetchStats(); }, [fetchStats, data]);
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats, data]);
 
   useEffect(() => {
     fetchData();
@@ -586,14 +685,17 @@ export default function ReservationsPage() {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      if (
-        typeof document !== "undefined" &&
-        document.visibilityState === "visible"
-      ) {
-        fetchData();
-      }
-    }, 5 * 60 * 1000);
+    const timer = setInterval(
+      () => {
+        if (
+          typeof document !== "undefined" &&
+          document.visibilityState === "visible"
+        ) {
+          fetchData();
+        }
+      },
+      5 * 60 * 1000,
+    );
 
     return () => clearInterval(timer);
   }, [fetchData]);
@@ -630,9 +732,10 @@ export default function ReservationsPage() {
       await reservationService.checkInReservation(confirmationCode);
       message.success(
         t("admin.reservations.messages.checkin_success", {
-          defaultValue: "Check-in thành công",
+          defaultValue: "Check-in thanh cong",
         }),
       );
+      setCheckedInIds((prev) => new Set(prev).add(reservationId));
       await fetchData();
     } catch (error) {
       console.error(error);
@@ -640,7 +743,7 @@ export default function ReservationsPage() {
         extractApiErrorMessage(
           error,
           t("admin.reservations.messages.checkin_failed", {
-            defaultValue: "Không thể check-in đặt bàn",
+            defaultValue: "Khong the check-in dat ban",
           }),
         ),
       );
@@ -649,18 +752,25 @@ export default function ReservationsPage() {
     }
   };
 
-  const handleConfirmCashDeposit = async (reservationId: string, amount: number) => {
+  const handleConfirmCashDeposit = async (
+    reservationId: string,
+    amount: number,
+  ) => {
     if (amount <= 0) return;
     const confirmed = window.confirm(
       t("admin.reservations.modal.confirm_action", {
-        action: t("admin.reservations.actions.confirm", { defaultValue: "Xác nhận cọc tiền mặt" }),
+        action: t("admin.reservations.actions.confirm", {
+          defaultValue: "Xác nhận cọc tiền mặt",
+        }),
       }),
     );
     if (!confirmed) return;
 
     setConfirmingCashId(reservationId);
     try {
-      await reservationService.confirmCashDeposit(reservationId, { cashReceive: amount });
+      await reservationService.confirmCashDeposit(reservationId, {
+        cashReceive: amount,
+      });
       message.success(
         t("admin.reservations.messages.deposit_confirmed", {
           defaultValue: "Đã xác nhận cọc tiền mặt",
@@ -691,7 +801,8 @@ export default function ReservationsPage() {
           <div>
             <h2
               className="text-3xl font-bold mb-1"
-              style={{ color: "var(--text)" }}>
+              style={{ color: "var(--text)" }}
+            >
               {t("admin.reservations.title")}
             </h2>
             <p style={{ color: "var(--text-muted)" }}>
@@ -709,7 +820,8 @@ export default function ReservationsPage() {
                 background: "var(--primary-soft)",
                 border: "1px solid var(--primary-border)",
                 color: "var(--primary)",
-              }}>
+              }}
+            >
               <DownloadOutlined />
               {exporting
                 ? t("common.actions.exporting_report")
@@ -723,7 +835,8 @@ export default function ReservationsPage() {
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
                 color: "var(--text)",
-              }}>
+              }}
+            >
               <ReloadOutlined />
               {t("admin.reservations.refresh")}
             </button>
@@ -736,26 +849,32 @@ export default function ReservationsPage() {
             style={{
               background: "var(--card)",
               border: "1px solid var(--border)",
-            }}>
+            }}
+          >
             <div>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                {t(`admin.reservations.stats.total`, { defaultValue: "Tổng cộng" })}
+                {t(`admin.reservations.stats.total`, {
+                  defaultValue: "Tổng cộng",
+                })}
               </p>
               <p
                 className="text-2xl font-bold mt-1"
-                style={{ color: "var(--primary)" }}>
+                style={{ color: "var(--primary)" }}
+              >
                 {globalStats.total}
               </p>
             </div>
             <div
               className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ background: "var(--primary-soft)" }}>
+              style={{ background: "var(--primary-soft)" }}
+            >
               <svg
                 className="w-5 h-5"
                 style={{ color: "var(--primary)" }}
                 fill="none"
                 stroke="currentColor"
-                viewBox="0 0 24 24">
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -767,7 +886,10 @@ export default function ReservationsPage() {
           </div>
           {statuses.map((s) => {
             const count = globalStats.byStatus[s.id] || 0;
-            const finalColor = s.code === "CONFIRMED" ? "#3b82f6" : (s.colorCode || "var(--primary)");
+            const finalColor =
+              s.code === "CONFIRMED"
+                ? "#3b82f6"
+                : s.colorCode || "var(--primary)";
             const bg = `${finalColor}18`;
             return (
               <div
@@ -776,26 +898,39 @@ export default function ReservationsPage() {
                 style={{
                   background: "var(--card)",
                   border: "1px solid var(--border)",
-                }}>
+                }}
+              >
                 <div>
-                  <p className="text-sm truncate w-[80px] xl:w-[100px]" style={{ color: "var(--text-muted)" }} title={t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name })}>
-                    {t(`admin.reservations.status.${s.code.toLowerCase()}`, { defaultValue: s.name })}
+                  <p
+                    className="text-sm truncate w-[80px] xl:w-[100px]"
+                    style={{ color: "var(--text-muted)" }}
+                    title={t(
+                      `admin.reservations.status.${s.code.toLowerCase()}`,
+                      { defaultValue: s.name },
+                    )}
+                  >
+                    {t(`admin.reservations.status.${s.code.toLowerCase()}`, {
+                      defaultValue: s.name,
+                    })}
                   </p>
                   <p
                     className="text-2xl font-bold mt-1"
-                    style={{ color: finalColor }}>
+                    style={{ color: finalColor }}
+                  >
                     {count}
                   </p>
                 </div>
                 <div
                   className="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center"
-                  style={{ background: bg }}>
+                  style={{ background: bg }}
+                >
                   <svg
                     className="w-5 h-5"
                     style={{ color: finalColor }}
                     fill="none"
                     stroke="currentColor"
-                    viewBox="0 0 24 24">
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -814,7 +949,8 @@ export default function ReservationsPage() {
           style={{
             background: "var(--card)",
             border: "1px solid var(--border)",
-          }}>
+          }}
+        >
           <input
             type="text"
             placeholder={t("admin.reservations.filter.search_placeholder")}
@@ -833,7 +969,8 @@ export default function ReservationsPage() {
             onChange={(e) =>
               setStatusId(e.target.value === "" ? "" : Number(e.target.value))
             }
-            className="px-3 py-2 text-sm min-w-[160px]">
+            className="px-3 py-2 text-sm min-w-[160px]"
+          >
             <option value="">
               {t("admin.reservations.filter.all_status")}
             </option>
@@ -870,7 +1007,8 @@ export default function ReservationsPage() {
                 background: "rgba(239,68,68,0.1)",
                 color: "#ef4444",
                 border: "1px solid rgba(239,68,68,0.2)",
-              }}>
+              }}
+            >
               {t("admin.reservations.filter.clear")}
             </button>
           )}
@@ -882,7 +1020,8 @@ export default function ReservationsPage() {
           style={{
             background: "var(--card)",
             border: "1px solid var(--border)",
-          }}>
+          }}
+        >
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead style={{ background: "var(--surface)" }}>
@@ -896,7 +1035,8 @@ export default function ReservationsPage() {
                         ? "text-center"
                         : "text-left"
                         }`}
-                      style={{ color: "var(--text-muted)" }}>
+                      style={{ color: "var(--text-muted)" }}
+                    >
                       {t(`admin.reservations.table_headers.${key}`)}
                     </th>
                   ))}
@@ -922,13 +1062,15 @@ export default function ReservationsPage() {
                     <td
                       colSpan={7}
                       className="py-16 text-center"
-                      style={{ color: "var(--text-muted)" }}>
+                      style={{ color: "var(--text-muted)" }}
+                    >
                       <div className="flex flex-col items-center gap-2">
                         <svg
                           className="w-12 h-12 opacity-30"
                           fill="none"
                           stroke="currentColor"
-                          viewBox="0 0 24 24">
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -947,16 +1089,19 @@ export default function ReservationsPage() {
                     <tr
                       key={item.id}
                       className="transition-colors hover:bg-[var(--surface)]"
-                      style={{ borderBottom: "1px solid var(--border)" }}>
+                      style={{ borderBottom: "1px solid var(--border)" }}
+                    >
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span
                           className="font-mono text-sm font-bold"
-                          style={{ color: "var(--primary)" }}>
+                          style={{ color: "var(--primary)" }}
+                        >
                           #{item.confirmationCode}
                         </span>
                         <p
                           className="text-xs mt-0.5"
-                          style={{ color: "var(--text-muted)" }}>
+                          style={{ color: "var(--text-muted)" }}
+                        >
                           {new Date(item.createdAt).toLocaleDateString()}
                         </p>
                       </td>
@@ -965,14 +1110,16 @@ export default function ReservationsPage() {
                         <div className="flex items-center gap-2">
                           <div
                             className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                            style={{ background: "var(--primary)" }}>
+                            style={{ background: "var(--primary)" }}
+                          >
                             {item.contactName.charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-0.5">
                               <p
                                 className="text-sm font-medium"
-                                style={{ color: "var(--text)" }}>
+                                style={{ color: "var(--text)" }}
+                              >
                                 {item.contactName}
                               </p>
                               {item.isGuest ? (
@@ -982,7 +1129,8 @@ export default function ReservationsPage() {
                                     background: "var(--surface)",
                                     color: "var(--text-muted)",
                                     border: "1px solid var(--border)",
-                                  }}>
+                                  }}
+                                >
                                   {t("admin.reservations.modal.contact.guest")}
                                 </span>
                               ) : (
@@ -992,14 +1140,16 @@ export default function ReservationsPage() {
                                     background: "rgba(234, 179, 8, 0.1)",
                                     color: "#eab308",
                                     border: "1px solid rgba(234, 179, 8, 0.2)",
-                                  }}>
+                                  }}
+                                >
                                   {t("admin.reservations.modal.contact.member")}
                                 </span>
                               )}
                             </div>
                             <p
                               className="text-xs"
-                              style={{ color: "var(--text-muted)" }}>
+                              style={{ color: "var(--text-muted)" }}
+                            >
                               {item.contactPhone}
                             </p>
                           </div>
@@ -1016,7 +1166,8 @@ export default function ReservationsPage() {
                                 background: "var(--surface)",
                                 border: "1px solid var(--border)",
                                 color: "var(--text)",
-                              }}>
+                              }}
+                            >
                               {tb.code}{" "}
                               <span style={{ color: "var(--text-muted)" }}>
                                 · {tb.floorName}
@@ -1029,7 +1180,8 @@ export default function ReservationsPage() {
                       <td className="px-4 py-3 whitespace-nowrap">
                         <p
                           className="text-sm font-medium"
-                          style={{ color: "var(--text)" }}>
+                          style={{ color: "var(--text)" }}
+                        >
                           {new Date(
                             item.reservationDateTime,
                           ).toLocaleDateString(undefined, {
@@ -1040,7 +1192,8 @@ export default function ReservationsPage() {
                         </p>
                         <p
                           className="text-xs"
-                          style={{ color: "var(--text-muted)" }}>
+                          style={{ color: "var(--text-muted)" }}
+                        >
                           {new Date(
                             item.reservationDateTime,
                           ).toLocaleTimeString(undefined, {
@@ -1056,12 +1209,14 @@ export default function ReservationsPage() {
                           style={{
                             background: "var(--surface)",
                             color: "var(--text)",
-                          }}>
+                          }}
+                        >
                           <svg
                             className="w-3 h-3"
                             fill="none"
                             stroke="currentColor"
-                            viewBox="0 0 24 24">
+                            viewBox="0 0 24 24"
+                          >
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -1081,10 +1236,14 @@ export default function ReservationsPage() {
                             !item.depositPaid && (
                               <span
                                 className="text-[11px] font-medium"
-                                style={{ color: "#b45309" }}>
-                                {t("admin.reservations.messages.deposit_pending", {
-                                  defaultValue: "Chờ thanh toán cọc",
-                                })}
+                                style={{ color: "#b45309" }}
+                              >
+                                {t(
+                                  "admin.reservations.messages.deposit_pending",
+                                  {
+                                    defaultValue: "Chờ thanh toán cọc",
+                                  },
+                                )}
                               </span>
                             )}
                         </div>
@@ -1099,7 +1258,8 @@ export default function ReservationsPage() {
                               todayMonth,
                               todayDay,
                             ) &&
-                            !item.checkedInAt && (
+                            !item.checkedInAt &&
+                            !checkedInIds.has(item.id) && (
                               <button
                                 type="button"
                                 onClick={() =>
@@ -1114,13 +1274,14 @@ export default function ReservationsPage() {
                                   background: "var(--primary)",
                                   color: "#fff",
                                 }}
-                                title={t("admin.reservations.actions.checkin")}>
+                                title={t("admin.reservations.actions.checkin")}
+                              >
                                 {checkingInId === item.id
                                   ? t("admin.reservations.modal.processing")
                                   : t("admin.reservations.actions.checkin")}
                               </button>
                             )}
-                          {item.status.code === "CONFIRMED" && item.checkedInAt && (
+                          {(item.checkedInAt || checkedInIds.has(item.id)) && (
                             <span
                               className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap"
                               style={{
@@ -1128,9 +1289,17 @@ export default function ReservationsPage() {
                                 color: "#22c55e",
                                 border: "1px solid rgba(34, 197, 94, 0.2)",
                               }}
-                              title={t("admin.reservations.checked_in_at", { defaultValue: "Đã check-in lúc" }) + " " + new Date(item.checkedInAt).toLocaleTimeString()}
+                              title={
+                                item.checkedInAt
+                                  ? t("admin.reservations.checked_in_at") +
+                                  " " +
+                                  new Date(
+                                    item.checkedInAt,
+                                  ).toLocaleTimeString()
+                                  : undefined
+                              }
                             >
-                              {t("admin.reservations.checked_in", { defaultValue: "Đã check-in" })}
+                              {t("admin.reservations.checked_in")}
                             </span>
                           )}
                           <button
@@ -1140,12 +1309,14 @@ export default function ReservationsPage() {
                               background: "var(--primary-soft)",
                               color: "var(--primary)",
                             }}
-                            title={t("admin.reservations.actions.view_detail")}>
+                            title={t("admin.reservations.actions.view_detail")}
+                          >
                             <svg
                               className="w-4 h-4"
                               fill="none"
                               stroke="currentColor"
-                              viewBox="0 0 24 24">
+                              viewBox="0 0 24 24"
+                            >
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -1175,9 +1346,13 @@ export default function ReservationsPage() {
                                       color: "#b45309",
                                       border: "1px solid #f59e0b44",
                                     }}
-                                    title={t("admin.reservations.actions.confirm", {
-                                      defaultValue: "Mở link thanh toán cọc",
-                                    })}>
+                                    title={t(
+                                      "admin.reservations.actions.confirm",
+                                      {
+                                        defaultValue: "Mở link thanh toán cọc",
+                                      },
+                                    )}
+                                  >
                                     {t("admin.reservations.actions.confirm", {
                                       defaultValue: "Link cọc",
                                     })}
@@ -1186,7 +1361,10 @@ export default function ReservationsPage() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    handleConfirmCashDeposit(item.id, item.depositAmount ?? 0)
+                                    handleConfirmCashDeposit(
+                                      item.id,
+                                      item.depositAmount ?? 0,
+                                    )
                                   }
                                   disabled={confirmingCashId === item.id}
                                   className="px-2 py-1 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
@@ -1194,9 +1372,13 @@ export default function ReservationsPage() {
                                     background: "#f59e0b",
                                     color: "#fff",
                                   }}
-                                  title={t("admin.reservations.actions.confirm", {
-                                    defaultValue: "Xác nhận cọc tiền mặt",
-                                  })}>
+                                  title={t(
+                                    "admin.reservations.actions.confirm",
+                                    {
+                                      defaultValue: "Xác nhận cọc tiền mặt",
+                                    },
+                                  )}
+                                >
                                   {confirmingCashId === item.id
                                     ? t("admin.reservations.modal.processing")
                                     : t("admin.reservations.actions.confirm", {
@@ -1213,12 +1395,14 @@ export default function ReservationsPage() {
                               color: "var(--text-muted)",
                               border: "1px solid var(--border)",
                             }}
-                            title={t("admin.reservations.actions.view_detail")}>
+                            title={t("admin.reservations.actions.view_detail")}
+                          >
                             <svg
                               className="w-4 h-4"
                               fill="none"
                               stroke="currentColor"
-                              viewBox="0 0 24 24">
+                              viewBox="0 0 24 24"
+                            >
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -1240,7 +1424,8 @@ export default function ReservationsPage() {
           {data && data.totalCount > 0 && (
             <div
               className="flex items-center justify-between px-4 py-3"
-              style={{ borderTop: "1px solid var(--border)" }}>
+              style={{ borderTop: "1px solid var(--border)" }}
+            >
               <div className="flex items-center gap-2">
                 <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   {t("admin.reservations.pagination.page_info_compact", {
@@ -1257,7 +1442,8 @@ export default function ReservationsPage() {
                     className="!h-9 !py-1.5 !pl-3 !pr-8 !text-sm"
                     aria-label={t("common.pagination.items_per_page", {
                       defaultValue: "Items/page",
-                    })}>
+                    })}
+                  >
                     {PAGE_SIZE_OPTIONS.map((size) => (
                       <option key={size} value={size}>
                         {size}
@@ -1282,7 +1468,8 @@ export default function ReservationsPage() {
                       background: "var(--surface)",
                       border: "1px solid var(--border)",
                       color: "var(--text)",
-                    }}>
+                    }}
+                  >
                     {t("admin.reservations.pagination.prev")}
                   </button>
                   {Array.from(
@@ -1306,7 +1493,8 @@ export default function ReservationsPage() {
                                 border: "1px solid var(--border)",
                                 color: "var(--text-muted)",
                               }
-                          }>
+                          }
+                        >
                           {p}
                         </button>
                       );
@@ -1320,7 +1508,8 @@ export default function ReservationsPage() {
                       background: "var(--surface)",
                       border: "1px solid var(--border)",
                       color: "var(--text)",
-                    }}>
+                    }}
+                  >
                     {t("admin.reservations.pagination.next")}
                   </button>
                 </div>

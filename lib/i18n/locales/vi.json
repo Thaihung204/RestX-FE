@@ -2299,7 +2299,11 @@
         "currency": "Tiền tệ",
         "tax_rate": "Thuế (%)",
         "timezone": "Múi giờ",
-        "date_format": "Định dạng ngày"
+        "date_format": "Định dạng ngày",
+        "deposit_config": "Cấu hình đặt cọc",
+        "min_party_size": "Số khách tối thiểu cần cọc",
+        "deposit_amount": "Tiền cọc mỗi khách",
+        "deadline_hours": "Thời gian giữ chỗ (Giờ)"
       },
       "appearance": {
         "theme": "Chủ đề",
