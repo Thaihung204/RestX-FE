@@ -37,6 +37,17 @@ export const lightTheme = {
       colorBorder: "var(--border)",
       colorBorderSecondary: "var(--border)",
     },
+    components: {
+      ...common.components,
+      DatePicker: {
+        colorBgElevated: "var(--card)",
+        colorBgContainer: "var(--surface)",
+        colorText: "var(--text)",
+        colorTextHeading: "var(--text)",
+        colorIcon: "var(--text-muted)",
+        colorIconHover: "var(--primary)",
+      },
+    },
   },
   customColors: {
     // Sidebar colors (derived from primary; rest comes from globals.css)
@@ -65,6 +76,14 @@ export const darkTheme = {
         contentBg: "var(--card)",
         headerBg: "var(--card)",
         titleColor: "var(--text)",
+      },
+      DatePicker: {
+        colorBgElevated: "var(--card)",
+        colorBgContainer: "var(--surface)",
+        colorText: "var(--text)",
+        colorTextHeading: "var(--text)",
+        colorIcon: "var(--text-muted)",
+        colorIconHover: "var(--primary)",
       },
       Card: {
         actionsBg: "var(--card)",
