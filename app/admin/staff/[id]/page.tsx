@@ -3,8 +3,8 @@
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import employeeService from "@/lib/services/employeeService";
-import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { formatVND } from "@/lib/utils/currency";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -285,34 +285,20 @@ export default function StaffFormPage() {
       <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="mb-8 flex justify-between items-end">
-            <div>
-              <button
-                onClick={() => router.back()}
-                className="flex items-center gap-2 mb-2 text-sm opacity-70 hover:opacity-100 transition-opacity"
-                style={{ color: "var(--text)" }}>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                {t("dashboard.staff.back_to_list")}
-              </button>
-              <h2
-                className="text-3xl font-bold"
-                style={{ color: "var(--text)" }}>
-                {isNewStaff
-                  ? t("dashboard.staff.add_new_staff")
-                  : t("dashboard.staff.edit_staff")}
-              </h2>
-            </div>
+          <div className="mb-8 flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+              style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
+              ← {t("admin.order_detail.actions.back")}
+            </button>
+            <h2
+              className="text-3xl font-bold"
+              style={{ color: "var(--text)" }}>
+              {isNewStaff
+                ? t("dashboard.staff.add_new_staff")
+                : t("dashboard.staff.edit_staff")}
+            </h2>
           </div>
 
           <form

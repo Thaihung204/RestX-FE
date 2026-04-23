@@ -2583,7 +2583,7 @@
       "purpose": "Purpose",
       "status": "Status",
       "date": "Payment Date",
-      "checkout": "Online Payment",
+      "checkout": "View Details",
       "actions": "Actions"
     },
     "filter": {

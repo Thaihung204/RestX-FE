@@ -100,29 +100,27 @@ export default function PaymentDetailPage() {
       <div className="mx-auto max-w-6xl space-y-6">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+              style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
+              ← {t("admin.order_detail.actions.back")}
+            </button>
             <h1 className="text-3xl font-bold" style={{ color: "var(--text)" }}>
               {t("payments.detail.title")}
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExportReceipt}
-              disabled={exporting || !payment}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
-              style={{ background: "var(--primary-soft)", border: "1px solid var(--primary-border)", color: "var(--primary)" }}>
-              <DownloadOutlined />
-              {exporting
-                ? t("common.actions.exporting_report")
-                : t("payments.detail.export_receipt")}
-            </button>
-            <button
-              onClick={() => router.back()}
-              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}>
-              ← {t("admin.order_detail.actions.back")}
-            </button>
-          </div>
+          <button
+            onClick={handleExportReceipt}
+            disabled={exporting || !payment}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
+            style={{ background: "var(--primary-soft)", border: "1px solid var(--primary-border)", color: "var(--primary)" }}>
+            <DownloadOutlined />
+            {exporting
+              ? t("common.actions.exporting_report")
+              : t("payments.detail.export_receipt")}
+          </button>
         </div>
 
         {loading && (
