@@ -34,6 +34,7 @@ export default function CartModal() {
     requestPayment,
     closeCartModal,
     setActiveCartTab,
+    activeOrderId,
   } = useCart();
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -49,20 +50,17 @@ export default function CartModal() {
     setIsRequestingPayment(true);
     try {
       await notificationService.requestTable(orderTableId, "Yêu cầu thanh toán");
-      messageApi.success(t("customer_page.cart_modal.payment_request_sent"));
+      // Wait for the toast to display (1.5 seconds) before proceeding
+      await messageApi.success(t("customer_page.cart_modal.payment_request_sent"), 1.5);
+      closeCartModal();
+      setFeedbackOpen(true);
     } catch {
-      // silent fail - vẫn mở feedback
+      messageApi.error(t("customer_page.cart_modal.payment_request_failed", "Yêu cầu thanh toán thất bại"));
     } finally {
       setIsRequestingPayment(false);
     }
-    closeCartModal();
-    setFeedbackOpen(true);
   };
 
-  const handleFeedbackSubmit = async (_rating: number, _feedback: string) => {
-    setFeedbackOpen(false);
-    requestPayment();
-  };
 
   const orderedItemsByStatus = useMemo(() => {
     const grouped = new Map<string, typeof orderedItems>();
@@ -681,8 +679,11 @@ export default function CartModal() {
       </Modal>
       <FeedbackModal
         open={feedbackOpen}
+        orderId={activeOrderId}
         onClose={() => setFeedbackOpen(false)}
-        onSubmit={handleFeedbackSubmit}
+        onSuccess={() => {
+          setFeedbackOpen(false);
+        }}
       />
     </>
   );

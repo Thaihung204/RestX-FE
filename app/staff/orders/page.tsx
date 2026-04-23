@@ -149,7 +149,7 @@ export default function OrderManagement() {
     return {
       Status: 0,
       From: `${yyyy}-${mm}-${dd}T00:00:00Z`,
-      To: `${yyyy}-${mm}-${dd}T23:59:59Z`,
+      // To: `${yyyy}-${mm}-${dd}T23:59:59Z`,
     };
   }, []);
 
@@ -270,7 +270,7 @@ export default function OrderManagement() {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
-      const data = await orderService.getAllOrders(getTodayOrderQuery());
+      const data = await orderService.getCurrentOrders(getTodayOrderQuery());
       setOrders(mapOrders(data ?? []));
     } catch (error) {
       console.error("Failed to fetch orders:", error);
@@ -305,7 +305,7 @@ export default function OrderManagement() {
           orderStatusService.getAllStatuses(),
           menuService.getMenu(),
           dishService.getActiveCombos().catch(() => []),
-          orderService.getAllOrders(getTodayOrderQuery()),
+          orderService.getCurrentOrders(getTodayOrderQuery()),
         ]);
 
       const safeStatuses = statusData ?? [];

@@ -1,6 +1,7 @@
 "use client";
 
 import { DropDown } from "@/components/ui/DropDown";
+import StatusToggle from "@/components/ui/StatusToggle";
 import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
 import supplierService, { SupplierItem } from "@/lib/services/supplierService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
@@ -148,7 +149,7 @@ export default function IngredientFormPage() {
       [name]:
         type === "checkbox"
           ? (e.target as HTMLInputElement).checked
-          : type === "number"
+          : type === "number" || name === "status"
           ? Number(value)
           : value === "" && (name === "supplierId" || name === "type")
           ? null
@@ -558,20 +559,12 @@ export default function IngredientFormPage() {
                           : t("dashboard.ingredients.status_desc_inactive")}
                       </p>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
-                      <input
-                        type="checkbox" name="isActive"
-                        checked={form.isActive} onChange={handleChange}
-                        className="sr-only peer"
+                    <div className="shrink-0 ml-3">
+                      <StatusToggle
+                        checked={form.isActive}
+                        onChange={() => setForm((prev) => ({ ...prev, isActive: !prev.isActive }))}
                       />
-                      <div
-                        className="w-11 h-6 rounded-full peer
-                          peer-checked:after:translate-x-full peer-checked:after:border-white
-                          after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                          after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
-                        style={{ background: form.isActive ? "var(--primary)" : "#4b5563" }}
-                      />
-                    </label>
+                    </div>
                   </div>
                 </section>
 

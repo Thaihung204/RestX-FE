@@ -2203,8 +2203,10 @@
         "mobile_supplier": "Supplier: ",
         "mobile_type": "Type: ",
         "edit_tooltip": "Edit",
+        "save_quantity": "Save quantity",
         "empty": "No ingredients found",
-        "load_error": "Failed to load ingredient list"
+        "load_error": "Failed to load ingredient list",
+        "retry": "Retry"
       },
       "tab_all": "All",
       "tab_active": "Active",
@@ -3060,6 +3062,25 @@
       "request_payment": "Request Payment",
       "payment_request_sent": "Payment request sent",
       "note_placeholder": "Note for this dish"
+    },
+    "feedback_modal": {
+      "title": "Rate your experience",
+      "subtitle": "Share how you felt about your meal today",
+      "select_star": "Select a rating",
+      "rating_1": "Bad",
+      "rating_2": "Not good",
+      "rating_3": "Okay",
+      "rating_4": "Good",
+      "rating_5": "Excellent",
+      "comment_label": "Comment",
+      "comment_placeholder": "Your comment (optional)",
+      "skip": "Skip",
+      "submit": "Submit feedback",
+      "submitting": "Submitting...",
+      "success": "Thank you for your feedback!",
+      "error": "Failed to submit feedback, please try again",
+      "no_order": "No order found to submit feedback",
+      "already_feedback": "This order has already been reviewed"
     },
     "welcome_card": {
       "greeting": "Welcome",
