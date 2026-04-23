@@ -4263,7 +4263,8 @@
       "pending": "Pending Confirmation",
       "confirmed": "Confirmed",
       "checked_in": "Checked In",
-      "completed": "Completed"
+      "completed": "Completed",
+      "cancelled": "Cancelled"
     },
     "customer": {
       "title": "Customer Information",
@@ -4325,7 +4326,29 @@
       "readonly_note": "You can only view this reservation. Contact the restaurant for any changes.",
       "unnamed_order": "Order",
       "paid": "Paid",
-      "unpaid": "Unpaid"
+      "unpaid": "Unpaid",
+      "popup_title": "Select Pre-order Items",
+      "popup_desc": "Browse the menu and pre-order your favourite dishes.",
+      "search_menu": "Search dishes...",
+      "no_menu_items": "No matching dishes found.",
+      "best_seller": "Best Seller",
+      "spicy": "Spicy",
+      "vegan": "Vegan",
+      "no_description": "No description available for this dish.",
+      "price_label": "PRICE",
+      "add_to_cart": "Add to cart",
+      "cart": "Cart",
+      "empty_cart": "Cart is empty",
+      "empty_cart_desc": "Select dishes from the menu on the left",
+      "note_placeholder": "Note (e.g. less ice, no onion...)",
+      "total": "Total",
+      "confirm_pre_order": "Confirm Order",
+      "creating_pre_order": "Processing...",
+      "view_cart": "View Cart",
+      "customer_required": "Customer information not found for pre-order.",
+      "no_selected_items": "No items selected.",
+      "pre_order_created": "Pre-order created successfully.",
+      "pre_order_failed": "Failed to create pre-order. Please try again."
     },
     "edit": {
       "locked_status": "This reservation is completed or cancelled and cannot be edited.",
@@ -4344,6 +4367,31 @@
     "map": {
       "loading": "Loading map...",
       "unavailable": "Map not available"
+    },
+    "floor_activity": {
+      "title": "Floor Activity",
+      "current_guest": "Currently seated",
+      "guests": "Guests",
+      "orders": "Orders",
+      "items": "Items",
+      "unpaid": "Unpaid",
+      "current_dishes": "Current dishes",
+      "no_dishes": "No dishes yet",
+      "kitchen_note": "Note",
+      "orders_detail": "Orders by table",
+      "opened_at": "Opened at",
+      "latest_order": "Latest order",
+      "goto_order_detail": "Go to Order Detail",
+      "goto_pos": "Go to POS",
+      "syncing": "Syncing realtime...",
+      "dish": "Dish",
+      "unknown_dish": "Unknown dish",
+      "status_available": "Available",
+      "status_occupied": "Occupied",
+      "status_reserved": "Reserved",
+      "status_cleaning": "Cleaning",
+      "status_disabled": "Disabled",
+      "status_selected": "Selected"
     },
     "location": {
       "no_address": "Address not available",

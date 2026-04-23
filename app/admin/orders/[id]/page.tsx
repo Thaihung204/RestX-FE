@@ -76,7 +76,7 @@ interface OrderDetailsResponse {
     id: string;
     dishId: string;
     dishName?: string | null;
-    dishPrice?: number;
+    unitPrice?: number;
     quantity: number;
     note?: string | null;
     status?: string | null;
@@ -477,7 +477,7 @@ export default function AdminOrderDetailPage() {
                           <td className="px-2 py-2">{item.dishName || item.dishId}</td>
                           <td className="px-2 py-2 text-center">{item.quantity}</td>
                           <td className="px-2 py-2 text-center">
-                            {formatCurrency((item.dishPrice ?? 0) * Number(item.quantity ?? 0))}
+                            {formatCurrency((item.unitPrice ?? 0) * Number(item.quantity ?? 0))}
                           </td>
                           <td className="px-2 py-2 text-center">
                             {availableStatuses.length > 0 ? (

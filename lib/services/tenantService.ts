@@ -531,7 +531,7 @@ export const tenantService = {
   },
 
   changeStatus: async (id: string, status: boolean): Promise<void> => {
-    await adminAxiosInstance.put(`/tenants/${id}/changeStatus`, { status });
+    await adminAxiosInstance.put(`/tenants/${id}/Status`, status );
   },
 
   // ============ TENANT REQUESTS API ============
