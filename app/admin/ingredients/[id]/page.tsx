@@ -221,16 +221,13 @@ export default function IngredientFormPage() {
       <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
 
-          <div className="mb-6">
+          <div className="mb-6 flex items-center gap-3">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-1.5 mb-3 text-sm opacity-60 hover:opacity-100 transition-opacity"
-              style={{ color: "var(--text)" }}
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+              style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              {t("dashboard.ingredients.back_to_list")}
+              ← {t("admin.order_detail.actions.back")}
             </button>
             <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: "var(--text)" }}>
               {isNew ? t("dashboard.ingredients.add_title") : t("dashboard.ingredients.edit_title")}
