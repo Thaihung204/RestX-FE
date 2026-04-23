@@ -1160,7 +1160,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             await reservationService.checkTables({
                 tableIds: selectedTables.map(t => t.id),
                 reservationDateTime,
-                numberOfGuests: booking.guests
+                numberOfGuests: Number(booking.guests)
             });
             setStep(ReservationStep.CONFIRMATION);
         } catch (error: any) {
@@ -1205,7 +1205,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             const result = await reservationService.createReservation({
                 tableIds: selectedTables.map(t => t.id),
                 reservationDateTime,
-                numberOfGuests: booking.guests,
+                numberOfGuests: Number(booking.guests),
                 name: userDetails.name,
                 phone: userDetails.phone,
                 email: userDetails.email,

@@ -1,4 +1,4 @@
-﻿import {
+import {
   DownloadableFile,
   getFileNameFromContentDisposition,
 } from "@/lib/utils/fileDownload";
@@ -144,6 +144,7 @@ export interface ReservationDepositStatus {
   checkoutUrl: string | null;
   paymentStatus?: string | number | null;
   paymentStatusName?: string | null;
+  orderId?: string | null;
 }
 
 export interface CheckAvailabilityParams {

@@ -266,7 +266,7 @@ export default function PaymentsPage() {
                     t("payments.columns.status"),
                     t("payments.columns.date"),
                     t("payments.columns.checkout"),
-                    t("payments.columns.actions"),
+                    // t("payments.columns.actions"),
                   ].map((col, i) => (
                     <th
                       key={i}
@@ -360,7 +360,7 @@ export default function PaymentsPage() {
                               })
                             : "—"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {/* <td className="px-6 py-4 whitespace-nowrap text-center">
                           {p.checkoutUrl ? (
                             <button
                               onClick={() =>
@@ -384,7 +384,7 @@ export default function PaymentsPage() {
                               —
                             </span>
                           )}
-                        </td>
+                        </td> */}
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           {p.orderId || p.reservationId ? (
                             <Link

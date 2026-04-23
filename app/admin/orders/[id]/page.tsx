@@ -9,7 +9,6 @@ import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -76,7 +75,7 @@ interface OrderDetailsResponse {
     id: string;
     dishId: string;
     dishName?: string | null;
-    dishPrice?: number;
+    unitPrice?: number;
     quantity: number;
     note?: string | null;
     status?: string | null;
@@ -308,7 +307,13 @@ export default function AdminOrderDetailPage() {
     <>
     <main className="flex-1 p-6 lg:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
+            ← {t("admin.order_detail.actions.back")}
+          </button>
           <div>
             <h1 className="text-3xl font-bold" style={{ color: "var(--text)" }}>
               {t("admin.order_detail.title")}
@@ -319,12 +324,6 @@ export default function AdminOrderDetailPage() {
                 : t("admin.order_detail.id", { id: orderId })}
             </p> */}
           </div>
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
-            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
-            ← {t("admin.order_detail.actions.back")}
-          </button>
         </div>
 
         {loading ? (
@@ -477,7 +476,7 @@ export default function AdminOrderDetailPage() {
                           <td className="px-2 py-2">{item.dishName || item.dishId}</td>
                           <td className="px-2 py-2 text-center">{item.quantity}</td>
                           <td className="px-2 py-2 text-center">
-                            {formatCurrency((item.dishPrice ?? 0) * Number(item.quantity ?? 0))}
+                            {formatCurrency((item.unitPrice ?? 0) * Number(item.quantity ?? 0))}
                           </td>
                           <td className="px-2 py-2 text-center">
                             {availableStatuses.length > 0 ? (

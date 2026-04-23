@@ -6,6 +6,7 @@ interface BackendStatusValue {
     name: string;
     colorCode: string;
     isDefault: boolean;
+    displayOrder?: number;
 }
 
 interface BackendResponse<T> {
@@ -19,6 +20,7 @@ export interface OrderDetailStatus {
     code: string;
     color: string;
     isDefault: boolean;
+    displayOrder?: number;
 }
 
 export interface CreateOrderDetailStatusDto {
@@ -41,6 +43,7 @@ function mapFromBackend(sv: BackendStatusValue): OrderDetailStatus {
         code: sv.code,
         color: sv.colorCode,
         isDefault: sv.isDefault,
+        displayOrder: sv.displayOrder,
     };
 }
 
@@ -106,6 +109,21 @@ class OrderDetailStatusService {
      */
     async setAsDefault(status: OrderDetailStatus): Promise<OrderDetailStatus> {
         return this.updateStatus(status.id, { ...status, isDefault: true });
+    }
+
+    /**
+     * PUT /api/statuses/order-detail/display-order
+     */
+    async updateDisplayOrder(statuses: OrderDetailStatus[]): Promise<void> {
+        const payload = statuses.map((status) => ({
+            id: Number(status.id),
+            code: status.code,
+            name: status.name,
+            colorCode: status.color,
+            isDefault: status.isDefault,
+            displayOrder: status.displayOrder ?? 0,
+        }));
+        await axiosInstance.put(`${this.apiBase}/display-order`, payload);
     }
 }
 

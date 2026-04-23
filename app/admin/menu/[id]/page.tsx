@@ -384,29 +384,12 @@ export default function MenuItemFormPage() {
     <div className="flex-1 flex flex-col h-full bg-[var(--bg-base)]">
       <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-6">
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-3 mb-6">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-2 mb-2 transition-colors p-2 rounded-lg"
-              style={{ color: "var(--text-muted)" }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--text)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--text-muted)")
-              }>
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+              style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
+              ← {t("admin.order_detail.actions.back")}
             </button>
             <div>
               <h2
