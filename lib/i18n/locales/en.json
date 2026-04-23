@@ -36,6 +36,8 @@
         "actions": "Actions"
       },
       "empty": "No reservations found",
+      "checked_in": "Checked in",
+      "checked_in_at": "Checked in at",
       "pagination": {
         "page_info": "Page {{page}} of {{total}} · {{count}} results",
         "page_info_compact": "Page {{page}} of {{total}} ·",

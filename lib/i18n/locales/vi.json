@@ -36,6 +36,8 @@
         "actions": "Thao tác"
       },
       "empty": "Không có đặt bàn",
+      "checked_in": "Đã check-in",
+      "checked_in_at": "Đã check-in lúc",
       "pagination": {
         "page_info": "Trang {{page}} / {{total}} · {{count}} kết quả",
         "page_info_compact": "Trang {{page}} / {{total}} ·",
