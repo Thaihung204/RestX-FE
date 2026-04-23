@@ -8,6 +8,7 @@ import { useCart } from "@/lib/contexts/CartContext";
 import customerService, {
     CustomerResponseDto,
 } from "@/lib/services/customerService";
+import notificationService from "@/lib/services/notificationService";
 import reservationService, {
     ReservationListItem,
 } from "@/lib/services/reservationService";
@@ -105,8 +106,17 @@ export default function CustomerFooter({
   const membershipLevel =
     customerProfile?.membershipLevel?.toLowerCase() || "bronze";
 
-  const handleAskService = () => {
-    messageApi.success(t("customer_page.footer.service_called"));
+  const handleAskService = async () => {
+    if (!tableId) {
+      messageApi.warning("Không xác định được bàn.");
+      return;
+    }
+    try {
+      await notificationService.requestTable(tableId, "Cần hỗ trợ");
+      messageApi.success(t("customer_page.footer.service_called"));
+    } catch {
+      messageApi.error("Không thể gửi yêu cầu. Vui lòng thử lại.");
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

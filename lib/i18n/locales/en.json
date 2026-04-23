@@ -2973,7 +2973,12 @@
   "notifications": {
     "title": "Notifications",
     "mark_read": "Mark as read",
-    "empty": "No notifications"
+    "mark_all_read": "Mark all as read",
+    "empty": "No notifications",
+    "unread_count": "{{count}} unread",
+    "just_now": "Just now",
+    "table_prefix": "Table {{code}}",
+    "table_unknown": "Unknown table"
   },
   "customer_page": {
     "footer": {
@@ -3016,6 +3021,7 @@
       "items_count": "{{count}} items",
       "confirm_order": "Send Order Request",
       "request_payment": "Request Payment",
+      "payment_request_sent": "Payment request sent",
       "note_placeholder": "Note for this dish"
     },
     "welcome_card": {
