@@ -34,6 +34,7 @@ interface CartContextType {
   cartItemCount: number;
   totalCartAmount: number;
   totalOrderAmount: number;
+  activeOrderId: string | null;
 
   // Cart actions
   addToCart: (item: CartItem) => void;
@@ -66,6 +67,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [orderTableId, setOrderTableId] = useState<string | undefined>();
   const [orderCustomerId, setOrderCustomerId] = useState<string | undefined>();
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const loadedOrderTableIdRef = useRef<string | undefined>(undefined);
 
   // Computed values
@@ -234,6 +236,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       setOrderedItems(Array.from(aggregatedByDishAndStatus.values()));
+
+      if (orders && orders.length > 0) {
+        const active = orders.find((o) => o.orderStatusId !== 3 && o.orderStatusId !== 4);
+        const target = active ?? orders[orders.length - 1];
+        setActiveOrderId(target?.id || null);
+      } else {
+        setActiveOrderId(null);
+      }
 
       // Sum subTotal from all orders (from response, not FE-calculated)
       const responseSubTotal = orders.reduce(
@@ -429,6 +439,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       cartItemCount,
       totalCartAmount,
       totalOrderAmount: orderedSubTotal,
+      activeOrderId,
       addToCart,
       removeFromCart,
       updateQuantity,
@@ -452,6 +463,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       cartItemCount,
       totalCartAmount,
       orderedSubTotal,
+      activeOrderId,
       addToCart,
       removeFromCart,
       updateQuantity,
