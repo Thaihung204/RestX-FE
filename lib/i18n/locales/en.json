@@ -2203,8 +2203,10 @@
         "mobile_supplier": "Supplier: ",
         "mobile_type": "Type: ",
         "edit_tooltip": "Edit",
+        "save_quantity": "Save quantity",
         "empty": "No ingredients found",
-        "load_error": "Failed to load ingredient list"
+        "load_error": "Failed to load ingredient list",
+        "retry": "Retry"
       },
       "tab_all": "All",
       "tab_active": "Active",

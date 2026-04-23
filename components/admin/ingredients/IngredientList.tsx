@@ -1,5 +1,6 @@
 "use client";
 
+import StatusToggle from "@/components/ui/StatusToggle";
 import { getTypeTranslation, type SupportedLocale } from "@/lib/i18n/dynamicTypeTranslations";
 import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
 import { useRouter } from "next/navigation";
@@ -28,6 +29,7 @@ export default function IngredientList() {
   const [filterType, setFilterType] = useState("all");
   const [filterActive, setFilterActive] = useState("all");
   const [savingRow, setSavingRow] = useState<string | null>(null);
+  const [editingQuantity, setEditingQuantity] = useState<Record<string, number | "">>({});
 
   useEffect(() => {
     fetchData();
@@ -152,7 +154,7 @@ export default function IngredientList() {
       <div className="rounded-xl p-6 text-center" style={{ background: "var(--card)", border: "1px solid rgba(239,68,68,0.3)" }}>
         <p className="text-sm mb-3" style={{ color: "#dc2626" }}>{error}</p>
         <button onClick={fetchData} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "var(--primary)" }}>
-          {t("dashboard.ingredients.retry", "Thử lại")}
+          {t("dashboard.ingredients.retry")}
         </button>
       </div>
     );
@@ -278,35 +280,65 @@ export default function IngredientList() {
                     </td>
 
                     <td className="px-3 py-3 text-center">
-                      <input
-                        type="number"
-                        value={item.currentQuantity || ""}
-                        onChange={(e) =>
-                          setIngredients((prev) =>
-                            prev.map((ingredient) =>
-                              ingredient.id === item.id
-                                ? {
-                                    ...ingredient,
-                                    currentQuantity: Number(e.target.value),
-                                  }
-                                : ingredient,
-                            ),
-                          )
-                        }
-                      onBlur={() =>
-                          handleUpdateIngredient(item.id as string, {
-                            currentQuantity: item.currentQuantity ?? 0,
-                          })
-                        }
-                        onClick={(event) => event.stopPropagation()}
-                        className="w-20 px-2 py-1 rounded border text-sm text-center"
-                        style={{
-                          background: "var(--bg-base)",
-                          color: "var(--text)",
-                          borderColor: "var(--border)",
-                        }}
-                        disabled={savingRow === item.id}
-                      />
+                      <div className="relative inline-flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="number"
+                          value={editingQuantity[item.id!] ?? item.currentQuantity ?? ""}
+                          onChange={(e) =>
+                            setEditingQuantity((prev) => ({
+                              ...prev,
+                              [item.id!]: e.target.value === "" ? "" : Number(e.target.value),
+                            }))
+                          }
+                          className="w-20 px-2 py-1 rounded border text-sm text-center"
+                          style={{
+                            background: "var(--bg-base)",
+                            color: "var(--text)",
+                            borderColor: editingQuantity[item.id!] !== undefined && editingQuantity[item.id!] !== (item.currentQuantity ?? "")
+                              ? "var(--primary)"
+                              : "var(--border)",
+                          }}
+                          disabled={savingRow === item.id}
+                        />
+                        {editingQuantity[item.id!] !== undefined &&
+                          editingQuantity[item.id!] !== (item.currentQuantity ?? 0) && (
+                          <button
+                            onClick={async () => {
+                              const val = editingQuantity[item.id!];
+                              if (val === "") return;
+                              await handleUpdateIngredient(item.id!, { currentQuantity: Number(val) });
+                              setEditingQuantity((prev) => {
+                                const next = { ...prev };
+                                delete next[item.id!];
+                                return next;
+                              });
+                            }}
+                            disabled={savingRow === item.id}
+                            className="absolute inline-flex items-center justify-center w-6 h-6 rounded-md transition-all"
+                            style={{
+                              background: "rgba(34,197,94,0.15)",
+                              color: "#16a34a",
+                              border: "1px solid rgba(34,197,94,0.3)",
+                              top: "50%",
+                              left: "calc(100% + 4px)",
+                              transform: "translateY(-50%)",
+                              zIndex: 10,
+                            }}
+                            title={t("dashboard.ingredients.list.save_quantity")}
+                          >
+                            {savingRow === item.id ? (
+                              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </td>
 
                     <td className="px-3 py-3 text-center text-xs hidden xl:table-cell" style={{ color: "var(--text-secondary)" }}>
@@ -335,22 +367,15 @@ export default function IngredientList() {
                     </td>
 
                     <td className="px-3 py-3 text-center">
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
+                      <StatusToggle
+                        checked={item.isActive}
+                        onChange={() => {
                           handleUpdateIngredient(item.id as string, {
                             isActive: !item.isActive,
                           });
                         }}
-                        className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
-                        style={STATUS_BADGE[status]}
                         disabled={savingRow === item.id}
-                      >
-                        {item.isActive
-                          ? t("dashboard.ingredients.list.badge_active")
-                          : t("dashboard.ingredients.list.badge_inactive")}
-                      </button>
+                      />
                     </td>
 
                     <td className="px-3 py-3 text-center hidden xl:table-cell">
@@ -404,22 +429,15 @@ export default function IngredientList() {
                     <p className="font-semibold truncate" style={{ color: "var(--text)" }}>{item.name}</p>
                     <p className="text-xs font-mono mt-0.5" style={{ color: "var(--text-muted)" }}>{item.code}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
+                  <StatusToggle
+                    checked={item.isActive}
+                    onChange={() => {
                       handleUpdateIngredient(item.id as string, {
                         isActive: !item.isActive,
                       });
                     }}
-                    className="px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 transition-all"
-                    style={STATUS_BADGE[status]}
                     disabled={savingRow === item.id}
-                  >
-                    {item.isActive
-                      ? t("dashboard.ingredients.list.badge_active")
-                      : t("dashboard.ingredients.list.badge_inactive_short")}
-                  </button>
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mt-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
@@ -427,35 +445,50 @@ export default function IngredientList() {
                     <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.ingredients.list.col_quantity")}
                     </span>
-                    <input
-                      type="number"
-                      value={item.currentQuantity || ""}
-                      onChange={(e) =>
-                        setIngredients((prev) =>
-                          prev.map((ingredient) =>
-                            ingredient.id === item.id
-                              ? {
-                                  ...ingredient,
-                                  currentQuantity: Number(e.target.value),
-                                }
-                              : ingredient,
-                          ),
-                        )
-                      }
-                      onBlur={() =>
-                        handleUpdateIngredient(item.id as string, {
-                          currentQuantity: item.currentQuantity ?? 0,
-                        })
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                      className="mt-1 w-full px-2 py-1 rounded border text-sm text-center"
-                      style={{
-                        background: "var(--bg-base)",
-                        color: "var(--text)",
-                        borderColor: "var(--border)",
-                      }}
-                      disabled={savingRow === item.id}
-                    />
+                    <div className="flex items-center gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="number"
+                        value={editingQuantity[item.id!] ?? item.currentQuantity ?? ""}
+                        onChange={(e) =>
+                          setEditingQuantity((prev) => ({
+                            ...prev,
+                            [item.id!]: e.target.value === "" ? "" : Number(e.target.value),
+                          }))
+                        }
+                        className="w-full px-2 py-1 rounded border text-sm text-center"
+                        style={{
+                          background: "var(--bg-base)",
+                          color: "var(--text)",
+                          borderColor: editingQuantity[item.id!] !== undefined && editingQuantity[item.id!] !== (item.currentQuantity ?? "")
+                            ? "var(--primary)"
+                            : "var(--border)",
+                        }}
+                        disabled={savingRow === item.id}
+                      />
+                      {editingQuantity[item.id!] !== undefined &&
+                        editingQuantity[item.id!] !== (item.currentQuantity ?? 0) && (
+                        <button
+                          onClick={async () => {
+                            const val = editingQuantity[item.id!];
+                            if (val === "") return;
+                            await handleUpdateIngredient(item.id!, { currentQuantity: Number(val) });
+                            setEditingQuantity((prev) => {
+                              const next = { ...prev };
+                              delete next[item.id!];
+                              return next;
+                            });
+                          }}
+                          disabled={savingRow === item.id}
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg transition-all flex-shrink-0"
+                          style={{ background: "rgba(34,197,94,0.15)", color: "#16a34a", border: "1px solid rgba(34,197,94,0.3)" }}
+                          title={t("dashboard.ingredients.list.save_quantity")}
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <span className="text-xs" style={{ color: "var(--text-muted)" }}>

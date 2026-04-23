@@ -2226,8 +2226,10 @@
         "mobile_supplier": "Nhà CC: ",
         "mobile_type": "Loại: ",
         "edit_tooltip": "Chỉnh sửa",
+        "save_quantity": "Lưu số lượng",
         "empty": "Không tìm thấy nguyên liệu nào",
-        "load_error": "Không tải được danh sách nguyên liệu"
+        "load_error": "Không tải được danh sách nguyên liệu",
+        "retry": "Thử lại"
       },
       "tab_all": "Tất cả",
       "tab_active": "Đang dùng",
