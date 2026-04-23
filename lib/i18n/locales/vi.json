@@ -4320,7 +4320,8 @@
       "pending": "Chờ xác nhận",
       "confirmed": "Đã xác nhận",
       "checked_in": "Đã check-in",
-      "completed": "Hoàn tất"
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy"
     },
     "customer": {
       "title": "Thông tin khách hàng",
@@ -4382,7 +4383,29 @@
       "readonly_note": "Bạn chỉ có quyền xem thông tin. Liên hệ nhà hàng để thay đổi.",
       "unnamed_order": "Đơn hàng",
       "paid": "Đã thanh toán",
-      "unpaid": "Chưa thanh toán"
+      "unpaid": "Chưa thanh toán",
+      "popup_title": "Chọn món Pre-order",
+      "popup_desc": "Khám phá thực đơn và đặt trước món ăn yêu thích.",
+      "search_menu": "Tìm kiếm món ăn...",
+      "no_menu_items": "Không tìm thấy món ăn phù hợp.",
+      "best_seller": "Bán chạy",
+      "spicy": "Cay",
+      "vegan": "Chay",
+      "no_description": "Chưa có mô tả cho món ăn này.",
+      "price_label": "GIÁ",
+      "add_to_cart": "Thêm vào giỏ",
+      "cart": "Giỏ hàng",
+      "empty_cart": "Giỏ hàng trống",
+      "empty_cart_desc": "Hãy chọn món từ thực đơn bên trái",
+      "note_placeholder": "Ghi chú (VD: ít đá, không hành...)",
+      "total": "Tổng thanh toán",
+      "confirm_pre_order": "Xác nhận đặt món",
+      "creating_pre_order": "Đang xử lý...",
+      "view_cart": "Xem giỏ hàng",
+      "customer_required": "Không tìm thấy thông tin khách hàng để tạo pre-order.",
+      "no_selected_items": "Chưa chọn món nào.",
+      "pre_order_created": "Tạo pre-order thành công.",
+      "pre_order_failed": "Tạo pre-order thất bại. Vui lòng thử lại."
     },
     "edit": {
       "locked_status": "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa.",
@@ -4401,6 +4424,31 @@
     "map": {
       "loading": "Đang tải sơ đồ...",
       "unavailable": "Không có sơ đồ bàn"
+    },
+    "floor_activity": {
+      "title": "Hoạt động sàn",
+      "current_guest": "Đang ngồi",
+      "guests": "Khách",
+      "orders": "Đơn",
+      "items": "Món",
+      "unpaid": "Chưa TT",
+      "current_dishes": "Món đang phục vụ",
+      "no_dishes": "Chưa có món",
+      "kitchen_note": "Ghi chú",
+      "orders_detail": "Đơn theo bàn",
+      "opened_at": "Mở bàn",
+      "latest_order": "Đơn gần nhất",
+      "goto_order_detail": "Đi tới Order Detail",
+      "goto_pos": "Đi tới POS",
+      "syncing": "Đang đồng bộ realtime...",
+      "dish": "Món",
+      "unknown_dish": "Món chưa rõ",
+      "status_available": "Sẵn sàng",
+      "status_occupied": "Đang phục vụ",
+      "status_reserved": "Đã đặt",
+      "status_cleaning": "Đang dọn",
+      "status_disabled": "Tạm khóa",
+      "status_selected": "Đang chọn"
     },
     "location": {
       "no_address": "Chưa có địa chỉ",

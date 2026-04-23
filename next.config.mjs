@@ -16,6 +16,25 @@ const nextConfig = {
   // it in .gitlab-ci.yml as well.
   // distDir: 'dist',
   reactStrictMode: false,
+  transpilePackages: [
+    'antd',
+    '@ant-design',
+    'rc-util',
+    'rc-pagination',
+    'rc-picker',
+    'rc-notification',
+    'rc-tooltip',
+    'rc-tree',
+    'rc-table',
+    '@rc-component/form',
+    '@rc-component/portal',
+    '@rc-component/trigger',
+    '@rc-component/tour',
+    '@rc-component/mini-decimal',
+    'rc-drawer',
+    'rc-dialog',
+    'rc-resize-observer'
+  ],
   // Bypass CORS for Admin API during development
   async rewrites() {
     // Internal API URLs - default to production since local BE is not running

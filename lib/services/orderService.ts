@@ -1,6 +1,6 @@
 import {
-    DownloadableFile,
-    getFileNameFromContentDisposition,
+  DownloadableFile,
+  getFileNameFromContentDisposition,
 } from "@/lib/utils/fileDownload";
 import axiosInstance from "./axiosInstance";
 
@@ -27,11 +27,17 @@ export interface OrderRequestDto {
   orderDetails: OrderDetailRequestDto[];
 }
 
+export interface PreOrderByReservationRequestDto {
+  customerId: string;
+  orderDetails: OrderDetailRequestDto[];
+}
+
 export interface OrderDetailDto {
   id?: string;
   dishId: string;
   dishName?: string;
   dishPrice?: number;
+  unitPrice?: number;
   quantity: number;
   note?: string | null;
   status?: string | null;
@@ -190,11 +196,28 @@ export interface ApplyDiscountResponse {
   appliedMembership: AppliedMembershipInfo | null;
 }
 
+export interface OrderApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
 class OrderService {
   async createOrder(payload: OrderRequestDto): Promise<string> {
     const response = await axiosInstance.post<string>("/orders", payload);
     // Backend returns Guid in body, axios will parse as string
     return response.data as unknown as string;
+  }
+
+  async preOrderByReservation(
+    reservationId: string,
+    payload: PreOrderByReservationRequestDto,
+  ): Promise<OrderApiResponse<OrderDto>> {
+    const response = await axiosInstance.post<OrderApiResponse<OrderDto>>(
+      `/orders/reservation/${encodeURIComponent(reservationId)}`,
+      payload,
+    );
+    return response.data;
   }
 
   async updateOrder(id: string, payload: OrderRequestDto): Promise<void> {
