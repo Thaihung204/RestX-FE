@@ -2228,8 +2228,10 @@
         "mobile_supplier": "Nhà CC: ",
         "mobile_type": "Loại: ",
         "edit_tooltip": "Chỉnh sửa",
+        "save_quantity": "Lưu số lượng",
         "empty": "Không tìm thấy nguyên liệu nào",
-        "load_error": "Không tải được danh sách nguyên liệu"
+        "load_error": "Không tải được danh sách nguyên liệu",
+        "retry": "Thử lại"
       },
       "tab_all": "Tất cả",
       "tab_active": "Đang dùng",
@@ -2514,14 +2516,14 @@
       "success": {
         "generate": "Tạo báo cáo thành công",
         "download": {
-          "month": "Đã tải chiến lược tháng",
-          "quarter": "Đã tải chiến lược quý",
-          "year": "Đã tải chiến lược năm"
+          "month": "Đã tải báo cáo tháng",
+          "quarter": "Đã tải báo cáo quý",
+          "year": "Đã tải báo cáo năm"
         }
       },
       "error": {
         "generate": "Tạo báo cáo thất bại",
-        "download": "Tải chiến lược thất bại"
+        "download": "Tải báo cáo thất bại"
       },
       "empty": {
         "title": "Chưa có báo cáo chiến lược",
@@ -3057,7 +3059,12 @@
   "notifications": {
     "title": "Thông báo",
     "mark_read": "Đánh dấu đã đọc",
-    "empty": "Không có thông báo"
+    "mark_all_read": "Đọc tất cả",
+    "empty": "Không có thông báo",
+    "unread_count": "{{count}} chưa đọc",
+    "just_now": "Vừa xong",
+    "table_prefix": "Bàn {{code}}",
+    "table_unknown": "Bàn chưa xác định"
   },
   "customer_page": {
     "footer": {
@@ -3100,7 +3107,27 @@
       "items_count": "{{count}} món",
       "confirm_order": "Gửi yêu cầu gọi món",
       "request_payment": "Xác nhận thanh toán",
+      "payment_request_sent": "Đã gửi yêu cầu thanh toán",
       "note_placeholder": "Ghi chú cho món này"
+    },
+    "feedback_modal": {
+      "title": "Đánh giá trải nghiệm",
+      "subtitle": "Chia sẻ cảm nhận của bạn về bữa ăn hôm nay",
+      "select_star": "Chọn số sao",
+      "rating_1": "Tệ",
+      "rating_2": "Không tốt",
+      "rating_3": "Bình thường",
+      "rating_4": "Tốt",
+      "rating_5": "Tuyệt vời",
+      "comment_label": "Nhận xét",
+      "comment_placeholder": "Nhận xét của bạn (không bắt buộc)",
+      "skip": "Bỏ qua",
+      "submit": "Gửi đánh giá",
+      "submitting": "Đang gửi...",
+      "success": "Cảm ơn bạn đã đánh giá!",
+      "error": "Gửi đánh giá thất bại, vui lòng thử lại",
+      "no_order": "Không tìm thấy đơn hàng để gửi đánh giá",
+      "already_feedback": "Đơn hàng này đã được đánh giá"
     },
     "welcome_card": {
       "greeting": "Xin chào quý khách",

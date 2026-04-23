@@ -255,6 +255,13 @@ class OrderService {
     return extractOrders(response.data);
   }
 
+  async getCurrentOrders(params?: StaffOrderQueryParams): Promise<OrderDto[]> {
+    const response = await axiosInstance.get("/orders/current-order", {
+      params,
+    });
+    return extractOrders(response.data);
+  }
+
   async getOrdersByFilter(params: OrderFilterParams): Promise<OrderDto[]> {
     const response = await axiosInstance.get("/orders", {
       params,

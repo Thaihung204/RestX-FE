@@ -2205,8 +2205,10 @@
         "mobile_supplier": "Supplier: ",
         "mobile_type": "Type: ",
         "edit_tooltip": "Edit",
+        "save_quantity": "Save quantity",
         "empty": "No ingredients found",
-        "load_error": "Failed to load ingredient list"
+        "load_error": "Failed to load ingredient list",
+        "retry": "Retry"
       },
       "tab_all": "All",
       "tab_active": "Active",
@@ -2469,14 +2471,14 @@
       "success": {
         "generate": "Report generated successfully",
         "download": {
-          "month": "Monthly strategy downloaded",
-          "quarter": "Quarterly strategy downloaded",
-          "year": "Yearly strategy downloaded"
+          "month": "Monthly report downloaded",
+          "quarter": "Quarterly report downloaded",
+          "year": "Yearly report downloaded"
         }
       },
       "error": {
         "generate": "Failed to generate report",
-        "download": "Failed to download strategy"
+        "download": "Failed to download report"
       },
       "empty": {
         "title": "No strategy report yet",
@@ -3012,7 +3014,12 @@
   "notifications": {
     "title": "Notifications",
     "mark_read": "Mark as read",
-    "empty": "No notifications"
+    "mark_all_read": "Mark all as read",
+    "empty": "No notifications",
+    "unread_count": "{{count}} unread",
+    "just_now": "Just now",
+    "table_prefix": "Table {{code}}",
+    "table_unknown": "Unknown table"
   },
   "customer_page": {
     "footer": {
@@ -3055,7 +3062,27 @@
       "items_count": "{{count}} items",
       "confirm_order": "Send Order Request",
       "request_payment": "Request Payment",
+      "payment_request_sent": "Payment request sent",
       "note_placeholder": "Note for this dish"
+    },
+    "feedback_modal": {
+      "title": "Rate your experience",
+      "subtitle": "Share how you felt about your meal today",
+      "select_star": "Select a rating",
+      "rating_1": "Bad",
+      "rating_2": "Not good",
+      "rating_3": "Okay",
+      "rating_4": "Good",
+      "rating_5": "Excellent",
+      "comment_label": "Comment",
+      "comment_placeholder": "Your comment (optional)",
+      "skip": "Skip",
+      "submit": "Submit feedback",
+      "submitting": "Submitting...",
+      "success": "Thank you for your feedback!",
+      "error": "Failed to submit feedback, please try again",
+      "no_order": "No order found to submit feedback",
+      "already_feedback": "This order has already been reviewed"
     },
     "welcome_card": {
       "greeting": "Welcome",

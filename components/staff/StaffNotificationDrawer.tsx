@@ -1,54 +1,366 @@
 "use client";
 
 import { useThemeMode } from "@/app/theme/AutoDarkThemeProvider";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { useTenant } from "@/lib/contexts/TenantContext";
+import notificationService, {
+  NotificationItem,
+} from "@/lib/services/notificationService";
 import {
-    BellOutlined,
-    CheckOutlined,
-    CloseOutlined,
-    CreditCardOutlined,
-    CustomerServiceOutlined,
+  BellOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  CreditCardOutlined,
+  CustomerServiceOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
+import { HubConnectionState } from "@microsoft/signalr";
 import { Badge, Button, Drawer, Tag, Typography } from "antd";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import notificationSignalRService from "../../lib/services/notificationSignalRService";
 
 const { Text } = Typography;
 
-interface Notification {
+interface UINotification {
   id: string;
   table: string;
   type: "payment" | "support";
-  message: string;
+  title: string;
   time: string;
   read: boolean;
 }
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: "1", table: "Bàn A2", type: "payment", message: "Yêu cầu thanh toán", time: "1 phút trước", read: false },
-  { id: "2", table: "Bàn B5", type: "support", message: "Cần hỗ trợ", time: "3 phút trước", read: false },
-  { id: "3", table: "Bàn C1", type: "payment", message: "Yêu cầu thanh toán", time: "7 phút trước", read: false },
-  { id: "4", table: "Bàn A4", type: "support", message: "Cần hỗ trợ", time: "12 phút trước", read: true },
-  { id: "5", table: "Bàn D3", type: "payment", message: "Yêu cầu thanh toán", time: "20 phút trước", read: true },
-  { id: "6", table: "Bàn B2", type: "support", message: "Cần hỗ trợ", time: "35 phút trước", read: true },
-];
+interface RealtimeNotificationEnvelope {
+  id?: string;
+  notification?: NotificationItem | null;
+}
+
+let myNotificationsPromise: Promise<NotificationItem[]> | null = null;
+
+function getMyNotifications(forceRefresh = false): Promise<NotificationItem[]> {
+  if (forceRefresh || !myNotificationsPromise) {
+    myNotificationsPromise = notificationService.getMyNotifications();
+  }
+  return myNotificationsPromise;
+}
+
+function formatRelativeTime(dateStr: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  const timestamp = new Date(dateStr).getTime();
+  if (Number.isNaN(timestamp)) return t("notifications.just_now");
+
+  const diff = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+  if (diff < 60) return t("notifications.seconds_ago", { count: diff, defaultValue: `${diff}s` });
+  if (diff < 3600) return t("notifications.minutes_ago", { count: Math.floor(diff / 60), defaultValue: `${Math.floor(diff / 60)}m` });
+  if (diff < 86400) return t("notifications.hours_ago", { count: Math.floor(diff / 3600), defaultValue: `${Math.floor(diff / 3600)}h` });
+  return t("notifications.days_ago", { count: Math.floor(diff / 86400), defaultValue: `${Math.floor(diff / 86400)}d` });
+}
+
+function mapNotification(n: NotificationItem, t: (key: string, opts?: Record<string, unknown>) => string): UINotification {
+  const isPayment = n.notificationType?.toUpperCase() === "PAYMENT";
+  const tableCode = n.message?.trim();
+  const safeTitle = n.title?.trim() || t("notifications.title");
+
+  return {
+    id: n.id,
+    table: tableCode ? t("notifications.table_prefix", { code: tableCode }) : t("notifications.table_unknown"),
+    type: isPayment ? "payment" : "support",
+    title: safeTitle,
+    time: n.createdDate ? formatRelativeTime(n.createdDate, t) : t("notifications.just_now"),
+    read: false,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function extractNotificationFromPayload(
+  payload: unknown,
+): NotificationItem | null {
+  if (!isRecord(payload)) return null;
+
+  const envelope = payload as RealtimeNotificationEnvelope;
+
+  if (isRecord(envelope.notification)) {
+    const notification = envelope.notification as NotificationItem;
+    if (typeof notification.id === "string") {
+      return notification;
+    }
+  }
+
+  const directId = payload.id;
+  const directTitle = payload.title;
+  if (typeof directId === "string" && typeof directTitle === "string") {
+    return payload as unknown as NotificationItem;
+  }
+
+  return null;
+}
+
+function extractNotificationId(payload: unknown): string | null {
+  if (typeof payload === "string") return payload;
+  if (!isRecord(payload)) return null;
+  return typeof payload.id === "string" ? payload.id : null;
+}
 
 export default function StaffNotificationDrawer() {
+  const { t } = useTranslation();
   const { mode } = useThemeMode();
+  const { user } = useAuth();
+  const { tenant } = useTenant();
+  const tenantId = tenant?.id;
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<UINotification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const readIdsRef = useRef<Set<string>>(new Set());
+  const joinedUserGroupIdsRef = useRef<Set<string>>(new Set());
+
+  const collectCandidateUserGroupIds = (items?: NotificationItem[]) => {
+    const result = new Set<string>();
+
+    const addCandidate = (value: unknown) => {
+      if (typeof value !== "string") return;
+      const normalized = value.trim();
+      if (!normalized) return;
+      result.add(normalized);
+    };
+
+    addCandidate(user?.id);
+
+    const userRecord = user as Record<string, unknown> | null;
+    if (userRecord) {
+      addCandidate(userRecord.memberId);
+      addCandidate(userRecord.memberID);
+      addCandidate(userRecord.employeeId);
+      addCandidate(userRecord.staffId);
+      addCandidate(userRecord.customerId);
+      addCandidate(userRecord.userId);
+    }
+
+    items?.forEach((item) => addCandidate(item.recipientId));
+
+    return Array.from(result);
+  };
+
+  const ensureTenantUserGroups = async (items?: NotificationItem[]) => {
+    if (!tenantId) return;
+
+    const candidateIds = collectCandidateUserGroupIds(items);
+    await Promise.all(
+      candidateIds.map(async (candidateId) => {
+        if (joinedUserGroupIdsRef.current.has(candidateId)) return;
+
+        try {
+          await notificationSignalRService.joinTenantUserGroup(
+            tenantId,
+            candidateId,
+          );
+          joinedUserGroupIdsRef.current.add(candidateId);
+        } catch {
+          // silent
+        }
+      }),
+    );
+  };
+
+  const syncNotifications = (data: NotificationItem[]) => {
+    setNotifications(
+      data.map((n) => ({
+        ...mapNotification(n, t),
+        read: readIdsRef.current.has(n.id),
+      })),
+    );
+  };
+
+  const refreshNotifications = async () => {
+    setLoading(true);
+    try {
+      const data = await getMyNotifications(true);
+      syncNotifications(data);
+      await ensureTenantUserGroups(data);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const upsertNotification = (
+    incoming: NotificationItem,
+    options?: { prependWhenNew?: boolean },
+  ) => {
+    const mapped = mapNotification(incoming, t);
+    const prependWhenNew = options?.prependWhenNew ?? true;
+
+    setNotifications((prev) => {
+      const existingIndex = prev.findIndex((item) => item.id === mapped.id);
+
+      if (existingIndex >= 0) {
+        const next = [...prev];
+        next[existingIndex] = {
+          ...mapped,
+          read: prev[existingIndex].read || readIdsRef.current.has(mapped.id),
+        };
+        return next;
+      }
+
+      const nextItem = {
+        ...mapped,
+        read: readIdsRef.current.has(mapped.id),
+      };
+
+      return prependWhenNew ? [nextItem, ...prev] : [...prev, nextItem];
+    });
+  };
+
+  // Initial fetch
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchNotifications = async () => {
+      setLoading(true);
+      try {
+        const data = await getMyNotifications();
+        if (!mounted) return;
+        syncNotifications(data);
+        await ensureTenantUserGroups(data);
+      } catch {
+        // silent
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // SignalR real-time notifications
+  useEffect(() => {
+    if (!tenantId) return;
+
+    let isMounted = true;
+
+    const handleNotificationCreated = (payload: unknown) => {
+      if (!isMounted) return;
+
+      const notification = extractNotificationFromPayload(payload);
+      if (!notification) return;
+
+      ensureTenantUserGroups([notification]).catch(() => {});
+
+      upsertNotification(notification, { prependWhenNew: true });
+    };
+
+    const handleNotificationUpdated = (payload: unknown) => {
+      if (!isMounted) return;
+
+      const notification = extractNotificationFromPayload(payload);
+      if (!notification) return;
+
+      ensureTenantUserGroups([notification]).catch(() => {});
+
+      upsertNotification(notification, { prependWhenNew: false });
+    };
+
+    const handleNotificationDeleted = (payload: unknown) => {
+      if (!isMounted) return;
+
+      const notificationId = extractNotificationId(payload);
+      if (!notificationId) return;
+
+      readIdsRef.current.add(notificationId);
+      setNotifications((prev) =>
+        prev.filter((item) => item.id !== notificationId),
+      );
+    };
+
+    const setupSignalR = async () => {
+      try {
+        await notificationSignalRService.start();
+        if (!isMounted) return;
+
+        const conn = notificationSignalRService.getConnection();
+        if (conn.state === HubConnectionState.Connected) {
+          await notificationSignalRService.joinTenantGroup(tenantId);
+          await ensureTenantUserGroups();
+          if (!isMounted) return;
+
+          notificationSignalRService.on<unknown>(
+            "notifications.created",
+            handleNotificationCreated,
+          );
+          notificationSignalRService.on<unknown>(
+            "notifications.personal.created",
+            handleNotificationCreated,
+          );
+          notificationSignalRService.on<unknown>(
+            "notifications.updated",
+            handleNotificationUpdated,
+          );
+          notificationSignalRService.on<unknown>(
+            "notifications.deleted",
+            handleNotificationDeleted,
+          );
+        }
+      } catch (error) {
+        console.error("SignalR notifications: setup failed", error);
+      }
+    };
+
+    setupSignalR();
+
+    return () => {
+      isMounted = false;
+      notificationSignalRService.off<unknown>(
+        "notifications.created",
+        handleNotificationCreated,
+      );
+      notificationSignalRService.off<unknown>(
+        "notifications.personal.created",
+        handleNotificationCreated,
+      );
+      notificationSignalRService.off<unknown>(
+        "notifications.updated",
+        handleNotificationUpdated,
+      );
+      notificationSignalRService.off<unknown>(
+        "notifications.deleted",
+        handleNotificationDeleted,
+      );
+
+      notificationSignalRService.leaveTenantGroup(tenantId).catch(() => {});
+      const joinedUserIds = Array.from(joinedUserGroupIdsRef.current);
+      joinedUserGroupIdsRef.current.clear();
+
+      joinedUserIds.forEach((joinedUserId) => {
+        notificationSignalRService
+          .leaveTenantUserGroup(tenantId, joinedUserId)
+          .catch(() => {});
+      });
+    };
+  }, [tenantId, user]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const markAllRead = () => {
+    notifications.forEach((n) => readIdsRef.current.add(n.id));
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const markRead = (id: string) => {
+    readIdsRef.current.add(id);
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     );
   };
 
   const dismiss = (id: string) => {
+    readIdsRef.current.add(id);
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
@@ -57,7 +369,11 @@ export default function StaffNotificationDrawer() {
       <Badge count={unreadCount} size="small" offset={[-4, 4]}>
         <Button
           type="text"
-          icon={<BellOutlined style={{ fontSize: 18, color: "var(--text-muted)" }} />}
+          icon={
+            <BellOutlined
+              style={{ fontSize: 18, color: "var(--text-muted)" }}
+            />
+          }
           onClick={() => setOpen(true)}
           style={{
             width: 36,
@@ -75,14 +391,13 @@ export default function StaffNotificationDrawer() {
         open={open}
         onClose={() => setOpen(false)}
         placement="right"
-        size="default"
-        style={{ maxWidth: 360, background: "var(--card)" }}
+        width={360}
+        style={{ background: "var(--card)" }}
         styles={{
           header: { display: "none" },
           body: { padding: 0, background: "var(--card)" },
           wrapper: { boxShadow: "-4px 0 24px rgba(0,0,0,0.12)" },
-        }}
-      >
+        }}>
         {/* Header */}
         <div
           style={{
@@ -95,8 +410,7 @@ export default function StaffNotificationDrawer() {
             top: 0,
             background: "var(--card)",
             zIndex: 10,
-          }}
-        >
+          }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
               style={{
@@ -108,17 +422,23 @@ export default function StaffNotificationDrawer() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-              }}
-            >
+              }}>
               <BellOutlined style={{ color: "var(--primary)", fontSize: 16 }} />
             </div>
             <div>
-              <Text style={{ color: "var(--text)", fontWeight: 700, fontSize: 15, display: "block", lineHeight: 1.2 }}>
-                Thông báo
+              <Text
+                style={{
+                  color: "var(--text)",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  display: "block",
+                  lineHeight: 1.2,
+                }}>
+                {t("notifications.title")}
               </Text>
               {unreadCount > 0 && (
                 <Text style={{ color: "var(--text-muted)", fontSize: 12 }}>
-                  {unreadCount} chưa đọc
+                  {t("notifications.unread_count", { count: unreadCount })}
                 </Text>
               )}
             </div>
@@ -129,11 +449,30 @@ export default function StaffNotificationDrawer() {
                 type="text"
                 size="small"
                 onClick={markAllRead}
-                style={{ color: "var(--primary)", fontSize: 12, fontWeight: 600, padding: "0 8px" }}
-              >
-                Đọc tất cả
+                style={{
+                  color: "var(--primary)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: "0 8px",
+                }}>
+                {t("notifications.mark_all_read")}
               </Button>
             )}
+            <Button
+              type="text"
+              size="small"
+              icon={<ReloadOutlined style={{ fontSize: 13 }} spin={loading} />}
+              onClick={refreshNotifications}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--text-muted)",
+              }}
+            />
             <Button
               type="text"
               icon={<CloseOutlined style={{ fontSize: 13 }} />}
@@ -154,9 +493,23 @@ export default function StaffNotificationDrawer() {
         {/* List */}
         <div style={{ padding: "8px 0" }}>
           {notifications.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-muted)" }}>
-              <BellOutlined style={{ fontSize: 40, opacity: 0.3, display: "block", marginBottom: 12 }} />
-              <Text style={{ color: "var(--text-muted)", fontSize: 14 }}>Không có thông báo</Text>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "60px 20px",
+                color: "var(--text-muted)",
+              }}>
+              <BellOutlined
+                style={{
+                  fontSize: 40,
+                  opacity: 0.3,
+                  display: "block",
+                  marginBottom: 12,
+                }}
+              />
+              <Text style={{ color: "var(--text-muted)", fontSize: 14 }}>
+                {t("notifications.empty")}
+              </Text>
             </div>
           ) : (
             notifications.map((notif) => (
@@ -169,14 +522,18 @@ export default function StaffNotificationDrawer() {
                   background: notif.read
                     ? "transparent"
                     : mode === "dark"
-                    ? "rgba(255, 56, 11, 0.06)"
-                    : "rgba(255, 56, 11, 0.04)",
+                      ? "rgba(255, 56, 11, 0.06)"
+                      : "rgba(255, 56, 11, 0.04)",
                   cursor: "pointer",
                   transition: "background 0.2s",
                   position: "relative",
-                }}
-              >
-                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    alignItems: "flex-start",
+                  }}>
                   {/* Icon */}
                   <div
                     style={{
@@ -195,19 +552,33 @@ export default function StaffNotificationDrawer() {
                         notif.type === "payment"
                           ? "1px solid rgba(82, 196, 26, 0.25)"
                           : "1px solid rgba(250, 173, 20, 0.25)",
-                    }}
-                  >
+                    }}>
                     {notif.type === "payment" ? (
-                      <CreditCardOutlined style={{ color: "#52c41a", fontSize: 16 }} />
+                      <CreditCardOutlined
+                        style={{ color: "#52c41a", fontSize: 16 }}
+                      />
                     ) : (
-                      <CustomerServiceOutlined style={{ color: "#faad14", fontSize: 16 }} />
+                      <CustomerServiceOutlined
+                        style={{ color: "#faad14", fontSize: 16 }}
+                      />
                     )}
                   </div>
 
                   {/* Content */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-                      <Text style={{ color: "var(--text)", fontWeight: 700, fontSize: 14 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        marginBottom: 3,
+                      }}>
+                      <Text
+                        style={{
+                          color: "var(--text)",
+                          fontWeight: 700,
+                          fontSize: 14,
+                        }}>
                         {notif.table}
                       </Text>
                       {!notif.read && (
@@ -224,23 +595,40 @@ export default function StaffNotificationDrawer() {
                     </div>
                     <Tag
                       color={notif.type === "payment" ? "success" : "warning"}
-                      style={{ fontSize: 11, margin: "0 0 4px 0", borderRadius: 4 }}
-                    >
-                      {notif.message}
+                      style={{
+                        fontSize: 11,
+                        margin: "0 0 4px 0",
+                        borderRadius: 4,
+                      }}>
+                      {notif.title}
                     </Tag>
-                    <Text style={{ color: "var(--text-muted)", fontSize: 11, display: "block" }}>
+                    <Text
+                      style={{
+                        color: "var(--text-muted)",
+                        fontSize: 11,
+                        display: "block",
+                      }}>
                       {notif.time}
                     </Text>
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                      flexShrink: 0,
+                    }}>
                     {!notif.read && (
                       <Button
                         type="text"
                         size="small"
                         icon={<CheckOutlined style={{ fontSize: 11 }} />}
-                        onClick={(e) => { e.stopPropagation(); markRead(notif.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markRead(notif.id);
+                        }}
                         style={{
                           width: 26,
                           height: 26,
@@ -257,7 +645,10 @@ export default function StaffNotificationDrawer() {
                       type="text"
                       size="small"
                       icon={<CloseOutlined style={{ fontSize: 11 }} />}
-                      onClick={(e) => { e.stopPropagation(); dismiss(notif.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        dismiss(notif.id);
+                      }}
                       style={{
                         width: 26,
                         height: 26,
