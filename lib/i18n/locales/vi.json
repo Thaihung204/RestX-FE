@@ -2514,14 +2514,14 @@
       "success": {
         "generate": "Tạo báo cáo thành công",
         "download": {
-          "month": "Đã tải chiến lược tháng",
-          "quarter": "Đã tải chiến lược quý",
-          "year": "Đã tải chiến lược năm"
+          "month": "Đã tải báo cáo tháng",
+          "quarter": "Đã tải báo cáo quý",
+          "year": "Đã tải báo cáo năm"
         }
       },
       "error": {
         "generate": "Tạo báo cáo thất bại",
-        "download": "Tải chiến lược thất bại"
+        "download": "Tải báo cáo thất bại"
       },
       "empty": {
         "title": "Chưa có báo cáo chiến lược",

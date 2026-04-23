@@ -2469,14 +2469,14 @@
       "success": {
         "generate": "Report generated successfully",
         "download": {
-          "month": "Monthly strategy downloaded",
-          "quarter": "Quarterly strategy downloaded",
-          "year": "Yearly strategy downloaded"
+          "month": "Monthly report downloaded",
+          "quarter": "Quarterly report downloaded",
+          "year": "Yearly report downloaded"
         }
       },
       "error": {
         "generate": "Failed to generate report",
-        "download": "Failed to download strategy"
+        "download": "Failed to download report"
       },
       "empty": {
         "title": "No strategy report yet",
