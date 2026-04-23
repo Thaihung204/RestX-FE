@@ -3018,7 +3018,12 @@
   "notifications": {
     "title": "Thông báo",
     "mark_read": "Đánh dấu đã đọc",
-    "empty": "Không có thông báo"
+    "mark_all_read": "Đọc tất cả",
+    "empty": "Không có thông báo",
+    "unread_count": "{{count}} chưa đọc",
+    "just_now": "Vừa xong",
+    "table_prefix": "Bàn {{code}}",
+    "table_unknown": "Bàn chưa xác định"
   },
   "customer_page": {
     "footer": {
@@ -3061,6 +3066,7 @@
       "items_count": "{{count}} món",
       "confirm_order": "Gửi yêu cầu gọi món",
       "request_payment": "Xác nhận thanh toán",
+      "payment_request_sent": "Đã gửi yêu cầu thanh toán",
       "note_placeholder": "Ghi chú cho món này"
     },
     "welcome_card": {
