@@ -21,7 +21,6 @@ interface ImageItem {
   isMain: boolean;
 }
 
-const DEFAULT_AI_VARIANTS = 4;
 const MAX_AI_PROMPT_LENGTH = 500;
 const MAX_DISH_NAME_LENGTH = 255;
 const MAX_DISH_DESCRIPTION_LENGTH = 2000;
@@ -161,20 +160,12 @@ export default function MenuItemFormPage() {
       return;
     }
 
-    const promptText = aiPrompt.trim().slice(0, MAX_AI_PROMPT_LENGTH);
-
     try {
       setAiGenerating(true);
       setAiSuggestions([]);
 
       const response = await aiService.generateContent({
-        dishId: isNewItem ? null : id,
         dishName: normalizedDishName,
-        comboId: null,
-        promotionId: null,
-        variants: DEFAULT_AI_VARIANTS,
-        tone: "friendly",
-        customContext: promptText || undefined,
       });
 
       const variants = (response?.variants || []).filter(

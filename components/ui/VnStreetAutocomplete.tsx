@@ -114,6 +114,7 @@ export default function VnStreetAutocomplete({
   return (
     <AutoComplete
       value={value}
+      size="large"
       options={options.map(opt => ({ value: opt.value, label: opt.label }))}
       onChange={(next) => form.setFieldValue(fieldName, next)}
       onSelect={(next) => {

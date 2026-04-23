@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import TenantBrandingSettings from "./components/TenantBrandingSettings";
+import ReservationDepositConfigSection from "./components/ReservationDepositConfigSection";
 
 export default function SettingsPage() {
   const { t } = useTranslation("common");
@@ -240,6 +241,8 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            <ReservationDepositConfigSection />
+
             <div
               className="rounded-xl p-6"
               style={{
@@ -350,9 +353,8 @@ export default function SettingsPage() {
                 ].map((theme) => (
                   <button
                     key={theme.name}
-                    className={`p-4 bg-gradient-to-br ${
-                      theme.color
-                    } border-2 rounded-xl transition-all`}
+                    className={`p-4 bg-gradient-to-br ${theme.color
+                      } border-2 rounded-xl transition-all`}
                     style={{
                       borderColor:
                         theme.name === "Dark" ? "var(--primary)" : "#374151",
@@ -361,8 +363,8 @@ export default function SettingsPage() {
                       (e.currentTarget.style.borderColor = "var(--primary)")
                     }
                     onMouseLeave={(e) =>
-                      (e.currentTarget.style.borderColor =
-                        theme.name === "Dark" ? "var(--primary)" : "#374151")
+                    (e.currentTarget.style.borderColor =
+                      theme.name === "Dark" ? "var(--primary)" : "#374151")
                     }
                     suppressHydrationWarning>
                     <div className="text-center">
@@ -395,11 +397,10 @@ export default function SettingsPage() {
                   (color) => (
                     <button
                       key={color}
-                      className={`h-12 bg-${color}-500 rounded-lg hover:scale-110 transition-transform ${
-                        color === "orange"
-                          ? "ring-2 ring-white ring-offset-2 ring-offset-gray-900"
-                          : ""
-                      }`}
+                      className={`h-12 bg-${color}-500 rounded-lg hover:scale-110 transition-transform ${color === "orange"
+                        ? "ring-2 ring-white ring-offset-2 ring-offset-gray-900"
+                        : ""
+                        }`}
                       suppressHydrationWarning
                     />
                   ),
@@ -712,12 +713,12 @@ export default function SettingsPage() {
                       "linear-gradient(to right, var(--primary), var(--primary-hover))",
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.background =
-                      "linear-gradient(to right, var(--primary-hover), var(--primary-border))")
+                  (e.currentTarget.style.background =
+                    "linear-gradient(to right, var(--primary-hover), var(--primary-border))")
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.background =
-                      "linear-gradient(to right, var(--primary), var(--primary-hover))")
+                  (e.currentTarget.style.background =
+                    "linear-gradient(to right, var(--primary), var(--primary-hover))")
                   }
                   suppressHydrationWarning>
                   {t("dashboard.settings.security.update_password")}
@@ -817,12 +818,12 @@ export default function SettingsPage() {
               transition: "all 0.3s",
             }}
             onMouseEnter={(e) =>
-              (e.currentTarget.style.background =
-                "linear-gradient(to right, var(--primary-hover), var(--primary-hover))")
+            (e.currentTarget.style.background =
+              "linear-gradient(to right, var(--primary-hover), var(--primary-hover))")
             }
             onMouseLeave={(e) =>
-              (e.currentTarget.style.background =
-                "linear-gradient(to right, var(--primary), var(--primary))")
+            (e.currentTarget.style.background =
+              "linear-gradient(to right, var(--primary), var(--primary))")
             }
             suppressHydrationWarning>
             {t("dashboard.settings.buttons.save_changes")}

@@ -219,6 +219,7 @@ interface TableActivityData {
   reservationContactPhone?: string;
   reservationStatusName?: string;
   reservationStatusCode?: string;
+  reservationCheckedInAt?: string | null;
   sessionId?: string;
   sessionStartedAt?: string;
   sessionEndedAt?: string | null;
@@ -454,6 +455,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           reservationContactPhone: reservation?.contact?.phone,
           reservationStatusName: reservation?.status?.name,
           reservationStatusCode: reservation?.status?.code,
+          reservationCheckedInAt: (reservation as any)?.checkedInAt,
           sessionId: session?.sessionId ?? session?.id,
           sessionStartedAt: session?.startedAt,
           sessionEndedAt: session?.endedAt ?? null,
@@ -512,7 +514,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       mounted = false;
       clearTimeout(debounceTimer);
       events.forEach((e) => orderSignalRService.off(e, handleChange));
-      orderSignalRService.invoke('LeaveTenantGroup', tenantId).catch(() => {});
+      orderSignalRService.invoke('LeaveTenantGroup', tenantId).catch(() => { });
     };
   }, [tenant?.id, fetchData]);
 
@@ -796,17 +798,17 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       const warningMessage =
         lockReason === 'same-order'
           ? t('staff.floor_activity.merge.same_order_selected', {
-              defaultValue: 'Bàn này đã thuộc cùng đơn với bàn đã chọn. Vui lòng chọn bàn khác.',
-            })
+            defaultValue: 'Bàn này đã thuộc cùng đơn với bàn đã chọn. Vui lòng chọn bàn khác.',
+          })
           : lockReason === 'same-group'
             ? t('staff.floor_activity.merge.same_group_selected', {
-                defaultValue: 'Bàn này đã nằm trong cùng nhóm gộp với bàn đã chọn.',
-              })
+              defaultValue: 'Bàn này đã nằm trong cùng nhóm gộp với bàn đã chọn.',
+            })
             : lockReason === 'requires-order-anchor'
               ? t('staff.floor_activity.merge.no_order_selected', {
-                  defaultValue: 'Cần chọn ít nhất 1 bàn đang có order để gộp.',
-                })
-            : t('staff.floor_activity.merge.reservation_pending_checkin', {
+                defaultValue: 'Cần chọn ít nhất 1 bàn đang có order để gộp.',
+              })
+              : t('staff.floor_activity.merge.reservation_pending_checkin', {
                 defaultValue: 'Không thể gộp bàn đã đặt nhưng chưa check-in.',
               });
 
@@ -1155,6 +1157,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           const canShowCheckInButton =
             !!selectedTable.reservationCode &&
             (selectedTable.reservationStatusCode || '').toUpperCase() === 'CONFIRMED' &&
+            !selectedTable.reservationCheckedInAt &&
             !selectedTable.orderId;
           const hasNamedGuest = selectedTable.status === 'occupied' && !!(selectedTable.reservationContactName || selectedTable.customerName);
           const selectedMergedTableNames = getMergedTableNames(selectedTable);
@@ -1267,12 +1270,12 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                       <span className="table-modal-info-value">
                         {selectedTable.sessionStartedAt
                           ? new Date(selectedTable.sessionStartedAt).toLocaleString('vi-VN', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                            })
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })
                           : '—'}
                       </span>
                     </div>
@@ -1283,12 +1286,12 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                       <span className="table-modal-info-value">
                         {selectedTable.sessionEndedAt
                           ? new Date(selectedTable.sessionEndedAt).toLocaleString('vi-VN', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                            })
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })
                           : '—'}
                       </span>
                     </div>
@@ -1347,6 +1350,12 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                       >
                         {t('staff.floor_activity.modal.checkin_btn')}
                       </Button>
+                    )}
+
+                    {!canShowCheckInButton && selectedTable.reservationCheckedInAt && (
+                      <div style={{ marginTop: 12, padding: '10px', background: 'rgba(34,197,94,0.1)', color: '#22c55e', borderRadius: 12, border: '1px solid rgba(34,197,94,0.2)', textAlign: 'center', fontWeight: 'bold' }}>
+                        {t("admin.reservations.checked_in", { defaultValue: "Đã check-in" })} lúc {new Date(selectedTable.reservationCheckedInAt).toLocaleTimeString('vi-VN')}
+                      </div>
                     )}
                   </div>
                 )}

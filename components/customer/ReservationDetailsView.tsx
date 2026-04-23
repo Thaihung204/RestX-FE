@@ -110,12 +110,14 @@ interface ReservationDepositStatus {
   paymentDeadline: string | null;
   isPaid: boolean;
   checkoutUrl: string | null;
+  status?: string | null;
   orderId?: string | null;
 }
 
 type ReservationDetailViewModel = ReservationDetail & {
   paymentDeadline?: string | null;
   checkoutUrl?: string | null;
+  depositStatus?: string | null;
   orderId?: string | null;
 };
 
@@ -138,6 +140,7 @@ const normalizeReservationDetail = (
     depositPaid: Boolean(raw.depositPaid),
     paymentDeadline: raw.paymentDeadline ?? null,
     checkoutUrl: raw.checkoutUrl ?? null,
+    depositStatus: raw.depositStatus ?? null,
     orderId: raw.orderId ?? null,
   };
 };
@@ -161,6 +164,7 @@ const mergeDepositStatusIntoDetail = (
     paymentDeadline:
       depositStatus.paymentDeadline ?? detail.paymentDeadline ?? null,
     checkoutUrl: depositStatus.checkoutUrl ?? detail.checkoutUrl ?? null,
+    depositStatus: depositStatus.status ?? detail.depositStatus ?? null,
     orderId: depositStatus.orderId ?? detail.orderId ?? null,
   };
 };
@@ -1561,7 +1565,7 @@ export default function ReservationDetailsView({
         !normalizedDetail.depositPaid &&
         normalizedDetail.depositAmount > 0 &&
         !isDepositDeadlinePassed &&
-        !normalizedDetail.checkoutUrl;
+        (!normalizedDetail.checkoutUrl || normalizedDetail.depositStatus === 'CANCELLED');
 
       if (
         shouldRegenerateDepositLink &&
@@ -1576,6 +1580,7 @@ export default function ReservationDetailsView({
             normalizedDetail = {
               ...normalizedDetail,
               checkoutUrl: payLinkRes.checkoutUrl,
+              depositStatus: "PENDING",
             };
           }
         } catch (payLinkError) {
@@ -1747,7 +1752,7 @@ export default function ReservationDetailsView({
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tenantAddress)}`
     : "";
   const mapEmbedUrl = tenantAddress
-    ? `https://www.google.com/maps?q=${encodeURIComponent(tenantAddress)}&output=embed`
+    ? `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent(tenantAddress)}&t=&z=14&ie=UTF8&iwloc=B&output=embed`
     : "";
 
   const handlePayDeposit = async () => {
@@ -1769,7 +1774,7 @@ export default function ReservationDetailsView({
     try {
       setDepositLoading(true);
 
-      if (detail.checkoutUrl) {
+      if (detail.checkoutUrl && detail.depositStatus !== 'CANCELLED') {
         window.location.assign(detail.checkoutUrl);
         return;
       }
@@ -1786,9 +1791,9 @@ export default function ReservationDetailsView({
         setDetail((prev) =>
           prev
             ? {
-                ...prev,
-                checkoutUrl: res.checkoutUrl,
-              }
+              ...prev,
+              checkoutUrl: res.checkoutUrl,
+            }
             : prev,
         );
 
@@ -2861,7 +2866,7 @@ export default function ReservationDetailsView({
                   )}
                   {!isDepositPaymentAllowed && (
                     <span
-                      className="flex-1 min-w-[180px] h-11 px-4 rounded-xl text-[11px] font-black whitespace-nowrap cursor-default inline-flex items-center justify-center"
+                      className="flex-1 min-w-[180px] h-11 px-4 rounded-xl text-[11px] font-black uppercase whitespace-nowrap cursor-default inline-flex items-center justify-center"
                       style={{
                         background: "var(--surface)",
                         color: detail.depositPaid
@@ -2870,7 +2875,11 @@ export default function ReservationDetailsView({
                         border: `1px solid ${detail.depositPaid ? "var(--success-border)" : "var(--danger-border)"}`,
                       }}>
                       {detail.depositPaid
+                       
                         ? t("reservation_detail.deposit.status_paid")
+                        : isCancelledByDeadline
+                          ? t("reservation_detail.deposit.deadline_cancel_desc")
+                         
                         : t("reservation_detail.deposit.status_unpaid")}
                     </span>
                   )}

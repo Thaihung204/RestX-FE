@@ -782,10 +782,26 @@
         "description": "Membership tiers are upgraded automatically based on spending. The higher the tier, the better the perks.",
         "points_path_title": "Points progression",
         "tiers": {
-          "bronze": { "name": "Bronze", "discount": "3% off", "points": "From 0 points" },
-          "silver": { "name": "Silver", "discount": "5% off", "points": "From 500 points" },
-          "gold": { "name": "Gold", "discount": "8% off", "points": "From 1500 points" },
-          "platinum": { "name": "Platinum", "discount": "12% off", "points": "From 5000 points" }
+          "bronze": {
+            "name": "Bronze",
+            "discount": "3% off",
+            "points": "From 0 points"
+          },
+          "silver": {
+            "name": "Silver",
+            "discount": "5% off",
+            "points": "From 500 points"
+          },
+          "gold": {
+            "name": "Gold",
+            "discount": "8% off",
+            "points": "From 1500 points"
+          },
+          "platinum": {
+            "name": "Platinum",
+            "discount": "12% off",
+            "points": "From 5000 points"
+          }
         }
       },
       "section_3": {
@@ -857,9 +873,18 @@
         "title_highlight": "operations",
         "description": "A complete staff management system — from account creation and permissions to order handling and table-side payment.",
         "staff": {
-          "an": { "name": "Nguyen Van An", "role": "Waiter" },
-          "bich": { "name": "Tran Thi Bich", "role": "Cashier" },
-          "duc": { "name": "Le Minh Duc", "role": "Waiter" }
+          "an": {
+            "name": "Nguyen Van An",
+            "role": "Waiter"
+          },
+          "bich": {
+            "name": "Tran Thi Bich",
+            "role": "Cashier"
+          },
+          "duc": {
+            "name": "Le Minh Duc",
+            "role": "Waiter"
+          }
         }
       },
       "section_1": {
@@ -1213,6 +1238,13 @@
     },
     "sidebar": {
       "management": "Management",
+      "sections": {
+        "overview": "Overview",
+        "operations": "Operations",
+        "catalog": "Catalog",
+        "team": "Team",
+        "system": "System"
+      },
       "items": {
         "dashboard": "Dashboard",
         "analytics": "Analytics",
@@ -2244,7 +2276,11 @@
         "currency": "Currency",
         "tax_rate": "Tax Rate (%)",
         "timezone": "Time Zone",
-        "date_format": "Date Format"
+        "date_format": "Date Format",
+        "deposit_config": "Reservation Deposit Configuration",
+        "min_party_size": "Min Party Size for Deposit",
+        "deposit_amount": "Deposit Amount Per Person",
+        "deadline_hours": "Hold Duration (Hours)"
       },
       "appearance": {
         "theme": "Theme",
@@ -2527,7 +2563,8 @@
     "revenue": {
       "title": "Revenue Trend",
       "subtitle": "Last 7 days performance",
-      "total_period": "Total period"
+      "total_period": "Total period",
+      "no_data": "No revenue data available"
     },
     "orders": {
       "title": "Orders Overview",
@@ -3563,7 +3600,11 @@
     "stats": {
       "total_tenants": "Total Tenants",
       "active_tenants": "Active Tenants",
-      "monthly_revenue": "Monthly Revenue"
+      "monthly_revenue": "Monthly Revenue",
+      "total": "Total Tenants",
+      "active": "Active",
+      "inactive": "Inactive",
+      "maintenance": "Maintenance"
     },
     "tabs": {
       "restaurant_list": "Tenants",
@@ -3683,7 +3724,10 @@
       "day": "Day",
       "week": "Week",
       "month": "Month",
-      "year": "Year"
+      "year": "Year",
+      "total_revenue": "Total Revenue",
+      "orders_period": "Orders This Period",
+      "avg_order_value": "Avg Order Value"
     },
     "messages": {
       "refresh_success": "Refreshed successfully",
@@ -3709,6 +3753,9 @@
       "update_success_message": "Tenant updated successfully",
       "save_error_title": "Save Failed",
       "save_error_message": "Failed to save tenant. Please try again.",
+      "activated": "Tenant activated successfully",
+      "deactivated": "Tenant deactivated successfully",
+      "toggle_error": "Failed to change status. Please try again.",
       "activate_success": "Tenant activated",
       "deactivate_success": "Tenant deactivated"
     },
@@ -3740,6 +3787,20 @@
       "inactive": "Inactive",
       "maintenance": "Maintenance"
     },
+    "detail_tabs": {
+      "general": "General Info",
+      "branding": "Branding & Theme",
+      "payment": "Payment Settings",
+      "system": "System Info",
+      "tenant_detail": "Tenant Detail",
+      "light_mode": "Light Mode",
+      "dark_mode": "Dark Mode",
+      "general_profile": "General Profile",
+      "general_profile_desc": "Configure the core identity and contact parameters for this restaurant tenant. Changes propagate across the RestX infrastructure.",
+      "active_tenant": "Active Tenant",
+      "inactive_tenant": "Inactive Tenant",
+      "view_details": "View Details"
+    },
     "plans": {
       "basic": "BASIC",
       "pro": "PRO",
@@ -3747,6 +3808,7 @@
     },
     "create": {
       "breadcrumb_create": "Create",
+      "page_title": "Create New Restaurant",
       "title": "Create New Restaurant",
       "subtitle": "Add a new tenant (restaurant) to the Restaurant Platform system.",
       "back": "Back",
@@ -3769,6 +3831,7 @@
         "prefix": "Prefix",
         "prefix_placeholder": "e.g., NHS",
         "address": "Restaurant Address",
+        "street_address": "Street Address",
         "address_line1_placeholder": "Street number",
         "address_line2_placeholder": "Ward/District",
         "address_line3_placeholder": "City/Province",
@@ -3815,6 +3878,10 @@
       }
     },
     "edit": {
+      "custom_domain_notice": {
+        "title": "Custom Domain",
+        "description": "If you wish to use a custom domain (e.g., myrestaurant.com), you must purchase it from a third-party provider and configure your DNS to point to our system."
+      },
       "breadcrumb_edit": "Edit",
       "title": "Edit Restaurant",
       "subtitle": "Update tenant (restaurant) information in the Restaurant Platform system.",
@@ -4032,6 +4099,7 @@
       "load_error": "Failed to load tenant requests",
       "invalid_id": "Invalid request ID",
       "no_data": "No pending tenant requests",
+      "no_data_desc": "All partnership requests have been processed or no new requests have been submitted yet.",
       "total_requests": "Total {{count}} requests",
       "total_requests_singular": "Total 1 pending request"
     }
@@ -4079,6 +4147,7 @@
       },
       "confirm": {
         "error_required": "Please fill in all required fields",
+        "error_invalid_email": "Please enter a valid email address",
         "error_generic": "An error occurred, please try again",
         "change_table": "Change Table",
         "title": "Confirm Reservation",
@@ -4143,6 +4212,7 @@
         "no_slots": "No available time slots",
         "restaurant_closed_today": "Restaurant closed",
         "restaurant_closed_on_day": "Restaurant is closed on {{day}}",
+        "restaurant_past_hours_on_day": "Restaurant has passed booking hours on {{day}}",
         "closed_overlay_badge": "Restaurant Closed",
         "closed_overlay_title": "Reservations are unavailable for this day",
         "closed_overlay_description": "Please choose another date to continue your booking.",
@@ -4332,13 +4402,13 @@
       "create_failed": "Failed to create payment link.",
       "paid_desc": "The deposit has been paid successfully.",
       "unpaid_desc": "Your deposit is still unpaid. Please pay soon to keep the table.",
-      "deadline_cancel_desc": "This reservation was cancelled due to overdue deposit payment.",
+      "deadline_cancel_desc": "Reservation Cancelled",
       "deadline_passed_desc": "The deposit payment deadline has passed.",
       "deadline": "Payment deadline",
       "open_checkout": "Open payment link",
-      "badge_paid": "Paid",
+      "badge_paid": "Deposit Confirmed",
       "badge_unpaid": "Unpaid",
-      "status_paid": "Paid",
+      "status_paid": "Deposit Confirmed",
       "status_unpaid": "Unpaid"
     },
     "order": {
@@ -4705,10 +4775,26 @@
         "description": "Membership tiers are upgraded automatically based on spending. The higher the tier, the better the perks.",
         "points_path_title": "Points progression",
         "tiers": {
-          "bronze": { "name": "Bronze", "discount": "3% off", "points": "From 0 points" },
-          "silver": { "name": "Silver", "discount": "5% off", "points": "From 500 points" },
-          "gold": { "name": "Gold", "discount": "8% off", "points": "From 1500 points" },
-          "platinum": { "name": "Platinum", "discount": "12% off", "points": "From 5000 points" }
+          "bronze": {
+            "name": "Bronze",
+            "discount": "3% off",
+            "points": "From 0 points"
+          },
+          "silver": {
+            "name": "Silver",
+            "discount": "5% off",
+            "points": "From 500 points"
+          },
+          "gold": {
+            "name": "Gold",
+            "discount": "8% off",
+            "points": "From 1500 points"
+          },
+          "platinum": {
+            "name": "Platinum",
+            "discount": "12% off",
+            "points": "From 5000 points"
+          }
         }
       },
       "section_3": {
@@ -4780,9 +4866,18 @@
         "title_highlight": "operations",
         "description": "A complete staff management system — from account creation and permissions to order handling and table-side payment.",
         "staff": {
-          "an": { "name": "Nguyen Van An", "role": "Waiter" },
-          "bich": { "name": "Tran Thi Bich", "role": "Cashier" },
-          "duc": { "name": "Le Minh Duc", "role": "Waiter" }
+          "an": {
+            "name": "Nguyen Van An",
+            "role": "Waiter"
+          },
+          "bich": {
+            "name": "Tran Thi Bich",
+            "role": "Cashier"
+          },
+          "duc": {
+            "name": "Le Minh Duc",
+            "role": "Waiter"
+          }
         }
       },
       "section_1": {

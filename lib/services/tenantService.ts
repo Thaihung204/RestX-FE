@@ -1,10 +1,10 @@
 import {
-    ITenant,
-    ITenantRequest,
-    TenantApiResponse,
-    TenantCreateInput,
-    TenantRequestInput,
-    TenantUpdateInput,
+  ITenant,
+  ITenantRequest,
+  TenantApiResponse,
+  TenantCreateInput,
+  TenantRequestInput,
+  TenantUpdateInput,
 } from "../types/tenant";
 import adminAxiosInstance from "./adminAxiosInstance";
 
@@ -94,9 +94,11 @@ const mapApiResponseToTenant = (apiTenant: TenantApiResponse): ITenant => {
 // Helper function to convert frontend create input to API format
 const mapCreateInputToApi = (input: TenantCreateInput) => {
   const slug = input.hostName || "";
-  const fullHostname = slug.endsWith(".restx.food")
+  const fullHostname = input.isCustomDomain
     ? slug
-    : `${slug}.restx.food`;
+    : slug.endsWith(".restx.food")
+      ? slug
+      : `${slug}.restx.food`;
 
   return {
     name: input.name,
