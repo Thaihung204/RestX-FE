@@ -40,12 +40,13 @@ export const DayPicker: React.FC<DayPickerProps> = ({
       if (!triggerRef.current) return;
       const rect = triggerRef.current.getBoundingClientRect();
       const popoverHeight = 320;
+      const popoverWidth = Math.min(300, window.innerWidth - 16);
       const spaceBelow = window.innerHeight - rect.bottom;
       const top = spaceBelow >= popoverHeight
-        ? rect.bottom + window.scrollY + 6
-        : rect.top + window.scrollY - popoverHeight - 6;
-      const left = Math.min(rect.left + window.scrollX, window.innerWidth - 300 - 8);
-      setPopoverStyle({ top, left: Math.max(8, left) });
+        ? rect.bottom + 6
+        : rect.top - popoverHeight - 6;
+      const left = Math.min(Math.max(8, rect.left), window.innerWidth - popoverWidth - 8);
+      setPopoverStyle({ top: Math.max(8, top), left: Math.max(8, left) });
     };
     updatePosition();
     window.addEventListener('resize', updatePosition);
@@ -95,9 +96,12 @@ export const DayPicker: React.FC<DayPickerProps> = ({
     <div
       ref={popoverRef}
       style={{
-        position: 'absolute',
+        position: 'fixed',
         zIndex: 9999,
-        width: 300,
+        width: 'min(300px, calc(100vw - 16px))',
+        maxHeight: 'calc(100dvh - 16px)',
+        overflow: 'auto',
+        overscrollBehavior: 'contain',
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderRadius: 16,

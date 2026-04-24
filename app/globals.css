@@ -849,6 +849,7 @@ textarea::placeholder {
 .table-360-viewer-container {
   position: absolute;
   inset: 0;
+  transform: translateZ(0);
 }
 
 .table-360-loading {
@@ -1085,6 +1086,11 @@ textarea::placeholder {
     text-align: center;
     justify-content: center;
     bottom: calc(env(safe-area-inset-bottom) + 154px);
+    backdrop-filter: none;
+  }
+
+  .table-360-action-secondary {
+    backdrop-filter: none;
   }
 }
 
@@ -1636,6 +1642,32 @@ html.reservation-overlay-open header {
 
 .tp-ui-modal.tp-ui-popover .tp-ui-wheel-column {
   touch-action: none;
+}
+
+@media (max-width: 768px) {
+  .floor-activity-date-popup {
+    max-width: calc(100vw - 16px) !important;
+  }
+
+  .floor-activity-date-popup .ant-picker-panel-container {
+    overflow: hidden;
+  }
+
+  .tp-ui-modal.tp-ui-popover {
+    inset: auto 8px 8px 8px !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+
+  .tp-ui-modal.tp-ui-popover .tp-ui-wrapper {
+    width: 100% !important;
+    max-height: min(72dvh, 420px);
+    overscroll-behavior: contain;
+  }
+
+  .tp-ui-modal.tp-ui-popover .tp-ui-wheel-column {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
 }
 
 .reservation-search-shell {

@@ -180,3 +180,10 @@ export interface TenantRequestInput {
   businessAddressLine4?: string;
   businessCountry?: string;
 }
+
+export interface BusinessHour {
+  dayOfWeek: number;
+  openTime: string;
+  closeTime: string;
+  isClosed: boolean;
+}

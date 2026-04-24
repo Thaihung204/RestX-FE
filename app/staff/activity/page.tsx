@@ -889,6 +889,8 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
               <DatePicker
                 className="floor-activity-filter-input floor-activity-filter-input--date-picker"
                 classNames={{ popup: { root: 'floor-activity-date-popup' } }}
+                getPopupContainer={(triggerNode) => triggerNode.parentElement || document.body}
+                placement="bottomLeft"
                 value={reservationFilterDate ? dayjs(reservationFilterDate, 'YYYY-MM-DD') : null}
                 format="DD/MM/YYYY"
                 allowClear={false}

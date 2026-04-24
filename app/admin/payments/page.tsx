@@ -9,6 +9,8 @@ import { message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DayPicker } from "@/components/ui/DayPicker";
+import dayjs from "dayjs";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 
@@ -164,12 +166,14 @@ export default function PaymentsPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={t("payments.search_placeholder")}
-                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
+                className="w-full px-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   color: "var(--text)",
                 }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
               />
             </div>
 
@@ -182,7 +186,7 @@ export default function PaymentsPage() {
               <DropDown
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="!h-14 !px-4">
+                className="!py-[10px] !px-[14px] !text-[14px] !rounded-xl">
                 <option value="">{t("payments.filter.all_status")}</option>
                 <option value="0">{t("payments.filter.pending")}</option>
                 <option value="1">{t("payments.filter.success")}</option>
@@ -199,7 +203,7 @@ export default function PaymentsPage() {
               <DropDown
                 value={methodFilter}
                 onChange={(e) => setMethodFilter(e.target.value)}
-                className="!h-14 !px-4">
+                className="!py-[10px] !px-[14px] !text-[14px] !rounded-xl">
                 <option value="">{t("payments.filter.all_methods")}</option>
                 <option value="CASH">CASH</option>
                 <option value="BANK">BANK</option>
@@ -212,17 +216,15 @@ export default function PaymentsPage() {
                 style={{ color: "var(--text-muted)" }}>
                 {t("payments.filter.date_label")}
               </label>
-              <input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}
-              />
+              <div>
+                <DayPicker
+                  value={dateFilter ? dayjs(dateFilter) : null}
+                  onChange={(d) => setDateFilter(d ? d.format("YYYY-MM-DD") : "")}
+                  placeholder={t("admin.reservations.filter.date_placeholder", {
+                    defaultValue: "Chọn ngày",
+                  })}
+                />
+              </div>
             </div>
           </div>
 
@@ -352,12 +354,12 @@ export default function PaymentsPage() {
                           style={{ color: "var(--text-muted)" }}>
                           {p.paymentDate
                             ? new Date(p.paymentDate).toLocaleString("vi-VN", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                              })
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            })
                             : "—"}
                         </td>
                         {/* <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -465,10 +467,10 @@ export default function PaymentsPage() {
                           pg === currentPage
                             ? { background: "var(--primary)", color: "white" }
                             : {
-                                background: "var(--surface)",
-                                border: "1px solid var(--border)",
-                                color: "var(--text-muted)",
-                              }
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              color: "var(--text-muted)",
+                            }
                         }>
                         {pg}
                       </button>

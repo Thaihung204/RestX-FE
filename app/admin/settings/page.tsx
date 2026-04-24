@@ -3,6 +3,7 @@
 import { DropDown } from "@/components/ui/DropDown";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { TimePicker } from "@/components/ui/TimePicker";
 
 import TenantBrandingSettings from "./components/TenantBrandingSettings";
 import ReservationDepositConfigSection from "./components/ReservationDepositConfigSection";
@@ -12,6 +13,9 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<
     "general" | "appearance" | "notifications" | "security"
   >("general");
+
+  const [openingTime, setOpeningTime] = useState("09:00");
+  const [closingTime, setClosingTime] = useState("23:00");
 
   return (
     <main className="p-6 lg:p-8">
@@ -201,22 +205,10 @@ export default function SettingsPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.opening_time")}
                     </label>
-                    <input
-                      type="time"
-                      defaultValue="09:00"
-                      className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      onFocus={(e) =>
-                        (e.currentTarget.style.borderColor = "var(--primary)")
-                      }
-                      onBlur={(e) =>
-                        (e.currentTarget.style.borderColor = "var(--border)")
-                      }
-                      suppressHydrationWarning
+                    <TimePicker
+                      value={openingTime}
+                      onChange={setOpeningTime}
+                      placeholder="Giờ mở cửa"
                     />
                   </div>
                   <div>
@@ -225,16 +217,10 @@ export default function SettingsPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.settings.general.closing_time")}
                     </label>
-                    <input
-                      type="time"
-                      defaultValue="23:00"
-                      className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                      style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                      }}
-                      suppressHydrationWarning
+                    <TimePicker
+                      value={closingTime}
+                      onChange={setClosingTime}
+                      placeholder="Giờ đóng cửa"
                     />
                   </div>
                 </div>

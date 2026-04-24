@@ -224,10 +224,10 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
           ? isDragging ? "grabbing" : "grab"
           : "pointer",
         userSelect: "none",
-        touchAction: "none",
         // Smooth position transition when NOT dragging (e.g. after drop)
         transition: isDragging ? "none" : "left 0.15s ease, top 0.15s ease",
         opacity: isDragging ? 0.9 : 1,
+        touchAction: draggable ? "none" : "auto",
       }}
     >
       <div style={getShapeStyle()}>

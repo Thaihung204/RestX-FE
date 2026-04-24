@@ -14,6 +14,8 @@ import { DownloadOutlined, ReloadOutlined, PlusOutlined } from "@ant-design/icon
 import { Select, message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { DayPicker } from '@/components/ui/DayPicker';
+import dayjs from 'dayjs';
 import { useTranslation } from "react-i18next";
 import AdminReservationCreateModal from "./components/AdminReservationCreateModal";
 
@@ -970,12 +972,14 @@ export default function ReservationsPage() {
             placeholder={t("admin.reservations.filter.search_placeholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 min-w-[200px] px-3 py-2 rounded-lg text-sm outline-none"
+            className="flex-1 min-w-[200px] px-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
             style={{
               background: "var(--surface)",
               border: "1px solid var(--border)",
               color: "var(--text)",
             }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
           />
 
           <DropDown
@@ -983,7 +987,7 @@ export default function ReservationsPage() {
             onChange={(e) =>
               setStatusId(e.target.value === "" ? "" : Number(e.target.value))
             }
-            className="px-3 py-2 text-sm min-w-[160px]"
+            className="!px-[14px] !py-[10px] !text-[14px] !rounded-xl min-w-[160px]"
           >
             <option value="">
               {t("admin.reservations.filter.all_status")}
@@ -997,17 +1001,13 @@ export default function ReservationsPage() {
             ))}
           </DropDown>
 
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-2 rounded-lg text-sm outline-none"
-            style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              color: "var(--text)",
-            }}
-          />
+          <div className="flex-1 min-w-[200px]">
+            <DayPicker
+              value={date ? dayjs(date) : null}
+              onChange={(d) => setDate(d.format("YYYY-MM-DD"))}
+              placeholder={t("admin.reservations.filter.date_placeholder", { defaultValue: "Chọn ngày" })}
+            />
+          </div>
 
           {(search || statusId !== "" || date) && (
             <button
