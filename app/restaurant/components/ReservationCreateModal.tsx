@@ -159,9 +159,10 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
             backdropFilter: 'blur(8px)',
             zIndex: 1200,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'center',
             padding: 16,
+            overflowY: 'auto',
           }}
         >
           <motion.div
@@ -175,9 +176,11 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
               borderRadius: 20,
               width: '100%',
               maxWidth: 520,
-              overflow: 'hidden',
+              overflow: 'visible',
               boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
               border: '1px solid var(--border)',
+              marginTop: 'auto',
+              marginBottom: 'auto',
             }}
           >
             <div
@@ -269,8 +272,8 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                 </div>
               ) : (
                 <>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('landing.booking.confirm.date_time')}
                       </label>
@@ -283,7 +286,7 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                         />
                       </div>
                     </div>
-                    <div>
+                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('landing.booking.form.preferred_time')}
                       </label>
@@ -314,8 +317,8 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('landing.booking.confirm.full_name')}
                       </label>
@@ -323,10 +326,10 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                         type="text"
                         value={form.name}
                         onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                        style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)' }}
+                        style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', boxSizing: 'border-box' }}
                       />
                     </div>
-                    <div>
+                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('landing.booking.confirm.phone_number')}
                       </label>
@@ -334,7 +337,7 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                         type="tel"
                         value={form.phone}
                         onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-                        style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)' }}
+                        style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', boxSizing: 'border-box' }}
                       />
                     </div>
                   </div>
