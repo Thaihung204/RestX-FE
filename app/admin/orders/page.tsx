@@ -16,6 +16,8 @@ import { message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DayPicker } from "@/components/ui/DayPicker";
+import dayjs from "dayjs";
 
 interface OrderRow {
   id: string;
@@ -179,12 +181,12 @@ export default function OrdersPage() {
             orderStatusId,
             time: o.createdDate
               ? new Date(o.createdDate).toLocaleString("vi-VN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })
               : "",
             paymentStatus,
             raw: o,
@@ -281,7 +283,7 @@ export default function OrdersPage() {
       events.forEach((event) => {
         orderSignalRService.off(event, handleOrderChange);
       });
-      orderSignalRService.invoke("LeaveTenantGroup", tenant.id).catch(() => {});
+      orderSignalRService.invoke("LeaveTenantGroup", tenant.id).catch(() => { });
     };
   }, [refreshOrders, tenant?.id]);
 
@@ -386,12 +388,14 @@ export default function OrdersPage() {
                 type="text"
                 value={customerNameSearch}
                 onChange={(e) => setCustomerNameSearch(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
+                className="w-full px-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   color: "var(--text)",
                 }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
               />
             </div>
 
@@ -410,12 +414,14 @@ export default function OrdersPage() {
                 type="text"
                 value={referenceSearch}
                 onChange={(e) => setReferenceSearch(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
+                className="w-full px-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   color: "var(--text)",
                 }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
               />
             </div>
 
@@ -429,21 +435,15 @@ export default function OrdersPage() {
                   defaultValue: "Tu ngay",
                 })}
               </label>
-              <input
-                id="orders-filter-from-date"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
-                aria-label={t("admin.reservations.filter.from_date", {
-                  defaultValue: "Tu ngay",
-                })}
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}
-              />
+              <div>
+                <DayPicker
+                  value={fromDate ? dayjs(fromDate) : null}
+                  onChange={(d) => setFromDate(d ? d.format("YYYY-MM-DD") : "")}
+                  placeholder={t("admin.reservations.filter.date_placeholder", {
+                    defaultValue: "Chọn ngày",
+                  })}
+                />
+              </div>
             </div>
 
             <div className="space-y-1">
@@ -456,21 +456,15 @@ export default function OrdersPage() {
                   defaultValue: "Den ngay",
                 })}
               </label>
-              <input
-                id="orders-filter-to-date"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
-                aria-label={t("admin.reservations.filter.to_date", {
-                  defaultValue: "Den ngay",
-                })}
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}
-              />
+              <div>
+                <DayPicker
+                  value={toDate ? dayjs(toDate) : null}
+                  onChange={(d) => setToDate(d ? d.format("YYYY-MM-DD") : "")}
+                  placeholder={t("admin.reservations.filter.date_placeholder", {
+                    defaultValue: "Chọn ngày",
+                  })}
+                />
+              </div>
             </div>
           </div>
 
@@ -480,29 +474,29 @@ export default function OrdersPage() {
             toDate ||
             customerNameSearch.trim() ||
             referenceSearch.trim()) && (
-            <div className="mt-3 flex justify-end">
-              <button
-                onClick={() => {
-                  setCustomerNameSearch("");
-                  setReferenceSearch("");
-                  setStatusFilter("");
-                  setPaymentStatusFilter("");
-                  setFromDate("");
-                  setToDate("");
-                }}
-                className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                style={{
-                  background: "rgba(239,68,68,0.1)",
-                  color: "#ef4444",
-                  border: "1px solid rgba(239,68,68,0.2)",
-                }}
-              >
-                {t("admin.reservations.filter.clear", {
-                  defaultValue: "Xoa loc",
-                })}
-              </button>
-            </div>
-          )}
+              <div className="mt-3 flex justify-end">
+                <button
+                  onClick={() => {
+                    setCustomerNameSearch("");
+                    setReferenceSearch("");
+                    setStatusFilter("");
+                    setPaymentStatusFilter("");
+                    setFromDate("");
+                    setToDate("");
+                  }}
+                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    background: "rgba(239,68,68,0.1)",
+                    color: "#ef4444",
+                    border: "1px solid rgba(239,68,68,0.2)",
+                  }}
+                >
+                  {t("admin.reservations.filter.clear", {
+                    defaultValue: "Xoa loc",
+                  })}
+                </button>
+              </div>
+            )}
         </div>
 
         <div
@@ -748,9 +742,9 @@ export default function OrdersPage() {
                                     prev.map((item) =>
                                       item.id === order.id
                                         ? {
-                                            ...item,
-                                            orderStatusId: nextStatusId,
-                                          }
+                                          ...item,
+                                          orderStatusId: nextStatusId,
+                                        }
                                         : item,
                                     ),
                                   );
@@ -804,11 +798,10 @@ export default function OrdersPage() {
 
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            order.paymentStatus === "paid"
-                              ? "bg-green-500/10 text-green-500 border border-green-500/20"
-                              : "bg-red-500/10 text-red-500 border border-red-500/20"
-                          }`}
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${order.paymentStatus === "paid"
+                            ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                            : "bg-red-500/10 text-red-500 border border-red-500/20"
+                            }`}
                         >
                           {order.paymentStatus === "paid"
                             ? t("dashboard.orders.payment_status.paid")
@@ -930,10 +923,10 @@ export default function OrdersPage() {
                           p === currentPage
                             ? { background: "var(--primary)", color: "white" }
                             : {
-                                background: "var(--surface)",
-                                border: "1px solid var(--border)",
-                                color: "var(--text-muted)",
-                              }
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              color: "var(--text-muted)",
+                            }
                         }
                       >
                         {p}

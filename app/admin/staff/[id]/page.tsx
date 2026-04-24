@@ -9,6 +9,8 @@ import { App } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DayPicker } from "@/components/ui/DayPicker";
+import dayjs from "dayjs";
 
 type ImagePosition = { x: number; y: number };
 
@@ -414,18 +416,9 @@ export default function StaffFormPage() {
                       style={{ color: "var(--text-muted)" }}>
                       {t("dashboard.staff.form.hire_date")}
                     </label>
-                    <input
-                      type="date"
-                      name="hireDate"
-                      value={formData.hireDate}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        borderColor: "var(--border)",
-                        color: "var(--text)",
-                      }}
+                    <DayPicker
+                      value={formData.hireDate ? dayjs(formData.hireDate) : null}
+                      onChange={(d) => setFormData(prev => ({ ...prev, hireDate: d.format('YYYY-MM-DD') }))}
                     />
                   </div>
 
@@ -546,17 +539,9 @@ export default function StaffFormPage() {
                         ({t("common.optional", { defaultValue: "optional" })})
                       </span>
                     </label>
-                    <input
-                      type="date"
-                      name="terminationDate"
-                      value={formData.terminationDate}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
-                      style={{
-                        background: "var(--surface)",
-                        borderColor: "var(--border)",
-                        color: "var(--text)",
-                      }}
+                    <DayPicker
+                      value={formData.terminationDate ? dayjs(formData.terminationDate) : null}
+                      onChange={(d) => setFormData(prev => ({ ...prev, terminationDate: d.format('YYYY-MM-DD') }))}
                     />
                   </div>
                 </div>
@@ -642,11 +627,11 @@ export default function StaffFormPage() {
                           style={{ color: "var(--text-muted)" }}>
                           {formData.isActive
                             ? t(
-                                "dashboard.staff.account_status.account_can_access",
-                              )
+                              "dashboard.staff.account_status.account_can_access",
+                            )
                             : t(
-                                "dashboard.staff.account_status.account_disabled",
-                              )}
+                              "dashboard.staff.account_status.account_disabled",
+                            )}
                         </p>
                       </div>
                     </div>
@@ -841,8 +826,8 @@ export default function StaffFormPage() {
                                 {isDragging
                                   ? t("dashboard.staff.avatar.drop_image_here")
                                   : t(
-                                      "dashboard.staff.avatar.drop_your_photo_here",
-                                    )}
+                                    "dashboard.staff.avatar.drop_your_photo_here",
+                                  )}
                               </p>
                               <p
                                 className="text-sm"

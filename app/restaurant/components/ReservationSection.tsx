@@ -4,7 +4,8 @@ import { TableData } from '@/app/admin/tables/components/DraggableTable';
 import { Layout, TableMap2D } from '@/app/admin/tables/components/TableMap2D';
 import reservationService from '@/lib/services/reservationService';
 import { FloorLayoutTableItem, floorService, tableService, TableStatus } from '@/lib/services/tableService';
-import { TenantConfig } from '@/lib/services/tenantService';
+import { TenantConfig, tenantService } from '@/lib/services/tenantService';
+import { BusinessHour } from '@/lib/types/tenant';
 import { GoogleGenAI, Type } from "@google/genai";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -26,7 +27,8 @@ const DEFAULT_TIME_SLOTS = ['17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
 const MAX_RESERVATION_ADVANCE_MONTHS = 1;
 const WEEK_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
-const APPLY_CLIENT_CURRENT_TIME_GUARD = false;
+const APPLY_CLIENT_CURRENT_TIME_GUARD = true;
+const MINIMUM_ADVANCE_BOOKING_MINUTES = 30;
 
 const TIME_SLOT_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
@@ -236,6 +238,45 @@ const fromMinutes = (totalMinutes: number) => {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 };
 
+const parseHourMinuteToken = (rawToken: string) => {
+    const token = rawToken.trim().toLowerCase();
+    if (!token) return null;
+
+    const ampmMatch = token.match(/\b(am|pm)\b/);
+    const ampm = ampmMatch ? ampmMatch[1] : null;
+    const clean = token
+        .replace(/\b(am|pm)\b/g, '')
+        .replace(/\s+/g, '')
+        .replace(/\./g, ':')
+        .replace(/h/g, ':');
+
+    const match = clean.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+    if (!match) return null;
+
+    let hour = Number(match[1]);
+    const minute = Number(match[2] ?? '0');
+    if (Number.isNaN(hour) || Number.isNaN(minute) || minute < 0 || minute > 59 || hour < 0 || hour > 23) {
+        return null;
+    }
+
+    if (ampm === 'am') {
+        if (hour === 12) hour = 0;
+    } else if (ampm === 'pm') {
+        if (hour < 12) hour += 12;
+    }
+
+    if (hour < 0 || hour > 23) return null;
+
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+};
+
+const isMinutesWithinWindow = (minutes: number, start: number, end: number) => {
+    if (start <= end) {
+        return minutes >= start && minutes <= end;
+    }
+    return minutes >= start || minutes <= end;
+};
+
 const normalizeTimeSlots = (slots: string[]) => {
     const unique = new Set<string>();
     for (const slot of slots) {
@@ -292,7 +333,7 @@ const getSelectableTimeBounds = (date: string, slots: string[]) => {
     if (APPLY_CLIENT_CURRENT_TIME_GUARD && date === getTodayLocalDate()) {
         const now = dayjs();
         const nowMinutes = (now.hour() * 60) + now.minute();
-        minMinutes = Math.max(minMinutes, nowMinutes + 1);
+        minMinutes = Math.max(minMinutes, nowMinutes + MINIMUM_ADVANCE_BOOKING_MINUTES);
     }
 
     if (minMinutes > latestAllowedMinutes) return null;
@@ -381,9 +422,20 @@ const buildDisabledIntervalsFromBounds = (
 
 const parseOpeningHours = (hours?: string | null) => {
     if (!hours) return null;
-    const match = hours.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
-    if (!match) return null;
-    return { open: match[1], close: match[2] };
+
+    const normalized = hours
+        .replace(/[–—]/g, '-')
+        .replace(/\b(to|den|đến)\b/gi, '-')
+        .replace(/\s*-\s*/g, ' - ');
+
+    const rawTokens = normalized.match(/\d{1,2}(?:[:h\.]\d{1,2})?\s*(?:am|pm)?/gi) || [];
+    if (rawTokens.length < 2) return null;
+
+    const open = parseHourMinuteToken(rawTokens[0] ?? '');
+    const close = parseHourMinuteToken(rawTokens[1] ?? '');
+    if (!open || !close) return null;
+
+    return { open, close };
 };
 
 const buildTimeSlotsFromHours = (open: string, close: string, intervalMinutes = DEFAULT_SLOT_INTERVAL_MINUTES) => {
@@ -407,13 +459,37 @@ const buildTimeSlotsFromHours = (open: string, close: string, intervalMinutes = 
     return slots;
 };
 
-const getTenantReservationConfig = (tenant: TenantConfig | null) => {
+const getTenantReservationConfig = (tenant: TenantConfig | null, date: string, businessHours: BusinessHour[] = []) => {
     let timeSlots = DEFAULT_TIME_SLOTS;
     let maxGuestsOverride: number | undefined;
     let closedNotice = '';
     const closedWeekdays = new Set<number>();
 
-    const openingHours = parseOpeningHours(tenant?.businessOpeningHours);
+    let apiOpeningHours: { open: string, close: string } | null = null;
+
+    if (businessHours.length > 0) {
+        businessHours.forEach(h => {
+            if (h.isClosed) closedWeekdays.add(h.dayOfWeek);
+        });
+
+        const dayIndex = dayjs(date, 'YYYY-MM-DD').day();
+        const currentDayHours = businessHours.find(h => h.dayOfWeek === dayIndex);
+
+        if (currentDayHours && !currentDayHours.isClosed) {
+            const formatTimeSpan = (time: string) => {
+                const parts = (time || '').split(':');
+                if (parts.length >= 2) return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                return time;
+            };
+
+            apiOpeningHours = {
+                open: formatTimeSpan(currentDayHours.openTime),
+                close: formatTimeSpan(currentDayHours.closeTime)
+            }
+        }
+    }
+
+    const openingHours = apiOpeningHours || parseOpeningHours(tenant?.businessOpeningHours);
     if (openingHours) {
         const generatedSlots = buildTimeSlotsFromHours(openingHours.open, openingHours.close);
         if (generatedSlots.length) timeSlots = generatedSlots;
@@ -467,8 +543,30 @@ const getTenantReservationConfig = (tenant: TenantConfig | null) => {
 
     const normalizedTimeSlots = normalizeTimeSlots(timeSlots);
 
+    let finalTimeSlots = normalizedTimeSlots.length ? normalizedTimeSlots : DEFAULT_TIME_SLOTS;
+    if (openingHours) {
+        const openMinutes = toMinutes(openingHours.open);
+        const closeMinutes = toMinutes(openingHours.close);
+        if (openMinutes !== null && closeMinutes !== null) {
+            const filtered = finalTimeSlots.filter((slot) => {
+                const slotMinutes = toMinutes(slot);
+                if (slotMinutes === null) return false;
+                return isMinutesWithinWindow(slotMinutes, openMinutes, closeMinutes);
+            });
+
+            if (filtered.length) {
+                finalTimeSlots = filtered;
+            } else {
+                const generatedSlots = buildTimeSlotsFromHours(openingHours.open, openingHours.close);
+                if (generatedSlots.length) {
+                    finalTimeSlots = generatedSlots;
+                }
+            }
+        }
+    }
+
     return {
-        timeSlots: normalizedTimeSlots.length ? normalizedTimeSlots : DEFAULT_TIME_SLOTS,
+        timeSlots: finalTimeSlots,
         maxGuestsOverride,
         closedWeekdays,
         closedNotice,
@@ -560,9 +658,23 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             mediaQuery.removeEventListener('change', syncViewport);
         };
     }, []);
+    const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+
+    useEffect(() => {
+        if (tenant?.id) {
+            tenantService.getBusinessHours(tenant.id).then(setBusinessHours).catch(console.error);
+        }
+    }, [tenant?.id]);
+
+    const [booking, setBooking] = useState<BookingData>(() => ({
+        date: getTodayLocalDate(),
+        time: '19:00',
+        guests: 4,
+    }));
+
     const { timeSlots, closedWeekdays, closedNotice } = useMemo(
-        () => getTenantReservationConfig(tenant),
-        [tenant],
+        () => getTenantReservationConfig(tenant, booking.date, businessHours),
+        [tenant, booking.date, businessHours],
     );
 
     const isDateClosedByTenantSettings = useCallback((date: string) => {
@@ -570,12 +682,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         const dayIndex = dayjs(date, 'YYYY-MM-DD').day();
         return closedWeekdays.has(dayIndex);
     }, [closedWeekdays]);
-
-    const [booking, setBooking] = useState<BookingData>(() => ({
-        date: getTodayLocalDate(),
-        time: timeSlots.includes('19:00') ? '19:00' : (timeSlots[0] || '19:00'),
-        guests: 4,
-    }));
 
     const isBookingDayClosed = useMemo(
         () => isDateClosedByTenantSettings(booking.date),
@@ -994,19 +1100,28 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     }, [step]);
 
-    // Đóng DatePicker khi scroll
+    // Đóng các trigger/picker khi scroll, nhưng không blur input đang nhập liệu (đặc biệt iOS keyboard)
     useEffect(() => {
         if (typeof window === 'undefined') return;
+        if (step !== ReservationStep.SEARCH && step !== ReservationStep.TABLE_SELECTION) return;
 
         let scrollTimer: ReturnType<typeof setTimeout>;
         const handleScroll = () => {
-            // Debounce để tránh gọi liên tục khi scroll
             clearTimeout(scrollTimer);
             scrollTimer = setTimeout(() => {
-                // Blur active element để Ant Design tự đóng popups
-                if (document.activeElement instanceof HTMLElement) {
-                    document.activeElement.blur();
+                const active = document.activeElement;
+                if (!(active instanceof HTMLElement)) return;
+
+                // Do not dismiss keyboard while user is typing in real text fields.
+                if (
+                    active instanceof HTMLInputElement ||
+                    active instanceof HTMLTextAreaElement ||
+                    active.isContentEditable
+                ) {
+                    return;
                 }
+
+                active.blur();
             }, 100);
         };
 
@@ -1016,7 +1131,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             clearTimeout(scrollTimer);
             window.removeEventListener('scroll', handleScroll);
         };
-    }, []);
+    }, [step]);
 
     const buildSelectedTable = (table: TableData): Table => ({
         id: table.id,
@@ -1785,7 +1900,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                                 <div className="reservation-confirm-card bg-[var(--card)] rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-0 md:min-h-[520px] relative isolate">
                                     {/* Left Summary Panel */}
-                                    <div className="reservation-confirm-side-left md:w-[32%] bg-black text-white p-4 sm:p-5 md:p-7 flex flex-col relative overflow-hidden shrink-0 rounded-t-2xl md:rounded-t-none md:rounded-l-[2.5rem]">
+                                    <div className="reservation-confirm-side-left md:w-[32%] bg-black text-white p-4 sm:p-5 md:p-7 flex flex-col relative overflow-hidden md:overflow-hidden shrink-0 rounded-t-2xl md:rounded-t-none md:rounded-l-[2.5rem] max-h-[36dvh] md:max-h-none">
                                         <div className="absolute inset-0 bg-[var(--primary)] opacity-90 rounded-t-2xl md:rounded-t-none md:rounded-l-[2.5rem]" />
                                         <div className="absolute -top-10 -right-10 text-white opacity-10 hidden md:block">
                                             <span className="material-symbols-outlined text-[180px]">restaurant_menu</span>
@@ -1804,28 +1919,28 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                 <StepIndicator active={3} t={t} inverted />
                                             </div>
 
-                                            <h2 className="reservation-confirm-title text-xl md:text-2xl font-serif mb-3 md:mb-5 border-b border-white/20 md:border-b-0 pb-2 md:pb-4 text-balance">{t('landing.booking.confirm.title')}</h2>
+                                            <h2 className="reservation-confirm-title text-lg md:text-2xl font-serif mb-2 md:mb-5 border-b border-white/20 md:border-b-0 pb-2 md:pb-4 text-balance">{t('landing.booking.confirm.title')}</h2>
 
-                                            <div className="reservation-confirm-metrics grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-6">
+                                            <div className="reservation-confirm-metrics grid grid-cols-3 md:grid-cols-1 gap-2 md:gap-6">
                                                 {[
                                                     { icon: 'calendar_today', label: t('landing.booking.confirm.date_time'), value: new Date(booking.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }), sub: booking.time },
                                                     { icon: 'table_restaurant', label: t('landing.booking.confirm.selected_table'), value: selectedTables.map(t => `#${t.label}`).join(', '), sub: `${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')}` },
                                                     { icon: 'group', label: t('landing.booking.confirm.party_size', { count: booking.guests }), value: `${booking.guests} ${t('landing.booking.table_map.guests')}`, sub: t('landing.booking.confirm.standard_seating') }
                                                 ].map((item, idx) => (
-                                                    <div key={idx} className="reservation-confirm-metric-item flex flex-col md:flex-row gap-1.5 md:gap-4 md:items-center">
-                                                        <div className="w-7 h-7 md:w-10 md:h-10 mb-1 md:mb-0 rounded-lg md:rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
-                                                            <span className="material-symbols-outlined text-white text-[15px] md:text-xl">{item.icon}</span>
+                                                    <div key={idx} className="reservation-confirm-metric-item flex flex-col md:flex-row gap-1 md:gap-4 md:items-center min-w-0">
+                                                        <div className="w-7 h-7 md:w-10 md:h-10 mb-0.5 md:mb-0 rounded-lg md:rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
+                                                            <span className="material-symbols-outlined text-white text-[14px] md:text-xl">{item.icon}</span>
                                                         </div>
-                                                        <div>
-                                                            <p className="text-white/70 text-[9px] md:text-[10px] font-bold uppercase tracking-widest mb-0.5">{item.label}</p>
-                                                            <p className="text-[13px] md:text-[0.98rem] font-bold text-pretty leading-snug">{item.value}</p>
-                                                            <p className="text-white/80 text-[10px] md:text-xs">{item.sub}</p>
+                                                        <div className="min-w-0">
+                                                            <p className="text-white/70 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.14em] md:tracking-widest mb-0.5 truncate">{item.label}</p>
+                                                            <p className="text-[12px] md:text-[0.98rem] font-bold leading-snug truncate">{item.value}</p>
+                                                            <p className="hidden md:block text-white/80 text-[10px] md:text-xs">{item.sub}</p>
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
 
-                                            <div className="reservation-confirm-address mt-3 md:mt-auto pt-3 md:pt-5 border-t border-white/20">
+                                            <div className="reservation-confirm-address hidden md:block mt-3 md:mt-auto pt-3 md:pt-5 border-t border-white/20">
                                                 <div className="flex items-start gap-2 md:gap-3 opacity-80">
                                                     <span className="material-symbols-outlined text-[15px] md:text-base mt-0.5">location_on</span>
                                                     <p className="text-[11px] md:text-sm font-medium leading-relaxed text-pretty">

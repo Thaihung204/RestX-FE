@@ -5,6 +5,7 @@ import {
   TenantCreateInput,
   TenantRequestInput,
   TenantUpdateInput,
+  BusinessHour,
 } from "../types/tenant";
 import adminAxiosInstance from "./adminAxiosInstance";
 
@@ -533,7 +534,7 @@ export const tenantService = {
   },
 
   changeStatus: async (id: string, status: boolean): Promise<void> => {
-    await adminAxiosInstance.put(`/tenants/${id}/Status`, status );
+    await adminAxiosInstance.put(`/tenants/${id}/Status`, status);
   },
 
   // ============ TENANT REQUESTS API ============
@@ -652,11 +653,16 @@ export const tenantService = {
    * Delete tenant request
    * Backend endpoint: DELETE /api/tenants/requests/{id}
    */
-  deleteTenantRequest: async (id: string): Promise<void> => {
-    await adminAxiosInstance.delete(`/tenants/requests/${id}`);
+  // ============ PAYMENT SETTINGS API ============
+
+  getBusinessHours: async (tenantId: string): Promise<BusinessHour[]> => {
+    const response = await adminAxiosInstance.get<BusinessHour[]>(`/tenants/${tenantId}/business-hours`);
+    return response.data;
   },
 
-  // ============ PAYMENT SETTINGS API ============
+  updateBusinessHours: async (tenantId: string, hours: BusinessHour[]): Promise<void> => {
+    await adminAxiosInstance.put(`/tenants/${tenantId}/business-hours`, hours);
+  },
 
   /**
    * Get payment settings for a tenant

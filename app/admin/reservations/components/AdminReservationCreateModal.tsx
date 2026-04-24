@@ -4,6 +4,8 @@ import { useThemeMode } from '@/app/theme/AntdProvider';
 import { DayPicker } from '@/components/ui/DayPicker';
 import { TimePicker } from '@/components/ui/TimePicker';
 import { useTenant } from '@/lib/contexts/TenantContext';
+import { tenantService } from '@/lib/services/tenantService';
+import { BusinessHour } from '@/lib/types/tenant';
 import {
     CreateReservationRequest,
     CreateReservationResponse,
@@ -56,17 +58,69 @@ export default function AdminReservationCreateModal({
 
     const { tenant } = useTenant();
 
+    const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+
+    useEffect(() => {
+        if (tenant?.id) {
+            tenantService.getBusinessHours(tenant.id).then(setBusinessHours).catch(console.error);
+        }
+    }, [tenant?.id]);
+
+    const currentDayHours = useMemo(() => {
+        if (!date) return null;
+        const day = date.day(); // 0 = Sunday
+        return businessHours.find(h => h.dayOfWeek === day);
+    }, [date, businessHours]);
+
     const parsedHours = useMemo(() => {
-        if (!tenant?.businessOpeningHours) return null;
-        const match = tenant.businessOpeningHours.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
-        if (!match) return null;
+        if (!currentDayHours || currentDayHours.isClosed || !currentDayHours.openTime || !currentDayHours.closeTime) return null;
+
+        const openParts = currentDayHours.openTime.split(':');
+        const closeParts = currentDayHours.closeTime.split(':');
+        if (openParts.length < 2 || closeParts.length < 2) return null;
+
         return {
-            openHour: parseInt(match[1], 10),
-            openMin: parseInt(match[2], 10),
-            closeHour: parseInt(match[3], 10),
-            closeMin: parseInt(match[4], 10)
+            openHour: parseInt(openParts[0]),
+            openMin: parseInt(openParts[1]),
+            closeHour: parseInt(closeParts[0]),
+            closeMin: parseInt(closeParts[1])
         };
-    }, [tenant]);
+    }, [currentDayHours]);
+
+    const isTimeWithinServiceHours = useMemo(() => {
+        return (value: string) => {
+            if (currentDayHours?.isClosed) return false;
+
+            if (date && date.isSame(dayjs(), 'day')) {
+                const now = dayjs();
+                const currentMinutes = now.hour() * 60 + now.minute();
+                const parts = value.split(':').map(Number);
+                if (parts.length === 2) {
+                    const selectedMinutes = parts[0] * 60 + parts[1];
+                    if (selectedMinutes < currentMinutes) {
+                        return false;
+                    }
+                }
+            }
+
+            if (!parsedHours) return true;
+            const parts = value.split(':').map(Number);
+            if (parts.length !== 2) return false;
+            const current = parts[0] * 60 + parts[1];
+
+            const openValue = parsedHours.openHour * 60 + parsedHours.openMin;
+            const closeValue = parsedHours.closeHour * 60 + parsedHours.closeMin;
+            if (openValue <= closeValue) {
+                return current >= openValue && current <= closeValue;
+            }
+            return current >= openValue || current <= closeValue;
+        };
+    }, [parsedHours, currentDayHours]);
+
+    const defaultServiceTime = useMemo(() => {
+        if (!parsedHours) return '19:00';
+        return `${String(parsedHours.openHour).padStart(2, '0')}:${String(parsedHours.openMin).padStart(2, '0')}`;
+    }, [parsedHours]);
 
     const disabledTimeObj = () => {
         if (!parsedHours) return {};
@@ -99,12 +153,17 @@ export default function AdminReservationCreateModal({
         if (open) {
             setStep(0);
             setDate(dayjs());
-            setTime('19:00');
+            setTime(defaultServiceTime);
             setGuests(2);
             setSelectedTableIds([]);
             loadTables();
         }
-    }, [open]);
+    }, [open, defaultServiceTime]);
+
+    useEffect(() => {
+        if (!parsedHours) return;
+        setTime((prev) => (isTimeWithinServiceHours(prev) ? prev : defaultServiceTime));
+    }, [parsedHours, isTimeWithinServiceHours, defaultServiceTime]);
 
     const loadTables = async () => {
         setFetchingTables(true);
@@ -148,6 +207,14 @@ export default function AdminReservationCreateModal({
     const handleNextStep1 = async () => {
         if (!date || !time || time.length < 4 || guests < 1) {
             message.error(t('landing.booking.confirm.error_required'));
+            return;
+        }
+        if (!isTimeWithinServiceHours(time)) {
+            message.error(
+                t('admin.reservations.create_modal.time_outside_service_hours', {
+                    defaultValue: 'Giờ chọn nằm ngoài khung giờ phục vụ'
+                })
+            );
             return;
         }
         if (availableTablesByGuests.length === 0) {

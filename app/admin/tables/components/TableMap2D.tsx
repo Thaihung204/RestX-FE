@@ -313,21 +313,14 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
     }
 
     if (event.touches.length === 1 && !isPinchingRef.current) {
-      stopInertia();
       const touch = event.touches[0];
       touchPanStartPointRef.current = { x: touch.clientX, y: touch.clientY };
-      touchPanStartScrollRef.current = {
-        left: containerRef.current.scrollLeft,
-        top: containerRef.current.scrollTop,
-      };
       touchLastSampleRef.current = {
         x: touch.clientX,
         y: touch.clientY,
         time: performance.now(),
       };
       touchMovedRef.current = false;
-      panVelocityRef.current = { x: 0, y: 0 };
-      setIsPanning(true);
     }
   };
 
@@ -354,12 +347,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
       return;
     }
 
-    if (
-      event.touches.length === 1 &&
-      touchPanStartPointRef.current &&
-      touchPanStartScrollRef.current &&
-      !isPinchingRef.current
-    ) {
+    if (event.touches.length === 1 && touchPanStartPointRef.current && !isPinchingRef.current) {
       const touch = event.touches[0];
       const deltaX = touch.clientX - touchPanStartPointRef.current.x;
       const deltaY = touch.clientY - touchPanStartPointRef.current.y;
@@ -368,27 +356,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
         touchMovedRef.current = true;
       }
 
-      if (event.cancelable) {
-        event.preventDefault();
-      }
-      containerRef.current.scrollLeft = touchPanStartScrollRef.current.left - deltaX;
-      containerRef.current.scrollTop = touchPanStartScrollRef.current.top - deltaY;
-
-      const now = performance.now();
-      const last = touchLastSampleRef.current;
-      if (last) {
-        const dt = Math.max(1, now - last.time);
-        const velocityFactor = isIOSLikeRef.current ? 10 : 16;
-        const smoothing = isIOSLikeRef.current ? 0.28 : 0.4;
-        const instantX = (touch.clientX - last.x) / dt * velocityFactor;
-        const instantY = (touch.clientY - last.y) / dt * velocityFactor;
-
-        panVelocityRef.current = {
-          x: panVelocityRef.current.x * (1 - smoothing) + instantX * smoothing,
-          y: panVelocityRef.current.y * (1 - smoothing) + instantY * smoothing,
-        };
-      }
-      touchLastSampleRef.current = { x: touch.clientX, y: touch.clientY, time: now };
+      touchLastSampleRef.current = { x: touch.clientX, y: touch.clientY, time: performance.now() };
     }
   }, [canDragPan, clampZoomScale, applyZoomAtClientPoint]);
 
@@ -405,22 +373,12 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
     }
 
     if (event.touches.length === 0) {
-      const hadTouchPan = !!touchPanStartPointRef.current;
       didTouchPan = touchMovedRef.current;
 
       touchPanStartPointRef.current = null;
-      touchPanStartScrollRef.current = null;
       touchLastSampleRef.current = null;
       touchMovedRef.current = false;
       setIsPanning(false);
-
-      if (hadTouchPan && didTouchPan && !isPinchingRef.current) {
-        const speed = Math.hypot(panVelocityRef.current.x, panVelocityRef.current.y);
-        const inertiaStartThreshold = isIOSLikeRef.current ? 0.45 : 0.8;
-        if (speed > inertiaStartThreshold) {
-          startInertia();
-        }
-      }
 
       if (endedOnTableNode) {
         lastTapRef.current = null;
@@ -468,7 +426,6 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
     pinchStartDistanceRef.current = null;
     isPinchingRef.current = false;
     touchPanStartPointRef.current = null;
-    touchPanStartScrollRef.current = null;
     touchLastSampleRef.current = null;
     touchMovedRef.current = false;
     setIsPanning(false);
@@ -767,7 +724,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
         ref={containerRef}
         className="relative block flex-1 overflow-auto overscroll-contain rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-2 sm:p-4"
         style={{
-          touchAction: canDragPan ? "none" : "pan-x pan-y",
+          touchAction: canDragPan ? "pan-x pan-y" : "pan-x pan-y",
           cursor: canDragPan ? (isPanning ? "grabbing" : "grab") : "default",
           userSelect: canDragPan && isPanning ? "none" : "auto",
         }}

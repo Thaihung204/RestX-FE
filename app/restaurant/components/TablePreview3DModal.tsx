@@ -57,9 +57,10 @@ function Table360Viewer({
     camera.position.set(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio || 1);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(width, height);
     wrap.appendChild(renderer.domElement);
+    renderer.domElement.style.touchAction = "none";
 
     let isDragging = false;
     let lastPointer = { x: 0, y: 0 };
@@ -79,6 +80,7 @@ function Table360Viewer({
     };
 
     const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
       isDragging = true;
       lastPointer = { x: event.clientX, y: event.clientY };
       renderer.domElement.style.cursor = "grabbing";
@@ -90,6 +92,7 @@ function Table360Viewer({
     };
 
     const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
       if (!isDragging) return;
       lon -= (event.clientX - lastPointer.x) * 0.15;
       lat += (event.clientY - lastPointer.y) * 0.15;
@@ -100,6 +103,8 @@ function Table360Viewer({
     const activeTouches = new Map<number, { x: number; y: number }>();
     let startPinchDistance: number | null = null;
     let startFov = camera.fov;
+    let isTouchDragging = false;
+    let lastTouch = { x: 0, y: 0 };
 
     const getTouchDistance = () => {
       const points = Array.from(activeTouches.values());
@@ -111,15 +116,39 @@ function Table360Viewer({
     };
 
     const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        isTouchDragging = true;
+        lastTouch = { x: touch.clientX, y: touch.clientY };
+        return;
+      }
+
       if (event.touches.length < 2) return;
+      isTouchDragging = false;
+      activeTouches.clear();
       for (const touch of Array.from(event.touches)) {
         activeTouches.set(touch.identifier, { x: touch.clientX, y: touch.clientY });
       }
       startPinchDistance = getTouchDistance();
       startFov = camera.fov;
+      if (event.cancelable) {
+        event.preventDefault();
+      }
     };
 
     const onTouchMove = (event: TouchEvent) => {
+      if (event.touches.length === 1 && isTouchDragging) {
+        const touch = event.touches[0];
+        lon -= (touch.clientX - lastTouch.x) * 0.15;
+        lat += (touch.clientY - lastTouch.y) * 0.15;
+        lat = clamp(lat, -85, 85);
+        lastTouch = { x: touch.clientX, y: touch.clientY };
+        if (event.cancelable) {
+          event.preventDefault();
+        }
+        return;
+      }
+
       if (event.touches.length < 2 || startPinchDistance === null) return;
       for (const touch of Array.from(event.touches)) {
         activeTouches.set(touch.identifier, { x: touch.clientX, y: touch.clientY });
@@ -135,6 +164,9 @@ function Table360Viewer({
     const onTouchEnd = (event: TouchEvent) => {
       for (const touch of Array.from(event.changedTouches)) {
         activeTouches.delete(touch.identifier);
+      }
+      if (event.touches.length === 0) {
+        isTouchDragging = false;
       }
       if (activeTouches.size < 2) {
         startPinchDistance = null;
@@ -291,7 +323,7 @@ function Table360Viewer({
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointermove", onPointerMove);
     renderer.domElement.addEventListener("wheel", onWheel, { passive: true });
-    renderer.domElement.addEventListener("touchstart", onTouchStart, { passive: true });
+    renderer.domElement.addEventListener("touchstart", onTouchStart, { passive: false });
     renderer.domElement.addEventListener("touchmove", onTouchMove, { passive: false });
     renderer.domElement.addEventListener("touchend", onTouchEnd, { passive: true });
     renderer.domElement.addEventListener("touchcancel", onTouchEnd, { passive: true });

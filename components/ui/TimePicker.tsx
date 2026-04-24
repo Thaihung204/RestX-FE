@@ -80,12 +80,13 @@ export const TimePicker: React.FC<TimePickerProps> = ({
       if (!triggerRef.current) return;
       const rect = triggerRef.current.getBoundingClientRect();
       const ph = 280;
+      const popoverWidth = Math.min(240, window.innerWidth - 16);
       const spaceBelow = window.innerHeight - rect.bottom;
       const top = spaceBelow >= ph
-        ? rect.bottom + window.scrollY + 6
-        : rect.top + window.scrollY - ph - 6;
-      const left = Math.min(rect.left + window.scrollX, window.innerWidth - 240 - 8);
-      setPopoverStyle({ top, left: Math.max(8, left) });
+        ? rect.bottom + 6
+        : rect.top - ph - 6;
+      const left = Math.min(Math.max(8, rect.left), window.innerWidth - popoverWidth - 8);
+      setPopoverStyle({ top: Math.max(8, top), left: Math.max(8, left) });
     };
     update();
     window.addEventListener('resize', update);
@@ -168,9 +169,12 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     <div
       ref={popoverRef}
       style={{
-        position: 'absolute',
+        position: 'fixed',
         zIndex: 9999,
-        width: 240,
+        width: 'min(240px, calc(100vw - 16px))',
+        maxHeight: 'calc(100dvh - 16px)',
+        overflow: 'auto',
+        overscrollBehavior: 'contain',
         background: 'var(--card)',
         border: '1px solid var(--border)',
         borderRadius: 16,

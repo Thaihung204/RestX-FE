@@ -10,7 +10,10 @@ import reservationService, {
 import { tenantService } from "@/lib/services/tenantService";
 import { HubConnectionState } from "@microsoft/signalr";
 import { Select, message } from "antd";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { DayPicker } from '@/components/ui/DayPicker';
+import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import { formatVND } from "@/lib/utils/currency";
 
@@ -914,12 +917,14 @@ export default function ReservationsPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-lg text-sm outline-none"
+              className="w-full pl-9 pr-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
               style={{
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
                 color: "var(--text)",
               }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
             />
           </div>
 
@@ -928,12 +933,14 @@ export default function ReservationsPage() {
             onChange={(e) =>
               setStatusId(e.target.value === "" ? "" : Number(e.target.value))
             }
-            className="px-3 py-2 rounded-lg text-sm outline-none min-w-[160px]"
+            className="px-[14px] py-[10px] rounded-xl text-[14px] outline-none min-w-[160px] transition-colors"
             style={{
               background: "var(--surface)",
               border: "1px solid var(--border)",
               color: "var(--text)",
             }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
           >
             <option value="">
               {t("admin.reservations.filter.all_status")}
@@ -947,20 +954,14 @@ export default function ReservationsPage() {
             ))}
           </select>
 
-          <input
-            type="date"
-            value={todayDate}
-            readOnly
-            disabled
-            className="px-3 py-2 rounded-lg text-sm outline-none cursor-not-allowed"
-            style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              color: "var(--text-muted)",
-              opacity: 0.8,
-            }}
-            aria-label={t("admin.reservations.filter.from_date")}
-          />
+          <div className="flex-1 min-w-[200px] opacity-80">
+            <DayPicker
+              value={dayjs(todayDate)}
+              onChange={() => { }}
+              disabled
+              placeholder={t("admin.reservations.filter.date_placeholder", { defaultValue: "Chọn ngày" })}
+            />
+          </div>
 
           {(search || statusId !== "") && (
             <button
@@ -998,8 +999,8 @@ export default function ReservationsPage() {
                       className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap ${["table_floor", "guests", "status", "actions"].includes(
                         key,
                       )
-                          ? "text-center"
-                          : "text-left"
+                        ? "text-center"
+                        : "text-left"
                         }`}
                       style={{ color: "var(--text-muted)" }}
                     >
