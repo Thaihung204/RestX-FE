@@ -1,19 +1,19 @@
 "use client";
 
 import {
-    CheckCircleOutlined,
-    DeleteOutlined,
-    ExclamationCircleOutlined,
-    EyeOutlined,
-    MailOutlined,
-    PhoneOutlined,
-    PlusOutlined,
-    ReloadOutlined,
-    RiseOutlined,
-    SearchOutlined,
-    ShopOutlined,
-    StopOutlined,
-    WarningOutlined,
+  CheckCircleOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
+  EyeOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  RiseOutlined,
+  SearchOutlined,
+  ShopOutlined,
+  StopOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { App, Button, Input, Modal, Select, Switch, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -169,7 +169,7 @@ const TenantPage: React.FC = () => {
     if (togglingIds.has(record.id)) return;
     setTogglingIds((prev) => new Set(prev).add(record.id));
     try {
-      await tenantService.upsertTenant({ id: record.id, name: record.name, businessName: record.businessName, status: activate } as any);
+      await tenantService.changeStatus(record.id, activate);
       setTenants((prev) =>
         prev.map((t) =>
           t.id === record.id ? { ...t, status: activate ? "active" : "inactive" } : t
