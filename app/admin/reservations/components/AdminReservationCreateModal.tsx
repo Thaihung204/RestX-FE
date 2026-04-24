@@ -1,38 +1,34 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { createPortal } from 'react-dom';
-import dayjs, { Dayjs } from 'dayjs';
-import { DatePicker, message, Spin, Form, Input, InputNumber, Button, Space } from 'antd';
-import ReactTimePicker from 'react-time-picker';
-import 'react-time-picker/dist/TimePicker.css';
-import 'react-clock/dist/Clock.css';
+import { useThemeMode } from '@/app/theme/AntdProvider';
+import { DayPicker } from '@/components/ui/DayPicker';
+import { TimePicker } from '@/components/ui/TimePicker';
+import { useTenant } from '@/lib/contexts/TenantContext';
 import {
-    reservationService,
     CreateReservationRequest,
-    CreateReservationResponse
+    CreateReservationResponse,
+    reservationService
 } from '@/lib/services/reservationService';
 import {
-    tableService,
     TableItem,
-    TableStatus
+    tableService
 } from '@/lib/services/tableService';
-import { useTranslation } from 'react-i18next';
 import {
-    CloseOutlined,
-    CalendarOutlined,
-    TeamOutlined,
-    RightOutlined,
-    LeftOutlined,
     CheckCircleOutlined,
-    UserOutlined,
-    PhoneOutlined,
+    CloseOutlined,
+    LeftOutlined,
     MailOutlined,
-    MessageOutlined
+    PhoneOutlined,
+    RightOutlined,
+    TeamOutlined,
+    UserOutlined
 } from '@ant-design/icons';
-import { useThemeMode } from '@/app/theme/AntdProvider';
-import { useTenant } from '@/lib/contexts/TenantContext';
+import { Button, Form, Input, InputNumber, message, Space, Spin } from 'antd';
+import dayjs, { Dayjs } from 'dayjs';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 
 interface AdminReservationCreateModalProps {
     open: boolean;
@@ -287,35 +283,24 @@ export default function AdminReservationCreateModal({
                                                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text)' }}>
                                                     {t('admin.reservations.create_modal.date', { defaultValue: 'Ngày đặt bàn' })}
                                                 </label>
-                                                <DatePicker
+                                                <DayPicker
                                                     value={date}
                                                     onChange={setDate}
-                                                    format="DD/MM/YYYY"
-                                                    disabledDate={current => current && current < dayjs().startOf('day')}
-                                                    className="w-full h-12 rounded-xl text-base"
-                                                    suffixIcon={<CalendarOutlined style={{ color: 'var(--primary)' }} />}
-                                                    styles={{ popup: { root: { zIndex: 3000 } } }}
+                                                    minDate={dayjs().startOf('day')}
                                                 />
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text)' }}>
                                                     {t('admin.reservations.create_modal.time', { defaultValue: 'Giờ nhận bàn' })}
                                                 </label>
-                                                <div className="admin-time-picker-wrapper pill-time-picker">
-                                                    <ReactTimePicker
-                                                        value={time}
-                                                        onChange={(val) => setTime(val || '19:00')}
-                                                        format="HH:mm"
-                                                        clockIcon={null}
-                                                        clearIcon={null}
-                                                        disableClock={true}
-                                                        className="w-full"
-                                                        minTime={parsedHours ? `${String(parsedHours.openHour).padStart(2, '0')}:${String(parsedHours.openMin).padStart(2, '0')}` : undefined}
-                                                        maxTime={parsedHours ? `${String(parsedHours.closeHour).padStart(2, '0')}:${String(parsedHours.closeMin).padStart(2, '0')}` : undefined}
-                                                    />
-                                                </div>
+                                                <TimePicker
+                                                    value={time}
+                                                    onChange={(val) => setTime(val || '19:00')}
+                                                    minTime={parsedHours ? `${String(parsedHours.openHour).padStart(2, '0')}:${String(parsedHours.openMin).padStart(2, '0')}` : undefined}
+                                                    maxTime={parsedHours ? `${String(parsedHours.closeHour).padStart(2, '0')}:${String(parsedHours.closeMin).padStart(2, '0')}` : undefined}
+                                                />
                                                 {serviceHoursText && (
-                                                    <p className="admin-reservation-service-hours">
+                                                    <p className="admin-reservation-service-hours mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
                                                         {serviceHoursText}
                                                     </p>
                                                 )}
