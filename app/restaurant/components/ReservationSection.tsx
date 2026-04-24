@@ -1,23 +1,22 @@
 'use client';
 
+import { TableData } from '@/app/admin/tables/components/DraggableTable';
+import { Layout, TableMap2D } from '@/app/admin/tables/components/TableMap2D';
+import reservationService from '@/lib/services/reservationService';
+import { FloorLayoutTableItem, floorService, tableService, TableStatus } from '@/lib/services/tableService';
+import { TenantConfig } from '@/lib/services/tenantService';
+import { GoogleGenAI, Type } from "@google/genai";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { GoogleGenAI, Type } from "@google/genai";
-import { ReservationStep, BookingData, Table, UserDetails } from './types';
-import { TenantConfig } from '@/lib/services/tenantService';
-import { tableService, floorService, TableStatus, FloorLayoutTableItem } from '@/lib/services/tableService';
-import reservationService from '@/lib/services/reservationService';
-import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
-import { TableData } from '@/app/admin/tables/components/DraggableTable';
 import TablePreview3DModal from './TablePreview3DModal';
+import { BookingData, ReservationStep, Table, UserDetails } from './types';
 
-import { DatePicker, message } from 'antd';
+import { DayPicker } from '@/components/ui/DayPicker';
+import { TimePicker } from '@/components/ui/TimePicker';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { message } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/lib/contexts/AuthContext';
-import TimePicker from 'react-time-picker';
-import 'react-time-picker/dist/TimePicker.css';
-import 'react-clock/dist/Clock.css';
 
 // ─────────────────────────────────────────────────────
 // Constants & Helpers
@@ -1384,40 +1383,17 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 <form onSubmit={handleSearchSubmit} className="reservation-pill">
                                     <div className="pill-segment relative" id="date-picker-anchor">
                                         <span className="pill-label">{t('landing.booking.form.arrival_date')}</span>
-                                        <DatePicker
-                                            className="reservation-date-picker pill-control"
-                                            classNames={{ popup: { root: 'reservation-date-popup' } }}
-                                            getPopupContainer={() => document.body}
+                                        <DayPicker
                                             value={dayjs(booking.date, 'YYYY-MM-DD')}
-                                            format="DD/MM/YYYY"
-                                            allowClear={false}
-                                            suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">calendar_month</span>}
-                                            prefix={<span className="material-symbols-outlined text-[var(--primary)]">calendar_month</span>}
-                                            disabledDate={(current) => {
-                                                if (!current) return false;
-                                                const today = getTodayLocalDate();
-                                                const maxBookableDate = getMaxBookableDate();
-                                                const currentDate = current.format('YYYY-MM-DD');
-                                                if (currentDate < today) return true;
-                                                if (currentDate > maxBookableDate) return true;
-                                                if (!timeSlots.length) return true;
-                                                return false;
-                                            }}
+                                            minDate={dayjs(getTodayLocalDate(), 'YYYY-MM-DD')}
+                                            maxDate={dayjs(getMaxBookableDate(), 'YYYY-MM-DD')}
                                             onChange={(value) => {
-                                                if (!value) return;
-                                                const selectedDate = value.format('YYYY-MM-DD');
-                                                const today = getTodayLocalDate();
-                                                const maxBookableDate = getMaxBookableDate();
-                                                let safeDate = selectedDate < today ? today : selectedDate;
-                                                if (safeDate > maxBookableDate) safeDate = maxBookableDate;
-
+                                                const safeDate = value.format('YYYY-MM-DD');
                                                 if (isDateClosedByTenantSettings(safeDate)) {
                                                     setBooking((prev) => ({ ...prev, date: safeDate }));
                                                     return;
                                                 }
-
-                                                let nextBounds = getSelectableTimeBounds(safeDate, timeSlots);
-
+                                                const nextBounds = getSelectableTimeBounds(safeDate, timeSlots);
                                                 setBooking((prev) => {
                                                     const nextTime = clampTimeToBounds(prev.time, nextBounds);
                                                     return { ...prev, date: safeDate, time: nextTime };
@@ -1435,7 +1411,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                 <div className="space-y-2">
                                                     <TimePicker
                                                         onChange={(value) => {
-                                                            if (!value) return;
                                                             const clamped = clampTimeToBounds(value, selectableTimeBounds);
                                                             if (clamped) {
                                                                 setBooking((prev) => ({ ...prev, time: clamped }));
@@ -1443,21 +1418,17 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                                         }}
                                                         value={booking.time}
                                                         disabled={!selectableTimeBounds}
-                                                        format="HH:mm"
-                                                        clockIcon={null}
-                                                        clearIcon={null}
-                                                        disableClock={true}
-                                                        className="pill-time-picker w-full"
                                                         minTime={selectableTimeBounds?.min}
                                                         maxTime={selectableTimeBounds?.max}
+                                                        isToday={booking.date === getTodayLocalDate()}
                                                     />
-                                                    <div className="text-xs text-[var(--text-muted)] text-center">
+                                                    {/* <div className="text-xs text-[var(--text-muted)] text-center">
                                                         {t('landing.booking.form.available_hours', {
                                                             start: selectableTimeBounds.min,
                                                             end: selectableTimeBounds.max,
                                                             defaultValue: `Giờ phục vụ: ${selectableTimeBounds.min} - ${selectableTimeBounds.max}`
                                                         })}
-                                                    </div>
+                                                    </div> */}
                                                     {!isSelectedTimeValid && booking.time && (
                                                         <div className="text-xs text-[var(--danger)] text-center flex items-center justify-center gap-1">
                                                             <span className="material-symbols-outlined text-sm">error</span>
