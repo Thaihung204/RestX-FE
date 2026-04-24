@@ -10,11 +10,12 @@ import reservationService, {
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { formatVND } from "@/lib/utils/currency";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
-import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
+import { DownloadOutlined, ReloadOutlined, PlusOutlined } from "@ant-design/icons";
 import { Select, message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import AdminReservationCreateModal from "./components/AdminReservationCreateModal";
 
 const tableHeaderKeys = [
   "reservation_code",
@@ -583,6 +584,7 @@ export default function ReservationsPage() {
   const [statuses, setStatuses] = useState<ReservationStatus[]>([]);
 
   const [search, setSearch] = useState("");
+  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [statusId, setStatusId] = useState<number | "">("");
   const [date, setDate] = useState("");
   const [page, setPage] = useState(1);
@@ -812,6 +814,18 @@ export default function ReservationsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCreateModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: "var(--primary)",
+                border: "1px solid var(--primary-border)",
+                color: "#fff",
+              }}
+            >
+              <PlusOutlined />
+              Thêm Đặt Bàn
+            </button>
             <button
               onClick={handleExportReservations}
               disabled={exporting}
@@ -1283,7 +1297,7 @@ export default function ReservationsPage() {
                             )}
                           {(item.checkedInAt || checkedInIds.has(item.id)) && (
                             <span
-                              className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap"
+                              className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap"
                               style={{
                                 background: "rgba(34, 197, 94, 0.1)",
                                 color: "#22c55e",
@@ -1527,6 +1541,12 @@ export default function ReservationsPage() {
           onStatusUpdated={fetchData}
         />
       )}
+
+      <AdminReservationCreateModal
+        open={isCreateModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSuccess={() => fetchData()}
+      />
     </main>
   );
 }

@@ -2,11 +2,11 @@
 
 import { App as AntdApp, ConfigProvider, theme } from "antd";
 import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from "react";
 import { darkTheme, lightTheme, ThemeMode } from "./themeConfig";
 
@@ -21,8 +21,8 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue>({
   mode: "light",
-  toggleTheme: () => {},
-  setTheme: () => {},
+  toggleTheme: () => { },
+  setTheme: () => { },
 });
 
 export const useThemeMode = () => useContext(ThemeContext);
@@ -114,6 +114,14 @@ export default function AntdProvider({
           optionSelectedBg: "var(--primary-soft)",
           colorTextPlaceholder: "var(--text-muted)",
         },
+        DatePicker: {
+          colorBgElevated: "var(--card)",
+          colorBgContainer: "var(--surface)",
+          colorText: "var(--text)",
+          colorTextHeading: "var(--text)",
+          colorIcon: "var(--text-muted)",
+          colorIconHover: "var(--primary)",
+        },
         Modal: {
           contentBg: "var(--card)",
           headerBg: "var(--card)",
@@ -182,7 +190,7 @@ export default function AntdProvider({
 
   return (
     <ThemeContext.Provider value={{ mode, toggleTheme, setTheme }}>
-      <ConfigProvider 
+      <ConfigProvider
         theme={antdTheme}
         form={{ requiredMark: false }}
       >

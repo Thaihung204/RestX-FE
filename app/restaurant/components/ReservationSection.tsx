@@ -15,8 +15,9 @@ import { DatePicker, message } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { PluginRegistry, TimepickerUI } from 'timepicker-ui';
-import { WheelPlugin } from 'timepicker-ui/plugins/wheel';
+import TimePicker from 'react-time-picker';
+import 'react-time-picker/dist/TimePicker.css';
+import 'react-clock/dist/Clock.css';
 
 // ─────────────────────────────────────────────────────
 // Constants & Helpers
@@ -26,6 +27,7 @@ const DEFAULT_TIME_SLOTS = ['17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
 const MAX_RESERVATION_ADVANCE_MONTHS = 1;
 const WEEK_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+const APPLY_CLIENT_CURRENT_TIME_GUARD = false;
 
 const TIME_SLOT_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
@@ -288,7 +290,7 @@ const getSelectableTimeBounds = (date: string, slots: string[]) => {
     const latestAllowedMinutes = Math.min((24 * 60) - 1, lastSlotMinutes + intervalMinutes);
 
     let minMinutes = firstSlotMinutes;
-    if (date === getTodayLocalDate()) {
+    if (APPLY_CLIENT_CURRENT_TIME_GUARD && date === getTodayLocalDate()) {
         const now = dayjs();
         const nowMinutes = (now.hour() * 60) + now.minute();
         minMinutes = Math.max(minMinutes, nowMinutes + 1);
@@ -372,41 +374,9 @@ const buildDisabledIntervalsFromBounds = (
     return intervals;
 };
 
-const ensureWheelPluginRegistered = () => {
-    if (!PluginRegistry.has('wheel')) {
-        PluginRegistry.register(WheelPlugin);
-    }
-};
+// Removed TimepickerUI related code
 
-const normalizePickerTime = (
-    hourValue?: string,
-    minuteValue?: string,
-    periodValue?: string,
-) => {
-    const parsedHour = Number.parseInt(hourValue ?? '', 10);
-    const parsedMinute = Number.parseInt(minuteValue ?? '', 10);
-
-    if (
-        Number.isNaN(parsedHour) ||
-        Number.isNaN(parsedMinute) ||
-        parsedHour < 0 ||
-        parsedMinute < 0 ||
-        parsedMinute > 59
-    ) {
-        return null;
-    }
-
-    let hour = parsedHour;
-    const period = (periodValue || '').trim().toLowerCase();
-    if (period === 'am' || period === 'pm') {
-        const normalized12Hour = ((hour % 12) + 12) % 12;
-        hour = period === 'pm' ? normalized12Hour + 12 : normalized12Hour;
-    }
-
-    if (hour > 23) return null;
-
-    return `${hour.toString().padStart(2, '0')}:${parsedMinute.toString().padStart(2, '0')}`;
-};
+// Removed TimepickerUI related code
 
 
 
@@ -567,9 +537,30 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const { user } = useAuth();
     const [step, setStep] = useState<ReservationStep>(ReservationStep.SEARCH);
     const autoFilledRef = useRef(false);
-    const timeInputRef = useRef<HTMLInputElement | null>(null);
-    const timePickerRef = useRef<TimepickerUI | null>(null);
+    const [isMobileViewport, setIsMobileViewport] = useState(false);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const mediaQuery = window.matchMedia('(max-width: 767px)');
+        let timeoutId: NodeJS.Timeout;
+
+        const syncViewport = () => {
+            // Debounce để tránh re-render liên tục khi resize
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                setIsMobileViewport(mediaQuery.matches);
+            }, 100);
+        };
+
+        syncViewport();
+        mediaQuery.addEventListener('change', syncViewport);
+
+        return () => {
+            clearTimeout(timeoutId);
+            mediaQuery.removeEventListener('change', syncViewport);
+        };
+    }, []);
     const { timeSlots, closedWeekdays, closedNotice } = useMemo(
         () => getTenantReservationConfig(tenant),
         [tenant],
@@ -713,92 +704,47 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         [booking.date, effectiveTimeSlots],
     );
 
+    // Mobile time picker options
+    const mobileTimeOptions = useMemo(() => {
+        if (!selectableTimeBounds) return { hours: [], minutes: [] };
+
+        const minHour = parseInt(selectableTimeBounds.min.split(':')[0]);
+        const maxHour = parseInt(selectableTimeBounds.max.split(':')[0]);
+        const minMinute = parseInt(selectableTimeBounds.min.split(':')[1]);
+        const maxMinute = parseInt(selectableTimeBounds.max.split(':')[1]);
+
+        // Generate available hours
+        const hours = [];
+        for (let h = minHour; h <= maxHour; h++) {
+            hours.push(String(h).padStart(2, '0'));
+        }
+
+        // Generate available minutes for current selected hour
+        const currentHour = parseInt(booking.time.split(':')[0] || '19');
+        let startMin = 0;
+        let endMin = 59;
+
+        if (currentHour === minHour) {
+            startMin = minMinute;
+        }
+        if (currentHour === maxHour) {
+            endMin = maxMinute;
+        }
+
+        const minutes = [];
+        for (let m = startMin; m <= endMin; m++) {
+            minutes.push(String(m).padStart(2, '0'));
+        }
+
+        return { hours, minutes };
+    }, [selectableTimeBounds, booking.time]);
+
     const isSelectedTimeValid = useMemo(
         () => isTimeWithinBounds(booking.time, selectableTimeBounds),
         [booking.time, selectableTimeBounds],
     );
 
-    useEffect(() => {
-        const input = timeInputRef.current;
 
-        if (timePickerRef.current) {
-            timePickerRef.current.destroy({ keepInputValue: true });
-            timePickerRef.current = null;
-        }
-
-        if (!input || !selectableTimeBounds) return;
-
-        ensureWheelPluginRegistered();
-        const disabledIntervals = buildDisabledIntervalsFromBounds(selectableTimeBounds);
-
-        const picker = new TimepickerUI(input, {
-            clock: {
-                type: '24h',
-                incrementMinutes: 1,
-                incrementHours: 1,
-                disabledTime: disabledIntervals.length > 0
-                    ? { interval: disabledIntervals }
-                    : undefined,
-            },
-            ui: {
-                theme: 'basic',
-                mode: 'compact-wheel',
-                animation: false,
-                backdrop: false,
-                editable: false,
-            },
-            wheel: {
-                placement: 'auto',
-                commitOnScroll: false,
-                hideDisabled: false,
-            },
-            labels: {
-                ok: t('landing.booking.table_map.mobile_confirm', { defaultValue: 'Confirm' }),
-                cancel: t('common.actions.cancel', { defaultValue: 'Cancel' }),
-                time: t('landing.booking.form.preferred_time'),
-            },
-            callbacks: {
-                onConfirm: ({ hour, minutes, type }) => {
-                    const normalized = normalizePickerTime(hour, minutes, type);
-                    if (!normalized) return;
-
-                    const clampedTime = clampTimeToBounds(normalized, selectableTimeBounds);
-                    if (!clampedTime) return;
-
-                    setBooking((prev) => (
-                        prev.time === clampedTime
-                            ? prev
-                            : { ...prev, time: clampedTime }
-                    ));
-                },
-            },
-        });
-
-        picker.create();
-
-        const safeTime = clampTimeToBounds(booking.time, selectableTimeBounds);
-        if (safeTime) {
-            picker.setValue(safeTime, true);
-        }
-
-        timePickerRef.current = picker;
-
-        return () => {
-            if (timePickerRef.current) {
-                timePickerRef.current.destroy({ keepInputValue: true });
-                timePickerRef.current = null;
-            }
-        };
-    }, [selectableTimeBounds, t]);
-
-    useEffect(() => {
-        if (!timePickerRef.current || !selectableTimeBounds) return;
-
-        const safeTime = clampTimeToBounds(booking.time, selectableTimeBounds);
-        if (!safeTime) return;
-
-        timePickerRef.current.setValue(safeTime, true);
-    }, [booking.time, selectableTimeBounds]);
 
 
     useEffect(() => {
@@ -990,18 +936,88 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         const body = document.body;
 
         if (isOverlayReservationStep) {
-            root.classList.add('reservation-overlay-open');
-            body.classList.add('reservation-overlay-open');
+            // Lưu scroll position trước khi lock
+            const scrollY = window.scrollY;
+
+            // Đóng tất cả popups/dropdowns trước khi mở overlay
+            const closeAllPopups = () => {
+                // Blur active element để Ant Design tự đóng popups
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+                // Trigger ESC để đóng các popups khác
+                document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+            };
+
+            closeAllPopups();
+
+            // Thêm class với debounce để tránh giật
+            requestAnimationFrame(() => {
+                root.classList.add('reservation-overlay-open');
+                body.classList.add('reservation-overlay-open');
+
+                // Fix cho mobile: giữ scroll position
+                if (isMobileViewport) {
+                    body.style.top = `-${scrollY}px`;
+                    body.style.position = 'fixed';
+                    body.style.width = '100%';
+                }
+            });
 
             return () => {
-                root.classList.remove('reservation-overlay-open');
-                body.classList.remove('reservation-overlay-open');
+                requestAnimationFrame(() => {
+                    root.classList.remove('reservation-overlay-open');
+                    body.classList.remove('reservation-overlay-open');
+
+                    // Restore scroll position cho mobile
+                    if (isMobileViewport) {
+                        body.style.position = '';
+                        body.style.top = '';
+                        body.style.width = '';
+                        window.scrollTo(0, scrollY);
+                    }
+                });
             };
         }
 
         root.classList.remove('reservation-overlay-open');
         body.classList.remove('reservation-overlay-open');
-    }, [isOverlayReservationStep]);
+    }, [isOverlayReservationStep, isMobileViewport]);
+
+    // Đóng tất cả popups khi step thay đổi
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+
+        // Blur active element để Ant Design tự đóng popups
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    }, [step]);
+
+    // Đóng DatePicker khi scroll
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        let scrollTimer: ReturnType<typeof setTimeout>;
+        const handleScroll = () => {
+            // Debounce để tránh gọi liên tục khi scroll
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(() => {
+                // Blur active element để Ant Design tự đóng popups
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+            }, 100);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+            clearTimeout(scrollTimer);
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
 
     const buildSelectedTable = (table: TableData): Table => ({
         id: table.id,
@@ -1268,7 +1284,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         : `${selectedTables.slice(0, 2).map((table) => `#${table.label}`).join(', ')} +${selectedTables.length - 2}`;
 
     return (
-        <div id="reservation" className="reservation-root-frame relative text-[var(--text)]">
+        <div id="reservation" className="reservation-root-frame relative text-[var(--text)] scroll-mt-20">
             {/* Background Layer */}
             <div className="reservation-bg-layer absolute inset-0 z-0">
                 <img
@@ -1342,10 +1358,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 </div>
             )}
 
-            <main className={`reservation-main-shell relative z-10 mx-auto px-3 sm:px-4 flex flex-col items-center ${isClosedOverlayVisible ? 'reservation-main-shell-blocked' : ''} ${step === ReservationStep.TABLE_SELECTION ? 'w-full max-w-[98vw] justify-start py-3 sm:py-4 md:py-5' : isCompactReservationStep ? 'container reservation-main-shell-compact justify-start py-2 sm:py-3 md:py-4 overflow-y-auto' : 'container justify-center py-8 md:py-20'}`}>
+            <main className="reservation-main-shell relative z-10 mx-auto px-3 sm:px-4 flex flex-col items-center min-h-screen">
 
                 {step === ReservationStep.SEARCH && (
-                    <div className="reservation-search-shell w-full max-w-5xl px-0 fade-in">
+                    <div className="reservation-search-shell w-full max-w-5xl px-0 fade-in flex-1 flex flex-col justify-center py-8 md:py-20">
                         <div className="reservation-hero-block text-center mb-8 sm:mb-12">
                             <div className="inline-block px-4 py-1.5 rounded-full border border-[var(--primary-border)] bg-black/30 backdrop-blur-md text-[var(--primary)] text-xs font-bold tracking-[0.2em] uppercase mb-6 shadow-xl">
                                 {t('landing.booking.hero.badge')}
@@ -1363,14 +1379,15 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                         <div className="reservation-search-overlay">
                             <div className="reservation-search-card bg-[var(--card)] rounded-2xl sm:rounded-[2rem] shadow-2xl p-4 sm:p-6 md:p-10 border border-white/10 relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--primary)] via-[var(--primary-soft)] to-[var(--primary)]"></div>
+                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--primary)] via-[var(--primary-soft)] to-[var(--primary)] rounded-t-2xl sm:rounded-t-[2rem]"></div>
 
                                 <form onSubmit={handleSearchSubmit} className="reservation-pill">
-                                    <div className="pill-segment">
+                                    <div className="pill-segment relative" id="date-picker-anchor">
                                         <span className="pill-label">{t('landing.booking.form.arrival_date')}</span>
                                         <DatePicker
                                             className="reservation-date-picker pill-control"
                                             classNames={{ popup: { root: 'reservation-date-popup' } }}
+                                            getPopupContainer={() => document.body}
                                             value={dayjs(booking.date, 'YYYY-MM-DD')}
                                             format="DD/MM/YYYY"
                                             allowClear={false}
@@ -1413,32 +1430,56 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                                     <div className="pill-segment">
                                         <span className="pill-label">{t('landing.booking.form.preferred_time')}</span>
-                                        <input
-                                            ref={timeInputRef}
-                                            type="text"
-                                            className="pill-time-input"
-                                            value={normalizeTimeSlot(booking.time) || selectableTimeBounds?.min || ''}
-                                            readOnly
-                                            inputMode="numeric"
-                                            autoComplete="off"
-                                            disabled={!selectableTimeBounds}
-                                            aria-label={t('landing.booking.form.preferred_time')}
-                                            onClick={() => {
-                                                if (!selectableTimeBounds) return;
-                                                timePickerRef.current?.open();
-                                            }}
-                                            onFocus={() => {
-                                                if (!selectableTimeBounds) return;
-                                                timePickerRef.current?.open();
-                                            }}
-                                            onKeyDown={(event) => {
-                                                if (!selectableTimeBounds) return;
-                                                if (event.key === 'Enter' || event.key === ' ') {
-                                                    event.preventDefault();
-                                                    timePickerRef.current?.open();
-                                                }
-                                            }}
-                                        />
+                                        <div className="w-full">
+                                            {selectableTimeBounds ? (
+                                                <div className="space-y-2">
+                                                    <TimePicker
+                                                        onChange={(value) => {
+                                                            if (!value) return;
+                                                            const clamped = clampTimeToBounds(value, selectableTimeBounds);
+                                                            if (clamped) {
+                                                                setBooking((prev) => ({ ...prev, time: clamped }));
+                                                            }
+                                                        }}
+                                                        value={booking.time}
+                                                        disabled={!selectableTimeBounds}
+                                                        format="HH:mm"
+                                                        clockIcon={null}
+                                                        clearIcon={null}
+                                                        disableClock={true}
+                                                        className="pill-time-picker w-full"
+                                                        minTime={selectableTimeBounds?.min}
+                                                        maxTime={selectableTimeBounds?.max}
+                                                    />
+                                                    <div className="text-xs text-[var(--text-muted)] text-center">
+                                                        {t('landing.booking.form.available_hours', {
+                                                            start: selectableTimeBounds.min,
+                                                            end: selectableTimeBounds.max,
+                                                            defaultValue: `Giờ phục vụ: ${selectableTimeBounds.min} - ${selectableTimeBounds.max}`
+                                                        })}
+                                                    </div>
+                                                    {!isSelectedTimeValid && booking.time && (
+                                                        <div className="text-xs text-[var(--danger)] text-center flex items-center justify-center gap-1">
+                                                            <span className="material-symbols-outlined text-sm">error</span>
+                                                            <span>
+                                                                {t('landing.booking.form.time_not_available', {
+                                                                    defaultValue: 'Thời gian này không khả dụng. Vui lòng chọn trong khung giờ phục vụ.'
+                                                                })}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-2">
+                                                    <div className="text-sm text-[var(--text-muted)]">
+                                                        {isBookingDayClosed
+                                                            ? t('landing.booking.form.restaurant_closed_today', { defaultValue: 'Nhà hàng đóng cửa hôm nay' })
+                                                            : t('landing.booking.form.no_available_time', { defaultValue: 'Không có giờ phục vụ' })
+                                                        }
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="pill-divider" />
@@ -2057,438 +2098,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 }}
             />
 
-            <style jsx global>{`
-                .reservation-date-picker.ant-picker {
-                    width: 100% !important;
-                    height: 54px !important;
-                    min-height: 54px !important;
-                    border-radius: 12px !important;
-                    border: 1px solid var(--border) !important;
-                    background: var(--surface) !important;
-                    color: var(--text) !important;
-                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-                    padding: 0 12px !important;
-                    gap: 10px !important;
-                }
-
-                .reservation-empty-warning {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    border-radius: 16px;
-                    border: 1px solid var(--warning-border);
-                    background: var(--warning-soft);
-                    padding: 12px 16px;
-                    color: var(--warning);
-                }
-
-                .reservation-empty-warning .material-symbols-outlined {
-                    font-size: 16px;
-                }
-
-                .reservation-empty-warning span:last-child {
-                    font-weight: 600;
-                }
-
-                .reservation-date-picker .ant-picker-input > input {
-                    color: var(--text) !important;
-                    font-weight: 600 !important;
-                }
-
-                .reservation-date-picker.ant-picker-focused {
-                    border-color: var(--primary) !important;
-                    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 22%, transparent) !important;
-                }
-
-                .reservation-date-popup {
-                    z-index: 1200 !important;
-                    background: var(--card) !important;
-                    border: 1px solid var(--border) !important;
-                    border-radius: 12px !important;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
-                }
-
-                .reservation-date-popup .ant-picker-panel-container,
-                .reservation-date-popup .ant-picker-panel,
-                .reservation-date-popup .ant-picker-date-panel,
-                .reservation-date-popup .ant-picker-content {
-                    background: var(--card) !important;
-                    color: var(--text) !important;
-                }
-
-                .reservation-date-popup .ant-picker-header,
-                .reservation-date-popup .ant-picker-footer {
-                    color: var(--text) !important;
-                    border-color: var(--border) !important;
-                }
-
-                .reservation-date-popup .ant-picker-header button,
-                .reservation-date-popup .ant-picker-header-view,
-                .reservation-date-popup .ant-picker-content th,
-                .reservation-date-popup .ant-picker-content td,
-                .reservation-date-popup .ant-picker-cell .ant-picker-cell-inner,
-                .reservation-date-popup .ant-picker-now-btn,
-                .reservation-date-popup .ant-picker-today-btn {
-                    color: var(--text) !important;
-                }
-
-                .reservation-date-popup .ant-picker-cell-disabled .ant-picker-cell-inner {
-                    color: var(--text-muted) !important;
-                    opacity: 0.45;
-                }
-
-                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
-                    border-color: var(--primary) !important;
-                }
-
-                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner,
-                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-range-start .ant-picker-cell-inner,
-                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-range-end .ant-picker-cell-inner {
-                    background: color-mix(in srgb, var(--primary) 24%, transparent) !important;
-                    color: var(--text) !important;
-                }
-
-                .reservation-date-popup .ant-picker-cell:hover .ant-picker-cell-inner {
-                    background: var(--surface-subtle) !important;
-                }
-
-                .reservation-pill {
-                    display: flex;
-                    align-items: stretch;
-                    background: color-mix(in srgb, var(--card) 92%, transparent);
-                    border: 1px solid var(--border);
-                    border-radius: 999px;
-                    padding: 8px;
-                    gap: 6px;
-                    backdrop-filter: blur(26px);
-                    -webkit-backdrop-filter: blur(26px);
-                    box-shadow: var(--shadow-lg);
-                }
-
-                .pill-segment {
-                    flex: 1;
-                    min-width: 0;
-                    padding: 12px 20px;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    gap: 6px;
-                    border-radius: 999px;
-                    transition: background 0.2s ease, box-shadow 0.2s ease;
-                }
-
-                .pill-segment:hover {
-                    background: color-mix(in srgb, var(--text) 6%, transparent);
-                    box-shadow: inset 0 0 0 1px var(--stroke-subtle);
-                }
-
-                .pill-label {
-                    font-size: 10px;
-                    font-weight: 700;
-                    letter-spacing: 0.22em;
-                    text-transform: uppercase;
-                    color: var(--primary);
-                }
-
-                .pill-meta {
-                    margin-left: 6px;
-                    font-weight: 500;
-                    letter-spacing: 0.08em;
-                    font-size: 9px;
-                    color: var(--text-muted);
-                }
-
-                .pill-divider {
-                    width: 1px;
-                    margin: 12px 0;
-                    background: var(--stroke-subtle);
-                    border-radius: 999px;
-                }
-
-                .pill-control .ant-select-selector,
-                .pill-control .ant-picker,
-                .pill-control.ant-picker {
-                    height: 42px !important;
-                    min-height: 42px !important;
-                    padding-left: 0 !important;
-                    padding-right: 0 !important;
-                    background: transparent !important;
-                    border: none !important;
-                    box-shadow: none !important;
-                }
-
-                .pill-control .ant-select-selector {
-                    align-items: center !important;
-                }
-
-                .pill-control .ant-select-selection-item,
-                .pill-control .ant-picker-input > input {
-                    color: var(--text) !important;
-                    font-weight: 600;
-                    font-size: 15px;
-                }
-
-                .pill-control .ant-select-selection-placeholder {
-                    color: var(--text-muted) !important;
-                }
-
-                .pill-control .ant-picker-input {
-                    justify-content: center;
-                }
-
-                .pill-control .ant-picker-input > input {
-                    padding-left: 0;
-                    text-align: center;
-                }
-
-                .pill-control .ant-select-arrow,
-                .pill-control .ant-picker-suffix {
-                    color: var(--text-muted) !important;
-                }
-
-                .pill-control .ant-picker-prefix,
-                .pill-control .ant-select-prefix {
-                    color: var(--primary) !important;
-                }
-
-                .pill-time-input {
-                    width: 100%;
-                    height: 42px;
-                    border: none;
-                    background: transparent;
-                    color: var(--text);
-                    font-size: 15px;
-                    font-weight: 600;
-                    text-align: center;
-                    outline: none;
-                    padding: 0;
-                    cursor: pointer;
-                }
-
-                .pill-time-input::-webkit-calendar-picker-indicator {
-                    opacity: 0.6;
-                    cursor: pointer;
-                }
-
-                .pill-time-input:disabled {
-                    color: var(--text-muted);
-                    opacity: 0.7;
-                    cursor: not-allowed;
-                }
-
-                .tp-ui {
-                    --tp-bg: var(--card);
-                    --tp-surface: var(--surface);
-                    --tp-input-bg: var(--surface-subtle);
-                    --tp-text: var(--text);
-                    --tp-text-secondary: var(--text-muted);
-                    --tp-primary: var(--primary);
-                    --tp-on-primary: var(--on-primary);
-                    --tp-primary-container: var(--primary-faint);
-                    --tp-on-primary-container: var(--text);
-                    --tp-outline: var(--primary);
-                    --tp-outline-variant: var(--border);
-                    --tp-border: var(--border);
-                    --tp-surface-hover: color-mix(in srgb, var(--primary) 14%, var(--surface));
-                    --tp-backdrop: color-mix(in srgb, black 55%, transparent);
-                    --tp-shadow: 0 24px 42px rgba(0, 0, 0, 0.24);
-                }
-
-                .tp-ui .tp-ui-wrapper {
-                    border: 1px solid var(--border);
-                    font-family: inherit;
-                }
-
-                .tp-ui .tp-ui-cancel-btn,
-                .tp-ui .tp-ui-ok-btn {
-                    font-weight: 700;
-                }
-
-                .pill-guest-row {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-
-                .pill-guest-count {
-                    font-size: 16px;
-                    font-weight: 700;
-                    color: var(--text);
-                }
-
-                .pill-guest-actions {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 6px;
-                }
-
-                .pill-step-btn {
-                    width: 30px;
-                    height: 30px;
-                    border-radius: 999px;
-                    border: 1px solid var(--stroke-subtle);
-                    background: transparent;
-                    color: var(--text);
-                    font-size: 16px;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.2s ease;
-                }
-
-                .pill-step-btn:hover {
-                    border-color: var(--primary);
-                    color: var(--primary);
-                    background: color-mix(in srgb, var(--primary) 12%, transparent);
-                }
-
-                .pill-submit {
-                    padding: 0 30px;
-                    background: var(--primary);
-                    color: var(--on-primary);
-                    border: none;
-                    border-radius: 999px;
-                    font-weight: 700;
-                    font-size: 14px;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    white-space: nowrap;
-                    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
-                    transition: all 0.2s ease;
-                }
-
-                .pill-submit:hover {
-                    filter: brightness(1.08);
-                    transform: translateY(-1px);
-                }
-
-                .mini-loader {
-                    width: 28px;
-                    height: 28px;
-                    border-radius: 999px;
-                    border: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
-                    border-top-color: var(--primary);
-                    animation: miniSpin 0.8s linear infinite;
-                }
-
-                @keyframes miniSpin {
-                    to { transform: rotate(360deg); }
-                }
-
-                @media (max-width: 1024px) {
-                    .reservation-pill {
-                        flex-direction: column;
-                        border-radius: 24px;
-                    }
-
-                    .pill-divider {
-                        width: 100%;
-                        height: 1px;
-                        margin: 0;
-                    }
-
-                    .pill-submit {
-                        width: 100%;
-                        justify-content: center;
-                    }
-                }
-
-                @media (max-width: 640px) {
-                    .reservation-pill {
-                        padding: 6px;
-                        border-radius: 18px;
-                        gap: 4px;
-                    }
-
-                    .pill-segment {
-                        padding: 10px 12px;
-                        border-radius: 14px;
-                    }
-
-                    .pill-control .ant-select-selection-item,
-                    .pill-control .ant-picker-input > input,
-                    .pill-time-input {
-                        font-size: 14px;
-                    }
-
-                    .pill-submit {
-                        min-height: 46px;
-                        padding: 0 18px;
-                    }
-                }
-
-                .reservation-time-popup,
-                .reservation-guest-popup {
-                    z-index: 1200 !important;
-                    background: var(--card) !important;
-                    border: 1px solid var(--border) !important;
-                    border-radius: 12px !important;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
-                    padding: 6px !important;
-                    overscroll-behavior: contain;
-                }
-
-                .reservation-time-popup .ant-select-dropdown,
-                .reservation-time-popup .ant-select-item {
-                    background: var(--card) !important;
-                    color: var(--text) !important;
-                    border-color: var(--border) !important;
-                }
-
-                .reservation-time-popup .ant-select-item {
-                    color: var(--text) !important;
-                    border-radius: 8px !important;
-                    font-weight: 600 !important;
-                }
-
-                .reservation-time-popup .ant-select-item-option-active {
-                    background: var(--surface-subtle) !important;
-                }
-
-                .reservation-time-popup .ant-select-item-option-selected {
-                    background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
-                    color: var(--text) !important;
-                }
-
-                .reservation-time-popup .rc-virtual-list-holder {
-                    max-height: min(280px, 45vh) !important;
-                    overflow-y: auto !important;
-                    overscroll-behavior: contain;
-                    -webkit-overflow-scrolling: touch;
-                }
-
-                .reservation-time-popup .ant-select-item-option-disabled {
-                    opacity: 0.35;
-                }
-
-                .reservation-time-popup .rc-virtual-list-holder,
-                .reservation-guest-popup .rc-virtual-list-holder {
-                    overscroll-behavior: contain;
-                }
-
-                .reservation-guest-popup .ant-select-item {
-                    color: var(--text) !important;
-                    border-radius: 8px !important;
-                    font-weight: 600 !important;
-                }
-
-                .reservation-guest-popup .ant-select-item-option-active {
-                    background: var(--surface-subtle) !important;
-                }
-
-                .reservation-guest-popup .ant-select-item-option-selected {
-                    background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
-                    color: var(--text) !important;
-                }
-
-                /* Guest stepper InputNumber */
-                .reservation-guest-stepper .ant-input-number {
-                    border: none !important;
-                    box-shadow: none !important;
-                    background: transparent !important;
-                }
-            `}</style>
 
             {/* Footer Branding */}
             <footer className="relative z-10 py-10 text-center">
