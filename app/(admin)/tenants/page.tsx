@@ -1,20 +1,19 @@
 "use client";
 
-import StatusToggle from "@/components/ui/StatusToggle";
 import {
-  CheckCircleOutlined,
-  DeleteOutlined,
-  ExclamationCircleOutlined,
-  EyeOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  RiseOutlined,
-  SearchOutlined,
-  ShopOutlined,
-  WarningOutlined,
-  StopOutlined,
+    CheckCircleOutlined,
+    DeleteOutlined,
+    ExclamationCircleOutlined,
+    EyeOutlined,
+    MailOutlined,
+    PhoneOutlined,
+    PlusOutlined,
+    ReloadOutlined,
+    RiseOutlined,
+    SearchOutlined,
+    ShopOutlined,
+    StopOutlined,
+    WarningOutlined,
 } from "@ant-design/icons";
 import { App, Button, Input, Modal, Select, Switch, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -276,6 +275,7 @@ const TenantPage: React.FC = () => {
       key: "hostName",
       width: 220,
       render: (hostName: string) => {
+        if (!hostName) return <span className="tenant-row-hostname">—</span>;
         const url = hostName.startsWith("http") ? hostName : `https://${hostName}`;
         return (
           <a
