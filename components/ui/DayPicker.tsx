@@ -9,6 +9,7 @@ interface DayPickerProps {
   onChange: (date: Dayjs) => void;
   minDate?: Dayjs;
   maxDate?: Dayjs;
+  disabledWeekdays?: number[];
   placeholder?: string;
   disabled?: boolean;
 }
@@ -21,6 +22,7 @@ export const DayPicker: React.FC<DayPickerProps> = ({
   onChange,
   minDate,
   maxDate,
+  disabledWeekdays = [],
   placeholder = 'Chọn ngày',
   disabled = false,
 }) => {
@@ -83,6 +85,7 @@ export const DayPicker: React.FC<DayPickerProps> = ({
   const isDisabled = (d: Dayjs) => {
     if (minDate && d.isBefore(minDate, 'day')) return true;
     if (maxDate && d.isAfter(maxDate, 'day')) return true;
+    if (disabledWeekdays.includes(d.day())) return true;
     return false;
   };
 

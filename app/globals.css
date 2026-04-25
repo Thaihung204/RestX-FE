@@ -2588,6 +2588,17 @@ html.reservation-overlay-open header {
   padding-inline: 12px;
 }
 
+.floor-activity-toolbar .floor-activity-filter-input--date-picker > button,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker > button {
+  width: 100%;
+  min-height: 44px;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+}
+
 .floor-activity-toolbar .ant-picker .ant-picker-input>input {
   color: var(--text) !important;
   font-weight: 600;
@@ -2596,22 +2607,6 @@ html.reservation-overlay-open header {
 .floor-activity-toolbar .ant-picker .ant-picker-suffix,
 .floor-activity-toolbar .ant-picker .ant-picker-clear {
   color: var(--text-muted) !important;
-}
-
-.floor-activity-toolbar .floor-activity-filter-input--time-picker {
-  min-height: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: #ffffff;
-  color: var(--text);
-  font-weight: 600;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  padding: 0;
-  width: 100%;
-  cursor: pointer;
-  outline: none;
 }
 
 .floor-activity-toolbar .ant-input {
@@ -2642,8 +2637,10 @@ html.reservation-overlay-open header {
 .floor-activity-toolbar .ant-input-affix-wrapper-focused,
 .floor-activity-toolbar .ant-picker:hover,
 .floor-activity-toolbar .ant-picker-focused,
-.floor-activity-toolbar .floor-activity-filter-input--time-picker:hover,
-.floor-activity-toolbar .floor-activity-filter-input--time-picker:focus {
+.floor-activity-toolbar .floor-activity-filter-input--date-picker > button:hover,
+.floor-activity-toolbar .floor-activity-filter-input--date-picker > button:focus,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker > button:hover,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker > button:focus {
   border-color: var(--primary-border) !important;
 }
 
@@ -2659,7 +2656,8 @@ html.reservation-overlay-open header {
 [data-theme="dark"] .floor-activity-toolbar .ant-input-affix-wrapper.ant-input-outlined,
 [data-theme="dark"] .floor-activity-toolbar .ant-picker,
 [data-theme="dark"] .floor-activity-toolbar .ant-picker-outlined,
-[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--time-picker,
+[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--date-picker > button,
+[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--time-picker > button,
 [data-theme="dark"] .floor-activity-action-row .floor-activity-action-btn.ant-btn-default {
   background: var(--card) !important;
   background-color: var(--card) !important;
