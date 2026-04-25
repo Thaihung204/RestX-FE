@@ -65,6 +65,11 @@ function setAuthCookie(token: string, rememberMe: boolean) {
   document.cookie = `accessToken=${token}; path=/; SameSite=Lax`;
 }
 
+function clearAuthCookie() {
+  if (typeof document === 'undefined') return;
+  document.cookie = 'accessToken=; path=/; max-age=0; SameSite=Lax';
+}
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -112,6 +117,8 @@ axiosInstance.interceptors.response.use(
           sessionStorage.removeItem('accessToken');
           sessionStorage.removeItem('refreshToken');
           sessionStorage.removeItem('userInfo');
+          // Xóa cookie để middleware không còn cho phép truy cập route được bảo vệ
+          clearAuthCookie();
 
           const currentPath = `${window.location.pathname}${window.location.search || ''}`;
           const encodedRedirect = encodeURIComponent(currentPath || '/');

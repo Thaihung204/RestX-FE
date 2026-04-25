@@ -14,7 +14,7 @@ export default function AdminAuthGuard({
 }: {
     children: React.ReactNode;
 }) {
-    const { user, loading } = useAuth();
+    const { user, loading, isAuthReady } = useAuth();
     const router = useRouter();
 
     // Determine if user has tenant admin access only (exclude System Admin)
@@ -22,7 +22,7 @@ export default function AdminAuthGuard({
     const isAdmin = userRoles.some(r => r === 'Admin' || r === 'System Admin');
 
     useEffect(() => {
-        if (!loading) {
+        if (isAuthReady) {
             if (!user) {
                 // Not logged in → redirect to login-email
                 const currentPath = typeof window !== 'undefined'
@@ -42,10 +42,10 @@ export default function AdminAuthGuard({
                 }
             }
         }
-    }, [user, loading, isAdmin, router]);
+    }, [user, isAuthReady, isAdmin, router]);
 
     // Show loading spinner while checking auth
-    if (loading) {
+    if (!isAuthReady || loading) {
         return (
             <div
                 className="min-h-screen flex items-center justify-center"
@@ -65,7 +65,7 @@ export default function AdminAuthGuard({
     }
 
     // Not authenticated or not tenant admin → don't render content (redirecting)
-    if (!user || !isAdmin) {
+    if (!isAuthReady || !user || !isAdmin) {
         return null;
     }
 
