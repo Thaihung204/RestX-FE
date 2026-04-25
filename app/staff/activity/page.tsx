@@ -1,8 +1,14 @@
 'use client';
 
 import orderSignalRService from '@/lib/services/orderSignalRService';
-import reservationService, { ReservationListItem } from '@/lib/services/reservationService';
-import { floorService, FloorSummary, tableService, TableSessionInfo } from '@/lib/services/tableService';
+import reservationService from '@/lib/services/reservationService';
+import {
+  floorService,
+  FloorSummary,
+  tableService,
+  TableSessionInfo,
+  TableSessionReservationInfo,
+} from '@/lib/services/tableService';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import {
   LinkOutlined,
@@ -18,13 +24,13 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { HubConnectionState } from '@microsoft/signalr';
-import { App, Button, Card, Col, DatePicker, Input, Modal, Row, Tag, Typography } from 'antd';
+import { App, Button, Card, Col, Input, Modal, Row, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PluginRegistry, TimepickerUI } from 'timepicker-ui';
-import { WheelPlugin } from 'timepicker-ui/plugins/wheel';
 import { useTranslation } from 'react-i18next';
+import { DayPicker } from '@/components/ui/DayPicker';
+import { TimePicker } from '@/components/ui/TimePicker';
 import { useThemeMode } from '../../theme/AntdProvider';
 
 const { Title, Text } = Typography;
@@ -116,38 +122,6 @@ function normalizeFilterTime(value: string): string | null {
   return `${Number(match[1]).toString().padStart(2, '0')}:${match[2]}`;
 }
 
-function ensureWheelPluginRegistered(): void {
-  if (!PluginRegistry.has('wheel')) {
-    PluginRegistry.register(WheelPlugin);
-  }
-}
-
-function normalizePickerTime(hourValue?: string, minuteValue?: string, periodValue?: string): string | null {
-  const parsedHour = Number.parseInt(hourValue ?? '', 10);
-  const parsedMinute = Number.parseInt(minuteValue ?? '', 10);
-
-  if (
-    Number.isNaN(parsedHour) ||
-    Number.isNaN(parsedMinute) ||
-    parsedHour < 0 ||
-    parsedMinute < 0 ||
-    parsedMinute > 59
-  ) {
-    return null;
-  }
-
-  let hour = parsedHour;
-  const period = (periodValue || '').trim().toLowerCase();
-  if (period === 'am' || period === 'pm') {
-    const normalized12Hour = ((hour % 12) + 12) % 12;
-    hour = period === 'pm' ? normalized12Hour + 12 : normalized12Hour;
-  }
-
-  if (hour > 23) return null;
-
-  return `${hour.toString().padStart(2, '0')}:${parsedMinute.toString().padStart(2, '0')}`;
-}
-
 function parseFilterDateTime(dateValue: string, timeValue: string): Date | null {
   if (!dateValue) return null;
   const timePart = timeValue || '00:00';
@@ -161,16 +135,16 @@ function toLocalDateTimeParam(date: Date): string {
 }
 
 function pickReservationForSlot(
-  reservations: ReservationListItem[],
+  reservations: TableSessionReservationInfo[],
   filterDateTime: Date,
   lateWindowMinutes: number,
-): ReservationListItem | undefined {
+): TableSessionReservationInfo | undefined {
   if (!reservations.length) return undefined;
 
   const sorted = reservations
     .map((reservation) => ({
       reservation,
-      date: new Date(reservation.reservationDateTime),
+      date: new Date(reservation.reservationDateTime ?? ''),
     }))
     .filter((item) => !Number.isNaN(item.date.getTime()))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -213,6 +187,7 @@ interface TableActivityData {
   reservationContactPhone?: string;
   reservationStatusName?: string;
   reservationStatusCode?: string;
+  reservationCheckedInAt?: string | null;
   sessionId?: string;
   sessionStartedAt?: string;
   sessionEndedAt?: string | null;
@@ -275,8 +250,6 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
   const [isMerging, setIsMerging] = useState(false);
   const [manualMergeGroupsByTable, setManualMergeGroupsByTable] = useState<Record<string, string[]>>({});
   const inFlightRef = useRef(false);
-  const timeInputRef = useRef<HTMLInputElement | null>(null);
-  const timePickerRef = useRef<TimepickerUI | null>(null);
 
   const selectedFilterDateTime = useMemo(
     () => parseFilterDateTime(reservationFilterDate, reservationFilterTime),
@@ -287,75 +260,6 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     () => resolveSessionBufferMinutes(tenant),
     [tenant],
   );
-
-  useEffect(() => {
-    const input = timeInputRef.current;
-
-    if (timePickerRef.current) {
-      timePickerRef.current.destroy({ keepInputValue: true });
-      timePickerRef.current = null;
-    }
-
-    if (!input) return;
-
-    ensureWheelPluginRegistered();
-
-    const picker = new TimepickerUI(input, {
-      clock: {
-        type: '24h',
-        incrementMinutes: 1,
-        incrementHours: 1,
-      },
-      ui: {
-        theme: 'basic',
-        mode: 'compact-wheel',
-        animation: false,
-        backdrop: false,
-        editable: false,
-      },
-      wheel: {
-        placement: 'auto',
-        commitOnScroll: false,
-        hideDisabled: false,
-      },
-      labels: {
-        ok: t('common.actions.confirm', { defaultValue: 'Xác nhận' }),
-        cancel: t('common.actions.cancel', { defaultValue: 'Cancel' }),
-        time: t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' }),
-      },
-      callbacks: {
-        onConfirm: ({ hour, minutes, type }) => {
-          const normalized = normalizePickerTime(hour, minutes, type);
-          if (!normalized) return;
-
-          setReservationFilterTime((prev) => (prev === normalized ? prev : normalized));
-        },
-      },
-    });
-
-    picker.create();
-
-    const normalizedCurrentTime = normalizeFilterTime(reservationFilterTime) || toHm(new Date());
-    picker.setValue(normalizedCurrentTime, true);
-
-    timePickerRef.current = picker;
-
-    return () => {
-      if (timePickerRef.current) {
-        timePickerRef.current.destroy({ keepInputValue: true });
-        timePickerRef.current = null;
-      }
-    };
-  }, [t]);
-
-  useEffect(() => {
-    if (!timePickerRef.current) return;
-
-    const normalized = normalizeFilterTime(reservationFilterTime);
-    if (!normalized) return;
-
-    timePickerRef.current.setValue(normalized, true);
-  }, [reservationFilterTime]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -379,31 +283,13 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
         }
       };
 
-      const filterDateForApi = reservationFilterDate || toYmd(new Date());
       const filterDateTime = selectedFilterDateTime ?? new Date();
       const filterAtParam = toLocalDateTimeParam(filterDateTime);
 
-      const [tableData, floorData, sessionData, reservationData] = await Promise.all([
+      const [tableData, floorData, sessionData] = await Promise.all([
         safe(tableService.getAllTables(), [], 'Tables'),
         safe(floorService.getAllFloors(), [], 'Floors'),
         safe(tableService.getTableSessions(filterAtParam), [], 'Sessions'),
-        safe(
-          reservationService.getReservations({ 
-            pageNumber: 1, 
-            pageSize: 500,
-            date: filterDateForApi,
-          }),
-          {
-            items: [],
-            totalCount: 0,
-            pageNumber: 1,
-            pageSize: 200,
-            totalPages: 1,
-            hasNextPage: false,
-            hasPreviousPage: false,
-          },
-          'Reservations',
-        ),
       ]);
 
       setFloors(floorData);
@@ -413,24 +299,23 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
         if (session.isActive) sessionMap.set(session.tableId, session);
       }
 
-      const validReservations = (reservationData.items ?? []).filter((reservation) => {
+      const reservationsByTable = new Map<string, TableSessionReservationInfo[]>();
+
+      for (const session of sessionData) {
+        const reservation = session.reservation;
+        if (!reservation) continue;
+
         const code = reservation.status?.code?.toUpperCase();
-        return !['CANCELLED', 'NO_SHOW', 'NOSHOW', 'COMPLETED', 'CHECKED_IN'].includes(code || '');
-      });
-
-      const reservationsById = new Map<string, ReservationListItem>();
-      const reservationsByTable = new Map<string, ReservationListItem[]>();
-
-      for (const reservation of validReservations) {
-        reservationsById.set(reservation.id, reservation);
-        for (const table of reservation.tables ?? []) {
-          const list = reservationsByTable.get(table.id) || [];
-          list.push(reservation);
-          reservationsByTable.set(table.id, list);
+        if (['CANCELLED', 'NO_SHOW', 'NOSHOW', 'COMPLETED', 'CHECKED_IN'].includes(code || '')) {
+          continue;
         }
+
+        const list = reservationsByTable.get(session.tableId) || [];
+        list.push(reservation);
+        reservationsByTable.set(session.tableId, list);
       }
 
-      const reservationMap = new Map<string, ReservationListItem>();
+      const reservationMap = new Map<string, TableSessionReservationInfo>();
       for (const [tableId, reservations] of reservationsByTable) {
         const pickedReservation = pickReservationForSlot(
           reservations,
@@ -438,25 +323,6 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           sessionBufferMinutes,
         );
         if (pickedReservation) reservationMap.set(tableId, pickedReservation);
-      }
-
-      for (const session of sessionData) {
-        if (session.reservationId && !reservationMap.has(session.tableId)) {
-          const linkedRes = reservationsById.get(session.reservationId);
-          if (!linkedRes) continue;
-
-          const linkedResDate = new Date(linkedRes.reservationDateTime);
-          if (Number.isNaN(linkedResDate.getTime())) continue;
-
-          if (
-            linkedResDate.getTime() <= filterDateTime.getTime() &&
-            !isPastReservationWithinLateWindow(linkedResDate, filterDateTime, sessionBufferMinutes)
-          ) {
-            continue;
-          }
-
-          reservationMap.set(session.tableId, linkedRes);
-        }
       }
 
       const mapped: TableActivityData[] = tableData.map((item) => {
@@ -482,10 +348,11 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           reservationId: reservation?.id,
           reservationTime: reservation?.reservationDateTime,
           reservationGuests: reservation?.numberOfGuests,
-          reservationContactName: reservation?.contactName,
-          reservationContactPhone: reservation?.contactPhone,
+          reservationContactName: reservation?.contact?.name,
+          reservationContactPhone: reservation?.contact?.phone,
           reservationStatusName: reservation?.status?.name,
           reservationStatusCode: reservation?.status?.code,
+          reservationCheckedInAt: (reservation as any)?.checkedInAt,
           sessionId: session?.sessionId ?? session?.id,
           sessionStartedAt: session?.startedAt,
           sessionEndedAt: session?.endedAt ?? null,
@@ -500,7 +367,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     } finally {
       inFlightRef.current = false;
     }
-  }, [reservationFilterDate, selectedFilterDateTime, sessionBufferMinutes]);
+  }, [selectedFilterDateTime, sessionBufferMinutes]);
 
   useEffect(() => {
     fetchData();
@@ -544,7 +411,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       mounted = false;
       clearTimeout(debounceTimer);
       events.forEach((e) => orderSignalRService.off(e, handleChange));
-      orderSignalRService.invoke('LeaveTenantGroup', tenantId).catch(() => {});
+      orderSignalRService.invoke('LeaveTenantGroup', tenantId).catch(() => { });
     };
   }, [tenant?.id, fetchData]);
 
@@ -828,17 +695,17 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       const warningMessage =
         lockReason === 'same-order'
           ? t('staff.floor_activity.merge.same_order_selected', {
-              defaultValue: 'Bàn này đã thuộc cùng đơn với bàn đã chọn. Vui lòng chọn bàn khác.',
-            })
+            defaultValue: 'Bàn này đã thuộc cùng đơn với bàn đã chọn. Vui lòng chọn bàn khác.',
+          })
           : lockReason === 'same-group'
             ? t('staff.floor_activity.merge.same_group_selected', {
-                defaultValue: 'Bàn này đã nằm trong cùng nhóm gộp với bàn đã chọn.',
-              })
+              defaultValue: 'Bàn này đã nằm trong cùng nhóm gộp với bàn đã chọn.',
+            })
             : lockReason === 'requires-order-anchor'
               ? t('staff.floor_activity.merge.no_order_selected', {
-                  defaultValue: 'Cần chọn ít nhất 1 bàn đang có order để gộp.',
-                })
-            : t('staff.floor_activity.merge.reservation_pending_checkin', {
+                defaultValue: 'Cần chọn ít nhất 1 bàn đang có order để gộp.',
+              })
+              : t('staff.floor_activity.merge.reservation_pending_checkin', {
                 defaultValue: 'Không thể gộp bàn đã đặt nhưng chưa check-in.',
               });
 
@@ -916,43 +783,33 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
               <Text className="floor-activity-filter-label">
                 {t('staff.floor_activity.date_filter_label', { defaultValue: 'Ngày' })}
               </Text>
-              <DatePicker
-                className="floor-activity-filter-input floor-activity-filter-input--date-picker"
-                classNames={{ popup: { root: 'floor-activity-date-popup' } }}
-                value={reservationFilterDate ? dayjs(reservationFilterDate, 'YYYY-MM-DD') : null}
-                format="DD/MM/YYYY"
-                allowClear={false}
-                inputReadOnly
-                suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">calendar_month</span>}
-                onChange={(value) => {
-                  if (!value) return;
-                  setReservationFilterDate(value.format('YYYY-MM-DD'));
-                }}
-              />
+              <div className="floor-activity-filter-input floor-activity-filter-input--date-picker">
+                <DayPicker
+                  value={reservationFilterDate ? dayjs(reservationFilterDate, 'YYYY-MM-DD') : null}
+                  onChange={(value) => {
+                    if (!value) return;
+                    setReservationFilterDate(value.format('YYYY-MM-DD'));
+                  }}
+                  placeholder={t('staff.floor_activity.date_filter_label', { defaultValue: 'Ngày' })}
+                />
+              </div>
             </div>
 
             <div className="floor-activity-filter-group floor-activity-filter-group--time">
               <Text className="floor-activity-filter-label">
                 {t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' })}
               </Text>
-              <input
-                ref={timeInputRef}
-                type="text"
-                className="floor-activity-filter-input floor-activity-filter-input--time-picker"
-                value={normalizeFilterTime(reservationFilterTime) || ''}
-                readOnly
-                inputMode="numeric"
-                autoComplete="off"
-                aria-label={t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' })}
-                onClick={() => timePickerRef.current?.open()}
-                onFocus={() => timePickerRef.current?.open()}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    timePickerRef.current?.open();
-                  }
-                }}
-              />
+              <div className="floor-activity-filter-input floor-activity-filter-input--time-picker">
+                <TimePicker
+                  value={normalizeFilterTime(reservationFilterTime) || toHm(new Date())}
+                  onChange={(value) => {
+                    const normalized = normalizeFilterTime(value);
+                    if (!normalized) return;
+                    setReservationFilterTime((prev) => (prev === normalized ? prev : normalized));
+                  }}
+                  placeholder={t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' })}
+                />
+              </div>
             </div>
 
             <Input
@@ -1187,6 +1044,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           const canShowCheckInButton =
             !!selectedTable.reservationCode &&
             (selectedTable.reservationStatusCode || '').toUpperCase() === 'CONFIRMED' &&
+            !selectedTable.reservationCheckedInAt &&
             !selectedTable.orderId;
           const hasNamedGuest = selectedTable.status === 'occupied' && !!(selectedTable.reservationContactName || selectedTable.customerName);
           const selectedMergedTableNames = getMergedTableNames(selectedTable);
@@ -1299,12 +1157,12 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                       <span className="table-modal-info-value">
                         {selectedTable.sessionStartedAt
                           ? new Date(selectedTable.sessionStartedAt).toLocaleString('vi-VN', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                            })
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })
                           : '—'}
                       </span>
                     </div>
@@ -1315,12 +1173,12 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                       <span className="table-modal-info-value">
                         {selectedTable.sessionEndedAt
                           ? new Date(selectedTable.sessionEndedAt).toLocaleString('vi-VN', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                            })
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })
                           : '—'}
                       </span>
                     </div>
@@ -1379,6 +1237,12 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                       >
                         {t('staff.floor_activity.modal.checkin_btn')}
                       </Button>
+                    )}
+
+                    {!canShowCheckInButton && selectedTable.reservationCheckedInAt && (
+                      <div style={{ marginTop: 12, padding: '10px', background: 'rgba(34,197,94,0.1)', color: '#22c55e', borderRadius: 12, border: '1px solid rgba(34,197,94,0.2)', textAlign: 'center', fontWeight: 'bold' }}>
+                        {t("admin.reservations.checked_in", { defaultValue: "Đã check-in" })} lúc {new Date(selectedTable.reservationCheckedInAt).toLocaleTimeString('vi-VN')}
+                      </div>
                     )}
                   </div>
                 )}

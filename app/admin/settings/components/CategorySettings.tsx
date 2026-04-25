@@ -1,10 +1,10 @@
 "use client";
 
-import { Category, categoryService } from "@/lib/services/categoryService";
+import categoryService, { Category } from "@/lib/services/categoryService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, message, Popconfirm, Table } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import { CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, MenuOutlined, PlusOutlined } from "@ant-design/icons";
+import { App, Button, Popconfirm, Table } from "antd";
+import { ColumnsType } from "antd/es/table";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -12,57 +12,29 @@ import { useTranslation } from "react-i18next";
 type ImagePosition = { x: number; y: number };
 
 function DraggableImagePreview({
-  src,
-  position,
-  onPositionChange,
-  alt,
-  onError,
-  hintText,
+  src, position, onPositionChange, alt, onError, hintText,
 }: {
-  src: string;
-  position: ImagePosition;
-  onPositionChange: (next: ImagePosition) => void;
-  alt: string;
-  onError?: React.ReactEventHandler<HTMLImageElement>;
-  hintText: string;
+  src: string; position: ImagePosition; onPositionChange: (next: ImagePosition) => void;
+  alt: string; onError?: React.ReactEventHandler<HTMLImageElement>; hintText: string;
 }) {
   const dragRef = useRef({ dragging: false, x: 0, y: 0 });
   const clamp = (v: number) => Math.max(0, Math.min(100, v));
-
   return (
     <div
       className="absolute inset-0 touch-none select-none cursor-grab active:cursor-grabbing"
-      onPointerDown={(e) => {
-        dragRef.current.dragging = true;
-        dragRef.current.x = e.clientX;
-        dragRef.current.y = e.clientY;
-        e.currentTarget.setPointerCapture(e.pointerId);
-      }}
+      onPointerDown={(e) => { dragRef.current = { dragging: true, x: e.clientX, y: e.clientY }; e.currentTarget.setPointerCapture(e.pointerId); }}
       onPointerMove={(e) => {
         if (!dragRef.current.dragging) return;
-        const dx = e.clientX - dragRef.current.x;
-        const dy = e.clientY - dragRef.current.y;
-        dragRef.current.x = e.clientX;
-        dragRef.current.y = e.clientY;
-        onPositionChange({
-          x: clamp(position.x + dx * 0.2),
-          y: clamp(position.y + dy * 0.2),
-        });
+        const dx = e.clientX - dragRef.current.x; const dy = e.clientY - dragRef.current.y;
+        dragRef.current.x = e.clientX; dragRef.current.y = e.clientY;
+        onPositionChange({ x: clamp(position.x + dx * 0.2), y: clamp(position.y + dy * 0.2) });
       }}
       onPointerUp={() => { dragRef.current.dragging = false; }}
       onPointerCancel={() => { dragRef.current.dragging = false; }}>
-      <img
-        src={src}
-        alt={alt}
-        className="w-full h-full pointer-events-none"
-        style={{ objectFit: "cover", objectPosition: `${position.x}% ${position.y}%` }}
-        onError={onError}
-      />
-      <div
-        className="absolute bottom-2 right-2 rounded-md px-2 py-1 text-[10px] font-medium pointer-events-none"
-        style={{ color: "#fff", background: "rgba(0,0,0,0.55)" }}>
-        {hintText}
-      </div>
+      <img src={src} alt={alt} className="w-full h-full pointer-events-none"
+        style={{ objectFit: "cover", objectPosition: `${position.x}% ${position.y}%` }} onError={onError} />
+      <div className="absolute bottom-2 right-2 rounded-md px-2 py-1 text-[10px] font-medium pointer-events-none"
+        style={{ color: "#fff", background: "rgba(0,0,0,0.55)" }}>{hintText}</div>
     </div>
   );
 }
@@ -78,6 +50,17 @@ export default function CategorySettings() {
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [imagePosition, setImagePosition] = useState<ImagePosition>({ x: 50, y: 50 });
   const [formData, setFormData] = useState<Partial<Category>>({ name: "", imageUrl: "", description: "" });
+  const { message } = App.useApp();
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Inline sort mode
+  const [sortMode, setSortMode] = useState(false);
+  const [sortedCategories, setSortedCategories] = useState<Category[]>([]);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const fetchCategories = async () => {
     try {
@@ -85,14 +68,7 @@ export default function CategorySettings() {
       const data = await categoryService.getCategories();
       setCategories(data);
     } catch (error) {
-      message.error(
-        extractApiErrorMessage(
-          error,
-          t("dashboard.settings.notifications.error_fetch", {
-            defaultValue: "Failed to load categories",
-          }),
-        ),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.settings.notifications.error_fetch")));
     } finally {
       setLoading(false);
     }
@@ -119,86 +95,122 @@ export default function CategorySettings() {
       setEditingCategory(null);
       setFormData({ name: "", imageUrl: "", description: "" });
     }
-    setSelectedImageFile(null);
-    setRemoveImage(false);
-    setImagePosition({ x: 50, y: 50 });
-    setIsModalOpen(true);
+    setSelectedImageFile(null); setRemoveImage(false); setImagePosition({ x: 50, y: 50 }); setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingCategory(null);
-    setSelectedImageFile(null);
-    setRemoveImage(false);
-    setImagePosition({ x: 50, y: 50 });
+    setIsModalOpen(false); setEditingCategory(null); setSelectedImageFile(null);
+    setRemoveImage(false); setImagePosition({ x: 50, y: 50 });
   };
 
   const handleSave = async () => {
     if (!formData.name) {
-      message.warning(t("dashboard.settings.categories.name_required", { defaultValue: "Category name is required" }));
+      message.warning(t("dashboard.settings.categories.name_required"));
       return;
     }
+    if (isSaving) return;
     try {
+      setIsSaving(true);
       if (editingCategory) {
         await categoryService.updateCategory(editingCategory.id, {
-          ...editingCategory,
-          name: formData.name,
+          ...editingCategory, name: formData.name,
           description: formData.description || "",
           imageUrl: removeImage ? "" : (formData.imageUrl || ""),
         }, selectedImageFile);
-        message.success(t("dashboard.settings.notifications.success_update", { defaultValue: "Category updated successfully" }));
+        message.success(t("dashboard.settings.notifications.success_update"));
       } else {
         await categoryService.createCategory({
-          name: formData.name,
-          description: formData.description || "",
+          name: formData.name, description: formData.description || "",
           imageUrl: removeImage ? "" : (formData.imageUrl || ""),
         }, selectedImageFile);
-        message.success(t("dashboard.settings.notifications.success_create", { defaultValue: "Category created successfully" }));
+        message.success(t("dashboard.settings.notifications.success_create"));
       }
-      await fetchCategories();
-      handleCloseModal();
+      await fetchCategories(); handleCloseModal();
     } catch (error) {
-      message.error(
-        extractApiErrorMessage(
-          error,
-          t("dashboard.settings.notifications.error_save", {
-            defaultValue: "Failed to save category",
-          }),
-        ),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.settings.notifications.error_save")));
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
     try {
+      setDeletingId(id);
       await categoryService.deleteCategory(id);
-      message.success(t("dashboard.settings.notifications.success_delete", { defaultValue: "Category deleted successfully" }));
+      message.success(t("dashboard.settings.notifications.success_delete"));
       setCategories(categories.filter((c) => c.id !== id));
     } catch (error) {
-      message.error(
-        extractApiErrorMessage(
-          error,
-          t("dashboard.settings.notifications.error_delete", {
-            defaultValue: "Failed to delete category",
-          }),
-        ),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.settings.notifications.error_delete")));
+    } finally {
+      setDeletingId(null);
     }
   };
 
+  const enterSortMode = () => {
+    const sorted = [...categories].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+    setSortedCategories(sorted);
+    setSortMode(true);
+  };
+
+  const cancelSortMode = () => { setSortMode(false); setDragOverIndex(null); };
+
+  const handleDragStart = (index: number) => { dragItem.current = index; };
+  const handleDragEnter = (index: number) => { dragOverItem.current = index; setDragOverIndex(index); };
+  const handleDragEnd = () => {
+    if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
+      dragItem.current = null; dragOverItem.current = null; setDragOverIndex(null); return;
+    }
+    const updated = [...sortedCategories];
+    const dragged = updated.splice(dragItem.current, 1)[0];
+    updated.splice(dragOverItem.current, 0, dragged);
+    dragItem.current = null; dragOverItem.current = null; setDragOverIndex(null);
+    setSortedCategories(updated);
+  };
+
+  const handleSaveOrder = async () => {
+    setSavingOrder(true);
+    try {
+      const payload = sortedCategories.map((cat, index) => ({ ...cat, displayOrder: index + 1 }));
+      await categoryService.updateDisplayOrder(payload);
+      message.success(t("dashboard.settings.categories.order_saved"));
+      await fetchCategories();
+      setSortMode(false);
+    } catch (error) {
+      message.error(extractApiErrorMessage(error, t("dashboard.settings.categories.order_error")));
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  const tableData = sortMode
+    ? sortedCategories
+    : [...categories].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+
   const columns: ColumnsType<Category> = [
+    {
+      title: t("dashboard.settings.categories.display_order"),
+      key: "displayOrder",
+      width: 110,
+      render: (_, cat, index) => sortMode ? (
+        <div className="flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
+          <MenuOutlined className="text-base opacity-50" />
+          <span className="text-sm font-semibold">{index + 1}</span>
+        </div>
+      ) : (
+        <span className="text-sm font-semibold" style={{ color: "var(--text-muted)" }}>
+          {cat.displayOrder ?? index + 1}
+        </span>
+      ),
+    },
     {
       title: t("dashboard.settings.categories.image"),
       key: "image",
       width: 80,
       render: (_, cat) => (
         <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 relative shadow-sm border border-gray-200 dark:border-gray-700">
-          <img
-            src={cat.imageUrl || "/images/placeholder.jpg"}
-            alt={cat.name}
-            className="w-full h-full object-cover"
-            onError={(e) => { e.currentTarget.src = "https://placehold.co/100x100?text=No+Image"; }}
-          />
+          <img src={cat.imageUrl || "/images/placeholder.jpg"} alt={cat.name} className="w-full h-full object-cover"
+            onError={(e) => { e.currentTarget.src = "https://placehold.co/100x100?text=No+Image"; }} />
         </div>
       ),
     },
@@ -214,25 +226,25 @@ export default function CategorySettings() {
       key: "description",
       render: (text) => <span className="text-sm line-clamp-2" style={{ color: "var(--text-muted)" }}>{text}</span>,
     },
-    {
+    ...(!sortMode ? [{
       title: t("dashboard.settings.categories.actions"),
       key: "actions",
-      align: "right",
+      align: "right" as const,
       width: 100,
-      render: (_, cat) => (
+      render: (_: any, cat: Category) => (
         <div className="flex justify-end gap-2">
-          <Button type="text" icon={<EditOutlined className="text-blue-500" />} onClick={() => handleOpenModal(cat)} className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" />
+          <Button type="text" icon={<EditOutlined className="text-blue-500" />} onClick={() => handleOpenModal(cat)} disabled={!!deletingId || isSaving} className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" />
           <Popconfirm
             title={t("dashboard.settings.categories.confirm_delete")}
             onConfirm={() => handleDelete(cat.id)}
-            okText={t("common.actions.yes", { defaultValue: "Yes" })}
-            cancelText={t("common.actions.no", { defaultValue: "No" })}
+            okText={t("common.actions.yes")}
+            cancelText={t("common.actions.no")}
             okButtonProps={{ danger: true }}>
-            <Button type="text" icon={<DeleteOutlined className="text-red-500" />} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
+            <Button type="text" icon={<DeleteOutlined className="text-red-500" />} loading={deletingId === cat.id} disabled={!!deletingId || isSaving} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
           </Popconfirm>
         </div>
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -242,22 +254,52 @@ export default function CategorySettings() {
           <h3 className="text-lg font-bold text-[var(--text)]">{t("dashboard.settings.categories.title")}</h3>
           <p className="text-sm text-[var(--text-muted)] mt-1">{t("dashboard.settings.categories.subtitle")}</p>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => handleOpenModal()}
-          style={{ background: "linear-gradient(to right, var(--primary), var(--primary-hover))", border: "none" }}>
-          {t("dashboard.settings.categories.add_category")}
-        </Button>
+        <div className="flex gap-2">
+          {sortMode ? (
+            <>
+              <Button icon={<CloseOutlined />} onClick={cancelSortMode} disabled={savingOrder}>
+                {t("dashboard.settings.buttons.cancel")}
+              </Button>
+              <Button type="primary" icon={<CheckOutlined />} loading={savingOrder} onClick={handleSaveOrder}
+                style={{ background: "var(--primary)", border: "none" }}>
+                {t("dashboard.settings.buttons.save_changes")}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button icon={<MenuOutlined />} onClick={enterSortMode} disabled={loading}
+                style={{ borderColor: "var(--primary)", color: "var(--primary)" }}>
+                {t("dashboard.settings.categories.display_order")}
+              </Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenModal()} disabled={loading}
+                style={{ background: "linear-gradient(to right, var(--primary), var(--primary-hover))", border: "none" }}>
+                {t("dashboard.settings.categories.add_category")}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <Table
         columns={columns}
-        dataSource={categories}
+        dataSource={tableData}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={false}
         className="admin-loyalty-table"
+        onRow={sortMode ? (_, index) => ({
+          draggable: true,
+          style: {
+            cursor: "grab",
+            background: dragOverIndex === index ? "rgba(var(--primary-rgb,99,102,241),0.06)" : undefined,
+            outline: dragOverIndex === index ? "2px solid var(--primary)" : undefined,
+            transition: "background 0.15s, outline 0.15s",
+          },
+          onDragStart: () => handleDragStart(index!),
+          onDragEnter: () => handleDragEnter(index!),
+          onDragEnd: handleDragEnd,
+          onDragOver: (e: React.DragEvent) => e.preventDefault(),
+        }) : undefined}
       />
 
       {isModalOpen && typeof document !== "undefined" && createPortal(
@@ -293,11 +335,8 @@ export default function CategorySettings() {
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-                      if (file.size > 5 * 1024 * 1024) { message.error(t("dashboard.settings.categories.file_size_error", { defaultValue: "File size be less than 5MB" })); return; }
-                      setSelectedImageFile(file);
-                      setRemoveImage(false);
-                      setImagePosition({ x: 50, y: 50 });
-                      e.target.value = "";
+                      if (file.size > 5 * 1024 * 1024) { message.error(t("dashboard.settings.categories.file_size_error")); return; }
+                      setSelectedImageFile(file); setRemoveImage(false); setImagePosition({ x: 50, y: 50 }); e.target.value = "";
                     }} />
                   <div className="relative group">
                     <label htmlFor="category-image-upload"
@@ -306,13 +345,13 @@ export default function CategorySettings() {
                       {((!removeImage && formData.imageUrl) || localPreviewUrl) ? (
                         <>
                           <DraggableImagePreview
-                            src={localPreviewUrl || (formData.imageUrl as string)}
-                            alt="Preview" position={imagePosition} onPositionChange={setImagePosition}
-                            hintText={t("dashboard.settings.appearance.drag_to_adjust", { defaultValue: "Drag to adjust" })}
-                            onError={(e) => { e.currentTarget.style.display = "none"; message.error(t("dashboard.settings.categories.invalid_image_url", { defaultValue: "Invalid image URL" })); }} />
+                            src={localPreviewUrl || (formData.imageUrl as string)} alt="Preview"
+                            position={imagePosition} onPositionChange={setImagePosition}
+                            hintText={t("dashboard.settings.appearance.drag_to_adjust")}
+                            onError={(e) => { e.currentTarget.style.display = "none"; message.error(t("dashboard.settings.categories.invalid_image_url")); }} />
                           <div className="z-10 bg-black/50 text-white px-4 py-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 duration-300">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                            {t("dashboard.settings.categories.change_image", { defaultValue: "Change Image" })}
+                            {t("dashboard.settings.categories.change_image")}
                           </div>
                         </>
                       ) : (
@@ -320,7 +359,7 @@ export default function CategorySettings() {
                           <div className="w-12 h-12 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center mx-auto mb-3">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                           </div>
-                          <p className="font-medium text-sm" style={{ color: "var(--text)" }}>{t("dashboard.settings.categories.upload_image", { defaultValue: "" })}</p>
+                          <p className="font-medium text-sm" style={{ color: "var(--text)" }}>{t("dashboard.settings.categories.upload_image")}</p>
                         </div>
                       )}
                     </label>
@@ -335,10 +374,10 @@ export default function CategorySettings() {
               </div>
             </div>
             <div className="p-6 pt-4 border-t bg-white/50 dark:bg-black/20 backdrop-blur-sm sticky bottom-0 z-10 flex justify-end gap-3" style={{ borderColor: "var(--border)" }}>
-              <button onClick={handleCloseModal} className="px-5 py-2.5 rounded-xl font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10" style={{ color: "var(--text-muted)" }}>
+              <button onClick={handleCloseModal} disabled={isSaving} className="px-5 py-2.5 rounded-xl font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50" style={{ color: "var(--text-muted)" }}>
                 {t("dashboard.settings.buttons.cancel")}
               </button>
-              <button onClick={handleSave} disabled={!formData.name?.trim()}
+              <button onClick={handleSave} disabled={!formData.name?.trim() || isSaving}
                 className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: "var(--primary)" }}>
                 {t("dashboard.settings.buttons.save_changes")}

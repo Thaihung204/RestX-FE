@@ -1,6 +1,7 @@
 "use client";
 
 import { DropDown } from "@/components/ui/DropDown";
+import StatusToggle from "@/components/ui/StatusToggle";
 import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
 import supplierService, { SupplierItem } from "@/lib/services/supplierService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
@@ -148,7 +149,7 @@ export default function IngredientFormPage() {
       [name]:
         type === "checkbox"
           ? (e.target as HTMLInputElement).checked
-          : type === "number"
+          : type === "number" || name === "status"
           ? Number(value)
           : value === "" && (name === "supplierId" || name === "type")
           ? null
@@ -221,16 +222,13 @@ export default function IngredientFormPage() {
       <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
 
-          <div className="mb-6">
+          <div className="mb-6 flex items-center gap-3">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-1.5 mb-3 text-sm opacity-60 hover:opacity-100 transition-opacity"
-              style={{ color: "var(--text)" }}
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+              style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              {t("dashboard.ingredients.back_to_list")}
+              ← {t("admin.order_detail.actions.back")}
             </button>
             <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: "var(--text)" }}>
               {isNew ? t("dashboard.ingredients.add_title") : t("dashboard.ingredients.edit_title")}
@@ -561,20 +559,12 @@ export default function IngredientFormPage() {
                           : t("dashboard.ingredients.status_desc_inactive")}
                       </p>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
-                      <input
-                        type="checkbox" name="isActive"
-                        checked={form.isActive} onChange={handleChange}
-                        className="sr-only peer"
+                    <div className="shrink-0 ml-3">
+                      <StatusToggle
+                        checked={form.isActive}
+                        onChange={() => setForm((prev) => ({ ...prev, isActive: !prev.isActive }))}
                       />
-                      <div
-                        className="w-11 h-6 rounded-full peer
-                          peer-checked:after:translate-x-full peer-checked:after:border-white
-                          after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                          after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
-                        style={{ background: form.isActive ? "var(--primary)" : "#4b5563" }}
-                      />
-                    </label>
+                    </div>
                   </div>
                 </section>
 

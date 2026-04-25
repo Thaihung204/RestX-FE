@@ -1,22 +1,23 @@
 'use client';
 
+import { TableData } from '@/app/admin/tables/components/DraggableTable';
+import { Layout, TableMap2D } from '@/app/admin/tables/components/TableMap2D';
+import reservationService from '@/lib/services/reservationService';
+import { FloorLayoutTableItem, floorService, tableService, TableStatus } from '@/lib/services/tableService';
+import { TenantConfig, tenantService } from '@/lib/services/tenantService';
+import { BusinessHour } from '@/lib/types/tenant';
+import { GoogleGenAI, Type } from "@google/genai";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { GoogleGenAI, Type } from "@google/genai";
-import { ReservationStep, BookingData, Table, UserDetails } from './types';
-import { TenantConfig } from '@/lib/services/tenantService';
-import { tableService, floorService, TableStatus, FloorLayoutTableItem } from '@/lib/services/tableService';
-import reservationService from '@/lib/services/reservationService';
-import { TableMap2D, Layout } from '@/app/admin/tables/components/TableMap2D';
-import { TableData } from '@/app/admin/tables/components/DraggableTable';
 import TablePreview3DModal from './TablePreview3DModal';
+import { BookingData, ReservationStep, Table, UserDetails } from './types';
 
-import { DatePicker } from 'antd';
+import { DayPicker } from '@/components/ui/DayPicker';
+import { TimePicker } from '@/components/ui/TimePicker';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { message } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/lib/contexts/AuthContext';
-import { PluginRegistry, TimepickerUI } from 'timepicker-ui';
-import { WheelPlugin } from 'timepicker-ui/plugins/wheel';
 
 // ─────────────────────────────────────────────────────
 // Constants & Helpers
@@ -26,6 +27,7 @@ const DEFAULT_TIME_SLOTS = ['17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
 const MAX_RESERVATION_ADVANCE_MONTHS = 1;
 const WEEK_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+const APPLY_CLIENT_CURRENT_TIME_GUARD = false;
 
 const TIME_SLOT_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
@@ -235,6 +237,45 @@ const fromMinutes = (totalMinutes: number) => {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 };
 
+const parseHourMinuteToken = (rawToken: string) => {
+    const token = rawToken.trim().toLowerCase();
+    if (!token) return null;
+
+    const ampmMatch = token.match(/\b(am|pm)\b/);
+    const ampm = ampmMatch ? ampmMatch[1] : null;
+    const clean = token
+        .replace(/\b(am|pm)\b/g, '')
+        .replace(/\s+/g, '')
+        .replace(/\./g, ':')
+        .replace(/h/g, ':');
+
+    const match = clean.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+    if (!match) return null;
+
+    let hour = Number(match[1]);
+    const minute = Number(match[2] ?? '0');
+    if (Number.isNaN(hour) || Number.isNaN(minute) || minute < 0 || minute > 59 || hour < 0 || hour > 23) {
+        return null;
+    }
+
+    if (ampm === 'am') {
+        if (hour === 12) hour = 0;
+    } else if (ampm === 'pm') {
+        if (hour < 12) hour += 12;
+    }
+
+    if (hour < 0 || hour > 23) return null;
+
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+};
+
+const isMinutesWithinWindow = (minutes: number, start: number, end: number) => {
+    if (start <= end) {
+        return minutes >= start && minutes <= end;
+    }
+    return minutes >= start || minutes <= end;
+};
+
 const normalizeTimeSlots = (slots: string[]) => {
     const unique = new Set<string>();
     for (const slot of slots) {
@@ -288,7 +329,7 @@ const getSelectableTimeBounds = (date: string, slots: string[]) => {
     const latestAllowedMinutes = Math.min((24 * 60) - 1, lastSlotMinutes + intervalMinutes);
 
     let minMinutes = firstSlotMinutes;
-    if (date === getTodayLocalDate()) {
+    if (APPLY_CLIENT_CURRENT_TIME_GUARD && date === getTodayLocalDate()) {
         const now = dayjs();
         const nowMinutes = (now.hour() * 60) + now.minute();
         minMinutes = Math.max(minMinutes, nowMinutes + 1);
@@ -372,49 +413,28 @@ const buildDisabledIntervalsFromBounds = (
     return intervals;
 };
 
-const ensureWheelPluginRegistered = () => {
-    if (!PluginRegistry.has('wheel')) {
-        PluginRegistry.register(WheelPlugin);
-    }
-};
+// Removed TimepickerUI related code
 
-const normalizePickerTime = (
-    hourValue?: string,
-    minuteValue?: string,
-    periodValue?: string,
-) => {
-    const parsedHour = Number.parseInt(hourValue ?? '', 10);
-    const parsedMinute = Number.parseInt(minuteValue ?? '', 10);
-
-    if (
-        Number.isNaN(parsedHour) ||
-        Number.isNaN(parsedMinute) ||
-        parsedHour < 0 ||
-        parsedMinute < 0 ||
-        parsedMinute > 59
-    ) {
-        return null;
-    }
-
-    let hour = parsedHour;
-    const period = (periodValue || '').trim().toLowerCase();
-    if (period === 'am' || period === 'pm') {
-        const normalized12Hour = ((hour % 12) + 12) % 12;
-        hour = period === 'pm' ? normalized12Hour + 12 : normalized12Hour;
-    }
-
-    if (hour > 23) return null;
-
-    return `${hour.toString().padStart(2, '0')}:${parsedMinute.toString().padStart(2, '0')}`;
-};
+// Removed TimepickerUI related code
 
 
 
 const parseOpeningHours = (hours?: string | null) => {
     if (!hours) return null;
-    const match = hours.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
-    if (!match) return null;
-    return { open: match[1], close: match[2] };
+
+    const normalized = hours
+        .replace(/[–—]/g, '-')
+        .replace(/\b(to|den|đến)\b/gi, '-')
+        .replace(/\s*-\s*/g, ' - ');
+
+    const rawTokens = normalized.match(/\d{1,2}(?:[:h\.]\d{1,2})?\s*(?:am|pm)?/gi) || [];
+    if (rawTokens.length < 2) return null;
+
+    const open = parseHourMinuteToken(rawTokens[0] ?? '');
+    const close = parseHourMinuteToken(rawTokens[1] ?? '');
+    if (!open || !close) return null;
+
+    return { open, close };
 };
 
 const buildTimeSlotsFromHours = (open: string, close: string, intervalMinutes = DEFAULT_SLOT_INTERVAL_MINUTES) => {
@@ -438,27 +458,80 @@ const buildTimeSlotsFromHours = (open: string, close: string, intervalMinutes = 
     return slots;
 };
 
-const getTenantReservationConfig = (tenant: TenantConfig | null) => {
+const formatBusinessHourTime = (time: string) => {
+    const parts = (time || '').split(':');
+    if (parts.length < 2) return time;
+    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+};
+
+const getBusinessHourBoundsForDate = (date: string, businessHours: BusinessHour[]) => {
+    if (!businessHours.length) return null;
+
+    const dayIndex = dayjs(date, 'YYYY-MM-DD').day();
+    const dayHours = businessHours.find((hour) => hour.dayOfWeek === dayIndex);
+    if (!dayHours || dayHours.isClosed) return null;
+
+    const slots = buildTimeSlotsFromHours(
+        formatBusinessHourTime(dayHours.openTime),
+        formatBusinessHourTime(dayHours.closeTime),
+    );
+
+    if (!slots.length) return null;
+
+    return getSelectableTimeBounds(date, slots);
+};
+
+const getTenantReservationConfig = (tenant: TenantConfig | null, date: string, businessHours: BusinessHour[] = []) => {
     let timeSlots = DEFAULT_TIME_SLOTS;
     let maxGuestsOverride: number | undefined;
     let closedNotice = '';
     const closedWeekdays = new Set<number>();
-
     const openingHours = parseOpeningHours(tenant?.businessOpeningHours);
-    if (openingHours) {
-        const generatedSlots = buildTimeSlotsFromHours(openingHours.open, openingHours.close);
-        if (generatedSlots.length) timeSlots = generatedSlots;
-    }
 
-    const weeklySchedule = parseWeeklyScheduleFromOpeningHours(tenant?.businessOpeningHours);
-    if (weeklySchedule.openDays.size) {
-        WEEK_DAYS.forEach((day) => {
-            if (!weeklySchedule.openDays.has(day)) {
-                closedWeekdays.add(day);
+    const selectedDayIndex = dayjs(date, 'YYYY-MM-DD').day();
+    const businessHourForSelectedDate = businessHours.find((hour) => hour.dayOfWeek === selectedDayIndex);
+    const isSelectedDayClosed = businessHourForSelectedDate?.isClosed === true;
+
+    if (businessHours.length > 0) {
+        businessHours.forEach((hour) => {
+            if (hour.isClosed) {
+                closedWeekdays.add(hour.dayOfWeek);
             }
         });
+
+        if (!isSelectedDayClosed && businessHourForSelectedDate) {
+            const formatTime = (time: string) => {
+                const parts = (time || '').split(':');
+                if (parts.length < 2) return time;
+                return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+            };
+
+            const generatedSlots = buildTimeSlotsFromHours(
+                formatTime(businessHourForSelectedDate.openTime),
+                formatTime(businessHourForSelectedDate.closeTime),
+            );
+            if (generatedSlots.length) {
+                timeSlots = generatedSlots;
+            }
+        } else if (isSelectedDayClosed) {
+            timeSlots = [];
+        }
+    } else {
+        if (openingHours) {
+            const generatedSlots = buildTimeSlotsFromHours(openingHours.open, openingHours.close);
+            if (generatedSlots.length) timeSlots = generatedSlots;
+        }
+
+        const weeklySchedule = parseWeeklyScheduleFromOpeningHours(tenant?.businessOpeningHours);
+        if (weeklySchedule.openDays.size) {
+            WEEK_DAYS.forEach((day) => {
+                if (!weeklySchedule.openDays.has(day)) {
+                    closedWeekdays.add(day);
+                }
+            });
+        }
+        weeklySchedule.closedDays.forEach((day) => closedWeekdays.add(day));
     }
-    weeklySchedule.closedDays.forEach((day) => closedWeekdays.add(day));
 
     const settings = parseTenantSettingsEntries((tenant as any)?.tenantSettings ?? []);
     for (const raw of settings) {
@@ -498,8 +571,33 @@ const getTenantReservationConfig = (tenant: TenantConfig | null) => {
 
     const normalizedTimeSlots = normalizeTimeSlots(timeSlots);
 
+    let finalTimeSlots = normalizedTimeSlots.length ? normalizedTimeSlots : DEFAULT_TIME_SLOTS;
+    if (businessHours.length > 0 && isSelectedDayClosed) {
+        finalTimeSlots = [];
+    }
+    if (businessHours.length === 0 && openingHours) {
+        const openMinutes = toMinutes(openingHours.open);
+        const closeMinutes = toMinutes(openingHours.close);
+        if (openMinutes !== null && closeMinutes !== null) {
+            const filtered = finalTimeSlots.filter((slot) => {
+                const slotMinutes = toMinutes(slot);
+                if (slotMinutes === null) return false;
+                return isMinutesWithinWindow(slotMinutes, openMinutes, closeMinutes);
+            });
+
+            if (filtered.length) {
+                finalTimeSlots = filtered;
+            } else {
+                const generatedSlots = buildTimeSlotsFromHours(openingHours.open, openingHours.close);
+                if (generatedSlots.length) {
+                    finalTimeSlots = generatedSlots;
+                }
+            }
+        }
+    }
+
     return {
-        timeSlots: normalizedTimeSlots.length ? normalizedTimeSlots : DEFAULT_TIME_SLOTS,
+        timeSlots: finalTimeSlots,
         maxGuestsOverride,
         closedWeekdays,
         closedNotice,
@@ -510,29 +608,55 @@ interface ReservationSectionProps {
     tenant: TenantConfig | null;
 }
 
-const StepIndicator: React.FC<{ active: number; t: (key: string, options?: any) => string; className?: string }> = ({ active, t, className = '' }) => (
-    <div className={`flex items-center gap-3 justify-center mb-8 ${className}`}>
-        {[1, 2, 3].map((s) => (
-            <React.Fragment key={s}>
-                <div className={`flex items-center gap-2 ${active === s ? 'text-[var(--text-inverse)]' : 'text-[var(--text-inverse)] opacity-40'}`}>
-                    <span
-                        className={`w-8 h-8 rounded-full grid place-items-center text-sm font-serif border-2 leading-none`}
-                        style={{
-                            backgroundColor: active === s ? 'var(--primary)' : 'transparent',
-                            borderColor: active === s ? 'var(--primary)' : 'rgba(255,255,255,0.2)',
-                            boxShadow: active === s ? '0 0 15px var(--primary-glow)' : 'none',
-                            lineHeight: 1,
-                        }}
-                    >
-                        {s}
-                    </span>
-                    <span className={`text-xs uppercase tracking-widest hidden sm:inline ${active === s ? 'font-bold' : 'font-medium'}`}>
-                        {s === 1 ? t('landing.booking.step.schedule') : s === 2 ? t('landing.booking.step.location') : t('landing.booking.step.confirm')}
-                    </span>
-                </div>
-                {s < 3 && <div className="w-8 md:w-16 h-px bg-[var(--text-inverse)] opacity-20" />}
-            </React.Fragment>
-        ))}
+const StepIndicator: React.FC<{ active: number; t: (key: string, options?: any) => string; className?: string; inverted?: boolean }> = ({ active, t, className = '', inverted = false }) => (
+    <div className={`reservation-step-indicator flex items-center gap-1 ${className}`}>
+        {[1, 2, 3].map((s) => {
+            const isDone = s < active;
+            const isActive = s === active;
+            return (
+                <React.Fragment key={s}>
+                    <div className="flex items-center gap-1.5">
+                        <span
+                            className="reservation-step-dot grid shrink-0 place-items-center rounded-full text-[10px] font-bold leading-none"
+                            style={{
+                                width: isActive ? 26 : 20,
+                                height: isActive ? 26 : 20,
+                                backgroundColor: isDone || isActive ? (inverted ? 'var(--on-primary)' : 'var(--primary)') : (inverted ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'),
+                                color: isDone || isActive ? (inverted ? 'var(--primary)' : 'var(--on-primary)') : (inverted ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)'),
+                                border: isDone || isActive ? 'none' : `1.5px solid ${inverted ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.18)'}`,
+                                boxShadow: isActive ? (inverted ? '0 0 12px rgba(255,255,255,0.5)' : '0 0 12px var(--primary-glow)') : 'none',
+                                transition: 'all 0.25s ease',
+                            }}
+                        >
+                            {isDone ? (
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>
+                            ) : s}
+                        </span>
+                        <span
+                            className="text-[11px] uppercase tracking-wider hidden sm:inline"
+                            style={{
+                                color: isActive ? 'var(--text-inverse)' : 'rgba(255,255,255,0.45)',
+                                fontWeight: isActive ? 700 : 500,
+                            }}
+                        >
+                            {s === 1 ? t('landing.booking.step.schedule') : s === 2 ? t('landing.booking.step.location') : t('landing.booking.step.confirm')}
+                        </span>
+                    </div>
+                    {s < 3 && (
+                        <div
+                            className="shrink-0"
+                            style={{
+                                width: 20,
+                                height: 1.5,
+                                borderRadius: 1,
+                                background: s < active ? 'var(--primary)' : 'rgba(255,255,255,0.15)',
+                                transition: 'background 0.3s ease',
+                            }}
+                        />
+                    )}
+                </React.Fragment>
+            );
+        })}
     </div>
 );
 
@@ -541,12 +665,45 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const { user } = useAuth();
     const [step, setStep] = useState<ReservationStep>(ReservationStep.SEARCH);
     const autoFilledRef = useRef(false);
-    const timeInputRef = useRef<HTMLInputElement | null>(null);
-    const timePickerRef = useRef<TimepickerUI | null>(null);
+    const [isMobileViewport, setIsMobileViewport] = useState(false);
+    const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+    const [booking, setBooking] = useState<BookingData>(() => ({
+        date: getTodayLocalDate(),
+        time: '19:00',
+        guests: 4,
+    }));
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const mediaQuery = window.matchMedia('(max-width: 767px)');
+        let timeoutId: NodeJS.Timeout;
+
+        const syncViewport = () => {
+            // Debounce để tránh re-render liên tục khi resize
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                setIsMobileViewport(mediaQuery.matches);
+            }, 100);
+        };
+
+        syncViewport();
+        mediaQuery.addEventListener('change', syncViewport);
+
+        return () => {
+            clearTimeout(timeoutId);
+            mediaQuery.removeEventListener('change', syncViewport);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!tenant?.id) return;
+        tenantService.getBusinessHours(tenant.id).then(setBusinessHours).catch(() => setBusinessHours([]));
+    }, [tenant?.id]);
 
     const { timeSlots, closedWeekdays, closedNotice } = useMemo(
-        () => getTenantReservationConfig(tenant),
-        [tenant],
+        () => getTenantReservationConfig(tenant, booking.date, businessHours),
+        [tenant, booking.date, businessHours],
     );
 
     const isDateClosedByTenantSettings = useCallback((date: string) => {
@@ -555,16 +712,17 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         return closedWeekdays.has(dayIndex);
     }, [closedWeekdays]);
 
-    const [booking, setBooking] = useState<BookingData>(() => ({
-        date: getTodayLocalDate(),
-        time: timeSlots.includes('19:00') ? '19:00' : (timeSlots[0] || '19:00'),
-        guests: 4,
-    }));
-
     const isBookingDayClosed = useMemo(
         () => isDateClosedByTenantSettings(booking.date),
         [booking.date, isDateClosedByTenantSettings],
     );
+
+    const isBookingPastHoursToday = useMemo(() => {
+        if (isBookingDayClosed) return false;
+        if (booking.date !== getTodayLocalDate()) return false;
+
+        return !getSelectableTimeBounds(booking.date, timeSlots);
+    }, [booking.date, isBookingDayClosed, timeSlots]);
 
     const closedBookingDateValue = useMemo(() => {
         const value = new Date(`${booking.date}T00:00:00`);
@@ -595,24 +753,33 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     }, [booking.date, closedBookingDateValue, i18n.language]);
 
     const closedBookingMessage = useMemo(() => {
+        if (isBookingPastHoursToday) {
+            return t('landing.booking.form.restaurant_past_hours_on_day', {
+                day: closedBookingWeekdayLabel,
+                defaultValue: `Restaurant has passed booking hours for ${closedBookingWeekdayLabel}`,
+            });
+        }
+
         if (closedNotice) return closedNotice;
         return t('landing.booking.form.restaurant_closed_on_day', {
             day: closedBookingWeekdayLabel,
             defaultValue: `Restaurant is closed on ${closedBookingWeekdayLabel}`,
         });
-    }, [closedNotice, closedBookingWeekdayLabel, t]);
+    }, [closedNotice, closedBookingWeekdayLabel, isBookingPastHoursToday, t]);
 
-    const isClosedOverlayVisible = step === ReservationStep.SEARCH && isBookingDayClosed;
+    const isClosedOverlayVisible = step === ReservationStep.SEARCH && (isBookingDayClosed || isBookingPastHoursToday);
 
     const nextAvailableBooking = useMemo(() => {
-        if (!isBookingDayClosed) return null;
+        if (!isBookingDayClosed && !isBookingPastHoursToday) return null;
 
         const start = dayjs(booking.date, 'YYYY-MM-DD');
         for (let offset = 1; offset <= 30; offset += 1) {
             const candidateDate = start.add(offset, 'day').format('YYYY-MM-DD');
             if (isDateClosedByTenantSettings(candidateDate)) continue;
 
-            const candidateBounds = getSelectableTimeBounds(candidateDate, timeSlots);
+            const candidateBounds = businessHours.length > 0
+                ? getBusinessHourBoundsForDate(candidateDate, businessHours)
+                : getSelectableTimeBounds(candidateDate, timeSlots);
             if (!candidateBounds) continue;
 
             return {
@@ -622,7 +789,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         }
 
         return null;
-    }, [booking.date, isBookingDayClosed, isDateClosedByTenantSettings, timeSlots]);
+    }, [booking.date, isBookingDayClosed, isBookingPastHoursToday, isDateClosedByTenantSettings, timeSlots, businessHours]);
 
     const handlePickNextAvailableDate = useCallback(() => {
         if (!nextAvailableBooking) return;
@@ -673,92 +840,47 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         [booking.date, effectiveTimeSlots],
     );
 
+    // Mobile time picker options
+    const mobileTimeOptions = useMemo(() => {
+        if (!selectableTimeBounds) return { hours: [], minutes: [] };
+
+        const minHour = parseInt(selectableTimeBounds.min.split(':')[0]);
+        const maxHour = parseInt(selectableTimeBounds.max.split(':')[0]);
+        const minMinute = parseInt(selectableTimeBounds.min.split(':')[1]);
+        const maxMinute = parseInt(selectableTimeBounds.max.split(':')[1]);
+
+        // Generate available hours
+        const hours = [];
+        for (let h = minHour; h <= maxHour; h++) {
+            hours.push(String(h).padStart(2, '0'));
+        }
+
+        // Generate available minutes for current selected hour
+        const currentHour = parseInt(booking.time.split(':')[0] || '19');
+        let startMin = 0;
+        let endMin = 59;
+
+        if (currentHour === minHour) {
+            startMin = minMinute;
+        }
+        if (currentHour === maxHour) {
+            endMin = maxMinute;
+        }
+
+        const minutes = [];
+        for (let m = startMin; m <= endMin; m++) {
+            minutes.push(String(m).padStart(2, '0'));
+        }
+
+        return { hours, minutes };
+    }, [selectableTimeBounds, booking.time]);
+
     const isSelectedTimeValid = useMemo(
         () => isTimeWithinBounds(booking.time, selectableTimeBounds),
         [booking.time, selectableTimeBounds],
     );
 
-    useEffect(() => {
-        const input = timeInputRef.current;
 
-        if (timePickerRef.current) {
-            timePickerRef.current.destroy({ keepInputValue: true });
-            timePickerRef.current = null;
-        }
-
-        if (!input || !selectableTimeBounds) return;
-
-        ensureWheelPluginRegistered();
-        const disabledIntervals = buildDisabledIntervalsFromBounds(selectableTimeBounds);
-
-        const picker = new TimepickerUI(input, {
-            clock: {
-                type: '24h',
-                incrementMinutes: 1,
-                incrementHours: 1,
-                disabledTime: disabledIntervals.length > 0
-                    ? { interval: disabledIntervals }
-                    : undefined,
-            },
-            ui: {
-                theme: 'basic',
-                mode: 'compact-wheel',
-                animation: false,
-                backdrop: false,
-                editable: false,
-            },
-            wheel: {
-                placement: 'auto',
-                commitOnScroll: false,
-                hideDisabled: false,
-            },
-            labels: {
-                ok: t('landing.booking.table_map.mobile_confirm', { defaultValue: 'Confirm' }),
-                cancel: t('common.actions.cancel', { defaultValue: 'Cancel' }),
-                time: t('landing.booking.form.preferred_time'),
-            },
-            callbacks: {
-                onConfirm: ({ hour, minutes, type }) => {
-                    const normalized = normalizePickerTime(hour, minutes, type);
-                    if (!normalized) return;
-
-                    const clampedTime = clampTimeToBounds(normalized, selectableTimeBounds);
-                    if (!clampedTime) return;
-
-                    setBooking((prev) => (
-                        prev.time === clampedTime
-                            ? prev
-                            : { ...prev, time: clampedTime }
-                    ));
-                },
-            },
-        });
-
-        picker.create();
-
-        const safeTime = clampTimeToBounds(booking.time, selectableTimeBounds);
-        if (safeTime) {
-            picker.setValue(safeTime, true);
-        }
-
-        timePickerRef.current = picker;
-
-        return () => {
-            if (timePickerRef.current) {
-                timePickerRef.current.destroy({ keepInputValue: true });
-                timePickerRef.current = null;
-            }
-        };
-    }, [selectableTimeBounds, t]);
-
-    useEffect(() => {
-        if (!timePickerRef.current || !selectableTimeBounds) return;
-
-        const safeTime = clampTimeToBounds(booking.time, selectableTimeBounds);
-        if (!safeTime) return;
-
-        timePickerRef.current.setValue(safeTime, true);
-    }, [booking.time, selectableTimeBounds]);
 
 
     useEffect(() => {
@@ -767,25 +889,19 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         let nextDate = booking.date < today ? today : booking.date;
         if (nextDate > maxBookableDate) nextDate = maxBookableDate;
 
-        if (isDateClosedByTenantSettings(nextDate)) return;
+        const nextBounds = businessHours.length > 0
+            ? getBusinessHourBoundsForDate(nextDate, businessHours)
+            : (isDateClosedByTenantSettings(nextDate) ? null : getSelectableTimeBounds(nextDate, timeSlots));
 
-        let nextBounds = getSelectableTimeBounds(nextDate, timeSlots);
-        if (nextDate === today && !nextBounds && timeSlots.length > 0) {
-            nextDate = dayjs(today).add(1, 'day').format('YYYY-MM-DD');
-            if (nextDate > maxBookableDate) return;
-            if (isDateClosedByTenantSettings(nextDate)) return;
-            nextBounds = getSelectableTimeBounds(nextDate, timeSlots);
-        }
-
-        if (!nextBounds) return;
-
-        const normalizedCurrentTime = normalizeTimeSlot(booking.time) || nextBounds.min;
-        const nextTime = clampTimeToBounds(normalizedCurrentTime, nextBounds);
+        const normalizedCurrentTime = normalizeTimeSlot(booking.time) || booking.time;
+        const nextTime = nextBounds
+            ? clampTimeToBounds(normalizedCurrentTime, nextBounds)
+            : normalizedCurrentTime;
 
         if (nextDate !== booking.date || nextTime !== booking.time) {
             setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
         }
-    }, [booking.date, booking.time, isDateClosedByTenantSettings, timeSlots]);
+    }, [booking.date, booking.time, isDateClosedByTenantSettings, timeSlots, businessHours]);
 
     // Auto-fill user info when logged in (only once, first time CONFIRMATION is opened)
     useEffect(() => {
@@ -956,32 +1072,115 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         const body = document.body;
 
         if (isOverlayReservationStep) {
-            root.classList.add('reservation-overlay-open');
-            body.classList.add('reservation-overlay-open');
+            // Lưu scroll position trước khi lock
+            const scrollY = window.scrollY;
+
+            // Đóng tất cả popups/dropdowns trước khi mở overlay
+            const closeAllPopups = () => {
+                // Blur active element để Ant Design tự đóng popups
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+                // Trigger ESC để đóng các popups khác
+                document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+            };
+
+            closeAllPopups();
+
+            // Thêm class với debounce để tránh giật
+            requestAnimationFrame(() => {
+                root.classList.add('reservation-overlay-open');
+                body.classList.add('reservation-overlay-open');
+
+                // Fix cho mobile: giữ scroll position
+                // Chỉ lock body ở TABLE_SELECTION, không lock ở CONFIRMATION/SUCCESS
+                // vì CONFIRMATION cần scroll khi bàn phím ảo bật lên
+                const isFormStep = step === ReservationStep.CONFIRMATION || step === ReservationStep.SUCCESS;
+                if (isMobileViewport && !isFormStep) {
+                    body.style.top = `-${scrollY}px`;
+                    body.style.position = 'fixed';
+                    body.style.width = '100%';
+                }
+            });
 
             return () => {
-                root.classList.remove('reservation-overlay-open');
-                body.classList.remove('reservation-overlay-open');
+                requestAnimationFrame(() => {
+                    root.classList.remove('reservation-overlay-open');
+                    body.classList.remove('reservation-overlay-open');
+
+                    // Restore scroll position cho mobile
+                    const isFormStep = step === ReservationStep.CONFIRMATION || step === ReservationStep.SUCCESS;
+                    if (isMobileViewport && !isFormStep) {
+                        body.style.position = '';
+                        body.style.top = '';
+                        body.style.width = '';
+                        window.scrollTo(0, scrollY);
+                    }
+                });
             };
         }
 
         root.classList.remove('reservation-overlay-open');
         body.classList.remove('reservation-overlay-open');
-    }, [isOverlayReservationStep]);
+    }, [isOverlayReservationStep, isMobileViewport]);
+
+    // Đóng tất cả popups khi step thay đổi
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+
+        // Blur active element để Ant Design tự đóng popups
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    }, [step]);
+
+    // Đóng các trigger/picker khi scroll, nhưng không blur input đang nhập liệu (đặc biệt iOS keyboard)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (step !== ReservationStep.SEARCH && step !== ReservationStep.TABLE_SELECTION) return;
+
+        let scrollTimer: ReturnType<typeof setTimeout>;
+        const handleScroll = () => {
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(() => {
+                const active = document.activeElement;
+                if (!(active instanceof HTMLElement)) return;
+
+                // Do not dismiss keyboard while user is typing in real text fields.
+                if (
+                    active instanceof HTMLInputElement ||
+                    active instanceof HTMLTextAreaElement ||
+                    active.isContentEditable
+                ) {
+                    return;
+                }
+
+                active.blur();
+            }, 100);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+            clearTimeout(scrollTimer);
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, [step]);
 
     const buildSelectedTable = (table: TableData): Table => ({
-                id: table.id,
-                label: table.name,
-                capacity: table.seats,
-                isOccupied: false,
-                isPremium: table.area === 'Window' || table.area === 'VIP',
-                zone: table.area,
-                x: table.position.x,
-                y: table.position.y,
-                width: table.width || 80,
-                height: table.height || 80,
-                shape: table.shape === 'Circle' ? 'Round' : 'Rectangle',
-                rotation: table.rotation || 0,
+        id: table.id,
+        label: table.name,
+        capacity: table.seats,
+        isOccupied: false,
+        isPremium: table.area === 'Window' || table.area === 'VIP',
+        zone: table.area,
+        x: table.position.x,
+        y: table.position.y,
+        width: table.width || 80,
+        height: table.height || 80,
+        shape: table.shape === 'Circle' ? 'Round' : 'Rectangle',
+        rotation: table.rotation || 0,
     });
 
     const handleMapTableClick = async (table: TableData) => {
@@ -1085,10 +1284,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         }
     };
 
-    const handleSearchSubmit = (e: React.FormEvent) => {
+    const handleSearchSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (isBookingDayClosed) {
+        if (isBookingDayClosed || isBookingPastHoursToday) {
             return;
         }
 
@@ -1098,12 +1297,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         if (nextDate > maxBookableDate) nextDate = maxBookableDate;
         let nextBounds = getSelectableTimeBounds(nextDate, timeSlots);
 
-        if (nextDate === today && !nextBounds && timeSlots.length > 0) {
-            nextDate = dayjs(today).add(1, 'day').format('YYYY-MM-DD');
-            if (nextDate > maxBookableDate) return;
-            nextBounds = getSelectableTimeBounds(nextDate, timeSlots);
-        }
-
         if (!nextBounds) return;
 
         const nextTime = clampTimeToBounds(booking.time, nextBounds);
@@ -1112,8 +1305,34 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
         }
 
+        try {
+            const reservationDateTime = `${nextDate}T${nextTime}:00`;
+            await reservationService.checkTime({ reservationDateTime });
+        } catch (error: any) {
+            console.error("Check time failed:", error);
+            const beMessage = error?.response?.data?.message || error?.message;
+            message.error(beMessage || t('landing.booking.confirm.error_generic', { defaultValue: 'An error occurred' }));
+            return;
+        }
+
         getSmartRecommendation(Number(booking.guests) || 1, nextTime);
         setStep(ReservationStep.TABLE_SELECTION);
+    };
+
+    const handleConfirmTableSelection = async () => {
+        try {
+            const reservationDateTime = `${booking.date}T${booking.time}:00`;
+            await reservationService.checkTables({
+                tableIds: selectedTables.map(t => t.id),
+                reservationDateTime,
+                numberOfGuests: Number(booking.guests)
+            });
+            setStep(ReservationStep.CONFIRMATION);
+        } catch (error: any) {
+            console.error("Check tables failed:", error);
+            const beMessage = error?.response?.data?.message || error?.message;
+            message.error(beMessage || t('landing.booking.confirm.error_generic', { defaultValue: 'An error occurred' }));
+        }
     };
 
 
@@ -1133,6 +1352,12 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             return;
         }
 
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(userDetails.email)) {
+            setSubmitError(t('landing.booking.confirm.error_invalid_email'));
+            return;
+        }
+
         setIsSubmitting(true);
         setSubmitError(null);
         setDepositCheckoutUrl('');
@@ -1145,7 +1370,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             const result = await reservationService.createReservation({
                 tableIds: selectedTables.map(t => t.id),
                 reservationDateTime,
-                numberOfGuests: booking.guests,
+                numberOfGuests: Number(booking.guests),
                 name: userDetails.name,
                 phone: userDetails.phone,
                 email: userDetails.email,
@@ -1208,7 +1433,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         : `${selectedTables.slice(0, 2).map((table) => `#${table.label}`).join(', ')} +${selectedTables.length - 2}`;
 
     return (
-        <div id="reservation" className="reservation-root-frame relative text-[var(--text)]">
+        <div id="reservation" className="reservation-root-frame relative text-[var(--text)] scroll-mt-20">
             {/* Background Layer */}
             <div className="reservation-bg-layer absolute inset-0 z-0">
                 <img
@@ -1282,10 +1507,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 </div>
             )}
 
-            <main className={`reservation-main-shell relative z-10 mx-auto px-4 h-full flex flex-col items-center ${isClosedOverlayVisible ? 'reservation-main-shell-blocked' : ''} ${step === ReservationStep.TABLE_SELECTION ? 'w-full max-w-[98vw] justify-start py-3 sm:py-4 md:py-5' : isCompactReservationStep ? 'container reservation-main-shell-compact justify-start py-2 sm:py-3 md:py-4 overflow-y-auto' : 'container justify-center py-8 md:py-20'}`}>
+            <main className="reservation-main-shell relative z-10 mx-auto px-3 sm:px-4 flex flex-col items-center min-h-screen">
 
                 {step === ReservationStep.SEARCH && (
-                    <div className="reservation-search-shell w-full max-w-5xl px-1 sm:px-0 fade-in">
+                    <div className="reservation-search-shell w-full max-w-5xl px-0 fade-in flex-1 flex flex-col justify-center py-8 md:py-20">
                         <div className="reservation-hero-block text-center mb-8 sm:mb-12">
                             <div className="inline-block px-4 py-1.5 rounded-full border border-[var(--primary-border)] bg-black/30 backdrop-blur-md text-[var(--primary)] text-xs font-bold tracking-[0.2em] uppercase mb-6 shadow-xl">
                                 {t('landing.booking.hero.badge')}
@@ -1303,176 +1528,175 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                         <div className="reservation-search-overlay">
                             <div className="reservation-search-card bg-[var(--card)] rounded-2xl sm:rounded-[2rem] shadow-2xl p-4 sm:p-6 md:p-10 border border-white/10 relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--primary)] via-[var(--primary-soft)] to-[var(--primary)]"></div>
+                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--primary)] via-[var(--primary-soft)] to-[var(--primary)] rounded-t-2xl sm:rounded-t-[2rem]"></div>
 
-                            <form onSubmit={handleSearchSubmit} className="reservation-pill">
-                                <div className="pill-segment">
-                                    <span className="pill-label">{t('landing.booking.form.arrival_date')}</span>
-                                        <DatePicker
-                                        className="reservation-date-picker pill-control"
-                                        classNames={{ popup: { root: 'reservation-date-popup' } }}
+                                <form onSubmit={handleSearchSubmit} className="reservation-pill">
+                                    <div className="pill-segment relative" id="date-picker-anchor">
+                                        <span className="pill-label">{t('landing.booking.form.arrival_date')}</span>
+                                        <DayPicker
                                             value={dayjs(booking.date, 'YYYY-MM-DD')}
-                                            format="DD/MM/YYYY"
-                                            allowClear={false}
-                                            suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">calendar_month</span>}
-                                            prefix={<span className="material-symbols-outlined text-[var(--primary)]">calendar_month</span>}
-                                            disabledDate={(current) => {
-                                                if (!current) return false;
-                                                const today = getTodayLocalDate();
-                                                const maxBookableDate = getMaxBookableDate();
-                                                const currentDate = current.format('YYYY-MM-DD');
-                                                if (currentDate < today) return true;
-                                                if (currentDate > maxBookableDate) return true;
-                                                if (isDateClosedByTenantSettings(currentDate)) return true;
-                                                if (!timeSlots.length) return true;
-                                                if (currentDate === today) return !getSelectableTimeBounds(today, timeSlots);
-                                                return false;
-                                            }}
+                                            minDate={dayjs(getTodayLocalDate(), 'YYYY-MM-DD')}
+                                            maxDate={dayjs(getMaxBookableDate(), 'YYYY-MM-DD')}
+                                            disabledWeekdays={Array.from(closedWeekdays)}
                                             onChange={(value) => {
-                                                if (!value) return;
-                                                const selectedDate = value.format('YYYY-MM-DD');
-                                                const today = getTodayLocalDate();
-                                                const maxBookableDate = getMaxBookableDate();
-                                                let safeDate = selectedDate < today ? today : selectedDate;
-                                                if (safeDate > maxBookableDate) safeDate = maxBookableDate;
-
+                                                const safeDate = value.format('YYYY-MM-DD');
                                                 if (isDateClosedByTenantSettings(safeDate)) {
                                                     setBooking((prev) => ({ ...prev, date: safeDate }));
                                                     return;
                                                 }
-
-                                                let nextBounds = getSelectableTimeBounds(safeDate, timeSlots);
-                                                if (safeDate === today && !nextBounds && timeSlots.length > 0) {
-                                                    safeDate = dayjs(today).add(1, 'day').format('YYYY-MM-DD');
-                                                    if (isDateClosedByTenantSettings(safeDate)) {
-                                                        setBooking((prev) => ({ ...prev, date: safeDate }));
-                                                        return;
-                                                    }
-                                                    nextBounds = getSelectableTimeBounds(safeDate, timeSlots);
-                                                }
-
+                                                const nextBounds = getSelectableTimeBounds(safeDate, timeSlots);
                                                 setBooking((prev) => {
                                                     const nextTime = clampTimeToBounds(prev.time, nextBounds);
                                                     return { ...prev, date: safeDate, time: nextTime };
                                                 });
                                             }}
                                         />
-                                </div>
+                                    </div>
 
-                                <div className="pill-divider" />
+                                    <div className="pill-divider" />
 
-                                <div className="pill-segment">
-                                    <span className="pill-label">{t('landing.booking.form.preferred_time')}</span>
-                                    <input
-                                        ref={timeInputRef}
-                                        type="text"
-                                        className="pill-time-input"
-                                        value={normalizeTimeSlot(booking.time) || selectableTimeBounds?.min || ''}
-                                        readOnly
-                                        inputMode="numeric"
-                                        autoComplete="off"
-                                        disabled={!selectableTimeBounds}
-                                        aria-label={t('landing.booking.form.preferred_time')}
-                                        onClick={() => {
-                                            if (!selectableTimeBounds) return;
-                                            timePickerRef.current?.open();
-                                        }}
-                                        onFocus={() => {
-                                            if (!selectableTimeBounds) return;
-                                            timePickerRef.current?.open();
-                                        }}
-                                        onKeyDown={(event) => {
-                                            if (!selectableTimeBounds) return;
-                                            if (event.key === 'Enter' || event.key === ' ') {
-                                                event.preventDefault();
-                                                timePickerRef.current?.open();
-                                            }
-                                        }}
-                                    />
-                                </div>
-
-                                <div className="pill-divider" />
-
-                                <div className="pill-segment pill-guests">
-                                    <span className="pill-label">
-                                        {t('landing.booking.form.party_size')}
-                                        </span>
-                                    <div className="pill-guest-row">
-                                        <span className="material-symbols-outlined text-[var(--primary)] text-lg">person</span>
-                                        <input
-                                            type="number"
-                                            value={booking.guests || ''}
-                                            min="1"
-                                            onChange={(e) => {
-                                                const val = parseInt(e.target.value, 10);
-                                                if (e.target.value === '') {
-                                                    // Allow temporary empty state while typing
-                                                    setBooking(b => ({ ...b, guests: '' as any }));
-                                                } else if (!isNaN(val) && val >= 1) {
-                                                    setBooking(b => ({ ...b, guests: val }));
-                                                }
-                                            }}
-                                            onBlur={(e) => {
-                                                const val = parseInt(e.target.value, 10);
-                                                if (isNaN(val) || val < 1) {
-                                                    setBooking(b => ({ ...b, guests: 1 }));
-                                                }
-                                            }}
-                                            className="pill-guest-count w-10 text-center bg-transparent border-none outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        />
-                                        <div className="pill-guest-actions">
-                                        <button
-                                            type="button"
-                                            aria-label={t('landing.booking.form.decrease_guests')}
-                                            onClick={() => setBooking((b) => {
-                                                const currentGuests = Math.max(1, Number(b.guests) || 1);
-                                                return { ...b, guests: Math.max(1, currentGuests - 1) };
-                                            })}
-                                                className="pill-step-btn"
-                                        >
-                                            −
-                                        </button>
-                                        <button
-                                            type="button"
-                                            aria-label={t('landing.booking.form.increase_guests')}
-                                            onClick={() => setBooking((b) => {
-                                                const currentGuests = Math.max(1, Number(b.guests) || 1);
-                                                return { ...b, guests: currentGuests + 1 };
-                                            })}
-                                                className="pill-step-btn"
-                                        >
-                                            +
-                                        </button>
+                                    <div className="pill-segment">
+                                        <span className="pill-label">{t('landing.booking.form.preferred_time')}</span>
+                                        <div className="w-full">
+                                            {selectableTimeBounds ? (
+                                                <div className="space-y-2">
+                                                    <TimePicker
+                                                        onChange={(value) => {
+                                                            const clamped = clampTimeToBounds(value, selectableTimeBounds);
+                                                            if (clamped) {
+                                                                setBooking((prev) => ({ ...prev, time: clamped }));
+                                                            }
+                                                        }}
+                                                        value={booking.time}
+                                                        disabled={!selectableTimeBounds}
+                                                        minTime={selectableTimeBounds?.min}
+                                                        maxTime={selectableTimeBounds?.max}
+                                                        isToday={booking.date === getTodayLocalDate()}
+                                                    />
+                                                    {/* <div className="text-xs text-[var(--text-muted)] text-center">
+                                                        {t('landing.booking.form.available_hours', {
+                                                            start: selectableTimeBounds.min,
+                                                            end: selectableTimeBounds.max,
+                                                            defaultValue: `Giờ phục vụ: ${selectableTimeBounds.min} - ${selectableTimeBounds.max}`
+                                                        })}
+                                                    </div> */}
+                                                    {!isSelectedTimeValid && booking.time && (
+                                                        <div className="text-xs text-[var(--danger)] text-center flex items-center justify-center gap-1">
+                                                            <span className="material-symbols-outlined text-sm">error</span>
+                                                            <span>
+                                                                {t('landing.booking.form.time_not_available', {
+                                                                    defaultValue: 'Thời gian này không khả dụng. Vui lòng chọn trong khung giờ phục vụ.'
+                                                                })}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-2">
+                                                    <div className="text-sm text-[var(--text-muted)]">
+                                                        {isBookingDayClosed
+                                                            ? t('landing.booking.form.restaurant_closed_today', { defaultValue: 'Nhà hàng đóng cửa hôm nay' })
+                                                            : t('landing.booking.form.no_available_time', { defaultValue: 'Không có giờ phục vụ' })
+                                                        }
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                </div>
 
-                                <button
-                                    type="submit"
-                                    disabled={isBookingDayClosed || !selectableTimeBounds || !isSelectedTimeValid}
-                                    className="pill-submit disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-                                >
-                                    <span>{isBookingDayClosed ? t('landing.booking.form.restaurant_closed_today', { defaultValue: 'Restaurant is closed today' }) : !selectableTimeBounds ? t('landing.booking.form.no_slots') : t('landing.booking.form.choose_table')}</span>
-                                    <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
-                                </button>
-                            </form>
+                                    <div className="pill-divider" />
+
+                                    <div className="pill-segment pill-guests">
+                                        <span className="pill-label">
+                                            {t('landing.booking.form.party_size')}
+                                        </span>
+                                        <div className="pill-guest-row">
+                                            <span className="material-symbols-outlined text-[var(--primary)] text-lg">person</span>
+                                            <input
+                                                type="number"
+                                                value={booking.guests || ''}
+                                                min="1"
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value, 10);
+                                                    if (e.target.value === '') {
+                                                        // Allow temporary empty state while typing
+                                                        setBooking(b => ({ ...b, guests: '' as any }));
+                                                    } else if (!isNaN(val) && val >= 1) {
+                                                        setBooking(b => ({ ...b, guests: val }));
+                                                    }
+                                                }}
+                                                onBlur={(e) => {
+                                                    const val = parseInt(e.target.value, 10);
+                                                    if (isNaN(val) || val < 1) {
+                                                        setBooking(b => ({ ...b, guests: 1 }));
+                                                    }
+                                                }}
+                                                className="pill-guest-count w-10 text-center bg-transparent border-none outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            />
+                                            <div className="pill-guest-actions">
+                                                <button
+                                                    type="button"
+                                                    aria-label={t('landing.booking.form.decrease_guests')}
+                                                    onClick={() => setBooking((b) => {
+                                                        const currentGuests = Math.max(1, Number(b.guests) || 1);
+                                                        return { ...b, guests: Math.max(1, currentGuests - 1) };
+                                                    })}
+                                                    className="pill-step-btn"
+                                                >
+                                                    −
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    aria-label={t('landing.booking.form.increase_guests')}
+                                                    onClick={() => setBooking((b) => {
+                                                        const currentGuests = Math.max(1, Number(b.guests) || 1);
+                                                        return { ...b, guests: currentGuests + 1 };
+                                                    })}
+                                                    className="pill-step-btn"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={isBookingDayClosed || !selectableTimeBounds || !isSelectedTimeValid}
+                                        className="pill-submit disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                                    >
+                                        <span>
+                                            {isBookingDayClosed
+                                                ? t('landing.booking.form.restaurant_closed_today', { defaultValue: 'Restaurant is closed today' })
+                                                : isBookingPastHoursToday
+                                                    ? t('landing.booking.form.restaurant_past_hours_on_day', {
+                                                        day: closedBookingWeekdayLabel,
+                                                        defaultValue: `Restaurant has passed booking hours for ${closedBookingWeekdayLabel}`,
+                                                    })
+                                                    : !selectableTimeBounds
+                                                        ? t('landing.booking.form.no_slots')
+                                                        : t('landing.booking.form.choose_table')}
+                                        </span>
+                                        <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+                                    </button>
+                                </form>
 
                                 <div className="reservation-search-features mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-[var(--border)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                {[
-                                    { icon: 'restaurant', label: t('landing.booking.features.fine_dining.label'), desc: t('landing.booking.features.fine_dining.desc') },
-                                    { icon: 'check_circle', label: t('landing.booking.features.instant_confirm.label'), desc: t('landing.booking.features.instant_confirm.desc') },
-                                    { icon: 'local_parking', label: t('landing.booking.features.valet.label'), desc: t('landing.booking.features.valet.desc') }
-                                ].map((item, idx) => (
-                                    <div key={idx} className="flex items-center gap-4 group cursor-default rounded-xl px-2 py-1">
-                                        <div className="w-12 h-12 rounded-full bg-[var(--primary-faint)] flex items-center justify-center group-hover:bg-[var(--primary)] group-hover:text-[var(--on-primary)] transition-all duration-300 transform group-hover:scale-110">
-                                            <span className="material-symbols-outlined text-[var(--primary)] group-hover:text-[var(--on-primary)]">{item.icon}</span>
+                                    {[
+                                        { icon: 'restaurant', label: t('landing.booking.features.fine_dining.label'), desc: t('landing.booking.features.fine_dining.desc') },
+                                        { icon: 'check_circle', label: t('landing.booking.features.instant_confirm.label'), desc: t('landing.booking.features.instant_confirm.desc') },
+                                        { icon: 'local_parking', label: t('landing.booking.features.valet.label'), desc: t('landing.booking.features.valet.desc') }
+                                    ].map((item, idx) => (
+                                        <div key={idx} className="flex items-center gap-4 group cursor-default rounded-xl px-2 py-1">
+                                            <div className="w-12 h-12 rounded-full bg-[var(--primary-faint)] flex items-center justify-center group-hover:bg-[var(--primary)] group-hover:text-[var(--on-primary)] transition-all duration-300 transform group-hover:scale-110">
+                                                <span className="material-symbols-outlined text-[var(--primary)] group-hover:text-[var(--on-primary)]">{item.icon}</span>
+                                            </div>
+                                            <div>
+                                                <span className="block text-sm font-bold text-[var(--text)]">{item.label}</span>
+                                                <span className="block text-[11px] text-[var(--text-muted)] font-medium uppercase tracking-wider">{item.desc}</span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="block text-sm font-bold text-[var(--text)]">{item.label}</span>
-                                            <span className="block text-[11px] text-[var(--text-muted)] font-medium uppercase tracking-wider">{item.desc}</span>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -1483,13 +1707,14 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     <div className="reservation-table-overlay" role="dialog" aria-modal="true" aria-label={t('landing.booking.table_map.title')}>
                         <div className="reservation-table-overlay-panel fade-in">
                             <div className="reservation-table-shell reservation-table-shell-overlay w-full">
-                                <StepIndicator active={2} t={t} />
-
-                                <div className="reservation-table-topbar flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-6 text-[var(--text-inverse)] px-1 sm:px-2">
-                                    <button onClick={() => setStep(ReservationStep.SEARCH)} className="flex items-center gap-2 text-[var(--text-inverse)] opacity-70 hover:opacity-100 group">
-                                        <span className="material-symbols-outlined text-lg p-2 bg-white/10 rounded-full group-hover:bg-white/20">arrow_back</span>
-                                        <span className="font-medium text-sm">{t('landing.booking.table_map.change_schedule')}</span>
-                                    </button>
+                                <div className="reservation-table-topbar flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 text-[var(--text-inverse)] px-1 sm:px-2">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <button onClick={() => setStep(ReservationStep.SEARCH)} className="flex items-center gap-2 text-[var(--text-inverse)] opacity-70 hover:opacity-100 group">
+                                            <span className="material-symbols-outlined text-lg p-2 bg-white/10 rounded-full group-hover:bg-white/20">arrow_back</span>
+                                            <span className="font-medium text-sm">{t('landing.booking.table_map.change_schedule')}</span>
+                                        </button>
+                                        <StepIndicator active={2} t={t} />
+                                    </div>
                                     <div className="text-left sm:text-right">
                                         <div className="text-[10px] opacity-60 uppercase tracking-widest font-bold mb-1">{t('landing.booking.table_map.reservation_for')}</div>
                                         <div className="text-sm font-bold flex flex-wrap items-center gap-2">
@@ -1503,192 +1728,189 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                 </div>
 
                                 <div className="reservation-table-frame bg-[var(--card)] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row h-[76dvh] sm:h-[82dvh] lg:h-[85vh]">
-                            {/* Sidebar */}
-                            <div className="reservation-table-side-left hidden lg:flex w-80 bg-[var(--surface)] p-8 flex-col border-r border-[var(--border)]">
-                                <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-4">{t('landing.booking.table_map.title')}</h3>
+                                    {/* Sidebar */}
+                                    <div className="reservation-table-side-left hidden lg:flex w-80 bg-[var(--surface)] p-8 flex-col border-r border-[var(--border)]">
+                                        <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-4">{t('landing.booking.table_map.title')}</h3>
 
-                                <div className="space-y-5 mb-8">
-                                    {[
-                                        { bg: 'bg-[#f6ffed]', border: 'border-[#52c41a]', label: t('landing.booking.table_map.legend_available') },
-                                        { bg: 'bg-[var(--primary-soft)]', border: 'border-[var(--primary)] shadow-md shadow-[var(--primary-glow)]', label: t('landing.booking.table_map.legend_selected') },
-                                        { bg: 'bg-[#fff1f0]', border: 'border-[#ff4d4f] diagonal-stripe opacity-60', label: t('landing.booking.table_map.legend_occupied') }
-                                    ].map((legend, i) => (
-                                        <div key={i} className="flex items-center gap-4">
-                                            <div className={`w-6 h-6 rounded-lg border-2 ${legend.bg} ${legend.border}`} />
-                                            <span className="text-sm text-[var(--text-muted)] font-medium">{legend.label}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="mt-auto">
-                                    <div className="p-6 bg-gradient-to-br from-[var(--primary-faint)] to-[var(--card)] rounded-2xl border border-[var(--primary-border)] shadow-sm relative overflow-hidden">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <span className="material-symbols-outlined text-[var(--primary)] text-base">auto_awesome</span>
-                                            <p className="text-[var(--primary-hover)] text-xs font-bold uppercase tracking-widest">{t('landing.booking.table_map.ai_assistant')}</p>
-                                        </div>
-                                        {isAiThinking ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 bg-[var(--primary-soft)] rounded-full animate-bounce" />
-                                                <div className="w-2 h-2 bg-[var(--primary-soft)] rounded-full animate-bounce delay-100" />
-                                                <div className="w-2 h-2 bg-[var(--primary-soft)] rounded-full animate-bounce delay-200" />
-                                            </div>
-                                        ) : (
-                                            <p className="text-sm text-[var(--text-muted)] italic leading-relaxed">&ldquo;{recommendation || t('landing.booking.table_map.ai_default')}&rdquo;</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Floor Plan Canvas */}
-                            <div className="reservation-table-map-pane flex-1 relative bg-[var(--surface-subtle)] overflow-hidden p-0 min-h-[46dvh] lg:min-h-0">
-                                <div className="lg:hidden absolute top-3 left-3 right-3 z-10 rounded-full border border-[var(--border)] bg-[var(--card)]/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] shadow-sm text-center">
-                                    {t('landing.booking.table_map.zoom_hint')}
-                                </div>
-                                {isLayoutLoading && (
-                                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--card)]/70 backdrop-blur-sm">
-                                        <div className="flex flex-col items-center gap-3 text-[var(--text-muted)]">
-                                            <div className="mini-loader" />
-                                            <span className="text-xs font-semibold uppercase tracking-[0.2em]">{t('landing.booking.table_map.loading')}</span>
-                                        </div>
-                                    </div>
-                                )}
-                                {layout ? (
-                                    <div className="w-full h-full p-2 sm:p-4 lg:p-6">
-                                        <TableMap2D
-                                            layout={layout}
-                                            onLayoutChange={setLayout}
-                                            onTableClick={handleMapTableClick}
-                                            onTablePositionChange={() => undefined}
-                                            readOnly
-                                            selectedTableIds={selectedTables.map(t => t.id)}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-sm text-[var(--text-muted)]">
-                                        {t('landing.booking.table_map.no_map')}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Right Summary Panel */}
-                            <div className="reservation-table-side-right hidden lg:flex w-80 bg-[var(--card)] p-10 flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.02)]">
-                                <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-5">{t('landing.booking.table_map.booking_title')}</h3>
-
-                                <div className="flex-1 space-y-6">
-                                    {selectedTables.length > 0 ? (
-                                        <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
-                                            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-xs text-[var(--text-muted)] flex items-center justify-between gap-4">
-                                                <span className="uppercase tracking-[0.2em] font-semibold">{t('landing.booking.table_map.total_capacity')}</span>
-                                                <span className="inline-flex items-center justify-center text-[var(--primary)] font-bold text-sm px-3 py-1 rounded-full bg-[var(--primary-faint)] border border-[var(--primary-border)] leading-none text-center whitespace-nowrap min-h-[28px]">
-                                                    {totalSelectedCapacity} {t('landing.booking.table_map.guests')}
-                                                </span>
-                                            </div>
-                                            {selectedTables.map(table => (
-                                                <div key={table.id} className="bg-[var(--primary-faint)] rounded-2xl p-6 border border-[var(--primary-border)]">
-                                                    <div className="flex items-center justify-between mb-4">
-                                                        <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-[0.2em]">{t('landing.booking.table_map.selected_table_label')}</span>
-                                                        <span className="text-2xl font-bold text-[var(--primary)] leading-none">{table.label}</span>
-                                                    </div>
-                                                    <div className="space-y-3">
-                                                        <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.floor')}</span>
-                                                            <span className="font-semibold px-2.5 py-1 rounded-lg text-[11px] uppercase tracking-wider bg-[var(--surface-subtle)] text-[var(--text)]">
-                                                                {table.zone}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.capacity')}</span>
-                                                            <span className="font-semibold text-[var(--text)]">{table.capacity} {t('landing.booking.table_map.guests')}</span>
-                                                        </div>
-                                                    </div>
-                                                    {panoramaMap.has(table.id) && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => openPanoramaPreview(table)}
-                                                            className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:brightness-110"
-                                                            style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}
-                                                        >
-                                                            <span className="material-symbols-outlined text-base">3d_rotation</span>
-                                                            {t('landing.booking.table_map.view_360')}
-                                                        </button>
-                                                    )}
+                                        <div className="space-y-5 mb-8">
+                                            {[
+                                                { bg: 'bg-[#f6ffed]', border: 'border-[#52c41a]', label: t('landing.booking.table_map.legend_available') },
+                                                { bg: 'bg-[var(--primary-soft)]', border: 'border-[var(--primary)] shadow-md shadow-[var(--primary-glow)]', label: t('landing.booking.table_map.legend_selected') },
+                                                { bg: 'bg-[#fff1f0]', border: 'border-[#ff4d4f] diagonal-stripe opacity-60', label: t('landing.booking.table_map.legend_occupied') }
+                                            ].map((legend, i) => (
+                                                <div key={i} className="flex items-center gap-4">
+                                                    <div className={`w-6 h-6 rounded-lg border-2 ${legend.bg} ${legend.border}`} />
+                                                    <span className="text-sm text-[var(--text-muted)] font-medium">{legend.label}</span>
                                                 </div>
                                             ))}
                                         </div>
-                                    ) : (
-                                        <div className="reservation-empty-warning">
-                                            <span className="material-symbols-outlined">info</span>
-                                            <span>{t('landing.booking.table_map.no_table_selected')}</span>
+
+                                        <div className="mt-auto">
+                                            <div className="p-6 bg-gradient-to-br from-[var(--primary-faint)] to-[var(--card)] rounded-2xl border border-[var(--primary-border)] shadow-sm relative overflow-hidden">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <span className="material-symbols-outlined text-[var(--primary)] text-base">auto_awesome</span>
+                                                    <p className="text-[var(--primary-hover)] text-xs font-bold uppercase tracking-widest">{t('landing.booking.table_map.ai_assistant')}</p>
+                                                </div>
+                                                {isAiThinking ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-2 h-2 bg-[var(--primary-soft)] rounded-full animate-bounce" />
+                                                        <div className="w-2 h-2 bg-[var(--primary-soft)] rounded-full animate-bounce delay-100" />
+                                                        <div className="w-2 h-2 bg-[var(--primary-soft)] rounded-full animate-bounce delay-200" />
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-sm text-[var(--text-muted)] italic leading-relaxed">&ldquo;{recommendation || t('landing.booking.table_map.ai_default')}&rdquo;</p>
+                                                )}
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
 
-                                </div>
+                                    {/* Floor Plan Canvas */}
+                                    <div className="reservation-table-map-pane flex-1 relative bg-[var(--surface-subtle)] overflow-hidden p-0 min-h-[46dvh] lg:min-h-0">
+                                        {isLayoutLoading && (
+                                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--card)]/70 backdrop-blur-sm">
+                                                <div className="flex flex-col items-center gap-3 text-[var(--text-muted)]">
+                                                    <div className="mini-loader" />
+                                                    <span className="text-xs font-semibold uppercase tracking-[0.2em]">{t('landing.booking.table_map.loading')}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {layout ? (
+                                            <div className="w-full h-full p-2 sm:p-4 lg:p-6">
+                                                <TableMap2D
+                                                    layout={layout}
+                                                    onLayoutChange={setLayout}
+                                                    onTableClick={handleMapTableClick}
+                                                    onTablePositionChange={() => undefined}
+                                                    readOnly
+                                                    selectedTableIds={selectedTables.map(t => t.id)}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-sm text-[var(--text-muted)]">
+                                                {t('landing.booking.table_map.no_map')}
+                                            </div>
+                                        )}
+                                    </div>
 
-                                <button
-                                    disabled={selectedTables.length === 0}
-                                    onClick={() => setStep(ReservationStep.CONFIRMATION)}
-                                    className={`
+                                    {/* Right Summary Panel */}
+                                    <div className="reservation-table-side-right hidden lg:flex w-80 bg-[var(--card)] p-10 flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.02)]">
+                                        <h3 className="text-2xl font-serif text-[var(--text)] mb-8 border-b border-[var(--border)] pb-5">{t('landing.booking.table_map.booking_title')}</h3>
+
+                                        <div className="flex-1 space-y-6">
+                                            {selectedTables.length > 0 ? (
+                                                <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                                                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-xs text-[var(--text-muted)] flex items-center justify-between gap-4">
+                                                        <span className="uppercase tracking-[0.2em] font-semibold">{t('landing.booking.table_map.total_capacity')}</span>
+                                                        <span className="inline-flex items-center justify-center text-[var(--primary)] font-bold text-sm px-3 py-1 rounded-full bg-[var(--primary-faint)] border border-[var(--primary-border)] leading-none text-center whitespace-nowrap min-h-[28px]">
+                                                            {totalSelectedCapacity} {t('landing.booking.table_map.guests')}
+                                                        </span>
+                                                    </div>
+                                                    {selectedTables.map(table => (
+                                                        <div key={table.id} className="bg-[var(--primary-faint)] rounded-2xl p-6 border border-[var(--primary-border)]">
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-[0.2em]">{t('landing.booking.table_map.selected_table_label')}</span>
+                                                                <span className="text-2xl font-bold text-[var(--primary)] leading-none">{table.label}</span>
+                                                            </div>
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center justify-between text-sm">
+                                                                    <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.floor')}</span>
+                                                                    <span className="font-semibold px-2.5 py-1 rounded-lg text-[11px] uppercase tracking-wider bg-[var(--surface-subtle)] text-[var(--text)]">
+                                                                        {table.zone}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center justify-between text-sm">
+                                                                    <span className="text-[var(--text-muted)]">{t('landing.booking.table_map.capacity')}</span>
+                                                                    <span className="font-semibold text-[var(--text)]">{table.capacity} {t('landing.booking.table_map.guests')}</span>
+                                                                </div>
+                                                            </div>
+                                                            {panoramaMap.has(table.id) && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => openPanoramaPreview(table)}
+                                                                    className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:brightness-110"
+                                                                    style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}
+                                                                >
+                                                                    <span className="material-symbols-outlined text-base">3d_rotation</span>
+                                                                    {t('landing.booking.table_map.view_360')}
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="reservation-empty-warning">
+                                                    <span className="material-symbols-outlined">info</span>
+                                                    <span>{t('landing.booking.table_map.no_table_selected')}</span>
+                                                </div>
+                                            )}
+
+                                        </div>
+
+                                        <button
+                                            disabled={selectedTables.length === 0}
+                                            onClick={handleConfirmTableSelection}
+                                            className={`
                     w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all transform hover:-translate-y-1 active:translate-y-0
                     ${selectedTables.length > 0 ? 'bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] shadow-[0_4px_14px_0_var(--primary-glow)]' : 'bg-[var(--surface-subtle)] text-[var(--text-muted)] cursor-not-allowed'}
                   `}
-                                >
-                                    {t('landing.booking.table_map.confirm_table')}
-                                </button>
-                            </div>
-
-                            {/* Mobile Sticky Footer */}
-                            <div className="reservation-table-mobile-footer lg:hidden p-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] bg-[var(--card)] border-t border-[var(--border)] flex flex-col gap-3">
-                                <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                                    <div>
-                                        <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">{t('landing.booking.table_map.mobile_selected')}</p>
-                                        <p className="font-bold text-[var(--text)] max-w-[70vw] sm:max-w-[56vw] truncate">
-                                            {selectedTables.length > 0
-                                                ? mobileSelectedTableSummary
-                                                : t('landing.booking.table_map.mobile_none')}
-                                        </p>
-                                        <p className="text-xs text-[var(--text-muted)]">
-                                            {t('landing.booking.table_map.total_capacity')}: {totalSelectedCapacity} {t('landing.booking.table_map.guests')}
-                                        </p>
-                                    </div>
-                                    <div className="flex w-full sm:w-auto items-center gap-2">
-                                        {mobilePanoramaTable && (
-                                            <button
-                                                type="button"
-                                                onClick={() => openPanoramaPreview(mobilePanoramaTable)}
-                                                className="flex-1 sm:flex-none px-4 py-2 border border-[var(--primary-border)] text-[var(--primary)] rounded-xl font-bold text-xs"
-                                            >
-                                                {t('landing.booking.table_map.view_360')}
-                                            </button>
-                                        )}
-                                        <button
-                                            disabled={selectedTables.length === 0}
-                                            onClick={() => setStep(ReservationStep.CONFIRMATION)}
-                                            className="flex-1 sm:flex-none px-5 py-2.5 bg-[var(--primary)] text-[var(--on-primary)] rounded-xl font-bold text-sm disabled:opacity-50"
                                         >
-                                            {t('landing.booking.table_map.mobile_confirm')}
+                                            {t('landing.booking.table_map.confirm_table')}
                                         </button>
                                     </div>
-                                </div>
 
-                                {selectedTables.length > 0 && (
-                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                                        {selectedTables.map((table) => (
-                                            <button
-                                                key={`mobile-chip-${table.id}`}
-                                                type="button"
-                                                onClick={() => panoramaMap.has(table.id) && openPanoramaPreview(table)}
-                                                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border ${panoramaMap.has(table.id)
-                                                    ? 'bg-[var(--primary-faint)] text-[var(--primary)] border-[var(--primary-border)]'
-                                                    : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]'
-                                                    }`}
-                                            >
-                                                #{table.label}
-                                            </button>
-                                        ))}
+                                    {/* Mobile Sticky Footer */}
+                                    <div className="reservation-table-mobile-footer lg:hidden p-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] bg-[var(--card)] border-t border-[var(--border)] flex flex-col gap-3">
+                                        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">{t('landing.booking.table_map.mobile_selected')}</p>
+                                                <p className="font-bold text-[var(--text)] max-w-[70vw] sm:max-w-[56vw] truncate">
+                                                    {selectedTables.length > 0
+                                                        ? mobileSelectedTableSummary
+                                                        : t('landing.booking.table_map.mobile_none')}
+                                                </p>
+                                                <p className="text-xs text-[var(--text-muted)]">
+                                                    {t('landing.booking.table_map.total_capacity')}: {totalSelectedCapacity} {t('landing.booking.table_map.guests')}
+                                                </p>
+                                            </div>
+                                            <div className="flex w-full sm:w-auto items-center gap-2">
+                                                {mobilePanoramaTable && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openPanoramaPreview(mobilePanoramaTable)}
+                                                        className="flex-1 sm:flex-none px-4 py-2 border border-[var(--primary-border)] text-[var(--primary)] rounded-xl font-bold text-xs"
+                                                    >
+                                                        {t('landing.booking.table_map.view_360')}
+                                                    </button>
+                                                )}
+                                                <button
+                                                    disabled={selectedTables.length === 0}
+                                                    onClick={handleConfirmTableSelection}
+                                                    className="flex-1 sm:flex-none px-5 py-2.5 bg-[var(--primary)] text-[var(--on-primary)] rounded-xl font-bold text-sm disabled:opacity-50"
+                                                >
+                                                    {t('landing.booking.table_map.mobile_confirm')}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {selectedTables.length > 0 && (
+                                            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                                                {selectedTables.map((table) => (
+                                                    <button
+                                                        key={`mobile-chip-${table.id}`}
+                                                        type="button"
+                                                        onClick={() => panoramaMap.has(table.id) && openPanoramaPreview(table)}
+                                                        className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border ${panoramaMap.has(table.id)
+                                                            ? 'bg-[var(--primary-faint)] text-[var(--primary)] border-[var(--primary-border)]'
+                                                            : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]'
+                                                            }`}
+                                                    >
+                                                        #{table.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                        </div>
+                                </div>
                             </div>
                         </div>
                     </div>,
@@ -1699,157 +1921,168 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     <div className="reservation-table-overlay reservation-flow-overlay" role="dialog" aria-modal="true" aria-label={t('landing.booking.confirm.title')}>
                         <div className="reservation-flow-overlay-panel reservation-confirm-overlay-panel fade-in">
                             <div className="reservation-confirm-shell w-full max-w-5xl">
-                        <StepIndicator active={3} t={t} className="mb-3 sm:mb-4" />
-
-                        {/* Back button */}
-                        <div className="reservation-confirm-back mb-6 px-2">
-                            <button
-                                onClick={() => setStep(ReservationStep.TABLE_SELECTION)}
-                                className="flex items-center gap-2 text-[var(--text-inverse)] opacity-70 hover:opacity-100 group transition-opacity"
-                            >
-                                <span className="material-symbols-outlined text-lg p-2 bg-white/10 rounded-full group-hover:bg-white/20">arrow_back</span>
-                                <span className="font-medium text-sm">{t('landing.booking.confirm.change_table')}</span>
-                            </button>
-                        </div>
-
-                        <div className="reservation-confirm-card bg-[var(--card)] rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-0 md:min-h-[520px]">
-                            {/* Left Summary Panel */}
-                            <div className="reservation-confirm-side-left md:w-[32%] bg-black text-white p-5 sm:p-6 md:p-7 flex flex-col relative overflow-hidden">
-                                <div className="absolute inset-0 bg-[var(--primary)] opacity-90" />
-                                <div className="absolute -top-10 -right-10 text-white opacity-10">
-                                    <span className="material-symbols-outlined text-[180px]">restaurant_menu</span>
+                                {/* Back button + Step indicator */}
+                                {/* Back button + Step indicator (Desktop) */}
+                                <div className="reservation-confirm-back hidden md:flex items-center justify-between gap-3 mb-4 sm:mb-5 px-2">
+                                    <button
+                                        onClick={() => setStep(ReservationStep.TABLE_SELECTION)}
+                                        className="flex items-center gap-2 text-[var(--text-inverse)] opacity-70 hover:opacity-100 group transition-opacity"
+                                    >
+                                        <span className="material-symbols-outlined text-lg p-2 bg-white/10 rounded-full group-hover:bg-white/20">arrow_back</span>
+                                        <span className="font-medium text-sm">{t('landing.booking.confirm.change_table')}</span>
+                                    </button>
+                                    <StepIndicator active={3} t={t} />
                                 </div>
 
-                                <div className="reservation-confirm-side-content relative z-10 h-full flex flex-col">
-                                    <h2 className="reservation-confirm-title font-serif mb-4 sm:mb-5 border-b border-white/20 pb-3 sm:pb-4 text-balance">{t('landing.booking.confirm.title')}</h2>
+                                <div className="reservation-confirm-card bg-[var(--card)] rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-0 md:min-h-[520px] relative isolate">
+                                    {/* Left Summary Panel */}
+                                    <div className="reservation-confirm-side-left md:w-[32%] bg-black text-white p-4 sm:p-5 md:p-7 flex flex-col relative overflow-hidden md:overflow-hidden shrink-0 rounded-t-2xl md:rounded-t-none md:rounded-l-[2.5rem] max-h-[36dvh] md:max-h-none">
+                                        <div className="absolute inset-0 bg-[var(--primary)] opacity-90 rounded-t-2xl md:rounded-t-none md:rounded-l-[2.5rem]" />
+                                        <div className="absolute -top-10 -right-10 text-white opacity-10 hidden md:block">
+                                            <span className="material-symbols-outlined text-[180px]">restaurant_menu</span>
+                                        </div>
 
-                                    <div className="reservation-confirm-metrics space-y-4 sm:space-y-5 md:space-y-6">
-                                        {[
-                                            { icon: 'calendar_today', label: t('landing.booking.confirm.date_time'), value: new Date(booking.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }), sub: booking.time },
-                                            { icon: 'table_restaurant', label: t('landing.booking.confirm.selected_table'), value: selectedTables.map(t => `Table ${t.label}`).join(', '), sub: `${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')}` },
-                                            { icon: 'group', label: t('landing.booking.confirm.party_size', { count: booking.guests }), value: `${booking.guests} ${t('landing.booking.table_map.guests')}`, sub: t('landing.booking.confirm.standard_seating') }
-                                        ].map((item, idx) => (
-                                            <div key={idx} className="reservation-confirm-metric-item flex gap-3 sm:gap-4">
-                                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
-                                                    <span className="material-symbols-outlined text-white">{item.icon}</span>
+                                        <div className="reservation-confirm-side-content relative z-10 h-full flex flex-col">
+                                            {/* Back button + Step indicator (Mobile) */}
+                                            <div className="md:hidden flex items-center justify-between gap-3 mb-4 pb-3 border-b border-white/20">
+                                                <button
+                                                    onClick={() => setStep(ReservationStep.TABLE_SELECTION)}
+                                                    className="flex items-center gap-1.5 text-white opacity-80 hover:opacity-100 transition-opacity"
+                                                >
+                                                    <span className="material-symbols-outlined text-base p-1.5 bg-white/10 rounded-full">arrow_back</span>
+                                                    <span className="font-medium text-[11px]">{t('landing.booking.confirm.change_table')}</span>
+                                                </button>
+                                                <StepIndicator active={3} t={t} inverted />
+                                            </div>
+
+                                            <h2 className="reservation-confirm-title text-lg md:text-2xl font-serif mb-2 md:mb-5 border-b border-white/20 md:border-b-0 pb-2 md:pb-4 text-balance">{t('landing.booking.confirm.title')}</h2>
+
+                                            <div className="reservation-confirm-metrics grid grid-cols-3 md:grid-cols-1 gap-2 md:gap-6">
+                                                {[
+                                                    { icon: 'calendar_today', label: t('landing.booking.confirm.date_time'), value: new Date(booking.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }), sub: booking.time },
+                                                    { icon: 'table_restaurant', label: t('landing.booking.confirm.selected_table'), value: selectedTables.map(t => `#${t.label}`).join(', '), sub: `${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')}` },
+                                                    { icon: 'group', label: t('landing.booking.confirm.party_size', { count: booking.guests }), value: `${booking.guests} ${t('landing.booking.table_map.guests')}`, sub: t('landing.booking.confirm.standard_seating') }
+                                                ].map((item, idx) => (
+                                                    <div key={idx} className="reservation-confirm-metric-item flex flex-col md:flex-row gap-1 md:gap-4 md:items-center min-w-0">
+                                                        <div className="w-7 h-7 md:w-10 md:h-10 mb-0.5 md:mb-0 rounded-lg md:rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
+                                                            <span className="material-symbols-outlined text-white text-[14px] md:text-xl">{item.icon}</span>
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-white/70 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.14em] md:tracking-widest mb-0.5 truncate">{item.label}</p>
+                                                            <p className="text-[12px] md:text-[0.98rem] font-bold leading-snug truncate">{item.value}</p>
+                                                            <p className="hidden md:block text-white/80 text-[10px] md:text-xs">{item.sub}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="reservation-confirm-address hidden md:block mt-3 md:mt-auto pt-3 md:pt-5 border-t border-white/20">
+                                                <div className="flex items-start gap-2 md:gap-3 opacity-80">
+                                                    <span className="material-symbols-outlined text-[15px] md:text-base mt-0.5">location_on</span>
+                                                    <p className="text-[11px] md:text-sm font-medium leading-relaxed text-pretty">
+                                                        {tenant?.businessAddressLine1 || '—'}{tenant?.businessAddressLine2 ? `, ${tenant?.businessAddressLine2}` : ''}
+                                                    </p>
                                                 </div>
-                                                <div>
-                                                    <p className="text-white/65 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-0.5">{item.label}</p>
-                                                    <p className="text-[0.9rem] sm:text-[0.98rem] font-bold text-pretty leading-snug">{item.value}</p>
-                                                    <p className="text-white/80 text-[11px] sm:text-xs">{item.sub}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Right Form Panel */}
+                                    <div className="reservation-confirm-side-right md:w-[68%] p-4 sm:p-6 md:p-8 bg-[var(--card)] rounded-b-2xl md:rounded-b-none md:rounded-r-[2.5rem]">
+                                        <div className="mb-4 md:mb-5">
+                                            <h3 className="text-xl md:text-[1.65rem] font-serif text-[var(--text)] mb-1 md:mb-2 text-balance">{t('landing.booking.confirm.finalize_title')}</h3>
+                                            <p className="text-[12px] md:text-sm text-[var(--text-muted)] font-medium text-pretty">{t('landing.booking.confirm.finalize_desc')}</p>
+                                            {user && (
+                                                <div className="mt-2 flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-[var(--primary)] font-semibold">
+                                                    <span className="material-symbols-outlined text-sm">verified_user</span>
+                                                    <span>{t('landing.booking.confirm.logged_in_hint', { name: user.name || user.fullName || user.email })}</span>
                                                 </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="reservation-confirm-address mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-white/20">
-                                        <div className="flex items-start gap-3 opacity-70">
-                                            <span className="material-symbols-outlined text-base mt-0.5">location_on</span>
-                                            <p className="text-xs sm:text-sm font-medium leading-relaxed text-pretty">
-                                                {tenant?.businessAddressLine1 || '—'}<br />
-                                                {tenant?.businessAddressLine2 || ''}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Right Form Panel */}
-                            <div className="reservation-confirm-side-right md:w-[68%] p-5 sm:p-6 md:p-8 bg-[var(--card)]">
-                                <div className="mb-4 sm:mb-5">
-                                    <h3 className="text-[1.35rem] sm:text-[1.55rem] md:text-[1.65rem] font-serif text-[var(--text)] mb-2 text-balance">{t('landing.booking.confirm.finalize_title')}</h3>
-                                    <p className="text-[13px] sm:text-sm text-[var(--text-muted)] font-medium text-pretty">{t('landing.booking.confirm.finalize_desc')}</p>
-                                    {user && (
-                                        <div className="mt-2 flex items-center gap-2 text-[11px] sm:text-xs text-[var(--primary)] font-semibold">
-                                            <span className="material-symbols-outlined text-sm">verified_user</span>
-                                            <span>{t('landing.booking.confirm.logged_in_hint', { name: user.name || user.fullName || user.email })}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <form className="reservation-confirm-form">
-                                    <div className="reservation-confirm-grid grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                                        <div className="group">
-                                            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-widest">{t('landing.booking.confirm.full_name')}</label>
-                                            <div className="relative">
-                                                <span className="material-symbols-outlined absolute left-3.5 top-3 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">person</span>
-                                                <input
-                                                    type="text"
-                                                    className="reservation-confirm-input w-full pl-11 pr-3.5 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
-                                                    value={userDetails.name}
-                                                    onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="group">
-                                            <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-widest">{t('landing.booking.confirm.phone_number')}</label>
-                                            <div className="relative">
-                                                <span className="material-symbols-outlined absolute left-3.5 top-3 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">call</span>
-                                                <input
-                                                    type="tel"
-                                                    className="reservation-confirm-input w-full pl-11 pr-3.5 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
-                                                    value={userDetails.phone}
-                                                    onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="group">
-                                        <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-widest">{t('landing.booking.confirm.email')}</label>
-                                        <div className="relative">
-                                            <span className="material-symbols-outlined absolute left-3.5 top-3 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors">mail</span>
-                                            <input
-                                                type="email"
-                                                className="reservation-confirm-input w-full pl-11 pr-3.5 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none"
-                                                value={userDetails.email}
-                                                onChange={(e) => setUserDetails({ ...userDetails, email: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="group">
-                                        <label className="block text-[11px] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-widest">{t('landing.booking.confirm.special_requests')} <span className="text-[var(--text-muted)] font-normal ml-1">{t('landing.booking.confirm.special_requests_optional')}</span></label>
-                                        <textarea
-                                            className="reservation-confirm-textarea w-full p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm focus:bg-[var(--card)] focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none h-24"
-                                            value={userDetails.requests}
-                                            onChange={(e) => setUserDetails({ ...userDetails, requests: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div className="pt-2 sm:pt-3">
-                                        {submitError && (
-                                            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-lg">error</span>
-                                                {submitError}
-                                            </div>
-                                        )}
-                                        <button
-                                            type="button"
-                                            onClick={handleCompleteReservation}
-                                            disabled={isSubmitting}
-                                            className="reservation-confirm-submit w-full py-3.5 bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] font-bold text-sm sm:text-base rounded-xl shadow-xl shadow-[var(--primary-glow)] transition-all transform hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 group"
-                                        >
-                                            {isSubmitting ? (
-                                                <>
-                                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                    <span>{t('landing.booking.confirm.processing')}</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span>{t('landing.booking.confirm.complete_btn')}</span>
-                                                    <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">check_circle</span>
-                                                </>
                                             )}
-                                        </button>
-                                        <p className="text-center text-[10px] text-[var(--text-muted)] mt-4 leading-relaxed">
-                                            {t('landing.booking.confirm.terms').replace('<a>', '').replace('</a>', '')}
-                                        </p>
+                                        </div>
+
+                                        <form className="reservation-confirm-form flex flex-col gap-3 md:gap-4">
+                                            <div className="reservation-confirm-grid grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
+                                                <div className="group">
+                                                    <label className="block text-[10px] md:text-[11px] font-bold text-[var(--text-muted)] mb-1.5 md:mb-2 uppercase tracking-widest">{t('landing.booking.confirm.full_name')}</label>
+                                                    <div className="relative">
+                                                        <span className="material-symbols-outlined absolute left-3 md:left-3.5 top-2.5 md:top-3 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors text-[18px] md:text-[24px]">person</span>
+                                                        <input
+                                                            type="text"
+                                                            className="reservation-confirm-input w-full pl-9 md:pl-11 pr-3 py-2.5 md:py-3 rounded-lg border border-[var(--border)] bg-transparent md:bg-[var(--surface-subtle)] text-sm focus:bg-[var(--card)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all outline-none"
+                                                            value={userDetails.name}
+                                                            onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="group">
+                                                    <label className="block text-[10px] md:text-[11px] font-bold text-[var(--text-muted)] mb-1.5 md:mb-2 uppercase tracking-widest">{t('landing.booking.confirm.phone_number')}</label>
+                                                    <div className="relative">
+                                                        <span className="material-symbols-outlined absolute left-3 md:left-3.5 top-2.5 md:top-3 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors text-[18px] md:text-[24px]">call</span>
+                                                        <input
+                                                            type="tel"
+                                                            className="reservation-confirm-input w-full pl-9 md:pl-11 pr-3 py-2.5 md:py-3 rounded-lg border border-[var(--border)] bg-transparent md:bg-[var(--surface-subtle)] text-sm focus:bg-[var(--card)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all outline-none"
+                                                            value={userDetails.phone}
+                                                            onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="group">
+                                                <label className="block text-[10px] md:text-[11px] font-bold text-[var(--text-muted)] mb-1.5 md:mb-2 uppercase tracking-widest">{t('landing.booking.confirm.email')}</label>
+                                                <div className="relative">
+                                                    <span className="material-symbols-outlined absolute left-3 md:left-3.5 top-2.5 md:top-3 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors text-[18px] md:text-[24px]">mail</span>
+                                                    <input
+                                                        type="email"
+                                                        className="reservation-confirm-input w-full pl-9 md:pl-11 pr-3 py-2.5 md:py-3 rounded-lg border border-[var(--border)] bg-transparent md:bg-[var(--surface-subtle)] text-sm focus:bg-[var(--card)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all outline-none"
+                                                        value={userDetails.email}
+                                                        onChange={(e) => setUserDetails({ ...userDetails, email: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="group">
+                                                <label className="block text-[10px] md:text-[11px] font-bold text-[var(--text-muted)] mb-1.5 md:mb-2 uppercase tracking-widest">{t('landing.booking.confirm.special_requests')} <span className="text-[var(--text-muted)] font-normal ml-1">{t('landing.booking.confirm.special_requests_optional')}</span></label>
+                                                <textarea
+                                                    className="reservation-confirm-textarea w-full p-3 md:p-3.5 rounded-lg border border-[var(--border)] bg-transparent md:bg-[var(--surface-subtle)] text-sm focus:bg-[var(--card)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all outline-none resize-none h-20 md:h-24"
+                                                    value={userDetails.requests}
+                                                    onChange={(e) => setUserDetails({ ...userDetails, requests: e.target.value })}
+                                                />
+                                            </div>
+
+                                            <div className="pt-2 sm:pt-3">
+                                                {submitError && (
+                                                    <div className="mb-3 md:mb-4 p-2.5 md:p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center gap-2">
+                                                        <span className="material-symbols-outlined text-[18px] md:text-lg">error</span>
+                                                        {submitError}
+                                                    </div>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={handleCompleteReservation}
+                                                    disabled={isSubmitting}
+                                                    className="reservation-confirm-submit w-full py-3 md:py-3.5 bg-[var(--primary)] hover:brightness-110 text-[var(--on-primary)] font-bold text-sm sm:text-base rounded-xl shadow-[0_4px_14px_0_var(--primary-glow)] transition-all transform hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-2.5 group"
+                                                >
+                                                    {isSubmitting ? (
+                                                        <>
+                                                            <span className="w-4 h-4 md:w-5 md:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                            <span>{t('landing.booking.confirm.processing')}</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span>{t('landing.booking.confirm.complete_btn')}</span>
+                                                            <span className="material-symbols-outlined text-[18px] md:text-[24px] group-hover:translate-x-1 transition-transform">check_circle</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                                <p className="text-center text-[9px] md:text-[10px] text-[var(--text-muted)] mt-3 md:mt-4 leading-relaxed">
+                                                    {t('landing.booking.confirm.terms').replace('<a>', '').replace('</a>', '')}
+                                                </p>
+                                            </div>
+                                        </form>
                                     </div>
-                                </form>
+                                </div>
                             </div>
-                        </div>
-                    </div>
                         </div>
                     </div>,
                     document.body
@@ -1857,92 +2090,112 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                 {step === ReservationStep.SUCCESS && typeof document !== 'undefined' && createPortal(
                     <div className="reservation-table-overlay reservation-flow-overlay" role="dialog" aria-modal="true" aria-label={t('landing.booking.success.title')}>
-                        <div className="reservation-flow-overlay-panel reservation-success-overlay-panel fade-in">
+                        <div
+                            className="reservation-flow-overlay-backdrop absolute inset-0 transition-opacity"
+                            onClick={() => {
+                                setStep(ReservationStep.SEARCH);
+                                setBooking(prev => ({ ...prev, time: '' }));
+                                setSelectedTables([]);
+                            }}
+                        />
+                        <div className="reservation-flow-overlay-panel reservation-success-overlay-panel fade-in relative pointer-events-auto">
                             <div className="reservation-success-shell max-w-lg w-full text-center bg-[var(--card)] rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 shadow-2xl relative overflow-hidden">
-                        {/* Green top accent */}
-                        <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--success)]" />
-
-                        {/* Success icon */}
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[var(--success-soft)] rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5">
-                            <span className="material-symbols-outlined text-[var(--success)] text-3xl sm:text-4xl">verified</span>
-                        </div>
-
-                        <h2 className="text-xl sm:text-2xl font-serif font-bold text-[var(--text)] mb-2 text-balance">{t('landing.booking.success.title')}</h2>
-                        <p className="text-[var(--text-muted)] text-sm mb-4 sm:mb-6 leading-relaxed px-1 sm:px-2 text-pretty">
-                            {t('landing.booking.success.thank_you')}{' '}
-                            <span className="text-[var(--text)] font-semibold">{userDetails.name}</span>.{' '}
-                            {t('landing.booking.success.table_label')}{' '}
-                            <span className="text-[var(--primary)] font-bold">
-                                {selectedTables.length > 0 ? selectedTables.map(t => `#${t.label}`).join(', ') : ''}
-                            </span>
-                            {selectedTables.length > 0 ? ` (${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')})` : ''} {t('landing.booking.success.reserved_for')}{' '}
-                            <span className="text-[var(--text)] font-semibold">
-                                {booking.guests} {t('landing.booking.success.guests')}
-                            </span>{' '}
-                            {t('landing.booking.success.on')}{' '}
-                            <span className="text-[var(--text)] font-semibold">
-                                {new Date(booking.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })}
-                            </span>{' '}
-                            {t('landing.booking.success.at')}{' '}
-                            <span className="text-[var(--text)] font-semibold">{booking.time}</span>.
-                        </p>
-
-                        {/* Info block */}
-                        <div className="bg-[var(--surface)] rounded-2xl p-3.5 sm:p-4 mb-5 sm:mb-6 text-left border border-[var(--border)] space-y-3">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold">{t('landing.booking.success.booking_ref')}</span>
-                                <span className="text-sm font-bold text-[var(--primary)] font-mono tracking-wider">
-                                    #{confirmationCode || reservationId || '---'}
-                                </span>
-                            </div>
-                            <div className="h-px bg-[var(--border)]" />
-
-                            <div className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
-                                <span className="material-symbols-outlined text-base text-[var(--text-muted)] mt-0.5">mail</span>
-                                <div className="min-w-0">
-                                    <div className="text-xs uppercase tracking-wide">{t('landing.booking.success.confirmation_sent', { defaultValue: 'Email xác nhận gửi tới:' })}</div>
-                                    <div className="text-[var(--text)] font-medium break-all">{userDetails.email || '—'}</div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
-                                <span className="material-symbols-outlined text-base text-[var(--text-muted)] mt-0.5">phone</span>
-                                <div className="min-w-0">
-                                    <div className="text-xs uppercase tracking-wide">{t('landing.booking.success.phone_label', { defaultValue: 'Phone' })}</div>
-                                    <div className="text-[var(--text)] font-medium">{userDetails.phone || '—'}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {depositCheckoutUrl && (
-                            <div className="mb-4">
+                                {/* Close Button */}
                                 <button
                                     onClick={() => {
-                                        window.location.href = depositCheckoutUrl;
+                                        setStep(ReservationStep.SEARCH);
+                                        setBooking(prev => ({ ...prev, time: '' }));
+                                        setSelectedTables([]);
                                     }}
-                                    className="w-full py-3.5 mb-2 bg-[var(--success)] hover:brightness-110 text-white font-bold rounded-xl transition-all text-sm sm:text-base"
+                                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--surface)] hover:bg-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors z-10"
                                 >
-                                    {t('landing.booking.success.pay_deposit_now', { defaultValue: 'Thanh toán cọc ngay' })}
+                                    <span className="material-symbols-outlined text-lg">close</span>
                                 </button>
-                                {depositPaymentDeadline && (
-                                    <p className="text-xs text-[var(--danger)] text-center">
-                                        {t('landing.booking.success.deposit_deadline', { defaultValue: 'Hạn thanh toán cọc' })}: {new Date(depositPaymentDeadline).toLocaleString('vi-VN')}
-                                    </p>
-                                )}
-                            </div>
-                        )}
 
-                        <button
-                            onClick={() => {
-                                const detailToken = (confirmationCode || reservationId || '').trim();
-                                if (!detailToken) return;
-                                window.location.href = `/your-reservation/${encodeURIComponent(detailToken)}`;
-                            }}
-                            disabled={!confirmationCode && !reservationId}
-                            className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
-                            {t('landing.booking.success.view_details', { defaultValue: 'Xem chi tiết' })}
-                        </button>
+                                {/* Green top accent */}
+                                <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--success)]" />
+
+                                {/* Success icon */}
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[var(--success-soft)] rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5">
+                                    <span className="material-symbols-outlined text-[var(--success)] text-3xl sm:text-4xl">verified</span>
+                                </div>
+
+                                <h2 className="text-xl sm:text-2xl font-serif font-bold text-[var(--text)] mb-2 text-balance">{t('landing.booking.success.title')}</h2>
+                                <p className="text-[var(--text-muted)] text-sm mb-4 sm:mb-6 leading-relaxed px-1 sm:px-2 text-pretty">
+                                    {t('landing.booking.success.thank_you')}{' '}
+                                    <span className="text-[var(--text)] font-semibold">{userDetails.name}</span>.{' '}
+                                    {t('landing.booking.success.table_label')}{' '}
+                                    <span className="text-[var(--primary)] font-bold">
+                                        {selectedTables.length > 0 ? selectedTables.map(t => `#${t.label}`).join(', ') : ''}
+                                    </span>
+                                    {selectedTables.length > 0 ? ` (${Array.from(new Set(selectedTables.map(t => t.zone))).join(', ')})` : ''} {t('landing.booking.success.reserved_for')}{' '}
+                                    <span className="text-[var(--text)] font-semibold">
+                                        {booking.guests} {t('landing.booking.success.guests')}
+                                    </span>{' '}
+                                    {t('landing.booking.success.on')}{' '}
+                                    <span className="text-[var(--text)] font-semibold">
+                                        {new Date(booking.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                    </span>{' '}
+                                    {t('landing.booking.success.at')}{' '}
+                                    <span className="text-[var(--text)] font-semibold">{booking.time}</span>.
+                                </p>
+
+                                {/* Info block */}
+                                <div className="bg-[var(--surface)] rounded-2xl p-3.5 sm:p-4 mb-5 sm:mb-6 text-left border border-[var(--border)] space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold">{t('landing.booking.success.booking_ref')}</span>
+                                        <span className="text-sm font-bold text-[var(--primary)] font-mono tracking-wider">
+                                            #{confirmationCode || reservationId || '---'}
+                                        </span>
+                                    </div>
+                                    <div className="h-px bg-[var(--border)]" />
+
+                                    <div className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                                        <span className="material-symbols-outlined text-base text-[var(--text-muted)] mt-0.5">mail</span>
+                                        <div className="min-w-0">
+                                            <div className="text-xs uppercase tracking-wide">{t('landing.booking.success.confirmation_sent', { defaultValue: 'Email xác nhận gửi tới:' })}</div>
+                                            <div className="text-[var(--text)] font-medium break-all">{userDetails.email || '—'}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                                        <span className="material-symbols-outlined text-base text-[var(--text-muted)] mt-0.5">phone</span>
+                                        <div className="min-w-0">
+                                            <div className="text-xs uppercase tracking-wide">{t('landing.booking.success.phone_label', { defaultValue: 'Phone' })}</div>
+                                            <div className="text-[var(--text)] font-medium">{userDetails.phone || '—'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {depositCheckoutUrl && (
+                                    <div className="mb-4">
+                                        <button
+                                            onClick={() => {
+                                                window.location.href = depositCheckoutUrl;
+                                            }}
+                                            className="w-full py-3.5 mb-2 bg-[var(--success)] hover:brightness-110 text-white font-bold rounded-xl transition-all text-sm sm:text-base"
+                                        >
+                                            {t('landing.booking.success.pay_deposit_now', { defaultValue: 'Thanh toán cọc ngay' })}
+                                        </button>
+                                        {depositPaymentDeadline && (
+                                            <p className="text-xs text-[var(--danger)] text-center">
+                                                {t('landing.booking.success.deposit_deadline', { defaultValue: 'Hạn thanh toán cọc' })}: {new Date(depositPaymentDeadline).toLocaleString('vi-VN')}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => {
+                                        const detailToken = (confirmationCode || reservationId || '').trim();
+                                        if (!detailToken) return;
+                                        window.location.href = `/your-reservation/${encodeURIComponent(detailToken)}`;
+                                    }}
+                                    disabled={!confirmationCode && !reservationId}
+                                    className="w-full py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] font-bold rounded-xl transition-all text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                    {t('landing.booking.success.view_details', { defaultValue: 'Xem chi tiết' })}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1967,438 +2220,6 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 }}
             />
 
-            <style jsx global>{`
-                .reservation-date-picker.ant-picker {
-                    width: 100% !important;
-                    height: 54px !important;
-                    min-height: 54px !important;
-                    border-radius: 12px !important;
-                    border: 1px solid var(--border) !important;
-                    background: var(--surface) !important;
-                    color: var(--text) !important;
-                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-                    padding: 0 12px !important;
-                    gap: 10px !important;
-                }
-
-                .reservation-empty-warning {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    border-radius: 16px;
-                    border: 1px solid var(--warning-border);
-                    background: var(--warning-soft);
-                    padding: 12px 16px;
-                    color: var(--warning);
-                }
-
-                .reservation-empty-warning .material-symbols-outlined {
-                    font-size: 16px;
-                }
-
-                .reservation-empty-warning span:last-child {
-                    font-weight: 600;
-                }
-
-                .reservation-date-picker .ant-picker-input > input {
-                    color: var(--text) !important;
-                    font-weight: 600 !important;
-                }
-
-                .reservation-date-picker.ant-picker-focused {
-                    border-color: var(--primary) !important;
-                    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 22%, transparent) !important;
-                }
-
-                .reservation-date-popup {
-                    z-index: 1200 !important;
-                    background: var(--card) !important;
-                    border: 1px solid var(--border) !important;
-                    border-radius: 12px !important;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
-                }
-
-                .reservation-date-popup .ant-picker-panel-container,
-                .reservation-date-popup .ant-picker-panel,
-                .reservation-date-popup .ant-picker-date-panel,
-                .reservation-date-popup .ant-picker-content {
-                    background: var(--card) !important;
-                    color: var(--text) !important;
-                }
-
-                .reservation-date-popup .ant-picker-header,
-                .reservation-date-popup .ant-picker-footer {
-                    color: var(--text) !important;
-                    border-color: var(--border) !important;
-                }
-
-                .reservation-date-popup .ant-picker-header button,
-                .reservation-date-popup .ant-picker-header-view,
-                .reservation-date-popup .ant-picker-content th,
-                .reservation-date-popup .ant-picker-content td,
-                .reservation-date-popup .ant-picker-cell .ant-picker-cell-inner,
-                .reservation-date-popup .ant-picker-now-btn,
-                .reservation-date-popup .ant-picker-today-btn {
-                    color: var(--text) !important;
-                }
-
-                .reservation-date-popup .ant-picker-cell-disabled .ant-picker-cell-inner {
-                    color: var(--text-muted) !important;
-                    opacity: 0.45;
-                }
-
-                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
-                    border-color: var(--primary) !important;
-                }
-
-                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner,
-                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-range-start .ant-picker-cell-inner,
-                .reservation-date-popup .ant-picker-cell-in-view.ant-picker-cell-range-end .ant-picker-cell-inner {
-                    background: color-mix(in srgb, var(--primary) 24%, transparent) !important;
-                    color: var(--text) !important;
-                }
-
-                .reservation-date-popup .ant-picker-cell:hover .ant-picker-cell-inner {
-                    background: var(--surface-subtle) !important;
-                }
-
-                .reservation-pill {
-                    display: flex;
-                    align-items: stretch;
-                    background: color-mix(in srgb, var(--card) 92%, transparent);
-                    border: 1px solid var(--border);
-                    border-radius: 999px;
-                    padding: 8px;
-                    gap: 6px;
-                    backdrop-filter: blur(26px);
-                    -webkit-backdrop-filter: blur(26px);
-                    box-shadow: var(--shadow-lg);
-                }
-
-                .pill-segment {
-                    flex: 1;
-                    min-width: 0;
-                    padding: 12px 20px;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    gap: 6px;
-                    border-radius: 999px;
-                    transition: background 0.2s ease, box-shadow 0.2s ease;
-                }
-
-                .pill-segment:hover {
-                    background: color-mix(in srgb, var(--text) 6%, transparent);
-                    box-shadow: inset 0 0 0 1px var(--stroke-subtle);
-                }
-
-                .pill-label {
-                    font-size: 10px;
-                    font-weight: 700;
-                    letter-spacing: 0.22em;
-                    text-transform: uppercase;
-                    color: var(--primary);
-                }
-
-                .pill-meta {
-                    margin-left: 6px;
-                    font-weight: 500;
-                    letter-spacing: 0.08em;
-                    font-size: 9px;
-                    color: var(--text-muted);
-                }
-
-                .pill-divider {
-                    width: 1px;
-                    margin: 12px 0;
-                    background: var(--stroke-subtle);
-                    border-radius: 999px;
-                }
-
-                .pill-control .ant-select-selector,
-                .pill-control .ant-picker,
-                .pill-control.ant-picker {
-                    height: 42px !important;
-                    min-height: 42px !important;
-                    padding-left: 0 !important;
-                    padding-right: 0 !important;
-                    background: transparent !important;
-                    border: none !important;
-                    box-shadow: none !important;
-                }
-
-                .pill-control .ant-select-selector {
-                    align-items: center !important;
-                }
-
-                .pill-control .ant-select-selection-item,
-                .pill-control .ant-picker-input > input {
-                    color: var(--text) !important;
-                    font-weight: 600;
-                    font-size: 15px;
-                }
-
-                .pill-control .ant-select-selection-placeholder {
-                    color: var(--text-muted) !important;
-                }
-
-                .pill-control .ant-picker-input {
-                    justify-content: center;
-                }
-
-                .pill-control .ant-picker-input > input {
-                    padding-left: 0;
-                    text-align: center;
-                }
-
-                .pill-control .ant-select-arrow,
-                .pill-control .ant-picker-suffix {
-                    color: var(--text-muted) !important;
-                }
-
-                .pill-control .ant-picker-prefix,
-                .pill-control .ant-select-prefix {
-                    color: var(--primary) !important;
-                }
-
-                .pill-time-input {
-                    width: 100%;
-                    height: 42px;
-                    border: none;
-                    background: transparent;
-                    color: var(--text);
-                    font-size: 15px;
-                    font-weight: 600;
-                    text-align: center;
-                    outline: none;
-                    padding: 0;
-                    cursor: pointer;
-                }
-
-                .pill-time-input::-webkit-calendar-picker-indicator {
-                    opacity: 0.6;
-                    cursor: pointer;
-                }
-
-                .pill-time-input:disabled {
-                    color: var(--text-muted);
-                    opacity: 0.7;
-                    cursor: not-allowed;
-                }
-
-                .tp-ui {
-                    --tp-bg: var(--card);
-                    --tp-surface: var(--surface);
-                    --tp-input-bg: var(--surface-subtle);
-                    --tp-text: var(--text);
-                    --tp-text-secondary: var(--text-muted);
-                    --tp-primary: var(--primary);
-                    --tp-on-primary: var(--on-primary);
-                    --tp-primary-container: var(--primary-faint);
-                    --tp-on-primary-container: var(--text);
-                    --tp-outline: var(--primary);
-                    --tp-outline-variant: var(--border);
-                    --tp-border: var(--border);
-                    --tp-surface-hover: color-mix(in srgb, var(--primary) 14%, var(--surface));
-                    --tp-backdrop: color-mix(in srgb, black 55%, transparent);
-                    --tp-shadow: 0 24px 42px rgba(0, 0, 0, 0.24);
-                }
-
-                .tp-ui .tp-ui-wrapper {
-                    border: 1px solid var(--border);
-                    font-family: inherit;
-                }
-
-                .tp-ui .tp-ui-cancel-btn,
-                .tp-ui .tp-ui-ok-btn {
-                    font-weight: 700;
-                }
-
-                .pill-guest-row {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-
-                .pill-guest-count {
-                    font-size: 16px;
-                    font-weight: 700;
-                    color: var(--text);
-                }
-
-                .pill-guest-actions {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 6px;
-                }
-
-                .pill-step-btn {
-                    width: 30px;
-                    height: 30px;
-                    border-radius: 999px;
-                    border: 1px solid var(--stroke-subtle);
-                    background: transparent;
-                    color: var(--text);
-                    font-size: 16px;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.2s ease;
-                }
-
-                .pill-step-btn:hover {
-                    border-color: var(--primary);
-                    color: var(--primary);
-                    background: color-mix(in srgb, var(--primary) 12%, transparent);
-                }
-
-                .pill-submit {
-                    padding: 0 30px;
-                    background: var(--primary);
-                    color: var(--on-primary);
-                    border: none;
-                    border-radius: 999px;
-                    font-weight: 700;
-                    font-size: 14px;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    white-space: nowrap;
-                    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
-                    transition: all 0.2s ease;
-                }
-
-                .pill-submit:hover {
-                    filter: brightness(1.08);
-                    transform: translateY(-1px);
-                }
-
-                .mini-loader {
-                    width: 28px;
-                    height: 28px;
-                    border-radius: 999px;
-                    border: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
-                    border-top-color: var(--primary);
-                    animation: miniSpin 0.8s linear infinite;
-                }
-
-                @keyframes miniSpin {
-                    to { transform: rotate(360deg); }
-                }
-
-                @media (max-width: 1024px) {
-                    .reservation-pill {
-                        flex-direction: column;
-                        border-radius: 24px;
-                    }
-
-                    .pill-divider {
-                        width: 100%;
-                        height: 1px;
-                        margin: 0;
-                    }
-
-                    .pill-submit {
-                        width: 100%;
-                        justify-content: center;
-                    }
-                }
-
-                @media (max-width: 640px) {
-                    .reservation-pill {
-                        padding: 6px;
-                        border-radius: 18px;
-                        gap: 4px;
-                    }
-
-                    .pill-segment {
-                        padding: 10px 12px;
-                        border-radius: 14px;
-                    }
-
-                    .pill-control .ant-select-selection-item,
-                    .pill-control .ant-picker-input > input,
-                    .pill-time-input {
-                        font-size: 14px;
-                    }
-
-                    .pill-submit {
-                        min-height: 46px;
-                        padding: 0 18px;
-                    }
-                }
-
-                .reservation-time-popup,
-                .reservation-guest-popup {
-                    z-index: 1200 !important;
-                    background: var(--card) !important;
-                    border: 1px solid var(--border) !important;
-                    border-radius: 12px !important;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
-                    padding: 6px !important;
-                    overscroll-behavior: contain;
-                }
-
-                .reservation-time-popup .ant-select-dropdown,
-                .reservation-time-popup .ant-select-item {
-                    background: var(--card) !important;
-                    color: var(--text) !important;
-                    border-color: var(--border) !important;
-                }
-
-                .reservation-time-popup .ant-select-item {
-                    color: var(--text) !important;
-                    border-radius: 8px !important;
-                    font-weight: 600 !important;
-                }
-
-                .reservation-time-popup .ant-select-item-option-active {
-                    background: var(--surface-subtle) !important;
-                }
-
-                .reservation-time-popup .ant-select-item-option-selected {
-                    background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
-                    color: var(--text) !important;
-                }
-
-                .reservation-time-popup .rc-virtual-list-holder {
-                    max-height: min(280px, 45vh) !important;
-                    overflow-y: auto !important;
-                    overscroll-behavior: contain;
-                    -webkit-overflow-scrolling: touch;
-                }
-
-                .reservation-time-popup .ant-select-item-option-disabled {
-                    opacity: 0.35;
-                }
-
-                .reservation-time-popup .rc-virtual-list-holder,
-                .reservation-guest-popup .rc-virtual-list-holder {
-                    overscroll-behavior: contain;
-                }
-
-                .reservation-guest-popup .ant-select-item {
-                    color: var(--text) !important;
-                    border-radius: 8px !important;
-                    font-weight: 600 !important;
-                }
-
-                .reservation-guest-popup .ant-select-item-option-active {
-                    background: var(--surface-subtle) !important;
-                }
-
-                .reservation-guest-popup .ant-select-item-option-selected {
-                    background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
-                    color: var(--text) !important;
-                }
-
-                /* Guest stepper InputNumber */
-                .reservation-guest-stepper .ant-input-number {
-                    border: none !important;
-                    box-shadow: none !important;
-                    background: transparent !important;
-                }
-            `}</style>
 
             {/* Footer Branding */}
             <footer className="relative z-10 py-10 text-center">

@@ -7,13 +7,13 @@ import type { CartItem } from "@/lib/types/menu";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
 } from "react";
 import { useTenant } from "./TenantContext";
 
@@ -34,11 +34,13 @@ interface CartContextType {
   cartItemCount: number;
   totalCartAmount: number;
   totalOrderAmount: number;
+  activeOrderId: string | null;
 
   // Cart actions
   addToCart: (item: CartItem) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
+  updateNote: (itemId: string, note: string) => void;
   clearCart: () => void;
 
   // Order actions
@@ -59,11 +61,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [messageApi, contextHolder] = message.useMessage();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [orderedItems, setOrderedItems] = useState<CartItem[]>([]);
+  const [orderedSubTotal, setOrderedSubTotal] = useState<number>(0);
   const [cartModalOpen, setCartModalOpen] = useState(false);
   const [activeCartTab, setActiveCartTabState] = useState<string>("1");
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [orderTableId, setOrderTableId] = useState<string | undefined>();
   const [orderCustomerId, setOrderCustomerId] = useState<string | undefined>();
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const loadedOrderTableIdRef = useRef<string | undefined>(undefined);
 
   // Computed values
@@ -81,14 +85,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [cartItems],
   );
 
-  const totalOrderAmount = useMemo(
-    () =>
-      orderedItems.reduce(
-        (sum, item) => sum + parseFloat(item.price) * item.quantity,
-        0,
-      ),
-    [orderedItems],
-  );
+  const totalOrderAmount = orderedSubTotal;
 
   // Order context
   const setOrderContext = useCallback(
@@ -104,20 +101,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Cart actions
   const addToCart = useCallback(
     (item: CartItem) => {
+      const rawQuantity = Number(item.quantity ?? 1);
+      const quantityToAdd =
+        Number.isFinite(rawQuantity) && rawQuantity > 0
+          ? Math.floor(rawQuantity)
+          : 1;
+
       setCartItems((prev) => {
         const existingItem = prev.find((cartItem) => cartItem.id === item.id);
 
         if (existingItem) {
           return prev.map((cartItem) =>
             cartItem.id === item.id
-              ? { ...cartItem, quantity: cartItem.quantity + 1 }
+              ? { ...cartItem, quantity: cartItem.quantity + quantityToAdd }
               : cartItem,
           );
         } else {
-          return [...prev, { ...item, quantity: 1 }];
+          return [...prev, { ...item, quantity: quantityToAdd }];
         }
       });
-      messageApi.success(`Đã thêm ${item.name} vào giỏ hàng`);
+      messageApi.success(
+        quantityToAdd > 1
+          ? `Đã thêm ${quantityToAdd} món ${item.name} vào giỏ hàng`
+          : `Đã thêm ${item.name} vào giỏ hàng`,
+      );
     },
     [messageApi],
   );
@@ -133,6 +140,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     setCartItems((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, quantity } : item)),
+    );
+  }, []);
+
+  const updateNote = useCallback((itemId: string, note: string) => {
+    setCartItems((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, note } : item)),
     );
   }, []);
 
@@ -181,6 +194,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           if (quantity <= 0) return;
 
           const status = detail.status?.trim() || "Pending";
+          // We include note in the aggregation key so that items with different notes don't get merged incorrectly.
+          // Or we can just merge notes. Let's merge notes.
           const aggregationKey = `${detail.dishId}__${status.toLowerCase()}`;
           const existing = aggregatedByDishAndStatus.get(aggregationKey);
           const fallbackPrice =
@@ -189,9 +204,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               : "0";
 
           if (existing) {
+            let combinedNote = existing.note || "";
+            if (detail.note) {
+              combinedNote = combinedNote ? `${combinedNote}; ${detail.note}` : detail.note;
+            }
+
             aggregatedByDishAndStatus.set(aggregationKey, {
               ...existing,
               quantity: existing.quantity + quantity,
+              note: combinedNote || undefined,
             });
             return;
           }
@@ -204,6 +225,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               `Dish ${detail.dishId.slice(0, 8)}`,
             price: dish?.price || fallbackPrice,
             quantity,
+            note: detail.note || undefined,
             category: "food",
             categoryId: dish?.categoryId || "",
             categoryName: dish?.categoryName,
@@ -214,6 +236,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       setOrderedItems(Array.from(aggregatedByDishAndStatus.values()));
+
+      if (orders && orders.length > 0) {
+        const active = orders.find((o) => o.orderStatusId !== 3 && o.orderStatusId !== 4);
+        const target = active ?? orders[orders.length - 1];
+        setActiveOrderId(target?.id || null);
+      } else {
+        setActiveOrderId(null);
+      }
+
+      // Sum subTotal from all orders (from response, not FE-calculated)
+      const responseSubTotal = orders.reduce(
+        (sum, order) => sum + (order.subTotal ?? 0),
+        0,
+      );
+      setOrderedSubTotal(responseSubTotal);
     } catch (error) {
       console.error("Fetch ordered items failed:", error);
     }
@@ -241,6 +278,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const orderDetails = cartItems.map((cartItem) => ({
         dishId: cartItem.id,
         quantity: cartItem.quantity,
+        note: cartItem.note,
       }));
 
       const payload: OrderRequestDto = {
@@ -380,8 +418,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Modal actions
   const openCartModal = useCallback(() => {
+    setActiveCartTabState(cartItems.length > 0 ? "1" : "2");
     setCartModalOpen(true);
-  }, []);
+  }, [cartItems]);
 
   const closeCartModal = useCallback(() => {
     setCartModalOpen(false);
@@ -399,10 +438,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setOrderContext,
       cartItemCount,
       totalCartAmount,
-      totalOrderAmount,
+      totalOrderAmount: orderedSubTotal,
+      activeOrderId,
       addToCart,
       removeFromCart,
       updateQuantity,
+      updateNote,
       clearCart,
       confirmOrder,
       requestPayment,
@@ -421,10 +462,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       orderCustomerId,
       cartItemCount,
       totalCartAmount,
-      totalOrderAmount,
+      orderedSubTotal,
+      activeOrderId,
       addToCart,
       removeFromCart,
       updateQuantity,
+      updateNote,
       clearCart,
       confirmOrder,
       requestPayment,

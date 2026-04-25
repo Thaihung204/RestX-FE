@@ -1,6 +1,6 @@
 import {
-    DownloadableFile,
-    getFileNameFromContentDisposition,
+  DownloadableFile,
+  getFileNameFromContentDisposition,
 } from "@/lib/utils/fileDownload";
 import axiosInstance from "./axiosInstance";
 
@@ -27,11 +27,17 @@ export interface OrderRequestDto {
   orderDetails: OrderDetailRequestDto[];
 }
 
+export interface PreOrderByReservationRequestDto {
+  customerId: string;
+  orderDetails: OrderDetailRequestDto[];
+}
+
 export interface OrderDetailDto {
   id?: string;
   dishId: string;
   dishName?: string;
   dishPrice?: number;
+  unitPrice?: number;
   quantity: number;
   note?: string | null;
   status?: string | null;
@@ -124,17 +130,26 @@ const extractOrders = (data: unknown): OrderDto[] => {
 };
 
 export interface OrderFilterParams {
-  search?: string;
+  page?: number;
+  itemsPerPage?: number;
+  from?: string;
+  to?: string;
+  status?: number;
+  customerName?: string;
   reference?: string;
-  tableId?: string;
-  customerId?: string;
-  orderStatusId?: number;
-  paymentStatusId?: number;
-  createdDate?: string;
-  pageNumber?: number;
-  pageSize?: number;
+  itemCount?: number;
+  total?: number;
+  paymentStatus?: number;
+  time?: string;
   sortBy?: string;
-  sortOrder?: "asc" | "desc";
+}
+
+export interface PaginatedOrderResult {
+  orders: OrderDto[];
+  totalCount: number;
+  page: number;
+  itemsPerPage: number;
+  totalPages: number;
 }
 
 export interface StaffOrderQueryParams {
@@ -190,11 +205,28 @@ export interface ApplyDiscountResponse {
   appliedMembership: AppliedMembershipInfo | null;
 }
 
+export interface OrderApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
 class OrderService {
   async createOrder(payload: OrderRequestDto): Promise<string> {
     const response = await axiosInstance.post<string>("/orders", payload);
     // Backend returns Guid in body, axios will parse as string
     return response.data as unknown as string;
+  }
+
+  async preOrderByReservation(
+    reservationId: string,
+    payload: PreOrderByReservationRequestDto,
+  ): Promise<OrderApiResponse<OrderDto>> {
+    const response = await axiosInstance.post<OrderApiResponse<OrderDto>>(
+      `/orders/reservation/${encodeURIComponent(reservationId)}`,
+      payload,
+    );
+    return response.data;
   }
 
   async updateOrder(id: string, payload: OrderRequestDto): Promise<void> {
@@ -223,11 +255,33 @@ class OrderService {
     return extractOrders(response.data);
   }
 
+  async getCurrentOrders(params?: StaffOrderQueryParams): Promise<OrderDto[]> {
+    const response = await axiosInstance.get("/orders/current-order", {
+      params,
+    });
+    return extractOrders(response.data);
+  }
+
   async getOrdersByFilter(params: OrderFilterParams): Promise<OrderDto[]> {
     const response = await axiosInstance.get("/orders", {
       params,
     });
     return extractOrders(response.data);
+  }
+
+  async getPaginatedOrders(params: OrderFilterParams): Promise<PaginatedOrderResult> {
+    const response = await axiosInstance.get("/orders", { params });
+    const data = response.data as any;
+
+    const orders = data.orders || data.Orders || extractOrders(data);
+
+    return {
+      orders,
+      totalCount: data.totalCount ?? data.TotalCount ?? orders.length,
+      page: data.page ?? data.Page ?? 1,
+      itemsPerPage: data.itemsPerPage ?? data.ItemsPerPage ?? orders.length,
+      totalPages: data.totalPages ?? data.TotalPages ?? 1,
+    };
   }
 
   async getOrdersByTable(tableId: string): Promise<OrderDto[]> {

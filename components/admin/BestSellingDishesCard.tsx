@@ -15,6 +15,15 @@ interface BestSellingDishesCardProps {
   loading?: boolean;
 }
 
+const getRankClass = (rank: number) => {
+  switch (rank) {
+    case 1: return "dashboard-rank-1";
+    case 2: return "dashboard-rank-2";
+    case 3: return "dashboard-rank-3";
+    default: return "dashboard-rank-default";
+  }
+};
+
 export default function BestSellingDishesCard({
   dishes = [],
   loading = false,
@@ -23,29 +32,22 @@ export default function BestSellingDishesCard({
 
   if (loading) {
     return (
-      <div
-        className="rounded-lg p-5 border"
-        style={{
-          background: "var(--card)",
-          borderColor: "var(--border)",
-        }}>
-        <h3 className="text-base font-semibold mb-4" style={{ color: "var(--text)" }}>
-          {t("dashboard.best_selling_dishes.title")}
-        </h3>
+      <div className="dashboard-data-card">
+        <div className="dashboard-data-card-header">
+          <h3 className="dashboard-data-card-title">
+            {t("dashboard.best_selling_dishes.title")}
+          </h3>
+        </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="animate-pulse rounded-lg p-3"
-              style={{ background: "var(--surface)" }}>
-              <div
-                className="h-4 rounded mb-2"
-                style={{ background: "var(--border)", width: "70%" }}
-              />
-              <div
-                className="h-2 rounded"
-                style={{ background: "var(--border)", width: "100%" }}
-              />
+            <div key={i} className="dashboard-data-card-item">
+              <div className="flex items-center gap-3">
+                <div className="dashboard-skeleton" style={{ width: "1.5rem", height: "1.5rem" }} />
+                <div className="flex-1 space-y-2">
+                  <div className="dashboard-skeleton" style={{ height: "0.875rem", width: "70%" }} />
+                  <div className="dashboard-skeleton" style={{ height: "0.625rem", width: "50%" }} />
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -55,18 +57,19 @@ export default function BestSellingDishesCard({
 
   if (!dishes || dishes.length === 0) {
     return (
-      <div
-        className="rounded-lg p-5 border"
-        style={{
-          background: "var(--card)",
-          borderColor: "var(--border)",
-        }}>
-        <h3 className="text-base font-semibold mb-4" style={{ color: "var(--text)" }}>
-          {t("dashboard.best_selling_dishes.title")}
-        </h3>
+      <div className="dashboard-data-card">
+        <div className="dashboard-data-card-header">
+          <h3 className="dashboard-data-card-title">
+            {t("dashboard.best_selling_dishes.title")}
+          </h3>
+        </div>
         <div
           className="text-center py-8 rounded-lg"
           style={{ background: "var(--surface)" }}>
+          <svg className="w-10 h-10 mx-auto mb-2" style={{ color: "var(--text-muted)", opacity: 0.4 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
             {t("dashboard.best_selling_dishes.empty")}
           </p>
@@ -76,60 +79,38 @@ export default function BestSellingDishesCard({
   }
 
   return (
-    <div
-      className="rounded-lg p-5 border"
-      style={{
-        background: "var(--card)",
-        borderColor: "var(--border)",
-      }}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold" style={{ color: "var(--text)" }}>
+    <div className="dashboard-data-card">
+      <div className="dashboard-data-card-header">
+        <h3 className="dashboard-data-card-title">
           {t("dashboard.best_selling_dishes.title")}
         </h3>
-        <span
-          className="text-xs font-medium px-2 py-0.5 rounded"
-          style={{
-            background: "var(--surface)",
-            color: "var(--text-muted)",
-          }}>
-          {t("dashboard.best_selling_dishes.subtitle", { count: dishes.length })}
+        <span className="dashboard-data-card-badge">
+          Top {dishes.length}
         </span>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {dishes.map((dish, index) => {
           const rank = index + 1;
-          
-          // Format currency
           const formattedRevenue = formatVND(dish.revenue);
 
           return (
-            <div
-              key={dish.dishId}
-              className="rounded-lg p-3 border"
-              style={{
-                background: "var(--surface)",
-                borderColor: "var(--border)",
-              }}>
-              <div className="flex items-start gap-2.5">
-                <span
-                  className="text-xs font-semibold flex-shrink-0 w-6 text-center mt-0.5"
-                  style={{ color: "var(--text-muted)" }}>
-                  #{rank}
-                </span>
+            <div key={dish.dishId} className="dashboard-data-card-item">
+              <div className="flex items-center gap-3">
+                <div className={`dashboard-rank-badge ${getRankClass(rank)}`}>
+                  {rank}
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p
-                    className="text-sm font-medium mb-1.5"
-                    style={{ color: "var(--text)" }}>
+                  <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>
                     {dish.name}
                   </p>
-                  <div className="flex items-center gap-3 text-xs">
+                  <div className="flex items-center gap-3 text-xs mt-0.5">
                     <span style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.best_selling_dishes.sold")}: <span className="font-medium" style={{ color: "var(--text)" }}>{dish.quantity}</span>
+                      {dish.quantity} {t("dashboard.best_selling_dishes.sold")}
                     </span>
-                    <span style={{ color: "var(--text-muted)" }}>•</span>
-                    <span style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.best_selling_dishes.revenue")}: <span className="font-medium" style={{ color: "var(--primary)" }}>{formattedRevenue}</span>
+                    <span style={{ color: "var(--border)" }}>|</span>
+                    <span className="font-semibold" style={{ color: "var(--primary)" }}>
+                      {formattedRevenue}
                     </span>
                   </div>
                 </div>

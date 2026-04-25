@@ -36,6 +36,8 @@
         "actions": "Actions"
       },
       "empty": "No reservations found",
+      "checked_in": "Checked in",
+      "checked_in_at": "Checked in at",
       "pagination": {
         "page_info": "Page {{page}} of {{total}} · {{count}} results",
         "page_info_compact": "Page {{page}} of {{total}} ·",
@@ -160,7 +162,8 @@
       "actions": {
         "add_dish": "Add Dish",
         "confirm_add_dish": "Confirm Add Dish",
-        "processing": "Processing..."
+        "processing": "Processing...",
+        "back": "Back"
       },
       "money": {
         "sub_total": "SubTotal",
@@ -179,6 +182,11 @@
         "loading": "Loading...",
         "no_image": "No Image",
         "no_menu_items": "No dishes available."
+      },
+      "cancel_dish": {
+        "title": "Cancel dish",
+        "confirm": "Yes, cancel",
+        "message": "Are you sure you want to cancel \"{{name}}\"? This action cannot be undone."
       }
     }
   },
@@ -776,10 +784,26 @@
         "description": "Membership tiers are upgraded automatically based on spending. The higher the tier, the better the perks.",
         "points_path_title": "Points progression",
         "tiers": {
-          "bronze": { "name": "Bronze", "discount": "3% off", "points": "From 0 points" },
-          "silver": { "name": "Silver", "discount": "5% off", "points": "From 500 points" },
-          "gold": { "name": "Gold", "discount": "8% off", "points": "From 1500 points" },
-          "platinum": { "name": "Platinum", "discount": "12% off", "points": "From 5000 points" }
+          "bronze": {
+            "name": "Bronze",
+            "discount": "3% off",
+            "points": "From 0 points"
+          },
+          "silver": {
+            "name": "Silver",
+            "discount": "5% off",
+            "points": "From 500 points"
+          },
+          "gold": {
+            "name": "Gold",
+            "discount": "8% off",
+            "points": "From 1500 points"
+          },
+          "platinum": {
+            "name": "Platinum",
+            "discount": "12% off",
+            "points": "From 5000 points"
+          }
         }
       },
       "section_3": {
@@ -851,9 +875,18 @@
         "title_highlight": "operations",
         "description": "A complete staff management system — from account creation and permissions to order handling and table-side payment.",
         "staff": {
-          "an": { "name": "Nguyen Van An", "role": "Waiter" },
-          "bich": { "name": "Tran Thi Bich", "role": "Cashier" },
-          "duc": { "name": "Le Minh Duc", "role": "Waiter" }
+          "an": {
+            "name": "Nguyen Van An",
+            "role": "Waiter"
+          },
+          "bich": {
+            "name": "Tran Thi Bich",
+            "role": "Cashier"
+          },
+          "duc": {
+            "name": "Le Minh Duc",
+            "role": "Waiter"
+          }
         }
       },
       "section_1": {
@@ -1207,6 +1240,13 @@
     },
     "sidebar": {
       "management": "Management",
+      "sections": {
+        "overview": "Overview",
+        "operations": "Operations",
+        "catalog": "Catalog",
+        "team": "Team",
+        "system": "System"
+      },
       "items": {
         "dashboard": "Dashboard",
         "analytics": "Analytics",
@@ -1216,6 +1256,7 @@
         "menu": "Menu",
         "ingredients": "Ingredients",
         "orders": "Orders",
+        "payments": "Payments",
         "customers": "Customers",
         "staff": "Staff",
         "schedules": "Schedules",
@@ -2170,8 +2211,10 @@
         "mobile_supplier": "Supplier: ",
         "mobile_type": "Type: ",
         "edit_tooltip": "Edit",
+        "save_quantity": "Save quantity",
         "empty": "No ingredients found",
-        "load_error": "Failed to load ingredient list"
+        "load_error": "Failed to load ingredient list",
+        "retry": "Retry"
       },
       "tab_all": "All",
       "tab_active": "Active",
@@ -2223,7 +2266,13 @@
         "file_size_error": "File size must be less than 5MB",
         "name_placeholder": "e.g. Appetizers",
         "description_placeholder": "Brief description of the category",
-        "no_categories": "No categories found. Click \"Add Category\" to create one."
+        "no_categories": "No categories found. Click \"Add Category\" to create one.",
+        "name_required": "Category name is required",
+        "invalid_image_url": "Invalid image URL",
+        "display_order": "Display Order",
+        "drag_to_reorder": "Drag rows to reorder display order",
+        "order_saved": "Display order saved successfully",
+        "order_error": "Failed to save display order"
       },
       "general": {
         "restaurant_info": "Restaurant Information",
@@ -2237,7 +2286,32 @@
         "currency": "Currency",
         "tax_rate": "Tax Rate (%)",
         "timezone": "Time Zone",
-        "date_format": "Date Format"
+        "date_format": "Date Format",
+        "deposit_config": "Reservation Deposit Configuration",
+        "min_party_size": "Min Party Size for Deposit",
+        "deposit_amount": "Deposit Amount Per Person",
+        "deadline_hours": "Hold Duration (Hours)"
+      },
+      "business": {
+        "title": "Business & Holiday Hours",
+        "description": "Manage the restaurant's opening, closing hours, and weekly holidays. Reservation features will rely on this configuration.",
+        "status": {
+          "open": "Open",
+          "closed": "Closed",
+          "day_off": "Day Off / Closed"
+        },
+        "inputs": {
+          "open": "Opening time",
+          "close": "Closing time",
+          "apply_all": "Apply to All",
+          "apply_all_title": "Apply Monday's hours to all other days"
+        },
+        "toasts": {
+          "fetch_error": "Failed to load business hours",
+          "update_success": "Business hours updated. Changes will take a few minutes to reflect on the customer page.",
+          "update_error": "Failed to update. Please try again.",
+          "apply_all_success": "Time applied to all days of the week"
+        }
       },
       "appearance": {
         "theme": "Theme",
@@ -2265,7 +2339,28 @@
       },
       "notifications": {
         "success_update": "Updated successfully",
-        "error_update": "Update failed"
+        "success_create": "Created successfully",
+        "success_delete": "Deleted successfully",
+        "error_update": "Update failed",
+        "error_fetch": "Failed to load data",
+        "error_save": "Failed to save",
+        "error_delete": "Failed to delete",
+        "order_notifications": "Order Notifications",
+        "system_notifications": "System Notifications",
+        "items": {
+          "new_orders": "New Orders",
+          "new_orders_desc": "Get notified when a new order is placed",
+          "order_updates": "Order Updates",
+          "order_updates_desc": "Status changes and item updates",
+          "order_completion": "Order Completion",
+          "order_completion_desc": "Notify when order is successfully paid",
+          "table_updates": "Table Status",
+          "table_updates_desc": "When tables are cleaned, merged, or moved",
+          "staff_alerts": "Staff Alerts",
+          "staff_alerts_desc": "Internal notifications from operations",
+          "inventory_alerts": "Inventory Alerts",
+          "inventory_alerts_desc": "When ingredients are running low or out of stock"
+        }
       },
       "security": {
         "change_password": "Change Password",
@@ -2417,10 +2512,16 @@
         "daysAgo": "days ago"
       },
       "success": {
-        "generate": "Report generated successfully"
+        "generate": "Report generated successfully",
+        "download": {
+          "month": "Monthly report downloaded",
+          "quarter": "Quarterly report downloaded",
+          "year": "Yearly report downloaded"
+        }
       },
       "error": {
-        "generate": "Failed to generate report"
+        "generate": "Failed to generate report",
+        "download": "Failed to download report"
       },
       "empty": {
         "title": "No strategy report yet",
@@ -2450,7 +2551,8 @@
       },
       "labels": {
         "action": "Action:",
-        "time": "Time:"
+        "time": "Time:",
+        "evidence": "Evidence:"
       },
       "summary": {
         "title": "Strategy Summary",
@@ -2473,7 +2575,21 @@
   },
   "common": {
     "cancel": "Cancel",
+    "active": "Active",
+    "inactive": "Inactive",
+    "saving": "Saving...",
+    "days": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    },
     "actions": {
+      "yes": "Yes",
+      "no": "No",
       "exporting": "Exporting..."
     },
     "theme": {
@@ -2503,7 +2619,8 @@
     "revenue": {
       "title": "Revenue Trend",
       "subtitle": "Last 7 days performance",
-      "total_period": "Total period"
+      "total_period": "Total period",
+      "no_data": "No revenue data available"
     },
     "orders": {
       "title": "Orders Overview",
@@ -2542,13 +2659,93 @@
     "request_bill": "Request Bill",
     "give_feedback": "Give Feedback"
   },
+  "payments": {
+    "title": "Payments",
+    "subtitle": "Manage payment history",
+    "fetch_error": "Failed to load payments",
+    "empty": "No transactions found",
+    "total": "{{count}} transactions",
+    "search_placeholder": "Customer name, order ID...",
+    "open_checkout": "Open PayOS checkout",
+    "view_details": "View details",
+    "view_reservation": "View reservation",
+    "columns": {
+      "customer": "Customer",
+      "method": "Method",
+      "amount": "Amount",
+      "purpose": "Purpose",
+      "status": "Status",
+      "date": "Payment Date",
+      "checkout": "View Details",
+      "actions": "Actions"
+    },
+    "filter": {
+      "status_label": "Status",
+      "method_label": "Method",
+      "date_label": "Payment Date",
+      "all_status": "All statuses",
+      "all_methods": "All",
+      "pending": "Pending",
+      "success": "Success",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "apply": "Apply"
+    },
+    "detail": {
+      "title": "Payment Details",
+      "load_error": "Failed to load payment details",
+      "payment_info": "Payment Information",
+      "money_summary": "Payment Summary",
+      "customer_info": "Customer Information",
+      "order_info": "Order Information",
+      "view_order": "View Order",
+      "cash_receive": "Cash Received",
+      "cashback": "Change",
+      "export_receipt": "Export Receipt",
+      "receipt_error": "Failed to export receipt"
+    }
+  },
   "menu_form": {
     "errors": {
       "load_failed": "Failed to load menu item",
       "name_required": "Name is required",
       "category_required": "Please select a category",
       "price_invalid": "Price must be greater than 0"
-    }
+    },
+    "title_new": "Add New Menu Item",
+    "title_edit": "Edit Menu Item",
+    "subtitle_new": "Create a new dish for your restaurant menu",
+    "subtitle_edit": "Update the menu item information",
+    "loading": "Loading...",
+    "basic_information": "Basic Information",
+    "item_name": "Item Name",
+    "category": "Category",
+    "select_category": "Select a category",
+    "unit": "Unit",
+    "unit_portion": "Portion",
+    "unit_plate": "Plate",
+    "unit_bowl": "Bowl",
+    "unit_cup": "Cup",
+    "unit_glass": "Glass",
+    "unit_piece": "Piece",
+    "unit_serving": "Serving",
+    "price": "Price",
+    "description": "Description",
+    "quantity_in_stock": "Quantity in Stock",
+    "item_properties": "Item Properties",
+    "vegetarian": "Vegetarian",
+    "vegetarian_desc": "This item is suitable for vegetarians",
+    "spicy": "Spicy",
+    "spicy_desc": "This item contains spicy ingredients",
+    "best_seller": "Best Seller",
+    "best_seller_desc": "Mark as best selling item",
+    "settings": "Settings",
+    "auto_disable_by_stock": "Auto-Disable by Stock",
+    "auto_disable_by_stock_desc": "Automatically disable when out of stock",
+    "item_images": "Item Images",
+    "cancel": "Cancel",
+    "create": "Create Menu Item",
+    "update": "Update Menu Item"
   },
   "table_form": {
     "errors": {
@@ -2869,7 +3066,12 @@
   "notifications": {
     "title": "Notifications",
     "mark_read": "Mark as read",
-    "empty": "No notifications"
+    "mark_all_read": "Mark all as read",
+    "empty": "No notifications",
+    "unread_count": "{{count}} unread",
+    "just_now": "Just now",
+    "table_prefix": "Table {{code}}",
+    "table_unknown": "Unknown table"
   },
   "customer_page": {
     "footer": {
@@ -2911,7 +3113,28 @@
       "total": "Total:",
       "items_count": "{{count}} items",
       "confirm_order": "Send Order Request",
-      "request_payment": "Request Payment"
+      "request_payment": "Request Payment",
+      "payment_request_sent": "Payment request sent",
+      "note_placeholder": "Note for this dish"
+    },
+    "feedback_modal": {
+      "title": "Rate your experience",
+      "subtitle": "Share how you felt about your meal today",
+      "select_star": "Select a rating",
+      "rating_1": "Bad",
+      "rating_2": "Not good",
+      "rating_3": "Okay",
+      "rating_4": "Good",
+      "rating_5": "Excellent",
+      "comment_label": "Comment",
+      "comment_placeholder": "Your comment (optional)",
+      "skip": "Skip",
+      "submit": "Submit feedback",
+      "submitting": "Submitting...",
+      "success": "Thank you for your feedback!",
+      "error": "Failed to submit feedback, please try again",
+      "no_order": "No order found to submit feedback",
+      "already_feedback": "This order has already been reviewed"
     },
     "welcome_card": {
       "greeting": "Welcome",
@@ -3433,7 +3656,11 @@
     "stats": {
       "total_tenants": "Total Tenants",
       "active_tenants": "Active Tenants",
-      "monthly_revenue": "Monthly Revenue"
+      "monthly_revenue": "Monthly Revenue",
+      "total": "Total Tenants",
+      "active": "Active",
+      "inactive": "Inactive",
+      "maintenance": "Maintenance"
     },
     "tabs": {
       "restaurant_list": "Tenants",
@@ -3553,7 +3780,10 @@
       "day": "Day",
       "week": "Week",
       "month": "Month",
-      "year": "Year"
+      "year": "Year",
+      "total_revenue": "Total Revenue",
+      "orders_period": "Orders This Period",
+      "avg_order_value": "Avg Order Value"
     },
     "messages": {
       "refresh_success": "Refreshed successfully",
@@ -3578,7 +3808,12 @@
       "update_success_title": "Success",
       "update_success_message": "Tenant updated successfully",
       "save_error_title": "Save Failed",
-      "save_error_message": "Failed to save tenant. Please try again."
+      "save_error_message": "Failed to save tenant. Please try again.",
+      "activated": "Tenant activated successfully",
+      "deactivated": "Tenant deactivated successfully",
+      "toggle_error": "Failed to change status. Please try again.",
+      "activate_success": "Tenant activated",
+      "deactivate_success": "Tenant deactivated"
     },
     "detail": {
       "back": "Back",
@@ -3597,10 +3832,30 @@
       "configure_domain": "Configure Domain",
       "suspend_tenant": "Suspend Tenant"
     },
+    "deactivate_modal": {
+      "title": "Deactivate Tenant",
+      "button_confirm": "Confirm Deactivate",
+      "warning_title": "Are you sure?",
+      "warning_description": "Deactivating this tenant will make it inaccessible to users."
+    },
     "status": {
       "active": "Active",
       "inactive": "Inactive",
       "maintenance": "Maintenance"
+    },
+    "detail_tabs": {
+      "general": "General Info",
+      "branding": "Branding & Theme",
+      "payment": "Payment Settings",
+      "system": "System Info",
+      "tenant_detail": "Tenant Detail",
+      "light_mode": "Light Mode",
+      "dark_mode": "Dark Mode",
+      "general_profile": "General Profile",
+      "general_profile_desc": "Configure the core identity and contact parameters for this restaurant tenant. Changes propagate across the RestX infrastructure.",
+      "active_tenant": "Active Tenant",
+      "inactive_tenant": "Inactive Tenant",
+      "view_details": "View Details"
     },
     "plans": {
       "basic": "BASIC",
@@ -3609,6 +3864,7 @@
     },
     "create": {
       "breadcrumb_create": "Create",
+      "page_title": "Create New Restaurant",
       "title": "Create New Restaurant",
       "subtitle": "Add a new tenant (restaurant) to the Restaurant Platform system.",
       "back": "Back",
@@ -3631,6 +3887,7 @@
         "prefix": "Prefix",
         "prefix_placeholder": "e.g., NHS",
         "address": "Restaurant Address",
+        "street_address": "Street Address",
         "address_line1_placeholder": "Street number",
         "address_line2_placeholder": "Ward/District",
         "address_line3_placeholder": "City/Province",
@@ -3677,6 +3934,10 @@
       }
     },
     "edit": {
+      "custom_domain_notice": {
+        "title": "Custom Domain",
+        "description": "If you wish to use a custom domain (e.g., myrestaurant.com), you must purchase it from a third-party provider and configure your DNS to point to our system."
+      },
       "breadcrumb_edit": "Edit",
       "title": "Edit Restaurant",
       "subtitle": "Update tenant (restaurant) information in the Restaurant Platform system.",
@@ -3894,6 +4155,7 @@
       "load_error": "Failed to load tenant requests",
       "invalid_id": "Invalid request ID",
       "no_data": "No pending tenant requests",
+      "no_data_desc": "All partnership requests have been processed or no new requests have been submitted yet.",
       "total_requests": "Total {{count}} requests",
       "total_requests_singular": "Total 1 pending request"
     }
@@ -3941,6 +4203,7 @@
       },
       "confirm": {
         "error_required": "Please fill in all required fields",
+        "error_invalid_email": "Please enter a valid email address",
         "error_generic": "An error occurred, please try again",
         "change_table": "Change Table",
         "title": "Confirm Reservation",
@@ -4005,6 +4268,7 @@
         "no_slots": "No available time slots",
         "restaurant_closed_today": "Restaurant closed",
         "restaurant_closed_on_day": "Restaurant is closed on {{day}}",
+        "restaurant_past_hours_on_day": "Restaurant has passed booking hours on {{day}}",
         "closed_overlay_badge": "Restaurant Closed",
         "closed_overlay_title": "Reservations are unavailable for this day",
         "closed_overlay_description": "Please choose another date to continue your booking.",
@@ -4150,7 +4414,8 @@
       "pending": "Pending Confirmation",
       "confirmed": "Confirmed",
       "checked_in": "Checked In",
-      "completed": "Completed"
+      "completed": "Completed",
+      "cancelled": "Cancelled"
     },
     "customer": {
       "title": "Customer Information",
@@ -4193,13 +4458,13 @@
       "create_failed": "Failed to create payment link.",
       "paid_desc": "The deposit has been paid successfully.",
       "unpaid_desc": "Your deposit is still unpaid. Please pay soon to keep the table.",
-      "deadline_cancel_desc": "This reservation was cancelled due to overdue deposit payment.",
+      "deadline_cancel_desc": "Reservation Cancelled",
       "deadline_passed_desc": "The deposit payment deadline has passed.",
       "deadline": "Payment deadline",
       "open_checkout": "Open payment link",
-      "badge_paid": "Paid",
+      "badge_paid": "Deposit Confirmed",
       "badge_unpaid": "Unpaid",
-      "status_paid": "Paid",
+      "status_paid": "Deposit Confirmed",
       "status_unpaid": "Unpaid"
     },
     "order": {
@@ -4212,7 +4477,29 @@
       "readonly_note": "You can only view this reservation. Contact the restaurant for any changes.",
       "unnamed_order": "Order",
       "paid": "Paid",
-      "unpaid": "Unpaid"
+      "unpaid": "Unpaid",
+      "popup_title": "Select Pre-order Items",
+      "popup_desc": "Browse the menu and pre-order your favourite dishes.",
+      "search_menu": "Search dishes...",
+      "no_menu_items": "No matching dishes found.",
+      "best_seller": "Best Seller",
+      "spicy": "Spicy",
+      "vegan": "Vegan",
+      "no_description": "No description available for this dish.",
+      "price_label": "PRICE",
+      "add_to_cart": "Add to cart",
+      "cart": "Cart",
+      "empty_cart": "Cart is empty",
+      "empty_cart_desc": "Select dishes from the menu on the left",
+      "note_placeholder": "Note (e.g. less ice, no onion...)",
+      "total": "Total",
+      "confirm_pre_order": "Confirm Order",
+      "creating_pre_order": "Processing...",
+      "view_cart": "View Cart",
+      "customer_required": "Customer information not found for pre-order.",
+      "no_selected_items": "No items selected.",
+      "pre_order_created": "Pre-order created successfully.",
+      "pre_order_failed": "Failed to create pre-order. Please try again."
     },
     "edit": {
       "locked_status": "This reservation is completed or cancelled and cannot be edited.",
@@ -4231,6 +4518,31 @@
     "map": {
       "loading": "Loading map...",
       "unavailable": "Map not available"
+    },
+    "floor_activity": {
+      "title": "Floor Activity",
+      "current_guest": "Currently seated",
+      "guests": "Guests",
+      "orders": "Orders",
+      "items": "Items",
+      "unpaid": "Unpaid",
+      "current_dishes": "Current dishes",
+      "no_dishes": "No dishes yet",
+      "kitchen_note": "Note",
+      "orders_detail": "Orders by table",
+      "opened_at": "Opened at",
+      "latest_order": "Latest order",
+      "goto_order_detail": "Go to Order Detail",
+      "goto_pos": "Go to POS",
+      "syncing": "Syncing realtime...",
+      "dish": "Dish",
+      "unknown_dish": "Unknown dish",
+      "status_available": "Available",
+      "status_occupied": "Occupied",
+      "status_reserved": "Reserved",
+      "status_cleaning": "Cleaning",
+      "status_disabled": "Disabled",
+      "status_selected": "Selected"
     },
     "location": {
       "no_address": "Address not available",
@@ -4519,10 +4831,26 @@
         "description": "Membership tiers are upgraded automatically based on spending. The higher the tier, the better the perks.",
         "points_path_title": "Points progression",
         "tiers": {
-          "bronze": { "name": "Bronze", "discount": "3% off", "points": "From 0 points" },
-          "silver": { "name": "Silver", "discount": "5% off", "points": "From 500 points" },
-          "gold": { "name": "Gold", "discount": "8% off", "points": "From 1500 points" },
-          "platinum": { "name": "Platinum", "discount": "12% off", "points": "From 5000 points" }
+          "bronze": {
+            "name": "Bronze",
+            "discount": "3% off",
+            "points": "From 0 points"
+          },
+          "silver": {
+            "name": "Silver",
+            "discount": "5% off",
+            "points": "From 500 points"
+          },
+          "gold": {
+            "name": "Gold",
+            "discount": "8% off",
+            "points": "From 1500 points"
+          },
+          "platinum": {
+            "name": "Platinum",
+            "discount": "12% off",
+            "points": "From 5000 points"
+          }
         }
       },
       "section_3": {
@@ -4594,9 +4922,18 @@
         "title_highlight": "operations",
         "description": "A complete staff management system — from account creation and permissions to order handling and table-side payment.",
         "staff": {
-          "an": { "name": "Nguyen Van An", "role": "Waiter" },
-          "bich": { "name": "Tran Thi Bich", "role": "Cashier" },
-          "duc": { "name": "Le Minh Duc", "role": "Waiter" }
+          "an": {
+            "name": "Nguyen Van An",
+            "role": "Waiter"
+          },
+          "bich": {
+            "name": "Tran Thi Bich",
+            "role": "Cashier"
+          },
+          "duc": {
+            "name": "Le Minh Duc",
+            "role": "Waiter"
+          }
         }
       },
       "section_1": {

@@ -36,6 +36,8 @@
         "actions": "Thao tác"
       },
       "empty": "Không có đặt bàn",
+      "checked_in": "Đã check-in",
+      "checked_in_at": "Đã check-in lúc",
       "pagination": {
         "page_info": "Trang {{page}} / {{total}} · {{count}} kết quả",
         "page_info_compact": "Trang {{page}} / {{total}} ·",
@@ -90,10 +92,10 @@
         "checked_in_at": "Check-in lúc:"
       },
       "messages": {
-        "checkin_success": "Check-in thanh cong",
-        "checkin_failed": "Khong the check-in reservation",
-        "already_checked_in": "Reservation nay da check-in roi",
-        "checked_in_at": "Da check-in luc"
+        "checkin_success": "Check-in thành công",
+        "checkin_failed": "Không thể check-in đặt bàn",
+        "already_checked_in": "Đặt bàn này đã check-in rồi",
+        "checked_in_at": "Đã check-in lúc"
       }
     },
     "order_detail": {
@@ -160,7 +162,8 @@
       "actions": {
         "add_dish": "Thêm món",
         "confirm_add_dish": "Xác nhận thêm món",
-        "processing": "Đang xử lý..."
+        "processing": "Đang xử lý...",
+        "back": "Quay lại"
       },
       "money": {
         "sub_total": "Tạm tính",
@@ -179,6 +182,11 @@
         "loading": "Đang tải...",
         "no_image": "Không có ảnh",
         "no_menu_items": "Không có món ăn nào."
+      },
+      "cancel_dish": {
+        "title": "Hủy món",
+        "confirm": "Xác nhận hủy",
+        "message": "Bạn có chắc muốn hủy món \"{{name}}\"? Hành động này không thể hoàn tác."
       }
     }
   },
@@ -804,10 +812,26 @@
         "description": "Hệ thống hạng thành viên tự động nâng cấp theo chi tiêu. Càng lên hạng cao, ưu đãi càng hấp dẫn.",
         "points_path_title": "Lộ trình tích điểm",
         "tiers": {
-          "bronze": { "name": "Bronze", "discount": "Giảm 3%", "points": "Từ 0 điểm" },
-          "silver": { "name": "Silver", "discount": "Giảm 5%", "points": "Từ 500 điểm" },
-          "gold": { "name": "Gold", "discount": "Giảm 8%", "points": "Từ 1500 điểm" },
-          "platinum": { "name": "Platinum", "discount": "Giảm 12%", "points": "Từ 5000 điểm" }
+          "bronze": {
+            "name": "Bronze",
+            "discount": "Giảm 3%",
+            "points": "Từ 0 điểm"
+          },
+          "silver": {
+            "name": "Silver",
+            "discount": "Giảm 5%",
+            "points": "Từ 500 điểm"
+          },
+          "gold": {
+            "name": "Gold",
+            "discount": "Giảm 8%",
+            "points": "Từ 1500 điểm"
+          },
+          "platinum": {
+            "name": "Platinum",
+            "discount": "Giảm 12%",
+            "points": "Từ 5000 điểm"
+          }
         }
       },
       "section_3": {
@@ -879,9 +903,18 @@
         "title_highlight": "thông minh",
         "description": "Hệ thống quản lý nhân viên toàn diện — từ tạo tài khoản, phân quyền, đến xử lý order và thanh toán ngay tại bàn.",
         "staff": {
-          "an": { "name": "Nguyễn Văn An", "role": "Phục vụ" },
-          "bich": { "name": "Trần Thị Bích", "role": "Thu ngân" },
-          "duc": { "name": "Lê Minh Đức", "role": "Phục vụ" }
+          "an": {
+            "name": "Nguyễn Văn An",
+            "role": "Phục vụ"
+          },
+          "bich": {
+            "name": "Trần Thị Bích",
+            "role": "Thu ngân"
+          },
+          "duc": {
+            "name": "Lê Minh Đức",
+            "role": "Phục vụ"
+          }
         }
       },
       "section_1": {
@@ -1100,7 +1133,14 @@
       "subtitle": "Các hành động mới nhất"
     },
     "sidebar": {
-      "management": "Quản lý",
+      "management": "Qu\u1EA3n l\u00FD",
+      "sections": {
+        "overview": "T\u1ED5ng quan",
+        "operations": "V\u1EADn h\u00E0nh",
+        "catalog": "Danh m\u1EE5c",
+        "team": "Nh\u00E2n s\u1EF1",
+        "system": "H\u1EC7 th\u1ED1ng"
+      },
       "items": {
         "dashboard": "Tổng quan",
         "analytics": "Phân tích",
@@ -1110,6 +1150,7 @@
         "menu": "Thực đơn",
         "ingredients": "Nguyên liệu",
         "orders": "Đơn hàng",
+        "payments": "Thanh toán",
         "customers": "Khách hàng",
         "staff": "Nhân viên",
         "schedules": "Lịch làm việc",
@@ -2193,8 +2234,10 @@
         "mobile_supplier": "Nhà CC: ",
         "mobile_type": "Loại: ",
         "edit_tooltip": "Chỉnh sửa",
+        "save_quantity": "Lưu số lượng",
         "empty": "Không tìm thấy nguyên liệu nào",
-        "load_error": "Không tải được danh sách nguyên liệu"
+        "load_error": "Không tải được danh sách nguyên liệu",
+        "retry": "Thử lại"
       },
       "tab_all": "Tất cả",
       "tab_active": "Đang dùng",
@@ -2246,7 +2289,13 @@
         "file_size_error": "Kích thước tệp phải nhỏ hơn 5MB",
         "name_placeholder": "ví dụ: Khai vị",
         "description_placeholder": "Mô tả ngắn gọn về danh mục",
-        "no_categories": "Chưa có danh mục nào. Nhấn \"Thêm danh mục\" để tạo mới."
+        "no_categories": "Chưa có danh mục nào. Nhấn \"Thêm danh mục\" để tạo mới.",
+        "name_required": "Tên danh mục là bắt buộc",
+        "invalid_image_url": "URL hình ảnh không hợp lệ",
+        "display_order": "Thứ tự hiển thị",
+        "drag_to_reorder": "Kéo thả các hàng để sắp xếp thứ tự hiển thị",
+        "order_saved": "Đã lưu thứ tự hiển thị thành công",
+        "order_error": "Lưu thứ tự hiển thị thất bại"
       },
       "general": {
         "restaurant_info": "Thông tin nhà hàng",
@@ -2260,7 +2309,32 @@
         "currency": "Tiền tệ",
         "tax_rate": "Thuế (%)",
         "timezone": "Múi giờ",
-        "date_format": "Định dạng ngày"
+        "date_format": "Định dạng ngày",
+        "deposit_config": "Cấu hình đặt cọc",
+        "min_party_size": "Số khách tối thiểu cần cọc",
+        "deposit_amount": "Tiền cọc mỗi khách",
+        "deadline_hours": "Thời gian giữ chỗ (Giờ)"
+      },
+      "business": {
+        "title": "Cấu hình giờ hoạt động & Ngày nghỉ",
+        "description": "Quản lý giờ mở/đóng cửa và các ngày nghỉ trong tuần của nhà hàng. Những tính năng đặt bàn sẽ dựa vào cấu hình này.",
+        "status": {
+          "open": "Đang mở",
+          "closed": "Đang đóng",
+          "day_off": "Ngày nghỉ / Đóng cửa"
+        },
+        "inputs": {
+          "open": "Mở cửa",
+          "close": "Đóng cửa",
+          "apply_all": "Áp dụng tất cả",
+          "apply_all_title": "Áp dụng thời gian của Thứ 2 cho tất cả các ngày khác"
+        },
+        "toasts": {
+          "fetch_error": "Lỗi tải giờ hoạt động",
+          "update_success": "Đã cập nhật giờ hoạt động. Các thay đổi sẽ mất vài phút để hiển thị ngoài trang khách.",
+          "update_error": "Cập nhật thất bại. Vui lòng thử lại.",
+          "apply_all_success": "Đã áp dụng thời gian này cho tất cả các ngày trong tuần"
+        }
       },
       "appearance": {
         "theme": "Chủ đề",
@@ -2310,7 +2384,28 @@
       },
       "notifications": {
         "success_update": "Cập nhật thành công",
-        "error_update": "Cập nhật thất bại"
+        "success_create": "Tạo mới thành công",
+        "success_delete": "Xóa thành công",
+        "error_update": "Cập nhật thất bại",
+        "error_fetch": "Tải dữ liệu thất bại",
+        "error_save": "Lưu thất bại",
+        "error_delete": "Xóa thất bại",
+        "order_notifications": "Thông báo đơn hàng",
+        "system_notifications": "Thông báo hệ thống",
+        "items": {
+          "new_orders": "Đơn hàng mới",
+          "new_orders_desc": "Nhận thông báo khi có đơn đặt món mới",
+          "order_updates": "Cập nhật đơn hàng",
+          "order_updates_desc": "Thay đổi trạng thái, cập nhật món",
+          "order_completion": "Hoàn tất đơn hàng",
+          "order_completion_desc": "Thông báo khi đơn hàng thanh toán thành công",
+          "table_updates": "Trạng thái bàn",
+          "table_updates_desc": "Khi bàn được dọn, ghép bàn hoặc chuyển bàn",
+          "staff_alerts": "Cảnh báo nhân viên",
+          "staff_alerts_desc": "Thông báo nội bộ từ các luồng vận hành",
+          "inventory_alerts": "Cảnh báo tồn kho",
+          "inventory_alerts_desc": "Khi nguyên liệu sắp hết hoặc cạn kho"
+        }
       },
       "security": {
         "change_password": "Đổi mật khẩu",
@@ -2462,10 +2557,16 @@
         "daysAgo": "ngày trước"
       },
       "success": {
-        "generate": "Tạo báo cáo thành công"
+        "generate": "Tạo báo cáo thành công",
+        "download": {
+          "month": "Đã tải báo cáo tháng",
+          "quarter": "Đã tải báo cáo quý",
+          "year": "Đã tải báo cáo năm"
+        }
       },
       "error": {
-        "generate": "Tạo báo cáo thất bại"
+        "generate": "Tạo báo cáo thất bại",
+        "download": "Tải báo cáo thất bại"
       },
       "empty": {
         "title": "Chưa có báo cáo chiến lược",
@@ -2495,7 +2596,8 @@
       },
       "labels": {
         "action": "Hành động:",
-        "time": "Thời gian:"
+        "time": "Thời gian:",
+        "evidence": "Dẫn chứng"
       },
       "summary": {
         "title": "Tóm tắt chiến lược",
@@ -2518,7 +2620,21 @@
   },
   "common": {
     "cancel": "Hủy",
+    "active": "Hoạt động",
+    "inactive": "Ngừng hoạt động",
+    "saving": "Đang lưu...",
+    "days": {
+      "monday": "Thứ 2",
+      "tuesday": "Thứ 3",
+      "wednesday": "Thứ 4",
+      "thursday": "Thứ 5",
+      "friday": "Thứ 6",
+      "saturday": "Thứ 7",
+      "sunday": "Chủ nhật"
+    },
     "actions": {
+      "yes": "Có",
+      "no": "Không",
       "exporting": "Đang xuất..."
     },
     "theme": {
@@ -2548,7 +2664,8 @@
     "revenue": {
       "title": "Xu hướng doanh thu",
       "subtitle": "Hiệu suất 7 ngày qua",
-      "total_period": "Tổng kỳ"
+      "total_period": "Tổng kỳ",
+      "no_data": "Chưa có dữ liệu doanh thu"
     },
     "orders": {
       "title": "Tổng quan đơn hàng",
@@ -2587,13 +2704,93 @@
     "request_bill": "Tính tiền",
     "give_feedback": "Góp ý dịch vụ"
   },
+  "payments": {
+    "title": "Thanh toán",
+    "subtitle": "Quản lý lịch sử thanh toán",
+    "fetch_error": "Không thể tải danh sách thanh toán",
+    "empty": "Không có giao dịch nào",
+    "total": "{{count}} giao dịch",
+    "search_placeholder": "Tên khách, mã đơn...",
+    "open_checkout": "Mở trang thanh toán PayOS",
+    "view_details": "Xem chi tiết",
+    "view_reservation": "Xem đặt bàn",
+    "columns": {
+      "customer": "Khách hàng",
+      "method": "Phương thức",
+      "amount": "Số tiền",
+      "purpose": "Mục đích",
+      "status": "Trạng thái",
+      "date": "Ngày thanh toán",
+      "checkout": "Xem chi tiết",
+      "actions": "Thao tác"
+    },
+    "filter": {
+      "status_label": "Trạng thái",
+      "method_label": "Phương thức",
+      "date_label": "Ngày thanh toán",
+      "all_status": "Tất cả trạng thái",
+      "all_methods": "Tất cả",
+      "pending": "Chờ xử lý",
+      "success": "Thành công",
+      "failed": "Thất bại",
+      "cancelled": "Đã hủy",
+      "apply": "Lọc"
+    },
+    "detail": {
+      "title": "Chi tiết thanh toán",
+      "load_error": "Không thể tải chi tiết thanh toán",
+      "payment_info": "Thông tin thanh toán",
+      "money_summary": "Tóm tắt thanh toán",
+      "customer_info": "Thông tin khách hàng",
+      "order_info": "Thông tin đơn hàng",
+      "view_order": "Xem đơn hàng",
+      "cash_receive": "Tiền nhận",
+      "cashback": "Tiền thối",
+      "export_receipt": "Xuất hóa đơn",
+      "receipt_error": "Không thể xuất hóa đơn"
+    }
+  },
   "menu_form": {
     "errors": {
       "load_failed": "Không thể tải thông tin món ăn",
       "name_required": "Vui lòng nhập tên món",
       "category_required": "Vui lòng chọn danh mục",
       "price_invalid": "Giá phải lớn hơn 0"
-    }
+    },
+    "title_new": "Thêm món mới",
+    "title_edit": "Chỉnh sửa món",
+    "subtitle_new": "Tạo món ăn mới cho thực đơn nhà hàng",
+    "subtitle_edit": "Cập nhật thông tin món ăn",
+    "loading": "Đang tải...",
+    "basic_information": "Thông tin cơ bản",
+    "item_name": "Tên món",
+    "category": "Danh mục",
+    "select_category": "Chọn danh mục",
+    "unit": "Đơn vị",
+    "unit_portion": "Phần",
+    "unit_plate": "Đĩa",
+    "unit_bowl": "Tô",
+    "unit_cup": "Ly nhỏ",
+    "unit_glass": "Ly",
+    "unit_piece": "Cái",
+    "unit_serving": "Suất",
+    "price": "Giá",
+    "description": "Mô tả",
+    "quantity_in_stock": "Số lượng tồn kho",
+    "item_properties": "Thuộc tính món",
+    "vegetarian": "Chay",
+    "vegetarian_desc": "Món này phù hợp cho người ăn chay",
+    "spicy": "Cay",
+    "spicy_desc": "Món này có thành phần cay",
+    "best_seller": "Bán chạy",
+    "best_seller_desc": "Đánh dấu là món bán chạy nhất",
+    "settings": "Cài đặt",
+    "auto_disable_by_stock": "Tự động tắt theo tồn kho",
+    "auto_disable_by_stock_desc": "Tự động tắt khi hết hàng",
+    "item_images": "Hình ảnh món",
+    "cancel": "Hủy",
+    "create": "Tạo món",
+    "update": "Cập nhật món"
   },
   "table_form": {
     "errors": {
@@ -2914,7 +3111,12 @@
   "notifications": {
     "title": "Thông báo",
     "mark_read": "Đánh dấu đã đọc",
-    "empty": "Không có thông báo"
+    "mark_all_read": "Đọc tất cả",
+    "empty": "Không có thông báo",
+    "unread_count": "{{count}} chưa đọc",
+    "just_now": "Vừa xong",
+    "table_prefix": "Bàn {{code}}",
+    "table_unknown": "Bàn chưa xác định"
   },
   "customer_page": {
     "footer": {
@@ -2956,7 +3158,28 @@
       "total": "Tổng cộng:",
       "items_count": "{{count}} món",
       "confirm_order": "Gửi yêu cầu gọi món",
-      "request_payment": "Xác nhận thanh toán"
+      "request_payment": "Xác nhận thanh toán",
+      "payment_request_sent": "Đã gửi yêu cầu thanh toán",
+      "note_placeholder": "Ghi chú cho món này"
+    },
+    "feedback_modal": {
+      "title": "Đánh giá trải nghiệm",
+      "subtitle": "Chia sẻ cảm nhận của bạn về bữa ăn hôm nay",
+      "select_star": "Chọn số sao",
+      "rating_1": "Tệ",
+      "rating_2": "Không tốt",
+      "rating_3": "Bình thường",
+      "rating_4": "Tốt",
+      "rating_5": "Tuyệt vời",
+      "comment_label": "Nhận xét",
+      "comment_placeholder": "Nhận xét của bạn (không bắt buộc)",
+      "skip": "Bỏ qua",
+      "submit": "Gửi đánh giá",
+      "submitting": "Đang gửi...",
+      "success": "Cảm ơn bạn đã đánh giá!",
+      "error": "Gửi đánh giá thất bại, vui lòng thử lại",
+      "no_order": "Không tìm thấy đơn hàng để gửi đánh giá",
+      "already_feedback": "Đơn hàng này đã được đánh giá"
     },
     "welcome_card": {
       "greeting": "Xin chào quý khách",
@@ -3478,7 +3701,11 @@
     "stats": {
       "total_tenants": "Tổng nhà hàng",
       "active_tenants": "Đang hoạt động",
-      "monthly_revenue": "Doanh thu tháng"
+      "monthly_revenue": "Doanh thu tháng",
+      "total": "Tổng nhà hàng",
+      "active": "Hoạt động",
+      "inactive": "Ngưng hoạt động",
+      "maintenance": "Bảo trì"
     },
     "table": {
       "tenant_info": "Thông tin nhà hàng",
@@ -3521,7 +3748,10 @@
       "day": "Ngày",
       "week": "Tuần",
       "month": "Tháng",
-      "year": "Năm"
+      "year": "Năm",
+      "total_revenue": "Tổng doanh thu",
+      "orders_period": "Đơn hàng kỳ này",
+      "avg_order_value": "Giá trị đơn TB"
     },
     "tabs": {
       "restaurant_list": "Tenants",
@@ -3623,7 +3853,12 @@
       "update_success_title": "Thành công",
       "update_success_message": "Cập nhật nhà hàng thành công",
       "save_error_title": "Lưu thất bại",
-      "save_error_message": "Không thể lưu nhà hàng. Vui lòng thử lại."
+      "save_error_message": "Không thể lưu nhà hàng. Vui lòng thử lại.",
+      "activated": "Đã kích hoạt nhà hàng thành công",
+      "deactivated": "Đã ngừng hoạt động nhà hàng thành công",
+      "toggle_error": "Không thể thay đổi trạng thái. Vui lòng thử lại.",
+      "activate_success": "Đã kích hoạt nhà hàng",
+      "deactivate_success": "Đã tắt nhà hàng"
     },
     "detail": {
       "back": "Quay lại",
@@ -3642,10 +3877,30 @@
       "configure_domain": "Cấu hình tên miền",
       "suspend_tenant": "Tạm ngừng nhà hàng"
     },
+    "deactivate_modal": {
+      "title": "Tắt hoạt động nhà hàng",
+      "button_confirm": "Xác nhận tắt",
+      "warning_title": "Bạn có chắc chắn không?",
+      "warning_description": "Tắt nhà hàng này sẽ khiến người dùng không thể truy cập."
+    },
     "status": {
       "active": "Hoạt động",
       "inactive": "Không hoạt động",
       "maintenance": "Bảo trì"
+    },
+    "detail_tabs": {
+      "general": "Th\u00f4ng tin chung",
+      "branding": "Th\u01b0\u01a1ng hi\u1ec7u & Giao di\u1ec7n",
+      "payment": "C\u00e0i \u0111\u1eb7t thanh to\u00e1n",
+      "system": "Th\u00f4ng tin h\u1ec7 th\u1ed1ng",
+      "tenant_detail": "Chi ti\u1ebft nh\u00e0 h\u00e0ng",
+      "light_mode": "Giao di\u1ec7n s\u00e1ng",
+      "dark_mode": "Giao di\u1ec7n t\u1ed1i",
+      "general_profile": "H\u1ed3 s\u01a1 chung",
+      "general_profile_desc": "C\u1ea5u h\u00ecnh danh t\u00ednh v\u00e0 th\u00f4ng tin li\u00ean h\u1ec7 c\u1ed1t l\u00f5i cho nh\u00e0 h\u00e0ng n\u00e0y. C\u00e1c thay \u0111\u1ed5i s\u1ebd \u0111\u01b0\u1ee3c \u00e1p d\u1ee5ng tr\u00ean to\u00e0n b\u1ed9 h\u1ec7 th\u1ed1ng RestX.",
+      "active_tenant": "Ho\u1ea1t \u0111\u1ed9ng",
+      "inactive_tenant": "Kh\u00f4ng ho\u1ea1t \u0111\u1ed9ng",
+      "view_details": "Xem chi ti\u1ebft"
     },
     "plans": {
       "basic": "CƠ BẢN",
@@ -3654,6 +3909,7 @@
     },
     "create": {
       "breadcrumb_create": "Tạo mới",
+      "page_title": "Tạo nhà hàng mới",
       "title": "Tạo nhà hàng mới",
       "subtitle": "Thêm nhà hàng mới vào hệ thống Nền tảng Nhà hàng.",
       "back": "Quay lại",
@@ -3676,6 +3932,7 @@
         "prefix": "Tiền tố",
         "prefix_placeholder": "VD: NHS",
         "address": "Địa chỉ nhà hàng",
+        "street_address": "Địa chỉ đường",
         "address_line1_placeholder": "Số nhà",
         "address_line2_placeholder": "Phường/Quận",
         "address_line3_placeholder": "Thành phố/Tỉnh",
@@ -3722,6 +3979,10 @@
       }
     },
     "edit": {
+      "custom_domain_notice": {
+        "title": "Tên miền tùy chỉnh",
+        "description": "Bạn cần mua tên miền từ nhà cung cấp khác nếu muốn sử dụng tên miền tùy chỉnh (ví dụ: myrestaurant.com)."
+      },
       "breadcrumb_edit": "Chỉnh sửa",
       "title": "Chỉnh sửa nhà hàng",
       "subtitle": "Cập nhật thông tin nhà hàng trong hệ thống Nền tảng Nhà hàng.",
@@ -3940,6 +4201,7 @@
       "load_error": "Không thể tải danh sách yêu cầu tenant",
       "invalid_id": "ID yêu cầu không hợp lệ",
       "no_data": "Không có yêu cầu đang chờ",
+      "no_data_desc": "Tất cả yêu cầu hợp tác đã được xử lý hoặc chưa có yêu cầu mới nào.",
       "total_requests": "Tổng {{count}} yêu cầu",
       "total_requests_singular": "Tổng 1 yêu cầu đang chờ"
     },
@@ -3998,6 +4260,7 @@
       },
       "confirm": {
         "error_required": "Vui lòng điền đầy đủ thông tin",
+        "error_invalid_email": "Vui lòng nhập địa chỉ email hợp lệ",
         "error_generic": "Có lỗi xảy ra, vui lòng thử lại",
         "change_table": "Đổi bàn",
         "title": "Xác nhận đặt bàn",
@@ -4062,6 +4325,7 @@
         "no_slots": "Đã hết khung giờ trống",
         "restaurant_closed_today": "Nhà hàng đang đóng cửa",
         "restaurant_closed_on_day": "Nhà hàng đóng cửa vào {{day}}",
+        "restaurant_past_hours_on_day": "Nhà hàng đã quá giờ nhận đặt bàn trong ngày {{day}}",
         "closed_overlay_badge": "Nhà Hàng Đang Đóng Cửa",
         "closed_overlay_title": "Hiện không nhận đặt bàn cho ngày này",
         "closed_overlay_description": "Vui lòng chọn ngày khác để tiếp tục đặt bàn.",
@@ -4207,7 +4471,8 @@
       "pending": "Chờ xác nhận",
       "confirmed": "Đã xác nhận",
       "checked_in": "Đã check-in",
-      "completed": "Hoàn tất"
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy"
     },
     "customer": {
       "title": "Thông tin khách hàng",
@@ -4250,13 +4515,13 @@
       "create_failed": "Tạo link thanh toán thất bại.",
       "paid_desc": "Khoản đặt cọc đã được thanh toán thành công.",
       "unpaid_desc": "Bạn chưa thanh toán đặt cọc. Hãy thanh toán sớm để giữ bàn.",
-      "deadline_cancel_desc": "Reservation đã bị hủy do quá hạn thanh toán cọc.",
+      "deadline_cancel_desc": "Đặt bàn đã bị huỷ",
       "deadline_passed_desc": "Đã quá hạn thanh toán đặt cọc.",
       "deadline": "Hạn thanh toán",
       "open_checkout": "Mở link thanh toán",
-      "badge_paid": "Đã thanh toán",
+      "badge_paid": "Đã xác nhận đặt cọc",
       "badge_unpaid": "Chưa thanh toán",
-      "status_paid": "Đã thanh toán",
+      "status_paid": "Đã xác nhận đặt cọc",
       "status_unpaid": "Chưa thanh toán"
     },
     "order": {
@@ -4269,7 +4534,29 @@
       "readonly_note": "Bạn chỉ có quyền xem thông tin. Liên hệ nhà hàng để thay đổi.",
       "unnamed_order": "Đơn hàng",
       "paid": "Đã thanh toán",
-      "unpaid": "Chưa thanh toán"
+      "unpaid": "Chưa thanh toán",
+      "popup_title": "Chọn món Pre-order",
+      "popup_desc": "Khám phá thực đơn và đặt trước món ăn yêu thích.",
+      "search_menu": "Tìm kiếm món ăn...",
+      "no_menu_items": "Không tìm thấy món ăn phù hợp.",
+      "best_seller": "Bán chạy",
+      "spicy": "Cay",
+      "vegan": "Chay",
+      "no_description": "Chưa có mô tả cho món ăn này.",
+      "price_label": "GIÁ",
+      "add_to_cart": "Thêm vào giỏ",
+      "cart": "Giỏ hàng",
+      "empty_cart": "Giỏ hàng trống",
+      "empty_cart_desc": "Hãy chọn món từ thực đơn bên trái",
+      "note_placeholder": "Ghi chú (VD: ít đá, không hành...)",
+      "total": "Tổng thanh toán",
+      "confirm_pre_order": "Xác nhận đặt món",
+      "creating_pre_order": "Đang xử lý...",
+      "view_cart": "Xem giỏ hàng",
+      "customer_required": "Không tìm thấy thông tin khách hàng để tạo pre-order.",
+      "no_selected_items": "Chưa chọn món nào.",
+      "pre_order_created": "Tạo pre-order thành công.",
+      "pre_order_failed": "Tạo pre-order thất bại. Vui lòng thử lại."
     },
     "edit": {
       "locked_status": "Reservation đã hoàn tất hoặc đã hủy, không thể chỉnh sửa.",
@@ -4288,6 +4575,31 @@
     "map": {
       "loading": "Đang tải sơ đồ...",
       "unavailable": "Không có sơ đồ bàn"
+    },
+    "floor_activity": {
+      "title": "Hoạt động sàn",
+      "current_guest": "Đang ngồi",
+      "guests": "Khách",
+      "orders": "Đơn",
+      "items": "Món",
+      "unpaid": "Chưa TT",
+      "current_dishes": "Món đang phục vụ",
+      "no_dishes": "Chưa có món",
+      "kitchen_note": "Ghi chú",
+      "orders_detail": "Đơn theo bàn",
+      "opened_at": "Mở bàn",
+      "latest_order": "Đơn gần nhất",
+      "goto_order_detail": "Đi tới Order Detail",
+      "goto_pos": "Đi tới POS",
+      "syncing": "Đang đồng bộ realtime...",
+      "dish": "Món",
+      "unknown_dish": "Món chưa rõ",
+      "status_available": "Sẵn sàng",
+      "status_occupied": "Đang phục vụ",
+      "status_reserved": "Đã đặt",
+      "status_cleaning": "Đang dọn",
+      "status_disabled": "Tạm khóa",
+      "status_selected": "Đang chọn"
     },
     "location": {
       "no_address": "Chưa có địa chỉ",
@@ -4576,10 +4888,26 @@
         "description": "Hệ thống hạng thành viên tự động nâng cấp theo chi tiêu. Càng lên hạng cao, ưu đãi càng hấp dẫn.",
         "points_path_title": "Lộ trình tích điểm",
         "tiers": {
-          "bronze": { "name": "Bronze", "discount": "Giảm 3%", "points": "Từ 0 điểm" },
-          "silver": { "name": "Silver", "discount": "Giảm 5%", "points": "Từ 500 điểm" },
-          "gold": { "name": "Gold", "discount": "Giảm 8%", "points": "Từ 1500 điểm" },
-          "platinum": { "name": "Platinum", "discount": "Giảm 12%", "points": "Từ 5000 điểm" }
+          "bronze": {
+            "name": "Bronze",
+            "discount": "Giảm 3%",
+            "points": "Từ 0 điểm"
+          },
+          "silver": {
+            "name": "Silver",
+            "discount": "Giảm 5%",
+            "points": "Từ 500 điểm"
+          },
+          "gold": {
+            "name": "Gold",
+            "discount": "Giảm 8%",
+            "points": "Từ 1500 điểm"
+          },
+          "platinum": {
+            "name": "Platinum",
+            "discount": "Giảm 12%",
+            "points": "Từ 5000 điểm"
+          }
         }
       },
       "section_3": {
@@ -4651,9 +4979,18 @@
         "title_highlight": "thông minh",
         "description": "Hệ thống quản lý nhân viên toàn diện — từ tạo tài khoản, phân quyền, đến xử lý order và thanh toán ngay tại bàn.",
         "staff": {
-          "an": { "name": "Nguyễn Văn An", "role": "Phục vụ" },
-          "bich": { "name": "Trần Thị Bích", "role": "Thu ngân" },
-          "duc": { "name": "Lê Minh Đức", "role": "Phục vụ" }
+          "an": {
+            "name": "Nguyễn Văn An",
+            "role": "Phục vụ"
+          },
+          "bich": {
+            "name": "Trần Thị Bích",
+            "role": "Thu ngân"
+          },
+          "duc": {
+            "name": "Lê Minh Đức",
+            "role": "Phục vụ"
+          }
         }
       },
       "section_1": {

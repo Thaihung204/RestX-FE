@@ -20,7 +20,6 @@ interface ComboDetailFormItem {
   quantity: string;
 }
 
-const DEFAULT_AI_VARIANTS = 4;
 const MAX_AI_PROMPT_LENGTH = 500;
 const MAX_COMBO_NAME_LENGTH = 255;
 const MAX_COMBO_DESCRIPTION_LENGTH = 2000;
@@ -55,21 +54,13 @@ export default function ComboFormPage() {
   const [imageFile, setImageFile] = useState<File | undefined>(undefined);
   const [existingImageUrl, setExistingImageUrl] = useState<string>("");
   const [isImageDropActive, setIsImageDropActive] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const imageInputId = "combo-image-upload-input";
+  const imagePreviewUrl = imageFile ? URL.createObjectURL(imageFile) : "";
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiPromptModalOpen, setAiPromptModalOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
-
-  const imageInputRef = useRef<HTMLInputElement | null>(null);
-  const imageInputId = "combo-image-upload-input";
-
-  const imagePreviewUrl = useMemo(() => {
-    if (!imageFile) {
-      return "";
-    }
-
-    return URL.createObjectURL(imageFile);
-  }, [imageFile]);
 
   const availableDishes = useMemo(
     () => dishes.filter((dish) => dish.isActive !== false),
@@ -309,18 +300,38 @@ export default function ComboFormPage() {
     if (!normalizedComboName) {
 >>>>>>> Stashed changes
       message.warning(
-        t("dashboard.menu.combo.ai_content.requires_existing_item", {
-          defaultValue: "Please save this combo first so AI can use its detail ID.",
+        t("dashboard.menu.ai_content.name_required", {
+          defaultValue: "Please enter combo name before generating AI content.",
         }),
       );
       return;
     }
 
-    const promptText = aiPrompt.trim().slice(0, MAX_AI_PROMPT_LENGTH);
-    const contextParts = [
-      formData.name.trim() ? `Name: ${formData.name.trim()}` : "",
-      promptText ? `Prompt: ${promptText}` : "",
-    ].filter(Boolean);
+    const dishNameMap = new Map(
+      dishes.map((dish) => [dish.id, dish.name?.trim() || ""]),
+    );
+    const comboDishes = details
+      .map((detail) => {
+        const normalizedDishId = detail.dishId.trim();
+        const resolvedDishName = dishNameMap.get(normalizedDishId) || normalizedDishId;
+        const quantity = Math.floor(Number(detail.quantity || "0"));
+
+        if (!resolvedDishName || !Number.isFinite(quantity) || quantity <= 0) {
+          return null;
+        }
+
+        return `${quantity} ${resolvedDishName}`;
+      })
+      .filter((item): item is string => Boolean(item));
+
+    if (comboDishes.length === 0) {
+      message.warning(
+        t("dashboard.menu.combo.errors.details_required", {
+          defaultValue: "Please select at least one valid dish before generating AI content.",
+        }),
+      );
+      return;
+    }
 
     try {
       setAiGenerating(true);
@@ -590,16 +601,12 @@ export default function ComboFormPage() {
   return (
     <main className="flex-1 p-6 lg:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 mb-2 transition-colors p-2 rounded-lg"
-            style={{ color: "var(--text-muted)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-80"
+            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}>
+            ← {t("admin.order_detail.actions.back")}
           </button>
           <div>
             <h2 className="text-3xl font-bold mb-2" style={{ color: "var(--text)" }}>
@@ -696,7 +703,7 @@ export default function ComboFormPage() {
                       setAiPrompt(e.target.value.slice(0, MAX_AI_PROMPT_LENGTH))
                     }
                     maxLength={MAX_AI_PROMPT_LENGTH}
-                    disabled={isNewCombo || aiGenerating}
+                    disabled={aiGenerating}
                     className="md:col-span-2 w-full px-3 py-2.5 rounded-lg outline-none"
                     style={{
                       background: "var(--surface)",
@@ -708,7 +715,7 @@ export default function ComboFormPage() {
                   <button
                     type="button"
                     onClick={handleGenerateDescription}
-                    disabled={isNewCombo || aiGenerating}
+                    disabled={aiGenerating}
                     className="px-4 py-2.5 rounded-lg font-medium transition-opacity disabled:opacity-60"
 =======
                 <div className="flex items-center justify-between gap-3 mb-2">
@@ -738,14 +745,6 @@ export default function ComboFormPage() {
                         })}
                   </button>
                 </div>
-
-                {isNewCombo && (
-                  <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>
-                    {t("dashboard.menu.combo.ai_content.requires_existing_item", {
-                      defaultValue: "Please save this combo first so AI can use its detail ID.",
-                    })}
-                  </p>
-                )}
 
                 <textarea
                   value={formData.description}
@@ -851,86 +850,93 @@ export default function ComboFormPage() {
                 <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
                   {t("dashboard.menu.combo.fields.image", { defaultValue: "Image" })}
                 </label>
-                <div className="combo-image-upload-field">
-                  <input
-                    id={imageInputId}
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="combo-image-input-hidden"
-                  />
 
-                  <label
-                    htmlFor={imageInputId}
-                    className={`combo-image-dropzone ${isImageDropActive ? "is-dragging" : ""}`}
-                    onDragEnter={handleImageDragEnter}
-                    onDragOver={handleImageDragOver}
-                    onDragLeave={handleImageDragLeave}
-                    onDrop={handleImageDrop}>
-                    <p className="combo-image-dropzone-title">
-                      {t("dashboard.menu.combo.fields.image_drop_title", {
-                        defaultValue: "Drop an image here or click to browse",
-                      })}
-                    </p>
-                    <p className="combo-image-dropzone-hint">
-                      {t("dashboard.menu.combo.fields.image_drop_hint", {
-                        defaultValue: "Supports JPG, PNG, WEBP",
-                      })}
-                    </p>
-                  </label>
+                {/* Hidden file input */}
+                <input
+                  id={imageInputId}
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
 
-                  <div className="combo-image-upload-actions">
-                    <Button type="default" onClick={openImagePicker}>
-                      {t("dashboard.menu.combo.actions.change_image", {
-                        defaultValue: "Choose image",
-                      })}
-                    </Button>
-
-                    {imageFile && (
-                      <Button onClick={resetSelectedImage}>
-                        {existingImageUrl
-                          ? t("dashboard.menu.combo.actions.use_saved_image", {
-                              defaultValue: "Use saved image",
-                            })
-                          : t("dashboard.menu.combo.actions.clear_image", {
-                              defaultValue: "Clear selection",
-                            })}
-                      </Button>
-                    )}
-                  </div>
-
-                  {(imageFile || existingImageUrl) && (
-                    <div className="combo-image-preview-card">
-                      <div className="combo-image-preview-media">
-                        <img
-                          src={imagePreviewUrl || existingImageUrl}
-                          alt={t("dashboard.menu.combo.fields.image", {
-                            defaultValue: "Image",
-                          })}
-                          className="w-full h-full object-cover"
-                        />
+                <div className="space-y-3">
+                  {/* Preview — shown when image selected or existing */}
+                  {(imageFile || existingImageUrl) ? (
+                    <div
+                      className="relative group rounded-xl overflow-hidden border-2 transition-all"
+                      style={{
+                        borderColor: "var(--primary)",
+                        aspectRatio: "4/3",
+                        background: "var(--surface)",
+                        boxShadow: "0 0 0 3px var(--primary)22",
+                        maxWidth: 280,
+                      }}>
+                      <img
+                        src={imagePreviewUrl || existingImageUrl}
+                        alt={t("dashboard.menu.combo.fields.image", { defaultValue: "Image" })}
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Hover overlay with remove button */}
+                      <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImageFile(undefined);
+                            if (imageInputRef.current) imageInputRef.current.value = "";
+                          }}
+                          className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all hover:scale-110 active:scale-95"
+                          title={t("dashboard.menu.images.remove", { defaultValue: "Remove image" })}>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
                       </div>
-
-                      <div className="combo-image-preview-copy">
-                        <p className="combo-image-preview-name">
-                          {imageFile
-                            ? imageFile.name
-                            : t("dashboard.menu.combo.fields.image_current", {
-                                defaultValue: "Current saved image",
-                              })}
-                        </p>
-                        <p className="combo-image-preview-note">
-                          {imageFile
-                            ? t("dashboard.menu.combo.fields.image_pending_hint", {
-                                defaultValue: "This image will be uploaded when you save the combo",
-                              })
-                            : t("dashboard.menu.combo.fields.image_current_hint", {
-                                defaultValue: "No new image selected. The current image will be kept.",
-                              })}
-                        </p>
-                      </div>
+                      {/* Change button */}
+                      <button
+                        type="button"
+                        onClick={openImagePicker}
+                        className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
+                        style={{ background: "rgba(0,0,0,0.6)", color: "#fff" }}>
+                        {t("dashboard.menu.combo.actions.change_image", { defaultValue: "Change" })}
+                      </button>
                     </div>
+                  ) : (
+                    /* Empty state upload button */
+                    <button
+                      type="button"
+                      onClick={openImagePicker}
+                      onDragEnter={(e) => { e.preventDefault(); setIsImageDropActive(true); }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDragLeave={(e) => { e.preventDefault(); setIsImageDropActive(false); }}
+                      onDrop={(e) => { e.preventDefault(); setIsImageDropActive(false); setSelectedImage(e.dataTransfer.files?.[0]); }}
+                      className="w-full rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-3 py-10 transition-all group"
+                      style={{
+                        borderColor: isImageDropActive ? "var(--primary)" : "var(--border)",
+                        background: isImageDropActive ? "var(--primary-soft)" : "var(--surface)",
+                      }}>
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center transition-colors group-hover:bg-[var(--primary)]/10"
+                        style={{ background: "var(--bg-base)" }}>
+                        <svg
+                          className="w-6 h-6 transition-colors group-hover:text-[var(--primary)]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          style={{ color: "var(--text-muted)" }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium transition-colors group-hover:text-[var(--primary)]" style={{ color: "var(--text)" }}>
+                          {t("dashboard.menu.images.click_to_upload", { defaultValue: "Click to upload image" })}
+                        </p>
+                        <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                          {t("dashboard.menu.images.format_hint", { defaultValue: "PNG, JPG, WEBP up to 5MB" })}
+                        </p>
+                      </div>
+                    </button>
                   )}
                 </div>
               </div>

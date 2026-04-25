@@ -8,9 +8,11 @@ import { useCart } from "@/lib/contexts/CartContext";
 import customerService, {
     CustomerResponseDto,
 } from "@/lib/services/customerService";
+import notificationService from "@/lib/services/notificationService";
 import reservationService, {
     ReservationListItem,
 } from "@/lib/services/reservationService";
+import { formatVND } from "@/lib/utils/currency";
 import {
     BellOutlined,
     BulbOutlined,
@@ -23,7 +25,6 @@ import { Button, Modal, Typography, message } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatVND } from "@/lib/utils/currency";
 
 const { Text } = Typography;
 
@@ -52,7 +53,7 @@ export default function CustomerFooter({
 }: CustomerFooterProps) {
   const router = useRouter();
   const { logout } = useAuth();
-  const { cartItemCount, totalCartAmount, openCartModal } = useCart();
+  const { cartItemCount, totalCartAmount, totalOrderAmount, openCartModal } = useCart();
   const { t, i18n } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
   const [messageApi, contextHolder] = message.useMessage();
@@ -105,8 +106,17 @@ export default function CustomerFooter({
   const membershipLevel =
     customerProfile?.membershipLevel?.toLowerCase() || "bronze";
 
-  const handleAskService = () => {
-    messageApi.success(t("customer_page.footer.service_called"));
+  const handleAskService = async () => {
+    if (!tableId) {
+      messageApi.warning("Không xác định được bàn.");
+      return;
+    }
+    try {
+      await notificationService.requestTable(tableId, "Cần hỗ trợ");
+      messageApi.success(t("customer_page.footer.service_called"));
+    } catch {
+      messageApi.error("Không thể gửi yêu cầu. Vui lòng thử lại.");
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -301,7 +311,7 @@ export default function CustomerFooter({
                 fontSize: 13,
                 fontWeight: 700,
               }}>
-              {formatVND(totalCartAmount)}
+              {formatVND(totalCartAmount + totalOrderAmount)}
             </Text>
           </div>
           <ShoppingCartOutlined

@@ -28,6 +28,7 @@ export default function IngredientCategorySettings() {
   const [editingCategory, setEditingCategory] = useState<IngredientCategory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<IngredientCategory>({ id: "", code: "", name: "", description: "", isActive: true });
 
   const getCategoryLabel = (category: IngredientCategory) => {
@@ -105,7 +106,9 @@ export default function IngredientCategorySettings() {
   };
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
     try {
+      setDeletingId(id);
       await ingredientService.deleteCategory(id);
       await loadCategories();
     } catch (error) {
@@ -118,6 +121,8 @@ export default function IngredientCategorySettings() {
           }),
         ),
       );
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -148,14 +153,14 @@ export default function IngredientCategorySettings() {
       width: 100,
       render: (_, cat) => (
         <div className="flex justify-end gap-2">
-          <Button type="text" icon={<EditOutlined className="text-blue-500" />} onClick={() => handleOpenModal(cat)} className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" />
+          <Button type="text" icon={<EditOutlined className="text-blue-500" />} onClick={() => handleOpenModal(cat)} disabled={!!deletingId || isSaving} className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" />
           <Popconfirm
             title={t("dashboard.manage.ingredient_categories.confirm_delete")}
             onConfirm={() => cat.id && handleDelete(cat.id)}
             okText={t("common.actions.yes", { defaultValue: "Yes" })}
             cancelText={t("common.actions.no", { defaultValue: "No" })}
             okButtonProps={{ danger: true }}>
-            <Button type="text" icon={<DeleteOutlined className="text-red-500" />} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
+            <Button type="text" icon={<DeleteOutlined className="text-red-500" />} loading={deletingId === cat.id} disabled={!!deletingId || isSaving} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
           </Popconfirm>
         </div>
       ),
@@ -173,12 +178,13 @@ export default function IngredientCategorySettings() {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => handleOpenModal()}
+          disabled={isLoading}
           style={{ background: "linear-gradient(to right, var(--primary), var(--primary-hover))", border: "none" }}>
           {t("dashboard.manage.ingredient_categories.add")}
         </Button>
       </div>
 
-      <Table columns={columns} dataSource={categories} rowKey={(r) => r.id || r.name} loading={isLoading} pagination={{ pageSize: 10 }} className="admin-loyalty-table" />
+      <Table columns={columns} dataSource={categories} rowKey={(r) => r.id || r.name} loading={isLoading} pagination={false} className="admin-loyalty-table" />
 
       {isModalOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={handleCloseModal}>

@@ -27,6 +27,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
+import CancelDishConfirm from "@/components/admin/orders/CancelDishConfirm";
 
 type OrderItemStatus = string;
 
@@ -148,7 +149,7 @@ export default function OrderManagement() {
     return {
       Status: 0,
       From: `${yyyy}-${mm}-${dd}T00:00:00Z`,
-      To: `${yyyy}-${mm}-${dd}T23:59:59Z`,
+      // To: `${yyyy}-${mm}-${dd}T23:59:59Z`,
     };
   }, []);
 
@@ -269,7 +270,7 @@ export default function OrderManagement() {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
-      const data = await orderService.getAllOrders(getTodayOrderQuery());
+      const data = await orderService.getCurrentOrders(getTodayOrderQuery());
       setOrders(mapOrders(data ?? []));
     } catch (error) {
       console.error("Failed to fetch orders:", error);
@@ -304,7 +305,7 @@ export default function OrderManagement() {
           orderStatusService.getAllStatuses(),
           menuService.getMenu(),
           dishService.getActiveCombos().catch(() => []),
-          orderService.getAllOrders(getTodayOrderQuery()),
+          orderService.getCurrentOrders(getTodayOrderQuery()),
         ]);
 
       const safeStatuses = statusData ?? [];
@@ -360,6 +361,8 @@ export default function OrderManagement() {
   const [isTablet, setIsTablet] = useState(false);
   const [isUpdatingOrderStatus, setIsUpdatingOrderStatus] = useState(false);
   const [isUpdatingDetailStatus, setIsUpdatingDetailStatus] = useState(false);
+  const [cancelConfirm, setCancelConfirm] = useState<{ orderId: string; detailId: string; dishName: string; statusValue: string } | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PaymentOrder | null>(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] =
@@ -537,7 +540,6 @@ export default function OrderManagement() {
     detailId: string,
     statusValue: string,
   ) => {
-    const previousOrders = orders;
     const normalizedValue = normalizeStatusValue(statusValue);
     const matchedStatus = orderDetailStatuses.find(
       (status) =>
@@ -549,6 +551,26 @@ export default function OrderManagement() {
       message.error(t("staff.orders.messages.order_status_update_failed"));
       return;
     }
+
+    // Intercept cancel — show confirm popup
+    if (matchedStatus.code?.toLowerCase() === "cancelled" || matchedStatus.name?.toLowerCase() === "cancelled") {
+      const order = orders.find((o) => o.id === orderId);
+      const item = order?.detailItems?.find((i) => i.id === detailId) ?? order?.items?.find((i: any) => i.id === detailId);
+      setCancelConfirm({ orderId, detailId, dishName: (item as any)?.name ?? "", statusValue });
+      return;
+    }
+
+    await _doUpdateDetailStatus(orderId, detailId, statusValue, normalizedValue, matchedStatus);
+  };
+
+  const _doUpdateDetailStatus = async (
+    orderId: string,
+    detailId: string,
+    statusValue: string,
+    normalizedValue: string,
+    matchedStatus: OrderDetailStatus,
+  ) => {
+    const previousOrders = orders;
 
     setOrders((prev) =>
       prev.map((order) => {
@@ -580,6 +602,20 @@ export default function OrderManagement() {
     } finally {
       setIsUpdatingDetailStatus(false);
     }
+  };
+
+  const handleConfirmCancelStaff = async () => {
+    if (!cancelConfirm) return;
+    const { orderId, detailId, statusValue } = cancelConfirm;
+    const normalizedValue = normalizeStatusValue(statusValue);
+    const matchedStatus = orderDetailStatuses.find(
+      (s) => s.id === normalizedValue || s.code?.toLowerCase() === normalizedValue.toLowerCase(),
+    );
+    if (!matchedStatus) return;
+    setIsCancelling(true);
+    await _doUpdateDetailStatus(orderId, detailId, statusValue, normalizedValue, matchedStatus);
+    setIsCancelling(false);
+    setCancelConfirm(null);
   };
 
   const addToCart = (item: DishItem) => {
@@ -819,14 +855,14 @@ export default function OrderManagement() {
       <div>
         {filteredOrders.length > 0 ? (
           filteredOrders.map((order) => {
-            const defaultStatuses = orderDetailStatuses
-              .filter((s) => s.isDefault)
+            const preparingStatuses = orderDetailStatuses
+              .filter((s) => s.code?.toLowerCase() === "preparing")
               .map((s) => s.code?.toLowerCase() || s.id);
 
             const filteredDetailItems = order.detailItems.filter((item) => {
-              if (defaultStatuses.length === 0) return true;
+              if (preparingStatuses.length === 0) return true;
               const nStatus = normalizeStatusValue(item.status).toLowerCase();
-              return defaultStatuses.includes(nStatus);
+              return preparingStatuses.includes(nStatus);
             });
 
             return (
@@ -953,6 +989,14 @@ export default function OrderManagement() {
         isMobile={isMobile}
         mode={mode as "light" | "dark"}
         t={t}
+      />
+
+      <CancelDishConfirm
+        open={!!cancelConfirm}
+        dishName={cancelConfirm?.dishName}
+        loading={isCancelling}
+        onConfirm={handleConfirmCancelStaff}
+        onCancel={() => setCancelConfirm(null)}
       />
 
       <style jsx global>{`

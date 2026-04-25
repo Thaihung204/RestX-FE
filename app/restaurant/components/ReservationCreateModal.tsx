@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { createPortal } from 'react-dom';
-import dayjs from 'dayjs';
-import { DatePicker } from 'antd';
-import { reservationService, CreateReservationResponse } from '@/lib/services/reservationService';
-import { useTranslation } from 'react-i18next';
 import type { TableData } from '@/app/admin/tables/components/DraggableTable';
+import { DayPicker } from '@/components/ui/DayPicker';
+import { TimePicker } from '@/components/ui/TimePicker';
+import { CreateReservationResponse, reservationService } from '@/lib/services/reservationService';
+import dayjs from 'dayjs';
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 
 interface ReservationCreateModalProps {
   open: boolean;
@@ -158,9 +159,10 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
             backdropFilter: 'blur(8px)',
             zIndex: 1200,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'center',
             padding: 16,
+            overflowY: 'auto',
           }}
         >
           <motion.div
@@ -174,9 +176,11 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
               borderRadius: 20,
               width: '100%',
               maxWidth: 520,
-              overflow: 'hidden',
+              overflow: 'visible',
               boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
               border: '1px solid var(--border)',
+              marginTop: 'auto',
+              marginBottom: 'auto',
             }}
           >
             <div
@@ -268,64 +272,29 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                 </div>
               ) : (
                 <>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('landing.booking.confirm.date_time')}
                       </label>
-                      <DatePicker
-                        value={dayjs(form.date, 'YYYY-MM-DD')}
-                        format="DD/MM/YYYY"
-                        allowClear={false}
-                        style={{ width: '100%', marginTop: 8 }}
-                        disabledDate={(current) => {
-                          if (!current) return false;
-                          const today = getTodayLocalDate();
-                          const maxBookableDate = getMaxBookableDate();
-                          const currentDate = current.format('YYYY-MM-DD');
-                          return currentDate < today || currentDate > maxBookableDate;
-                        }}
-                        onChange={(value) => {
-                          if (!value) return;
-                          const selectedDate = value.format('YYYY-MM-DD');
-                          const today = getTodayLocalDate();
-                          const maxBookableDate = getMaxBookableDate();
-                          let safeDate = selectedDate < today ? today : selectedDate;
-                          if (safeDate > maxBookableDate) safeDate = maxBookableDate;
-                          setForm((prev) => ({ ...prev, date: safeDate }));
-                        }}
-                      />
+                      <div style={{ marginTop: 8 }}>
+                        <DayPicker
+                          value={dayjs(form.date, 'YYYY-MM-DD')}
+                          minDate={dayjs(getTodayLocalDate(), 'YYYY-MM-DD')}
+                          maxDate={dayjs(getMaxBookableDate(), 'YYYY-MM-DD')}
+                          onChange={(d) => setForm((prev) => ({ ...prev, date: d.format('YYYY-MM-DD') }))}
+                        />
+                      </div>
                     </div>
-                    <div>
+                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('landing.booking.form.preferred_time')}
                       </label>
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                        <select
-                          value={form.time.split(':')[0]}
-                          onChange={(e) => {
-                            const min = form.time.split(':')[1] || '00';
-                            setForm((prev) => ({ ...prev, time: `${e.target.value}:${min}` }));
-                          }}
-                          style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14 }}
-                        >
-                          {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
-                            <option key={h} value={h}>{h}</option>
-                          ))}
-                        </select>
-                        <span style={{ display: 'flex', alignItems: 'center', color: 'var(--text-muted)', fontWeight: 700 }}>:</span>
-                        <select
-                          value={form.time.split(':')[1] || '00'}
-                          onChange={(e) => {
-                            const hr = form.time.split(':')[0] || '00';
-                            setForm((prev) => ({ ...prev, time: `${hr}:${e.target.value}` }));
-                          }}
-                          style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14 }}
-                        >
-                          {['00', '15', '30', '45'].map((m) => (
-                            <option key={m} value={m}>{m}</option>
-                          ))}
-                        </select>
+                      <div style={{ marginTop: 8 }}>
+                        <TimePicker
+                          value={form.time}
+                          onChange={(t) => setForm((prev) => ({ ...prev, time: t }))}
+                        />
                       </div>
                     </div>
                   </div>
@@ -348,8 +317,8 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('landing.booking.confirm.full_name')}
                       </label>
@@ -357,10 +326,10 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                         type="text"
                         value={form.name}
                         onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                        style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)' }}
+                        style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', boxSizing: 'border-box' }}
                       />
                     </div>
-                    <div>
+                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('landing.booking.confirm.phone_number')}
                       </label>
@@ -368,7 +337,7 @@ export const ReservationCreateModal: React.FC<ReservationCreateModalProps> = ({
                         type="tel"
                         value={form.phone}
                         onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-                        style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)' }}
+                        style={{ width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', boxSizing: 'border-box' }}
                       />
                     </div>
                   </div>

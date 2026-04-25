@@ -20,6 +20,7 @@ export interface ITenant {
 export interface TenantCreateInput {
   name: string;
   hostName?: string;
+  isCustomDomain?: boolean;
   businessName: string;
   phoneNumber: string;
   addressLine1: string;
@@ -178,4 +179,11 @@ export interface TenantRequestInput {
   businessAddressLine3?: string;
   businessAddressLine4?: string;
   businessCountry?: string;
+}
+
+export interface BusinessHour {
+  dayOfWeek: number;
+  openTime: string;
+  closeTime: string;
+  isClosed: boolean;
 }

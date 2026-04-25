@@ -5,32 +5,24 @@ import { ITenantRequest, TenantRequestStatus } from "@/lib/types/tenant";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  EnvironmentOutlined,
   EyeOutlined,
+  GlobalOutlined,
   MailOutlined,
   PhoneOutlined,
   ReloadOutlined,
   SearchOutlined,
-  ShopOutlined,
 } from "@ant-design/icons";
 import {
   App,
-  Avatar,
   Badge,
   Button,
-  Card,
-  Descriptions,
   Input,
   Modal,
-  Space,
-  Table,
-  Tag,
-  Typography,
+  Spin,
 } from "antd";
-import type { ColumnsType } from "antd/es/table";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 interface TenantRequestListProps {
   onRequestUpdated?: () => void;
@@ -185,317 +177,250 @@ export const TenantRequestList: React.FC<TenantRequestListProps> = ({
     });
   };
 
-  const columns: ColumnsType<ITenantRequest> = [
-    {
-      title: t("tenants.table.tenant_info"),
-      dataIndex: "name",
-      key: "name",
-      width: 280,
-      fixed: "left",
-      render: (_, record) => (
-        <div className="flex items-center gap-3">
-          <Avatar
-            shape="square"
-            size="large"
-            className="shadow-sm rounded-lg bg-[var(--primary)] text-white">
-            {record.name.charAt(0)}
-          </Avatar>
-          <div className="flex flex-col">
-            <span
-              className="font-semibold text-sm"
-              style={{ color: "var(--text)" }}>
-              {record.name}
-            </span>
-            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {record.businessName || "-"}
-            </span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: t("tenants.table.contact"),
-      key: "contact",
-      width: 220,
-      render: (_, record) => (
-        <div className="flex flex-col gap-1">
-          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-            <PhoneOutlined className="mr-1" />
-            {record.businessPrimaryPhone || "-"}
-          </span>
-          <span
-            className="text-[11px] truncate max-w-[200px]"
-            style={{ color: "var(--text-muted)" }}
-            title={record.businessEmailAddress || ""}>
-            <MailOutlined className="mr-1" />
-            {record.businessEmailAddress || "-"}
-          </span>
-        </div>
-      ),
-    },
-    {
-      title: t("tenants.table.address"),
-      key: "address",
-      width: 240,
-      render: (_, record) => (
-        <div className="flex flex-col">
-          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-            {record.businessAddressLine1 || "-"} {record.businessAddressLine2 || ""}
-          </span>
-          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-            {record.businessAddressLine3 || ""}{record.businessAddressLine3 && record.businessAddressLine4 ? ", " : ""}{record.businessAddressLine4 || ""}
-          </span>
-        </div>
-      ),
-    },
-    {
-      title: t("tenants.table.hostname"),
-      dataIndex: "hostname",
-      key: "hostname",
-      width: 200,
-      render: (hostname: string) => (
-        <span
-          className="text-[11px] font-mono truncate max-w-[180px] block"
-          style={{ color: "var(--text-muted)" }}
-          title={hostname}>
-          {hostname}
-        </span>
-      ),
-    },
-    {
-      title: t("tenant_requests.list.column_actions"),
-      key: "actions",
-      fixed: "right",
-      width: 200,
-      render: (_, record) => (
-        <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-2 w-full items-start">
-          <div className="flex items-start justify-center">
-            <Button
-              type="text"
-              shape="circle"
-              icon={<EyeOutlined style={{ color: "var(--text-muted)" }} />}
-              onClick={() => handleViewDetails(record)}
-              title={t("tenant_requests.list.action_view")}
-              aria-label={t("tenant_requests.list.action_view")}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Button
-              type="primary"
-              size="small"
-              icon={<CheckCircleOutlined />}
-              loading={actionLoading === record.id}
-              onClick={() => handleApprove(record)}
-              className="w-full justify-center">
-              {t("tenant_requests.list.action_approve")}
-            </Button>
-            <Button
-              danger
-              size="small"
-              icon={<CloseCircleOutlined />}
-              loading={actionLoading === record.id}
-              onClick={() => handleReject(record)}
-              className="w-full justify-center">
-              {t("tenant_requests.list.action_reject")}
-            </Button>
-          </div>
-        </div>
-      ),
-    },
-  ];
-
   const pendingCount = requests.length;
 
+  const buildAddress = (req: ITenantRequest) => {
+    const parts = [
+      req.businessAddressLine1,
+      req.businessAddressLine2,
+      req.businessAddressLine3,
+      req.businessAddressLine4,
+    ].filter(Boolean);
+    return parts.join(", ");
+  };
+
+  const req = detailModal.request;
+
   return (
-    <Card
-      variant="borderless"
-      className="shadow-md overflow-hidden"
-      styles={{ body: { padding: 0 } }}
-      style={{
-        background: "var(--card)",
-        borderColor: "var(--border)",
-        maxWidth: "100%",
-      }}>
-      {/* Filter Bar */}
-      <div
-        className="p-3 md:p-4 flex flex-col sm:flex-row gap-2 md:gap-3 justify-between items-stretch sm:items-center"
-        style={{
-          borderBottom: "1px solid var(--border)",
-          background: "var(--card)",
-        }}>
-        <div className="flex flex-col sm:flex-row flex-1 gap-2 max-w-2xl">
+    <div className="tr-shell">
+      {/* ── Filter Bar ── */}
+      <div className="tr-filter-bar">
+        <div className="tr-filter-left">
           <Input
             allowClear
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:flex-1"
+            className="tr-search-input"
+            placeholder={t("tenant_requests.list.search_placeholder")}
           />
-          <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-            {t("tenant_requests.list.total_filtered", { total: requests.length, filtered: filteredData.length })}
-          </div>
+          <span className="tr-filter-summary">
+            {t("tenant_requests.list.total_filtered", {
+              total: requests.length,
+              filtered: filteredData.length,
+            })}
+          </span>
         </div>
-        <div className="flex gap-2">
+        <div className="tr-filter-right">
           <Badge count={pendingCount} showZero>
-            <Button type="default" className="w-full sm:w-auto">
+            <Button type="default" className="tr-pending-btn">
               {t("tenant_requests.list.pending_requests")}
             </Button>
           </Badge>
           <Button
             icon={<ReloadOutlined />}
             onClick={fetchPendingRequests}
-            loading={loading}>
+            loading={loading}
+            className="tr-refresh-btn">
             {t("tenant_requests.list.refresh")}
           </Button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="w-full overflow-auto">
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey={(record) => record.id || record.hostname || record.name}
-          size="small"
-          loading={loading}
-          className="admin-tenants-table"
-          style={
-            {
-              "--table-header-bg": "var(--surface)",
-              "--table-header-text": "var(--text)",
-              "--table-row-hover-bg": "var(--surface-subtle)",
-            } as React.CSSProperties
-          }
-          locale={{
-            emptyText: (
-              <div style={{ padding: "40px", color: "var(--text-muted)" }}>
-                <div>{t("tenant_requests.list.no_data")}</div>
-              </div>
-            ),
-          }}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => (
-              <span style={{ color: "var(--text-muted)" }}>
-                {t("tenant_requests.list.total_requests", { count: total })}
-              </span>
-            ),
-            className: "px-3 md:px-4 pb-3",
-            responsive: true,
-            showLessItems: true,
-          }}
-          scroll={{ x: "max-content", y: "calc(100vh - 400px)" }}
-        />
-      </div>
+      {/* ── Request Cards ── */}
+      <Spin spinning={loading}>
+        {filteredData.length === 0 && !loading ? (
+          <div className="tr-empty">
+            <div className="tr-empty-icon">
+              <GlobalOutlined />
+            </div>
+            <p className="tr-empty-title">{t("tenant_requests.list.no_data")}</p>
+            <p className="tr-empty-desc">{t("tenant_requests.list.no_data_desc")}</p>
+          </div>
+        ) : (
+          <div className="tr-card-list">
+            {filteredData.map((record) => (
+              <div
+                key={record.id || record.hostname || record.name}
+                className="tr-card">
+                <div className="tr-card-accent" />
+                <div className="tr-card-body">
+                  {/* Identity */}
+                  <div className="tr-card-identity">
+                    <div className="tr-card-avatar">
+                      {record.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="tr-card-name-wrap">
+                      <span className="tr-card-name">{record.name}</span>
+                      <span className="tr-card-biz">{record.businessName || "-"}</span>
+                    </div>
+                  </div>
 
-      {/* Detail Modal */}
+                  {/* Contact */}
+                  <div className="tr-card-contact">
+                    <span className="tr-card-contact-item">
+                      <PhoneOutlined />
+                      {record.businessPrimaryPhone || "-"}
+                    </span>
+                    <span className="tr-card-contact-item" title={record.businessEmailAddress || ""}>
+                      <MailOutlined />
+                      {record.businessEmailAddress || "-"}
+                    </span>
+                  </div>
+
+                  {/* Address */}
+                  <div className="tr-card-address">
+                    <EnvironmentOutlined />
+                    <span>{buildAddress(record) || "-"}</span>
+                  </div>
+
+                  {/* Domain */}
+                  <div className="tr-card-domain">
+                    <span className="tr-domain-badge">{record.hostname}</span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="tr-card-actions">
+                    <button
+                      className="tr-action-view"
+                      onClick={() => handleViewDetails(record)}
+                      title={t("tenant_requests.list.action_view")}>
+                      <EyeOutlined />
+                    </button>
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<CheckCircleOutlined />}
+                      loading={actionLoading === record.id}
+                      onClick={() => handleApprove(record)}
+                      className="tr-action-approve">
+                      {t("tenant_requests.list.action_approve")}
+                    </Button>
+                    <Button
+                      danger
+                      size="small"
+                      icon={<CloseCircleOutlined />}
+                      loading={actionLoading === record.id}
+                      onClick={() => handleReject(record)}
+                      className="tr-action-reject">
+                      {t("tenant_requests.list.action_reject")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Spin>
+
+      {/* ── Detail Modal ── */}
       <Modal
-        title={
-          <Space>
-            <ShopOutlined />
-            {t("tenant_requests.list.detail_modal_title")}
-          </Space>
-        }
         open={detailModal.visible}
         onCancel={() => setDetailModal({ visible: false, request: null })}
-        footer={[
-          <Button
-            key="close"
-            onClick={() => setDetailModal({ visible: false, request: null })}>
-            {t("tenant_requests.list.detail_close")}
-          </Button>,
-          <Button
-            key="reject"
-            danger
-            loading={actionLoading === detailModal.request?.id}
-            onClick={() => {
-              if (detailModal.request) {
-                handleReject(detailModal.request);
-                setDetailModal({ visible: false, request: null });
-              }
-            }}>
-            {t("tenant_requests.list.action_reject")}
-          </Button>,
-          <Button
-            key="approve"
-            type="primary"
-            loading={actionLoading === detailModal.request?.id}
-            onClick={() => {
-              if (detailModal.request) {
-                handleApprove(detailModal.request);
-                setDetailModal({ visible: false, request: null });
-              }
-            }}>
-            {t("tenant_requests.list.action_approve")}
-          </Button>,
-        ]}
-        width="90%"
-        style={{ maxWidth: 700 }}
-        styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}>
-        {detailModal.request && (
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item
-              label={t("tenant_requests.list.detail_restaurant_name")}>
-              {detailModal.request.name}
-            </Descriptions.Item>
-            <Descriptions.Item label={t("tenant_requests.list.detail_hostname")}>
-              <Text code>{detailModal.request.hostname}</Text>
-            </Descriptions.Item>
-            {detailModal.request.businessName && (
-              <Descriptions.Item
-                label={t("tenant_requests.list.detail_business_name")}>
-                {detailModal.request.businessName}
-              </Descriptions.Item>
-            )}
-            {detailModal.request.businessEmailAddress && (
-              <Descriptions.Item
-                label={t("tenant_requests.list.detail_business_email")}>
-                {detailModal.request.businessEmailAddress}
-              </Descriptions.Item>
-            )}
-            {detailModal.request.businessPrimaryPhone && (
-              <Descriptions.Item
-                label={t("tenant_requests.list.detail_phone")}>
-                {detailModal.request.businessPrimaryPhone}
-              </Descriptions.Item>
-            )}
-            {(detailModal.request.businessAddressLine1 ||
-              detailModal.request.businessAddressLine2 ||
-              detailModal.request.businessAddressLine3 ||
-              detailModal.request.businessAddressLine4) && (
-              <Descriptions.Item
-                label={t("tenant_requests.list.detail_address")}>
-                <div>
-                  {detailModal.request.businessAddressLine1 && (
-                    <div>{detailModal.request.businessAddressLine1}</div>
-                  )}
-                  {detailModal.request.businessAddressLine2 && (
-                    <div>{detailModal.request.businessAddressLine2}</div>
-                  )}
-                  {detailModal.request.businessAddressLine3 && (
-                    <div>{detailModal.request.businessAddressLine3}</div>
-                  )}
-                  {detailModal.request.businessAddressLine4 && (
-                    <div>{detailModal.request.businessAddressLine4}</div>
-                  )}
+        centered
+        width={560}
+        rootClassName="tr-detail-modal"
+        title={null}
+        footer={null}
+        styles={{
+          mask: { backdropFilter: "blur(10px)", background: "var(--modal-overlay)" },
+        }}>
+        {req && (
+          <div className="tr-modal-inner">
+            {/* Modal Header */}
+            <div className="tr-modal-header">
+              <div className="tr-modal-avatar">
+                {req.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h2 className="tr-modal-name">{req.name}</h2>
+                <span className="tr-modal-status-badge">
+                  <CheckCircleOutlined />
+                  {t("tenant_requests.list.status_pending_approval")}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="tr-modal-fields">
+              <div className="tr-modal-field">
+                <span className="tr-modal-label">{t("tenant_requests.list.detail_restaurant_name")}</span>
+                <span className="tr-modal-value">{req.name}</span>
+              </div>
+              <div className="tr-modal-field">
+                <span className="tr-modal-label">{t("tenant_requests.list.detail_hostname")}</span>
+                <span className="tr-modal-value tr-modal-value-mono">{req.hostname}</span>
+              </div>
+              {req.businessName && (
+                <div className="tr-modal-field">
+                  <span className="tr-modal-label">{t("tenant_requests.list.detail_business_name")}</span>
+                  <span className="tr-modal-value">{req.businessName}</span>
                 </div>
-              </Descriptions.Item>
-            )}
-            {detailModal.request.businessCountry && (
-              <Descriptions.Item label={t("tenant_requests.list.detail_country")}>
-                {detailModal.request.businessCountry}
-              </Descriptions.Item>
-            )}
-            <Descriptions.Item label={t("tenant_requests.list.detail_status")}>
-              <Tag color="orange" icon={<CheckCircleOutlined />}>
-                {t("tenant_requests.list.status_pending_approval")}
-              </Tag>
-            </Descriptions.Item>
-          </Descriptions>
+              )}
+              {req.businessEmailAddress && (
+                <div className="tr-modal-field">
+                  <span className="tr-modal-label">{t("tenant_requests.list.detail_business_email")}</span>
+                  <span className="tr-modal-value">{req.businessEmailAddress}</span>
+                </div>
+              )}
+              {req.businessPrimaryPhone && (
+                <div className="tr-modal-field">
+                  <span className="tr-modal-label">{t("tenant_requests.list.detail_phone")}</span>
+                  <span className="tr-modal-value">{req.businessPrimaryPhone}</span>
+                </div>
+              )}
+              {(req.businessAddressLine1 || req.businessAddressLine2 || req.businessAddressLine3 || req.businessAddressLine4) && (
+                <div className="tr-modal-field">
+                  <span className="tr-modal-label">{t("tenant_requests.list.detail_address")}</span>
+                  <span className="tr-modal-value">
+                    {[req.businessAddressLine1, req.businessAddressLine2, req.businessAddressLine3, req.businessAddressLine4]
+                      .filter(Boolean)
+                      .map((line, i) => (
+                        <span key={i} className="tr-modal-address-line">{line}</span>
+                      ))}
+                  </span>
+                </div>
+              )}
+              {req.businessCountry && (
+                <div className="tr-modal-field">
+                  <span className="tr-modal-label">{t("tenant_requests.list.detail_country")}</span>
+                  <span className="tr-modal-value">{req.businessCountry}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="tr-modal-footer">
+              <Button
+                onClick={() => setDetailModal({ visible: false, request: null })}
+                className="tr-modal-close-btn">
+                {t("tenant_requests.list.detail_close")}
+              </Button>
+              <Button
+                danger
+                loading={actionLoading === req.id}
+                onClick={() => {
+                  handleReject(req);
+                  setDetailModal({ visible: false, request: null });
+                }}
+                className="tr-modal-reject-btn">
+                {t("tenant_requests.list.action_reject")}
+              </Button>
+              <Button
+                type="primary"
+                loading={actionLoading === req.id}
+                onClick={() => {
+                  handleApprove(req);
+                  setDetailModal({ visible: false, request: null });
+                }}
+                className="tr-modal-approve-btn">
+                {t("tenant_requests.list.action_approve")}
+              </Button>
+            </div>
+          </div>
         )}
       </Modal>
-    </Card>
+    </div>
   );
 };
 

@@ -7,8 +7,8 @@ import orderStatusService, {
   OrderStatus,
 } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
-import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { formatVND } from "@/lib/utils/currency";
+import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
@@ -16,6 +16,8 @@ import { message } from "antd";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DayPicker } from "@/components/ui/DayPicker";
+import dayjs from "dayjs";
 
 interface OrderRow {
   id: string;
@@ -40,8 +42,12 @@ export default function OrdersPage() {
   const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [customerNameSearch, setCustomerNameSearch] = useState("");
+  const [referenceSearch, setReferenceSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [exporting, setExporting] = useState<boolean>(false);
@@ -51,11 +57,26 @@ export default function OrdersPage() {
 
   const orderFilterParams = useMemo(
     () => ({
-      Status: statusFilter === "" ? undefined : Number(statusFilter),
-      From: fromDate || undefined,
-      To: toDate || undefined,
+      status: statusFilter === "" ? undefined : Number(statusFilter),
+      paymentStatus:
+        paymentStatusFilter === "" ? undefined : Number(paymentStatusFilter),
+      from: fromDate ? `${fromDate}T00:00:00Z` : undefined,
+      to: toDate ? `${toDate}T23:59:59Z` : undefined,
+      customerName: customerNameSearch.trim() || undefined,
+      reference: referenceSearch.trim() || undefined,
+      page: page,
+      itemsPerPage: pageSize,
     }),
-    [fromDate, statusFilter, toDate],
+    [
+      fromDate,
+      statusFilter,
+      paymentStatusFilter,
+      toDate,
+      customerNameSearch,
+      referenceSearch,
+      page,
+      pageSize,
+    ],
   );
 
   const mapPaymentStatus = (statusId: number): "unpaid" | "paid" => {
@@ -131,10 +152,13 @@ export default function OrdersPage() {
     inFlightRef.current = true;
 
     try {
-      const data = await orderService.getAllOrders(orderFilterParams);
+      const result = await orderService.getPaginatedOrders(orderFilterParams);
+
+      setTotalPages(result.totalPages);
+      setTotalCount(result.totalCount);
 
       setOrders(
-        data.map((o) => {
+        result.orders.map((o) => {
           const distinctCount = o.orderDetails?.length ?? 0;
           const totalQuantity =
             o.orderDetails?.reduce((sum, d) => sum + (d.quantity ?? 0), 0) ?? 0;
@@ -157,12 +181,12 @@ export default function OrdersPage() {
             orderStatusId,
             time: o.createdDate
               ? new Date(o.createdDate).toLocaleString("vi-VN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })
               : "",
             paymentStatus,
             raw: o,
@@ -222,7 +246,8 @@ export default function OrdersPage() {
         tenantId?: string;
         order?: { tenantId?: string };
       };
-      const changedTenantId = payloadObj?.tenantId || payloadObj?.order?.tenantId;
+      const changedTenantId =
+        payloadObj?.tenantId || payloadObj?.order?.tenantId;
       if (changedTenantId && changedTenantId !== tenant.id) return;
 
       if (debounceTimer) clearTimeout(debounceTimer);
@@ -258,13 +283,21 @@ export default function OrdersPage() {
       events.forEach((event) => {
         orderSignalRService.off(event, handleOrderChange);
       });
-      orderSignalRService.invoke("LeaveTenantGroup", tenant.id).catch(() => {});
+      orderSignalRService.invoke("LeaveTenantGroup", tenant.id).catch(() => { });
     };
   }, [refreshOrders, tenant?.id]);
 
   useEffect(() => {
     setPage(1);
-  }, [fromDate, statusFilter, toDate, pageSize, searchTerm]);
+  }, [
+    fromDate,
+    statusFilter,
+    paymentStatusFilter,
+    toDate,
+    pageSize,
+    customerNameSearch,
+    referenceSearch,
+  ]);
 
   const handleExportOrders = useCallback(async () => {
     setExporting(true);
@@ -282,32 +315,7 @@ export default function OrdersPage() {
     }
   }, [orderFilterParams, t]);
 
-  const filteredOrders = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    if (!normalizedSearch) return orders;
-
-    return orders.filter((order) => {
-      const haystack = [
-        order.orderNumber,
-        order.customerName,
-        order.id,
-        order.raw?.reference ?? "",
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return haystack.includes(normalizedSearch);
-    });
-  }, [orders, searchTerm]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
-  const currentPage = Math.min(page, totalPages);
-
-  const pagedOrders = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredOrders.slice(start, start + pageSize);
-  }, [currentPage, filteredOrders, pageSize]);
+  const currentPage = Math.min(page, Math.max(1, totalPages));
 
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -316,7 +324,8 @@ export default function OrdersPage() {
           <div>
             <h2
               className="text-3xl font-bold mb-1"
-              style={{ color: "var(--text)" }}>
+              style={{ color: "var(--text)" }}
+            >
               {t("dashboard.orders.title")}
             </h2>
             <p style={{ color: "var(--text-muted)" }}>
@@ -333,7 +342,8 @@ export default function OrdersPage() {
                 background: "var(--primary-soft)",
                 border: "1px solid var(--primary-border)",
                 color: "var(--primary)",
-              }}>
+              }}
+            >
               <DownloadOutlined />
               {exporting
                 ? t("common.actions.exporting_report")
@@ -347,7 +357,8 @@ export default function OrdersPage() {
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
                 color: "var(--text)",
-              }}>
+              }}
+            >
               <ReloadOutlined />
               {t("admin.reservations.refresh", { defaultValue: "Lam moi" })}
             </button>
@@ -359,137 +370,133 @@ export default function OrdersPage() {
           style={{
             background: "var(--card)",
             border: "1px solid var(--border)",
-          }}>
+          }}
+        >
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="space-y-1">
               <label
-                htmlFor="orders-filter-search"
+                htmlFor="orders-filter-customer"
                 className="block text-xs"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.orders.search.label", {
-                  defaultValue: "Tìm kiếm",
+                style={{ color: "var(--text-muted)" }}
+              >
+                {t("dashboard.orders.search.customer", {
+                  defaultValue: "Tên khách hàng",
                 })}
               </label>
               <input
-                id="orders-filter-search"
+                id="orders-filter-customer"
                 type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
+                value={customerNameSearch}
+                onChange={(e) => setCustomerNameSearch(e.target.value)}
+                className="w-full px-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   color: "var(--text)",
                 }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
               />
             </div>
 
             <div className="space-y-1">
               <label
-                htmlFor="orders-filter-status"
+                htmlFor="orders-filter-reference"
                 className="block text-xs"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.orders.table.status", {
-                  defaultValue: "Trang thai",
+                style={{ color: "var(--text-muted)" }}
+              >
+                {t("dashboard.orders.search.reference", {
+                  defaultValue: "Mã đơn hàng",
                 })}
               </label>
-              <select
-                id="orders-filter-status"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg text-sm"
+              <input
+                id="orders-filter-reference"
+                type="text"
+                value={referenceSearch}
+                onChange={(e) => setReferenceSearch(e.target.value)}
+                className="w-full px-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   color: "var(--text)",
-                }}>
-                <option value="">
-                  {t("admin.reservations.filter.all_status", {
-                    defaultValue: "Tat ca trang thai",
-                  })}
-                </option>
-                {orderStatuses.map((status) => (
-                  <option key={status.id} value={status.id}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+              />
             </div>
 
             <div className="space-y-1">
               <label
                 htmlFor="orders-filter-from-date"
                 className="block text-xs"
-                style={{ color: "var(--text-muted)" }}>
+                style={{ color: "var(--text-muted)" }}
+              >
                 {t("admin.reservations.filter.from_date", {
                   defaultValue: "Tu ngay",
                 })}
               </label>
-              <input
-                id="orders-filter-from-date"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
-                aria-label={t("admin.reservations.filter.from_date", {
-                  defaultValue: "Tu ngay",
-                })}
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}
-              />
+              <div>
+                <DayPicker
+                  value={fromDate ? dayjs(fromDate) : null}
+                  onChange={(d) => setFromDate(d ? d.format("YYYY-MM-DD") : "")}
+                  placeholder={t("admin.reservations.filter.date_placeholder", {
+                    defaultValue: "Chọn ngày",
+                  })}
+                />
+              </div>
             </div>
 
             <div className="space-y-1">
               <label
                 htmlFor="orders-filter-to-date"
                 className="block text-xs"
-                style={{ color: "var(--text-muted)" }}>
+                style={{ color: "var(--text-muted)" }}
+              >
                 {t("admin.reservations.filter.to_date", {
                   defaultValue: "Den ngay",
                 })}
               </label>
-              <input
-                id="orders-filter-to-date"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg text-sm outline-none"
-                aria-label={t("admin.reservations.filter.to_date", {
-                  defaultValue: "Den ngay",
-                })}
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}
-              />
+              <div>
+                <DayPicker
+                  value={toDate ? dayjs(toDate) : null}
+                  onChange={(d) => setToDate(d ? d.format("YYYY-MM-DD") : "")}
+                  placeholder={t("admin.reservations.filter.date_placeholder", {
+                    defaultValue: "Chọn ngày",
+                  })}
+                />
+              </div>
             </div>
           </div>
 
-          {(statusFilter !== "" || fromDate || toDate || searchTerm.trim()) && (
-            <div className="mt-3 flex justify-end">
-              <button
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter("");
-                  setFromDate("");
-                  setToDate("");
-                }}
-                className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                style={{
-                  background: "rgba(239,68,68,0.1)",
-                  color: "#ef4444",
-                  border: "1px solid rgba(239,68,68,0.2)",
-                }}>
-                {t("admin.reservations.filter.clear", {
-                  defaultValue: "Xoa loc",
-                })}
-              </button>
-            </div>
-          )}
+          {(statusFilter !== "" ||
+            paymentStatusFilter !== "" ||
+            fromDate ||
+            toDate ||
+            customerNameSearch.trim() ||
+            referenceSearch.trim()) && (
+              <div className="mt-3 flex justify-end">
+                <button
+                  onClick={() => {
+                    setCustomerNameSearch("");
+                    setReferenceSearch("");
+                    setStatusFilter("");
+                    setPaymentStatusFilter("");
+                    setFromDate("");
+                    setToDate("");
+                  }}
+                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    background: "rgba(239,68,68,0.1)",
+                    color: "#ef4444",
+                    border: "1px solid rgba(239,68,68,0.2)",
+                  }}
+                >
+                  {t("admin.reservations.filter.clear", {
+                    defaultValue: "Xoa loc",
+                  })}
+                </button>
+              </div>
+            )}
         </div>
 
         <div
@@ -497,49 +504,142 @@ export default function OrdersPage() {
           style={{
             background: "var(--card)",
             border: "1px solid var(--border)",
-          }}>
+          }}
+        >
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead style={{ background: "var(--surface)" }}>
                 <tr>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {t("dashboard.orders.table.order")}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {t("dashboard.orders.table.customer")}
                   </th>
                   <th
                     className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {t("dashboard.orders.table.items")}
                   </th>
                   <th
                     className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {t("dashboard.orders.table.total")}
                   </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
-                    {t("dashboard.orders.table.status")}
+                  <th className="px-6 py-2 text-center text-xs font-medium uppercase tracking-wider transition-colors">
+                    <DropDown
+                      containerClassName="max-w-[150px] mx-auto"
+                      className="!bg-transparent !border-none !pl-0 !pr-6 !py-0 uppercase tracking-wider font-medium text-xs text-center !shadow-none"
+                      style={{
+                        background: "transparent",
+                        borderColor: "transparent",
+                        color: statusFilter
+                          ? "var(--primary)"
+                          : "var(--text-muted)",
+                        textAlignLast: "center",
+                      }}
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                      <option
+                        style={{
+                          background: "var(--surface)",
+                          color: "var(--text)",
+                          textTransform: "none",
+                          textAlign: "left",
+                        }}
+                        value=""
+                      >
+                        {t("dashboard.orders.table.status")}
+                      </option>
+                      {orderStatuses.map((s) => (
+                        <option
+                          style={{
+                            background: "var(--surface)",
+                            color: "var(--text)",
+                            textTransform: "none",
+                            textAlign: "left",
+                          }}
+                          key={s.id}
+                          value={s.id}
+                        >
+                          {s.name}
+                        </option>
+                      ))}
+                    </DropDown>
+                  </th>
+                  <th className="px-6 py-2 text-center text-xs font-medium uppercase tracking-wider transition-colors">
+                    <DropDown
+                      containerClassName="max-w-[150px] mx-auto"
+                      className="!bg-transparent !border-none !pl-0 !pr-6 !py-0 uppercase tracking-wider font-medium text-xs text-center !shadow-none"
+                      style={{
+                        background: "transparent",
+                        borderColor: "transparent",
+                        color: paymentStatusFilter
+                          ? "var(--primary)"
+                          : "var(--text-muted)",
+                        textAlignLast: "center",
+                      }}
+                      value={paymentStatusFilter}
+                      onChange={(e) => setPaymentStatusFilter(e.target.value)}
+                    >
+                      <option
+                        style={{
+                          background: "var(--surface)",
+                          color: "var(--text)",
+                          textTransform: "none",
+                          textAlign: "left",
+                        }}
+                        value=""
+                      >
+                        {t("dashboard.orders.table.payment")}
+                      </option>
+                      <option
+                        style={{
+                          background: "var(--surface)",
+                          color: "#10b981",
+                          textTransform: "none",
+                          textAlign: "left",
+                        }}
+                        value="1"
+                      >
+                        {t("dashboard.orders.payment_status.paid", {
+                          defaultValue: "Đã thanh toán",
+                        })}
+                      </option>
+                      <option
+                        style={{
+                          background: "var(--surface)",
+                          color: "#ef4444",
+                          textTransform: "none",
+                          textAlign: "left",
+                        }}
+                        value="0"
+                      >
+                        {t("dashboard.orders.payment_status.unpaid", {
+                          defaultValue: "Chưa thanh toán",
+                        })}
+                      </option>
+                    </DropDown>
                   </th>
                   <th
                     className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
-                    {t("dashboard.orders.table.payment")}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {t("dashboard.orders.table.time")}
                   </th>
                   <th
                     className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}>
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {t("dashboard.orders.table.actions")}
                   </th>
                 </tr>
@@ -554,24 +654,27 @@ export default function OrdersPage() {
                       />
                     </td>
                   </tr>
-                ) : pagedOrders.length === 0 ? (
+                ) : orders.length === 0 ? (
                   <tr>
                     <td
                       colSpan={8}
                       className="px-6 py-12 text-center text-sm"
-                      style={{ color: "var(--text-muted)" }}>
+                      style={{ color: "var(--text-muted)" }}
+                    >
                       {t("orders.empty", { defaultValue: "No orders found" })}
                     </td>
                   </tr>
                 ) : (
-                  pagedOrders.map((order) => (
+                  orders.map((order) => (
                     <tr
                       key={order.id}
                       className="transition-colors"
-                      style={{ borderBottom: "1px solid var(--border)" }}>
+                      style={{ borderBottom: "1px solid var(--border)" }}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-left">
                         <span
-                          style={{ color: "var(--primary)", fontWeight: 600 }}>
+                          style={{ color: "var(--primary)", fontWeight: 600 }}
+                        >
                           {order.orderNumber}
                         </span>
                       </td>
@@ -579,7 +682,8 @@ export default function OrdersPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-left">
                         <span
                           className="font-medium"
-                          style={{ color: "var(--text)" }}>
+                          style={{ color: "var(--text)" }}
+                        >
                           {order.customerName}
                         </span>
                       </td>
@@ -593,7 +697,10 @@ export default function OrdersPage() {
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className="font-bold" style={{ color: "var(--text)" }}>
+                        <span
+                          className="font-bold"
+                          style={{ color: "var(--text)" }}
+                        >
                           {formatVND(order.total)}
                         </span>
                       </td>
@@ -634,28 +741,39 @@ export default function OrdersPage() {
                                   setOrders((prev) =>
                                     prev.map((item) =>
                                       item.id === order.id
-                                        ? { ...item, orderStatusId: nextStatusId }
+                                        ? {
+                                          ...item,
+                                          orderStatusId: nextStatusId,
+                                        }
                                         : item,
                                     ),
                                   );
 
                                   message.success(
-                                    t("admin.order_detail.messages.update_success", {
-                                      defaultValue: "Cap nhat trang thai thanh cong",
-                                    }),
+                                    t(
+                                      "admin.order_detail.messages.update_success",
+                                      {
+                                        defaultValue:
+                                          "Cap nhat trang thai thanh cong",
+                                      },
+                                    ),
                                   );
                                 } catch (err) {
                                   console.error("Failed to update status", err);
                                   message.error(
                                     extractApiErrorMessage(
                                       err,
-                                      t("admin.order_detail.messages.update_error", {
-                                        defaultValue: "Cap nhat loi",
-                                      }),
+                                      t(
+                                        "admin.order_detail.messages.update_error",
+                                        {
+                                          defaultValue: "Cap nhat loi",
+                                        },
+                                      ),
                                     ),
                                   );
                                 }
-                              }}>
+                              }}
+                            >
                               {!st && (
                                 <option value="" disabled>
                                   -
@@ -668,7 +786,8 @@ export default function OrdersPage() {
                                   style={{
                                     color: "var(--text)",
                                     background: "var(--card)",
-                                  }}>
+                                  }}
+                                >
                                   {status.name}
                                 </option>
                               ))}
@@ -679,11 +798,11 @@ export default function OrdersPage() {
 
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            order.paymentStatus === "paid"
-                              ? "bg-green-500/10 text-green-500 border border-green-500/20"
-                              : "bg-red-500/10 text-red-500 border border-red-500/20"
-                          }`}>
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${order.paymentStatus === "paid"
+                            ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                            : "bg-red-500/10 text-red-500 border border-red-500/20"
+                            }`}
+                        >
                           {order.paymentStatus === "paid"
                             ? t("dashboard.orders.payment_status.paid")
                             : t("dashboard.orders.payment_status.unpaid")}
@@ -692,7 +811,8 @@ export default function OrdersPage() {
 
                       <td
                         className="px-6 py-4 whitespace-nowrap text-sm text-center"
-                        style={{ color: "var(--text-muted)" }}>
+                        style={{ color: "var(--text-muted)" }}
+                      >
                         {order.time}
                       </td>
 
@@ -705,12 +825,14 @@ export default function OrdersPage() {
                               backgroundColor: "var(--primary-soft)",
                               color: "var(--primary)",
                             }}
-                            title={t("dashboard.orders.actions.view_details")}>
+                            title={t("dashboard.orders.actions.view_details")}
+                          >
                             <svg
                               className="w-4 h-4"
                               fill="none"
                               stroke="currentColor"
-                              viewBox="0 0 24 24">
+                              viewBox="0 0 24 24"
+                            >
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -734,16 +856,17 @@ export default function OrdersPage() {
             </table>
           </div>
 
-          {!loading && filteredOrders.length > 0 && (
+          {!loading && orders.length > 0 && (
             <div
               className="flex items-center justify-between px-4 py-3"
-              style={{ borderTop: "1px solid var(--border)" }}>
+              style={{ borderTop: "1px solid var(--border)" }}
+            >
               <div className="flex items-center gap-2">
                 <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   {t("admin.reservations.pagination.page_info_compact", {
                     page: currentPage,
                     total: totalPages,
-                    defaultValue: `Trang ${currentPage}/${totalPages} Â·`,
+                    defaultValue: `Trang ${currentPage}/${totalPages} \u00B7`,
                   })}
                 </p>
                 <div className="flex items-center gap-2">
@@ -754,7 +877,8 @@ export default function OrdersPage() {
                     className="!h-9 !py-1.5 !pl-3 !pr-8 !text-sm"
                     aria-label={t("common.pagination.items_per_page", {
                       defaultValue: "Items/page",
-                    })}>
+                    })}
+                  >
                     {PAGE_SIZE_OPTIONS.map((size) => (
                       <option key={size} value={size}>
                         {size}
@@ -779,7 +903,8 @@ export default function OrdersPage() {
                       background: "var(--surface)",
                       border: "1px solid var(--border)",
                       color: "var(--text)",
-                    }}>
+                    }}
+                  >
                     {t("admin.reservations.pagination.prev", {
                       defaultValue: "Truoc",
                     })}
@@ -787,7 +912,8 @@ export default function OrdersPage() {
 
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     const p =
-                      Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                      Math.max(1, Math.min(totalPages - 4, currentPage - 2)) +
+                      i;
                     return (
                       <button
                         key={p}
@@ -797,11 +923,12 @@ export default function OrdersPage() {
                           p === currentPage
                             ? { background: "var(--primary)", color: "white" }
                             : {
-                                background: "var(--surface)",
-                                border: "1px solid var(--border)",
-                                color: "var(--text-muted)",
-                              }
-                        }>
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              color: "var(--text-muted)",
+                            }
+                        }
+                      >
                         {p}
                       </button>
                     );
@@ -817,7 +944,8 @@ export default function OrdersPage() {
                       background: "var(--surface)",
                       border: "1px solid var(--border)",
                       color: "var(--text)",
-                    }}>
+                    }}
+                  >
                     {t("admin.reservations.pagination.next", {
                       defaultValue: "Sau",
                     })}

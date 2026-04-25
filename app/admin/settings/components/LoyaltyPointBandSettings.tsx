@@ -30,6 +30,9 @@ export default function LoyaltyPointBandSettings() {
   const [editingBand, setEditingBand] = useState<LoyaltyPointBand | null>(null);
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   // Default values for new bands
   const defaultValues = {
@@ -88,7 +91,9 @@ export default function LoyaltyPointBandSettings() {
   };
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
     try {
+      setDeletingId(id);
       await loyaltyService.deleteBand(id);
       messageApi.success(
         t("dashboard.manage.notifications.delete_success", {
@@ -106,11 +111,15 @@ export default function LoyaltyPointBandSettings() {
           }),
         ),
       );
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
     try {
+      setIsSaving(true);
       const values = await form.validateFields();
 
       if (editingBand) {
@@ -144,11 +153,15 @@ export default function LoyaltyPointBandSettings() {
           }),
         ),
       );
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleToggleStatus = async (record: LoyaltyPointBand) => {
+    if (togglingId) return;
     try {
+      setTogglingId(record.id);
       const updatedBand = { ...record, isActive: !record.isActive };
       await loyaltyService.updateBand(record.id, updatedBand);
       messageApi.success(
@@ -167,6 +180,8 @@ export default function LoyaltyPointBandSettings() {
           }),
         ),
       );
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -233,6 +248,7 @@ export default function LoyaltyPointBandSettings() {
         <StatusToggle
           checked={isActive}
           onChange={() => handleToggleStatus(record)}
+          disabled={!!togglingId || !!deletingId}
           ariaLabel={
             isActive
               ? t("common.status.deactivate", { defaultValue: "Deactivate" })
@@ -251,6 +267,7 @@ export default function LoyaltyPointBandSettings() {
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
             type="text"
+            disabled={!!deletingId || !!togglingId || isSaving}
             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
           />
           <Popconfirm
@@ -266,6 +283,8 @@ export default function LoyaltyPointBandSettings() {
             <Button
               icon={<DeleteOutlined />}
               type="text"
+              loading={deletingId === record.id}
+              disabled={!!deletingId || !!togglingId || isSaving}
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
             />
           </Popconfirm>
@@ -294,6 +313,7 @@ export default function LoyaltyPointBandSettings() {
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleAdd}
+          disabled={loading}
           style={{
             background:
               "linear-gradient(to right, var(--primary), var(--primary-hover))",
@@ -310,7 +330,7 @@ export default function LoyaltyPointBandSettings() {
         dataSource={bands}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={false}
         className="admin-loyalty-table"
       />
 
@@ -329,6 +349,8 @@ export default function LoyaltyPointBandSettings() {
         onCancel={() => setModalVisible(false)}
         destroyOnClose
         okButtonProps={{
+          loading: isSaving,
+          disabled: isSaving,
           style: {
             background: "var(--primary)",
             borderColor: "var(--primary)",

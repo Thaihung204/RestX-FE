@@ -13,7 +13,7 @@ interface KPICardProps {
   };
   iconBg?: string;
   iconColor?: string;
-  borderAccent?: string;
+  accentClass?: string;
 }
 
 export default function KPICard({
@@ -24,61 +24,46 @@ export default function KPICard({
   trend,
   iconBg = "rgba(59, 130, 246, 0.1)",
   iconColor = "#3b82f6",
-  borderAccent,
+  accentClass = "dashboard-kpi-card-primary",
 }: KPICardProps) {
   return (
-    <div
-      className="rounded-xl p-4"
-      style={{
-        background: "var(--card)",
-        border: borderAccent
-          ? `1px solid ${borderAccent}`
-          : "1px solid var(--border)",
-      }}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            {title}
+    <div className={`dashboard-kpi-card ${accentClass}`} style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
+          <p className="dashboard-kpi-card-title">{title}</p>
+          <p className="dashboard-kpi-card-value">{value}</p>
+          <p className="dashboard-kpi-card-subtitle" style={{ minHeight: "1rem" }}>
+            {subtitle || "\u00A0"}
           </p>
-          <p
-            className="text-3xl font-bold mt-1"
-            style={{ color: "var(--text)" }}>
-            {value}
-          </p>
-          {subtitle && (
-            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-              {subtitle}
-            </p>
-          )}
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <div
-            className="w-12 h-12 rounded-lg flex items-center justify-center"
-            style={{ background: iconBg, color: iconColor }}>
-            {icon}
-          </div>
-          {trend && (
-            <div
-              className="flex items-center gap-1 text-xs font-bold"
-              style={{
-                color: trend.isPositive ? "#22c55e" : "#ef4444",
-              }}>
-              <svg
-                className={`w-3 h-3 ${trend.isPositive ? "" : "rotate-180"}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M5 15l7-7 7 7"
-                />
-              </svg>
-              {Math.abs(trend.value)}%
-            </div>
-          )}
+        <div
+          className="dashboard-kpi-card-icon"
+          style={{ background: iconBg, color: iconColor, flexShrink: 0 }}>
+          {icon}
         </div>
+      </div>
+      <div style={{ minHeight: "1.5rem", display: "flex", alignItems: "center", marginTop: "0.25rem" }}>
+        {trend ? (
+          <span
+            className={`dashboard-kpi-card-trend ${trend.isPositive
+                ? "dashboard-kpi-card-trend-up"
+                : "dashboard-kpi-card-trend-down"
+              }`}>
+            <svg
+              className={`w-3 h-3 ${trend.isPositive ? "" : "rotate-180"}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M5 15l7-7 7 7"
+              />
+            </svg>
+            {Math.abs(trend.value)}%
+          </span>
+        ) : null}
       </div>
     </div>
   );

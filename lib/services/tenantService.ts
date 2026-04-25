@@ -5,6 +5,7 @@ import {
   TenantCreateInput,
   TenantRequestInput,
   TenantUpdateInput,
+  BusinessHour,
 } from "../types/tenant";
 import adminAxiosInstance from "./adminAxiosInstance";
 
@@ -94,9 +95,11 @@ const mapApiResponseToTenant = (apiTenant: TenantApiResponse): ITenant => {
 // Helper function to convert frontend create input to API format
 const mapCreateInputToApi = (input: TenantCreateInput) => {
   const slug = input.hostName || "";
-  const fullHostname = slug.endsWith(".restx.food")
+  const fullHostname = input.isCustomDomain
     ? slug
-    : `${slug}.restx.food`;
+    : slug.endsWith(".restx.food")
+      ? slug
+      : `${slug}.restx.food`;
 
   return {
     name: input.name,
@@ -530,6 +533,10 @@ export const tenantService = {
     await adminAxiosInstance.delete(`/tenants/${id}`);
   },
 
+  changeStatus: async (id: string, status: boolean): Promise<void> => {
+    await adminAxiosInstance.put(`/tenants/${id}/Status`, status);
+  },
+
   // ============ TENANT REQUESTS API ============
 
   /**
@@ -646,11 +653,16 @@ export const tenantService = {
    * Delete tenant request
    * Backend endpoint: DELETE /api/tenants/requests/{id}
    */
-  deleteTenantRequest: async (id: string): Promise<void> => {
-    await adminAxiosInstance.delete(`/tenants/requests/${id}`);
+  // ============ PAYMENT SETTINGS API ============
+
+  getBusinessHours: async (tenantId: string): Promise<BusinessHour[]> => {
+    const response = await adminAxiosInstance.get<BusinessHour[]>(`/tenants/${tenantId}/business-hours`);
+    return response.data;
   },
 
-  // ============ PAYMENT SETTINGS API ============
+  updateBusinessHours: async (tenantId: string, hours: BusinessHour[]): Promise<void> => {
+    await adminAxiosInstance.put(`/tenants/${tenantId}/business-hours`, hours);
+  },
 
   /**
    * Get payment settings for a tenant

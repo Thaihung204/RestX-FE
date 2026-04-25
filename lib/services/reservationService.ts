@@ -1,8 +1,18 @@
-﻿import {
+import {
   DownloadableFile,
   getFileNameFromContentDisposition,
 } from "@/lib/utils/fileDownload";
 import axiosInstance from "./axiosInstance";
+
+export interface ReservationConfig {
+  minPartySize: number;
+  depositAmountPerPerson: number;
+  deadlineHours: number;
+  earlyRefundHours: number;
+  earlyRefundPercentage: number;
+  lateRefundHours: number;
+  lateRefundPercentage: number;
+}
 
 export interface ReservationStatus {
   id: number;
@@ -75,6 +85,7 @@ export interface ReservationListItem {
   confirmationCode: string;
   tables: Pick<ReservationTableItem, "id" | "code" | "capacity" | "floorName">[];
   reservationDateTime: string;
+  checkedInAt?: string | null;
   numberOfGuests: number;
   contactName: string;
   contactPhone: string;
@@ -133,6 +144,7 @@ export interface ReservationDepositStatus {
   checkoutUrl: string | null;
   paymentStatus?: string | number | null;
   paymentStatusName?: string | null;
+  orderId?: string | null;
 }
 
 export interface CheckAvailabilityParams {
@@ -173,6 +185,14 @@ export const reservationService = {
   createReservation: async (data: CreateReservationRequest): Promise<CreateReservationResponse> => {
     const response = await axiosInstance.post<ApiEnvelope<CreateReservationResponse>>("/reservations", data);
     return response.data.data;
+  },
+
+  checkTime: async (params: { reservationDateTime: string }): Promise<void> => {
+    await axiosInstance.post("/reservations/check-time", params);
+  },
+
+  checkTables: async (params: { tableIds: string[], reservationDateTime: string, numberOfGuests: number }): Promise<void> => {
+    await axiosInstance.post("/reservations/check-tables", params);
   },
 
   getReservations: async (params: GetReservationsParams = {}): Promise<PaginatedReservations> => {
@@ -239,6 +259,15 @@ export const reservationService = {
     await axiosInstance.post(`/reservations/${id}/confirm`);
   },
 
+  getReservationConfig: async (): Promise<ReservationConfig> => {
+    const response = await axiosInstance.get<ApiEnvelope<ReservationConfig>>("/reservations/config");
+    return response.data.data;
+  },
+
+  updateReservationConfig: async (config: ReservationConfig): Promise<void> => {
+    await axiosInstance.put("/reservations/config", config);
+  },
+
   checkInReservation: async (id: string): Promise<void> => {
     await axiosInstance.post(`/reservations/${id}/checkin`);
   },
@@ -255,6 +284,10 @@ export const reservationService = {
       `/reservations/${id}/deposit/pay`,
     );
     return unwrapApiEnvelope(response.data);
+  },
+
+  confirmCashDeposit: async (id: string, data: { cashReceive: number }): Promise<void> => {
+    await axiosInstance.post(`/reservations/${id}/deposit/confirm-cash`, data);
   },
 
   completeReservation: async (id: string): Promise<void> => {
