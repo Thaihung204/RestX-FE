@@ -119,11 +119,11 @@ export default function RestaurantPage() {
 
           <MenuSection menu={menu} />
 
-          <NewsSection tenant={tenant} />
-
           <ReservationSection tenant={tenant} />
 
           <ReservationLookupSection />
+
+          <NewsSection tenant={tenant} />
         </main>
 
         <Footer />
