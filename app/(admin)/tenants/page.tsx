@@ -1,6 +1,5 @@
 "use client";
 
-import StatusToggle from "@/components/ui/StatusToggle";
 import {
   CheckCircleOutlined,
   DeleteOutlined,
@@ -13,8 +12,8 @@ import {
   RiseOutlined,
   SearchOutlined,
   ShopOutlined,
-  WarningOutlined,
   StopOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { App, Button, Input, Modal, Select, Switch, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -170,7 +169,7 @@ const TenantPage: React.FC = () => {
     if (togglingIds.has(record.id)) return;
     setTogglingIds((prev) => new Set(prev).add(record.id));
     try {
-      await tenantService.upsertTenant({ id: record.id, name: record.name, businessName: record.businessName, status: activate } as any);
+      await tenantService.changeStatus(record.id, activate);
       setTenants((prev) =>
         prev.map((t) =>
           t.id === record.id ? { ...t, status: activate ? "active" : "inactive" } : t
@@ -276,6 +275,7 @@ const TenantPage: React.FC = () => {
       key: "hostName",
       width: 220,
       render: (hostName: string) => {
+        if (!hostName) return <span className="tenant-row-hostname">—</span>;
         const url = hostName.startsWith("http") ? hostName : `https://${hostName}`;
         return (
           <a
