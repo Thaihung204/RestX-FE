@@ -167,11 +167,6 @@ export default function MenuItemFormPage() {
       setAiGenerating(true);
       setAiSuggestions([]);
 
-<<<<<<< Updated upstream
-      const response = await aiService.generateContent({
-        dishName: normalizedDishName,
-      });
-=======
       const payload: {
         dishName: string;
         customContext?: string;
@@ -184,7 +179,6 @@ export default function MenuItemFormPage() {
       }
 
       const response = await aiService.generateContent(payload);
->>>>>>> Stashed changes
 
       const variants = (response?.variants || []).filter(
         (item) => typeof item?.content === "string" && item.content.trim().length > 0,
@@ -361,11 +355,11 @@ export default function MenuItemFormPage() {
         message.success(
           nextStatus
             ? t("dashboard.menu.ingredients.status.activate_success", {
-                name: formData.name,
-              })
+              name: formData.name,
+            })
             : t("dashboard.menu.ingredients.status.deactivate_success", {
-                name: formData.name,
-              }),
+              name: formData.name,
+            }),
         );
         setFormData((prev) => ({ ...prev, isActive: nextStatus }));
       })
@@ -470,8 +464,8 @@ export default function MenuItemFormPage() {
                           color: "var(--text)",
                         }}
                         onFocus={(e) =>
-                          (e.currentTarget.style.boxShadow =
-                            "0 0 0 2px var(--primary)")
+                        (e.currentTarget.style.boxShadow =
+                          "0 0 0 2px var(--primary)")
                         }
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
@@ -527,8 +521,8 @@ export default function MenuItemFormPage() {
                             color: "var(--text)",
                           }}
                           onFocus={(e) =>
-                            (e.currentTarget.style.boxShadow =
-                              "0 0 0 2px var(--primary)")
+                          (e.currentTarget.style.boxShadow =
+                            "0 0 0 2px var(--primary)")
                           }
                           onBlur={(e) =>
                             (e.currentTarget.style.boxShadow = "none")
@@ -543,41 +537,10 @@ export default function MenuItemFormPage() {
                     </div>
 
                     <div className="space-y-3">
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-                      <label
-                        htmlFor="description"
-                        className="block text-sm font-medium mb-2"
-                        style={{ color: "var(--text)" }}>
-                        Description
-=======
-                      <label htmlFor="description" className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
-                        {t("menu_form.description")}
->>>>>>> cdc40e85556333771d0a1237eb9acfce543cc8bf
-                      </label>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                        <input
-                          type="text"
-                          value={aiPrompt}
-                          onChange={(e) =>
-                            setAiPrompt(e.target.value.slice(0, MAX_AI_PROMPT_LENGTH))
-                          }
-                          maxLength={MAX_AI_PROMPT_LENGTH}
-                          disabled={aiGenerating}
-                          className="md:col-span-2 w-full px-3 py-2 rounded-lg outline-none"
-                          style={{
-                            background: "var(--surface)",
-                            border: "1px solid var(--border)",
-                            color: "var(--text)",
-                          }}
-                        />
-=======
                       <div className="flex items-center justify-between gap-3 mb-2">
                         <label htmlFor="description" className="block text-sm font-medium" style={{ color: "var(--text)" }}>
                           {t("menu_form.description")}
                         </label>
->>>>>>> Stashed changes
 
                         <button
                           type="button"
@@ -591,11 +554,11 @@ export default function MenuItemFormPage() {
                           }}>
                           {aiGenerating
                             ? t("dashboard.menu.ai_content.generating", {
-                                defaultValue: "Generating...",
-                              })
+                              defaultValue: "Generating...",
+                            })
                             : t("dashboard.menu.ai_content.generate", {
-                                defaultValue: "Generate AI",
-                              })}
+                              defaultValue: "Generate AI",
+                            })}
                         </button>
                       </div>
 
@@ -619,8 +582,8 @@ export default function MenuItemFormPage() {
                           color: "var(--text)",
                         }}
                         onFocus={(e) =>
-                          (e.currentTarget.style.boxShadow =
-                            "0 0 0 2px var(--primary)")
+                        (e.currentTarget.style.boxShadow =
+                          "0 0 0 2px var(--primary)")
                         }
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
@@ -711,8 +674,8 @@ export default function MenuItemFormPage() {
                           color: "var(--text)",
                         }}
                         onFocus={(e) =>
-                          (e.currentTarget.style.boxShadow =
-                            "0 0 0 2px var(--primary)")
+                        (e.currentTarget.style.boxShadow =
+                          "0 0 0 2px var(--primary)")
                         }
                         onBlur={(e) =>
                           (e.currentTarget.style.boxShadow = "none")
@@ -871,11 +834,11 @@ export default function MenuItemFormPage() {
                               style={{ color: "var(--text)" }}>
                               {formData.isActive
                                 ? t("dashboard.menu.dish_status.active", {
-                                    defaultValue: "Active",
-                                  })
+                                  defaultValue: "Active",
+                                })
                                 : t("dashboard.menu.dish_status.inactive", {
-                                    defaultValue: "Inactive",
-                                  })}
+                                  defaultValue: "Inactive",
+                                })}
                             </span>
                             <span
                               className="px-2.5 py-0.5 rounded-full text-xs font-bold"
@@ -889,11 +852,11 @@ export default function MenuItemFormPage() {
                               }}>
                               {formData.isActive
                                 ? t("dashboard.menu.dish_status.enabled", {
-                                    defaultValue: "Enabled",
-                                  })
+                                  defaultValue: "Enabled",
+                                })
                                 : t("dashboard.menu.dish_status.disabled", {
-                                    defaultValue: "Disabled",
-                                  })}
+                                  defaultValue: "Disabled",
+                                })}
                             </span>
                           </div>
                           <p
@@ -901,12 +864,12 @@ export default function MenuItemFormPage() {
                             style={{ color: "var(--text-muted)" }}>
                             {formData.isActive
                               ? t("dashboard.menu.dish_status.can_order", {
-                                  defaultValue: "Customers can order this dish",
-                                })
+                                defaultValue: "Customers can order this dish",
+                              })
                               : t("dashboard.menu.dish_status.cannot_order", {
-                                  defaultValue:
-                                    "This dish is currently unavailable",
-                                })}
+                                defaultValue:
+                                  "This dish is currently unavailable",
+                              })}
                           </p>
                         </div>
                       </div>
@@ -941,6 +904,85 @@ export default function MenuItemFormPage() {
           </form>
         </div>
       </main>
+
+      <Modal
+        className="ai-generate-modal"
+        open={aiPromptModalOpen}
+        onCancel={() => {
+          if (!aiGenerating) {
+            setAiPromptModalOpen(false);
+          }
+        }}
+        footer={null}
+        centered
+        destroyOnHidden>
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+            {t("dashboard.menu.ai_content.prompt_modal_title", {
+              defaultValue: "Generate description with AI",
+            })}
+          </h3>
+
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            {t("dashboard.menu.ai_content.prompt_modal_hint", {
+              defaultValue:
+                "Enter optional instructions for AI. Leave empty to generate from dish name only.",
+            })}
+          </p>
+
+          <label className="text-sm font-medium block" style={{ color: "var(--text)" }}>
+            {t("dashboard.menu.ai_content.prompt_label", {
+              defaultValue: "Prompt",
+            })}
+          </label>
+
+          <textarea
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value.slice(0, MAX_AI_PROMPT_LENGTH))}
+            maxLength={MAX_AI_PROMPT_LENGTH}
+            disabled={aiGenerating}
+            rows={4}
+            placeholder={t("dashboard.menu.ai_content.prompt_placeholder", {
+              defaultValue: "Optional prompt (e.g., focus on spicy flavor and premium ingredients)",
+            })}
+            className="ai-prompt-textarea w-full px-3 py-2 rounded-lg outline-none resize-none"
+          />
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setAiPromptModalOpen(false)}
+              disabled={aiGenerating}
+              className="px-4 py-2 rounded-lg text-sm font-medium"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGenerateDescription}
+              disabled={aiGenerating}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
+              style={{
+                background: "var(--primary)",
+                border: "1px solid var(--primary)",
+                color: "#fff",
+              }}>
+              {aiGenerating
+                ? t("dashboard.menu.ai_content.generating", {
+                  defaultValue: "Generating...",
+                })
+                : t("dashboard.menu.ai_content.generate", {
+                  defaultValue: "Generate AI",
+                })}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -1559,12 +1559,22 @@ img {
   animation: reservation-fade-up 0.35s ease-out both;
 }
 
-<<<<<<< Updated upstream
-.reservation-section-animate:nth-child(1) { animation-delay: 0.05s; }
-.reservation-section-animate:nth-child(2) { animation-delay: 0.10s; }
-.reservation-section-animate:nth-child(3) { animation-delay: 0.15s; }
-.reservation-section-animate:nth-child(4) { animation-delay: 0.20s; }
-=======
+.reservation-section-animate:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.reservation-section-animate:nth-child(2) {
+  animation-delay: 0.10s;
+}
+
+.reservation-section-animate:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.reservation-section-animate:nth-child(4) {
+  animation-delay: 0.20s;
+}
+
 /* AI description generator modal (menu + combo forms) */
 .ai-generate-modal .ant-modal-content {
   background: var(--card) !important;
@@ -1594,11 +1604,6 @@ img {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px var(--primary-soft);
 }
-
-.reservation-section-animate:nth-child(1) {
-  animation-delay: 0.05s;
-}
->>>>>>> Stashed changes
 
 /* Reservation outer frame: keep at least one viewport, allow natural growth */
 .reservation-root-frame {
@@ -2647,8 +2652,8 @@ html.reservation-overlay-open header {
   padding-inline: 12px;
 }
 
-.floor-activity-toolbar .floor-activity-filter-input--date-picker > button,
-.floor-activity-toolbar .floor-activity-filter-input--time-picker > button {
+.floor-activity-toolbar .floor-activity-filter-input--date-picker>button,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker>button {
   width: 100%;
   min-height: 44px;
   background: #ffffff !important;
@@ -2696,10 +2701,10 @@ html.reservation-overlay-open header {
 .floor-activity-toolbar .ant-input-affix-wrapper-focused,
 .floor-activity-toolbar .ant-picker:hover,
 .floor-activity-toolbar .ant-picker-focused,
-.floor-activity-toolbar .floor-activity-filter-input--date-picker > button:hover,
-.floor-activity-toolbar .floor-activity-filter-input--date-picker > button:focus,
-.floor-activity-toolbar .floor-activity-filter-input--time-picker > button:hover,
-.floor-activity-toolbar .floor-activity-filter-input--time-picker > button:focus {
+.floor-activity-toolbar .floor-activity-filter-input--date-picker>button:hover,
+.floor-activity-toolbar .floor-activity-filter-input--date-picker>button:focus,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker>button:hover,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker>button:focus {
   border-color: var(--primary-border) !important;
 }
 
@@ -2715,8 +2720,8 @@ html.reservation-overlay-open header {
 [data-theme="dark"] .floor-activity-toolbar .ant-input-affix-wrapper.ant-input-outlined,
 [data-theme="dark"] .floor-activity-toolbar .ant-picker,
 [data-theme="dark"] .floor-activity-toolbar .ant-picker-outlined,
-[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--date-picker > button,
-[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--time-picker > button,
+[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--date-picker>button,
+[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--time-picker>button,
 [data-theme="dark"] .floor-activity-action-row .floor-activity-action-btn.ant-btn-default {
   background: var(--card) !important;
   background-color: var(--card) !important;
@@ -3501,6 +3506,7 @@ html.reservation-overlay-open header {
 [data-theme="dark"] .ai-icon {
   filter: invert(1);
 }
+
 /* =========================================================
  * Combo Form - Image Upload
  * ========================================================= */
