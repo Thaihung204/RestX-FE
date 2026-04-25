@@ -1123,10 +1123,19 @@ export default function ReservationsPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden"
                             style={{ background: "var(--primary)" }}
                           >
-                            {item.contactName.charAt(0).toUpperCase()}
+                            {item.customer?.avatarUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={item.customer.avatarUrl}
+                                alt={item.contactName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              item.contactName.charAt(0).toUpperCase()
+                            )}
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-0.5">

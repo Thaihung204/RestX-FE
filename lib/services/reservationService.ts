@@ -89,6 +89,10 @@ export interface ReservationListItem {
   numberOfGuests: number;
   contactName: string;
   contactPhone: string;
+  customer?: {
+    avatarUrl?: string;
+    [key: string]: any;
+  };
   isGuest: boolean;
   status: ReservationStatus;
   depositAmount?: number;
