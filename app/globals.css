@@ -1534,10 +1534,46 @@ img {
   animation: reservation-fade-up 0.35s ease-out both;
 }
 
+<<<<<<< Updated upstream
 .reservation-section-animate:nth-child(1) { animation-delay: 0.05s; }
 .reservation-section-animate:nth-child(2) { animation-delay: 0.10s; }
 .reservation-section-animate:nth-child(3) { animation-delay: 0.15s; }
 .reservation-section-animate:nth-child(4) { animation-delay: 0.20s; }
+=======
+/* AI description generator modal (menu + combo forms) */
+.ai-generate-modal .ant-modal-content {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ai-generate-modal .ant-modal-close {
+  color: var(--text-muted) !important;
+}
+
+.ai-generate-modal .ant-modal-close:hover {
+  color: var(--text) !important;
+}
+
+.ai-generate-trigger-button:hover {
+  opacity: 0.92;
+}
+
+.ai-prompt-textarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.ai-prompt-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+.reservation-section-animate:nth-child(1) {
+  animation-delay: 0.05s;
+}
+>>>>>>> Stashed changes
 
 /* Reservation outer frame: always fit one viewport */
 .reservation-root-frame {

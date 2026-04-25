@@ -8,7 +8,7 @@ import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import type { AIContentVariant } from "@/lib/types/ai";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
-import { message } from "antd";
+import { message, Modal } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -53,6 +53,7 @@ export default function MenuItemFormPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  const [aiPromptModalOpen, setAiPromptModalOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
 
@@ -152,6 +153,8 @@ export default function MenuItemFormPage() {
 
   const handleGenerateDescription = async () => {
     const normalizedDishName = formData.name.trim();
+    const normalizedPrompt = aiPrompt.trim();
+
     if (!normalizedDishName) {
       message.warning(
         t("dashboard.menu.ai_content.name_required", {
@@ -167,6 +170,7 @@ export default function MenuItemFormPage() {
       setAiGenerating(true);
       setAiSuggestions([]);
 
+<<<<<<< Updated upstream
       const response = await aiService.generateContent({
         dishId: isNewItem ? null : id,
         dishName: normalizedDishName,
@@ -176,6 +180,20 @@ export default function MenuItemFormPage() {
         tone: "friendly",
         customContext: promptText || undefined,
       });
+=======
+      const payload: {
+        dishName: string;
+        customContext?: string;
+      } = {
+        dishName: normalizedDishName,
+      };
+
+      if (normalizedPrompt) {
+        payload.customContext = normalizedPrompt;
+      }
+
+      const response = await aiService.generateContent(payload);
+>>>>>>> Stashed changes
 
       const variants = (response?.variants || []).filter(
         (item) => typeof item?.content === "string" && item.content.trim().length > 0,
@@ -191,6 +209,7 @@ export default function MenuItemFormPage() {
       }
 
       setAiSuggestions(variants);
+      setAiPromptModalOpen(false);
       message.success(
         t("dashboard.menu.ai_content.generate_success", {
           defaultValue: "AI content generated. Choose one variant below.",
@@ -578,6 +597,7 @@ export default function MenuItemFormPage() {
                     </div>
 
                     <div className="space-y-3">
+<<<<<<< Updated upstream
                       <label
                         htmlFor="description"
                         className="block text-sm font-medium mb-2"
@@ -601,12 +621,18 @@ export default function MenuItemFormPage() {
                             color: "var(--text)",
                           }}
                         />
+=======
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <label htmlFor="description" className="block text-sm font-medium" style={{ color: "var(--text)" }}>
+                          {t("menu_form.description")}
+                        </label>
+>>>>>>> Stashed changes
 
                         <button
                           type="button"
-                          onClick={handleGenerateDescription}
+                          onClick={() => setAiPromptModalOpen(true)}
                           disabled={aiGenerating}
-                          className="px-4 py-2 rounded-lg font-medium transition-opacity disabled:opacity-60"
+                          className="ai-generate-trigger-button px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
                           style={{
                             background: "var(--primary)",
                             border: "1px solid var(--primary)",
@@ -1058,6 +1084,85 @@ export default function MenuItemFormPage() {
           </form>
         </div>
       </main>
+
+      <Modal
+        className="ai-generate-modal"
+        open={aiPromptModalOpen}
+        onCancel={() => {
+          if (!aiGenerating) {
+            setAiPromptModalOpen(false);
+          }
+        }}
+        footer={null}
+        centered
+        destroyOnHidden>
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+            {t("dashboard.menu.ai_content.prompt_modal_title", {
+              defaultValue: "Generate description with AI",
+            })}
+          </h3>
+
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            {t("dashboard.menu.ai_content.prompt_modal_hint", {
+              defaultValue:
+                "Enter optional instructions for AI. Leave empty to generate from dish name only.",
+            })}
+          </p>
+
+          <label className="text-sm font-medium block" style={{ color: "var(--text)" }}>
+            {t("dashboard.menu.ai_content.prompt_label", {
+              defaultValue: "Prompt",
+            })}
+          </label>
+
+          <textarea
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value.slice(0, MAX_AI_PROMPT_LENGTH))}
+            maxLength={MAX_AI_PROMPT_LENGTH}
+            disabled={aiGenerating}
+            rows={4}
+            placeholder={t("dashboard.menu.ai_content.prompt_placeholder", {
+              defaultValue: "Optional prompt (e.g., focus on spicy flavor and premium ingredients)",
+            })}
+            className="ai-prompt-textarea w-full px-3 py-2 rounded-lg outline-none resize-none"
+          />
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setAiPromptModalOpen(false)}
+              disabled={aiGenerating}
+              className="px-4 py-2 rounded-lg text-sm font-medium"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGenerateDescription}
+              disabled={aiGenerating}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
+              style={{
+                background: "var(--primary)",
+                border: "1px solid var(--primary)",
+                color: "#fff",
+              }}>
+              {aiGenerating
+                ? t("dashboard.menu.ai_content.generating", {
+                    defaultValue: "Generating...",
+                  })
+                : t("dashboard.menu.ai_content.generate", {
+                    defaultValue: "Generate AI",
+                  })}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

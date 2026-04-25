@@ -1465,6 +1465,9 @@
         "ai_content": {
           "generate": "Tạo bằng AI",
           "generating": "Đang tạo...",
+          "prompt_modal_title": "Tạo mô tả bằng AI",
+          "prompt_modal_hint": "Nhập hướng dẫn tùy chọn cho AI. Có thể để trống để AI tự tạo từ tên combo và các món.",
+          "prompt_label": "Prompt",
           "prompt_placeholder": "Prompt tùy chọn (ví dụ: nhấn mạnh tiết kiệm và phù hợp đi nhóm)",
           "variants_label": "Số lượng phương án",
           "variants_hint": "Số ở trên là số lượng phương án mô tả AI sẽ tạo (1-10).",
@@ -1585,6 +1588,9 @@
       "ai_content": {
         "generate": "Tạo bằng AI",
         "generating": "Đang tạo...",
+        "prompt_modal_title": "Tạo mô tả bằng AI",
+        "prompt_modal_hint": "Nhập hướng dẫn tùy chọn cho AI. Có thể để trống để AI tự tạo từ tên món.",
+        "prompt_label": "Prompt",
         "prompt_placeholder": "Prompt tùy chọn (ví dụ: nhấn mạnh vị cay và nguyên liệu cao cấp)",
         "variants_label": "Số lượng phương án",
         "variants_hint": "Số ở trên là số lượng phương án mô tả AI sẽ tạo (1-10).",

@@ -1571,6 +1571,9 @@
         "ai_content": {
           "generate": "Generate AI",
           "generating": "Generating...",
+          "prompt_modal_title": "Generate description with AI",
+          "prompt_modal_hint": "Enter optional instructions for AI. Leave empty to generate from combo name and dishes.",
+          "prompt_label": "Prompt",
           "prompt_placeholder": "Optional prompt (e.g., emphasize value-for-money and family sharing)",
           "variants_label": "Number of variants",
           "variants_hint": "The number above controls how many AI description variants will be generated (1-10).",
@@ -1691,6 +1694,9 @@
       "ai_content": {
         "generate": "Generate AI",
         "generating": "Generating...",
+        "prompt_modal_title": "Generate description with AI",
+        "prompt_modal_hint": "Enter optional instructions for AI. Leave empty to generate from dish name only.",
+        "prompt_label": "Prompt",
         "prompt_placeholder": "Optional prompt (e.g., focus on spicy flavor and premium ingredients)",
         "variants_label": "Number of variants",
         "variants_hint": "The number above controls how many AI description variants will be generated (1-10).",

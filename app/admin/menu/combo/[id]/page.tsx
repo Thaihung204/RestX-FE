@@ -9,7 +9,7 @@ import dishService, {
 } from "@/lib/services/dishService";
 import type { AIContentVariant } from "@/lib/types/ai";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
-import { App, Button } from "antd";
+import { App, Button, Modal } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -56,6 +56,7 @@ export default function ComboFormPage() {
   const [existingImageUrl, setExistingImageUrl] = useState<string>("");
   const [isImageDropActive, setIsImageDropActive] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  const [aiPromptModalOpen, setAiPromptModalOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
 
@@ -299,7 +300,14 @@ export default function ComboFormPage() {
   };
 
   const handleGenerateDescription = async () => {
+<<<<<<< Updated upstream
     if (isNewCombo) {
+=======
+    const normalizedComboName = formData.name.trim();
+    const normalizedPrompt = aiPrompt.trim();
+
+    if (!normalizedComboName) {
+>>>>>>> Stashed changes
       message.warning(
         t("dashboard.menu.combo.ai_content.requires_existing_item", {
           defaultValue: "Please save this combo first so AI can use its detail ID.",
@@ -318,6 +326,7 @@ export default function ComboFormPage() {
       setAiGenerating(true);
       setAiSuggestions([]);
 
+<<<<<<< Updated upstream
       const response = await aiService.generateContent({
         dishId: null,
         comboId: id,
@@ -326,6 +335,22 @@ export default function ComboFormPage() {
         tone: "friendly",
         customContext: contextParts.join("\n") || undefined,
       });
+=======
+      const payload: {
+        comboName: string;
+        comboDishes: string[];
+        customContext?: string;
+      } = {
+        comboName: normalizedComboName,
+        comboDishes,
+      };
+
+      if (normalizedPrompt) {
+        payload.customContext = normalizedPrompt;
+      }
+
+      const response = await aiService.generateContent(payload);
+>>>>>>> Stashed changes
 
       const variants = (response?.variants || []).filter(
         (item) => typeof item?.content === "string" && item.content.trim().length > 0,
@@ -341,6 +366,7 @@ export default function ComboFormPage() {
       }
 
       setAiSuggestions(variants);
+      setAiPromptModalOpen(false);
       message.success(
         t("dashboard.menu.combo.ai_content.generate_success", {
           defaultValue: "AI content generated. Choose one variant below.",
@@ -655,6 +681,7 @@ export default function ComboFormPage() {
               </div>
 
               <div>
+<<<<<<< Updated upstream
                 <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
                   {t("dashboard.menu.combo.fields.description", {
                     defaultValue: "Description",
@@ -683,6 +710,20 @@ export default function ComboFormPage() {
                     onClick={handleGenerateDescription}
                     disabled={isNewCombo || aiGenerating}
                     className="px-4 py-2.5 rounded-lg font-medium transition-opacity disabled:opacity-60"
+=======
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <label className="block text-sm font-medium" style={{ color: "var(--text)" }}>
+                    {t("dashboard.menu.combo.fields.description", {
+                      defaultValue: "Description",
+                    })}
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => setAiPromptModalOpen(true)}
+                    disabled={aiGenerating}
+                    className="ai-generate-trigger-button px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
+>>>>>>> Stashed changes
                     style={{
                       background: "var(--primary)",
                       border: "1px solid var(--primary)",
@@ -973,6 +1014,85 @@ export default function ComboFormPage() {
           </form>
         )}
       </div>
+
+      <Modal
+        className="ai-generate-modal"
+        open={aiPromptModalOpen}
+        onCancel={() => {
+          if (!aiGenerating) {
+            setAiPromptModalOpen(false);
+          }
+        }}
+        footer={null}
+        centered
+        destroyOnHidden>
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+            {t("dashboard.menu.combo.ai_content.prompt_modal_title", {
+              defaultValue: "Generate description with AI",
+            })}
+          </h3>
+
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            {t("dashboard.menu.combo.ai_content.prompt_modal_hint", {
+              defaultValue:
+                "Enter optional instructions for AI. Leave empty to generate from combo name and dishes.",
+            })}
+          </p>
+
+          <label className="text-sm font-medium block" style={{ color: "var(--text)" }}>
+            {t("dashboard.menu.combo.ai_content.prompt_label", {
+              defaultValue: "Prompt",
+            })}
+          </label>
+
+          <textarea
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value.slice(0, MAX_AI_PROMPT_LENGTH))}
+            maxLength={MAX_AI_PROMPT_LENGTH}
+            disabled={aiGenerating}
+            rows={4}
+            placeholder={t("dashboard.menu.combo.ai_content.prompt_placeholder", {
+              defaultValue: "Optional prompt (e.g., emphasize value-for-money and family sharing)",
+            })}
+            className="ai-prompt-textarea w-full px-3 py-2 rounded-lg outline-none resize-none"
+          />
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setAiPromptModalOpen(false)}
+              disabled={aiGenerating}
+              className="px-4 py-2 rounded-lg text-sm font-medium"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGenerateDescription}
+              disabled={aiGenerating}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
+              style={{
+                background: "var(--primary)",
+                border: "1px solid var(--primary)",
+                color: "#fff",
+              }}>
+              {aiGenerating
+                ? t("dashboard.menu.combo.ai_content.generating", {
+                    defaultValue: "Generating...",
+                  })
+                : t("dashboard.menu.combo.ai_content.generate", {
+                    defaultValue: "Generate AI",
+                  })}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </main>
   );
 }
