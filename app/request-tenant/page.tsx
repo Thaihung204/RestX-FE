@@ -5,7 +5,7 @@ import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
 import { tenantService } from "@/lib/services/tenantService";
 import { TenantRequestInput } from "@/lib/types/tenant";
 import type { FormProps } from "antd";
-import { App, Button, Card, Form, Input, Typography } from "antd";
+import { App, Button, Card, Form, Input, Typography, Checkbox } from "antd";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,6 +22,8 @@ const RequestTenantPage: React.FC = () => {
   const { message } = App.useApp();
   const [form] = Form.useForm<TenantRequestInput>();
   const [loading, setLoading] = useState(false);
+  const [hostNameValue, setHostNameValue] = useState("");
+  const [isCustomDomain, setIsCustomDomain] = useState(false);
   const onFinish: FormProps<TenantRequestInput>["onFinish"] = async (
     values,
   ) => {
@@ -44,6 +46,7 @@ const RequestTenantPage: React.FC = () => {
         businessAddressLine3: values.businessAddressLine3,
         businessAddressLine4: values.businessAddressLine4,
         businessCountry: values.businessCountry,
+        isCustomDomain: isCustomDomain,
       };
 
       console.log("[RequestTenant] Submitting request:", requestData);
@@ -81,9 +84,11 @@ const RequestTenantPage: React.FC = () => {
       return Promise.resolve();
     }
 
-    if (!/^[a-z0-9-]+$/.test(value)) {
+    const regex = isCustomDomain ? /^[a-z0-9-\.]+$/ : /^[a-z0-9-]+$/;
+
+    if (!regex.test(value)) {
       return Promise.reject(
-        new Error("Only lowercase letters, numbers, and hyphens are allowed"),
+        new Error(isCustomDomain ? "Only lowercase letters, numbers, hyphens, and dots are allowed" : "Only lowercase letters, numbers, and hyphens are allowed"),
       );
     }
     return Promise.resolve();
@@ -120,14 +125,63 @@ const RequestTenantPage: React.FC = () => {
             </Form.Item>
 
             <Form.Item
-              label="Subdomain (URL)"
+              label="Hostname"
               name="hostname"
               rules={[
-                { required: true, message: "Please enter subdomain" },
+                { required: true, message: "Please enter hostname" },
                 { validator: validateSlug },
               ]}
-              tooltip="This will be your portal hostname">
-              <Input />
+              tooltip="This will be your portal hostname"
+              extra={
+                <div className="flex flex-col gap-2 mt-2">
+                  <Checkbox
+                    checked={isCustomDomain}
+                    onChange={(e) => {
+                      setIsCustomDomain(e.target.checked);
+                      form.validateFields(['hostname']);
+                    }}
+                  >
+                    Use custom domain
+                  </Checkbox>
+                  {!isCustomDomain && (
+                    <span className="text-sm text-gray-500">
+                      Access URL: hostname.restx.food
+                    </span>
+                  )}
+                </div>
+              }>
+              {isCustomDomain ? (
+                <Input
+                  value={hostNameValue}
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .toLowerCase()
+                      .replace(/\s+/g, "-")
+                      .replace(/[^a-z0-9-\.]/g, "");
+                    form.setFieldValue("hostname", value);
+                    setHostNameValue(value);
+                  }}
+                  size="large"
+                />
+              ) : (
+                <div className="flex items-center rounded-lg border border-gray-300 overflow-hidden" style={{ background: "var(--surface)" }}>
+                  <span className="px-3 bg-gray-100 text-gray-500 border-r border-gray-300 dark:bg-zinc-800 dark:border-zinc-700">https://</span>
+                  <Input
+                    value={hostNameValue}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")
+                        .replace(/[^a-z0-9-]/g, "");
+                      form.setFieldValue("hostname", value);
+                      setHostNameValue(value);
+                    }}
+                    bordered={false}
+                    className="flex-1 rounded-none px-3 py-2"
+                  />
+                  <span className="px-3 bg-gray-100 text-gray-500 border-l border-gray-300 dark:bg-zinc-800 dark:border-zinc-700">.restx.food</span>
+                </div>
+              )}
             </Form.Item>
 
             <Form.Item label="Business Name" name="businessName">
@@ -156,8 +210,8 @@ const RequestTenantPage: React.FC = () => {
             </Title>
 
             <Form.Item label="Address Line 1" name="businessAddressLine1">
-              <VnStreetAutocomplete 
-                form={form} 
+              <VnStreetAutocomplete
+                form={form}
                 fieldName="businessAddressLine1"
                 cityFieldName="businessAddressLine3"
                 districtWardFieldName="businessAddressLine2"
