@@ -1093,7 +1093,10 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                 body.classList.add('reservation-overlay-open');
 
                 // Fix cho mobile: giữ scroll position
-                if (isMobileViewport) {
+                // Chỉ lock body ở TABLE_SELECTION, không lock ở CONFIRMATION/SUCCESS
+                // vì CONFIRMATION cần scroll khi bàn phím ảo bật lên
+                const isFormStep = step === ReservationStep.CONFIRMATION || step === ReservationStep.SUCCESS;
+                if (isMobileViewport && !isFormStep) {
                     body.style.top = `-${scrollY}px`;
                     body.style.position = 'fixed';
                     body.style.width = '100%';
@@ -1106,7 +1109,8 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                     body.classList.remove('reservation-overlay-open');
 
                     // Restore scroll position cho mobile
-                    if (isMobileViewport) {
+                    const isFormStep = step === ReservationStep.CONFIRMATION || step === ReservationStep.SUCCESS;
+                    if (isMobileViewport && !isFormStep) {
                         body.style.position = '';
                         body.style.top = '';
                         body.style.width = '';
