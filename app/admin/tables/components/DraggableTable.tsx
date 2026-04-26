@@ -25,6 +25,7 @@ interface DraggableTableProps {
   draggable?: boolean;
   renderContent?: (table: TableData) => React.ReactNode;
   scale?: number;
+  reduceEffects?: boolean;
 }
 
 const STATUS_CONFIG = {
@@ -59,6 +60,7 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
   draggable = true,
   renderContent,
   scale = 1,
+  reduceEffects = false,
 }) => {
   const statusStyle = STATUS_CONFIG[table.status];
   const [isDragging, setIsDragging] = React.useState(false);
@@ -186,8 +188,10 @@ export const DraggableTable: React.FC<DraggableTableProps> = ({
       alignItems: "center",
       justifyContent: "center",
       position: "relative",
-      boxShadow: isDragging ? "0 8px 16px rgba(0,0,0,0.15)" : "0 2px 4px rgba(0,0,0,0.05)",
-      transition: isDragging ? "none" : "box-shadow 0.2s",
+      boxShadow: reduceEffects
+        ? "none"
+        : (isDragging ? "0 8px 16px rgba(0,0,0,0.15)" : "0 2px 4px rgba(0,0,0,0.05)"),
+      transition: reduceEffects || isDragging ? "none" : "box-shadow 0.2s",
     };
 
     if (shape === "Circle") base.borderRadius = "50%";

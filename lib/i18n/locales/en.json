@@ -1612,6 +1612,9 @@
         "ai_content": {
           "generate": "Generate AI",
           "generating": "Generating...",
+          "prompt_modal_title": "Generate description with AI",
+          "prompt_modal_hint": "Enter optional instructions for AI. Leave empty to generate from combo name and dishes.",
+          "prompt_label": "Prompt",
           "prompt_placeholder": "Optional prompt (e.g., emphasize value-for-money and family sharing)",
           "variants_label": "Number of variants",
           "variants_hint": "The number above controls how many AI description variants will be generated (1-10).",
@@ -1732,6 +1735,9 @@
       "ai_content": {
         "generate": "Generate AI",
         "generating": "Generating...",
+        "prompt_modal_title": "Generate description with AI",
+        "prompt_modal_hint": "Enter optional instructions for AI. Leave empty to generate from dish name only.",
+        "prompt_label": "Prompt",
         "prompt_placeholder": "Optional prompt (e.g., focus on spicy flavor and premium ingredients)",
         "variants_label": "Number of variants",
         "variants_hint": "The number above controls how many AI description variants will be generated (1-10).",
@@ -2286,6 +2292,27 @@
         "deposit_amount": "Deposit Amount Per Person",
         "deadline_hours": "Hold Duration (Hours)"
       },
+      "business": {
+        "title": "Business & Holiday Hours",
+        "description": "Manage the restaurant's opening, closing hours, and weekly holidays. Reservation features will rely on this configuration.",
+        "status": {
+          "open": "Open",
+          "closed": "Closed",
+          "day_off": "Day Off / Closed"
+        },
+        "inputs": {
+          "open": "Opening time",
+          "close": "Closing time",
+          "apply_all": "Apply to All",
+          "apply_all_title": "Apply Monday's hours to all other days"
+        },
+        "toasts": {
+          "fetch_error": "Failed to load business hours",
+          "update_success": "Business hours updated. Changes will take a few minutes to reflect on the customer page.",
+          "update_error": "Failed to update. Please try again.",
+          "apply_all_success": "Time applied to all days of the week"
+        }
+      },
       "appearance": {
         "theme": "Theme",
         "accent_color": "Accent Color",
@@ -2317,7 +2344,23 @@
         "error_update": "Update failed",
         "error_fetch": "Failed to load data",
         "error_save": "Failed to save",
-        "error_delete": "Failed to delete"
+        "error_delete": "Failed to delete",
+        "order_notifications": "Order Notifications",
+        "system_notifications": "System Notifications",
+        "items": {
+          "new_orders": "New Orders",
+          "new_orders_desc": "Get notified when a new order is placed",
+          "order_updates": "Order Updates",
+          "order_updates_desc": "Status changes and item updates",
+          "order_completion": "Order Completion",
+          "order_completion_desc": "Notify when order is successfully paid",
+          "table_updates": "Table Status",
+          "table_updates_desc": "When tables are cleaned, merged, or moved",
+          "staff_alerts": "Staff Alerts",
+          "staff_alerts_desc": "Internal notifications from operations",
+          "inventory_alerts": "Inventory Alerts",
+          "inventory_alerts_desc": "When ingredients are running low or out of stock"
+        }
       },
       "security": {
         "change_password": "Change Password",
@@ -2535,6 +2578,15 @@
     "active": "Active",
     "inactive": "Inactive",
     "saving": "Saving...",
+    "days": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    },
     "actions": {
       "yes": "Yes",
       "no": "No",

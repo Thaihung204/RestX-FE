@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -1575,6 +1575,36 @@ img {
   animation-delay: 0.20s;
 }
 
+/* AI description generator modal (menu + combo forms) */
+.ai-generate-modal .ant-modal-content {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ai-generate-modal .ant-modal-close {
+  color: var(--text-muted) !important;
+}
+
+.ai-generate-modal .ant-modal-close:hover {
+  color: var(--text) !important;
+}
+
+.ai-generate-trigger-button:hover {
+  opacity: 0.92;
+}
+
+.ai-prompt-textarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.ai-prompt-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
 /* Reservation outer frame: keep at least one viewport, allow natural growth */
 .reservation-root-frame {
   --reservation-header-offset: clamp(64px, 8vh, 84px);
@@ -2622,6 +2652,17 @@ html.reservation-overlay-open header {
   padding-inline: 12px;
 }
 
+.floor-activity-toolbar .floor-activity-filter-input--date-picker>button,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker>button {
+  width: 100%;
+  min-height: 44px;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+}
+
 .floor-activity-toolbar .ant-picker .ant-picker-input>input {
   color: var(--text) !important;
   font-weight: 600;
@@ -2630,22 +2671,6 @@ html.reservation-overlay-open header {
 .floor-activity-toolbar .ant-picker .ant-picker-suffix,
 .floor-activity-toolbar .ant-picker .ant-picker-clear {
   color: var(--text-muted) !important;
-}
-
-.floor-activity-toolbar .floor-activity-filter-input--time-picker {
-  min-height: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: #ffffff;
-  color: var(--text);
-  font-weight: 600;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  padding: 0;
-  width: 100%;
-  cursor: pointer;
-  outline: none;
 }
 
 .floor-activity-toolbar .ant-input {
@@ -2676,8 +2701,10 @@ html.reservation-overlay-open header {
 .floor-activity-toolbar .ant-input-affix-wrapper-focused,
 .floor-activity-toolbar .ant-picker:hover,
 .floor-activity-toolbar .ant-picker-focused,
-.floor-activity-toolbar .floor-activity-filter-input--time-picker:hover,
-.floor-activity-toolbar .floor-activity-filter-input--time-picker:focus {
+.floor-activity-toolbar .floor-activity-filter-input--date-picker>button:hover,
+.floor-activity-toolbar .floor-activity-filter-input--date-picker>button:focus,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker>button:hover,
+.floor-activity-toolbar .floor-activity-filter-input--time-picker>button:focus {
   border-color: var(--primary-border) !important;
 }
 
@@ -2693,7 +2720,8 @@ html.reservation-overlay-open header {
 [data-theme="dark"] .floor-activity-toolbar .ant-input-affix-wrapper.ant-input-outlined,
 [data-theme="dark"] .floor-activity-toolbar .ant-picker,
 [data-theme="dark"] .floor-activity-toolbar .ant-picker-outlined,
-[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--time-picker,
+[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--date-picker>button,
+[data-theme="dark"] .floor-activity-toolbar .floor-activity-filter-input--time-picker>button,
 [data-theme="dark"] .floor-activity-action-row .floor-activity-action-btn.ant-btn-default {
   background: var(--card) !important;
   background-color: var(--card) !important;
@@ -3478,6 +3506,7 @@ html.reservation-overlay-open header {
 [data-theme="dark"] .ai-icon {
   filter: invert(1);
 }
+
 /* =========================================================
  * Combo Form - Image Upload
  * ========================================================= */

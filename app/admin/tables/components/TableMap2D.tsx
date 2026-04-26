@@ -61,12 +61,20 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
   const floorRef = useRef<HTMLDivElement>(null);
+  const scaleWrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [fitScale, setFitScale] = useState(1);
   const [zoomScale, setZoomScale] = useState(1);
+  const isManualZoomRef = useRef(false);
+  const fitScaleRef = useRef(1);
+  const zoomScaleRef = useRef(1);
   const pinchStartDistanceRef = useRef<number | null>(null);
   const pinchStartZoomRef = useRef(1);
   const isPinchingRef = useRef(false);
+  const pinchFrameRef = useRef<number | null>(null);
+  const pinchSampleRef = useRef<{ distance: number } | null>(null);
+  const pinchAnchorRef = useRef<{ anchorX: number; anchorY: number; worldX: number; worldY: number } | null>(null);
+  const pinchGestureRef = useRef(false);
   const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null);
   const lastDoubleTapZoomRef = useRef<{ from: number; to: number } | null>(null);
   const panStartPointRef = useRef<{ x: number; y: number } | null>(null);
@@ -81,12 +89,34 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   const touchPanStartScrollRef = useRef<{ left: number; top: number } | null>(null);
   const touchLastSampleRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const touchMovedRef = useRef(false);
+  const [isGestureZooming, setIsGestureZooming] = useState(false);
 
   const activeFloor = layout.floors.find((f) => f.id === layout.activeFloorId);
   const selectedSet = React.useMemo(() => new Set(selectedTableIds), [selectedTableIds]);
   const [hasFocused, setHasFocused] = useState(false);
   const canDragPan = readOnly;
   const scale = fitScale * zoomScale;
+
+  useEffect(() => {
+    fitScaleRef.current = fitScale;
+  }, [fitScale]);
+
+  useEffect(() => {
+    zoomScaleRef.current = zoomScale;
+  }, [zoomScale]);
+
+  const applyVisualScale = useCallback((zoom: number) => {
+    const nextScale = fitScaleRef.current * zoom;
+
+    if (scaleWrapperRef.current && activeFloor) {
+      scaleWrapperRef.current.style.width = `${activeFloor.width * nextScale}px`;
+      scaleWrapperRef.current.style.height = `${activeFloor.height * nextScale}px`;
+    }
+
+    if (floorRef.current) {
+      floorRef.current.style.transform = `translateZ(0) scale(${nextScale})`;
+    }
+  }, [activeFloor]);
 
   const clampZoomScale = useCallback((next: number) => {
     return Math.min(MAX_ZOOM_SCALE, Math.max(MIN_ZOOM_SCALE, next));
@@ -104,11 +134,12 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
 
     const container = containerRef.current;
     const rect = container.getBoundingClientRect();
-    const anchorX = clientX - rect.left;
-    const anchorY = clientY - rect.top;
+    const anchorX = clientX - rect.left - container.clientLeft;
+    const anchorY = clientY - rect.top - container.clientTop;
 
-    const prevScale = scale;
-    const nextScale = fitScale * nextZoom;
+    const currentFitScale = fitScaleRef.current;
+    const prevScale = currentFitScale * zoomScaleRef.current;
+    const nextScale = currentFitScale * nextZoom;
 
     if (prevScale <= 0 || nextScale <= 0) {
       setZoomScale(nextZoom);
@@ -118,14 +149,17 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
     const worldX = (container.scrollLeft + anchorX) / prevScale;
     const worldY = (container.scrollTop + anchorY) / prevScale;
 
+    zoomScaleRef.current = nextZoom;
     setZoomScale(nextZoom);
 
     requestAnimationFrame(() => {
       if (!containerRef.current) return;
-      containerRef.current.scrollLeft = worldX * nextScale - anchorX;
-      containerRef.current.scrollTop = worldY * nextScale - anchorY;
+      const targetLeft = worldX * nextScale - anchorX;
+      const targetTop = worldY * nextScale - anchorY;
+      containerRef.current.scrollLeft = targetLeft;
+      containerRef.current.scrollTop = targetTop;
     });
-  }, [fitScale, scale]);
+  }, []);
 
   const startInertia = useCallback(() => {
     if (!containerRef.current) return;
@@ -171,6 +205,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   }, [activeFloor?.id, selectedTableIds.join(',')]);
 
   useEffect(() => {
+    isManualZoomRef.current = false;
     setZoomScale(1);
   }, [activeFloor?.id]);
 
@@ -196,6 +231,13 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
     const updateScale = () => {
       const container = containerRef.current;
       if (!container) return;
+
+      // Avoid auto-fit recalculation while user is actively zooming.
+      // Recomputing fitScale during gesture causes center drift/flicker.
+      if (isGestureZooming || isManualZoomRef.current || zoomScaleRef.current !== 1) {
+        return;
+      }
+
       const computedStyle = window.getComputedStyle(container);
       const horizontalPadding =
         (parseFloat(computedStyle.paddingLeft || '0') || 0) +
@@ -247,17 +289,19 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
         }
       }
 
-      setFitScale(finalScale);
+      const roundedScale = Math.round(finalScale * 10000) / 10000;
+      setFitScale((prev) => (Math.abs(prev - roundedScale) > 0.0005 ? roundedScale : prev));
     };
 
     updateScale();
     const observer = new ResizeObserver(updateScale);
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [activeFloor?.width, activeFloor?.height, activeFloor?.id, focusOnSelected, selectedSet, hasFocused]);
+  }, [activeFloor?.width, activeFloor?.height, activeFloor?.id, focusOnSelected, selectedSet, hasFocused, isGestureZooming]);
 
   const handleZoomIn = () => {
     if (!containerRef.current) return;
+    isManualZoomRef.current = true;
     lastDoubleTapZoomRef.current = null;
     const rect = containerRef.current.getBoundingClientRect();
     const next = clampZoomScale(zoomScale + 0.2);
@@ -266,6 +310,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
 
   const handleZoomOut = () => {
     if (!containerRef.current) return;
+    isManualZoomRef.current = true;
     lastDoubleTapZoomRef.current = null;
     const rect = containerRef.current.getBoundingClientRect();
     const next = clampZoomScale(zoomScale - 0.2);
@@ -273,6 +318,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   };
 
   const handleZoomReset = () => {
+    isManualZoomRef.current = false;
     lastDoubleTapZoomRef.current = null;
     setZoomScale(1);
   };
@@ -297,14 +343,41 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
     if (!canDragPan || !containerRef.current) return;
 
     if (event.touches.length === 2) {
+      isManualZoomRef.current = true;
       lastDoubleTapZoomRef.current = null;
       const distance = getTouchDistance(event.touches);
       if (!distance) return;
+      pinchGestureRef.current = true;
       isPinchingRef.current = true;
       setIsPanning(false);
       stopInertia();
       pinchStartDistanceRef.current = distance;
-      pinchStartZoomRef.current = zoomScale;
+      pinchStartZoomRef.current = zoomScaleRef.current;
+      setIsGestureZooming(true);
+
+      const [first, second] = [event.touches[0], event.touches[1]];
+      if (first && second) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const centerX = (first.clientX + second.clientX) / 2;
+        const centerY = (first.clientY + second.clientY) / 2;
+        const anchorX = centerX - rect.left - containerRef.current.clientLeft;
+        const anchorY = centerY - rect.top - containerRef.current.clientTop;
+        const currentScale = fitScaleRef.current * zoomScaleRef.current;
+
+        if (currentScale > 0) {
+          pinchAnchorRef.current = {
+            anchorX,
+            anchorY,
+            worldX: (containerRef.current.scrollLeft + anchorX) / currentScale,
+            worldY: (containerRef.current.scrollTop + anchorY) / currentScale,
+          };
+        }
+      }
+
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+
       touchPanStartPointRef.current = null;
       touchPanStartScrollRef.current = null;
       touchLastSampleRef.current = null;
@@ -324,6 +397,32 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
     }
   };
 
+  const flushPinchZoom = useCallback(() => {
+    pinchFrameRef.current = null;
+    if (!canDragPan || !isPinchingRef.current || !pinchStartDistanceRef.current || !containerRef.current) return;
+
+    const sample = pinchSampleRef.current;
+    const anchor = pinchAnchorRef.current;
+    if (!sample || !anchor) return;
+
+    const ratio = sample.distance / pinchStartDistanceRef.current;
+    const nextZoom = clampZoomScale(pinchStartZoomRef.current * ratio);
+    // Keep a tiny epsilon only to avoid noisy no-op frames.
+    // Too large a threshold makes zoom-out feel sticky near fit.
+    if (Math.abs(nextZoom - zoomScaleRef.current) < 0.0015) {
+      return;
+    }
+    const nextScale = fitScaleRef.current * nextZoom;
+
+    zoomScaleRef.current = nextZoom;
+    applyVisualScale(nextZoom);
+
+    const targetLeft = anchor.worldX * nextScale - anchor.anchorX;
+    const targetTop = anchor.worldY * nextScale - anchor.anchorY;
+    containerRef.current.scrollLeft = targetLeft;
+    containerRef.current.scrollTop = targetTop;
+  }, [canDragPan, clampZoomScale, applyVisualScale]);
+
   const handleTouchMove = useCallback((event: TouchEvent) => {
     if (!canDragPan || !containerRef.current) return;
 
@@ -338,12 +437,19 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
       if (event.cancelable) {
         event.preventDefault();
       }
+      const previousDistance = pinchSampleRef.current?.distance;
+      // Use light smoothing to damp sensor jitter without creating "pull-back" lag.
+      const stabilizedDistance = previousDistance
+        ? (previousDistance * 0.12) + (nextDistance * 0.88)
+        : nextDistance;
 
-      const ratio = nextDistance / pinchStartDistanceRef.current;
-      const nextScale = clampZoomScale(pinchStartZoomRef.current * ratio);
-      const centerX = (first.clientX + second.clientX) / 2;
-      const centerY = (first.clientY + second.clientY) / 2;
-      applyZoomAtClientPoint(nextScale, centerX, centerY);
+      pinchSampleRef.current = {
+        distance: stabilizedDistance,
+      };
+
+      if (pinchFrameRef.current === null) {
+        pinchFrameRef.current = window.requestAnimationFrame(flushPinchZoom);
+      }
       return;
     }
 
@@ -358,7 +464,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
 
       touchLastSampleRef.current = { x: touch.clientX, y: touch.clientY, time: performance.now() };
     }
-  }, [canDragPan, clampZoomScale, applyZoomAtClientPoint]);
+  }, [canDragPan, flushPinchZoom]);
 
   const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
     if (!canDragPan) return;
@@ -366,10 +472,19 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
     const targetElement = event.target as HTMLElement | null;
     const endedOnTableNode = !!targetElement?.closest('[data-table-node="true"]');
     let didTouchPan = false;
+    const wasPinchGesture = pinchGestureRef.current || isPinchingRef.current || !!pinchStartDistanceRef.current;
 
     if (event.touches.length < 2) {
+      setZoomScale(zoomScaleRef.current);
       pinchStartDistanceRef.current = null;
       isPinchingRef.current = false;
+      pinchSampleRef.current = null;
+      pinchAnchorRef.current = null;
+      if (pinchFrameRef.current !== null) {
+        window.cancelAnimationFrame(pinchFrameRef.current);
+        pinchFrameRef.current = null;
+      }
+      setIsGestureZooming(false);
     }
 
     if (event.touches.length === 0) {
@@ -379,6 +494,14 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
       touchLastSampleRef.current = null;
       touchMovedRef.current = false;
       setIsPanning(false);
+
+      if (wasPinchGesture) {
+        // Ignore tap/double-tap detection after pinch to avoid post-gesture zoom drift.
+        pinchGestureRef.current = false;
+        lastTapRef.current = null;
+        lastDoubleTapZoomRef.current = null;
+        return;
+      }
 
       if (endedOnTableNode) {
         lastTapRef.current = null;
@@ -423,8 +546,17 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   };
 
   const handleTouchCancel = () => {
+    setZoomScale(zoomScaleRef.current);
     pinchStartDistanceRef.current = null;
     isPinchingRef.current = false;
+    pinchGestureRef.current = false;
+    pinchSampleRef.current = null;
+    pinchAnchorRef.current = null;
+    if (pinchFrameRef.current !== null) {
+      window.cancelAnimationFrame(pinchFrameRef.current);
+      pinchFrameRef.current = null;
+    }
+    setIsGestureZooming(false);
     touchPanStartPointRef.current = null;
     touchLastSampleRef.current = null;
     touchMovedRef.current = false;
@@ -502,6 +634,10 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
   useEffect(() => {
     return () => {
       stopInertia();
+      if (pinchFrameRef.current !== null) {
+        window.cancelAnimationFrame(pinchFrameRef.current);
+        pinchFrameRef.current = null;
+      }
     };
   }, [stopInertia]);
 
@@ -724,9 +860,13 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
         ref={containerRef}
         className="relative block flex-1 overflow-auto overscroll-contain rounded-xl border border-[var(--border)] bg-[var(--bg-base)] p-2 sm:p-4"
         style={{
-          touchAction: canDragPan ? "pan-x pan-y" : "pan-x pan-y",
+          touchAction: canDragPan ? (isGestureZooming ? "none" : "pan-x pan-y") : "pan-x pan-y",
           cursor: canDragPan ? (isPanning ? "grabbing" : "grab") : "default",
           userSelect: canDragPan && isPanning ? "none" : "auto",
+          WebkitOverflowScrolling: canDragPan ? "auto" : "touch",
+          transform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
         }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -739,6 +879,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
       >
         {/* Scaled wrapper — preserves canvas coordinate system */}
         <div
+          ref={scaleWrapperRef}
           style={{
             width: activeFloor.width * scale,
             height: activeFloor.height * scale,
@@ -752,8 +893,11 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
             style={{
               width: activeFloor.width,
               height: activeFloor.height,
-              transform: `scale(${scale})`,
+              transform: `translateZ(0) scale(${scale})`,
               transformOrigin: "top left",
+              willChange: isGestureZooming ? "transform" : "auto",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
               backgroundColor: "white",
               backgroundImage: activeFloor.backgroundImage ? `url(${activeFloor.backgroundImage})` : undefined,
               backgroundSize: "contain",
@@ -764,7 +908,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
             }}
           >
             {/* Grid Overlay */}
-            {showGrid && (
+            {showGrid && !isGestureZooming && (
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
@@ -789,6 +933,7 @@ export const TableMap2D: React.FC<TableMap2DProps> = ({
                 draggable={!readOnly}
                 renderContent={renderTableContent}
                 scale={scale}
+                reduceEffects={isGestureZooming}
               />
             ))}
           </div>

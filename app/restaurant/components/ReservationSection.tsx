@@ -27,8 +27,7 @@ const DEFAULT_TIME_SLOTS = ['17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
 const DEFAULT_SLOT_INTERVAL_MINUTES = 30;
 const MAX_RESERVATION_ADVANCE_MONTHS = 1;
 const WEEK_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
-const APPLY_CLIENT_CURRENT_TIME_GUARD = true;
-const MINIMUM_ADVANCE_BOOKING_MINUTES = 30;
+const APPLY_CLIENT_CURRENT_TIME_GUARD = false;
 
 const TIME_SLOT_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
@@ -333,7 +332,7 @@ const getSelectableTimeBounds = (date: string, slots: string[]) => {
     if (APPLY_CLIENT_CURRENT_TIME_GUARD && date === getTodayLocalDate()) {
         const now = dayjs();
         const nowMinutes = (now.hour() * 60) + now.minute();
-        minMinutes = Math.max(minMinutes, nowMinutes + MINIMUM_ADVANCE_BOOKING_MINUTES);
+        minMinutes = Math.max(minMinutes, nowMinutes + 1);
     }
 
     if (minMinutes > latestAllowedMinutes) return null;
@@ -459,51 +458,80 @@ const buildTimeSlotsFromHours = (open: string, close: string, intervalMinutes = 
     return slots;
 };
 
+const formatBusinessHourTime = (time: string) => {
+    const parts = (time || '').split(':');
+    if (parts.length < 2) return time;
+    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+};
+
+const getBusinessHourBoundsForDate = (date: string, businessHours: BusinessHour[]) => {
+    if (!businessHours.length) return null;
+
+    const dayIndex = dayjs(date, 'YYYY-MM-DD').day();
+    const dayHours = businessHours.find((hour) => hour.dayOfWeek === dayIndex);
+    if (!dayHours || dayHours.isClosed) return null;
+
+    const slots = buildTimeSlotsFromHours(
+        formatBusinessHourTime(dayHours.openTime),
+        formatBusinessHourTime(dayHours.closeTime),
+    );
+
+    if (!slots.length) return null;
+
+    return getSelectableTimeBounds(date, slots);
+};
+
 const getTenantReservationConfig = (tenant: TenantConfig | null, date: string, businessHours: BusinessHour[] = []) => {
     let timeSlots = DEFAULT_TIME_SLOTS;
     let maxGuestsOverride: number | undefined;
     let closedNotice = '';
     const closedWeekdays = new Set<number>();
+    const openingHours = parseOpeningHours(tenant?.businessOpeningHours);
 
-    let apiOpeningHours: { open: string, close: string } | null = null;
+    const selectedDayIndex = dayjs(date, 'YYYY-MM-DD').day();
+    const businessHourForSelectedDate = businessHours.find((hour) => hour.dayOfWeek === selectedDayIndex);
+    const isSelectedDayClosed = businessHourForSelectedDate?.isClosed === true;
 
     if (businessHours.length > 0) {
-        businessHours.forEach(h => {
-            if (h.isClosed) closedWeekdays.add(h.dayOfWeek);
+        businessHours.forEach((hour) => {
+            if (hour.isClosed) {
+                closedWeekdays.add(hour.dayOfWeek);
+            }
         });
 
-        const dayIndex = dayjs(date, 'YYYY-MM-DD').day();
-        const currentDayHours = businessHours.find(h => h.dayOfWeek === dayIndex);
-
-        if (currentDayHours && !currentDayHours.isClosed) {
-            const formatTimeSpan = (time: string) => {
+        if (!isSelectedDayClosed && businessHourForSelectedDate) {
+            const formatTime = (time: string) => {
                 const parts = (time || '').split(':');
-                if (parts.length >= 2) return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
-                return time;
+                if (parts.length < 2) return time;
+                return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
             };
 
-            apiOpeningHours = {
-                open: formatTimeSpan(currentDayHours.openTime),
-                close: formatTimeSpan(currentDayHours.closeTime)
+            const generatedSlots = buildTimeSlotsFromHours(
+                formatTime(businessHourForSelectedDate.openTime),
+                formatTime(businessHourForSelectedDate.closeTime),
+            );
+            if (generatedSlots.length) {
+                timeSlots = generatedSlots;
             }
+        } else if (isSelectedDayClosed) {
+            timeSlots = [];
         }
-    }
+    } else {
+        if (openingHours) {
+            const generatedSlots = buildTimeSlotsFromHours(openingHours.open, openingHours.close);
+            if (generatedSlots.length) timeSlots = generatedSlots;
+        }
 
-    const openingHours = apiOpeningHours || parseOpeningHours(tenant?.businessOpeningHours);
-    if (openingHours) {
-        const generatedSlots = buildTimeSlotsFromHours(openingHours.open, openingHours.close);
-        if (generatedSlots.length) timeSlots = generatedSlots;
+        const weeklySchedule = parseWeeklyScheduleFromOpeningHours(tenant?.businessOpeningHours);
+        if (weeklySchedule.openDays.size) {
+            WEEK_DAYS.forEach((day) => {
+                if (!weeklySchedule.openDays.has(day)) {
+                    closedWeekdays.add(day);
+                }
+            });
+        }
+        weeklySchedule.closedDays.forEach((day) => closedWeekdays.add(day));
     }
-
-    const weeklySchedule = parseWeeklyScheduleFromOpeningHours(tenant?.businessOpeningHours);
-    if (weeklySchedule.openDays.size) {
-        WEEK_DAYS.forEach((day) => {
-            if (!weeklySchedule.openDays.has(day)) {
-                closedWeekdays.add(day);
-            }
-        });
-    }
-    weeklySchedule.closedDays.forEach((day) => closedWeekdays.add(day));
 
     const settings = parseTenantSettingsEntries((tenant as any)?.tenantSettings ?? []);
     for (const raw of settings) {
@@ -544,7 +572,10 @@ const getTenantReservationConfig = (tenant: TenantConfig | null, date: string, b
     const normalizedTimeSlots = normalizeTimeSlots(timeSlots);
 
     let finalTimeSlots = normalizedTimeSlots.length ? normalizedTimeSlots : DEFAULT_TIME_SLOTS;
-    if (openingHours) {
+    if (businessHours.length > 0 && isSelectedDayClosed) {
+        finalTimeSlots = [];
+    }
+    if (businessHours.length === 0 && openingHours) {
         const openMinutes = toMinutes(openingHours.open);
         const closeMinutes = toMinutes(openingHours.close);
         if (openMinutes !== null && closeMinutes !== null) {
@@ -635,6 +666,12 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
     const [step, setStep] = useState<ReservationStep>(ReservationStep.SEARCH);
     const autoFilledRef = useRef(false);
     const [isMobileViewport, setIsMobileViewport] = useState(false);
+    const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+    const [booking, setBooking] = useState<BookingData>(() => ({
+        date: getTodayLocalDate(),
+        time: '19:00',
+        guests: 4,
+    }));
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -658,19 +695,11 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             mediaQuery.removeEventListener('change', syncViewport);
         };
     }, []);
-    const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
 
     useEffect(() => {
-        if (tenant?.id) {
-            tenantService.getBusinessHours(tenant.id).then(setBusinessHours).catch(console.error);
-        }
+        if (!tenant?.id) return;
+        tenantService.getBusinessHours(tenant.id).then(setBusinessHours).catch(() => setBusinessHours([]));
     }, [tenant?.id]);
-
-    const [booking, setBooking] = useState<BookingData>(() => ({
-        date: getTodayLocalDate(),
-        time: '19:00',
-        guests: 4,
-    }));
 
     const { timeSlots, closedWeekdays, closedNotice } = useMemo(
         () => getTenantReservationConfig(tenant, booking.date, businessHours),
@@ -748,7 +777,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
             const candidateDate = start.add(offset, 'day').format('YYYY-MM-DD');
             if (isDateClosedByTenantSettings(candidateDate)) continue;
 
-            const candidateBounds = getSelectableTimeBounds(candidateDate, timeSlots);
+            const candidateBounds = businessHours.length > 0
+                ? getBusinessHourBoundsForDate(candidateDate, businessHours)
+                : getSelectableTimeBounds(candidateDate, timeSlots);
             if (!candidateBounds) continue;
 
             return {
@@ -758,7 +789,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         }
 
         return null;
-    }, [booking.date, isBookingDayClosed, isBookingPastHoursToday, isDateClosedByTenantSettings, timeSlots]);
+    }, [booking.date, isBookingDayClosed, isBookingPastHoursToday, isDateClosedByTenantSettings, timeSlots, businessHours]);
 
     const handlePickNextAvailableDate = useCallback(() => {
         if (!nextAvailableBooking) return;
@@ -858,9 +889,9 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         let nextDate = booking.date < today ? today : booking.date;
         if (nextDate > maxBookableDate) nextDate = maxBookableDate;
 
-        const nextBounds = isDateClosedByTenantSettings(nextDate)
-            ? null
-            : getSelectableTimeBounds(nextDate, timeSlots);
+        const nextBounds = businessHours.length > 0
+            ? getBusinessHourBoundsForDate(nextDate, businessHours)
+            : (isDateClosedByTenantSettings(nextDate) ? null : getSelectableTimeBounds(nextDate, timeSlots));
 
         const normalizedCurrentTime = normalizeTimeSlot(booking.time) || booking.time;
         const nextTime = nextBounds
@@ -870,7 +901,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         if (nextDate !== booking.date || nextTime !== booking.time) {
             setBooking(prev => ({ ...prev, date: nextDate, time: nextTime }));
         }
-    }, [booking.date, booking.time, isDateClosedByTenantSettings, timeSlots]);
+    }, [booking.date, booking.time, isDateClosedByTenantSettings, timeSlots, businessHours]);
 
     // Auto-fill user info when logged in (only once, first time CONFIRMATION is opened)
     useEffect(() => {
@@ -1506,6 +1537,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
                                             value={dayjs(booking.date, 'YYYY-MM-DD')}
                                             minDate={dayjs(getTodayLocalDate(), 'YYYY-MM-DD')}
                                             maxDate={dayjs(getMaxBookableDate(), 'YYYY-MM-DD')}
+                                            disabledWeekdays={Array.from(closedWeekdays)}
                                             onChange={(value) => {
                                                 const safeDate = value.format('YYYY-MM-DD');
                                                 if (isDateClosedByTenantSettings(safeDate)) {

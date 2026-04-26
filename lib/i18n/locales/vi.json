@@ -1506,6 +1506,9 @@
         "ai_content": {
           "generate": "Tạo bằng AI",
           "generating": "Đang tạo...",
+          "prompt_modal_title": "Tạo mô tả bằng AI",
+          "prompt_modal_hint": "Nhập hướng dẫn tùy chọn cho AI. Có thể để trống để AI tự tạo từ tên combo và các món.",
+          "prompt_label": "Prompt",
           "prompt_placeholder": "Prompt tùy chọn (ví dụ: nhấn mạnh tiết kiệm và phù hợp đi nhóm)",
           "variants_label": "Số lượng phương án",
           "variants_hint": "Số ở trên là số lượng phương án mô tả AI sẽ tạo (1-10).",
@@ -1626,6 +1629,9 @@
       "ai_content": {
         "generate": "Tạo bằng AI",
         "generating": "Đang tạo...",
+        "prompt_modal_title": "Tạo mô tả bằng AI",
+        "prompt_modal_hint": "Nhập hướng dẫn tùy chọn cho AI. Có thể để trống để AI tự tạo từ tên món.",
+        "prompt_label": "Prompt",
         "prompt_placeholder": "Prompt tùy chọn (ví dụ: nhấn mạnh vị cay và nguyên liệu cao cấp)",
         "variants_label": "Số lượng phương án",
         "variants_hint": "Số ở trên là số lượng phương án mô tả AI sẽ tạo (1-10).",
@@ -2309,6 +2315,27 @@
         "deposit_amount": "Tiền cọc mỗi khách",
         "deadline_hours": "Thời gian giữ chỗ (Giờ)"
       },
+      "business": {
+        "title": "Cấu hình giờ hoạt động & Ngày nghỉ",
+        "description": "Quản lý giờ mở/đóng cửa và các ngày nghỉ trong tuần của nhà hàng. Những tính năng đặt bàn sẽ dựa vào cấu hình này.",
+        "status": {
+          "open": "Đang mở",
+          "closed": "Đang đóng",
+          "day_off": "Ngày nghỉ / Đóng cửa"
+        },
+        "inputs": {
+          "open": "Mở cửa",
+          "close": "Đóng cửa",
+          "apply_all": "Áp dụng tất cả",
+          "apply_all_title": "Áp dụng thời gian của Thứ 2 cho tất cả các ngày khác"
+        },
+        "toasts": {
+          "fetch_error": "Lỗi tải giờ hoạt động",
+          "update_success": "Đã cập nhật giờ hoạt động. Các thay đổi sẽ mất vài phút để hiển thị ngoài trang khách.",
+          "update_error": "Cập nhật thất bại. Vui lòng thử lại.",
+          "apply_all_success": "Đã áp dụng thời gian này cho tất cả các ngày trong tuần"
+        }
+      },
       "appearance": {
         "theme": "Chủ đề",
         "accent_color": "Màu chủ đạo",
@@ -2362,7 +2389,23 @@
         "error_update": "Cập nhật thất bại",
         "error_fetch": "Tải dữ liệu thất bại",
         "error_save": "Lưu thất bại",
-        "error_delete": "Xóa thất bại"
+        "error_delete": "Xóa thất bại",
+        "order_notifications": "Thông báo đơn hàng",
+        "system_notifications": "Thông báo hệ thống",
+        "items": {
+          "new_orders": "Đơn hàng mới",
+          "new_orders_desc": "Nhận thông báo khi có đơn đặt món mới",
+          "order_updates": "Cập nhật đơn hàng",
+          "order_updates_desc": "Thay đổi trạng thái, cập nhật món",
+          "order_completion": "Hoàn tất đơn hàng",
+          "order_completion_desc": "Thông báo khi đơn hàng thanh toán thành công",
+          "table_updates": "Trạng thái bàn",
+          "table_updates_desc": "Khi bàn được dọn, ghép bàn hoặc chuyển bàn",
+          "staff_alerts": "Cảnh báo nhân viên",
+          "staff_alerts_desc": "Thông báo nội bộ từ các luồng vận hành",
+          "inventory_alerts": "Cảnh báo tồn kho",
+          "inventory_alerts_desc": "Khi nguyên liệu sắp hết hoặc cạn kho"
+        }
       },
       "security": {
         "change_password": "Đổi mật khẩu",
@@ -2580,6 +2623,15 @@
     "active": "Hoạt động",
     "inactive": "Ngừng hoạt động",
     "saving": "Đang lưu...",
+    "days": {
+      "monday": "Thứ 2",
+      "tuesday": "Thứ 3",
+      "wednesday": "Thứ 4",
+      "thursday": "Thứ 5",
+      "friday": "Thứ 6",
+      "saturday": "Thứ 7",
+      "sunday": "Chủ nhật"
+    },
     "actions": {
       "yes": "Có",
       "no": "Không",

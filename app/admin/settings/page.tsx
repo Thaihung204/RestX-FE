@@ -3,19 +3,16 @@
 import { DropDown } from "@/components/ui/DropDown";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TimePicker } from "@/components/ui/TimePicker";
 
 import TenantBrandingSettings from "./components/TenantBrandingSettings";
 import ReservationDepositConfigSection from "./components/ReservationDepositConfigSection";
+import BusinessHourSettings from "./components/BusinessHourSettings";
 
 export default function SettingsPage() {
   const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState<
     "general" | "appearance" | "notifications" | "security"
   >("general");
-
-  const [openingTime, setOpeningTime] = useState("09:00");
-  const [closingTime, setClosingTime] = useState("23:00");
 
   return (
     <main className="p-6 lg:p-8">
@@ -198,34 +195,10 @@ export default function SettingsPage() {
                     suppressHydrationWarning
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.settings.general.opening_time")}
-                    </label>
-                    <TimePicker
-                      value={openingTime}
-                      onChange={setOpeningTime}
-                      placeholder="Giờ mở cửa"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "var(--text-muted)" }}>
-                      {t("dashboard.settings.general.closing_time")}
-                    </label>
-                    <TimePicker
-                      value={closingTime}
-                      onChange={setClosingTime}
-                      placeholder="Giờ đóng cửa"
-                    />
-                  </div>
-                </div>
               </div>
             </div>
+
+            <BusinessHourSettings />
 
             <ReservationDepositConfigSection />
 

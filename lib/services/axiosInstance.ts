@@ -120,14 +120,17 @@ axiosInstance.interceptors.response.use(
           // Xóa cookie để middleware không còn cho phép truy cập route được bảo vệ
           clearAuthCookie();
 
-          const currentPath = `${window.location.pathname}${window.location.search || ''}`;
-          const encodedRedirect = encodeURIComponent(currentPath || '/');
-          const loginPath =
-            window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/staff')
-              ? '/login-email'
-              : '/login';
+          const windowPath = window.location.pathname;
+          if (!windowPath.startsWith('/your-reservation')) {
+            const currentPath = `${windowPath}${window.location.search || ''}`;
+            const encodedRedirect = encodeURIComponent(currentPath || '/');
+            const loginPath =
+              windowPath.startsWith('/admin') || windowPath.startsWith('/staff')
+                ? '/login-email'
+                : '/login';
 
-          window.location.href = `${loginPath}?redirect=${encodedRedirect}`;
+            window.location.href = `${loginPath}?redirect=${encodedRedirect}`;
+          }
         }
         return Promise.reject(refreshError);
       }

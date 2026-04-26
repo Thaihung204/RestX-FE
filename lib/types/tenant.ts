@@ -171,6 +171,7 @@ export interface ITenantRequest {
 export interface TenantRequestInput {
   name: string;
   hostname: string;
+  isCustomDomain?: boolean;
   businessName?: string;
   businessPrimaryPhone?: string;
   businessEmailAddress?: string;

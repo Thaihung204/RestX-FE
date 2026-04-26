@@ -24,13 +24,13 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { HubConnectionState } from '@microsoft/signalr';
-import { App, Button, Card, Col, DatePicker, Input, Modal, Row, Tag, Typography } from 'antd';
+import { App, Button, Card, Col, Input, Modal, Row, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PluginRegistry, TimepickerUI } from 'timepicker-ui';
-import { WheelPlugin } from 'timepicker-ui/plugins/wheel';
 import { useTranslation } from 'react-i18next';
+import { DayPicker } from '@/components/ui/DayPicker';
+import { TimePicker } from '@/components/ui/TimePicker';
 import { useThemeMode } from '../../theme/AntdProvider';
 
 const { Title, Text } = Typography;
@@ -120,38 +120,6 @@ function normalizeFilterTime(value: string): string | null {
   if (!match) return null;
 
   return `${Number(match[1]).toString().padStart(2, '0')}:${match[2]}`;
-}
-
-function ensureWheelPluginRegistered(): void {
-  if (!PluginRegistry.has('wheel')) {
-    PluginRegistry.register(WheelPlugin);
-  }
-}
-
-function normalizePickerTime(hourValue?: string, minuteValue?: string, periodValue?: string): string | null {
-  const parsedHour = Number.parseInt(hourValue ?? '', 10);
-  const parsedMinute = Number.parseInt(minuteValue ?? '', 10);
-
-  if (
-    Number.isNaN(parsedHour) ||
-    Number.isNaN(parsedMinute) ||
-    parsedHour < 0 ||
-    parsedMinute < 0 ||
-    parsedMinute > 59
-  ) {
-    return null;
-  }
-
-  let hour = parsedHour;
-  const period = (periodValue || '').trim().toLowerCase();
-  if (period === 'am' || period === 'pm') {
-    const normalized12Hour = ((hour % 12) + 12) % 12;
-    hour = period === 'pm' ? normalized12Hour + 12 : normalized12Hour;
-  }
-
-  if (hour > 23) return null;
-
-  return `${hour.toString().padStart(2, '0')}:${parsedMinute.toString().padStart(2, '0')}`;
 }
 
 function parseFilterDateTime(dateValue: string, timeValue: string): Date | null {
@@ -282,8 +250,6 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
   const [isMerging, setIsMerging] = useState(false);
   const [manualMergeGroupsByTable, setManualMergeGroupsByTable] = useState<Record<string, string[]>>({});
   const inFlightRef = useRef(false);
-  const timeInputRef = useRef<HTMLInputElement | null>(null);
-  const timePickerRef = useRef<TimepickerUI | null>(null);
 
   const selectedFilterDateTime = useMemo(
     () => parseFilterDateTime(reservationFilterDate, reservationFilterTime),
@@ -294,75 +260,6 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     () => resolveSessionBufferMinutes(tenant),
     [tenant],
   );
-
-  useEffect(() => {
-    const input = timeInputRef.current;
-
-    if (timePickerRef.current) {
-      timePickerRef.current.destroy({ keepInputValue: true });
-      timePickerRef.current = null;
-    }
-
-    if (!input) return;
-
-    ensureWheelPluginRegistered();
-
-    const picker = new TimepickerUI(input, {
-      clock: {
-        type: '24h',
-        incrementMinutes: 1,
-        incrementHours: 1,
-      },
-      ui: {
-        theme: 'basic',
-        mode: 'compact-wheel',
-        animation: false,
-        backdrop: false,
-        editable: false,
-      },
-      wheel: {
-        placement: 'auto',
-        commitOnScroll: false,
-        hideDisabled: false,
-      },
-      labels: {
-        ok: t('common.actions.confirm', { defaultValue: 'Xác nhận' }),
-        cancel: t('common.actions.cancel', { defaultValue: 'Cancel' }),
-        time: t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' }),
-      },
-      callbacks: {
-        onConfirm: ({ hour, minutes, type }) => {
-          const normalized = normalizePickerTime(hour, minutes, type);
-          if (!normalized) return;
-
-          setReservationFilterTime((prev) => (prev === normalized ? prev : normalized));
-        },
-      },
-    });
-
-    picker.create();
-
-    const normalizedCurrentTime = normalizeFilterTime(reservationFilterTime) || toHm(new Date());
-    picker.setValue(normalizedCurrentTime, true);
-
-    timePickerRef.current = picker;
-
-    return () => {
-      if (timePickerRef.current) {
-        timePickerRef.current.destroy({ keepInputValue: true });
-        timePickerRef.current = null;
-      }
-    };
-  }, [t]);
-
-  useEffect(() => {
-    if (!timePickerRef.current) return;
-
-    const normalized = normalizeFilterTime(reservationFilterTime);
-    if (!normalized) return;
-
-    timePickerRef.current.setValue(normalized, true);
-  }, [reservationFilterTime]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -886,45 +783,33 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
               <Text className="floor-activity-filter-label">
                 {t('staff.floor_activity.date_filter_label', { defaultValue: 'Ngày' })}
               </Text>
-              <DatePicker
-                className="floor-activity-filter-input floor-activity-filter-input--date-picker"
-                classNames={{ popup: { root: 'floor-activity-date-popup' } }}
-                getPopupContainer={(triggerNode) => triggerNode.parentElement || document.body}
-                placement="bottomLeft"
-                value={reservationFilterDate ? dayjs(reservationFilterDate, 'YYYY-MM-DD') : null}
-                format="DD/MM/YYYY"
-                allowClear={false}
-                inputReadOnly
-                suffixIcon={<span className="material-symbols-outlined text-[var(--text-muted)]">calendar_month</span>}
-                onChange={(value) => {
-                  if (!value) return;
-                  setReservationFilterDate(value.format('YYYY-MM-DD'));
-                }}
-              />
+              <div className="floor-activity-filter-input floor-activity-filter-input--date-picker">
+                <DayPicker
+                  value={reservationFilterDate ? dayjs(reservationFilterDate, 'YYYY-MM-DD') : null}
+                  onChange={(value) => {
+                    if (!value) return;
+                    setReservationFilterDate(value.format('YYYY-MM-DD'));
+                  }}
+                  placeholder={t('staff.floor_activity.date_filter_label', { defaultValue: 'Ngày' })}
+                />
+              </div>
             </div>
 
             <div className="floor-activity-filter-group floor-activity-filter-group--time">
               <Text className="floor-activity-filter-label">
                 {t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' })}
               </Text>
-              <input
-                ref={timeInputRef}
-                type="text"
-                className="floor-activity-filter-input floor-activity-filter-input--time-picker"
-                value={normalizeFilterTime(reservationFilterTime) || ''}
-                readOnly
-                inputMode="numeric"
-                autoComplete="off"
-                aria-label={t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' })}
-                onClick={() => timePickerRef.current?.open()}
-                onFocus={() => timePickerRef.current?.open()}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    timePickerRef.current?.open();
-                  }
-                }}
-              />
+              <div className="floor-activity-filter-input floor-activity-filter-input--time-picker">
+                <TimePicker
+                  value={normalizeFilterTime(reservationFilterTime) || toHm(new Date())}
+                  onChange={(value) => {
+                    const normalized = normalizeFilterTime(value);
+                    if (!normalized) return;
+                    setReservationFilterTime((prev) => (prev === normalized ? prev : normalized));
+                  }}
+                  placeholder={t('staff.floor_activity.time_filter_label', { defaultValue: 'Giờ' })}
+                />
+              </div>
             </div>
 
             <Input
