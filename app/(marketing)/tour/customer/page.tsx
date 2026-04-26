@@ -862,33 +862,6 @@ export default function CustomerPage() {
             </Paragraph>
           </motion.div>
 
-          {/* Counter badges */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-              gap: 16,
-              maxWidth: 560,
-              margin: "0 auto 56px",
-            }}>
-            <CounterBadge
-              value={0}
-              label={t("tour.customer.section_1.stats.wait_seconds")}
-              color={PINK}
-            />
-            <CounterBadge
-              value={100}
-              label={t("tour.customer.section_1.stats.menu_items")}
-              color={PINK}
-              suffix="+"
-            />
-            <CounterBadge
-              value={3}
-              label={t("tour.customer.section_1.stats.order_steps")}
-              color={PINK}
-            />
-          </div>
-
           {/* Feature cards */}
           <div
             style={{
