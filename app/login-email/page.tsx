@@ -6,12 +6,12 @@ import { GlassInput } from "@/components/ui/GlassInput";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import {
-  EyeInvisibleOutlined,
-  EyeOutlined,
-  LockOutlined,
-  LoginOutlined,
-  MailOutlined,
-  PhoneOutlined,
+    EyeInvisibleOutlined,
+    EyeOutlined,
+    LockOutlined,
+    LoginOutlined,
+    MailOutlined,
+    PhoneOutlined,
 } from "@ant-design/icons";
 import { message } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -36,7 +36,7 @@ function LoginEmailPageContent() {
   // State
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");

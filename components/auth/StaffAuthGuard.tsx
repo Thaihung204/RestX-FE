@@ -14,7 +14,7 @@ export default function StaffAuthGuard({
 }: {
     children: React.ReactNode;
 }) {
-    const { user, loading } = useAuth();
+    const { user, loading, isAuthReady } = useAuth();
     const router = useRouter();
 
     // Determine if user has staff/admin access
@@ -30,7 +30,7 @@ export default function StaffAuthGuard({
     const canAccessStaff = isStaff || isAdmin;
 
     useEffect(() => {
-        if (!loading) {
+        if (isAuthReady) {
             if (!user) {
                 // Not logged in → redirect to phone login (staff usually use phone)
                 router.replace("/login-email");
@@ -39,10 +39,10 @@ export default function StaffAuthGuard({
                 router.replace("/");
             }
         }
-    }, [user, loading, canAccessStaff, router]);
+    }, [user, isAuthReady, canAccessStaff, router]);
 
     // Show loading spinner while checking auth
-    if (loading) {
+    if (!isAuthReady || loading) {
         return (
             <div
                 className="min-h-screen flex items-center justify-center"
@@ -62,7 +62,7 @@ export default function StaffAuthGuard({
     }
 
     // Not authenticated or not allowed role → don't render content (redirecting)
-    if (!user || !canAccessStaff) {
+    if (!isAuthReady || !user || !canAccessStaff) {
         return null;
     }
 
