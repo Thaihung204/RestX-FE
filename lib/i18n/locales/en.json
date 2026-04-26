@@ -895,7 +895,7 @@
         "description": "Owners create accounts, assign permissions, and manage all staff in one place. Each employee gets a role-specific dashboard.",
         "bullets": {
           "create_account": "Create new staff accounts in seconds",
-          "assign_roles": "Assign roles: waiter, cashier, manager",
+          "assign_roles": "Assign roles: waiter, kitchen, manager",
           "edit_disable": "Edit profile, reset password, disable account"
         },
         "terminal": {
@@ -4942,7 +4942,7 @@
         "description": "Owners create accounts, assign permissions, and manage all staff in one place. Each employee gets a role-specific dashboard.",
         "bullets": {
           "create_account": "Create new staff accounts in seconds",
-          "assign_roles": "Assign roles: waiter, cashier, manager",
+          "assign_roles": "Assign roles: waiter, kitchen, manager",
           "edit_disable": "Edit profile, reset password, disable account"
         },
         "terminal": {

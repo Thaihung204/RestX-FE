@@ -923,7 +923,7 @@
         "description": "Chủ quán tạo tài khoản, phân quyền và quản lý toàn bộ nhân sự ngay trên hệ thống. Mỗi nhân viên có dashboard riêng phù hợp với vai trò của họ.",
         "bullets": {
           "create_account": "Tạo tài khoản nhân viên mới chỉ trong vài giây",
-          "assign_roles": "Phân quyền theo vai trò: phục vụ, thu ngân, quản lý",
+          "assign_roles": "Phân quyền theo vai trò: phục vụ, bếp, quản lý",
           "edit_disable": "Chỉnh sửa thông tin, đổi mật khẩu, vô hiệu hóa tài khoản"
         },
         "terminal": {
@@ -4999,7 +4999,7 @@
         "description": "Chủ quán tạo tài khoản, phân quyền và quản lý toàn bộ nhân sự ngay trên hệ thống. Mỗi nhân viên có dashboard riêng phù hợp với vai trò của họ.",
         "bullets": {
           "create_account": "Tạo tài khoản nhân viên mới chỉ trong vài giây",
-          "assign_roles": "Phân quyền theo vai trò: phục vụ, thu ngân, quản lý",
+          "assign_roles": "Phân quyền theo vai trò: phục vụ, bếp, quản lý",
           "edit_disable": "Chỉnh sửa thông tin, đổi mật khẩu, vô hiệu hóa tài khoản"
         },
         "terminal": {
