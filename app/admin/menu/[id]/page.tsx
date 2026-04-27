@@ -410,9 +410,6 @@ export default function MenuItemFormPage() {
                 style={{ color: "var(--text)" }}>
                 {isNewItem ? t("menu_form.title_new") : t("menu_form.title_edit")}
               </h2>
-              <p style={{ color: "var(--text-muted)" }}>
-                {isNewItem ? t("menu_form.subtitle_new") : t("menu_form.subtitle_edit")}
-              </p>
             </div>
           </div>
 
