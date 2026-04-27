@@ -102,6 +102,7 @@ export default function HelpPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t("dashboard.help.search_placeholder")}
                 className="w-full pl-12 pr-4 py-3 rounded-lg focus:outline-none"
                 style={{
                   background: 'var(--surface)',

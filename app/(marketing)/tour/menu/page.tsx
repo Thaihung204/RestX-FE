@@ -388,117 +388,13 @@ export default function MenuTourPage() {
       <section
         ref={heroRef}
         style={{
-          padding: "120px 24px 80px",
           background: "var(--bg-base)",
           position: "relative",
           overflow: "hidden",
-          minHeight: "60vh",
+          minHeight: "10vh",
           display: "flex",
           alignItems: "center",
         }}>
-        {/* Animated bg orbs */}
-        {[
-          { w: 600, h: 600, top: -200, left: -200, delay: 0 },
-          { w: 400, h: 400, top: 100, right: -100, delay: 1.5 },
-          { w: 300, h: 300, bottom: -100, left: "40%", delay: 3 },
-        ].map((orb, i) => (
-          <motion.div
-            key={i}
-            animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
-            transition={{
-              duration: 6 + i * 2,
-              repeat: Infinity,
-              delay: orb.delay,
-              ease: "easeInOut",
-            }}
-            style={{
-              position: "absolute",
-              width: orb.w,
-              height: orb.h,
-              top: (orb as any).top,
-              left: (orb as any).left,
-              right: (orb as any).right,
-              bottom: (orb as any).bottom,
-              borderRadius: "50%",
-              background: `radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)`,
-              pointerEvents: "none",
-            }}
-          />
-        ))}
-
-        <motion.div
-          style={{
-            maxWidth: 900,
-            margin: "0 auto",
-            textAlign: "center",
-            y: heroY,
-            opacity: heroOpacity,
-            position: "relative",
-            zIndex: 1,
-          }}>
-          {/* Stats row */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={heroIn ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.7 }}
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "clamp(24px, 5vw, 64px)",
-              flexWrap: "wrap",
-            }}>
-            {[
-              {
-                value: 3,
-                suffix: t("tour.menu.stats.setup_suffix"),
-                label: t("tour.menu.stats.setup_label"),
-              },
-              {
-                value: 100,
-                suffix: "+",
-                label: t("tour.menu.stats.menu_items_label"),
-              },
-              {
-                value: 0,
-                suffix: t("tour.menu.stats.reload_suffix"),
-                label: t("tour.menu.stats.realtime_label"),
-              },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ y: -4 }}
-                style={{
-                  textAlign: "center",
-                  padding: "20px 28px",
-                  borderRadius: 20,
-                  background: "var(--card)",
-                  border: `1.5px solid ${PB}`,
-                  boxShadow: "0 4px 24px rgba(99,102,241,0.08)",
-                  minWidth: 120,
-                }}>
-                <div
-                  style={{
-                    fontSize: "clamp(24px, 3vw, 36px)",
-                    fontWeight: 900,
-                    color: P,
-                    lineHeight: 1,
-                  }}>
-                  <CountUp to={stat.value} suffix={stat.suffix} />
-                </div>
-                <Text
-                  style={{
-                    color: "var(--text-muted)",
-                    fontSize: 12,
-                    fontWeight: 500,
-                    marginTop: 6,
-                    display: "block",
-                  }}>
-                  {stat.label}
-                </Text>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
       </section>
 
       {/* ── Feature cards ── */}

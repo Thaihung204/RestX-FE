@@ -334,6 +334,9 @@ const authService = {
       }
       localStorage.setItem('userInfo', JSON.stringify(normalizedUser));
 
+      // Set cookie để middleware nhận diện session sau khi register
+      setAuthCookie(tokens.accessToken, false);
+
       console.log('Register successful with auto-login, user:', normalizedUser);
       return {
         user: normalizedUser,

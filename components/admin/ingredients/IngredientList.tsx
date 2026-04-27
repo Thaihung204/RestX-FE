@@ -146,7 +146,7 @@ export default function IngredientList() {
   ];
 
   const activeTabStyle: React.CSSProperties  = { background: "var(--primary)", color: "white" };
-  const normalTabStyle: React.CSSProperties  = { background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" };
+  const normalTabStyle: React.CSSProperties  = { background: "var(--surface)", color: "var(--text-secondary)", border: "1px solid var(--border)" };
 
 
   if (error) {
@@ -163,7 +163,7 @@ export default function IngredientList() {
   return (
     <div className="space-y-4">
 
-      <div className="rounded-xl p-4 sm:p-5" style={{ background: "var(--bg-surface)" }}>
+      <div className="rounded-xl p-4 sm:p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <input
@@ -172,7 +172,7 @@ export default function IngredientList() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border outline-none transition-all text-sm"
-              style={{ background: "var(--bg-base)", color: "var(--text)", borderColor: "var(--border)" }}
+              style={{ background: "var(--surface)", color: "var(--text)", borderColor: "var(--border)" }}
             />
           </div>
 
@@ -181,7 +181,7 @@ export default function IngredientList() {
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               className="px-3 py-2 rounded-lg border outline-none text-sm"
-              style={{ background: "var(--bg-base)", color: "var(--text)", borderColor: "var(--border)" }}
+              style={{ background: "var(--surface)", color: "var(--text)", borderColor: "var(--border)" }}
             >
               <option value="all">
                 {t("dashboard.ingredients.list.filter_all_types")}
@@ -208,11 +208,11 @@ export default function IngredientList() {
         </div>
       </div>
 
-      <div className="rounded-xl overflow-hidden" style={{ background: "var(--bg-surface)" }}>
+      <div className="rounded-xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ background: "var(--bg-base)", borderBottom: "2px solid var(--border)" }}>
+              <tr style={{ background: "var(--card)", borderBottom: "2px solid var(--border)" }}>
                 <th className="text-left px-4 py-3 font-semibold whitespace-nowrap" style={{ color: "var(--text)", minWidth: 160 }}>
                   {t("dashboard.ingredients.list.col_name")}
                 </th>
@@ -261,7 +261,7 @@ export default function IngredientList() {
                     className="cursor-pointer transition-colors"
                     style={{ borderBottom: "1px solid var(--border)" }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "var(--card)")}
                   >
                     <td className="px-4 py-3">
                       <p className="font-semibold truncate max-w-[180px]" style={{ color: "var(--text)" }}>{item.name}</p>
@@ -269,7 +269,7 @@ export default function IngredientList() {
                     <td className="px-3 py-3 hidden lg:table-cell">
                       <span
                         className="px-1.5 py-0.5 rounded text-xs font-mono"
-                        style={{ background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+                        style={{ background: "var(--surface)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
                       >
                         {item.code}
                       </span>
@@ -292,7 +292,7 @@ export default function IngredientList() {
                           }
                           className="w-20 px-2 py-1 rounded border text-sm text-center"
                           style={{
-                            background: "var(--bg-base)",
+                            background: "var(--surface)",
                             color: "var(--text)",
                             borderColor: editingQuantity[item.id!] !== undefined && editingQuantity[item.id!] !== (item.currentQuantity ?? "")
                               ? "var(--primary)"
@@ -357,7 +357,7 @@ export default function IngredientList() {
                       {item.type ? (
                         <span
                           className="px-2 py-0.5 rounded-full text-xs"
-                          style={{ background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+                          style={{ background: "var(--surface)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
                         >
                           {getTypeLabel(item.type)}
                         </span>
@@ -381,7 +381,7 @@ export default function IngredientList() {
                     <td className="px-3 py-3 text-center hidden xl:table-cell">
                       <span
                         className="px-2 py-0.5 rounded-full text-xs"
-                        style={{ background: "var(--bg-base)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+                        style={{ background: "var(--surface)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
                       >
                         {getStatusLabel(item.status)}
                       </span>
@@ -422,7 +422,7 @@ export default function IngredientList() {
                 onClick={() => router.push(`/admin/ingredients/${item.id}`)}
                 className="p-4 cursor-pointer transition-colors"
                 onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "var(--card)")}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-1 min-w-0 pr-2">
@@ -457,7 +457,7 @@ export default function IngredientList() {
                         }
                         className="w-full px-2 py-1 rounded border text-sm text-center"
                         style={{
-                          background: "var(--bg-base)",
+                          background: "var(--surface)",
                           color: "var(--text)",
                           borderColor: editingQuantity[item.id!] !== undefined && editingQuantity[item.id!] !== (item.currentQuantity ?? "")
                             ? "var(--primary)"

@@ -650,136 +650,305 @@ export default function MenuPage() {
 
       <Modal
         title={
-          activeDish
-            ? t("dashboard.menu.ingredients.modal.title", {
-                name: activeDish.name,
-              })
-            : t("dashboard.menu.ingredients.modal.title_empty")
+          <div className="flex items-center gap-2">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: "rgba(255,56,11,0.1)" }}>
+              <svg className="w-4 h-4" style={{ color: "var(--primary)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-semibold text-base" style={{ color: "var(--text)" }}>
+                {activeDish
+                  ? t("dashboard.menu.ingredients.modal.title", { name: activeDish.name })
+                  : t("dashboard.menu.ingredients.modal.title_empty")}
+              </p>
+              <p className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
+                {dishRecipes.length > 0 ? t("dashboard.menu.ingredients.modal.ingredient_count", { count: dishRecipes.length }) : t("dashboard.menu.ingredients.modal.no_ingredient")}
+              </p>
+            </div>
+          </div>
         }
         open={recipeModalOpen}
         onCancel={() => setRecipeModalOpen(false)}
         footer={null}
-        width={640}
+        width={680}
         destroyOnHidden>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_140px_120px] gap-3">
-            <DropDown
-              value={selectedIngredientId}
-              onChange={(e) => setSelectedIngredientId(e.target.value)}
-              disabled={ingredientsLoading}>
-              <option value="">
-              </option>
-              {ingredients.map((ingredient) => (
-                <option
-                  key={ingredient.id || ingredient.name}
-                  value={ingredient.id || ""}>
-                  {ingredient.name} ({ingredient.unit})
-                </option>
-              ))}
-            </DropDown>
-            <input
-              type="text"
-              value={quantity}
-              onChange={(e) => {
-                const nextValue = e.target.value;
-                if (isNumericInput(nextValue)) {
-                  setQuantity(nextValue);
-                }
-              }}
-              className="w-full px-4 py-2.5 rounded-lg outline-none transition-all"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-              }}
-            />
-            <Button
-              type="primary"
-              onClick={handleAddRecipe}
-              loading={savingRecipe}
-              className="w-full">
-              {t("dashboard.menu.ingredients.actions.add")}
-            </Button>
-          </div>
-
+        <div className="space-y-5 pt-1">
+          {/* Add ingredient section */}
           <div
-            className="border rounded-lg"
-            style={{ borderColor: "var(--border)" }}>
-            {loadingRecipes ? (
-              <div
-                className="p-4 text-sm"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.menu.ingredients.modal.loading_recipes")}
-              </div>
-            ) : dishRecipes.length === 0 ? (
-              <div
-                className="p-4 text-sm"
-                style={{ color: "var(--text-muted)" }}>
-                {t("dashboard.menu.ingredients.modal.empty_recipes")}
-              </div>
-            ) : (
-              <div
-                className="divide-y"
-                style={{ borderColor: "var(--border)" }}>
-                {dishRecipes.map((recipe) => {
-                  const ingredientName =
-                    recipe.ingredientName ||
-                    ingredients.find((item) => item.id === recipe.ingredientId)
-                      ?.name ||
-                    "";
+            className="rounded-xl p-4 space-y-3"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              {t("dashboard.menu.ingredients.modal.add_section_title")}
+            </p>
+            <div className="grid grid-cols-1 gap-3">
+              <DropDown
+                value={selectedIngredientId}
+                onChange={(e) => setSelectedIngredientId(e.target.value)}
+                disabled={ingredientsLoading}>
+                <option value="">— {t("dashboard.menu.ingredients.modal.select_option_empty")} —</option>
+                {ingredients.map((ingredient) => {
+                  const stockPct = ingredient.maxStockLevel > 0
+                    ? (ingredient.currentQuantity ?? 0) / ingredient.maxStockLevel
+                    : 1;
+                  const stockLabel = stockPct <= 0 ? t("dashboard.menu.ingredients.modal.stock_out") : stockPct < 0.2 ? t("dashboard.menu.ingredients.modal.stock_low") : "";
                   return (
-                    <div key={recipe.id || recipe.ingredientId} className="p-3">
-                      <div className="flex flex-col md:flex-row md:items-center gap-3">
-                        <div className="flex-1">
-                          <p
-                            className="text-sm font-medium"
-                            style={{ color: "var(--text)" }}>
-                            {ingredientName}
-                          </p>
-                        </div>
-                        <input
-                          type="text"
-                          value={String(recipe.quantity ?? "")}
-                          onChange={(e) => {
-                            const nextValue = e.target.value;
-                            if (!isNumericInput(nextValue)) return;
-
-                            setDishRecipes((prev) =>
-                              prev.map((r) =>
-                                r.ingredientId === recipe.ingredientId
-                                  ? {
-                                      ...r,
-                                      quantity:
-                                        nextValue === ""
-                                          ? 0
-                                          : Number(nextValue),
-                                    }
-                                  : r,
-                              ),
-                            );
-                          }}
-                          className="w-full md:w-[120px] px-4 py-2.5 rounded-lg outline-none transition-all"
-                          style={{
-                            background: "var(--surface)",
-                            border: "1px solid var(--border)",
-                            color: "var(--text)",
-                          }}
-                        />
-                        <div className="flex gap-2">
-                          <Button
-                            danger
-                            onClick={() => handleDeleteRecipe(recipe)}
-                            loading={savingRecipe}
-                            className="min-w-[72px]">
-                            {t("dashboard.menu.ingredients.actions.delete")}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                    <option key={ingredient.id || ingredient.name} value={ingredient.id || ""}>
+                      {ingredient.name} ({ingredient.unit}){stockLabel ? ` — ${stockLabel}` : ""}
+                    </option>
                   );
                 })}
+              </DropDown>
+
+              {/* Selected ingredient info card */}
+              {selectedIngredientId && (() => {
+                const ing = ingredients.find((i) => i.id === selectedIngredientId);
+                if (!ing) return null;
+                const current = ing.currentQuantity ?? 0;
+                const stockPct = ing.maxStockLevel > 0 ? current / ing.maxStockLevel : 1;
+                const stockStatus = current <= 0
+                  ? { label: t("dashboard.menu.ingredients.modal.stock_status_out"), color: "#ef4444", bg: "rgba(239,68,68,0.1)" }
+                  : stockPct < 0.2
+                  ? { label: t("dashboard.menu.ingredients.modal.stock_status_low"), color: "#f59e0b", bg: "rgba(245,158,11,0.1)" }
+                  : { label: t("dashboard.menu.ingredients.modal.stock_status_ok"), color: "#22c55e", bg: "rgba(34,197,94,0.1)" };
+                return (
+                  <div
+                    className="rounded-lg p-3 grid grid-cols-2 sm:grid-cols-4 gap-3"
+                    style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+                    <div>
+                      <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>{t("dashboard.menu.ingredients.modal.label_unit")}</p>
+                      <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{ing.unit}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>{t("dashboard.menu.ingredients.modal.label_stock")}</p>
+                      <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                        {current.toLocaleString()} {ing.unit}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>{t("dashboard.menu.ingredients.modal.label_min_max")}</p>
+                      <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                        {ing.minStockLevel} / {ing.maxStockLevel}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>Trạng thái</p>
+                      <span
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                        style={{ background: stockStatus.bg, color: stockStatus.color }}>
+                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: stockStatus.color }} />
+                        {stockStatus.label}
+                      </span>
+                    </div>
+                    {ing.supplierName && (
+                      <div className="col-span-2">
+                        <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>{t("dashboard.menu.ingredients.modal.label_supplier")}</p>
+                        <p className="text-sm" style={{ color: "var(--text)" }}>{ing.supplierName}</p>
+                      </div>
+                    )}
+                    {ing.type && (
+                      <div className="col-span-2">
+                        <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>{t("dashboard.menu.ingredients.modal.label_type")}</p>
+                        <p className="text-sm" style={{ color: "var(--text)" }}>{ing.type}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>
+                    {t("dashboard.menu.ingredients.modal.quantity_label")}
+                    {selectedIngredientId && (() => {
+                      const unit = ingredients.find((i) => i.id === selectedIngredientId)?.unit;
+                      return unit ? <span className="ml-1 font-semibold" style={{ color: "var(--text)" }}>({unit})</span> : null;
+                    })()}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={quantity}
+                      onChange={(e) => {
+                        const nextValue = e.target.value;
+                        if (isNumericInput(nextValue)) setQuantity(nextValue);
+                      }}
+                      className="w-full px-4 py-2.5 rounded-lg outline-none transition-all pr-16"
+                      style={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
+                      }}
+                    />
+                    {selectedIngredientId && (
+                      <span
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium px-1.5 py-0.5 rounded"
+                        style={{ background: "var(--surface)", color: "var(--text-muted)" }}>
+                        {ingredients.find((i) => i.id === selectedIngredientId)?.unit ?? ""}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  type="primary"
+                  onClick={handleAddRecipe}
+                  loading={savingRecipe}
+                  icon={
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  }
+                  className="!px-5 !h-[42px] self-end"
+                  style={{ background: "var(--primary)", borderColor: "var(--primary)" }}>
+                  {t("dashboard.menu.ingredients.actions.add")}
+                </Button>
               </div>
-            )}
+            </div>
+          </div>
+
+          {/* Recipe list */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--text-muted)" }}>
+              {t("dashboard.menu.ingredients.modal.list_section_title")}
+            </p>
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{ border: "1px solid var(--border)" }}>
+              {loadingRecipes ? (
+                <div className="p-6 flex items-center justify-center gap-2" style={{ color: "var(--text-muted)" }}>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  <span className="text-sm">{t("dashboard.menu.ingredients.modal.loading_recipes")}</span>
+                </div>
+              ) : dishRecipes.length === 0 ? (
+                <div className="p-8 flex flex-col items-center gap-2" style={{ color: "var(--text-muted)" }}>
+                  <svg className="w-10 h-10 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                  </svg>
+                  <p className="text-sm">{t("dashboard.menu.ingredients.modal.empty_recipes")}</p>
+                </div>
+              ) : (
+                <>
+                  {/* Table header */}
+                  <div
+                    className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-4 py-2 text-xs font-semibold uppercase tracking-wide"
+                    style={{ background: "var(--surface)", color: "var(--text-muted)", borderBottom: "1px solid var(--border)" }}>
+                    <span>{t("dashboard.menu.ingredients.modal.col_ingredient")}</span>
+                    <span className="w-24 text-center">{t("dashboard.menu.ingredients.modal.col_stock")}</span>
+                    <span className="w-36 text-center">{t("dashboard.menu.ingredients.modal.col_quantity")}</span>
+                    <span className="w-16 text-center">{t("dashboard.menu.ingredients.modal.col_delete")}</span>
+                  </div>
+                  <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+                    {dishRecipes.map((recipe) => {
+                      const ing = ingredients.find((item) => item.id === recipe.ingredientId);
+                      const ingredientName = recipe.ingredientName || ing?.name || "";
+                      const unit = ing?.unit ?? "";
+                      const current = ing?.currentQuantity ?? 0;
+                      const stockPct = (ing?.maxStockLevel ?? 0) > 0 ? current / ing!.maxStockLevel : 1;
+                      const stockColor = current <= 0 ? "#ef4444" : stockPct < 0.2 ? "#f59e0b" : "#22c55e";
+
+                      return (
+                        <div
+                          key={recipe.id || recipe.ingredientId}
+                          className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center px-4 py-3 transition-colors hover:bg-black/5">
+                          {/* Name + meta */}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>
+                              {ingredientName}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                              {unit && (
+                                <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "var(--surface)", color: "var(--text-muted)" }}>
+                                  {unit}
+                                </span>
+                              )}
+                              {ing?.type && (
+                                <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                                  {ing.type}
+                                </span>
+                              )}
+                              {ing?.supplierName && (
+                                <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                                  · {ing.supplierName}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Stock */}
+                          <div className="w-24 text-center">
+                            <p className="text-xs font-medium" style={{ color: stockColor }}>
+                              {current.toLocaleString()} {unit}
+                            </p>
+                            {ing && (
+                              <div className="mt-1 h-1 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{
+                                    width: `${Math.min(100, stockPct * 100)}%`,
+                                    background: stockColor,
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Quantity input */}
+                          <div className="w-36 relative">
+                            <input
+                              type="text"
+                              value={String(recipe.quantity ?? "")}
+                              onChange={(e) => {
+                                const nextValue = e.target.value;
+                                if (!isNumericInput(nextValue)) return;
+                                setDishRecipes((prev) =>
+                                  prev.map((r) =>
+                                    r.ingredientId === recipe.ingredientId
+                                      ? { ...r, quantity: nextValue === "" ? 0 : Number(nextValue) }
+                                      : r,
+                                  ),
+                                );
+                              }}
+                              onBlur={() => handleUpdateRecipe(recipe)}
+                              className="w-full px-3 py-2 rounded-lg outline-none transition-all text-sm pr-10"
+                              style={{
+                                background: "var(--surface)",
+                                border: "1px solid var(--border)",
+                                color: "var(--text)",
+                              }}
+                            />
+                            {unit && (
+                              <span
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs"
+                                style={{ color: "var(--text-muted)" }}>
+                                {unit}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Delete */}
+                          <div className="w-16 flex justify-center">
+                            <button
+                              onClick={() => handleDeleteRecipe(recipe)}
+                              disabled={savingRecipe}
+                              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-red-500/10"
+                              title={t("dashboard.menu.ingredients.modal.delete_tooltip")}>
+                              <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </Modal>

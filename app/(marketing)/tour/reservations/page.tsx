@@ -1,14 +1,14 @@
 "use client";
 
 import {
-  CalendarOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  CompassOutlined,
-  EnvironmentOutlined,
-  EyeOutlined,
-  TeamOutlined,
-  UserOutlined,
+    CalendarOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CompassOutlined,
+    EnvironmentOutlined,
+    EyeOutlined,
+    TeamOutlined,
+    UserOutlined,
 } from "@ant-design/icons";
 import { Typography } from "antd";
 import { AnimatePresence, motion } from "framer-motion";
@@ -29,6 +29,8 @@ const getSteps = (t: (key: string) => string) => [
     title: t("tour.reservations.steps.step_1.title"),
     summary: t("tour.reservations.steps.step_1.summary"),
     icon: <CalendarOutlined style={{ fontSize: 22 }} />,
+    image: "/images/example/reservation.png",
+    imageAlt: t("tour.reservations.steps.step_1.title"),
     script: [
       {
         icon: <ClockCircleOutlined />,
@@ -60,6 +62,8 @@ const getSteps = (t: (key: string) => string) => [
     title: t("tour.reservations.steps.step_2.title"),
     summary: t("tour.reservations.steps.step_2.summary"),
     icon: <CheckCircleOutlined style={{ fontSize: 22 }} />,
+    image: "/images/example/reservation-admin.png",
+    imageAlt: t("tour.reservations.steps.step_2.title"),
     script: [
       {
         icon: <CalendarOutlined />,
@@ -90,6 +94,8 @@ const getSteps = (t: (key: string) => string) => [
     title: t("tour.reservations.steps.step_3.title"),
     summary: t("tour.reservations.steps.step_3.summary"),
     icon: <UserOutlined style={{ fontSize: 22 }} />,
+    image: undefined,
+    imageAlt: undefined,
     script: [
       {
         icon: <UserOutlined />,
@@ -322,6 +328,24 @@ function StepBlock({
                   flexDirection: "column",
                   gap: 12,
                 }}>
+                {step.image && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: [0.25, 0.4, 0.25, 1] }}
+                    style={{
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      border: `1px solid ${CB}`,
+                      marginBottom: 4,
+                    }}>
+                    <img
+                      src={step.image}
+                      alt={step.imageAlt}
+                      style={{ width: "100%", height: "auto", display: "block" }}
+                    />
+                  </motion.div>
+                )}
                 {step.script.map((s, i) => (
                   <ScriptItem key={i} {...s} index={i} />
                 ))}
