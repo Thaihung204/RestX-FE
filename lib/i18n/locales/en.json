@@ -1288,7 +1288,8 @@
         "unit": "Default Unit",
         "actions": "Actions",
         "empty": "No ingredient categories found.",
-        "confirm_delete": "Are you sure you want to delete this category?",
+        "confirm_delete": "Are you sure you want to delete this ingredient category?",
+        "confirm_delete_desc": "Category \"{{name}}\" will be permanently deleted.",
         "name_placeholder": "e.g. Vegetables, Meat, Dairy...",
         "description_placeholder": "Brief description of this ingredient category",
         "empty_title": "No Categories Found",
@@ -1348,6 +1349,11 @@
         "inactive": "Inactive",
         "empty": "No suppliers found.",
         "confirm_delete": "Are you sure you want to delete this supplier?",
+        "confirm_delete_desc": "Supplier \"{{name}}\" will be permanently deleted.",
+        "confirm_deactivate_title": "Deactivate supplier?",
+        "confirm_activate_title": "Activate supplier?",
+        "confirm_deactivate_desc": "\"{{name}}\" will be deactivated.",
+        "confirm_activate_desc": "\"{{name}}\" will be activated again.",
         "fetch_failed": "Failed to load suppliers",
         "save_failed": "Failed to save supplier",
         "status_update_failed": "Failed to update status",
@@ -1403,7 +1409,13 @@
           "silver": "Silver",
           "gold": "Gold",
           "platinum": "Platinum"
-        }
+        },
+        "confirm_delete_title": "Delete loyalty band?",
+        "confirm_delete_desc": "Band \"{{name}}\" will be permanently deleted.",
+        "confirm_deactivate_title": "Deactivate loyalty band?",
+        "confirm_activate_title": "Activate loyalty band?",
+        "confirm_deactivate_desc": "Band \"{{name}}\" will be deactivated.",
+        "confirm_activate_desc": "Band \"{{name}}\" will be activated again."
       },
       "order_status": {
         "title": "Dish Status Management",
@@ -1544,7 +1556,13 @@
           "activate_success": "Promotion activated",
           "deactivate_success": "Promotion deactivated",
           "status_error": "Unable to update status"
-        }
+        },
+        "confirm_delete_title": "Delete promotion?",
+        "confirm_delete_desc": "Promotion \"{{name}}\" will be permanently deleted.",
+        "confirm_deactivate_title": "Deactivate promotion?",
+        "confirm_activate_title": "Activate promotion?",
+        "confirm_deactivate_desc": "Promotion \"{{name}}\" will be deactivated.",
+        "confirm_activate_desc": "Promotion \"{{name}}\" will be activated again."
       },
       "notifications": {
         "delete_success": "Deleted successfully",
@@ -1650,7 +1668,11 @@
         },
         "confirm": {
           "delete_title": "Delete this combo?",
-          "delete_description": "The combo will be deactivated and hidden from active lists."
+          "delete_description": "The combo will be deactivated and hidden from active lists.",
+          "deactivate_title": "Deactivate combo?",
+          "activate_title": "Activate combo?",
+          "deactivate_desc": "This combo will be hidden from the menu.",
+          "activate_desc": "This combo will be visible on the menu."
         },
         "toasts": {
           "fetch_error": "Failed to load combos",
@@ -1813,7 +1835,11 @@
           "deactivate_action": "Deactivate",
           "activate_success": "{{name}} activated",
           "deactivate_success": "{{name}} deactivated",
-          "update_failed": "Failed to update status"
+          "update_failed": "Failed to update status",
+          "confirm_deactivate_title": "Deactivate dish?",
+          "confirm_activate_title": "Activate dish?",
+          "confirm_deactivate_desc": "\"{{name}}\" will be hidden from the menu.",
+          "confirm_activate_desc": "\"{{name}}\" will be visible on the menu."
         },
         "validation": {
           "select_ingredient": "Please select an ingredient",
@@ -1983,7 +2009,10 @@
       "view_profile": "View Profile",
       "activate": "Activate",
       "deactivate": "Deactivate",
-      "no_staff_found": "No staff found",
+      "confirm_deactivate_title": "Deactivate staff member?",
+      "confirm_activate_title": "Activate staff member?",
+      "confirm_deactivate_desc": "\"{{name}}\" will be deactivated and unable to log in.",
+      "confirm_activate_desc": "\"{{name}}\" will be activated again.",
       "try_adjusting_filters": "Try adjusting your search or filters",
       "stats": {
         "total_staff": "Total Staff",
@@ -2208,6 +2237,12 @@
       "delete_btn_label": "Delete Ingredient",
       "delete_confirm_msg": "This cannot be undone.",
       "delete_btn": "Delete",
+      "confirm_delete_title": "Delete ingredient?",
+      "confirm_delete_desc": "Ingredient \"{{name}}\" will be permanently deleted.",
+      "confirm_deactivate_title": "Deactivate ingredient?",
+      "confirm_activate_title": "Activate ingredient?",
+      "confirm_deactivate_desc": "\"{{name}}\" will be deactivated.",
+      "confirm_activate_desc": "\"{{name}}\" will be activated again.",
       "status_active": "In Use",
       "status_inactive": "Inactive",
       "status_desc_active": "Ingredient is active",
@@ -2284,7 +2319,7 @@
         "image": "Image",
         "actions": "Actions",
         "confirm_delete": "Are you sure you want to delete this category?",
-        "change_image": "Change Image",
+        "confirm_delete_desc": "Category \"{{name}}\" will be permanently deleted.",
         "upload_image": "Upload Image",
         "file_size_error": "File size must be less than 5MB",
         "name_placeholder": "e.g. Appetizers",
@@ -2598,6 +2633,8 @@
   },
   "common": {
     "cancel": "Cancel",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
     "active": "Active",
     "inactive": "Inactive",
     "saving": "Saving...",
@@ -2613,6 +2650,8 @@
     "actions": {
       "yes": "Yes",
       "no": "No",
+      "delete": "Delete",
+      "edit": "Edit",
       "exporting": "Exporting..."
     },
     "theme": {
@@ -3857,9 +3896,13 @@
     },
     "deactivate_modal": {
       "title": "Deactivate Tenant",
-      "button_confirm": "Confirm Deactivate",
+      "button_confirm": "Deactivate",
       "warning_title": "Are you sure?",
       "warning_description": "Deactivating this tenant will make it inaccessible to users."
+    },
+    "activate_modal": {
+      "title": "Activate Tenant?",
+      "description": "This tenant will be activated and users will be able to access it again."
     },
     "status": {
       "active": "Active",

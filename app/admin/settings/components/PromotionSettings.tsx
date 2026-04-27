@@ -5,12 +5,14 @@ import promotionService, { Promotion } from "@/lib/services/promotionService";
 import { formatVND } from "@/lib/utils/currency";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { App, Button, Popconfirm, Table } from "antd";
+import { App, Button, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function PromotionSettings() {
   const { t } = useTranslation("common");
@@ -23,6 +25,8 @@ export default function PromotionSettings() {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Promotion | null>(null);
+  const [pendingToggle, setPendingToggle] = useState<Promotion | null>(null);
 
   const [formData, setFormData] = useState<Promotion>({
     id: "",
@@ -188,60 +192,41 @@ export default function PromotionSettings() {
       setDeletingId(id);
       await promotionService.deletePromotion(id);
       setPromotions((prev) => prev.filter((item) => item.id !== id));
-      message.success(
-        t("dashboard.manage.promotion.toasts.delete_success", {
-          defaultValue: "Promotion deleted successfully",
-        }),
-      );
+      message.success(t("dashboard.manage.promotion.toasts.delete_success"));
     } catch (error: unknown) {
-      console.error("Failed to delete promotion:", error);
-      const errorMsg = extractApiErrorMessage(
-        error,
-        t("dashboard.manage.promotion.toasts.delete_error", {
-          defaultValue: "Unable to delete promotion",
-        }),
-      );
-      message.error(errorMsg);
+      message.error(extractApiErrorMessage(error, t("dashboard.manage.promotion.toasts.delete_error")));
     } finally {
       setDeletingId(null);
+      setPendingDelete(null);
     }
   };
 
-  const handleToggleStatus = async (promotion: Promotion) => {
-    if (togglingId) return;
-    const nextStatus = !promotion.isActive;
+  const handleToggleStatus = (promotion: Promotion) => {
+    setPendingToggle(promotion);
+  };
 
+  const confirmToggleStatus = async () => {
+    if (!pendingToggle || togglingId) return;
+    const promotion = pendingToggle;
+    const nextStatus = !promotion.isActive;
     if (nextStatus === true) {
       const validTo = promotion.validTo ? new Date(promotion.validTo) : null;
       if (validTo && validTo < new Date()) {
         message.warning(t("dashboard.manage.promotion.toasts.cannot_activate_expired"));
+        setPendingToggle(null);
         return;
       }
     }
-
     try {
       setTogglingId(promotion.id);
-      await promotionService.updatePromotion(promotion.id, {
-        ...promotion,
-        isActive: nextStatus,
-      });
-      setPromotions((prev) =>
-        prev.map((item) =>
-          item.id === promotion.id ? { ...item, isActive: nextStatus } : item,
-        ),
-      );
-      message.success(
-        nextStatus
-          ? t("dashboard.manage.promotion.toasts.activate_success")
-          : t("dashboard.manage.promotion.toasts.deactivate_success"),
-      );
+      await promotionService.updatePromotion(promotion.id, { ...promotion, isActive: nextStatus });
+      setPromotions((prev) => prev.map((item) => item.id === promotion.id ? { ...item, isActive: nextStatus } : item));
+      message.success(nextStatus ? t("dashboard.manage.promotion.toasts.activate_success") : t("dashboard.manage.promotion.toasts.deactivate_success"));
     } catch (error: unknown) {
-      console.error("Failed to update status:", error);
-      const errorMsg = extractApiErrorMessage(
-        error,t("dashboard.manage.promotion.toasts.status_error"));
-      message.error(errorMsg);
+      message.error(extractApiErrorMessage(error, t("dashboard.manage.promotion.toasts.status_error")));
     } finally {
       setTogglingId(null);
+      setPendingToggle(null);
     }
   };
 
@@ -313,11 +298,7 @@ export default function PromotionSettings() {
           checked={promo.isActive}
           onChange={() => handleToggleStatus(promo)}
           disabled={!!togglingId || !!deletingId}
-          ariaLabel={
-            promo.isActive
-              ? t("common.status.deactivate", { defaultValue: "Deactivate" })
-              : t("common.status.activate", { defaultValue: "Activate" })
-          }
+          ariaLabel={promo.isActive ? t("common.deactivate") : t("common.activate")}
         />
       ),
     },
@@ -334,25 +315,14 @@ export default function PromotionSettings() {
             disabled={!!deletingId || !!togglingId || isSaving}
             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
           />
-          <Popconfirm
-            title={t("common.confirm.delete_title", {
-              defaultValue: "Are you sure?",
-            })}
-            description={t("common.confirm.delete_msg", {
-              defaultValue: "This action cannot be undone.",
-            })}
-            onConfirm={() => handleDelete(promo.id)}
-            okText={t("common.actions.yes", { defaultValue: "Yes" })}
-            cancelText={t("common.actions.no", { defaultValue: "No" })}
-            okButtonProps={{ danger: true }}>
-            <Button
-              type="text"
-              icon={<DeleteOutlined />}
-              loading={deletingId === promo.id}
-              disabled={!!deletingId || !!togglingId || isSaving}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            />
-          </Popconfirm>
+          <Button
+            type="text"
+            icon={<DeleteOutlined />}
+            loading={deletingId === promo.id}
+            disabled={!!deletingId || !!togglingId || isSaving}
+            onClick={() => setPendingDelete(promo)}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          />
         </div>
       ),
     },
@@ -395,6 +365,32 @@ export default function PromotionSettings() {
         loading={isLoading}
         pagination={false}
         className="admin-loyalty-table"
+      />
+
+      <ConfirmModal
+        open={!!pendingDelete}
+        title={t("dashboard.manage.promotion.confirm_delete_title")}
+        description={t("dashboard.manage.promotion.confirm_delete_desc", { name: pendingDelete?.name })}
+        confirmText={t("common.actions.delete")}
+        cancelText={t("common.cancel")}
+        variant="danger"
+        loading={!!deletingId}
+        onConfirm={() => pendingDelete && handleDelete(pendingDelete.id)}
+        onCancel={() => setPendingDelete(null)}
+      />
+
+      <ConfirmModal
+        open={!!pendingToggle}
+        title={pendingToggle?.isActive ? t("dashboard.manage.promotion.confirm_deactivate_title") : t("dashboard.manage.promotion.confirm_activate_title")}
+        description={pendingToggle?.isActive
+          ? t("dashboard.manage.promotion.confirm_deactivate_desc", { name: pendingToggle?.name })
+          : t("dashboard.manage.promotion.confirm_activate_desc", { name: pendingToggle?.name })}
+        confirmText={pendingToggle?.isActive ? t("common.deactivate") : t("common.activate")}
+        cancelText={t("common.cancel")}
+        variant={pendingToggle?.isActive ? "warning" : "info"}
+        loading={!!togglingId}
+        onConfirm={confirmToggleStatus}
+        onCancel={() => setPendingToggle(null)}
       />
 
       {isModalOpen &&

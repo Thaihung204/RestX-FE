@@ -3,11 +3,12 @@
 import ContentAreaLoader from "@/components/admin/ContentAreaLoader";
 import DishCard, { DishCardItem } from "@/components/admin/menu/DishCard";
 import MenuManagementTabs from "@/components/admin/menu/MenuManagementTabs";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { DropDown } from "@/components/ui/DropDown";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import dishService from "@/lib/services/dishService";
 import ingredientService, {
-    IngredientItem,
+  IngredientItem,
 } from "@/lib/services/ingredientService";
 import menuService from "@/lib/services/menuService";
 import recipeService, { DishRecipeItem } from "@/lib/services/recipeService";
@@ -43,6 +44,8 @@ export default function MenuPage() {
   const [quantity, setQuantity] = useState<string>("1");
   const [savingRecipe, setSavingRecipe] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState("All");
+  const [pendingToggleItem, setPendingToggleItem] = useState<DishCardItem | null>(null);
+  const [togglingStatus, setTogglingStatus] = useState(false);
 
   const normalizeMenuItem = (item: any, index: number): MenuItem => ({
     id:
@@ -191,8 +194,15 @@ export default function MenuPage() {
   };
 
   const handleToggleStatus = async (item: DishCardItem) => {
+    setPendingToggleItem(item);
+  };
+
+  const confirmToggleStatus = async () => {
+    if (!pendingToggleItem) return;
+    const item = pendingToggleItem;
     const nextStatus = !item.isActive;
     try {
+      setTogglingStatus(true);
       await dishService.toggleDishStatus(item.id, nextStatus);
       message.success(
         nextStatus
@@ -231,6 +241,9 @@ export default function MenuPage() {
         t("dashboard.menu.ingredients.status.update_failed"),
       );
       message.error(errorMsg);
+    } finally {
+      setTogglingStatus(false);
+      setPendingToggleItem(null);
     }
   };
 
@@ -952,6 +965,26 @@ export default function MenuPage() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        open={!!pendingToggleItem}
+        title={
+          pendingToggleItem?.isActive
+            ? t("dashboard.menu.ingredients.status.confirm_deactivate_title")
+            : t("dashboard.menu.ingredients.status.confirm_activate_title")
+        }
+        description={
+          pendingToggleItem?.isActive
+            ? t("dashboard.menu.ingredients.status.confirm_deactivate_desc", { name: pendingToggleItem?.name })
+            : t("dashboard.menu.ingredients.status.confirm_activate_desc", { name: pendingToggleItem?.name })
+        }
+        confirmText={pendingToggleItem?.isActive ? t("common.deactivate") : t("common.activate")}
+        cancelText={t("common.cancel")}
+        variant={pendingToggleItem?.isActive ? "warning" : "info"}
+        loading={togglingStatus}
+        onConfirm={confirmToggleStatus}
+        onCancel={() => setPendingToggleItem(null)}
+      />
     </main>
   );
 }

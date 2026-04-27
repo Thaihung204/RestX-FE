@@ -1,9 +1,11 @@
 "use client";
 
 import MenuManagementTabs from "@/components/admin/menu/MenuManagementTabs";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import dishService, { ComboSummaryDto } from "@/lib/services/dishService";
+import { formatVND } from "@/lib/utils/currency";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import {
   DeleteOutlined,
@@ -14,7 +16,6 @@ import { App, Button, Popconfirm } from "antd";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatVND } from "@/lib/utils/currency";
 
 export default function ComboManagementPage() {
   const { t } = useTranslation();
@@ -23,6 +24,8 @@ export default function ComboManagementPage() {
   const [combos, setCombos] = useState<ComboSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingActionId, setLoadingActionId] = useState<string | null>(null);
+  const [pendingToggleCombo, setPendingToggleCombo] = useState<ComboSummaryDto | null>(null);
+  const [togglingStatus, setTogglingStatus] = useState(false);
 
   const fetchCombos = async () => {
     try {
@@ -52,37 +55,38 @@ export default function ComboManagementPage() {
     [combos],
   );
 
-  const handleToggleStatus = async (combo: ComboSummaryDto) => {
+  const handleToggleStatus = (combo: ComboSummaryDto) => {
+    setPendingToggleCombo(combo);
+  };
+
+  const confirmToggleStatus = async () => {
+    if (!pendingToggleCombo) return;
+    const combo = pendingToggleCombo;
     try {
+      setTogglingStatus(true);
       setLoadingActionId(combo.id);
       const nextStatus = !combo.isActive;
       await dishService.toggleComboStatus(combo.id, nextStatus);
-
       setCombos((prev) =>
         prev.map((item) =>
           item.id === combo.id ? { ...item, isActive: nextStatus } : item,
         ),
       );
-
       message.success(
         nextStatus
-          ? t("dashboard.menu.combo.toasts.activate_success", {
-              defaultValue: "Combo activated",
-            })
-          : t("dashboard.menu.combo.toasts.deactivate_success", {
-              defaultValue: "Combo deactivated",
-            }),
+          ? t("dashboard.menu.combo.toasts.activate_success", { defaultValue: "Combo activated" })
+          : t("dashboard.menu.combo.toasts.deactivate_success", { defaultValue: "Combo deactivated" }),
       );
     } catch (err: unknown) {
       const errorMsg = extractApiErrorMessage(
         err,
-        t("dashboard.menu.combo.toasts.status_error", {
-          defaultValue: "Unable to update combo status",
-        }),
+        t("dashboard.menu.combo.toasts.status_error", { defaultValue: "Unable to update combo status" }),
       );
       message.error(errorMsg);
     } finally {
+      setTogglingStatus(false);
       setLoadingActionId(null);
+      setPendingToggleCombo(null);
     }
   };
 
@@ -91,18 +95,13 @@ export default function ComboManagementPage() {
       setLoadingActionId(comboId);
       await dishService.deleteCombo(comboId);
       setCombos((prev) => prev.filter((combo) => combo.id !== comboId));
-
       message.success(
-        t("dashboard.menu.combo.toasts.delete_success", {
-          defaultValue: "Combo deleted successfully",
-        }),
+        t("dashboard.menu.combo.toasts.delete_success", { defaultValue: "Combo deleted successfully" }),
       );
     } catch (err: unknown) {
       const errorMsg = extractApiErrorMessage(
         err,
-        t("dashboard.menu.combo.toasts.delete_error", {
-          defaultValue: "Unable to delete combo",
-        }),
+        t("dashboard.menu.combo.toasts.delete_error", { defaultValue: "Unable to delete combo" }),
       );
       message.error(errorMsg);
     } finally {
@@ -133,48 +132,30 @@ export default function ComboManagementPage() {
                 icon={<PlusOutlined />}
                 className="!inline-flex !h-12 !items-center !rounded-xl !px-6 !text-base !font-semibold"
                 style={{ background: "var(--primary)", borderColor: "var(--primary)" }}>
-                {t("dashboard.menu.combo.actions.add_combo", {
-                  defaultValue: "Add Combo",
-                })}
+                {t("dashboard.menu.combo.actions.add_combo", { defaultValue: "Add Combo" })}
               </Button>
             </Link>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div
-            className="rounded-xl p-4"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <div className="rounded-xl p-4" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
               {t("dashboard.menu.combo.stats.total", { defaultValue: "Total Combos" })}
             </p>
-            <p className="text-3xl font-bold mt-1" style={{ color: "var(--text)" }}>
-              {combos.length}
-            </p>
+            <p className="text-3xl font-bold mt-1" style={{ color: "var(--text)" }}>{combos.length}</p>
           </div>
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "var(--card)",
-              border: "1px solid rgba(34, 197, 94, 0.2)",
-            }}>
+          <div className="rounded-xl p-4" style={{ background: "var(--card)", border: "1px solid rgba(34, 197, 94, 0.2)" }}>
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
               {t("dashboard.menu.combo.stats.active", { defaultValue: "Active" })}
             </p>
             <p className="text-3xl font-bold text-green-500 mt-1">{activeCount}</p>
           </div>
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "var(--card)",
-              border: "1px solid rgba(255, 56, 11, 0.2)",
-            }}>
+          <div className="rounded-xl p-4" style={{ background: "var(--card)", border: "1px solid rgba(255, 56, 11, 0.2)" }}>
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
               {t("dashboard.menu.combo.stats.inactive", { defaultValue: "Inactive" })}
             </p>
-            <p className="text-3xl font-bold mt-1" style={{ color: "var(--primary)" }}>
-              {combos.length - activeCount}
-            </p>
+            <p className="text-3xl font-bold mt-1" style={{ color: "var(--primary)" }}>{combos.length - activeCount}</p>
           </div>
         </div>
 
@@ -201,9 +182,7 @@ export default function ComboManagementPage() {
                   icon={<PlusOutlined />}
                   className="!inline-flex !h-12 !items-center !rounded-xl !px-6 !text-base !font-semibold"
                   style={{ background: "var(--primary)", borderColor: "var(--primary)" }}>
-                  {t("dashboard.menu.combo.actions.add_combo", {
-                    defaultValue: "Add Combo",
-                  })}
+                  {t("dashboard.menu.combo.actions.add_combo", { defaultValue: "Add Combo" })}
                 </Button>
               </Link>
             </div>
@@ -212,10 +191,7 @@ export default function ComboManagementPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
             {combos.map((combo) => {
               const comboDetails = combo.details || [];
-              const itemCount = comboDetails.reduce(
-                (sum, detail) => sum + (detail.quantity || 0),
-                0,
-              );
+              const itemCount = comboDetails.reduce((sum, detail) => sum + (detail.quantity || 0), 0);
               const totalDishTypes = comboDetails.length;
               const hasDishes = totalDishTypes > 0;
 
@@ -224,24 +200,11 @@ export default function ComboManagementPage() {
                   key={combo.id}
                   className="rounded-xl overflow-hidden transition-all group h-full flex flex-col"
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.borderColor = "rgba(255,56,11,0.5)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.borderColor = "var(--border)")
-                  }>
-                  <div
-                    className="relative overflow-hidden"
-                    style={{
-                      background: "var(--surface)",
-                      aspectRatio: "4/3",
-                    }}>
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(255,56,11,0.5)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}>
+                  <div className="relative overflow-hidden" style={{ background: "var(--surface)", aspectRatio: "4/3" }}>
                     {combo.imageUrl ? (
-                      <img
-                        src={combo.imageUrl}
-                        alt={combo.name}
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={combo.imageUrl} alt={combo.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.menu.combo.no_image", { defaultValue: "No image" })}
@@ -249,13 +212,8 @@ export default function ComboManagementPage() {
                     )}
 
                     <div className="absolute top-3 left-3">
-                      <span
-                        className="px-2.5 py-1 rounded-full text-white text-xs font-semibold"
-                        style={{ background: "rgba(15, 23, 42, 0.72)" }}>
-                        {t("dashboard.menu.combo.fields.total_items", {
-                          defaultValue: "Total items",
-                        })}
-                        : {itemCount}
+                      <span className="px-2.5 py-1 rounded-full text-white text-xs font-semibold" style={{ background: "rgba(15, 23, 42, 0.72)" }}>
+                        {t("dashboard.menu.combo.fields.total_items", { defaultValue: "Total items" })}: {itemCount}
                       </span>
                     </div>
 
@@ -263,9 +221,7 @@ export default function ComboManagementPage() {
                       <span
                         className="px-2.5 py-1 rounded-full text-xs font-semibold"
                         style={{
-                          background: combo.isActive
-                            ? "rgba(34, 197, 94, 0.15)"
-                            : "rgba(107, 114, 128, 0.2)",
+                          background: combo.isActive ? "rgba(34, 197, 94, 0.15)" : "rgba(107, 114, 128, 0.2)",
                           color: combo.isActive ? "#16a34a" : "#6b7280",
                         }}>
                         {combo.isActive
@@ -286,12 +242,8 @@ export default function ComboManagementPage() {
                   <div className="p-4 flex flex-1 flex-col">
                     <div className="flex items-start justify-between mb-2 gap-2">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-bold mb-1 truncate" style={{ color: "var(--text)" }}>
-                          {combo.name}
-                        </h3>
-                        <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
-                          {combo.code || "-"}
-                        </p>
+                        <h3 className="text-base font-bold mb-1 truncate" style={{ color: "var(--text)" }}>{combo.name}</h3>
+                        <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{combo.code || "-"}</p>
                       </div>
                     </div>
 
@@ -305,37 +257,23 @@ export default function ComboManagementPage() {
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                       }}>
-                      {combo.description ||
-                        t("dashboard.menu.combo.no_description", {
-                          defaultValue: "No description",
-                        })}
+                      {combo.description || t("dashboard.menu.combo.no_description", { defaultValue: "No description" })}
                     </p>
 
                     <div className="mt-3 min-h-10">
                       <DropDown
-                        aria-label={t("dashboard.menu.combo.actions.view_dishes", {
-                          defaultValue: "View dishes",
-                        })}
+                        aria-label={t("dashboard.menu.combo.actions.view_dishes", { defaultValue: "View dishes" })}
                         defaultValue=""
                         disabled={!hasDishes}
                         className="!h-10 !py-2 !text-sm">
                         <option value="" disabled>
                           {hasDishes
-                            ? `${t("dashboard.menu.combo.actions.view_dishes", {
-                                defaultValue: "View dishes",
-                              })} (${totalDishTypes})`
-                            : t("dashboard.menu.combo.fields.no_dishes", {
-                                defaultValue: "No dishes in this combo yet",
-                              })}
+                            ? `${t("dashboard.menu.combo.actions.view_dishes", { defaultValue: "View dishes" })} (${totalDishTypes})`
+                            : t("dashboard.menu.combo.fields.no_dishes", { defaultValue: "No dishes in this combo yet" })}
                         </option>
                         {comboDetails.map((detail, index) => (
-                          <option
-                            key={`${combo.id}-dish-${detail.dishId || index}`}
-                            value={`${detail.dishId || "dish"}-${index}`}>
-                            {(detail.dishName ||
-                              t("dashboard.menu.combo.placeholders.select_dish", {
-                                defaultValue: "Dish",
-                              })) + ` x${detail.quantity || 1}`}
+                          <option key={`${combo.id}-dish-${detail.dishId || index}`} value={`${detail.dishId || "dish"}-${index}`}>
+                            {(detail.dishName || t("dashboard.menu.combo.placeholders.select_dish", { defaultValue: "Dish" })) + ` x${detail.quantity || 1}`}
                           </option>
                         ))}
                       </DropDown>
@@ -356,12 +294,8 @@ export default function ComboManagementPage() {
                           onChange={() => handleToggleStatus(combo)}
                           ariaLabel={
                             combo.isActive
-                              ? t("dashboard.menu.combo.actions.deactivate", {
-                                  defaultValue: "Deactivate combo",
-                                })
-                              : t("dashboard.menu.combo.actions.activate", {
-                                  defaultValue: "Activate combo",
-                                })
+                              ? t("dashboard.menu.combo.actions.deactivate", { defaultValue: "Deactivate combo" })
+                              : t("dashboard.menu.combo.actions.activate", { defaultValue: "Activate combo" })
                           }
                         />
                       </div>
@@ -377,16 +311,10 @@ export default function ComboManagementPage() {
                           />
                         </Link>
                         <Popconfirm
-                          title={t("dashboard.menu.combo.confirm.delete_title", {
-                            defaultValue: "Delete this combo?",
+                          title={t("dashboard.menu.combo.confirm.delete_title", { defaultValue: "Delete this combo?" })}
+                          description={t("dashboard.menu.combo.confirm.delete_description", {
+                            defaultValue: "The combo will be deactivated and hidden from active lists.",
                           })}
-                          description={t(
-                            "dashboard.menu.combo.confirm.delete_description",
-                            {
-                              defaultValue:
-                                "The combo will be deactivated and hidden from active lists.",
-                            },
-                          )}
                           okText={t("common.actions.delete", { defaultValue: "Delete" })}
                           cancelText={t("common.cancel", { defaultValue: "Cancel" })}
                           onConfirm={() => handleDeleteCombo(combo.id)}>
@@ -409,6 +337,26 @@ export default function ComboManagementPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        open={!!pendingToggleCombo}
+        title={
+          pendingToggleCombo?.isActive
+            ? t("dashboard.menu.combo.confirm.deactivate_title")
+            : t("dashboard.menu.combo.confirm.activate_title")
+        }
+        description={
+          pendingToggleCombo?.isActive
+            ? t("dashboard.menu.combo.confirm.deactivate_desc", { name: pendingToggleCombo?.name })
+            : t("dashboard.menu.combo.confirm.activate_desc", { name: pendingToggleCombo?.name })
+        }
+        confirmText={pendingToggleCombo?.isActive ? t("common.deactivate") : t("common.activate")}
+        cancelText={t("common.cancel")}
+        variant={pendingToggleCombo?.isActive ? "warning" : "info"}
+        loading={togglingStatus}
+        onConfirm={confirmToggleStatus}
+        onCancel={() => setPendingToggleCombo(null)}
+      />
     </main>
   );
 }

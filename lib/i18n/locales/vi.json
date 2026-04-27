@@ -1183,6 +1183,7 @@
         "actions": "Thao tác",
         "empty": "Chưa có loại nguyên liệu nào.",
         "confirm_delete": "Bạn có chắc muốn xóa loại nguyên liệu này?",
+        "confirm_delete_desc": "Loại nguyên liệu \"{{name}}\" sẽ bị xóa vĩnh viễn.",
         "name_placeholder": "Ví dụ: Rau củ, Thịt, Sữa...",
         "description_placeholder": "Mô tả ngắn gọn về loại nguyên liệu này",
         "empty_title": "Chưa có danh mục nào",
@@ -1242,6 +1243,11 @@
         "inactive": "Ngừng hoạt động",
         "empty": "Chưa có nhà cung cấp nào. Nhấn \"Thêm nhà cung cấp\" để tạo mới.",
         "confirm_delete": "Bạn có chắc muốn xóa nhà cung cấp này?",
+        "confirm_delete_desc": "Nhà cung cấp \"{{name}}\" sẽ bị xóa vĩnh viễn.",
+        "confirm_deactivate_title": "Vô hiệu hóa nhà cung cấp?",
+        "confirm_activate_title": "Kích hoạt nhà cung cấp?",
+        "confirm_deactivate_desc": "\"{{name}}\" sẽ bị vô hiệu hóa.",
+        "confirm_activate_desc": "\"{{name}}\" sẽ được kích hoạt trở lại.",
         "created": "Đã thêm nhà cung cấp",
         "updated": "Đã cập nhật nhà cung cấp",
         "deleted": "Đã xóa nhà cung cấp",
@@ -1297,7 +1303,13 @@
           "silver": "Bạc",
           "gold": "Vàng",
           "platinum": "Bạch kim"
-        }
+        },
+        "confirm_delete_title": "Xóa hạng thành viên?",
+        "confirm_delete_desc": "Hạng \"{{name}}\" sẽ bị xóa vĩnh viễn.",
+        "confirm_deactivate_title": "Vô hiệu hóa hạng thành viên?",
+        "confirm_activate_title": "Kích hoạt hạng thành viên?",
+        "confirm_deactivate_desc": "Hạng \"{{name}}\" sẽ bị vô hiệu hóa.",
+        "confirm_activate_desc": "Hạng \"{{name}}\" sẽ được kích hoạt trở lại."
       },
       "order_status": {
         "title": "Quản lý trạng thái món ăn",
@@ -1438,7 +1450,13 @@
           "activate_success": "Đã kích hoạt khuyến mãi",
           "deactivate_success": "Đã tắt khuyến mãi",
           "status_error": "Không thể cập nhật trạng thái"
-        }
+        },
+        "confirm_delete_title": "Xóa khuyến mãi?",
+        "confirm_delete_desc": "Khuyến mãi \"{{name}}\" sẽ bị xóa vĩnh viễn.",
+        "confirm_deactivate_title": "Vô hiệu hóa khuyến mãi?",
+        "confirm_activate_title": "Kích hoạt khuyến mãi?",
+        "confirm_deactivate_desc": "Khuyến mãi \"{{name}}\" sẽ bị vô hiệu hóa.",
+        "confirm_activate_desc": "Khuyến mãi \"{{name}}\" sẽ được kích hoạt trở lại."
       },
       "notifications": {
         "delete_success": "Xóa thành công",
@@ -1544,7 +1562,11 @@
         },
         "confirm": {
           "delete_title": "Xóa combo này?",
-          "delete_description": "Combo sẽ bị ngừng kích hoạt và ẩn khỏi danh sách đang bán."
+          "delete_description": "Combo sẽ bị vô hiệu hóa và ẩn khỏi danh sách đang bán.",
+          "deactivate_title": "Vô hiệu hóa combo?",
+          "activate_title": "Kích hoạt combo?",
+          "deactivate_desc": "Combo sẽ bị ẩn khỏi menu.",
+          "activate_desc": "Combo sẽ hiển thị trên menu."
         },
         "toasts": {
           "fetch_error": "Không thể tải danh sách combo",
@@ -1700,14 +1722,18 @@
         },
         "status": {
           "activate_title": "Kích hoạt món",
-          "deactivate_title": "Ngừng kích hoạt món",
+          "deactivate_title": "Vô hiệu hóa món",
           "activate_confirm": "Bạn có chắc chắn muốn kích hoạt {{name}}?",
-          "deactivate_confirm": "Bạn có chắc chắn muốn ngừng kích hoạt {{name}}?",
+          "deactivate_confirm": "Bạn có chắc chắn muốn vô hiệu hóa {{name}}?",
           "activate_action": "Kích hoạt",
-          "deactivate_action": "Ngừng kích hoạt",
+          "deactivate_action": "Vô hiệu hóa",
           "activate_success": "Đã kích hoạt {{name}}",
-          "deactivate_success": "Đã ngừng kích hoạt {{name}}",
-          "update_failed": "Cập nhật trạng thái thất bại"
+          "deactivate_success": "Đã vô hiệu hóa {{name}}",
+          "update_failed": "Cập nhật trạng thái thất bại",
+          "confirm_deactivate_title": "Vô hiệu hóa món ăn?",
+          "confirm_activate_title": "Kích hoạt món ăn?",
+          "confirm_deactivate_desc": "\"{{name}}\" sẽ bị ẩn khỏi menu.",
+          "confirm_activate_desc": "\"{{name}}\" sẽ hiển thị trên menu."
         },
         "validation": {
           "select_ingredient": "Vui lòng chọn nguyên liệu",
@@ -2006,6 +2032,10 @@
       "view_profile": "Xem hồ sơ",
       "activate": "Kích hoạt",
       "deactivate": "Ngừng kích hoạt",
+      "confirm_deactivate_title": "Vô hiệu hóa nhân viên?",
+      "confirm_activate_title": "Kích hoạt nhân viên?",
+      "confirm_deactivate_desc": "\"{{name}}\" sẽ bị vô hiệu hóa và không thể đăng nhập.",
+      "confirm_activate_desc": "\"{{name}}\" sẽ được kích hoạt trở lại.",
       "no_staff_found": "Không tìm thấy nhân viên",
       "try_adjusting_filters": "Thử điều chỉnh tìm kiếm hoặc bộ lọc",
       "stats": {
@@ -2231,6 +2261,12 @@
       "delete_btn_label": "Xoá nguyên liệu",
       "delete_confirm_msg": "Không thể hoàn tác.",
       "delete_btn": "Xoá",
+      "confirm_delete_title": "Xóa nguyên liệu?",
+      "confirm_delete_desc": "Nguyên liệu \"{{name}}\" sẽ bị xóa vĩnh viễn.",
+      "confirm_deactivate_title": "Vô hiệu hóa nguyên liệu?",
+      "confirm_activate_title": "Kích hoạt nguyên liệu?",
+      "confirm_deactivate_desc": "\"{{name}}\" đã bị vô hiệu hóa.",
+      "confirm_activate_desc": "\"{{name}}\" đã được kích hoạt trở lại.",
       "status_active": "Đang sử dụng",
       "status_inactive": "Ngừng sử dụng",
       "status_desc_active": "Nguyên liệu đang hoạt động",
@@ -2307,6 +2343,7 @@
         "image": "Hình ảnh",
         "actions": "Hành động",
         "confirm_delete": "Bạn có chắc chắn muốn xóa danh mục này?",
+        "confirm_delete_desc": "Danh mục \"{{name}}\" sẽ bị xóa vĩnh viễn.",
         "change_image": "Đổi ảnh",
         "upload_image": "Tải ảnh lên",
         "file_size_error": "Kích thước tệp phải nhỏ hơn 5MB",
@@ -2643,6 +2680,8 @@
   },
   "common": {
     "cancel": "Hủy",
+    "activate": "Kích hoạt",
+    "deactivate": "Vô hiệu hóa",
     "active": "Hoạt động",
     "inactive": "Ngừng hoạt động",
     "saving": "Đang lưu...",
@@ -2658,6 +2697,8 @@
     "actions": {
       "yes": "Có",
       "no": "Không",
+      "delete": "Xóa",
+      "edit": "Chỉnh sửa",
       "exporting": "Đang xuất..."
     },
     "theme": {
@@ -3901,10 +3942,14 @@
       "suspend_tenant": "Tạm ngừng nhà hàng"
     },
     "deactivate_modal": {
-      "title": "Tắt hoạt động nhà hàng",
-      "button_confirm": "Xác nhận tắt",
+      "title": "Vô hiệu hóa nhà hàng",
+      "button_confirm": "Vô hiệu hóa",
       "warning_title": "Bạn có chắc chắn không?",
-      "warning_description": "Tắt nhà hàng này sẽ khiến người dùng không thể truy cập."
+      "warning_description": "Vô hiệu hóa nhà hàng này sẽ khiến người dùng không thể truy cập."
+    },
+    "activate_modal": {
+      "title": "Kích hoạt nhà hàng?",
+      "description": "Nhà hàng sẽ được kích hoạt và người dùng có thể truy cập trở lại."
     },
     "status": {
       "active": "Hoạt động",

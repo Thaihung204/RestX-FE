@@ -1,21 +1,19 @@
 "use client";
 
 import {
-  CheckCircleOutlined,
-  DeleteOutlined,
-  ExclamationCircleOutlined,
-  EyeOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  RiseOutlined,
-  SearchOutlined,
-  ShopOutlined,
-  StopOutlined,
-  WarningOutlined,
+    CheckCircleOutlined,
+    EyeOutlined,
+    MailOutlined,
+    PhoneOutlined,
+    PlusOutlined,
+    ReloadOutlined,
+    RiseOutlined,
+    SearchOutlined,
+    ShopOutlined,
+    StopOutlined,
+    WarningOutlined
 } from "@ant-design/icons";
-import { App, Button, Input, Modal, Select, Switch, Table } from "antd";
+import { App, Input, Select, Switch, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,6 +25,7 @@ import TenantRequestList from "../../../components/(admin)/tenants/TenantRequest
 import { tenantService } from "../../../lib/services/tenantService";
 import { ITenant } from "../../../lib/types/tenant";
 import { useTenantLayout } from "./TenantLayoutProvider";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const STAT_CONFIGS = [
   {
@@ -71,6 +70,7 @@ const TenantPage: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [deactivateModal, setDeactivateModal] = useState<{ visible: boolean; tenant: ITenant | null }>({ visible: false, tenant: null });
+  const [activateModal, setActivateModal] = useState<{ visible: boolean; tenant: ITenant | null }>({ visible: false, tenant: null });
 
   const { activeTab, setActiveTab, setTabItems } = useTenantLayout();
 
@@ -160,8 +160,8 @@ const TenantPage: React.FC = () => {
       // Deactivating — show confirm modal
       setDeactivateModal({ visible: true, tenant: record });
     } else {
-      // Activating — no confirm needed
-      doToggleStatus(record, true);
+      // Activating — show confirm modal
+      setActivateModal({ visible: true, tenant: record });
     }
   };
 
@@ -195,6 +195,12 @@ const TenantPage: React.FC = () => {
     if (!deactivateModal.tenant) return;
     await doToggleStatus(deactivateModal.tenant, false);
     setDeactivateModal({ visible: false, tenant: null });
+  };
+
+  const handleActivateConfirm = async () => {
+    if (!activateModal.tenant) return;
+    await doToggleStatus(activateModal.tenant, true);
+    setActivateModal({ visible: false, tenant: null });
   };
 
   const STATUS_OPTIONS_TRANSLATED = [
@@ -444,50 +450,29 @@ const TenantPage: React.FC = () => {
       </main>
 
       {/* Deactivate Confirm Modal */}
-      <Modal
-        centered
-        maskClosable={!deactivateModal.tenant || !togglingIds.has(deactivateModal.tenant.id)}
-        keyboard={!deactivateModal.tenant || !togglingIds.has(deactivateModal.tenant.id)}
-        title={
-          <div className="flex items-center gap-3">
-            <ExclamationCircleOutlined className="text-orange-500 text-2xl" />
-            <span className="text-lg font-semibold">
-              {t("tenants.deactivate_modal.title")}
-            </span>
-          </div>
-        }
+      <ConfirmModal
         open={deactivateModal.visible}
+        title={t("tenants.deactivate_modal.title")}
+        description={t("tenants.deactivate_modal.warning_description")}
+        confirmText={t("tenants.deactivate_modal.button_confirm")}
+        cancelText={t("tenants.edit.delete_modal.button_cancel")}
+        variant="warning"
+        loading={deactivateModal.tenant ? togglingIds.has(deactivateModal.tenant.id) : false}
+        onConfirm={handleDeactivateConfirm}
         onCancel={() => setDeactivateModal({ visible: false, tenant: null })}
-        footer={[
-          <Button key="cancel" onClick={() => setDeactivateModal({ visible: false, tenant: null })} size="large">
-            {t("tenants.edit.delete_modal.button_cancel")}
-          </Button>,
-          <Button
-            key="confirm"
-            type="primary"
-            danger
-            loading={deactivateModal.tenant ? togglingIds.has(deactivateModal.tenant.id) : false}
-            onClick={handleDeactivateConfirm}
-            size="large"
-            icon={<DeleteOutlined />}>
-            {t("tenants.deactivate_modal.button_confirm")}
-          </Button>,
-        ]}
-        width={480}
-        styles={{
-          mask: { backdropFilter: "blur(10px)", background: "var(--modal-overlay)" },
-        }}>
-        <div className="py-4 space-y-4">
-          <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900 rounded-lg p-4">
-            <p className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-1">
-              {t("tenants.deactivate_modal.warning_title")}
-            </p>
-            <p className="text-sm text-orange-700 dark:text-orange-300">
-              {t("tenants.deactivate_modal.warning_description")}
-            </p>
-          </div>
-        </div>
-      </Modal>
+      />
+
+      <ConfirmModal
+        open={activateModal.visible}
+        title={t("tenants.activate_modal.title")}
+        description={t("tenants.activate_modal.description")}
+        confirmText={t("common.activate")}
+        cancelText={t("common.cancel")}
+        variant="info"
+        loading={activateModal.tenant ? togglingIds.has(activateModal.tenant.id) : false}
+        onConfirm={handleActivateConfirm}
+        onCancel={() => setActivateModal({ visible: false, tenant: null })}
+      />
     </>
   );
 };
