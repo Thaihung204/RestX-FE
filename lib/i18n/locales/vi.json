@@ -1672,8 +1672,29 @@
         "modal": {
           "title": "Nguyên liệu: {{name}}",
           "title_empty": "Nguyên liệu",
+          "ingredient_count": "{{count}} nguyên liệu",
+          "no_ingredient": "Chưa có nguyên liệu",
           "select_placeholder": "Chọn nguyên liệu",
+          "add_section_title": "Thêm nguyên liệu mới",
+          "select_option_empty": "— Chọn nguyên liệu —",
+          "stock_out": "⚠ Hết hàng",
+          "stock_low": "⚠ Sắp hết",
+          "stock_status_out": "Hết hàng",
+          "stock_status_low": "Sắp hết",
+          "stock_status_ok": "Còn hàng",
+          "label_stock": "Tồn kho",
+          "label_min_max": "Min / Max",
+          "label_supplier": "Nhà cung cấp",
+          "label_type": "Loại",
+          "label_unit": "Đơn vị",
+          "quantity_label": "Định lượng dùng cho 1 phần món",
           "quantity_placeholder": "Số lượng",
+          "list_section_title": "Danh sách nguyên liệu trong món",
+          "col_ingredient": "Nguyên liệu",
+          "col_stock": "Tồn kho",
+          "col_quantity": "Định lượng / món",
+          "col_delete": "Xóa",
+          "delete_tooltip": "Xóa nguyên liệu",
           "loading_recipes": "Đang tải nguyên liệu...",
           "empty_recipes": "Chưa có nguyên liệu nào."
         },
@@ -1729,7 +1750,9 @@
       "title": "Quản lý đơn hàng",
       "subtitle": "Theo dõi và quản lý đơn hàng",
       "search": {
-        "label": "Tìm kiếm"
+        "label": "Tìm kiếm",
+        "customer_placeholder": "Nhập tên khách hàng...",
+        "reference_placeholder": "Nhập mã đơn hàng..."
       },
       "new_order": "Đơn mới",
       "stats": {

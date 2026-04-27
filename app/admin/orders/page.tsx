@@ -1,10 +1,11 @@
 "use client";
 
+import { DayPicker } from "@/components/ui/DayPicker";
 import { DropDown } from "@/components/ui/DropDown";
 import orderService, { OrderDto } from "@/lib/services/orderService";
 import orderSignalRService from "@/lib/services/orderSignalRService";
 import orderStatusService, {
-  OrderStatus,
+    OrderStatus,
 } from "@/lib/services/orderStatusService";
 import { TenantConfig, tenantService } from "@/lib/services/tenantService";
 import { formatVND } from "@/lib/utils/currency";
@@ -13,11 +14,10 @@ import { triggerBrowserDownload } from "@/lib/utils/fileDownload";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { HubConnectionState } from "@microsoft/signalr";
 import { message } from "antd";
+import dayjs from "dayjs";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DayPicker } from "@/components/ui/DayPicker";
-import dayjs from "dayjs";
 
 interface OrderRow {
   id: string;
@@ -387,6 +387,7 @@ export default function OrdersPage() {
                 id="orders-filter-customer"
                 type="text"
                 value={customerNameSearch}
+                placeholder={t("dashboard.orders.search.customer_placeholder", { defaultValue: "Nhập tên khách hàng..." })}
                 onChange={(e) => setCustomerNameSearch(e.target.value)}
                 className="w-full px-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
                 style={{
@@ -413,6 +414,7 @@ export default function OrdersPage() {
                 id="orders-filter-reference"
                 type="text"
                 value={referenceSearch}
+                placeholder={t("dashboard.orders.search.reference_placeholder", { defaultValue: "Nhập mã đơn hàng..." })}
                 onChange={(e) => setReferenceSearch(e.target.value)}
                 className="w-full px-[14px] py-[10px] rounded-xl text-[14px] outline-none transition-colors"
                 style={{
