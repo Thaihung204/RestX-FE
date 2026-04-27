@@ -23,7 +23,7 @@ interface Staff {
   avatarUrl?: string;
 }
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
+const PAGE_SIZE_OPTIONS = [12, 24, 48, 96] as const;
 
 export default function StaffPage() {
   const { t } = useTranslation(["common", "dashboard"]);
@@ -35,7 +35,7 @@ export default function StaffPage() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(12);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -252,6 +252,7 @@ export default function StaffPage() {
                 <input
                   type="text"
                   value={searchQuery}
+                  placeholder={t("dashboard.staff.search_placeholder")}
                   onChange={(e) => {
                     setCurrentPage(1);
                     setSearchQuery(e.target.value);

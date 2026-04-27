@@ -1778,8 +1778,29 @@
         "modal": {
           "title": "Ingredients: {{name}}",
           "title_empty": "Ingredients",
+          "ingredient_count": "{{count}} ingredients",
+          "no_ingredient": "No ingredients yet",
           "select_placeholder": "Select ingredient",
+          "add_section_title": "Add new ingredient",
+          "select_option_empty": "— Select ingredient —",
+          "stock_out": "⚠ Out of stock",
+          "stock_low": "⚠ Low stock",
+          "stock_status_out": "Out of stock",
+          "stock_status_low": "Low stock",
+          "stock_status_ok": "In stock",
+          "label_stock": "Stock",
+          "label_min_max": "Min / Max",
+          "label_supplier": "Supplier",
+          "label_type": "Type",
+          "label_unit": "Unit",
+          "quantity_label": "Quantity per serving",
           "quantity_placeholder": "Quantity",
+          "list_section_title": "Ingredients in this dish",
+          "col_ingredient": "Ingredient",
+          "col_stock": "Stock",
+          "col_quantity": "Qty / serving",
+          "col_delete": "Delete",
+          "delete_tooltip": "Remove ingredient",
           "loading_recipes": "Loading ingredients...",
           "empty_recipes": "No ingredients yet."
         },
@@ -1835,7 +1856,9 @@
       "title": "Order Management",
       "subtitle": "Track and manage all restaurant orders",
       "search": {
-        "label": "Search"
+        "label": "Search",
+        "customer_placeholder": "Enter customer name...",
+        "reference_placeholder": "Enter order reference..."
       },
       "new_order": "New Order",
       "stats": {
