@@ -3,11 +3,13 @@
 import categoryService, { Category } from "@/lib/services/categoryService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, MenuOutlined, PlusOutlined } from "@ant-design/icons";
-import { App, Button, Popconfirm, Table } from "antd";
+import { App, Button, Popconfirm, Table, Modal } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import aiService from "@/lib/services/aiService";
+import type { AIContentVariant } from "@/lib/types/ai";
 
 type ImagePosition = { x: number; y: number };
 
@@ -53,6 +55,73 @@ export default function CategorySettings() {
   const { message } = App.useApp();
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // AI Generator specific state
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiPromptModalOpen, setAiPromptModalOpen] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
+
+  const handleGenerateDescription = async () => {
+    const normalizedName = formData.name?.trim() || "";
+    const normalizedPrompt = aiPrompt.trim();
+
+    try {
+      setAiGenerating(true);
+      setAiSuggestions([]);
+
+      const payload: {
+        dishName: string;
+        customContext?: string;
+      } = {
+        dishName: normalizedName, // Fake it for backend compatibility
+      };
+
+      if (normalizedPrompt) {
+        payload.customContext = normalizedPrompt;
+      }
+
+      const response = await aiService.generateContent(payload);
+
+      const variants = (response?.variants || []).filter(
+        (item) => typeof item?.content === "string" && item.content.trim().length > 0,
+      );
+
+      if (variants.length === 0) {
+        message.warning(
+          t("dashboard.settings.ai_content.empty_result", {
+            defaultValue: "AI did not return any content. Please try another prompt.",
+          }),
+        );
+        return;
+      }
+
+      setAiSuggestions(variants);
+      setAiPromptModalOpen(false);
+      message.success(
+        t("dashboard.settings.ai_content.generate_success", {
+          defaultValue: "AI content generated. Choose one variant below.",
+        }),
+      );
+    } catch (err) {
+      message.error(
+        t("dashboard.settings.ai_content.generate_failed", {
+          defaultValue: "Failed to generate content with AI.",
+        }),
+      );
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  const applyAIVariant = (variant: AIContentVariant) => {
+    setFormData((prev) => ({ ...prev, description: variant.content || "" }));
+    message.success(
+      t("dashboard.settings.ai_content.apply_success", {
+        defaultValue: "Description updated from AI variant.",
+      }),
+    );
+  };
 
   // Inline sort mode
   const [sortMode, setSortMode] = useState(false);
@@ -323,10 +392,97 @@ export default function CategorySettings() {
                   style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }} />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>{t("dashboard.settings.categories.description")}</label>
+                <div className="flex items-center justify-between gap-3 mb-1.5">
+                  <label className="block text-sm font-medium" style={{ color: "var(--text)" }}>{t("dashboard.settings.categories.description")}</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!aiPrompt) {
+                        setAiPrompt(`Hãy tạo mô tả tối đa 50 từ cho thể loại món ăn ${formData.name || ""}`.trim());
+                      }
+                      setAiPromptModalOpen(true);
+                    }}
+                    disabled={aiGenerating}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
+                    style={{
+                      background: "var(--primary)",
+                      border: "1px solid var(--primary)",
+                      color: "#fff",
+                    }}>
+                    {aiGenerating
+                      ? t("dashboard.settings.ai_content.generating", {
+                        defaultValue: "Generating...",
+                      })
+                      : t("dashboard.settings.ai_content.generate", {
+                        defaultValue: "Generate AI",
+                      })}
+                  </button>
+                </div>
                 <textarea value={formData.description || ""} onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl border focus:ring-4 focus:ring-[var(--primary)]/10 focus:border-[var(--primary)] transition-all outline-none resize-none"
                   rows={3} style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }} />
+                {aiSuggestions.length > 0 && (
+                  <div
+                    className="rounded-xl p-3 space-y-2 mt-3"
+                    style={{
+                      background: "var(--bg-base)",
+                      border: "1px solid var(--border)",
+                    }}>
+                    <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                      {t("dashboard.settings.ai_content.variants_title", {
+                        defaultValue: "AI variants (click one to apply)",
+                      })}
+                    </p>
+
+                    <div className="space-y-2">
+                      {aiSuggestions.map((variant, index) => (
+                        <button
+                          key={`cat-ai-variant-${index}`}
+                          type="button"
+                          onClick={() => applyAIVariant(variant)}
+                          className="w-full text-left rounded-lg px-3 py-2 transition-colors"
+                          style={{
+                            background: "var(--card)",
+                            border: "1px solid var(--border)",
+                          }}>
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                              {variant.headline ||
+                                t("dashboard.settings.ai_content.variant_label", {
+                                  defaultValue: "Variant {{index}}",
+                                  index: index + 1,
+                                })}
+                            </p>
+
+                            {typeof variant.score === "number" && (
+                              <span
+                                className="text-xs px-2 py-1 rounded"
+                                style={{
+                                  background: "rgba(0,0,0,0.08)",
+                                  color: "var(--text-muted)",
+                                }}>
+                                {t("dashboard.settings.ai_content.score_label", {
+                                  defaultValue: "Score: {{score}}",
+                                  score: variant.score,
+                                })}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
+                            {variant.content}
+                          </p>
+
+                          {variant.scoreNote && (
+                            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                              {variant.scoreNote}
+                            </p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>{t("dashboard.settings.categories.image")}</label>
@@ -387,6 +543,91 @@ export default function CategorySettings() {
         </div>,
         document.body,
       )}
+
+      {/* AI Generate Prompt Modal */}
+      <Modal
+        className="ai-generate-modal"
+        open={aiPromptModalOpen}
+        onCancel={() => {
+          if (!aiGenerating) {
+            setAiPromptModalOpen(false);
+          }
+        }}
+        footer={null}
+        centered
+        destroyOnHidden>
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+            {t("dashboard.settings.ai_content.prompt_modal_title", {
+              defaultValue: "Generate description with AI",
+            })}
+          </h3>
+
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            {t("dashboard.settings.ai_content.prompt_modal_hint", {
+              defaultValue:
+                "Enter optional instructions for AI.",
+            })}
+          </p>
+
+          <label className="text-sm font-medium block" style={{ color: "var(--text)" }}>
+            {t("dashboard.settings.ai_content.prompt_label", {
+              defaultValue: "Prompt",
+            })}
+          </label>
+
+          <textarea
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value.slice(0, 500))}
+            maxLength={500}
+            disabled={aiGenerating}
+            rows={4}
+            placeholder={t("dashboard.settings.ai_content.prompt_placeholder", {
+              defaultValue: "Optional prompt...",
+            })}
+            className="w-full px-3 py-2 rounded-lg outline-none resize-none border focus:ring-2"
+            style={{
+              background: "var(--surface)",
+              borderColor: "var(--border)",
+              color: "var(--text)",
+            }}
+          />
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setAiPromptModalOpen(false)}
+              disabled={aiGenerating}
+              className="px-4 py-2 rounded-lg text-sm font-medium"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGenerateDescription}
+              disabled={aiGenerating}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
+              style={{
+                background: "var(--primary)",
+                border: "1px solid var(--primary)",
+                color: "#fff",
+              }}>
+              {aiGenerating
+                ? t("dashboard.settings.ai_content.generating", {
+                  defaultValue: "Generating...",
+                })
+                : t("dashboard.settings.ai_content.generate", {
+                  defaultValue: "Generate AI",
+                })}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
