@@ -1,5 +1,6 @@
 "use client";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import StatusToggle from "@/components/ui/StatusToggle";
 import promotionService, { Promotion } from "@/lib/services/promotionService";
 import { formatVND } from "@/lib/utils/currency";
@@ -11,8 +12,6 @@ import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function PromotionSettings() {
   const { t } = useTranslation("common");

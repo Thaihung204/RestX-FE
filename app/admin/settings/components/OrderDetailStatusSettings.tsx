@@ -1,5 +1,6 @@
 "use client";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import orderDetailStatusService, {
     OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
