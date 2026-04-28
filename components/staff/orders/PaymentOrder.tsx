@@ -1,19 +1,19 @@
 "use client";
 
 import orderService, {
-    ApplyDiscountResponse,
+  ApplyDiscountResponse,
 } from "@/lib/services/orderService";
 import promotionService, { Promotion } from "@/lib/services/promotionService";
+import { formatVND } from "@/lib/utils/currency";
 import {
-    BankOutlined,
-    CheckCircleFilled,
-    CrownOutlined,
-    DollarOutlined,
-    TagOutlined,
+  BankOutlined,
+  CheckCircleFilled,
+  CrownOutlined,
+  DollarOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import { Button, InputNumber, Modal, Spin, Typography } from "antd";
 import { useCallback, useEffect, useState } from "react";
-import { formatVND } from "@/lib/utils/currency";
 
 const { Text } = Typography;
 
@@ -132,12 +132,28 @@ export default function PaymentOrder({
     [selectedOrder, setCashReceived],
   );
 
+  const cancelDiscount = useCallback(async () => {
+    if (!selectedOrder) return;
+    setIsApplyingDiscount(true);
+    try {
+      const result = await orderService.applyDiscount(selectedOrder.id, {
+        promotionCode: null,
+        applyMembership: false,
+      });
+      setDiscountData(null);
+      setCashReceived(result.totalAmount);
+    } catch (error) {
+      console.error("Failed to cancel discount:", error);
+    } finally {
+      setIsApplyingDiscount(false);
+    }
+  }, [selectedOrder, setCashReceived]);
+
   const handleSelectPromotion = async (code: string) => {
     if (selectedPromoCode === code && discountMode === "promotion") {
       setSelectedPromoCode(null);
       setDiscountMode("none");
-      setDiscountData(null);
-      setCashReceived(selectedOrder?.total ?? 0);
+      await cancelDiscount();
       return;
     }
     setDiscountMode("promotion");
@@ -149,8 +165,7 @@ export default function PaymentOrder({
     if (discountMode === "membership") {
       setDiscountMode("none");
       setSelectedPromoCode(null);
-      setDiscountData(null);
-      setCashReceived(selectedOrder?.total ?? 0);
+      await cancelDiscount();
       return;
     }
     setDiscountMode("membership");
