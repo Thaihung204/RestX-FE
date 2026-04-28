@@ -296,9 +296,19 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
 
       setFloors(floorData);
 
-      const sessionMap = new Map<string, TableSessionInfo>();
+      const activeSessionMap = new Map<string, TableSessionInfo>();
+      const latestSessionMap = new Map<string, TableSessionInfo>();
       for (const session of sessionData) {
-        if (session.isActive) sessionMap.set(session.tableId, session);
+        const existingLatest = latestSessionMap.get(session.tableId);
+        if (
+          !existingLatest ||
+          new Date(session.startedAt || session.endedAt || 0).getTime() >=
+            new Date(existingLatest.startedAt || existingLatest.endedAt || 0).getTime()
+        ) {
+          latestSessionMap.set(session.tableId, session);
+        }
+
+        if (session.isActive) activeSessionMap.set(session.tableId, session);
       }
 
       const reservationsByTable = new Map<string, TableSessionReservationInfo[]>();
@@ -328,9 +338,12 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
       }
 
       const mapped: TableActivityData[] = tableData.map((item) => {
-        const session = sessionMap.get(item.id);
+        const activeSession = activeSessionMap.get(item.id);
         const reservation = reservationMap.get(item.id);
-        const status: TableStatus = session ? 'occupied' : 'available';
+        const latestSession = latestSessionMap.get(item.id);
+        // Always show latest session (active or ended) for searchability, with reservation priority
+        const session = latestSession;
+        const status: TableStatus = activeSession ? 'occupied' : 'available';
 
         return {
           id: item.id,
@@ -1080,7 +1093,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           const isSelectedTableMerged = selectedMergedTableCount > 1;
           const hasSessionFootprint = Boolean(selectedTable.sessionId || selectedTable.sessionStartedAt || selectedTable.sessionEndedAt);
           const isSessionActive = selectedTable.sessionIsActive === true;
-          const canCloseSession = isSessionActive && Boolean(selectedTable.reservationCheckedInAt);
+          const canCloseSession = isSessionActive;
           const isSessionEnded = Boolean(selectedTable.sessionEndedAt) || (selectedTable.sessionIsActive === false && hasSessionFootprint);
 
           return (
