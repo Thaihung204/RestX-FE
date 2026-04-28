@@ -2655,7 +2655,7 @@
     "actions": {
       "yes": "Yes",
       "no": "No",
-      "exporting_report": "Exporting report..."
+      "exporting_report": "Exporting report...",
       "delete": "Delete",
       "edit": "Edit",
       "exporting": "Exporting..."

@@ -2702,7 +2702,7 @@
     "actions": {
       "yes": "Có",
       "no": "Không",
-      "exporting_report": "Đang xuất báo cáo..."
+      "exporting_report": "Đang xuất báo cáo...",
       "delete": "Xóa",
       "edit": "Chỉnh sửa",
       "exporting": "Đang xuất..."
