@@ -311,7 +311,7 @@ const TenantPage: React.FC = () => {
     },
 
     {
-      title: t("dashboard.tables.card.view_details"),
+      title: "",
       key: "actions",
       width: 80,
       align: "right" as const,
@@ -319,6 +319,7 @@ const TenantPage: React.FC = () => {
         <button
           className="tenant-view-btn"
           onClick={() => handleViewDetails(record)}
+          aria-label={t("tenants.actions.view_details")}
           title={t("tenants.actions.view_details")}>
           <EyeOutlined />
         </button>
@@ -337,7 +338,7 @@ const TenantPage: React.FC = () => {
       <main style={{ background: "var(--bg-base)", color: "var(--text)", flex: 1 }}>
         <div className="tenant-content">
           {activeTab === "tenants" && (
-            <div className="dashboard-animate-in" style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+            <div className="dashboard-animate-in" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
               {/* KPI Stats (Glass Slabs) */}
               <div className="tenant-stats-bar">
                 {STAT_CONFIGS.map((cfg) => {
@@ -421,7 +422,7 @@ const TenantPage: React.FC = () => {
                     responsive: true,
                     showLessItems: true,
                   }}
-                  scroll={{ x: "max-content", y: "calc(100vh - 520px)" }}
+                  scroll={{ x: "max-content", y: "calc(100vh - 430px)" }}
                 />
               </div>
             </div>
