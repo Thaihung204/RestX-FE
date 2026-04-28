@@ -5,6 +5,7 @@ import { useLanguage } from "@/components/I18nProvider";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import adminAuthService from "@/lib/services/adminAuthService";
 import { Button, Dropdown } from "antd";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -57,9 +58,13 @@ export default function DashboardHeader() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-6">
             {/* Logo - Moved from Sidebar */}
-            <div
+            <Link
+              href="/restaurant"
+              aria-label={t("dashboard.header.go_restaurant_home", {
+                defaultValue: "Go to restaurant home",
+              })}
               className="flex items-center gap-3 border-r pr-6"
-              style={{ borderColor: "var(--border)" }}>
+              style={{ borderColor: "var(--border)", textDecoration: "none" }}>
               <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                 <img
                   src={tenantLogoUrl}
@@ -80,7 +85,7 @@ export default function DashboardHeader() {
                   {t("dashboard.sidebar.management")}
                 </p>
               </div>
-            </div>
+            </Link>
 
           </div>
 
