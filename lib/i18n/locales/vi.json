@@ -2658,11 +2658,16 @@
     "actions": {
       "yes": "Có",
       "no": "Không",
-      "exporting": "Đang xuất..."
+      "exporting": "Đang xuất...",
+      "exporting_report": "Đang xuất báo cáo..."
     },
     "theme": {
       "switch_to_light": "Chế độ Sáng",
       "switch_to_dark": "Chế độ Tối"
+    },
+    "messages": {
+      "export_success": "Xuất báo cáo thành công",
+      "export_failed": "Xuất báo cáo thất bại"
     }
   },
   "payment": {

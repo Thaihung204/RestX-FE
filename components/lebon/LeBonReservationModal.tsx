@@ -39,7 +39,7 @@ const getMaxDate = () => dayjs().add(1, 'month').format('YYYY-MM-DD');
 const isFuture = (date: string, time: string) =>
   dayjs(`${date}T${time}:00`).isAfter(dayjs());
 
-// ─── Inline styles (palette: lb-surface / lb-gold / lb-text) ─────────────────
+// ─── Inline styles (palette: #0f2316 / #c9a84c / #f5f0e8) ────────────────────
 const S = {
   label: {
     fontFamily: 'var(--font-montserrat, Montserrat, sans-serif)',
@@ -47,7 +47,7 @@ const S = {
     fontWeight: 600,
     letterSpacing: 3,
     textTransform: 'uppercase' as const,
-    color: 'var(--lb-gold-60)',
+    color: 'rgba(201,168,76,0.8)',
     display: 'block',
     marginBottom: 8,
   },
@@ -261,9 +261,6 @@ export function LeBonReservationModal({ open, onClose }: Props) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
 
-  // Portal mount
-  useState(() => { setMounted(true); });
-
   useEffect(() => {
     if (open) {
       setMounted(true);
@@ -328,8 +325,6 @@ export function LeBonReservationModal({ open, onClose }: Props) {
   };
 
   if (!mounted) return null;
-
-  const STEP_TITLES = ['Chọn Thời Gian', 'Thông Tin Liên Hệ', 'Xác Nhận'];
 
   return createPortal(
     <div style={{
@@ -433,7 +428,7 @@ export function LeBonReservationModal({ open, onClose }: Props) {
               {/* Summary preview */}
               <div style={{
                 padding: '14px 18px',
-                background: 'var(--lb-gold-10)',
+                background: 'rgba(201,168,76,0.06)',
                 border: '1px solid var(--lb-gold-15)',
                 display: 'flex', gap: 24, flexWrap: 'wrap',
               }}>
@@ -457,7 +452,7 @@ export function LeBonReservationModal({ open, onClose }: Props) {
               {/* Summary bar */}
               <div style={{
                 padding: '12px 18px',
-                background: 'var(--lb-gold-10)',
+                background: 'rgba(201,168,76,0.06)',
                 border: '1px solid var(--lb-gold-15)',
                 display: 'flex', gap: 24, flexWrap: 'wrap',
               }}>
@@ -525,7 +520,7 @@ export function LeBonReservationModal({ open, onClose }: Props) {
               {/* Check mark */}
               <div style={{
                 width: 64, height: 64, margin: '0 auto 24px',
-                border: '1px solid var(--lb-gold)',
+                border: '1px solid #c9a84c',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
