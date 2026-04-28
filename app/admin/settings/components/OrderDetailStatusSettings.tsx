@@ -1,5 +1,6 @@
 "use client";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import orderDetailStatusService, {
     OrderDetailStatus,
 } from "@/lib/services/orderDetailStatusService";
@@ -21,7 +22,6 @@ import {
     Input,
     message,
     Modal,
-    Popconfirm,
     Table,
     Tag,
     Tooltip,
@@ -41,6 +41,7 @@ export default function OrderDetailStatusSettings() {
     const [isSaving, setIsSaving] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
+    const [pendingDelete, setPendingDelete] = useState<OrderDetailStatus | null>(null);
 
     // Sort mode state
     const [sortMode, setSortMode] = useState(false);
@@ -100,6 +101,7 @@ export default function OrderDetailStatusSettings() {
             messageApi.error(extractApiErrorMessage(error, t("dashboard.manage.order_status.errors.delete_failed")));
         } finally {
             setDeletingId(null);
+            setPendingDelete(null);
         }
     };
 
@@ -271,23 +273,16 @@ export default function OrderDetailStatusSettings() {
                             className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                         />
                     </Tooltip>
-                    <Popconfirm
-                        title={t("dashboard.manage.order_status.confirm_delete")}
-                        description={t("dashboard.manage.order_status.confirm_delete_desc")}
-                        onConfirm={() => handleDelete(record.id)}
-                        okText={t("dashboard.manage.order_status.actions.confirm")}
-                        cancelText={t("dashboard.manage.order_status.actions.cancel")}
-                        okButtonProps={{ danger: true }}>
-                        <Tooltip title={t("dashboard.manage.order_status.tooltip.delete")}>
-                            <Button
-                                type="text"
-                                icon={<DeleteOutlined className="text-red-500" />}
-                                loading={deletingId === record.id}
-                                disabled={!!deletingId || !!settingDefaultId || isSaving}
-                                className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                            />
-                        </Tooltip>
-                    </Popconfirm>
+                    <Tooltip title={t("dashboard.manage.order_status.tooltip.delete")}>
+                        <Button
+                            type="text"
+                            icon={<DeleteOutlined className="text-red-500" />}
+                            loading={deletingId === record.id}
+                            disabled={!!deletingId || !!settingDefaultId || isSaving}
+                            onClick={() => setPendingDelete(record)}
+                            className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        />
+                    </Tooltip>
                 </div>
             ),
         }] : []),
@@ -362,6 +357,18 @@ export default function OrderDetailStatusSettings() {
                     onDragEnd: handleDragEnd,
                     onDragOver: (e: React.DragEvent) => e.preventDefault(),
                 }) : undefined}
+            />
+
+            <ConfirmModal
+                open={!!pendingDelete}
+                title={t("dashboard.manage.order_status.confirm_delete")}
+                description={t("dashboard.manage.order_status.confirm_delete_desc")}
+                confirmText={t("common.actions.delete")}
+                cancelText={t("common.cancel")}
+                variant="danger"
+                loading={!!deletingId}
+                onConfirm={() => pendingDelete && handleDelete(pendingDelete.id)}
+                onCancel={() => setPendingDelete(null)}
             />
 
             <Modal

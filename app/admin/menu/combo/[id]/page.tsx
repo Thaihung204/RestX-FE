@@ -1,5 +1,6 @@
 "use client";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import aiService from "@/lib/services/aiService";
@@ -58,6 +59,7 @@ export default function ComboFormPage() {
   const imageInputId = "combo-image-upload-input";
   const imagePreviewUrl = imageFile ? URL.createObjectURL(imageFile) : "";
   const [aiPrompt, setAiPrompt] = useState("");
+  const [confirmToggleOpen, setConfirmToggleOpen] = useState(false);
   const [aiPromptModalOpen, setAiPromptModalOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
@@ -796,9 +798,7 @@ export default function ComboFormPage() {
                 </div>
                 <StatusToggle
                   checked={formData.isActive}
-                  onChange={() =>
-                    setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))
-                  }
+                  onChange={() => setConfirmToggleOpen(true)}
                   ariaLabel={t("dashboard.menu.combo.fields.active", {
                     defaultValue: "Active",
                   })}
@@ -1058,6 +1058,28 @@ export default function ComboFormPage() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        open={confirmToggleOpen}
+        title={
+          formData.isActive
+            ? t("dashboard.menu.combo.confirm.deactivate_title")
+            : t("dashboard.menu.combo.confirm.activate_title")
+        }
+        description={
+          formData.isActive
+            ? t("dashboard.menu.combo.confirm.deactivate_desc")
+            : t("dashboard.menu.combo.confirm.activate_desc")
+        }
+        confirmText={formData.isActive ? t("common.deactivate") : t("common.activate")}
+        cancelText={t("common.cancel")}
+        variant={formData.isActive ? "warning" : "info"}
+        onConfirm={() => {
+          setFormData((prev) => ({ ...prev, isActive: !prev.isActive }));
+          setConfirmToggleOpen(false);
+        }}
+        onCancel={() => setConfirmToggleOpen(false)}
+      />
     </main>
   );
 }
