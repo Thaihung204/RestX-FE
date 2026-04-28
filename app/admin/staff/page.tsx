@@ -1,6 +1,7 @@
 "use client";
 
 import ContentAreaLoader from "@/components/admin/ContentAreaLoader";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import employeeService from "@/lib/services/employeeService";
@@ -46,6 +47,8 @@ export default function StaffPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
+  const [pendingToggle, setPendingToggle] = useState<{ id: string; name: string; currentStatus: "active" | "inactive" } | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const roles = ["Manager", "Staff"];
 
@@ -136,48 +139,34 @@ export default function StaffPage() {
     setCurrentPage(page);
   };
 
-  const handleToggleStatus = async (
-    id: string,
-    name: string,
-    currentStatus: "active" | "inactive",
-  ) => {
-    try {
-      const newStatus = currentStatus !== "active";
-      await employeeService.updateEmployee(id, {
-        isActive: newStatus,
-      });
+  const handleToggleStatus = (id: string, name: string, currentStatus: "active" | "inactive") => {
+    setPendingToggle({ id, name, currentStatus });
+  };
 
+  const confirmToggleStatus = async () => {
+    if (!pendingToggle) return;
+    const { id, name, currentStatus } = pendingToggle;
+    try {
+      setTogglingId(id);
+      const newStatus = currentStatus !== "active";
+      await employeeService.updateEmployee(id, { isActive: newStatus });
       message.success(
         newStatus
-          ? t("dashboard.staff.modal.activate_success", {
-              name,
-              defaultValue: `${name} has been activated successfully`,
-            })
-          : t("dashboard.staff.modal.deactivate_success", {
-              name,
-              defaultValue: `${name} has been deactivated successfully`,
-            }),
+          ? t("dashboard.staff.modal.activate_success", { name })
+          : t("dashboard.staff.modal.deactivate_success", { name }),
       );
-
       setStaffList((prev) =>
         prev.map((member) =>
-          member.id === id
-            ? {
-                ...member,
-                status: newStatus ? "active" : "inactive",
-              }
-            : member,
+          member.id === id ? { ...member, status: newStatus ? "active" : "inactive" } : member,
         ),
       );
-
       setTotalActive((prev) => (newStatus ? prev + 1 : Math.max(0, prev - 1)));
-      setTotalInactive((prev) =>
-        newStatus ? Math.max(0, prev - 1) : prev + 1,
-      );
+      setTotalInactive((prev) => (newStatus ? Math.max(0, prev - 1) : prev + 1));
     } catch (error) {
-      message.error(
-        extractApiErrorMessage(error, t("dashboard.staff.errors.update_failed")),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.staff.errors.update_failed")));
+    } finally {
+      setTogglingId(null);
+      setPendingToggle(null);
     }
   };
 
@@ -559,6 +548,7 @@ export default function StaffPage() {
                             member.status,
                           )
                         }
+                        disabled={togglingId === member.id}
                         ariaLabel={
                           member.status === "active"
                             ? t("dashboard.staff.deactivate")
@@ -760,6 +750,26 @@ export default function StaffPage() {
           </div>
         )}
       </main>
+
+      <ConfirmModal
+        open={!!pendingToggle}
+        title={
+          pendingToggle?.currentStatus === "active"
+            ? t("dashboard.staff.confirm_deactivate_title")
+            : t("dashboard.staff.confirm_activate_title")
+        }
+        description={
+          pendingToggle?.currentStatus === "active"
+            ? t("dashboard.staff.confirm_deactivate_desc", { name: pendingToggle?.name })
+            : t("dashboard.staff.confirm_activate_desc", { name: pendingToggle?.name })
+        }
+        confirmText={pendingToggle?.currentStatus === "active" ? t("common.deactivate") : t("common.activate")}
+        cancelText={t("common.cancel")}
+        variant={pendingToggle?.currentStatus === "active" ? "warning" : "info"}
+        loading={!!togglingId}
+        onConfirm={confirmToggleStatus}
+        onCancel={() => setPendingToggle(null)}
+      />
     </div>
   );
 }

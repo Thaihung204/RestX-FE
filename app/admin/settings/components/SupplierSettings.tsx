@@ -1,10 +1,11 @@
 "use client";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import StatusToggle from "@/components/ui/StatusToggle";
 import supplierService, { SupplierItem } from "@/lib/services/supplierService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { App, Button, Popconfirm, Table } from "antd";
+import { App, Button, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -23,6 +24,8 @@ export default function SupplierSettings() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [formData, setFormData] = useState<Supplier>({ name: "", phone: "", email: "", address: "", isActive: true });
+  const [pendingDelete, setPendingDelete] = useState<Supplier | null>(null);
+  const [pendingToggle, setPendingToggle] = useState<Supplier | null>(null);
 
   useEffect(() => { fetchSuppliers(); }, []);
 
@@ -32,9 +35,7 @@ export default function SupplierSettings() {
       const data = await supplierService.getAll();
       setSuppliers(data as Supplier[]);
     } catch (error) {
-      message.error(
-        extractApiErrorMessage(error, t("dashboard.manage.suppliers.fetch_failed")),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.manage.suppliers.fetch_failed")));
     } finally {
       setLoading(false);
     }
@@ -62,9 +63,7 @@ export default function SupplierSettings() {
       await fetchSuppliers();
       handleCloseModal();
     } catch (error) {
-      message.error(
-        extractApiErrorMessage(error, t("dashboard.manage.suppliers.save_failed")),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.manage.suppliers.save_failed")));
     } finally {
       setSaving(false);
     }
@@ -75,34 +74,30 @@ export default function SupplierSettings() {
     try {
       setDeletingId(id);
       await supplierService.delete(id);
-      message.success(t("dashboard.manage.suppliers.deleted", { defaultValue: "Đã xoá" }));
+      message.success(t("dashboard.manage.suppliers.deleted"));
       setSuppliers((prev) => prev.filter((s) => s.id !== id));
     } catch (error) {
-      message.error(
-        extractApiErrorMessage(error, t("dashboard.manage.suppliers.delete_failed")),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.manage.suppliers.delete_failed")));
     } finally {
       setDeletingId(null);
+      setPendingDelete(null);
     }
   };
 
-  const toggleStatus = async (supplier: Supplier) => {
-    if (!supplier.id || togglingId) return;
+  const confirmToggleStatus = async () => {
+    if (!pendingToggle) return;
+    const supplier = pendingToggle;
     const updated = { ...supplier, isActive: !supplier.isActive };
     setSuppliers((prev) => prev.map((s) => (s.id === supplier.id ? updated : s)));
     try {
-      setTogglingId(supplier.id);
-      await supplierService.update(supplier.id, updated);
+      setTogglingId(supplier.id!);
+      await supplierService.update(supplier.id!, updated);
     } catch (error) {
       setSuppliers((prev) => prev.map((s) => (s.id === supplier.id ? supplier : s)));
-      message.error(
-        extractApiErrorMessage(
-          error,
-          t("dashboard.manage.suppliers.status_update_failed"),
-        ),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.manage.suppliers.status_update_failed")));
     } finally {
       setTogglingId(null);
+      setPendingToggle(null);
     }
   };
 
@@ -150,9 +145,9 @@ export default function SupplierSettings() {
       render: (_, s) => (
         <StatusToggle
           checked={s.isActive}
-          onChange={() => toggleStatus(s)}
+          onChange={() => setPendingToggle(s)}
           disabled={!!togglingId || !!deletingId}
-          ariaLabel={s.isActive ? t("dashboard.manage.suppliers.deactivate") : t("dashboard.manage.suppliers.activate")}
+          ariaLabel={s.isActive ? t("common.deactivate") : t("common.activate")}
         />
       ),
     },
@@ -164,14 +159,7 @@ export default function SupplierSettings() {
       render: (_, s) => (
         <div className="flex justify-end gap-2">
           <Button type="text" icon={<EditOutlined className="text-blue-500" />} onClick={() => handleOpenModal(s)} disabled={!!deletingId || !!togglingId || saving} className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" />
-          <Popconfirm
-            title={t("dashboard.manage.suppliers.confirm_delete")}
-            onConfirm={() => s.id && handleDelete(s.id)}
-            okText={t("common.actions.yes", { defaultValue: "Yes" })}
-            cancelText={t("common.actions.no", { defaultValue: "No" })}
-            okButtonProps={{ danger: true }}>
-            <Button type="text" icon={<DeleteOutlined className="text-red-500" />} loading={deletingId === s.id} disabled={!!deletingId || !!togglingId || saving} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
-          </Popconfirm>
+          <Button type="text" icon={<DeleteOutlined className="text-red-500" />} loading={deletingId === s.id} disabled={!!deletingId || !!togglingId || saving} onClick={() => setPendingDelete(s)} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
         </div>
       ),
     },
@@ -184,17 +172,39 @@ export default function SupplierSettings() {
           <h3 className="text-lg font-bold text-[var(--text)]">{t("dashboard.manage.suppliers.title")}</h3>
           <p className="text-sm text-[var(--text-muted)] mt-1">{t("dashboard.manage.suppliers.subtitle")}</p>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => handleOpenModal()}
-          disabled={loading}
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenModal()} disabled={loading}
           style={{ background: "linear-gradient(to right, var(--primary), var(--primary-hover))", border: "none" }}>
           {t("dashboard.manage.suppliers.add")}
         </Button>
       </div>
 
       <Table columns={columns} dataSource={suppliers} rowKey={(r) => r.id || r.name} loading={loading} pagination={false} className="admin-loyalty-table" />
+
+      <ConfirmModal
+        open={!!pendingDelete}
+        title={t("dashboard.manage.suppliers.confirm_delete")}
+        description={t("dashboard.manage.suppliers.confirm_delete_desc", { name: pendingDelete?.name })}
+        confirmText={t("common.actions.delete")}
+        cancelText={t("common.cancel")}
+        variant="danger"
+        loading={!!deletingId}
+        onConfirm={() => pendingDelete?.id && handleDelete(pendingDelete.id)}
+        onCancel={() => setPendingDelete(null)}
+      />
+
+      <ConfirmModal
+        open={!!pendingToggle}
+        title={pendingToggle?.isActive ? t("dashboard.manage.suppliers.confirm_deactivate_title") : t("dashboard.manage.suppliers.confirm_activate_title")}
+        description={pendingToggle?.isActive
+          ? t("dashboard.manage.suppliers.confirm_deactivate_desc", { name: pendingToggle?.name })
+          : t("dashboard.manage.suppliers.confirm_activate_desc", { name: pendingToggle?.name })}
+        confirmText={pendingToggle?.isActive ? t("common.deactivate") : t("common.activate")}
+        cancelText={t("common.cancel")}
+        variant={pendingToggle?.isActive ? "warning" : "info"}
+        loading={!!togglingId}
+        onConfirm={confirmToggleStatus}
+        onCancel={() => setPendingToggle(null)}
+      />
 
       {isModalOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={handleCloseModal}>
@@ -237,11 +247,11 @@ export default function SupplierSettings() {
                   rows={3} style={{ background: "var(--bg-base)", borderColor: "var(--border)", color: "var(--text)" }} />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>{t("dashboard.manage.suppliers.status", { defaultValue: "Status" })}</label>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>{t("dashboard.manage.suppliers.status")}</label>
                 <StatusToggle
                   checked={formData.isActive}
                   onChange={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                  ariaLabel={formData.isActive ? t("dashboard.manage.suppliers.active", { defaultValue: "Active" }) : t("dashboard.manage.suppliers.inactive", { defaultValue: "Inactive" })}
+                  ariaLabel={formData.isActive ? t("common.deactivate") : t("common.activate")}
                 />
               </div>
             </div>

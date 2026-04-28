@@ -1,5 +1,6 @@
 "use client";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { getTypeTranslation, upsertTypeTranslations, type SupportedLocale } from "@/lib/i18n/dynamicTypeTranslations";
 import ingredientService, { IngredientCategory } from "@/lib/services/ingredientService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
@@ -31,6 +32,7 @@ export default function IngredientCategorySettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<IngredientCategory | null>(null);
   const [formData, setFormData] = useState<IngredientCategory>({ id: "", code: "", name: "", description: "", isActive: true });
 
   // AI Generator specific state
@@ -114,14 +116,7 @@ export default function IngredientCategorySettings() {
       setCategories(data);
     } catch (error) {
       setCategories([]);
-      message.error(
-        extractApiErrorMessage(
-          error,
-          t("dashboard.manage.ingredient_categories.fetch_failed", {
-            defaultValue: "Failed to load ingredient categories",
-          }),
-        ),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.manage.ingredient_categories.fetch_failed")));
     } finally {
       setIsLoading(false);
     }
@@ -161,14 +156,7 @@ export default function IngredientCategorySettings() {
       handleCloseModal();
     } catch (error) {
       console.error("Failed to save ingredient category", error);
-      message.error(
-        extractApiErrorMessage(
-          error,
-          t("dashboard.manage.ingredient_categories.save_failed", {
-            defaultValue: "Failed to save ingredient category",
-          }),
-        ),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.manage.ingredient_categories.save_failed")));
     } finally {
       setIsSaving(false);
     }
@@ -179,19 +167,14 @@ export default function IngredientCategorySettings() {
     try {
       setDeletingId(id);
       await ingredientService.deleteCategory(id);
+      message.success(t("dashboard.manage.ingredient_categories.deleted"));
       await loadCategories();
     } catch (error) {
       console.error("Failed to delete ingredient category", error);
-      message.error(
-        extractApiErrorMessage(
-          error,
-          t("dashboard.manage.ingredient_categories.delete_failed", {
-            defaultValue: "Failed to delete ingredient category",
-          }),
-        ),
-      );
+      message.error(extractApiErrorMessage(error, t("dashboard.manage.ingredient_categories.delete_failed")));
     } finally {
       setDeletingId(null);
+      setPendingDelete(null);
     }
   };
 
@@ -223,14 +206,7 @@ export default function IngredientCategorySettings() {
       render: (_, cat) => (
         <div className="flex justify-end gap-2">
           <Button type="text" icon={<EditOutlined className="text-blue-500" />} onClick={() => handleOpenModal(cat)} disabled={!!deletingId || isSaving} className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" />
-          <Popconfirm
-            title={t("dashboard.manage.ingredient_categories.confirm_delete")}
-            onConfirm={() => cat.id && handleDelete(cat.id)}
-            okText={t("common.actions.yes", { defaultValue: "Yes" })}
-            cancelText={t("common.actions.no", { defaultValue: "No" })}
-            okButtonProps={{ danger: true }}>
-            <Button type="text" icon={<DeleteOutlined className="text-red-500" />} loading={deletingId === cat.id} disabled={!!deletingId || isSaving} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
-          </Popconfirm>
+          <Button type="text" icon={<DeleteOutlined className="text-red-500" />} loading={deletingId === cat.id} disabled={!!deletingId || isSaving} onClick={() => setPendingDelete(cat)} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
         </div>
       ),
     },
@@ -243,17 +219,25 @@ export default function IngredientCategorySettings() {
           <h3 className="text-lg font-bold text-[var(--text)]">{t("dashboard.manage.ingredient_categories.title")}</h3>
           <p className="text-sm text-[var(--text-muted)] mt-1">{t("dashboard.manage.ingredient_categories.subtitle")}</p>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => handleOpenModal()}
-          disabled={isLoading}
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenModal()} disabled={isLoading}
           style={{ background: "linear-gradient(to right, var(--primary), var(--primary-hover))", border: "none" }}>
           {t("dashboard.manage.ingredient_categories.add")}
         </Button>
       </div>
 
       <Table columns={columns} dataSource={categories} rowKey={(r) => r.id || r.name} loading={isLoading} pagination={false} className="admin-loyalty-table" />
+
+      <ConfirmModal
+        open={!!pendingDelete}
+        title={t("dashboard.manage.ingredient_categories.confirm_delete")}
+        description={t("dashboard.manage.ingredient_categories.confirm_delete_desc", { name: pendingDelete ? getCategoryLabel(pendingDelete) : "" })}
+        confirmText={t("common.actions.delete")}
+        cancelText={t("common.cancel")}
+        variant="danger"
+        loading={!!deletingId}
+        onConfirm={() => pendingDelete?.id && handleDelete(pendingDelete.id)}
+        onCancel={() => setPendingDelete(null)}
+      />
 
       {isModalOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={handleCloseModal}>
@@ -262,7 +246,7 @@ export default function IngredientCategorySettings() {
             onClick={(e) => e.stopPropagation()}>
             <div className="p-6 border-b flex justify-between items-center bg-white/50 dark:bg-black/20 backdrop-blur-sm sticky top-0 z-10" style={{ borderColor: "var(--border)" }}>
               <h3 className="text-xl font-bold" style={{ color: "var(--text)" }}>
-                {editingCategory ? t("dashboard.manage.ingredient_categories.edit", { defaultValue: "Edit Category" }) : t("dashboard.manage.ingredient_categories.add", { defaultValue: "Add Category" })}
+                {editingCategory ? t("dashboard.manage.ingredient_categories.edit") : t("dashboard.manage.ingredient_categories.add")}
               </h3>
               <button onClick={handleCloseModal} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors" style={{ color: "var(--text-muted)" }}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -382,7 +366,7 @@ export default function IngredientCategorySettings() {
               <button onClick={handleSave} disabled={!formData.name?.trim() || isSaving}
                 className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: "var(--primary)" }}>
-                {isSaving ? t("common.saving", { defaultValue: "Saving..." }) : t("dashboard.settings.buttons.save_changes")}
+                {isSaving ? t("common.saving") : t("dashboard.settings.buttons.save_changes")}
               </button>
             </div>
           </div>

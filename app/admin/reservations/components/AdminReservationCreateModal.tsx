@@ -60,6 +60,8 @@ export default function AdminReservationCreateModal({
 
     const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
 
+    const dayjsDayToBusinessDay = (day: number) => (day + 6) % 7;
+
     useEffect(() => {
         if (tenant?.id) {
             tenantService.getBusinessHours(tenant.id).then(setBusinessHours).catch(console.error);
@@ -68,7 +70,7 @@ export default function AdminReservationCreateModal({
 
     const currentDayHours = useMemo(() => {
         if (!date) return null;
-        const day = date.day(); // 0 = Sunday
+        const day = dayjsDayToBusinessDay(date.day());
         return businessHours.find(h => h.dayOfWeek === day);
     }, [date, businessHours]);
 
