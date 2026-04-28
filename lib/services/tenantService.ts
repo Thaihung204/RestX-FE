@@ -163,6 +163,92 @@ const normalizeFieldValue = (key: string, value: unknown): string => {
   return String(value);
 };
 
+const normalizeBusinessHourTime = (raw: unknown, fallback: string): string => {
+  if (typeof raw !== "string") return fallback;
+  const trimmed = raw.trim();
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!match) return fallback;
+
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const second = Number(match[3] ?? "0");
+
+  if (
+    Number.isNaN(hour) ||
+    Number.isNaN(minute) ||
+    Number.isNaN(second) ||
+    hour < 0 ||
+    hour > 23 ||
+    minute < 0 ||
+    minute > 59 ||
+    second < 0 ||
+    second > 59
+  ) {
+    return fallback;
+  }
+
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
+};
+
+const normalizeBusinessHourRecord = (raw: unknown): BusinessHour | null => {
+  if (!raw || typeof raw !== "object") return null;
+
+  const source = raw as Record<string, unknown>;
+  const dayCandidate =
+    source.dayOfWeek ?? source.dayofWeek ?? source.DayOfWeek ?? source.day;
+  const parsedDay = Number(dayCandidate);
+  if (!Number.isInteger(parsedDay) || parsedDay < 0 || parsedDay > 6) {
+    return null;
+  }
+
+  const isClosedRaw =
+    source.isClosed ?? source.isclosed ?? source.IsClosed ?? false;
+  const isClosed =
+    typeof isClosedRaw === "boolean"
+      ? isClosedRaw
+      : String(isClosedRaw).toLowerCase() === "true";
+
+  return {
+    dayOfWeek: parsedDay,
+    openTime: normalizeBusinessHourTime(source.openTime ?? source.OpenTime, "09:00:00"),
+    closeTime: normalizeBusinessHourTime(source.closeTime ?? source.CloseTime, "22:00:00"),
+    isClosed,
+  };
+};
+
+const normalizeBusinessHourList = (raw: unknown): BusinessHour[] => {
+  const payload = Array.isArray(raw)
+    ? raw
+    : ((raw as Record<string, unknown> | null)?.data as unknown);
+
+  if (!Array.isArray(payload)) return [];
+
+  const byDay = new Map<number, BusinessHour>();
+  payload.forEach((item) => {
+    const normalized = normalizeBusinessHourRecord(item);
+    if (!normalized) return;
+    byDay.set(normalized.dayOfWeek, normalized);
+  });
+
+  const ordered: BusinessHour[] = [];
+  for (let day = 0; day <= 6; day += 1) {
+    const existing = byDay.get(day);
+    if (existing) {
+      ordered.push(existing);
+      continue;
+    }
+
+    ordered.push({
+      dayOfWeek: day,
+      openTime: "09:00:00",
+      closeTime: "22:00:00",
+      isClosed: false,
+    });
+  }
+
+  return ordered;
+};
+
 const toFormData = (
   data: any,
   files?: {
@@ -656,12 +742,22 @@ export const tenantService = {
   // ============ PAYMENT SETTINGS API ============
 
   getBusinessHours: async (tenantId: string): Promise<BusinessHour[]> => {
-    const response = await adminAxiosInstance.get<BusinessHour[]>(`/tenants/${tenantId}/business-hours`);
-    return response.data;
+    const response = await adminAxiosInstance.get<unknown>(`/tenants/${tenantId}/business-hours`);
+    return normalizeBusinessHourList(response.data);
   },
 
   updateBusinessHours: async (tenantId: string, hours: BusinessHour[]): Promise<void> => {
-    await adminAxiosInstance.put(`/tenants/${tenantId}/business-hours`, hours);
+    const orderedHours = normalizeBusinessHourList(hours)
+      .slice()
+      .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
+      .map((item) => ({
+        dayOfWeek: item.dayOfWeek,
+        openTime: normalizeBusinessHourTime(item.openTime, "09:00:00"),
+        closeTime: normalizeBusinessHourTime(item.closeTime, "22:00:00"),
+        isClosed: Boolean(item.isClosed),
+      }));
+
+    await adminAxiosInstance.put(`/tenants/${tenantId}/business-hours`, orderedHours);
   },
 
   /**

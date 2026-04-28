@@ -780,7 +780,12 @@
         "cancel_reservation_confirm_content": "Hệ thống sẽ hủy đặt bàn này và tự cập nhật trạng thái liên quan.",
         "cancel_reservation_success": "Đã hủy đặt bàn thành công.",
         "cancel_reservation_error": "Không thể hủy đặt bàn",
-        "customer": "Khách hàng"
+        "customer": "Khách hàng",
+        "close_session_btn": "Đóng phiên bàn",
+        "close_session_confirm_title": "Xác nhận đóng phiên bàn?",
+        "close_session_confirm_content": "Phiên bàn sẽ được đóng và trạng thái bàn sẽ cập nhật lại.",
+        "close_session_success": "Đóng phiên bàn thành công!",
+        "close_session_error": "Đóng phiên bàn thất bại"
       }
     },
     "customer": {

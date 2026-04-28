@@ -19,6 +19,7 @@ import {
   FireOutlined,
   LoginOutlined,
   PhoneOutlined,
+  PoweroffOutlined,
   ShoppingCartOutlined,
   TableOutlined,
   UserOutlined,
@@ -245,6 +246,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
   const [reservationKeyword, setReservationKeyword] = useState('');
   const [selectedTable, setSelectedTable] = useState<TableActivityData | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [isClosingSession, setIsClosingSession] = useState(false);
   const [isMergeMode, setIsMergeMode] = useState(false);
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
   const [isMerging, setIsMerging] = useState(false);
@@ -430,6 +432,32 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
     } finally {
       setIsCheckingIn(false);
     }
+  };
+
+  const handleCloseSession = async (table: TableActivityData) => {
+    if (!table.id) return;
+
+    Modal.confirm({
+      title: t('staff.floor_activity.modal.close_session_confirm_title', { defaultValue: 'Xac nhan dong phien ban?' }),
+      content: t('staff.floor_activity.modal.close_session_confirm_content', { defaultValue: 'Phien ban se duoc dong va trang thai ban se cap nhat lai.' }),
+      okText: t('common.confirm', { defaultValue: 'Xac nhan' }),
+      cancelText: t('common.cancel', { defaultValue: 'Huy' }),
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        setIsClosingSession(true);
+        try {
+          await tableService.closeTableSession(table.id);
+          messageApi.success(t('staff.floor_activity.modal.close_session_success', { defaultValue: 'Dong phien ban thanh cong!' }));
+          setSelectedTable(null);
+          await fetchData();
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          messageApi.error(msg || t('staff.floor_activity.modal.close_session_error', { defaultValue: 'Dong phien ban that bai' }));
+        } finally {
+          setIsClosingSession(false);
+        }
+      },
+    });
   };
 
   const handleMergeExecution = async () => {
@@ -1052,6 +1080,7 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
           const isSelectedTableMerged = selectedMergedTableCount > 1;
           const hasSessionFootprint = Boolean(selectedTable.sessionId || selectedTable.sessionStartedAt || selectedTable.sessionEndedAt);
           const isSessionActive = selectedTable.sessionIsActive === true;
+          const canCloseSession = isSessionActive && Boolean(selectedTable.reservationCheckedInAt);
           const isSessionEnded = Boolean(selectedTable.sessionEndedAt) || (selectedTable.sessionIsActive === false && hasSessionFootprint);
 
           return (
@@ -1184,6 +1213,20 @@ export function TablesPageContent({ showAllActivities = false }: { showAllActivi
                     </div>
                   </div>
 
+                  {canCloseSession && (
+                    <Button
+                      danger
+                      type="primary"
+                      icon={<PoweroffOutlined />}
+                      loading={isClosingSession}
+                      onClick={() => handleCloseSession(selectedTable)}
+                      block
+                      size="large"
+                      style={{ marginTop: 12, borderRadius: 12, height: 44, fontWeight: 700, fontSize: 14 }}
+                    >
+                      {t('staff.floor_activity.modal.close_session_btn', { defaultValue: 'Dong phien ban' })}
+                    </Button>
+                  )}
 
                 </div>
 

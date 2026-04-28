@@ -752,7 +752,12 @@
         "cancel_reservation_confirm_content": "This will cancel the reservation and automatically update related status.",
         "cancel_reservation_success": "Reservation cancelled successfully.",
         "cancel_reservation_error": "Unable to cancel reservation",
-        "customer": "Customer"
+        "customer": "Customer",
+        "close_session_btn": "Close table session",
+        "close_session_confirm_title": "Close this table session?",
+        "close_session_confirm_content": "The session will be closed and the table status will be updated.",
+        "close_session_success": "Table session closed successfully!",
+        "close_session_error": "Failed to close table session"
       }
     },
     "customer": {
