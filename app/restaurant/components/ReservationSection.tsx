@@ -315,6 +315,10 @@ const getTodayLocalDate = () => {
     return new Date(now.getTime() - tzOffset).toISOString().split('T')[0];
 };
 
+const dayjsDayToBusinessDay = (day: number) => (day + 6) % 7;
+
+const businessDayToDayjsDay = (day: number) => ((day % 7) + 1) % 7;
+
 const getMaxBookableDate = () => dayjs().add(MAX_RESERVATION_ADVANCE_MONTHS, 'month').format('YYYY-MM-DD');
 
 const getSelectableTimeBounds = (date: string, slots: string[]) => {
@@ -467,7 +471,7 @@ const formatBusinessHourTime = (time: string) => {
 const getBusinessHourBoundsForDate = (date: string, businessHours: BusinessHour[]) => {
     if (!businessHours.length) return null;
 
-    const dayIndex = dayjs(date, 'YYYY-MM-DD').day();
+    const dayIndex = dayjsDayToBusinessDay(dayjs(date, 'YYYY-MM-DD').day());
     const dayHours = businessHours.find((hour) => hour.dayOfWeek === dayIndex);
     if (!dayHours || dayHours.isClosed) return null;
 
@@ -488,14 +492,14 @@ const getTenantReservationConfig = (tenant: TenantConfig | null, date: string, b
     const closedWeekdays = new Set<number>();
     const openingHours = parseOpeningHours(tenant?.businessOpeningHours);
 
-    const selectedDayIndex = dayjs(date, 'YYYY-MM-DD').day();
+    const selectedDayIndex = dayjsDayToBusinessDay(dayjs(date, 'YYYY-MM-DD').day());
     const businessHourForSelectedDate = businessHours.find((hour) => hour.dayOfWeek === selectedDayIndex);
     const isSelectedDayClosed = businessHourForSelectedDate?.isClosed === true;
 
     if (businessHours.length > 0) {
         businessHours.forEach((hour) => {
             if (hour.isClosed) {
-                closedWeekdays.add(hour.dayOfWeek);
+                closedWeekdays.add(businessDayToDayjsDay(hour.dayOfWeek));
             }
         });
 
@@ -721,7 +725,21 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
         if (isBookingDayClosed) return false;
         if (booking.date !== getTodayLocalDate()) return false;
 
-        return !getSelectableTimeBounds(booking.date, timeSlots);
+        const normalizedSlots = normalizeTimeSlots(timeSlots);
+        if (!normalizedSlots.length) return true;
+
+        const lastSlotMinutes = toMinutes(normalizedSlots[normalizedSlots.length - 1]);
+        if (lastSlotMinutes === null) return true;
+
+        const intervalMinutes = Math.max(1, getSlotIntervalMinutes(normalizedSlots));
+        const latestBookableMinutes = Math.min((24 * 60) - 1, lastSlotMinutes + intervalMinutes);
+
+        const ADVANCE_BUFFER_MINUTES = 30;
+        const now = dayjs();
+        const nowMinutes = (now.hour() * 60) + now.minute();
+        const earliestBookableMinutes = nowMinutes + ADVANCE_BUFFER_MINUTES;
+
+        return earliestBookableMinutes > latestBookableMinutes;
     }, [booking.date, isBookingDayClosed, timeSlots]);
 
     const closedBookingDateValue = useMemo(() => {
@@ -1662,7 +1680,7 @@ const ReservationSection: React.FC<ReservationSectionProps> = ({ tenant }) => {
 
                                     <button
                                         type="submit"
-                                        disabled={isBookingDayClosed || !selectableTimeBounds || !isSelectedTimeValid}
+                                        disabled={isBookingDayClosed || isBookingPastHoursToday || !selectableTimeBounds || !isSelectedTimeValid}
                                         className="pill-submit disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                                     >
                                         <span>

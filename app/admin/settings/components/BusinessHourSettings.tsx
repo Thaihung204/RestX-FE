@@ -9,13 +9,13 @@ import { BusinessHour } from "@/lib/types/tenant";
 import { TimePicker } from "@/components/ui/TimePicker";
 
 const getDaysOfWeek = (t: any) => [
-    { value: 1, label: t("common.days.monday", { defaultValue: "Thứ 2" }) },
-    { value: 2, label: t("common.days.tuesday", { defaultValue: "Thứ 3" }) },
-    { value: 3, label: t("common.days.wednesday", { defaultValue: "Thứ 4" }) },
-    { value: 4, label: t("common.days.thursday", { defaultValue: "Thứ 5" }) },
-    { value: 5, label: t("common.days.friday", { defaultValue: "Thứ 6" }) },
-    { value: 6, label: t("common.days.saturday", { defaultValue: "Thứ 7" }) },
-    { value: 0, label: t("common.days.sunday", { defaultValue: "Chủ nhật" }) },
+    { value: 0, label: t("common.days.monday", { defaultValue: "Thứ 2" }) },
+    { value: 1, label: t("common.days.tuesday", { defaultValue: "Thứ 3" }) },
+    { value: 2, label: t("common.days.wednesday", { defaultValue: "Thứ 4" }) },
+    { value: 3, label: t("common.days.thursday", { defaultValue: "Thứ 5" }) },
+    { value: 4, label: t("common.days.friday", { defaultValue: "Thứ 6" }) },
+    { value: 5, label: t("common.days.saturday", { defaultValue: "Thứ 7" }) },
+    { value: 6, label: t("common.days.sunday", { defaultValue: "Chủ nhật" }) },
 ];
 
 export default function BusinessHourSettings() {
@@ -38,7 +38,6 @@ export default function BusinessHourSettings() {
                     const existing = data.find(h => h.dayOfWeek === day.value);
                     if (existing) return existing;
                     return {
-                        tenantId: tenant.id,
                         dayOfWeek: day.value,
                         openTime: "08:00:00",
                         closeTime: "22:00:00",
@@ -183,7 +182,7 @@ export default function BusinessHourSettings() {
                                                 minTime={formatTimeForInput(currentHour.openTime)}
                                             />
                                         </div>
-                                        {day.value === 1 && (
+                                        {day.value === 0 && (
                                             <button
                                                 onClick={() => handleApplyAll(currentHour)}
                                                 className="ml-auto px-3 py-1.5 text-xs rounded-md transition-colors whitespace-nowrap hidden sm:block"

@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import StatusToggle from "@/components/ui/StatusToggle";
 import VnAddressSelect from "@/components/ui/VnAddressSelect";
 import VnStreetAutocomplete from "@/components/ui/VnStreetAutocomplete";
@@ -88,6 +89,7 @@ const TenantEditPage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [tenantStatus, setTenantStatus] = useState<boolean>(true);
   const [deactivateModalVisible, setDeactivateModalVisible] = useState(false);
+  const [activateModalVisible, setActivateModalVisible] = useState(false);
   const [logoFileList, setLogoFileList] = useState<UploadFile[]>([]);
   const [faviconFileList, setFaviconFileList] = useState<UploadFile[]>([]);
   const [backgroundFileList, setBackgroundFileList] = useState<UploadFile[]>([]);
@@ -395,7 +397,7 @@ const TenantEditPage: React.FC = () => {
     if (tenantStatus) {
       setDeactivateModalVisible(true);
     } else {
-      setTenantStatus(true);
+      setActivateModalVisible(true);
     }
   };
 
@@ -907,48 +909,34 @@ const TenantEditPage: React.FC = () => {
       </Modal>
 
       {/* Deactivate Confirmation Modal */}
-      <Modal
-        getContainer={() => document.body}
-        centered
-        title={
-          <div className="flex items-center gap-3">
-            <ExclamationCircleOutlined className="text-orange-500 text-2xl" />
-            <span className="text-lg font-semibold">{t("tenants.deactivate_modal.title")}</span>
-          </div>
-        }
+      <ConfirmModal
         open={deactivateModalVisible}
+        title={t("tenants.deactivate_modal.title")}
+        description={t("tenants.deactivate_modal.warning_description")}
+        confirmText={t("tenants.deactivate_modal.button_confirm")}
+        cancelText={t("tenants.edit.delete_modal.button_cancel")}
+        variant="warning"
+        onConfirm={() => {
+          setTenantStatus(false);
+          setDeactivateModalVisible(false);
+        }}
         onCancel={() => setDeactivateModalVisible(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setDeactivateModalVisible(false)} size="large">
-            {t("tenants.edit.delete_modal.button_cancel")}
-          </Button>,
-          <Button
-            key="confirm"
-            type="primary"
-            danger
-            onClick={() => {
-              setTenantStatus(false);
-              setDeactivateModalVisible(false);
-            }}
-            size="large">
-            {t("tenants.deactivate_modal.button_confirm")}
-          </Button>,
-        ]}
-        width={480}
-        styles={{
-          mask: { backdropFilter: "blur(10px)", background: "var(--modal-overlay)" },
-        }}>
-        <div className="py-4 space-y-4">
-          <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900 rounded-lg p-4">
-            <p className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-1">
-              {t("tenants.deactivate_modal.warning_title")}
-            </p>
-            <p className="text-sm text-orange-700 dark:text-orange-300">
-              {t("tenants.deactivate_modal.warning_description")}
-            </p>
-          </div>
-        </div>
-      </Modal>
+      />
+
+      {/* Activate Confirmation Modal */}
+      <ConfirmModal
+        open={activateModalVisible}
+        title={t("tenants.activate_modal.title")}
+        description={t("tenants.activate_modal.description")}
+        confirmText={t("common.activate")}
+        cancelText={t("common.cancel")}
+        variant="info"
+        onConfirm={() => {
+          setTenantStatus(true);
+          setActivateModalVisible(false);
+        }}
+        onCancel={() => setActivateModalVisible(false)}
+      />
     </>
   );
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import MultiImageUpload from "@/components/MultiImageUpload";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import aiService from "@/lib/services/aiService";
@@ -55,6 +56,8 @@ export default function MenuItemFormPage() {
   const [aiPromptModalOpen, setAiPromptModalOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
+  const [confirmToggleOpen, setConfirmToggleOpen] = useState(false);
+  const [togglingStatus, setTogglingStatus] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -348,28 +351,27 @@ export default function MenuItemFormPage() {
   };
 
   const handleToggleStatus = () => {
+    setConfirmToggleOpen(true);
+  };
+
+  const confirmToggleStatus = async () => {
     const nextStatus = !formData.isActive;
-    dishService
-      .toggleDishStatus(id, nextStatus)
-      .then(() => {
-        message.success(
-          nextStatus
-            ? t("dashboard.menu.ingredients.status.activate_success", {
-              name: formData.name,
-            })
-            : t("dashboard.menu.ingredients.status.deactivate_success", {
-              name: formData.name,
-            }),
-        );
-        setFormData((prev) => ({ ...prev, isActive: nextStatus }));
-      })
-      .catch((err: unknown) => {
-        const errorMsg = extractApiErrorMessage(
-          err,
-          t("dashboard.menu.ingredients.status.update_failed"),
-        );
-        message.error(errorMsg);
-      });
+    try {
+      setTogglingStatus(true);
+      await dishService.toggleDishStatus(id, nextStatus);
+      message.success(
+        nextStatus
+          ? t("dashboard.menu.ingredients.status.activate_success", { name: formData.name })
+          : t("dashboard.menu.ingredients.status.deactivate_success", { name: formData.name }),
+      );
+      setFormData((prev) => ({ ...prev, isActive: nextStatus }));
+    } catch (err: unknown) {
+      const errorMsg = extractApiErrorMessage(err, t("dashboard.menu.ingredients.status.update_failed"));
+      message.error(errorMsg);
+    } finally {
+      setTogglingStatus(false);
+      setConfirmToggleOpen(false);
+    }
   };
 
   const handleChange = (
@@ -987,6 +989,26 @@ export default function MenuItemFormPage() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        open={confirmToggleOpen}
+        title={
+          formData.isActive
+            ? t("dashboard.menu.ingredients.status.confirm_deactivate_title")
+            : t("dashboard.menu.ingredients.status.confirm_activate_title")
+        }
+        description={
+          formData.isActive
+            ? t("dashboard.menu.ingredients.status.confirm_deactivate_desc", { name: formData.name })
+            : t("dashboard.menu.ingredients.status.confirm_activate_desc", { name: formData.name })
+        }
+        confirmText={formData.isActive ? t("common.deactivate") : t("common.activate")}
+        cancelText={t("common.cancel")}
+        variant={formData.isActive ? "warning" : "info"}
+        loading={togglingStatus}
+        onConfirm={confirmToggleStatus}
+        onCancel={() => setConfirmToggleOpen(false)}
+      />
     </div>
   );
 }
