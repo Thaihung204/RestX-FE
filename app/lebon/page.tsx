@@ -1,7 +1,7 @@
 'use client';
 
 import { LeBonReservationModal } from '@/components/lebon/LeBonReservationModal';
-// import { injectTenantBranding } from '@/lib/hooks/useThemeTokens';
+import { injectTenantBranding } from '@/lib/hooks/useThemeTokens';
 import { Cormorant_Garamond, Montserrat } from 'next/font/google';
 import NextImage from 'next/image';
 import { useEffect, useRef, useState } from 'react';
@@ -20,16 +20,16 @@ const montserrat = Montserrat({
   display: 'swap',
 });
 
-// // ─── Le Bon mock branding (thay bằng API call khi có DB) ─────────────────────
-// const LEBON_BRANDING = {
-//   primaryColor:      '#c9a84c',
-//   lightBaseColor:    '#f5f0e8',
-//   lightSurfaceColor: '#ede8dc',
-//   lightCardColor:    '#faf7f2',
-//   darkBaseColor:     '#0a1810',
-//   darkSurfaceColor:  '#0f2316',
-//   darkCardColor:     '#152b1c',
-// } as const;
+// ─── Le Bon mock branding (thay bằng API call khi có DB) ─────────────────────
+const LEBON_BRANDING = {
+  primaryColor:      '#c9a84c',
+  lightBaseColor:    '#f5f0e8',
+  lightSurfaceColor: '#ede8dc',
+  lightCardColor:    '#faf7f2',
+  darkBaseColor:     '#0a1810',
+  darkSurfaceColor:  '#0f2316',
+  darkCardColor:     '#152b1c',
+} as const;
 
 // ─── Scroll-reveal hook ───────────────────────────────────────────────────────
 function useReveal(threshold = 0.15) {
@@ -959,10 +959,10 @@ export default function LeBonPage() {
   const [reservationOpen, setReservationOpen] = useState(false);
   const [dark, setDark] = useState(true);
 
-  // // Inject Le Bon branding ngay khi mount — không cần chờ TenantContext
-  // useEffect(() => {
-  //   injectTenantBranding(LEBON_BRANDING);
-  // }, []);
+  // Inject Le Bon branding ngay khi mount — không cần chờ TenantContext
+  useEffect(() => {
+    injectTenantBranding(LEBON_BRANDING);
+  }, []);
 
   // Sync data-theme với hệ thống globals.css
   useEffect(() => {
