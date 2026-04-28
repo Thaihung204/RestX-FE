@@ -1,5 +1,6 @@
 "use client";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { DropDown } from "@/components/ui/DropDown";
 import StatusToggle from "@/components/ui/StatusToggle";
 import ingredientService, { IngredientCategory, IngredientItem } from "@/lib/services/ingredientService";
@@ -89,11 +90,7 @@ export default function IngredientFormPage() {
       const data = await supplierService.getAll();
       setSuppliers(data.filter((s) => s.isActive));
     } catch (err: unknown) {
-      const errorMsg = extractApiErrorMessage(
-        err,
-        t("dashboard.ingredients.fetch_suppliers_failed"),
-      );
-      message.warning(errorMsg);
+      message.warning(extractApiErrorMessage(err, t("dashboard.ingredients.fetch_suppliers_failed")));
     } finally {
       setLoadingSuppliers(false);
     }
@@ -105,11 +102,7 @@ export default function IngredientFormPage() {
       const data = await ingredientService.getAllCategories();
       setIngredientCategories(data.filter((c) => c.isActive !== false));
     } catch (err: unknown) {
-      const errorMsg = extractApiErrorMessage(
-        err,
-        t("dashboard.ingredients.fetch_categories_failed"),
-      );
-      message.warning(errorMsg);
+      message.warning(extractApiErrorMessage(err, t("dashboard.ingredients.fetch_categories_failed")));
     } finally {
       setLoadingCategories(false);
     }
@@ -120,7 +113,7 @@ export default function IngredientFormPage() {
       setLoadingData(true);
       const data = await ingredientService.getById(id);
       setForm({
-        name: data.name?? "",
+        name: data.name ?? "",
         code: data.code ?? "",
         unit: data.unit ?? "kg",
         minStockLevel: data.minStockLevel ?? 0,
@@ -132,11 +125,7 @@ export default function IngredientFormPage() {
         status: data.status ?? 0,
       });
     } catch (err: unknown) {
-      const errorMsg = extractApiErrorMessage(
-        err,
-        t("dashboard.ingredients.fetch_ingredient_failed"),
-      );
-      message.error(errorMsg);
+      message.error(extractApiErrorMessage(err, t("dashboard.ingredients.fetch_ingredient_failed")));
     } finally {
       setLoadingData(false);
     }
@@ -165,10 +154,7 @@ export default function IngredientFormPage() {
     if (form.unit.length > 20)    { message.error(t("dashboard.ingredients.unit_max_length")); return; }
     if (isNew && !form.supplierId){ message.error(t("dashboard.ingredients.supplier_required")); return; }
 
-    const normalizedPayload = {
-      ...form,
-      type: normalizeTypeCode(form.type),
-    };
+    const normalizedPayload = { ...form, type: normalizeTypeCode(form.type) };
 
     try {
       setLoading(true);
@@ -181,11 +167,7 @@ export default function IngredientFormPage() {
       }
       router.push("/admin/ingredients");
     } catch (err: unknown) {
-      const errorMsg = extractApiErrorMessage(
-        err,
-        t("dashboard.ingredients.save_failed"),
-      );
-      message.error(errorMsg);
+      message.error(extractApiErrorMessage(err, t("dashboard.ingredients.save_failed")));
     } finally {
       setLoading(false);
     }
@@ -198,13 +180,10 @@ export default function IngredientFormPage() {
       message.success(t("dashboard.ingredients.delete_success"));
       router.push("/admin/ingredients");
     } catch (err: unknown) {
-      const errorMsg = extractApiErrorMessage(
-        err,
-        t("dashboard.ingredients.delete_failed"),
-      );
-      message.error(errorMsg);
+      message.error(extractApiErrorMessage(err, t("dashboard.ingredients.delete_failed")));
     } finally {
       setLoading(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -267,11 +246,7 @@ export default function IngredientFormPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
               <div className="lg:col-span-8 space-y-5">
-
-                <section
-                  className="rounded-xl p-5 sm:p-6"
-                  style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-                >
+                <section className="rounded-xl p-5 sm:p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
                     <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
                     {t("dashboard.ingredients.basic_info")}
@@ -280,7 +255,7 @@ export default function IngredientFormPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.name")} 
+                        {t("dashboard.ingredients.name")}
                       </label>
                       <input
                         type="text" name="name" value={form.name} onChange={handleChange} required
@@ -292,7 +267,7 @@ export default function IngredientFormPage() {
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.code")} {" "}
+                        {t("dashboard.ingredients.code")}{" "}
                         <span className="text-xs opacity-50">{t("dashboard.ingredients.code_max_length")}</span>
                       </label>
                       <input
@@ -306,34 +281,23 @@ export default function IngredientFormPage() {
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.unit")} 
+                        {t("dashboard.ingredients.unit")}
                       </label>
-                      <DropDown
-                        name="unit" value={form.unit} onChange={handleChange}
-                        disabled={cannotSave}
-                        className="px-3"
-                        style={cannotSave ? disabledFieldStyle : fieldStyle}
-                      >
+                      <DropDown name="unit" value={form.unit} onChange={handleChange} disabled={cannotSave} className="px-3" style={cannotSave ? disabledFieldStyle : fieldStyle}>
                         {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
                       </DropDown>
                     </div>
 
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-                        {t("dashboard.ingredients.supplier")} 
+                        {t("dashboard.ingredients.supplier")}
                       </label>
                       {loadingSuppliers ? (
-                        <div
-                          className="w-full px-3 py-2.5 rounded-lg border text-sm"
-                          style={disabledFieldStyle}
-                        >
+                        <div className="w-full px-3 py-2.5 rounded-lg border text-sm" style={disabledFieldStyle}>
                           {t("dashboard.ingredients.loading_suppliers")}
                         </div>
                       ) : hasNoSuppliers ? (
-                        <div
-                          className="w-full px-3 py-2.5 rounded-lg border text-sm flex items-center gap-2"
-                          style={disabledFieldStyle}
-                        >
+                        <div className="w-full px-3 py-2.5 rounded-lg border text-sm flex items-center gap-2" style={disabledFieldStyle}>
                           <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                               d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
@@ -341,18 +305,9 @@ export default function IngredientFormPage() {
                           {t("dashboard.ingredients.no_suppliers")}
                         </div>
                       ) : (
-                        <DropDown
-                          name="supplierId"
-                          value={form.supplierId ?? ""}
-                          onChange={handleChange}
-                          required={isNew}
-                          className="px-3"
-                          style={fieldStyle}
-                        >
+                        <DropDown name="supplierId" value={form.supplierId ?? ""} onChange={handleChange} required={isNew} className="px-3" style={fieldStyle}>
                           <option value="" disabled>{t("dashboard.ingredients.select_supplier")}</option>
-                          {suppliers.map((s) => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
-                          ))}
+                          {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </DropDown>
                       )}
                     </div>
@@ -363,25 +318,13 @@ export default function IngredientFormPage() {
                         <span className="ml-1 text-xs opacity-50">{t("dashboard.ingredients.type_optional")}</span>
                       </label>
                       {loadingCategories ? (
-                        <div
-                          className="w-full px-3 py-2.5 rounded-lg border text-sm"
-                          style={disabledFieldStyle}
-                        >
+                        <div className="w-full px-3 py-2.5 rounded-lg border text-sm" style={disabledFieldStyle}>
                           {t("dashboard.ingredients.loading_categories")}
                         </div>
                       ) : (
-                        <DropDown
-                          name="type"
-                          value={form.type ?? ""}
-                          onChange={handleChange}
-                          disabled={cannotSave}
-                          className="px-3"
-                          style={cannotSave ? disabledFieldStyle : fieldStyle}
-                        >
+                        <DropDown name="type" value={form.type ?? ""} onChange={handleChange} disabled={cannotSave} className="px-3" style={cannotSave ? disabledFieldStyle : fieldStyle}>
                           {ingredientCategories.map((c) => (
-                            <option key={c.id} value={c.code ?? c.name}>
-                              {getCategoryLabel(c)}
-                            </option>
+                            <option key={c.id} value={c.code ?? c.name}>{getCategoryLabel(c)}</option>
                           ))}
                         </DropDown>
                       )}
@@ -389,10 +332,7 @@ export default function IngredientFormPage() {
                   </div>
                 </section>
 
-                <section
-                  className="rounded-xl p-5 sm:p-6"
-                  style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-                >
+                <section className="rounded-xl p-5 sm:p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
                     <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
                     {t("dashboard.ingredients.stock_levels")}
@@ -403,42 +343,23 @@ export default function IngredientFormPage() {
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.min_stock")}
                       </label>
-                      <input
-                        type="number" name="minStockLevel"
-                        min={0} step="0.001"
-                        value={form.minStockLevel || ""}
-                        onChange={handleChange}
-                        disabled={cannotSave}
+                      <input type="number" name="minStockLevel" min={0} step="0.001" value={form.minStockLevel || ""} onChange={handleChange} disabled={cannotSave}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
-                        style={cannotSave ? disabledFieldStyle : fieldStyle}
-                      />
+                        style={cannotSave ? disabledFieldStyle : fieldStyle} />
                     </div>
                     <div>
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.max_stock")}
                       </label>
-                      <input
-                        type="number" name="maxStockLevel"
-                        min={0} step="0.001"
-                        value={form.maxStockLevel || ""}
-                        onChange={handleChange}
-                        disabled={cannotSave}
+                      <input type="number" name="maxStockLevel" min={0} step="0.001" value={form.maxStockLevel || ""} onChange={handleChange} disabled={cannotSave}
                         className="w-full px-3 py-2.5 rounded-lg border outline-none transition-all focus:ring-2 focus:ring-orange-500/20"
-                        style={cannotSave ? disabledFieldStyle : fieldStyle}
-                      />
+                        style={cannotSave ? disabledFieldStyle : fieldStyle} />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block mb-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
                         {t("dashboard.ingredients.stock_status_label")}
                       </label>
-                      <DropDown
-                        name="status"
-                        value={form.status ?? 0}
-                        onChange={handleChange}
-                        disabled={cannotSave}
-                        className="px-3"
-                        style={cannotSave ? disabledFieldStyle : fieldStyle}
-                      >
+                      <DropDown name="status" value={form.status ?? 0} onChange={handleChange} disabled={cannotSave} className="px-3" style={cannotSave ? disabledFieldStyle : fieldStyle}>
                         <option value={0}>{t("dashboard.ingredients.status_values.in_stock")}</option>
                         <option value={1}>{t("dashboard.ingredients.status_values.low_stock")}</option>
                         <option value={2}>{t("dashboard.ingredients.status_values.out_of_stock")}</option>
@@ -453,11 +374,7 @@ export default function IngredientFormPage() {
               </div>
 
               <div className="lg:col-span-4 space-y-5">
-
-                <section
-                  className="rounded-xl p-5 sm:p-6"
-                  style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-                >
+                <section className="rounded-xl p-5 sm:p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
                   <h3 className="text-base font-semibold mb-5 flex items-center gap-2" style={{ color: "var(--text)" }}>
                     <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
                     {t("dashboard.ingredients.actions_section")}
@@ -468,17 +385,12 @@ export default function IngredientFormPage() {
                       type="submit"
                       disabled={loading || cannotSave}
                       title={cannotSave ? t("dashboard.ingredients.need_supplier_tooltip") : undefined}
-                      className="w-full py-2.5 rounded-lg font-bold text-white transition-all
-                        hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                      className="w-full py-2.5 rounded-lg font-bold text-white transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       style={{ background: loading || cannotSave ? "#aaa" : "var(--primary)", color: "white" }}
                       onMouseEnter={(e) => { if (!loading && !cannotSave) e.currentTarget.style.background = "#CC2D08"; }}
                       onMouseLeave={(e) => { if (!loading && !cannotSave) e.currentTarget.style.background = "var(--primary)"; }}
                     >
-                      {loading
-                        ? t("dashboard.ingredients.saving")
-                        : isNew
-                          ? t("dashboard.ingredients.create_btn")
-                          : t("dashboard.ingredients.update_btn")}
+                      {loading ? t("dashboard.ingredients.saving") : isNew ? t("dashboard.ingredients.create_btn") : t("dashboard.ingredients.update_btn")}
                     </button>
 
                     <button
@@ -492,7 +404,7 @@ export default function IngredientFormPage() {
                       {t("dashboard.ingredients.cancel")}
                     </button>
 
-                    {!isNew && !showDeleteConfirm && (
+                    {!isNew && (
                       <button
                         type="button"
                         onClick={() => setShowDeleteConfirm(true)}
@@ -505,58 +417,21 @@ export default function IngredientFormPage() {
                       </button>
                     )}
                   </div>
-
-                  {!isNew && showDeleteConfirm && (
-                    <div
-                      className="mt-4 p-3 rounded-lg"
-                      style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}
-                    >
-                      <p className="text-sm font-medium mb-3" style={{ color: "#dc2626" }}>
-                        {t("dashboard.ingredients.delete_btn")} &quot;{form.name}&quot;? {t("dashboard.ingredients.delete_confirm_msg")}
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button" onClick={handleDelete} disabled={loading}
-                          className="flex-1 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
-                          style={{ background: "#dc2626" }}
-                        >
-                          {t("dashboard.ingredients.delete_btn")}
-                        </button>
-                        <button
-                          type="button" onClick={() => setShowDeleteConfirm(false)}
-                          className="flex-1 py-2 rounded-lg text-sm font-medium"
-                          style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-                        >
-                          {t("dashboard.ingredients.cancel")}
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </section>
 
-                <section
-                  className="rounded-xl p-5 sm:p-6"
-                  style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-                >
+                <section className="rounded-xl p-5 sm:p-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
                   <h3 className="text-base font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--text)" }}>
                     <span className="w-1 h-4 rounded-full shrink-0" style={{ background: "var(--primary)" }} />
                     {t("dashboard.ingredients.status_section")}
                   </h3>
 
-                  <div
-                    className="flex items-center justify-between p-3 rounded-lg"
-                    style={{ background: "var(--surface)" }}
-                  >
+                  <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: "var(--surface)" }}>
                     <div>
                       <p className="font-semibold text-sm" style={{ color: "var(--text)" }}>
-                        {form.isActive
-                          ? t("dashboard.ingredients.status_active")
-                          : t("dashboard.ingredients.status_inactive")}
+                        {form.isActive ? t("dashboard.ingredients.status_active") : t("dashboard.ingredients.status_inactive")}
                       </p>
                       <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                        {form.isActive
-                          ? t("dashboard.ingredients.status_desc_active")
-                          : t("dashboard.ingredients.status_desc_inactive")}
+                        {form.isActive ? t("dashboard.ingredients.status_desc_active") : t("dashboard.ingredients.status_desc_inactive")}
                       </p>
                     </div>
                     <div className="shrink-0 ml-3">
@@ -567,13 +442,24 @@ export default function IngredientFormPage() {
                     </div>
                   </div>
                 </section>
-
               </div>
 
             </div>
           </form>
         </div>
       </main>
+
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title={t("dashboard.ingredients.confirm_delete_title")}
+        description={t("dashboard.ingredients.confirm_delete_desc", { name: form.name })}
+        confirmText={t("common.actions.delete")}
+        cancelText={t("common.cancel")}
+        variant="danger"
+        loading={loading}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

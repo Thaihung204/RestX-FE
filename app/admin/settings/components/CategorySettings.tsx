@@ -1,5 +1,6 @@
 "use client";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import categoryService, { Category } from "@/lib/services/categoryService";
 import { extractApiErrorMessage } from "@/lib/utils/extractApiErrorMessage";
 import { CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, MenuOutlined, PlusOutlined } from "@ant-design/icons";
@@ -55,6 +56,7 @@ export default function CategorySettings() {
   const { message } = App.useApp();
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
 
   // AI Generator specific state
   const [aiPrompt, setAiPrompt] = useState("");
@@ -173,10 +175,7 @@ export default function CategorySettings() {
   };
 
   const handleSave = async () => {
-    if (!formData.name) {
-      message.warning(t("dashboard.settings.categories.name_required"));
-      return;
-    }
+    if (!formData.name) { message.warning(t("dashboard.settings.categories.name_required")); return; }
     if (isSaving) return;
     try {
       setIsSaving(true);
@@ -213,6 +212,7 @@ export default function CategorySettings() {
       message.error(extractApiErrorMessage(error, t("dashboard.settings.notifications.error_delete")));
     } finally {
       setDeletingId(null);
+      setPendingDelete(null);
     }
   };
 
@@ -223,7 +223,6 @@ export default function CategorySettings() {
   };
 
   const cancelSortMode = () => { setSortMode(false); setDragOverIndex(null); };
-
   const handleDragStart = (index: number) => { dragItem.current = index; };
   const handleDragEnter = (index: number) => { dragOverItem.current = index; setDragOverIndex(index); };
   const handleDragEnd = () => {
@@ -267,9 +266,7 @@ export default function CategorySettings() {
           <span className="text-sm font-semibold">{index + 1}</span>
         </div>
       ) : (
-        <span className="text-sm font-semibold" style={{ color: "var(--text-muted)" }}>
-          {cat.displayOrder ?? index + 1}
-        </span>
+        <span className="text-sm font-semibold" style={{ color: "var(--text-muted)" }}>{cat.displayOrder ?? index + 1}</span>
       ),
     },
     {
@@ -303,14 +300,7 @@ export default function CategorySettings() {
       render: (_: any, cat: Category) => (
         <div className="flex justify-end gap-2">
           <Button type="text" icon={<EditOutlined className="text-blue-500" />} onClick={() => handleOpenModal(cat)} disabled={!!deletingId || isSaving} className="hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" />
-          <Popconfirm
-            title={t("dashboard.settings.categories.confirm_delete")}
-            onConfirm={() => handleDelete(cat.id)}
-            okText={t("common.actions.yes")}
-            cancelText={t("common.actions.no")}
-            okButtonProps={{ danger: true }}>
-            <Button type="text" icon={<DeleteOutlined className="text-red-500" />} loading={deletingId === cat.id} disabled={!!deletingId || isSaving} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
-          </Popconfirm>
+          <Button type="text" icon={<DeleteOutlined className="text-red-500" />} loading={deletingId === cat.id} disabled={!!deletingId || isSaving} onClick={() => setPendingDelete(cat)} className="hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" />
         </div>
       ),
     }] : []),
@@ -369,6 +359,18 @@ export default function CategorySettings() {
           onDragEnd: handleDragEnd,
           onDragOver: (e: React.DragEvent) => e.preventDefault(),
         }) : undefined}
+      />
+
+      <ConfirmModal
+        open={!!pendingDelete}
+        title={t("dashboard.settings.categories.confirm_delete")}
+        description={t("dashboard.settings.categories.confirm_delete_desc", { name: pendingDelete?.name })}
+        confirmText={t("common.actions.delete")}
+        cancelText={t("common.cancel")}
+        variant="danger"
+        loading={!!deletingId}
+        onConfirm={() => pendingDelete && handleDelete(pendingDelete.id)}
+        onCancel={() => setPendingDelete(null)}
       />
 
       {isModalOpen && typeof document !== "undefined" && createPortal(
