@@ -3,16 +3,91 @@
 import { DropDown } from "@/components/ui/DropDown";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Modal, message } from "antd";
+
+import aiService from "@/lib/services/aiService";
+import type { AIContentVariant } from "@/lib/types/ai";
 
 import TenantBrandingSettings from "./components/TenantBrandingSettings";
 import ReservationDepositConfigSection from "./components/ReservationDepositConfigSection";
 import BusinessHourSettings from "./components/BusinessHourSettings";
+
+const MAX_AI_PROMPT_LENGTH = 500;
 
 export default function SettingsPage() {
   const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState<
     "general" | "appearance" | "notifications" | "security"
   >("general");
+
+  // AI Generator state
+  const [restaurantName, setRestaurantName] = useState("");
+  const [restaurantDescription, setRestaurantDescription] = useState("");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiPromptModalOpen, setAiPromptModalOpen] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<AIContentVariant[]>([]);
+
+  const handleGenerateDescription = async () => {
+    const normalizedName = restaurantName.trim() || t("dashboard.settings.general.restaurant_name", { defaultValue: "Nhà hàng" });
+    const normalizedPrompt = aiPrompt.trim();
+
+    try {
+      setAiGenerating(true);
+      setAiSuggestions([]);
+
+      const payload: {
+        dishName: string;
+        customContext?: string;
+      } = {
+        dishName: normalizedName, // using dishName field just for backend payload compatibility
+      };
+
+      if (normalizedPrompt) {
+        payload.customContext = normalizedPrompt;
+      }
+
+      const response = await aiService.generateContent(payload);
+
+      const variants = (response?.variants || []).filter(
+        (item) => typeof item?.content === "string" && item.content.trim().length > 0,
+      );
+
+      if (variants.length === 0) {
+        message.warning(
+          t("dashboard.settings.ai_content.empty_result", {
+            defaultValue: "AI did not return any content. Please try another prompt.",
+          }),
+        );
+        return;
+      }
+
+      setAiSuggestions(variants);
+      setAiPromptModalOpen(false);
+      message.success(
+        t("dashboard.settings.ai_content.generate_success", {
+          defaultValue: "AI content generated. Choose one variant below.",
+        }),
+      );
+    } catch (err) {
+      message.error(
+        t("dashboard.settings.ai_content.generate_failed", {
+          defaultValue: "Failed to generate content with AI.",
+        }),
+      );
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  const applyAIVariant = (variant: AIContentVariant) => {
+    setRestaurantDescription(variant.content || "");
+    message.success(
+      t("dashboard.settings.ai_content.apply_success", {
+        defaultValue: "Description updated from AI variant.",
+      }),
+    );
+  };
 
   return (
     <main className="p-6 lg:p-8">
@@ -106,6 +181,8 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="text"
+                    value={restaurantName}
+                    onChange={(e) => setRestaurantName(e.target.value)}
                     className="w-full px-4 py-2 rounded-lg focus:outline-none"
                     style={{
                       background: "var(--surface)",
@@ -194,6 +271,118 @@ export default function SettingsPage() {
                     }
                     suppressHydrationWarning
                   />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <label
+                      className="block text-sm font-medium"
+                      style={{ color: "var(--text-muted)" }}>
+                      {t("dashboard.settings.general.description", { defaultValue: "Restaurant Description" })}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!aiPrompt) {
+                          setAiPrompt(`Hãy tạo giới thiệu nhà hàng tối đa 200 từ cho nhà hàng ${restaurantName || ""}`.trim());
+                        }
+                        setAiPromptModalOpen(true);
+                      }}
+                      disabled={aiGenerating}
+                      className="ai-generate-trigger-button px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
+                      style={{
+                        background: "var(--primary)",
+                        border: "1px solid var(--primary)",
+                        color: "#fff",
+                      }}>
+                      {aiGenerating
+                        ? t("dashboard.settings.ai_content.generating", {
+                          defaultValue: "Generating...",
+                        })
+                        : t("dashboard.settings.ai_content.generate", {
+                          defaultValue: "Generate AI",
+                        })}
+                    </button>
+                  </div>
+                  <textarea
+                    rows={4}
+                    value={restaurantDescription}
+                    onChange={(e) => setRestaurantDescription(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg focus:outline-none resize-none"
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text)",
+                    }}
+                    onFocus={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--primary)")
+                    }
+                    onBlur={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--border)")
+                    }
+                    suppressHydrationWarning
+                  />
+                  {aiSuggestions.length > 0 && (
+                    <div
+                      className="rounded-xl p-3 space-y-2 mt-3"
+                      style={{
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                      }}>
+                      <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                        {t("dashboard.settings.ai_content.variants_title", {
+                          defaultValue: "AI variants (click one to apply)",
+                        })}
+                      </p>
+
+                      <div className="space-y-2">
+                        {aiSuggestions.map((variant, index) => (
+                          <button
+                            key={`restaurant-ai-variant-${index}`}
+                            type="button"
+                            onClick={() => applyAIVariant(variant)}
+                            className="w-full text-left rounded-lg px-3 py-2 transition-colors"
+                            style={{
+                              background: "var(--card)",
+                              border: "1px solid var(--border)",
+                            }}>
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                                {variant.headline ||
+                                  t("dashboard.settings.ai_content.variant_label", {
+                                    defaultValue: "Variant {{index}}",
+                                    index: index + 1,
+                                  })}
+                              </p>
+
+                              {typeof variant.score === "number" && (
+                                <span
+                                  className="text-xs px-2 py-1 rounded"
+                                  style={{
+                                    background: "rgba(0,0,0,0.08)",
+                                    color: "var(--text-muted)",
+                                  }}>
+                                  {t("dashboard.settings.ai_content.score_label", {
+                                    defaultValue: "Score: {{score}}",
+                                    score: variant.score,
+                                  })}
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
+                              {variant.content}
+                            </p>
+
+                            {variant.scoreNote && (
+                              <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                                {variant.scoreNote}
+                              </p>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -789,6 +978,90 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+
+      <Modal
+        className="ai-generate-modal"
+        open={aiPromptModalOpen}
+        onCancel={() => {
+          if (!aiGenerating) {
+            setAiPromptModalOpen(false);
+          }
+        }}
+        footer={null}
+        centered
+        destroyOnHidden>
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+            {t("dashboard.settings.ai_content.prompt_modal_title", {
+              defaultValue: "Generate description with AI",
+            })}
+          </h3>
+
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            {t("dashboard.settings.ai_content.prompt_modal_hint", {
+              defaultValue:
+                "Enter optional instructions for AI.",
+            })}
+          </p>
+
+          <label className="text-sm font-medium block" style={{ color: "var(--text)" }}>
+            {t("dashboard.settings.ai_content.prompt_label", {
+              defaultValue: "Prompt",
+            })}
+          </label>
+
+          <textarea
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value.slice(0, MAX_AI_PROMPT_LENGTH))}
+            maxLength={MAX_AI_PROMPT_LENGTH}
+            disabled={aiGenerating}
+            rows={4}
+            placeholder={t("dashboard.settings.ai_content.prompt_placeholder", {
+              defaultValue: "Optional prompt (e.g., focus on family friendly atmosphere)",
+            })}
+            className="ai-prompt-textarea w-full px-3 py-2 rounded-lg outline-none resize-none border focus:ring-2"
+            style={{
+              background: "var(--surface)",
+              borderColor: "var(--border)",
+              color: "var(--text)",
+            }}
+          />
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setAiPromptModalOpen(false)}
+              disabled={aiGenerating}
+              className="px-4 py-2 rounded-lg text-sm font-medium"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+              }}>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGenerateDescription}
+              disabled={aiGenerating}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
+              style={{
+                background: "var(--primary)",
+                border: "1px solid var(--primary)",
+                color: "#fff",
+              }}>
+              {aiGenerating
+                ? t("dashboard.settings.ai_content.generating", {
+                  defaultValue: "Generating...",
+                })
+                : t("dashboard.settings.ai_content.generate", {
+                  defaultValue: "Generate AI",
+                })}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </main>
   );
 }

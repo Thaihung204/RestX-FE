@@ -684,7 +684,12 @@ export default function ComboFormPage() {
 
                   <button
                     type="button"
-                    onClick={() => setAiPromptModalOpen(true)}
+                    onClick={() => {
+                      if (!aiPrompt) {
+                        setAiPrompt(`Hãy tạo mô tả tối đa 50 từ cho combo ${formData.name || ""}`.trim());
+                      }
+                      setAiPromptModalOpen(true);
+                    }}
                     disabled={aiGenerating}
                     className="ai-generate-trigger-button px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
                     style={{

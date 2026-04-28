@@ -412,9 +412,6 @@ export default function MenuItemFormPage() {
                 style={{ color: "var(--text)" }}>
                 {isNewItem ? t("menu_form.title_new") : t("menu_form.title_edit")}
               </h2>
-              <p style={{ color: "var(--text-muted)" }}>
-                {isNewItem ? t("menu_form.subtitle_new") : t("menu_form.subtitle_edit")}
-              </p>
             </div>
           </div>
 
@@ -546,7 +543,14 @@ export default function MenuItemFormPage() {
 
                         <button
                           type="button"
-                          onClick={() => setAiPromptModalOpen(true)}
+                          onClick={() => {
+                            if (!aiPrompt) {
+                              setAiPrompt(
+                                `Hãy tạo mô tả tối đa 50 từ cho món ${formData.name || ""}`.trim()
+                              );
+                            }
+                            setAiPromptModalOpen(true);
+                          }}
                           disabled={aiGenerating}
                           className="ai-generate-trigger-button px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
                           style={{
