@@ -1,5 +1,6 @@
 "use client";
 
+import CancelDishConfirm from "@/components/admin/orders/CancelDishConfirm";
 import AddOrderItem from "@/components/staff/orders/AddOrderItem";
 import CardOrder from "@/components/staff/orders/CardOrder";
 import FilterOrder from "@/components/staff/orders/FilterOrder";
@@ -27,7 +28,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeMode } from "../../theme/AntdProvider";
-import CancelDishConfirm from "@/components/admin/orders/CancelDishConfirm";
 
 type OrderItemStatus = string;
 
@@ -73,6 +73,9 @@ type PaymentOrder = {
   subTotal: number;
   total: number;
   customerId?: string;
+  depositAmount?: number;
+  serviceCharge?: number;
+  serviceChargePercent?: number;
   raw?: {
     paymentStatusId?: number;
   };
@@ -633,9 +636,7 @@ export default function OrderManagement() {
   const addComboToCart = (combo: ComboSummaryDto) => {
     if (!combo?.details?.length) {
       message.warning(
-        t("staff.orders.messages.combo_empty", {
-          defaultValue: "Combo has no dishes",
-        }),
+        t("staff.orders.messages.combo_empty"),
       );
       return;
     }
@@ -686,9 +687,7 @@ export default function OrderManagement() {
     });
 
     message.success(
-      t("staff.orders.messages.combo_added", {
-        defaultValue: "Combo added to order",
-      }),
+      t("staff.orders.messages.combo_added"),
     );
   };
 
@@ -718,9 +717,7 @@ export default function OrderManagement() {
 
     if (isOrderPaid(targetOrder.raw)) {
       message.warning(
-        t("staff.orders.messages.paid_order_locked", {
-          defaultValue: "Order đã thanh toán, không thể thêm món.",
-        }),
+        t("staff.orders.messages.paid_order_locked"),
       );
       return;
     }
@@ -750,27 +747,67 @@ export default function OrderManagement() {
     }
   };
 
-  const openPaymentModal = (order: OrderForPaymentTrigger) => {
+  const openPaymentModal = async (order: OrderForPaymentTrigger) => {
     const matchedOrder = orders.find((o) => o.id === order.id);
     const source = matchedOrder ?? order;
 
+    // Open modal immediately with data we have
     setIsOrderDetailModalOpen(false);
     setSelectedOrderForDetail(null);
+    const subTotalInitial = matchedOrder?.subTotal ?? source.total;
     setSelectedOrder({
       id: source.id,
       reference: source.reference,
       total: source.total,
-      subTotal: matchedOrder?.subTotal ?? source.total,
+      subTotal: subTotalInitial,
       customerId:
         matchedOrder?.customerId || source.raw?.customerId || undefined,
-      raw: {
-        paymentStatusId: source.raw?.paymentStatusId,
-      },
+      depositAmount: 0,
+      serviceCharge: 0,
+      serviceChargePercent: 0,
+      raw: { paymentStatusId: source.raw?.paymentStatusId },
     });
     setCashReceived(source.total);
     setFinalTotal(source.total);
     setPaymentMethod("cash");
     setIsPaymentModalOpen(true);
+
+    // Fetch full order to get serviceCharge & reservation.depositAmount
+    try {
+      const res = await orderService.getOrderById(source.id) as any;
+      // Unwrap API wrapper: { data: {...} } or { success, data: {...} } or raw object
+      const orderData = res?.data ?? res;
+      console.log("[PaymentModal] full order data:", orderData);
+
+      const subTotalRaw: number = Number(orderData?.subTotal ?? subTotalInitial);
+
+      // serviceCharge from API is a flat VND amount (not percent)
+      const serviceChargeRaw: number = Number(orderData?.serviceCharge ?? 0);
+      // Compute display percent from subTotal (round to nearest whole %)
+      const serviceChargePercent: number =
+        serviceChargeRaw > 0 && subTotalRaw > 0
+          ? Math.round((serviceChargeRaw / subTotalRaw) * 100)
+          : 0;
+
+      const depositAmount: number = Number(
+        orderData?.reservation?.depositAmount ?? 0,
+      );
+
+      console.log("[PaymentModal] serviceCharge:", serviceChargeRaw, "deposit:", depositAmount);
+
+      setSelectedOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              depositAmount,
+              serviceCharge: serviceChargeRaw,
+              serviceChargePercent,
+            }
+          : prev,
+      );
+    } catch (err) {
+      console.error("[PaymentModal] failed to fetch order detail:", err);
+    }
   };
 
   const handlePayment = async () => {
@@ -974,9 +1011,7 @@ export default function OrderManagement() {
           const currentOrder = orders.find((o) => o.id === orderId);
           if (currentOrder && isOrderPaid(currentOrder.raw)) {
             message.warning(
-              t("staff.orders.messages.paid_order_locked", {
-                defaultValue: "Order đã thanh toán, không thể thêm món.",
-              }),
+              t("staff.orders.messages.paid_order_locked"),
             );
             return;
           }

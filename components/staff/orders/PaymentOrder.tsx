@@ -1,16 +1,16 @@
 "use client";
 
 import orderService, {
-  ApplyDiscountResponse,
+    ApplyDiscountResponse,
 } from "@/lib/services/orderService";
 import promotionService, { Promotion } from "@/lib/services/promotionService";
 import { formatVND } from "@/lib/utils/currency";
 import {
-  BankOutlined,
-  CheckCircleFilled,
-  CrownOutlined,
-  DollarOutlined,
-  TagOutlined,
+    BankOutlined,
+    CheckCircleFilled,
+    CrownOutlined,
+    DollarOutlined,
+    TagOutlined,
 } from "@ant-design/icons";
 import { Button, InputNumber, Modal, Spin, Typography } from "antd";
 import { useCallback, useEffect, useState } from "react";
@@ -30,6 +30,9 @@ interface SelectedOrder {
   subTotal: number;
   total: number;
   customerId?: string;
+  depositAmount?: number;
+  serviceCharge?: number;
+  serviceChargePercent?: number;
 }
 
 interface PaymentOrderProps {
@@ -84,6 +87,9 @@ export default function PaymentOrder({
   const subTotal = selectedOrder?.subTotal ?? selectedOrder?.total ?? 0;
   const finalTotal = discountData?.totalAmount ?? selectedOrder?.total ?? 0;
   const hasDiscount = !!(discountData && discountData.discountAmount > 0);
+  const depositAmount = selectedOrder?.depositAmount ?? 0;
+  const serviceChargeAmt = discountData?.serviceCharge ?? selectedOrder?.serviceCharge ?? 0;
+  const serviceChargePercent = selectedOrder?.serviceChargePercent ?? 0;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -199,59 +205,88 @@ export default function PaymentOrder({
               border: "1px solid #f0f0f0",
               padding: "12px 14px",
             }}>
-            <div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 10,
-                }}>
-                <div>
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    {t("staff.orders.payment.modal.total_label")}
-                  </Text>
-                  <div
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 700,
-                      color: "#262626",
-                      marginTop: 2,
-                    }}>
-                    {formatVND(subTotal)}
-                  </div>
-                </div>
-
-                <div style={{ textAlign: "right" }}>
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    {t("staff.orders.payment.modal.final_total_label")}
-                  </Text>
-                  <div
-                    style={{
-                      fontSize: 17,
-                      fontWeight: 800,
-                      color: "var(--primary, #1677ff)",
-                      marginTop: 2,
-                    }}>
-                    {formatVND(finalTotal)}
-                  </div>
+            {/* Row 1: subTotal vs finalTotal */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 10,
+                marginBottom: 10,
+              }}>
+              <div>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  {t("staff.orders.payment.modal.total_label")}
+                </Text>
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: "#262626",
+                    marginTop: 2,
+                  }}>
+                  {formatVND(subTotal)}
                 </div>
               </div>
 
-              {hasDiscount && !isApplyingDiscount && (
+              <div style={{ textAlign: "right" }}>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  {t("staff.orders.payment.modal.final_total_label")}
+                </Text>
                 <div
                   style={{
-                    marginTop: 8,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    gap: 4,
+                    fontSize: 17,
+                    fontWeight: 800,
+                    color: "var(--primary, #1677ff)",
+                    marginTop: 2,
                   }}>
-                  <CheckCircleFilled
-                    style={{ color: "#52c41a", fontSize: 11 }}
-                  />
-                  <Text style={{ fontSize: 12, color: "#52c41a" }}>
+                  {formatVND(finalTotal)}
+                </div>
+              </div>
+            </div>
+
+            {/* Breakdown lines */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 5,
+                borderTop: "1px dashed #f0f0f0",
+                paddingTop: 8,
+              }}>
+              {/* Service charge */}
+              {serviceChargeAmt > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: "#8c8c8c" }}>
+                    {t("staff.orders.payment.discount.service_charge")}{serviceChargePercent > 0 ? ` (${serviceChargePercent}%)` : ""}
+                  </span>
+                  <span style={{ fontSize: 12, color: "#d46b08", fontWeight: 600 }}>
+                    +{formatVND(serviceChargeAmt)}
+                  </span>
+                </div>
+              )}
+
+              {/* Discount */}
+              {hasDiscount && !isApplyingDiscount && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: "#8c8c8c", display: "flex", alignItems: "center", gap: 4 }}>
+                    <CheckCircleFilled style={{ color: "#52c41a", fontSize: 11 }} />
+                    {t("staff.orders.payment.discount.discount_label")}
+                  </span>
+                  <span style={{ fontSize: 12, color: "#52c41a", fontWeight: 600 }}>
                     -{formatVND(discountData!.discountAmount)}
-                  </Text>
+                  </span>
+                </div>
+              )}
+
+              {/* Deposit */}
+              {depositAmount > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: "#8c8c8c" }}>
+                    {t("staff.orders.payment.discount.deposit_label")}
+                  </span>
+                  <span style={{ fontSize: 12, color: "#cf1322", fontWeight: 600 }}>
+                    -{formatVND(depositAmount)}
+                  </span>
                 </div>
               )}
             </div>
@@ -435,7 +470,7 @@ export default function PaymentOrder({
                   }}>
                   <div style={{ flex: 1, height: 1, background: "#f0f0f0" }} />
                   <Text type="secondary" style={{ fontSize: 11 }}>
-                    {t("staff.orders.payment.discount.or") || "hoặc"}
+                    {t("staff.orders.payment.discount.or")}
                   </Text>
                   <div style={{ flex: 1, height: 1, background: "#f0f0f0" }} />
                 </div>
