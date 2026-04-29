@@ -345,7 +345,10 @@
         "order_create_failed": "Failed to create order",
         "status_updated": "Item status updated",
         "order_status_updated": "Order status updated",
-        "order_status_update_failed": "Failed to update order status"
+        "order_status_update_failed": "Failed to update order status",
+        "combo_empty": "Combo has no dishes",
+        "combo_added": "Combo added to order",
+        "paid_order_locked": "Order has been paid, cannot add more items."
       },
       "payment": {
         "btn": "Pay",
@@ -387,7 +390,10 @@
           "no_discount": "No membership discount available",
           "no_promotions": "No promotion codes available",
           "min_order": "Min. order",
-          "or": "or"
+          "or": "or",
+          "service_charge": "Service charge",
+          "discount_label": "Discount",
+          "deposit_label": "Deposit"
         }
       }
     },
@@ -2408,6 +2414,7 @@
         "error_fetch": "Failed to load data",
         "error_save": "Failed to save",
         "error_delete": "Failed to delete",
+        "error_delete_category_in_use": "Cannot delete category because it is being used by one or more dishes.",
         "order_notifications": "Order Notifications",
         "system_notifications": "System Notifications",
         "items": {

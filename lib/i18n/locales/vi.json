@@ -347,7 +347,10 @@
         "order_create_failed": "Tạo order thất bại",
         "status_updated": "Đã cập nhật trạng thái món",
         "order_status_updated": "Đã cập nhật trạng thái order",
-        "order_status_update_failed": "Cập nhật trạng thái order thất bại"
+        "order_status_update_failed": "Cập nhật trạng thái order thất bại",
+        "combo_empty": "Combo không có món nào",
+        "combo_added": "Đã thêm combo vào order",
+        "paid_order_locked": "Order đã thanh toán, không thể thêm món."
       },
       "payment": {
         "btn": "Thanh toán",
@@ -389,7 +392,10 @@
           "no_discount": "Không có giảm giá thành viên",
           "no_promotions": "Không có mã giảm giá",
           "min_order": "Đơn tối thiểu",
-          "or": "hoặc"
+          "or": "hoặc",
+          "service_charge": "Phí dịch vụ",
+          "discount_label": "Giảm giá",
+          "deposit_label": "Tiền đặt cọc"
         }
       }
     },
@@ -2455,6 +2461,7 @@
         "error_fetch": "Tải dữ liệu thất bại",
         "error_save": "Lưu thất bại",
         "error_delete": "Xóa thất bại",
+        "error_delete_category_in_use": "Không thể xóa danh mục vì đang có một hoặc nhiều món ăn sử dụng.",
         "order_notifications": "Thông báo đơn hàng",
         "system_notifications": "Thông báo hệ thống",
         "items": {

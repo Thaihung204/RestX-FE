@@ -502,32 +502,6 @@ export default function AIPanelDashboard({
                     </div>
                   ),
                 },
-                {
-                  key: "action_plan",
-                  label: t("dashboard.analytics.tabs.actionPlan"),
-                  children: (
-                    <div className="pt-4">
-                      {parsed.actionPlan.length > 0 && (
-                        <AIStrategySection
-                          title={t("dashboard.analytics.sections.executionPlan")}
-                          variant="primary"
-                          icon={
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                            </svg>
-                          }>
-                          <div className="space-y-3">
-                            {[...parsed.actionPlan]
-                              .sort((a, b) => IMPACT_ORDER[(a.impact ?? "medium")] - IMPACT_ORDER[(b.impact ?? "medium")])
-                              .map((action, i) => (
-                                <AIStrategyListItem key={i} title={action.title ?? `#{action.priority ?? i + 1}`} evidence={action.evidence ?? ""} action={action.action ?? ""} when={action.priority ? `Ưu tiên ${action.priority}` : t("dashboard.analytics.labels.now", { defaultValue: "Hiện tại" })} impact={action.impact ?? "medium"} variant="action" />
-                              ))}
-                          </div>
-                        </AIStrategySection>
-                      )}
-                    </div>
-                  ),
-                },
               ]}
             />
           </div>
