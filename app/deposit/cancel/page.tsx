@@ -2,26 +2,22 @@
 
 import { Button, Card, Typography } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
 
-export default function DepositCancelPage() {
+function DepositCancelContent() {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [reservationId, setReservationId] = useState<string | null>(null);
 
-  useEffect(() => {
-    // PayOS returns query params: orderCode, status, cancel, code, id
-    // We also support a custom `reservationId` param set when building the cancel URL
-    const rid =
-      searchParams.get("reservationId") ||
-      searchParams.get("id") ||
-      null;
-    setReservationId(rid);
-  }, [searchParams]);
+  // PayOS returns: orderCode, status, cancel, code, id
+  // We also support a custom `reservationId` param set when building the cancel URL
+  const reservationId =
+    searchParams.get("reservationId") ||
+    searchParams.get("id") ||
+    null;
 
   const handleBack = () => {
     if (reservationId) {
@@ -61,7 +57,6 @@ export default function DepositCancelPage() {
             gap: 16,
           }}
         >
-          {/* Icon */}
           <div
             style={{
               width: 72,
@@ -100,5 +95,13 @@ export default function DepositCancelPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function DepositCancelPage() {
+  return (
+    <Suspense>
+      <DepositCancelContent />
+    </Suspense>
   );
 }
