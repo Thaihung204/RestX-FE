@@ -1,13 +1,32 @@
 "use client";
 
 import { Button, Card, Typography } from "antd";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
 
-export default function PaymentCancelPage() {
+function DepositCancelContent() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // PayOS returns: orderCode, status, cancel, code, id
+  // We also support a custom `reservationId` param set when building the cancel URL
+  const reservationId =
+    searchParams.get("reservationId") ||
+    searchParams.get("id") ||
+    null;
+
+  const handleBack = () => {
+    if (reservationId) {
+      router.push(`/your-reservation/${encodeURIComponent(reservationId)}`);
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
     <div
       style={{
@@ -17,7 +36,8 @@ export default function PaymentCancelPage() {
         justifyContent: "center",
         background: "var(--light-surface)",
         padding: 24,
-      }}>
+      }}
+    >
       <Card
         style={{
           maxWidth: 520,
@@ -27,14 +47,16 @@ export default function PaymentCancelPage() {
           background: "var(--light-card)",
           boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
         }}
-        styles={{ body: { padding: 32 } }}>
+        styles={{ body: { padding: 32 } }}
+      >
         <div
           style={{
             textAlign: "center",
             display: "flex",
             flexDirection: "column",
             gap: 16,
-          }}>
+          }}
+        >
           <div
             style={{
               width: 72,
@@ -47,22 +69,39 @@ export default function PaymentCancelPage() {
               justifyContent: "center",
               fontSize: 36,
               margin: "0 auto",
-            }}>
+            }}
+          >
             ✕
           </div>
+
           <Title level={3} style={{ margin: 0, color: "var(--primary)" }}>
-            {t("payment.cancel.title")}
+            {t("deposit.cancel.title")}
           </Title>
+
           <Text style={{ color: "rgba(0,0,0,0.65)" }}>
-            {t("payment.cancel.message")}
+            {t("deposit.cancel.message")}
           </Text>
-          <Link href="/staff/orders">
-            <Button type="primary" size="large" style={{ borderRadius: 10 }}>
-              {t("payment.cancel.back")}
-            </Button>
-          </Link>
+
+          <Button
+            type="primary"
+            size="large"
+            style={{ borderRadius: 10 }}
+            onClick={handleBack}
+          >
+            {reservationId
+              ? t("deposit.cancel.back_to_reservation")
+              : t("deposit.cancel.back_home")}
+          </Button>
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function DepositCancelPage() {
+  return (
+    <Suspense>
+      <DepositCancelContent />
+    </Suspense>
   );
 }

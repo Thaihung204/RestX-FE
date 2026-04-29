@@ -663,7 +663,7 @@ export default function OrdersPage() {
                       className="px-6 py-12 text-center text-sm"
                       style={{ color: "var(--text-muted)" }}
                     >
-                      {t("orders.empty", { defaultValue: "No orders found" })}
+                      {t("dashboard.orders.empty")}
                     </td>
                   </tr>
                 ) : (

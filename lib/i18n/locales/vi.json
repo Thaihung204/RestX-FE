@@ -125,6 +125,12 @@
         "checked_in_at": "Đã check-in lúc"
       }
     },
+    "orders": {
+      "messages": {
+        "statuses_load_failed": "Không thể tải trạng thái đơn hàng",
+        "load_failed": "Không thể tải danh sách đơn hàng"
+      }
+    },
     "order_detail": {
       "title": "Chi tiết đơn hàng",
       "reference": "Mã đơn: {{reference}}",
@@ -202,6 +208,7 @@
       "messages": {
         "load_error": "Không thể tải chi tiết đơn hàng.",
         "update_error": "Cập nhật thất bại.",
+        "update_success": "Cập nhật trạng thái đơn hàng thành công.",
         "add_dish_success": "Đã thêm món vào đơn thành công!",
         "not_found": "Không tìm thấy đơn hàng.",
         "no_items": "Không có món trong đơn hàng.",
@@ -1097,6 +1104,37 @@
       "overview_load_failed": "Không thể tải dữ liệu tổng quan",
       "export_success": "Xuất báo cáo thành công",
       "export_failed": "Xuất báo cáo thất bại"
+    },
+    "orders": {
+      "title": "Đơn hàng",
+      "subtitle": "Quản lý và theo dõi tất cả đơn hàng",
+      "search": {
+        "customer": "Tên khách hàng",
+        "customer_placeholder": "Nhập tên khách hàng...",
+        "reference": "Mã đơn hàng",
+        "reference_placeholder": "Nhập mã đơn hàng..."
+      },
+      "table": {
+        "order": "Đơn hàng",
+        "customer": "Khách hàng",
+        "items": "Món",
+        "total": "Tổng tiền",
+        "status": "Trạng thái",
+        "payment": "Thanh toán",
+        "time": "Thời gian",
+        "actions": "Thao tác"
+      },
+      "labels": {
+        "items_count": "{{count}} món"
+      },
+      "payment_status": {
+        "paid": "Đã thanh toán",
+        "unpaid": "Chưa thanh toán"
+      },
+      "actions": {
+        "view_details": "Xem chi tiết"
+      },
+      "empty": "Không có đơn hàng nào"
     },
     "best_selling_dishes": {
       "title": "Món Bán Chạy",
@@ -2738,11 +2776,27 @@
       "no": "Không",
       "delete": "Xóa",
       "edit": "Chỉnh sửa",
-      "exporting": "Đang xuất..."
+      "exporting": "Đang xuất...",
+      "exporting_report": "Đang xuất..."
+    },
+    "messages": {
+      "export_success": "Xuất báo cáo thành công",
+      "export_failed": "Xuất báo cáo thất bại"
+    },
+    "pagination": {
+      "items_per_page": "Mục/trang"
     },
     "theme": {
       "switch_to_light": "Chế độ Sáng",
       "switch_to_dark": "Chế độ Tối"
+    }
+  },
+  "deposit": {
+    "cancel": {
+      "title": "Hủy thanh toán cọc",
+      "message": "Bạn đã hủy thanh toán đặt cọc. Khoản cọc chưa được ghi nhận, bàn của bạn vẫn đang chờ xác nhận.",
+      "back_to_reservation": "Quay lại đặt bàn",
+      "back_home": "Về trang chủ"
     }
   },
   "payment": {
