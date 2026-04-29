@@ -36,6 +36,7 @@ export const aiService = {
   analyzeDashboard: async (payload: { filterType: string; analysisType?: string; fromDate?: string; toDate?: string }): Promise<any> => {
     const response = await axiosInstance.post<any>("/ai/analytics", payload, {
       withCredentials: true,
+      timeout: 60000,
     });
     return response.data;
   },

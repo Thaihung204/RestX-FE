@@ -99,6 +99,26 @@ const formatDateTime = (value?: string | null) => {
   return date.toLocaleString("vi-VN");
 };
 
+/** Gộp các dòng cùng tên món + cùng status, cộng dồn quantity */
+const aggregateAdminItems = (
+  items: NonNullable<OrderDetailsResponse["orderDetails"]>,
+) => {
+  const map = new Map<string, (typeof items)[number] & { quantity: number; ids: string[] }>();
+  for (const item of items) {
+    const nameKey = (item.dishName || item.dishId).toLowerCase().trim();
+    const statusKey = (item.status ?? "").toLowerCase();
+    const key = `${nameKey}||${statusKey}`;
+    const existing = map.get(key);
+    if (existing) {
+      existing.quantity += item.quantity;
+      existing.ids.push(item.id);
+    } else {
+      map.set(key, { ...item, quantity: item.quantity, ids: [item.id] });
+    }
+  }
+  return Array.from(map.values());
+};
+
 export default function AdminOrderDetailPage() {
   const { t } = useTranslation("common");
   const router = useRouter();
@@ -113,7 +133,7 @@ export default function AdminOrderDetailPage() {
   const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
   const [tenant, setTenant] = useState<TenantConfig | null>(null);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
-  const [cancelConfirm, setCancelConfirm] = useState<{ detailId: string; dishName: string; newStatusId: number } | null>(null);
+  const [cancelConfirm, setCancelConfirm] = useState<{ detailIds: string[]; dishName: string; newStatusId: number } | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const inFlightRef = useRef(false);
   const lastFetchRef = useRef<number | null>(null);
@@ -134,17 +154,17 @@ export default function AdminOrderDetailPage() {
     fetchStatuses();
   }, []);
 
-  const handleDetailStatusChange = async (detailId: string, newStatusId: number, dishName?: string) => {
+  const handleDetailStatusChange = async (detailIds: string[], newStatusId: number, dishName?: string) => {
     if (!orderId) return;
     const cancelStatus = availableStatuses.find(
       (s) => s.code?.toLowerCase() === "cancelled" || s.name?.toLowerCase() === "cancelled",
     );
     if (cancelStatus && String(newStatusId) === cancelStatus.id) {
-      setCancelConfirm({ detailId, dishName: dishName ?? "", newStatusId });
+      setCancelConfirm({ detailIds, dishName: dishName ?? "", newStatusId });
       return;
     }
     try {
-      await orderService.updateOrderDetailStatus(orderId, detailId, newStatusId);
+      await Promise.all(detailIds.map((id) => orderService.updateOrderDetailStatus(orderId, id, newStatusId)));
     } catch (err: unknown) {
       console.error("Failed to update status", err);
       const errorMsg = extractApiErrorMessage(
@@ -159,13 +179,13 @@ export default function AdminOrderDetailPage() {
     if (!cancelConfirm || !orderId) return;
     setIsCancelling(true);
     try {
-      await orderService.updateOrderDetailStatus(orderId, cancelConfirm.detailId, cancelConfirm.newStatusId);
+      await Promise.all(cancelConfirm.detailIds.map((id) => orderService.updateOrderDetailStatus(orderId, id, cancelConfirm.newStatusId)));
       setOrder((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
           orderDetails: (prev.orderDetails ?? []).map((d) =>
-            d.id === cancelConfirm.detailId ? { ...d, status: "Cancelled" } : d,
+            cancelConfirm.detailIds.includes(d.id) ? { ...d, status: "Cancelled" } : d,
           ),
         };
       });
@@ -471,7 +491,7 @@ export default function AdminOrderDetailPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {order.orderDetails.map((item) => (
+                      {aggregateAdminItems(order.orderDetails).map((item) => (
                         <tr key={item.id} style={{ borderBottom: "1px solid var(--border)" }}>
                           <td className="px-2 py-2">{item.dishName || item.dishId}</td>
                           <td className="px-2 py-2 text-center">{item.quantity}</td>
@@ -486,8 +506,8 @@ export default function AdminOrderDetailPage() {
                                   value={availableStatuses.find(s => s.name === item.status)?.id ?? ""}
                                   disabled={item.status?.toLowerCase() === "cancelled"}
                                   onChange={(e) => {
-                                    if (e.target.value && item.id) {
-                                      handleDetailStatusChange(item.id, Number(e.target.value), item.dishName ?? undefined);
+                                    if (e.target.value && item.ids && item.ids.length > 0) {
+                                      handleDetailStatusChange(item.ids, Number(e.target.value), item.dishName ?? undefined);
                                     }
                                   }}
                                 >

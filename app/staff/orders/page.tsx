@@ -2,6 +2,7 @@
 
 import AddOrderItem from "@/components/staff/orders/AddOrderItem";
 import CardOrder from "@/components/staff/orders/CardOrder";
+import CreateOrderModal from "@/components/staff/orders/CreateOrderModal";
 import FilterOrder from "@/components/staff/orders/FilterOrder";
 import OrderDetailsPopup from "@/components/staff/orders/OrderDetailsPopup";
 import PaymentOrder from "@/components/staff/orders/PaymentOrder";
@@ -20,6 +21,7 @@ import orderStatusService, {
     OrderStatus,
 } from "@/lib/services/orderStatusService";
 import paymentService from "@/lib/services/paymentService";
+import { tableService, TableItem } from "@/lib/services/tableService";
 import type { DishItem, MenuCategory } from "@/lib/types/menu";
 import { HubConnectionState } from "@microsoft/signalr";
 import { App, Empty, Space } from "antd";
@@ -43,6 +45,7 @@ interface OrderItem {
   price: number;
   note?: string;
   status: OrderItemStatus;
+  ids?: string[];
 }
 
 interface Order {
@@ -102,16 +105,18 @@ const aggregateOrderItems = (items: OrderItem[]): OrderItem[] => {
   const aggregated = new Map<string, OrderItem>();
 
   items.forEach((item) => {
-    const existing = aggregated.get(item.dishId);
+    // Chỉ gộp khi CÙNG tên món VÀ CÙNG status
+    const nameKey = (item.name || item.dishId).toLowerCase().trim();
+    const statusKey = item.status?.toLowerCase?.() ?? "";
+    const key = `${nameKey}||${statusKey}`;
+    const existing = aggregated.get(key);
     if (existing) {
-      aggregated.set(item.dishId, {
-        ...existing,
-        quantity: existing.quantity + item.quantity,
-      });
-      return;
+      existing.quantity += item.quantity;
+      if (!existing.ids) existing.ids = [existing.id];
+      existing.ids.push(item.id);
+    } else {
+      aggregated.set(key, { ...item, ids: [item.id] });
     }
-
-    aggregated.set(item.dishId, { ...item });
   });
 
   return Array.from(aggregated.values());
@@ -130,6 +135,7 @@ export default function OrderManagement() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
   const [comboItems, setComboItems] = useState<ComboSummaryDto[]>([]);
+  const [tables, setTables] = useState<TableItem[]>([]);
   const inFlightRef = useRef(false);
   const lastRefreshRef = useRef<number | null>(null);
   const [orderDetailStatuses, setOrderDetailStatuses] = useState<
@@ -242,7 +248,7 @@ export default function OrderManagement() {
           tableId: resolvedTableId,
           tableName,
           items: summaryItems,
-          detailItems: items,
+          detailItems: summaryItems,
           createdAt: order.completedAt
             ? new Date(order.completedAt).toLocaleTimeString("vi-VN", {
                 hour: "2-digit",
@@ -299,13 +305,14 @@ export default function OrderManagement() {
     inFlightRef.current = true;
     initializedRef.current = true;
     try {
-      const [statusData, orderStatusData, menuData, comboData, orderData] =
+      const [statusData, orderStatusData, menuData, comboData, orderData, tableData] =
         await Promise.all([
           orderDetailStatusService.getAllStatuses(),
           orderStatusService.getAllStatuses(),
           menuService.getMenu(),
           dishService.getActiveCombos().catch(() => []),
           orderService.getCurrentOrders(getTodayOrderQuery()),
+          tableService.getAllTables().catch(() => []),
         ]);
 
       const safeStatuses = statusData ?? [];
@@ -316,6 +323,7 @@ export default function OrderManagement() {
       setOrderStatuses(safeOrderStatuses);
       setMenuCategories(safeMenu);
       setComboItems(comboData ?? []);
+      setTables(tableData ?? []);
 
       statusValueMapRef.current = buildStatusValueMap(safeStatuses);
       dishNameMapRef.current = buildDishNameMap(safeMenu);
@@ -372,6 +380,13 @@ export default function OrderManagement() {
   const [cashReceived, setCashReceived] = useState<number>(0);
   const [finalTotal, setFinalTotal] = useState<number>(0);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  // Create new order state (staff creates order without customerId)
+  const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
+  const [createOrderTableId, setCreateOrderTableId] = useState<string>("");
+  const [createOrderCart, setCreateOrderCart] = useState<{ item: DishItem; quantity: number }[]>([]);
+  const [createOrderActiveCategory, setCreateOrderActiveCategory] = useState("");
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
   const isOrderPaid = useCallback(
     (raw?: { paymentStatusId?: number; paymentStatus?: number } | null) => {
@@ -572,16 +587,28 @@ export default function OrderManagement() {
   ) => {
     const previousOrders = orders;
 
+    // Find all target IDs for the grouped item
+    let targetIds = [detailId];
+    const orderToUpdate = previousOrders.find((o) => o.id === orderId);
+    if (orderToUpdate) {
+      const groupedItem =
+        orderToUpdate.detailItems.find((i) => i.id === detailId) ??
+        orderToUpdate.items.find((i: any) => i.id === detailId);
+      if (groupedItem?.ids && groupedItem.ids.length > 0) {
+        targetIds = groupedItem.ids;
+      }
+    }
+
     setOrders((prev) =>
       prev.map((order) => {
         if (order.id !== orderId) return order;
         return {
           ...order,
           detailItems: order.detailItems.map((item) =>
-            item.id === detailId ? { ...item, status: normalizedValue } : item,
+            targetIds.includes(item.id) ? { ...item, status: normalizedValue } : item,
           ),
           items: order.items.map((item) =>
-            item.id === detailId ? { ...item, status: normalizedValue } : item,
+            targetIds.includes(item.id) ? { ...item, status: normalizedValue } : item,
           ),
         };
       }),
@@ -589,10 +616,14 @@ export default function OrderManagement() {
 
     setIsUpdatingDetailStatus(true);
     try {
-      await orderService.updateOrderDetailStatus(
-        orderId,
-        detailId,
-        Number(matchedStatus.id),
+      await Promise.all(
+        targetIds.map((id) =>
+          orderService.updateOrderDetailStatus(
+            orderId,
+            id,
+            Number(matchedStatus.id),
+          )
+        )
       );
       message.success(t("staff.orders.messages.status_updated"));
     } catch (error) {
@@ -628,6 +659,104 @@ export default function OrderManagement() {
       }
       return [...prev, { item, quantity: 1 }];
     });
+  };
+
+  // Handlers for the CreateOrderModal (separate cart, no customerId)
+  const addToCreateOrderCart = (item: DishItem) => {
+    setCreateOrderCart((prev) => {
+      const existing = prev.find((c) => c.item.id === item.id);
+      if (existing) {
+        return prev.map((c) =>
+          c.item.id === item.id ? { ...c, quantity: c.quantity + 1 } : c,
+        );
+      }
+      return [...prev, { item, quantity: 1 }];
+    });
+  };
+
+  const addComboToCreateOrderCart = (combo: ComboSummaryDto) => {
+    if (!combo?.details?.length) {
+      message.warning(
+        t("staff.orders.messages.combo_empty", { defaultValue: "Combo has no dishes" }),
+      );
+      return;
+    }
+    setCreateOrderCart((prev) => {
+      const nextCart = [...prev];
+      combo.details.forEach((detail) => {
+        if (!detail.dishId) return;
+        const matchedDish = menuCategories
+          .flatMap((category) => category.items)
+          .find((dish) => dish.id === detail.dishId);
+        const resolvedDish: DishItem = matchedDish || {
+          id: detail.dishId,
+          name: detail.dishName || detail.dishId,
+          description: "",
+          price: Number(detail.dishPrice ?? 0),
+          unit: "portion",
+          isVegetarian: false,
+          isSpicy: false,
+          isBestSeller: false,
+          images: [],
+          imageUrl: null,
+          categoryId: "combo",
+          categoryName: "Combo",
+        };
+        const quantityToAdd = detail.quantity > 0 ? detail.quantity : 1;
+        const existing = nextCart.find((line) => line.item.id === detail.dishId);
+        if (existing) {
+          existing.quantity += quantityToAdd;
+          return;
+        }
+        nextCart.push({ item: resolvedDish, quantity: quantityToAdd });
+      });
+      return nextCart;
+    });
+    message.success(t("staff.orders.messages.combo_added", { defaultValue: "Combo added to order" }));
+  };
+
+  const updateCreateOrderCartQuantity = (itemId: string, delta: number) => {
+    setCreateOrderCart((prev) =>
+      prev
+        .map((c) =>
+          c.item.id === itemId ? { ...c, quantity: Math.max(0, c.quantity + delta) } : c,
+        )
+        .filter((c) => c.quantity > 0),
+    );
+  };
+
+  const handleCreateNewOrder = async () => {
+    if (!createOrderTableId || createOrderCart.length === 0) {
+      message.error(
+        t("staff.orders.messages.select_table_and_items", {
+          defaultValue: "Vui lòng chọn bàn và ít nhất 1 món.",
+        }),
+      );
+      return;
+    }
+    setIsCreatingOrder(true);
+    try {
+      const payload: OrderRequestDto = {
+        tableId: createOrderTableId,
+        // Không truyền customerId — staff tạo order trực tiếp
+        orderDetails: createOrderCart.map((c) => ({
+          dishId: c.item.id,
+          quantity: c.quantity,
+          note: "",
+        })),
+      };
+      await orderService.createOrder(payload);
+      message.success(t("staff.orders.messages.order_created"));
+      setIsCreateOrderModalOpen(false);
+      setCreateOrderCart([]);
+      setCreateOrderTableId("");
+      refreshOrders();
+    } catch (error) {
+      console.error("Create order failed:", error);
+      message.error(t("staff.orders.messages.order_create_failed"));
+    } finally {
+      setIsCreatingOrder(false);
+    }
   };
 
   const addComboToCart = (combo: ComboSummaryDto) => {
@@ -725,11 +854,20 @@ export default function OrderManagement() {
       return;
     }
 
+    // Ưu tiên tableId từ tableSessions đầu tiên, fallback về tableId đã resolve
+    const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+    const resolvedTableId =
+      targetOrder.tableSessions
+        ?.map((s) => s.tableId)
+        .find((id): id is string => !!id && id !== EMPTY_GUID) ??
+      targetOrder.tableId;
+
+    const customerId = targetOrder.raw?.customerId;
+
     try {
       const payload: OrderRequestDto = {
-        tableId: targetOrder.tableId,
-        customerId:
-          targetOrder.raw.customerId || "00000000-0000-0000-0000-000000000000",
+        tableId: resolvedTableId,
+        ...(customerId && customerId !== EMPTY_GUID ? { customerId } : {}),
         orderDetails: cart.map((c) => ({
           dishId: c.item.id,
           quantity: c.quantity,
@@ -745,7 +883,7 @@ export default function OrderManagement() {
       setSelectedOrderIdForAdd("");
       refreshOrders();
     } catch (error) {
-      console.error("Update order failed:", error);
+      console.error("Add items to order failed:", error);
       message.error(t("staff.orders.messages.order_create_failed"));
     }
   };
@@ -845,6 +983,14 @@ export default function OrderManagement() {
         onChangeTable={setSelectedTableId}
         onAddItem={() => setIsAddItemModalOpen(true)}
         disableAddItem={addableOrders.length === 0}
+        onCreateOrder={() => {
+          setCreateOrderCart([]);
+          setCreateOrderTableId("");
+          if (menuCategories.length > 0 && !createOrderActiveCategory) {
+            setCreateOrderActiveCategory(menuCategories[0].categoryId);
+          }
+          setIsCreateOrderModalOpen(true);
+        }}
         isMobile={isMobile}
         isTablet={isTablet}
         mode={mode as "light" | "dark"}
@@ -997,6 +1143,30 @@ export default function OrderManagement() {
         loading={isCancelling}
         onConfirm={handleConfirmCancelStaff}
         onCancel={() => setCancelConfirm(null)}
+      />
+
+      {/* Modal tạo order mới cho staff — không truyền customerId */}
+      <CreateOrderModal
+        isOpen={isCreateOrderModalOpen}
+        onClose={() => {
+          setIsCreateOrderModalOpen(false);
+          setCreateOrderCart([]);
+          setCreateOrderTableId("");
+        }}
+        onConfirm={handleCreateNewOrder}
+        isCreating={isCreatingOrder}
+        tables={tables}
+        selectedTableId={createOrderTableId}
+        setSelectedTableId={setCreateOrderTableId}
+        menuCategories={menuCategories}
+        comboItems={comboItems}
+        activeMenuCategory={createOrderActiveCategory || (menuCategories[0]?.categoryId ?? "")}
+        setActiveMenuCategory={setCreateOrderActiveCategory}
+        cart={createOrderCart}
+        addToCart={addToCreateOrderCart}
+        addComboToCart={addComboToCreateOrderCart}
+        updateCartQuantity={updateCreateOrderCartQuantity}
+        t={t}
       />
 
       <style jsx global>{`
