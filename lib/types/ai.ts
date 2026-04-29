@@ -62,17 +62,7 @@ export interface AIChatHistoryResponse {
 }
 
 export interface AIContentGenerateRequest {
-  dishId?: string | null;
-  dishName?: string | null;
-  comboId?: string | null;
-  comboName?: string | null;
-  comboDishes?: string[] | null;
-  promotionId?: string | null;
-  promotionName?: string | null;
-  discountValue?: number | null;
-  tone?: string;
-  customContext?: string;
-  variants?: number;
+  prompt: string;
 }
 
 export interface AIContentVariant {
